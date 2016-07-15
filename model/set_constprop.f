@@ -23,8 +23,6 @@
 
       USE fldvar, only: ro_g0, mu_g0, mu_g
 
-      use constant, only: ep_star
-
       USE compar, only: ijkstart3, ijkend3
       use functions, only: wall_at, fluid_at
 

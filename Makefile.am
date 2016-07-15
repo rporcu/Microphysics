@@ -349,7 +349,6 @@ libmfix_src = \
 	model/dmp_modules/sendrecv_mod.f \
 	model/drag_mod.f \
 	model/eos_mod.f \
-	model/equal.f \
 	model/error_manager_mod.f \
 	model/exit.f \
 	model/fldvar_mod.f \

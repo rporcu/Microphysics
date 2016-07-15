@@ -30,8 +30,6 @@
       INTEGER, PARAMETER :: DIMENSION_IC = 500
 ! Maximum number of items for specifying boundary conditions
       INTEGER, PARAMETER :: DIMENSION_BC = 500
-! Maximum number of items for specifying internal surfaces.
-      INTEGER, PARAMETER :: DIMENSION_IS = 500
 ! Maximum number of items for specifying point sources
       INTEGER, PARAMETER :: DIMENSION_PS = 5000
 ! Maximum number of solids phases
