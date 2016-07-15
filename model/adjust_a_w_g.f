@@ -29,7 +29,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE fldvar
       USE geometry
       USE run
@@ -38,6 +37,7 @@
       USE sendrecv
       USE fun_avg
       USE functions
+      use ambm, only: e, w, s, n, t, b
 
       IMPLICIT NONE
 !-----------------------------------------------

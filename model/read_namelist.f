@@ -40,6 +40,7 @@
       USE ur_facs
       USE usr
       USE utilities, ONLY: blank_line, line_too_big, seek_comment
+      USE utilities, ONLY: make_upper_case, replace_tab
       USE vtk
       Use stl
 

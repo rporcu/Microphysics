@@ -26,7 +26,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
+      use ambm, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar

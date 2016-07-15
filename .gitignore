@@ -17,3 +17,4 @@ model/dmp_modules/mpif.h
 model/files.lis
 model/mpif.h
 tmp.*
+.build

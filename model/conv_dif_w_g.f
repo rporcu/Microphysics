@@ -36,8 +36,6 @@
          CALL STORE_A_W_G1 (A_M)
       ENDIF
 
-      CALL DIF_W_IS(MU_G, A_M, 0)
-
       RETURN
       END SUBROUTINE CONV_DIF_W_G
 
@@ -257,7 +255,7 @@
       USE indices, only: i_of, j_of, k_of
       USE indices, only: kp1, im1, jm1
 
-      USE matrix, only: e, w, n, s, t, b
+      use ambm, only: e, w, n, s, t, b
       use fldvar
       IMPLICIT NONE
 
@@ -392,7 +390,7 @@
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero
-      USE matrix, only: e, w, n, s, t, b
+      use ambm, only: e, w, n, s, t, b
 
       IMPLICIT NONE
 
@@ -528,7 +526,7 @@
       USE param, only: dimension_3, dimension_m
       USE param1, only: one
 
-      USE matrix, only: e, w, n, s, t, b
+      use ambm, only: e, w, n, s, t, b
 
       USE run, only: discretize
 

@@ -576,7 +576,7 @@
       USE geometry, only: ox_e, do_k, vol_u
       USE indices, only: i_of
 
-      USE matrix, only: e, w, n, s, t, b
+      use ambm, only: e, w, n, s, t, b
       USE param, only: dimension_3
       USE param1, only: zero
       USE fldvar, only: df_gu

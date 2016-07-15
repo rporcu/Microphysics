@@ -24,7 +24,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -106,7 +105,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE mpi_utility
@@ -632,7 +630,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -739,7 +736,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE funits
@@ -854,7 +850,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -985,7 +980,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -1206,7 +1200,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE funits
       USE compar
@@ -1308,7 +1301,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE funits
       USE compar
@@ -1394,7 +1386,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -1449,7 +1440,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices

@@ -338,9 +338,6 @@ libmfix_src = \
 	model/des/write_res0_des.f \
 	model/des/write_res1_des_mod.f \
 	model/solvers/dgtsl.f \
-	model/dif_u_is.f \
-	model/dif_v_is.f \
-	model/dif_w_is.f \
 	model/discretization_mod.f \
 	model/display_resid.f \
 	model/dmp_modules/compar_mod.f \
@@ -386,8 +383,6 @@ libmfix_src = \
 	model/line_too_big.f \
 	model/location_check.f \
 	model/machine_mod.f \
-	model/make_upper_case.f \
-	model/matrix_mod.f \
 	model/mfix.f \
 	model/mflux_mod.f \
 	model/mod_bc_i.f \

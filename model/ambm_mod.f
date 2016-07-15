@@ -27,6 +27,16 @@
 
       LOGICAL :: ambm_locked = .false.
 
+
+! Definitions for sparse matrix
+      INTEGER, PARAMETER :: e = 1
+      INTEGER, PARAMETER :: w =-1
+      INTEGER, PARAMETER :: n = 2
+      INTEGER, PARAMETER :: s =-2
+      INTEGER, PARAMETER :: t = 3
+      INTEGER, PARAMETER :: b =-3
+
+
       CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

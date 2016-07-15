@@ -295,7 +295,6 @@ CONTAINS
 !-----------------------------------------------
     USE param
     USE param1
-    USE matrix
     USE geometry
     USE compar
     USE indices
@@ -623,7 +622,6 @@ CONTAINS
 !-----------------------------------------------
     USE param
     USE param1
-    USE matrix
     USE geometry
     USE compar
     USE indices
@@ -688,7 +686,6 @@ CONTAINS
 !-----------------------------------------------
     USE param
     USE param1
-    USE matrix
     USE geometry
     USE compar
     USE indices
@@ -774,7 +771,6 @@ CONTAINS
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE indices
@@ -859,7 +855,6 @@ CONTAINS
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE compar
       USE funits
@@ -948,7 +943,6 @@ CONTAINS
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE funits
       USE compar
@@ -1031,7 +1025,6 @@ CONTAINS
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
       USE geometry
       USE funits
       USE compar

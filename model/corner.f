@@ -16,7 +16,7 @@
       USE geometry
       USE indices
       USE machine, only: start_log, end_log
-      USE matrix
+      use ambm, only: e, w, s, n, t, b
       USE param
       USE param1
       USE physprop

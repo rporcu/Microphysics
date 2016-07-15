@@ -28,7 +28,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE matrix
+      USE ambm, only: n,s,e,w,t,b
       USE compar
       IMPLICIT NONE
 !-----------------------------------------------

@@ -208,67 +208,37 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
 
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Function name: SEEK_COMMENT (LINE_MAXCOL)                           C
-!  Purpose: determine if (and where) a comment character appears       C
-!           in a data input line                                       C
-!                                                                      C
-!  Author: P.Nicoletti                                Date: 25-NOV-91  C
-!  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: SEEK_COMMENT                                    C
-!                                                                      C
-!  Local variables: DIM_COMMENT, COMMENT_CHAR, L, COMMENT, L2          C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      INTEGER FUNCTION SEEK_COMMENT (LINE, MAXCOL)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Function name: SEEK_COMMENT (LINE_MAXCOL)                           !
+!  Author: P.Nicoletti                                Date: 25-NOV-91  !
+!                                                                      !
+!  Purpose: Returns the index to where a comment character was found   !
+!  in the input data line.  Equals MAXCOL + 1 if no-comment characters !
+!  in the line.                                                        !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      PURE INTEGER FUNCTION SEEK_COMMENT (LINE, MAXCOL)
+
       IMPLICIT NONE
-!-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
-!                   input data line
-      CHARACTER(len=*) LINE
-!
-!                   maximum column of input data line to search
-      INTEGER       MAXCOL
-!
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!
-!                   the number of designated comment characters
+
+! Dummy Arguments
+!---------------------------------------------------------------------//
+! Input data line
+      CHARACTER(len=*), INTENT(IN) :: LINE
+! Maximum column of input data line to search
+      INTEGER, INTENT(IN) :: MAXCOL
+
+! Local Variables
+!---------------------------------------------------------------------//
+! The number of designated comment characters
       INTEGER, PARAMETER :: DIM_COMMENT = 2
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
-!
-!                   loop indicies
+! The comment characters
+      CHARACTER, PARAMETER :: COMMENT_CHAR(DIM_COMMENT) = (/'#', '!'/)
+! Loop indicies
       INTEGER :: L, L2
-!
-!                   the comment characters
-      CHARACTER, DIMENSION(DIM_COMMENT) :: COMMENT_CHAR
-!-----------------------------------------------
-!
-!     The function SEEK_COMMENT returns the index to where a comment
-!     character was found in the input data line.  Equals MAXCOL + 1
-!     if no-comment characters in the line
-!
-!
-      DATA COMMENT_CHAR/'#', '!'/
-!
+!.......................................................................!
+
       DO L = 1, MAXCOL
          DO L2 = 1, DIM_COMMENT
             IF (LINE(L:L) == COMMENT_CHAR(L2)) THEN
@@ -282,47 +252,32 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
       RETURN
       END FUNCTION SEEK_COMMENT
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Function name: SEEK_END (LINE, MAXCOL)                              C
-!  Purpose: determine where trailing blanks begin in a line            C
-!                                                                      C
-!  Author: P.Nicoletti, M. Syamlal                    Date: 7-AUG-92   C
-!  Reviewer: M. Syamlal                               Date: 11-DEC-92  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: SEEK_END                                        C
-!                                                                      C
-!  Local variables: L                                                  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      INTEGER FUNCTION SEEK_END (LINE, MAXCOL)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Function name: SEEK_END (LINE, MAXCOL)                              !
+!  Author: P.Nicoletti, M. Syamlal                    Date: 7-AUG-92   !
+!                                                                      !
+!  Purpose: Return the index to where the last character was found in  !
+!  the input data line.  Equals MAXCOL if no trailing blank characters !
+!  in the line.                                                        !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      PURE INTEGER FUNCTION SEEK_END (LINE, MAXCOL)
+
       IMPLICIT NONE
-!-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
-!                   maximum column of input data line to search
-      INTEGER MAXCOL
-!
-!                   input data line
-      CHARACTER LINE*(*)
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
+
+! Dummy Arguments
+!---------------------------------------------------------------------//
+! input data line
+      CHARACTER, INTENT(IN) :: LINE*(*)
+! maximum column of input data line to search
+      INTEGER, INTENT(IN) :: MAXCOL
+
+! Local Variables
+!---------------------------------------------------------------------//
       INTEGER :: L
-!-----------------------------------------------
-!
-!     The function SEEK_END returns the index to where the last
-!     character was found in the input data line.  Equals MAXCOL
-!     if no trailing blank characters in the line
-!
-!
+!.......................................................................!
+
       SEEK_END = 0
       DO L = 1, MAXCOL
          IF (LINE(L:L) /= ' ') SEEK_END = L
@@ -331,58 +286,33 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
       END FUNCTION SEEK_END
 
 !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Function name: LINE_TOO_BIG (LINE,LINE_LEN,MAXCOL)                  C
-!  Purpose: return an error condition if input data is located past    C
-!           column MAXCOL in the data input file                       C
-!                                                                      C
-!  Author: P.Nicoletti                                Date: 25-NOV-91  C
-!  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: LINE_TOO_BIG                                    C
-!                                                                      C
-!  Local variables: L                                                  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      INTEGER FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Function name: LINE_TOO_BIG (LINE,LINE_LEN,MAXCOL)                  !
+!  Author: P.Nicoletti                                Date: 25-NOV-91  !
+!                                                                      !
+!  Purpose: Return a value greater than 0 to indicate an error         !
+!  condition (data passed column MAXCOL in LINE)                       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      PURE INTEGER FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
+
       IMPLICIT NONE
-!-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
-!                   input data line
-      CHARACTER(LEN=*) :: LINE
-!
-!                   length of input data line
-      INTEGER       LINE_LEN
-!
-!                   maximum column that non-blank charcaters are
-!                   are in the input data line
-      INTEGER       MAXCOL
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
-!
-!               loop index
+
+! Dummy Arguments
+!---------------------------------------------------------------------//
+! input data line
+      CHARACTER(LEN=*), INTENT(IN) :: LINE
+! length of input data line
+      INTEGER, INTENT(IN) :: LINE_LEN
+! maximum column that non-blank charcater are in the input data line
+      INTEGER, INTENT(IN) :: MAXCOL
+
+! Local Variables
+!---------------------------------------------------------------------//
       INTEGER :: L
-!-----------------------------------------------
-!
-!     The function LINE_TOO_BIG returns a value greater than 0 to
-!     indicate an error condition (data passed column MAXCOL in LINE)
-!
-!
+!.......................................................................!
+
       DO L = MAXCOL + 1, LINE_LEN
          IF (LINE(L:L) /= ' ') THEN
             LINE_TOO_BIG = L
@@ -401,13 +331,18 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
 ! Purpose: Return .TRUE. if a line contains no input or only spaces.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      LOGICAL FUNCTION BLANK_LINE (line)
+      PURE LOGICAL FUNCTION BLANK_LINE (line)
 
       IMPLICIT NONE
 
-      CHARACTER :: LINE*(*)
+! Dummy Arguments
+!---------------------------------------------------------------------//
+      CHARACTER, INTENT(IN) :: LINE*(*)
 
+! Local Variables
+!---------------------------------------------------------------------//
       INTEGER :: L
+!.......................................................................!
 
       BLANK_LINE = .FALSE.
       DO L=1, len(line)
@@ -417,5 +352,84 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
       BLANK_LINE = .TRUE.
       RETURN
       END FUNCTION BLANK_LINE
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Module name: MAKE_UPPER_CASE (LINE_STRING,MAXCOL)                   C
+!  Author: P.Nicoletti                                Date: 26-NOV-91  C
+!                                                                      C
+!  Purpose: change lowercase characters to uppercase in input line     C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+      SUBROUTINE MAKE_UPPER_CASE(LINE_STRING, MAXCOL)
+
+      IMPLICIT NONE
+
+! Dummy Arguments
+!---------------------------------------------------------------------//
+! Input line to change to uppercase
+      CHARACTER(len=*), INTENT(INOUT) :: LINE_STRING
+! Number of characters to look at in LINE_STRING
+      INTEGER, INTENT(IN) :: MAXCOL
+
+! Local Variables
+!---------------------------------------------------------------------//
+! ICHAR value for UPPERCASE A, lowercase a, lowercase z
+      INTEGER, PARAMETER :: A_UP = ICHAR('A')
+      INTEGER, PARAMETER :: A_LO = ICHAR('a')
+      INTEGER, PARAMETER :: Z_LO = ICHAR('z')
+! ICHAR differnce between lower and uppercase letters
+      INTEGER, PARAMETER :: A_DIFF = A_LO - A_UP
+! Holds ICHAR value of current character
+      INTEGER :: INT_C
+! loop index
+      INTEGER :: L
+!.......................................................................!
+
+      DO L = 1, MAXCOL
+         INT_C = ICHAR(LINE_STRING(L:L))
+         IF (A_LO<=INT_C .AND. INT_C<=Z_LO) THEN
+            INT_C = INT_C - A_DIFF
+            LINE_STRING(L:L) = CHAR(INT_C)
+         ENDIF
+      END DO
+      RETURN
+      END SUBROUTINE MAKE_UPPER_CASE
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: REPLACE_TAB (LINE_STRING,MAXCOL)                       !
+!  Author: M. Syamlal                                 Date: 10-JUL-03  !
+!                                                                      !
+!  Purpose: replace tab characters with space                          !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE REPLACE_TAB(LINE_STRING, MAXCOL)
+
+      IMPLICIT NONE
+
+! Dummy Arguments
+!---------------------------------------------------------------------//
+! Input line to change to uppercase
+      CHARACTER(len=*), INTENT(INOUT) :: LINE_STRING
+! Number of characters to look at in LINE_STRING
+      INTEGER, INTENT(IN) :: MAXCOL
+
+! Local Variables
+!---------------------------------------------------------------------//
+      CHARACTER, PARAMETER :: TAB = CHAR(9)
+      CHARACTER, PARAMETER :: CRET = CHAR(13)
+! Loop index
+      INTEGER :: L
+!.......................................................................!
+
+      DO L = 1, MAXCOL
+        if(LINE_STRING(L:L) .eq. TAB) LINE_STRING(L:L) = ' '
+        if(LINE_STRING(L:L) .eq. CRET) LINE_STRING(L:L) = ' '
+      END DO
+      RETURN
+      END SUBROUTINE REPLACE_TAB
 
 END MODULE utilities

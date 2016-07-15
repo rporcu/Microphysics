@@ -20,7 +20,6 @@
       USE fldvar
       USE run
       USE geometry
-      USE matrix
       USE indices
       USE physprop
       USE drag

@@ -565,7 +565,7 @@
       USE geometry, only: dy, dz, vol_w, ayz_w
       USE indices, only: i_of, j_of, k_of, im1, kp1
 
-      USE matrix, only: e, w, n, s, t, b
+      use ambm, only: e, w, n, s, t, b
       use param, only: dimension_3
       USE param1, only: zero, half
       USE fldvar, only: df_gw

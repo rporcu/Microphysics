@@ -22,7 +22,6 @@
 !-----------------------------------------------
       USE GEOMETRY
       USE INDICES
-      USE MATRIX
       USE PARAM
       USE PARAM1
       USE compar
@@ -100,7 +99,6 @@
 !-----------------------------------------------
       USE GEOMETRY
       USE INDICES
-      USE MATRIX
       USE PARAM
       USE PARAM1
       USE debug
@@ -648,7 +646,6 @@
 !-----------------------------------------------
       USE PARAM
       USE PARAM1
-      USE MATRIX
       USE GEOMETRY
       USE INDICES
       USE debug
