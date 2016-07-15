@@ -346,13 +346,6 @@
 ! Bottom face (i, j, k)
       D_Fb = MU_G(IJK)*OX(I)*C_AB*AXY_W(IJKM)
 
-      DF_GW(IJK,E) = D_FE
-      DF_GW(IJK,W) = D_FW
-      DF_GW(IJK,N) = D_FN
-      DF_GW(IJK,S) = D_FS
-      DF_GW(IJK,T) = D_FT
-      DF_GW(IJK,B) = D_FB
-
       RETURN
 
     CONTAINS

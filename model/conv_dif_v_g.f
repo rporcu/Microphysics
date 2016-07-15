@@ -270,7 +270,6 @@
       use matrix, only: e, w, n, s, t, b
       USE param1, only: zero
       use fldvar
-      USE fldvar, only: DF_gv
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -364,13 +363,6 @@
                         AVG_Z_H(MU_G(IJKBN),MU_G(IJKN),KM),J)*&
                 OX(I)*C_AB*AXY_V(IJKM)
       ENDIF   ! end if (do_k)
-
-      DF_GV(IJK,E) = D_FE
-      DF_GV(IJK,W) = D_FW
-      DF_GV(IJK,N) = D_FN
-      DF_GV(IJK,S) = D_FS
-      DF_GV(IJK,T) = D_FT
-      DF_GV(IJK,B) = D_FB
 
 
       RETURN

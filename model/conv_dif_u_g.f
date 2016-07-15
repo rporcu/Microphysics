@@ -266,7 +266,6 @@
 
       use matrix, only: e, w, s, n, t, b
       USE param1, only: zero
-      USE fldvar, only: DF_GU
 
 
       use fldvar
@@ -366,12 +365,6 @@
                 OX_E(I)*C_AB*AXY_U(IJKM)
       ENDIF
 
-      DF_GU(IJK,E) = D_FE
-      DF_GU(IJK,W) = D_FW
-      DF_GU(IJK,N) = D_FN
-      DF_GU(IJK,S) = D_FS
-      DF_GU(IJK,T) = D_FT
-      DF_GU(IJK,B) = D_FB
 
       RETURN
 

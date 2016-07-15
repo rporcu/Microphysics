@@ -77,12 +77,6 @@
       Allocate( RESID_PACK(NRESID*2*(DIMENSION_M+1)))
 
 
-      Allocate(  TAU_U_g(DIMENSION_3p) )
-      Allocate(  TAU_V_g(DIMENSION_3p) )
-      Allocate(  TAU_W_g(DIMENSION_3p) )
-      Allocate(  DF_gu(DIMENSION_3p, -3:3) )
-      Allocate(  DF_gv(DIMENSION_3p, -3:3) )
-      Allocate(  DF_gw(DIMENSION_3p, -3:3) )
 
 !tmp_array
       Allocate(  Array1(DIMENSION_3) )
@@ -101,6 +95,9 @@
 !visc_g
       Allocate(  trD_g(DIMENSION_3) )
       Allocate(  LAMBDA_g (DIMENSION_3p) )
+      Allocate(  TAU_U_g(DIMENSION_3p) )
+      Allocate(  TAU_V_g(DIMENSION_3p) )
+      Allocate(  TAU_W_g(DIMENSION_3p) )
 
 !xsi_array
       Allocate(  Xsi_e(DIMENSION_3) )

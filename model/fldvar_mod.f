@@ -38,12 +38,6 @@
 ! trace of D_g at i, j, k
       DOUBLE PRECISION, ALLOCATABLE ::  trD_g(:)
 
-! diffusive component of conv-dif
-! stores diffusive term in matrix for x, y, z momentum cell
-      DOUBLE PRECISION, ALLOCATABLE :: DF_gu(:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: DF_gv(:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: DF_gw(:,:)
-
 ! cross terms
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  TAU_U_g
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  TAU_V_g
