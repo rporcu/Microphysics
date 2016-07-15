@@ -35,7 +35,7 @@
 !  mu.grad(u)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_U_G(lTAU_U_G, lctau_u_g)
+      SUBROUTINE CALC_TAU_U_G(lTAU_U_G)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -58,8 +58,6 @@
 !---------------------------------------------------------------------//
 ! TAU_U_g
       DOUBLE PRECISION, INTENT(OUT) :: lTAU_U_g(DIMENSION_3)
-! cTAU_U_g
-      DOUBLE PRECISION, INTENT(OUT) :: lcTAU_U_g(DIMENSION_3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -91,7 +89,7 @@
 !$omp          EPGA, MUGA, MU_GE, MU_GBE, SBV, SSX, SSY, SSZ,         &
 !$omp          DWOXDZ, VTZB)                                           &
 !$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of, ip1, jm1, km1,     &
-!$omp         do_k, ltau_u_g, lctau_u_g,                  &
+!$omp         do_k, ltau_u_g,                   &
 !$omp         ep_g, MU_G, LAMBDA_G, trd_g, u_g, v_g, w_g,          &
 !$omp         axy_u, axz_u, ayz, ayz_u, vol_u,                         &
 !$omp         ox_e, odx_e, ox, odx, odz, LAMBDA_G)
@@ -167,23 +165,18 @@
 ! Add the terms
                lTAU_U_G(IJK) = SBV + SSX + SSY + SSZ
 
-! Also calculate and store the full gas phase viscous stress tensor
-               CALL GET_FULL_TAU_U_G(IJK, ltau_u_g, lctau_u_g)
-
             ELSE
                lTAU_U_G(IJK) = ZERO
-               lctau_u_g(IJK) = zero
             ENDIF   ! end if (.NOT.IP_AT_E(IJK) .AND. EPGA>DIL_EP_S)
          ENDDO   ! end do ijk
 !$omp end parallel do
 
       ELSE
 ! if cartesian grid
-         CALL CALC_CG_TAU_U_G(lTAU_U_G, lctau_u_g)
+         CALL CALC_CG_TAU_U_G(lTAU_U_G)
       ENDIF
 
       call send_recv(ltau_u_g,2)
-      call send_recv(lctau_u_g,2)
 
       RETURN
 
@@ -203,7 +196,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_CG_TAU_U_G(lTAu_U_G, lctau_u_g)
+      SUBROUTINE CALC_CG_TAU_U_G(lTAu_U_G)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -228,8 +221,6 @@
 !---------------------------------------------------------------------//
 ! TAU_U_g
       DOUBLE PRECISION, INTENT(OUT) :: lTAU_U_g(DIMENSION_3)
-! cTAU_U_g
-      DOUBLE PRECISION, INTENT(OUT) :: lcTAU_U_g(DIMENSION_3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -271,7 +262,7 @@
 !$omp          dvdx_at_S, dvdx_at_N, dwdx_at_B, dwdx_at_T,             &
 !$omp          MU_G_cut, cut_tau_ug, ssy_cut, ssz_cut)                &
 !$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of,  ip1, jm1, km1,    &
-!$omp         do_k, ltau_u_g, lctau_u_g,                               &
+!$omp         do_k, ltau_u_g,                            &
 !$omp         ep_g, MU_G, LAMBDA_G, trd_g, u_g, v_g, w_g,          &
 !$omp         axy_u, axz_u, ayz, ayz_u, vol,                           &
 !$omp         bc_type, bc_u_id, bc_uw_g, bc_vw_g, bc_ww_g, bc_hw_g,    &
@@ -538,105 +529,12 @@
 ! Add the terms
             lTAU_U_G(IJK) = SBV + SSX + SSY + SSZ
 
-! Also calculate and store the full gas phase viscous stress tensor
-            CALL GET_FULL_TAU_U_G(IJK, ltau_u_g, lctau_u_g)
          ELSE
             lTAU_U_G(IJK) = ZERO
-            lctau_u_g(IJK) = zero
          ENDIF
       ENDDO
 !$omp end parallel do
 
       RETURN
       END SUBROUTINE CALC_CG_TAU_U_G
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: GET_FULL_Tau_U_g                                        C
-!  Purpose: Calculate the divergence of the complete gas phase stress  C
-!  tensor including all terms in the u-direction.                      C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_FULL_TAU_U_G(IJK, ltau_u_g, lctau_u_g)
-
-! Modules
-!---------------------------------------------------------------------//
-      USE fldvar, only: u_g
-
-      USE functions, only: east_of, flow_at_e
-      USE functions, only: im_of, jm_of, km_of
-      USE functions, only: ip_of, jp_of, kp_of
-
-      USE fun_avg, only: avg_x
-
-      USE geometry, only: ox_e, do_k, vol_u
-      USE indices, only: i_of
-
-      use matrix, only: e, w, n, s, t, b
-      USE param, only: dimension_3
-      USE param1, only: zero
-      USE fldvar, only: df_gu
-      use fldvar, only: MU_G
-      IMPLICIT NONE
-
-! Dummy arguments
-!---------------------------------------------------------------------//
-! ijk index
-      INTEGER, INTENT(IN) :: IJK
-! TAU_U_g
-      DOUBLE PRECISION, INTENT(IN) :: lTAU_U_g(DIMENSION_3)
-! cTAU_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: lcTAU_U_g(DIMENSION_3)
-
-! Local Variables
-!---------------------------------------------------------------------//
-! indices
-      INTEGER :: I, IJKE
-      INTEGER :: IPJK, IJPK, IJKP, IMJK, IJMK, IJKM
-! average viscosity
-      DOUBLE PRECISION :: MUGA
-! source terms
-      DOUBLE PRECISION :: SSX, SSY, SSZ
-!---------------------------------------------------------------------//
-
-      IPJK = IP_OF(IJK)
-      IJPK = JP_OF(IJK)
-      IJKP = KP_OF(IJK)
-      IMJK = IM_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJKM = KM_OF(IJK)
-
-! convection terms: see conv_dif_u_g
-      SSX = ZERO
-      SSY = ZERO
-      SSZ = ZERO
-      IF (FLOW_AT_E(IJK)) THEN
-! part of 1/x d/dx (x.tau_xx) xdxdydz =>
-!         1/x d/dx (x.mu.du/dx) xdxdydz =>
-! delta (mu.du/dx.Ayz) |E-W : at (i+1 - i-1), j, k
-         SSX = DF_GU(IJK,E)*(U_G(IPJK) - U_G(IJK)) - &
-               DF_GU(IJK,W)*(U_G(IJK) - U_G(IJKM))
-
-! part of d/dy (tau_xy) xdxdydz =>
-!         d/dy (mu.du/dy) xdxdydz =>
-! delta (mu.du/dy.Axz) |N-S : at (i+1/2, j+1/2 - j-1/2, k)
-         SSY = DF_GU(IJK,N)*(U_G(IJPK)-U_G(IJK)) - &
-               DF_GU(IJK,S)*(U_G(IJK)-U_G(IJMK))
-
-         IF (DO_K) THEN
-! part of 1/x d/dz (tau_xz) xdxdydz =>
-!         1/x d/dz (mu/x.du/dz) xdxdydz =>
-! delta (mu/x.du/dz.Axy) |T-B : at (i+1/2, j, k+1/2 - k-1/2)
-            SSZ = DF_GU(IJK,T)*(U_G(IJKP)-U_G(IJK)) - &
-                  DF_GU(IJK,B)*(U_G(IJK)-U_G(IJKM))
-         ENDIF
-      ENDIF   ! end if flow_at_e
-
-! Add the terms
-      lctau_u_g(IJK) = (lTAU_U_G(IJK) + SSX + SSY + SSZ)
-
-      RETURN
-      END SUBROUTINE GET_FULL_TAU_U_G
 

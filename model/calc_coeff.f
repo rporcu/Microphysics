@@ -121,7 +121,6 @@
       USE fldvar, only : TRD_g
 ! Stress tensor cross terms.
       USE fldvar, only : TAU_U_G, TAU_V_G, TAU_W_G
-      USE fldvar, only : cTAU_U_G, cTAU_V_G, cTAU_W_G
 
       implicit none
 
@@ -131,9 +130,9 @@
       CALL CALC_TRD_G
 
 ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      CALL CALC_TAU_U_G (TAU_U_G, CTAU_U_G)
-      CALL CALC_TAU_V_G (TAU_V_G, CTAU_V_G)
-      CALL CALC_TAU_W_G (TAU_W_G, CTAU_W_G)
+      CALL CALC_TAU_U_G (TAU_U_G)
+      CALL CALC_TAU_V_G (TAU_V_G)
+      CALL CALC_TAU_W_G (TAU_W_G)
 
 
       RETURN

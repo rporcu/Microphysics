@@ -83,9 +83,6 @@
       Allocate(  DF_gu(DIMENSION_3p, -3:3) )
       Allocate(  DF_gv(DIMENSION_3p, -3:3) )
       Allocate(  DF_gw(DIMENSION_3p, -3:3) )
-      Allocate(  CTAU_U_G(DIMENSION_3P))
-      Allocate(  CTAU_V_G(DIMENSION_3P))
-      Allocate(  CTAU_W_G(DIMENSION_3P))
 
 !tmp_array
       Allocate(  Array1(DIMENSION_3) )
