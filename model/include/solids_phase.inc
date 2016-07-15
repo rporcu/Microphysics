@@ -1,0 +1,16 @@
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!  Namelist: SOLIDS_PHASE_LOCKED                                       !
+!  Author: J.Musser                                   Date: 03-APR-15  !
+!                                                                      !
+!  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      NAMELIST / SOLIDS_PHASE_LOCKED / SOLIDS_MODEL, MMAX
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!  Namelist: SOLIDS_PHASE_UNLOCKED                                     !
+!  Author: J.Musser                                   Date: 03-APR-15  !
+!                                                                      !
+!  Purpose: List MFIX keywords that may be edited during a run by      !
+!  invoking a REFRESH.                                                 !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      NAMELIST / SOLIDS_PHASE_UNLOCKED /  D_p0, RO_s0

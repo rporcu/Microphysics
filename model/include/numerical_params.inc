@@ -1,0 +1,14 @@
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!  Namelist: NUMERICAL_PARAM_UNLOCKED                                  !
+!  Author: J.Musser                                   Date: 03-APR-15  !
+!                                                                      !
+!  Purpose: List MFIX keywords that may be edited during a run by      !
+!  invoking a REFRESH.                                                 !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      NAMELIST / NUMERICAL_PARAM_UNLOCKED /&
+
+      MAX_NIT, DETECT_STALL, NORM_G, MAX_INLET_VEL_FAC, TOL_RESID, &
+      TOL_DIVERGE, &
+      LEQ_IT, LEQ_METHOD, LEQ_SWEEP, LEQ_TOL, LEQ_PC, DO_TRANSPOSE, &
+      UR_FAC, DISCRETIZE
+

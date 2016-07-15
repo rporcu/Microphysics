@@ -1,0 +1,1207 @@
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/zero_norm_vel.f > model/zero_norm_vel.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/xsi_mod.f > model/xsi_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/xsi_array_mod.f > model/xsi_array_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/xerbla.f > model/solvers/xerbla.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/write_usr1.f > model/usr/write_usr1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/write_usr0.f > model/usr/write_usr0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_table.f > model/io/write_table.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_spx1.f > model/io/write_spx1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_spx0.f > model/io/write_spx0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_res1.f > model/io/write_res1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_res0.f > model/io/write_res0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_out3.f > model/io/write_out3.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_out1.f > model/io/write_out1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_out0.f > model/io/write_out0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_header.f > model/io/write_header.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_error.f > model/io/write_error.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_ab_m_var.f > model/io/write_ab_m_var.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/write_ab_m.f > model/io/write_ab_m.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/visc_g_mod.f > model/visc_g_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/vf_gs.f > model/vf_gs.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/vavg_w_g.f > model/vavg_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/vavg_v_g.f > model/vavg_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/vavg_u_g.f > model/vavg_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/utilities_mod.f > model/utilities_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_write_out1.f > model/usr/usr_write_out1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_write_out0.f > model/usr/usr_write_out0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_rates.f > model/usr/usr_rates.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_physical_prop.f > model/usr/usr_physical_prop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_mod.f > model/usr/usr_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_init_namelist.f > model/usr/usr_init_namelist.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr_drag.f > model/usr/usr_drag.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr3.f > model/usr/usr3.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr2.f > model/usr/usr2.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr1.f > model/usr/usr1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/usr/usr0.f > model/usr/usr0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/ur_facs_mod.f > model/ur_facs_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/update_old.f > model/update_old.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/turb_mod.f > model/turb_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/under_relax.f > model/under_relax.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/transport_prop.f > model/transport_prop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/toleranc_mod.f > model/toleranc_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tmp_array_mod.f > model/tmp_array_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tmp_array1_mod.f > model/tmp_array1_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/time_march.f > model/time_march.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/time_cpu_mod.f > model/time_cpu_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/thermochemical/read_thermochemical_mod.f > model/thermochemical/read_thermochemical_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/thermochemical/get_values.f > model/thermochemical/get_values.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/test_lin_eq.f > model/test_lin_eq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tau_w_g.f > model/tau_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tau_v_g.f > model/tau_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tau_u_g.f > model/tau_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/tau_g_mod.f > model/tau_g_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/source_w_g.f > model/source_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/source_v_g.f > model/source_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/source_u_g.f > model/source_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/source_pp_g.f > model/source_pp_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/source_phi.f > model/source_phi.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_vel_star.f > model/solve_vel_star.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_species_eq.f > model/solve_species_eq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_pp_g.f > model/solve_pp_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_lin_eq.f > model/solve_lin_eq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_k_epsilon_eq.f > model/solve_k_epsilon_eq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solve_energy_eq.f > model/solve_energy_eq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solids_pressure_mod.f > model/solids_pressure_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/shift_dxyz.f > model/shift_dxyz.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_wall_bc.f > model/set_wall_bc.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_ro_g.f > model/set_ro_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_ps.f > model/set_ps.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_outflow.f > model/set_outflow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_param.f > model/set_param.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_mw_mix_g.f > model/set_mw_mix_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_max2.f > model/set_max2.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_l_scale.f > model/set_l_scale.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_index1a.f > model/set_index1a.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_index1.f > model/set_index1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_increments.f > model/set_increments.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_icbc_flags.f > model/set_icbc_flags.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_ic.f > model/set_ic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_geometry1.f > model/set_geometry1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_geometry.f > model/set_geometry.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_fluidbed_p.f > model/set_fluidbed_p.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_flags.f > model/set_flags.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_constprop.f > model/set_constprop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_constants.f > model/set_constants.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_bc_flow.f > model/set_bc_flow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_bc1.f > model/set_bc1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/set_bc0.f > model/set_bc0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/rxns_mod.f > model/rxns_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/run_mod.f > model/run_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/scales_mod.f > model/scales_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/rxn_com_mod.f > model/rxn_com_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/rrates_init.f > model/rrates_init.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/rrates0.f > model/rrates0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/rrates.f > model/rrates.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/residual_mod.f > model/residual_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/reset_new.f > model/reset_new.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/remove_comment.f > model/remove_comment.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/read_res1.f > model/io/read_res1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/read_namelist.f > model/read_namelist.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/read_database.f > model/read_database.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/pscor_mod.f > model/pscor_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/ps_mod.f > model/ps_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/physical_prop.f > model/physical_prop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/physprop_mod.f > model/physprop_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/pgcor_mod.f > model/pgcor_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/parse_rxn.f > model/parse_rxn.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/parse_resid_string.f > model/parse_resid_string.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/parse_mod.f > model/parse_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/parse_line.f > model/parse_line.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/param_mod.f > model/param_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/param1_mod.f > model/param1_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/parallel_mod.f > model/parallel_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/output_mod.f > model/output_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/output_manager.f > model/io/output_manager.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_bin_r.f > model/io/out_bin_r.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_bin_512r.f > model/io/out_bin_512r.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_bin_512i.f > model/io/out_bin_512i.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_bin_512.f > model/io/out_bin_512.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_array_kc.f > model/io/out_array_kc.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_array_k.f > model/io/out_array_k.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_array_c.f > model/io/out_array_c.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/out_array.f > model/io/out_array.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/open_files.f > model/io/open_files.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/open_file.f > model/io/open_file.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/mod_bc_k.f > model/mod_bc_k.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/mod_bc_j.f > model/mod_bc_j.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/mod_bc_i.f > model/mod_bc_i.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/mflux_mod.f > model/mflux_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/mfix.f > model/mfix.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/matrix_mod.f > model/matrix_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/make_upper_case.f > model/make_upper_case.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/machine_mod.f > model/machine_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/location_check.f > model/location_check.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/line_too_big.f > model/line_too_big.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leqsol_mod.f > model/solvers/leqsol_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leq_sor.f > model/solvers/leq_sor.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leq_gmres.f > model/solvers/leq_gmres.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leq_cg.f > model/solvers/leq_cg.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leq_bicgst.f > model/solvers/leq_bicgst.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/leq_bicgs.f > model/solvers/leq_bicgs.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/k_epsilon_prop.f > model/k_epsilon_prop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/iterate.f > model/iterate.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/is_mod.f > model/is_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/init_resid.f > model/init_resid.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/init_namelist.f > model/init_namelist.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/init_fvars.f > model/init_fvars.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/init_ab_m.f > model/init_ab_m.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/indices_mod.f > model/indices_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/in_binary_512i_mod.f > model/io/in_binary_512i_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/in_binary_512_mod.f > model/io/in_binary_512_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/ic_mod.f > model/ic_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_walls_bc.f > model/get_walls_bc.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_ps.f > model/get_ps.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_is.f > model/get_is.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_flow_bc.f > model/get_flow_bc.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_data.f > model/get_data.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/get_bc_area.f > model/get_bc_area.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/geometry_mod.f > model/geometry_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/io/funits_mod.f > model/io/funits_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/functions_mod.f > model/functions_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/fun_avg_mod.f > model/fun_avg_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/flow_to_vel.f > model/flow_to_vel.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/fldvar_mod.f > model/fldvar_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/exit.f > model/exit.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/error_manager_mod.f > model/error_manager_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/equal.f > model/equal.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/eos_mod.f > model/eos_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/energy_mod.f > model/energy_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/drag_mod.f > model/drag_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/sendrecv_mod.f > model/dmp_modules/sendrecv_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/sendrecv3_mod.f > model/dmp_modules/sendrecv3_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/parallel_mpi_mod.f > model/dmp_modules/parallel_mpi_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/mpi_utility_mod.f > model/dmp_modules/mpi_utility_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/mpi_mod.f > model/dmp_modules/mpi_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/gridmap_mod.f > model/dmp_modules/gridmap_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/debug_mod.f > model/dmp_modules/debug_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/dbg_util_mod.f > model/dmp_modules/dbg_util_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dmp_modules/compar_mod.f > model/dmp_modules/compar_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/display_resid.f > model/display_resid.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dif_w_is.f > model/dif_w_is.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dif_v_is.f > model/dif_v_is.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/discretization_mod.f > model/discretization_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dif_u_is.f > model/dif_u_is.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/solvers/dgtsl.f > model/solvers/dgtsl.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/write_res1_des_mod.f > model/des/write_res1_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/write_res0_des.f > model/des/write_res0_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/write_des_data.f > model/des/write_des_data.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/vtp_mod.f > model/des/vtp_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr_rates_des.f > model/des/usr_rates_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr4_des.f > model/des/usr4_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr3_des.f > model/des/usr3_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr2_des.f > model/des/usr2_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr1_des.f > model/des/usr1_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/usr0_des.f > model/des/usr0_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/stl_preproc_des_mod.f > model/des/stl_preproc_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/solid_drag.f > model/des/solid_drag.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_phase_index.f > model/des/set_phase_index.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_filter_des.f > model/des/set_filter_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_ic_dem.f > model/des/set_ic_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_geometry_des.f > model/des/set_geometry_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_pic_mo.f > model/des/set_bc_pic_mo.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_pic_mi.f > model/des/set_bc_pic_mi.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_pic.f > model/des/set_bc_pic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_dem_mo.f > model/des/set_bc_dem_mo.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_dem_mi.f > model/des/set_bc_dem_mi.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/set_bc_dem.f > model/des/set_bc_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/sendrecvnode_mod.f > model/des/sendrecvnode_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/read_res1_des_mod.f > model/des/read_res1_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/read_res0_des.f > model/des/read_res0_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/read_particle_input.f > model/des/read_particle_input.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/randomno_mod.f > model/des/randomno_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/pic_routines.f > model/des/pic_routines.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/pic_bc_routines.f > model/des/pic_bc_routines.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/pic_bc_mod.f > model/des/pic_bc_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/particles_in_cell.f > model/des/particles_in_cell.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/particle_filter_mod.f > model/des/particle_filter_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/nsquare.f > model/des/nsquare.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/neighbour.f > model/des/neighbour.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_unpack_des_mod.f > model/des/mpi_unpack_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_pack_des_mod.f > model/des/mpi_pack_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_node_des_mod.f > model/des/mpi_node_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_init_des_mod.f > model/des/mpi_init_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_funs_des_mod.f > model/des/mpi_funs_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mpi_comm_des_mod.f > model/des/mpi_comm_des_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mfix_pic_mod.f > model/des/mfix_pic_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mass_outflow_dem.f > model/des/mass_outflow_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/mass_inflow_dem.f > model/des/mass_inflow_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/make_arrays_des.f > model/des/make_arrays_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/layout_mi_dem.f > model/des/layout_mi_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/interpolation_mod.f > model/des/interpolation_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/init_settling_dem.f > model/des/init_settling_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/generate_particles_mod.f > model/des/generate_particles_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/gas_drag.f > model/des/gas_drag.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/drag_gs_des1.f > model/des/drag_gs_des1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/drag_gs_des0.f > model/des/drag_gs_des0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/drag_gp_des.f > model/des/drag_gp_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/discretelement_mod.f > model/des/discretelement_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/diffuse_mean_fields.f > model/des/diffuse_mean_fields.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/dif_phi_source_des.f > model/des/dif_phi_source_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/dif_phi_des.f > model/des/dif_phi_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/dif_phi_bc_des.f > model/des/dif_phi_bc_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/desmpi_wrapper_mod.f > model/des/desmpi_wrapper_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/desmpi_mod.f > model/des/desmpi_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/desgrid_mod.f > model/des/desgrid_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_time_march.f > model/des/des_time_march.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_thermo_rad.f > model/des/des_thermo_rad.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_thermo_newvalues.f > model/des/des_thermo_newvalues.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_thermo_mod.f > model/des/des_thermo_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_thermo_conv.f > model/des/des_thermo_conv.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_thermo_cond_mod.f > model/des/des_thermo_cond_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_stl_functions_mod.f > model/des/des_stl_functions_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_rxns_mod.f > model/des/des_rxns_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_rrates0.f > model/des/des_rrates0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_reaction_model.f > model/des/des_reaction_model.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_physical_prop.f > model/des/des_physical_prop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_init_namelist.f > model/des/des_init_namelist.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_init_arrays.f > model/des/des_init_arrays.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_granular_temperature.f > model/des/des_granular_temperature.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_functions.f > model/des/des_functions.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_cluster_mod.f > model/des/des_cluster_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_bc_mod.f > model/des/des_bc_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/des_allocate_mod.f > model/des/des_allocate_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/comp_mean_fields1.f > model/des/comp_mean_fields1.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/comp_mean_fields0.f > model/des/comp_mean_fields0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/comp_mean_fields.f > model/des/comp_mean_fields.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/check_cell_movement.f > model/des/check_cell_movement.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfwallposvel.f > model/des/cfwallposvel.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfwallcontact.f > model/des/cfwallcontact.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfupdateold.f > model/des/cfupdateold.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfslide.f > model/des/cfslide.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfrelvel.f > model/des/cfrelvel.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfnewvalues.f > model/des/cfnewvalues.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cffctowall.f > model/des/cffctowall.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/cfassign.f > model/des/cfassign.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_thermo_des.f > model/des/calc_thermo_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_rrate_des.f > model/des/calc_rrate_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_pg_grad.f > model/des/calc_pg_grad.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_interp_weights.f > model/des/calc_interp_weights.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_grad_des.f > model/des/calc_grad_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_force_dem.f > model/des/calc_force_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_epg_des.f > model/des/calc_epg_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_dtpic.f > model/des/calc_dtpic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_drag_des.f > model/des/calc_drag_des.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/des/calc_collision_wall_mod.f > model/des/calc_collision_wall_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/dbg_mod.f > model/dbg_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/deprecated.f > model/deprecated.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/correct_0.f > model/correct_0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/corner_mod.f > model/corner_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/corner.f > model/corner.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_rop.f > model/conv_rop.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_pp_g.f > model/conv_pp_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_dif_w_g.f > model/conv_dif_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_dif_v_g.f > model/conv_dif_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_dif_u_g.f > model/conv_dif_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/constant_mod.f > model/constant_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/conv_dif_phi.f > model/conv_dif_phi.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/coeff_mod.f > model/coeff_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chischeme_mod.f > model/chischeme_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chem/stiff_chem_stats_mod.f > model/chem/stiff_chem_stats_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cont_mod.f > model/cont_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chem/stiff_chem_rrates.f > model/chem/stiff_chem_rrates.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chem/stiff_chem_mod.f > model/chem/stiff_chem_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chem/stiff_chem_maps_mod.f > model/chem/stiff_chem_maps_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/chem/stiff_chem_dbg_mod.f > model/chem/stiff_chem_dbg_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_plane.f > model/check_plane.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data_30.f > model/check_data_30.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data_20.f > model/check_data_20.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_phases.f > model/check_data/check_solids_phases.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_mppic.f > model/check_data/check_solids_mppic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_dem.f > model/check_data/check_solids_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_common_discrete.f > model/check_data/check_solids_common_discrete.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_common_all.f > model/check_data/check_solids_common_all.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_run_control.f > model/check_data/check_run_control.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_solids_model_prereqs.f > model/check_data/check_solids_model_prereqs.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_point_sources.f > model/check_data/check_point_sources.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_output_control.f > model/check_data/check_output_control.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_odepack_stiff_chem.f > model/check_data/check_odepack_stiff_chem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_numerics.f > model/check_data/check_numerics.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_internal_surfaces.f > model/check_data/check_internal_surfaces.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_initial_conditions.f > model/check_data/check_initial_conditions.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_ic_mppic.f > model/check_data/check_ic_mppic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_ic_dem.f > model/check_data/check_ic_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_ic_common_discrete.f > model/check_data/check_ic_common_discrete.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_geometry_prereqs.f > model/check_data/check_geometry_prereqs.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_geometry.f > model/check_data/check_geometry.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_dmp_prereqs.f > model/check_data/check_dmp_prereqs.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_chemical_rxns.f > model/check_data/check_chemical_rxns.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_boundary_conditions.f > model/check_data/check_boundary_conditions.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_gas_phase.f > model/check_data/check_gas_phase.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_walls.f > model/check_data/check_bc_walls.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_pic.f > model/check_data/check_bc_pic.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_outflow.f > model/check_data/check_bc_outflow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_inflow.f > model/check_data/check_bc_inflow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_geometry.f > model/check_data/check_bc_geometry.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_bc_dem.f > model/check_data/check_bc_dem.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_data/check_axis.f > model/check_data/check_axis.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_convergence.f > model/check_convergence.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_bqend.f > model/check_bqend.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/check_ab_m.f > model/check_ab_m.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cdist_mod.f > model/cdist_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/write_progress_bar.f > model/cartesian_grid/write_progress_bar.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/vtk_out.f > model/cartesian_grid/vtk_out.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/vtk_mod.f > model/cartesian_grid/vtk_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/update_dashboard.f > model/cartesian_grid/update_dashboard.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/stl_mod.f > model/cartesian_grid/stl_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/set_Odxyz.f > model/cartesian_grid/set_Odxyz.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/progress_bar_mod.f > model/cartesian_grid/progress_bar_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/quadric_mod.f > model/cartesian_grid/quadric_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/polygon_mod.f > model/cartesian_grid/polygon_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_stl_data.f > model/cartesian_grid/get_stl_data.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_poly_data.f > model/cartesian_grid/get_poly_data.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_master.f > model/cartesian_grid/get_master.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_delh.f > model/cartesian_grid/get_delh.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_cut_cell_volume_area.f > model/cartesian_grid/get_cut_cell_volume_area.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_cut_cell_flags.f > model/cartesian_grid/get_cut_cell_flags.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_connectivity.f > model/cartesian_grid/get_connectivity.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/get_alpha.f > model/cartesian_grid/get_alpha.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/eval_usr_fct.f > model/cartesian_grid/eval_usr_fct.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/dmp_cartesian.f > model/cartesian_grid/dmp_cartesian.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/define_quadrics.f > model/cartesian_grid/define_quadrics.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/deallocate_cut_cell_arrays.f > model/cartesian_grid/deallocate_cut_cell_arrays.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/dashboard_mod.f > model/cartesian_grid/dashboard_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/cutcell_mod.f > model/cartesian_grid/cutcell_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/cut_cell_preprocessing.f > model/cartesian_grid/cut_cell_preprocessing.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/check_data_cartesian.f > model/cartesian_grid/check_data_cartesian.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/cartesian_grid_init_namelist.f > model/cartesian_grid/cartesian_grid_init_namelist.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/calc_vort_out.f > model/cartesian_grid/calc_vort_out.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/allocate_dummy_cut_cell_arrays.f > model/cartesian_grid/allocate_dummy_cut_cell_arrays.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/allocate_cut_cell_arrays.f > model/cartesian_grid/allocate_cut_cell_arrays.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/CG_source_w_g.f > model/cartesian_grid/CG_source_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/CG_source_v_g.f > model/cartesian_grid/CG_source_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/CG_source_u_g.f > model/cartesian_grid/CG_source_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/CG_set_outflow.f > model/cartesian_grid/CG_set_outflow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/cartesian_grid/CG_set_bc0.f > model/cartesian_grid/CG_set_bc0.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_trd_g.f > model/calc_trd_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_resid.f > model/calc_resid.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_outflow.f > model/calc_outflow.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_mu_g.f > model/calc_mu_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_mflux.f > model/calc_mflux.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_k_g.f > model/calc_k_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_h.f > model/calc_h.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_dif_g.f > model/calc_dif_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_d_t.f > model/calc_d_t.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_d_n.f > model/calc_d_n.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_d_e.f > model/calc_d_e.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_coeff.f > model/calc_coeff.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/calc_cell.f > model/calc_cell.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/boundfunijk_mod.f > model/boundfunijk_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/bound_x.f > model/bound_x.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/bodyforce_mod.f > model/bodyforce_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/bc_phi.f > model/bc_phi.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/bc_mod.f > model/bc_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/ambm_mod.f > model/ambm_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/allocate_arrays.f > model/allocate_arrays.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/adjust_leq.f > model/adjust_leq.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/adjust_dt_mod.f > model/adjust_dt_mod.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/adjust_a_w_g.f > model/adjust_a_w_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/adjust_a_v_g.f > model/adjust_a_v_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/adjust_a_u_g.f > model/adjust_a_u_g.d
+SRCDIR="." OBJEXT="o" MODEXT="mod" MODDIR="./model" \
+SED="/usr/bin/sed" GREP="/usr/bin/grep" /bin/sh ./build-aux/fortran-depcomp model/accum_resid.f > model/accum_resid.d
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cdist_mod.o model/cdist_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/mpi_mod.o model/dmp_modules/mpi_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/param_mod.o model/param_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/param1_mod.o model/param1_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/progress_bar_mod.o model/cartesian_grid/progress_bar_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/dashboard_mod.o model/cartesian_grid/dashboard_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/fldvar_mod.o model/fldvar_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/time_cpu_mod.o model/time_cpu_mod.f
+/nfs/apps/Compilers/Intel/ParallelStudio/2016.1.056/bin/ifort  -g -c -o model/chem/ODEPACK.o model/chem/ODEPACK.F
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/BLAS.o model/solvers/BLAS.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/DGTSV.o model/solvers/DGTSV.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/matrix_mod.o model/matrix_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/parallel_mod.o model/parallel_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/turb_mod.o model/turb_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tau_g_mod.o model/tau_g_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/visc_g_mod.o model/visc_g_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/mflux_mod.o model/mflux_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/scales_mod.o model/scales_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/particle_filter_mod.o model/des/particle_filter_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/pic_routines.o model/des/pic_routines.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/dgtsl.o model/solvers/dgtsl.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_flow_bc.o model/get_flow_bc.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_walls_bc.o model/get_walls_bc.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/line_too_big.o model/line_too_big.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/make_upper_case.o model/make_upper_case.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/remove_comment.o model/remove_comment.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/thermochemical/get_values.o model/thermochemical/get_values.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_write_out0.o model/usr/usr_write_out0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_write_out1.o model/usr/usr_write_out1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/write_usr0.o model/usr/write_usr0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/write_usr1.o model/usr/write_usr1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/geometry_mod.o model/geometry_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/constant_mod.o model/constant_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/ur_facs_mod.o model/ur_facs_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/is_mod.o model/is_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/ps_mod.o model/ps_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_thermo_mod.o model/des/des_thermo_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/pic_bc_mod.o model/des/pic_bc_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/ic_mod.o model/ic_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_bin_r.o model/io/out_bin_r.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/compar_mod.o model/dmp_modules/compar_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/cutcell_mod.o model/cartesian_grid/cutcell_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/discretelement_mod.o model/des/discretelement_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/indices_mod.o model/indices_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mfix_pic_mod.o model/des/mfix_pic_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/output_mod.o model/output_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/quadric_mod.o model/cartesian_grid/quadric_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/run_mod.o model/run_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/vtk_mod.o model/cartesian_grid/vtk_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/residual_mod.o model/residual_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_mod.o model/usr/usr_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cont_mod.o model/cont_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/pgcor_mod.o model/pgcor_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/pscor_mod.o model/pscor_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/bc_mod.o model/bc_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/bound_x.o model/bound_x.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_cell.o model/calc_cell.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/stl_mod.o model/cartesian_grid/stl_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/polygon_mod.o model/cartesian_grid/polygon_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/corner_mod.o model/corner_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/energy_mod.o model/energy_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/funits_mod.o model/io/funits_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/xsi_array_mod.o model/xsi_array_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/init_ab_m.o model/init_ab_m.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/open_file.o model/io/open_file.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/xerbla.o model/solvers/xerbla.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/parallel_mpi_mod.o model/dmp_modules/parallel_mpi_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/fun_avg_mod.o model/fun_avg_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_max2.o model/set_max2.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/shift_dxyz.o model/shift_dxyz.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/bodyforce_mod.o model/bodyforce_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/randomno_mod.o model/des/randomno_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solids_pressure_mod.o model/solids_pressure_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr0.o model/usr/usr0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr1.o model/usr/usr1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr2.o model/usr/usr2.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr3.o model/usr/usr3.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_init_namelist.o model/usr/usr_init_namelist.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_l_scale.o model/set_l_scale.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/drag_mod.o model/drag_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/allocate_dummy_cut_cell_arrays.o model/cartesian_grid/allocate_dummy_cut_cell_arrays.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/cartesian_grid_init_namelist.o model/cartesian_grid/cartesian_grid_init_namelist.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/deallocate_cut_cell_arrays.o model/cartesian_grid/deallocate_cut_cell_arrays.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/functions_mod.o model/functions_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/allocate_cut_cell_arrays.o model/cartesian_grid/allocate_cut_cell_arrays.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_stl_functions_mod.o model/des/des_stl_functions_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_interp_weights.o model/des/calc_interp_weights.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cffctowall.o model/des/cffctowall.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfrelvel.o model/des/cfrelvel.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfslide.o model/des/cfslide.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/machine_mod.o model/machine_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/debug_mod.o model/dmp_modules/debug_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/ambm_mod.o model/ambm_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tmp_array_mod.o model/tmp_array_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tmp_array1_mod.o model/tmp_array1_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_plane.o model/check_plane.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_functions.o model/des/des_functions.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_table.o model/io/write_table.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_bin_512.o model/io/out_bin_512.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_bin_512i.o model/io/out_bin_512i.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_bin_512r.o model/io/out_bin_512r.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_error.o model/io/write_error.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_header.o model/io/write_header.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_spx0.o model/io/write_spx0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/mpi_utility_mod.o model/dmp_modules/mpi_utility_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/sendrecv_mod.o model/dmp_modules/sendrecv_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/toleranc_mod.o model/toleranc_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/bc_phi.o model/bc_phi.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_mflux.o model/calc_mflux.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_alpha.o model/cartesian_grid/get_alpha.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_connectivity.o model/cartesian_grid/get_connectivity.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_cut_cell_volume_area.o model/cartesian_grid/get_cut_cell_volume_area.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_bc_mod.o model/des/des_bc_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_ab_m.o model/check_ab_m.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_grad_des.o model/des/calc_grad_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_pg_grad.o model/des/calc_pg_grad.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/interpolation_mod.o model/des/interpolation_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfupdateold.o model/des/cfupdateold.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/dif_phi_bc_des.o model/des/dif_phi_bc_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/gas_drag.o model/des/gas_drag.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/in_binary_512_mod.o model/io/in_binary_512_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/in_binary_512i_mod.o model/io/in_binary_512i_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dif_u_is.o model/dif_u_is.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dif_v_is.o model/dif_v_is.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dif_w_is.o model/dif_w_is.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/dbg_util_mod.o model/dmp_modules/dbg_util_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/sendrecv3_mod.o model/dmp_modules/sendrecv3_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_bc1.o model/set_bc1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_geometry1.o model/set_geometry1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/test_lin_eq.o model/test_lin_eq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/vf_gs.o model/vf_gs.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfwallcontact.o model/des/cfwallcontact.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/physprop_mod.o model/physprop_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/discretization_mod.o model/discretization_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/adjust_a_u_g.o model/adjust_a_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/adjust_a_v_g.o model/adjust_a_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/adjust_a_w_g.o model/adjust_a_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_trd_g.o model/calc_trd_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/calc_vort_out.o model/cartesian_grid/calc_vort_out.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/define_quadrics.o model/cartesian_grid/define_quadrics.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/eval_usr_fct.o model/cartesian_grid/eval_usr_fct.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_cut_cell_flags.o model/cartesian_grid/get_cut_cell_flags.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_master.o model/cartesian_grid/get_master.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/dif_phi_des.o model/des/dif_phi_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/drag_gs_des1.o model/des/drag_gs_des1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/under_relax.o model/under_relax.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/boundfunijk_mod.o model/boundfunijk_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_d_e.o model/calc_d_e.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_d_n.o model/calc_d_n.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_d_t.o model/calc_d_t.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_dif_g.o model/calc_dif_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/thermochemical/read_thermochemical_mod.o model/thermochemical/read_thermochemical_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_k_g.o model/calc_k_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_mu_g.o model/calc_mu_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_outflow.o model/calc_outflow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/eos_mod.o model/eos_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/coeff_mod.o model/coeff_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_pp_g.o model/conv_pp_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/corner.o model/corner.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/correct_0.o model/correct_0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfwallposvel.o model/des/cfwallposvel.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_thermo_rad.o model/des/des_thermo_rad.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/drag_gp_des.o model/des/drag_gp_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/solid_drag.o model/des/solid_drag.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/equal.o model/equal.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/init_resid.o model/init_resid.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/k_epsilon_prop.o model/k_epsilon_prop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_array.o model/io/out_array.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_array_c.o model/io/out_array_c.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_array_k.o model/io/out_array_k.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/parse_resid_string.o model/parse_resid_string.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/reset_new.o model/reset_new.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_constprop.o model/set_constprop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_ic.o model/set_ic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_index1.o model/set_index1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_mw_mix_g.o model/set_mw_mix_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_param.o model/set_param.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_wall_bc.o model/set_wall_bc.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tau_v_g.o model/tau_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tau_w_g.o model/tau_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/update_old.o model/update_old.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/zero_norm_vel.o model/zero_norm_vel.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/error_manager_mod.o model/error_manager_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/accum_resid.o model/accum_resid.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/utilities_mod.o model/utilities_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_resid.o model/calc_resid.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/cut_cell_preprocessing.o model/cartesian_grid/cut_cell_preprocessing.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/dmp_cartesian.o model/cartesian_grid/dmp_cartesian.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_delh.o model/cartesian_grid/get_delh.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/set_Odxyz.o model/cartesian_grid/set_Odxyz.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/desmpi_wrapper_mod.o model/des/desmpi_wrapper_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chem/stiff_chem_stats_mod.o model/chem/stiff_chem_stats_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dbg_mod.o model/dbg_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfnewvalues.o model/des/cfnewvalues.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_granular_temperature.o model/des/des_granular_temperature.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mass_outflow_dem.o model/des/mass_outflow_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/exit.o model/exit.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_bc_area.o model/get_bc_area.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/out_array_kc.o model/io/out_array_kc.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_ab_m.o model/io/write_ab_m.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_ab_m_var.o model/io/write_ab_m_var.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/CG_set_outflow.o model/cartesian_grid/CG_set_outflow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chem/stiff_chem_maps_mod.o model/chem/stiff_chem_maps_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_fluidbed_p.o model/set_fluidbed_p.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_outflow.o model/set_outflow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_ro_g.o model/set_ro_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_h.o model/calc_h.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/physical_prop.o model/physical_prop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/transport_prop.o model/transport_prop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/CG_set_bc0.o model/cartesian_grid/CG_set_bc0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_bc0.o model/set_bc0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_flags.o model/set_flags.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_index1a.o model/set_index1a.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_thermo_conv.o model/des/des_thermo_conv.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/mfix.o model/mfix.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leqsol_mod.o model/solvers/leqsol_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/dmp_modules/gridmap_mod.o model/dmp_modules/gridmap_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_bqend.o model/check_bqend.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_axis.o model/check_data/check_axis.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_dem.o model/check_data/check_bc_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_geometry.o model/check_data/check_bc_geometry.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_inflow.o model/check_data/check_bc_inflow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_outflow.o model/check_data/check_bc_outflow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_pic.o model/check_data/check_bc_pic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_bc_walls.o model/check_data/check_bc_walls.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_boundary_conditions.o model/check_data/check_boundary_conditions.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_dmp_prereqs.o model/check_data/check_dmp_prereqs.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_geometry.o model/check_data/check_geometry.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_geometry_prereqs.o model/check_data/check_geometry_prereqs.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_ic_common_discrete.o model/check_data/check_ic_common_discrete.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_ic_dem.o model/check_data/check_ic_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_ic_mppic.o model/check_data/check_ic_mppic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_initial_conditions.o model/check_data/check_initial_conditions.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_internal_surfaces.o model/check_data/check_internal_surfaces.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_point_sources.o model/check_data/check_point_sources.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_run_control.o model/check_data/check_run_control.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_dem.o model/check_data/check_solids_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_model_prereqs.o model/check_data/check_solids_model_prereqs.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_mppic.o model/check_data/check_solids_mppic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_phases.o model/check_data/check_solids_phases.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chischeme_mod.o model/chischeme_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/deprecated.o model/deprecated.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_epg_des.o model/des/calc_epg_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/cfassign.o model/des/cfassign.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/check_cell_movement.o model/des/check_cell_movement.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/layout_mi_dem.o model/des/layout_mi_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_dem.o model/des/set_bc_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_pic.o model/des/set_bc_pic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_pic_mi.o model/des/set_bc_pic_mi.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_pic_mo.o model/des/set_bc_pic_mo.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_geometry_des.o model/des/set_geometry_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/display_resid.o model/display_resid.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/flow_to_vel.o model/flow_to_vel.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_is.o model/get_is.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_ps.o model/get_ps.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/location_check.o model/location_check.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/mod_bc_i.o model/mod_bc_i.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/mod_bc_j.o model/mod_bc_j.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/mod_bc_k.o model/mod_bc_k.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/open_files.o model/io/open_files.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_bc_flow.o model/set_bc_flow.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_constants.o model/set_constants.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_geometry.o model/set_geometry.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_icbc_flags.o model/set_icbc_flags.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_increments.o model/set_increments.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_drag.o model/usr/usr_drag.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_physical_prop.o model/usr/usr_physical_prop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_out3.o model/io/write_out3.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chem/stiff_chem_dbg_mod.o model/chem/stiff_chem_dbg_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/rxn_com_mod.o model/rxn_com_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_convergence.o model/check_convergence.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_thermo_cond_mod.o model/des/des_thermo_cond_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/vavg_u_g.o model/vavg_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/vavg_v_g.o model/vavg_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/vavg_w_g.o model/vavg_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/adjust_dt_mod.o model/adjust_dt_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/adjust_leq.o model/adjust_leq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/update_dashboard.o model/cartesian_grid/update_dashboard.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_numerics.o model/check_data/check_numerics.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/diffuse_mean_fields.o model/des/diffuse_mean_fields.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/iterate.o model/iterate.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leq_bicgs.o model/solvers/leq_bicgs.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leq_bicgst.o model/solvers/leq_bicgst.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leq_cg.o model/solvers/leq_cg.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leq_sor.o model/solvers/leq_sor.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_lin_eq.o model/solve_lin_eq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_pp_g.o model/solve_pp_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_vel_star.o model/solve_vel_star.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/xsi_mod.o model/xsi_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/rxns_mod.o model/rxns_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_rxns_mod.o model/des/des_rxns_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/parse_mod.o model/parse_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_dif_phi.o model/conv_dif_phi.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_dif_u_g.o model/conv_dif_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_dif_v_g.o model/conv_dif_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_dif_w_g.o model/conv_dif_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/conv_rop.o model/conv_rop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/check_data_cartesian.o model/cartesian_grid/check_data_cartesian.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solvers/leq_gmres.o model/solvers/leq_gmres.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/calc_coeff.o model/calc_coeff.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/CG_source_u_g.o model/cartesian_grid/CG_source_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/CG_source_v_g.o model/cartesian_grid/CG_source_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/CG_source_w_g.o model/cartesian_grid/CG_source_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_poly_data.o model/cartesian_grid/get_poly_data.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/get_stl_data.o model/cartesian_grid/get_stl_data.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/write_progress_bar.o model/cartesian_grid/write_progress_bar.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_gas_phase.o model/check_data/check_gas_phase.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chem/stiff_chem_mod.o model/chem/stiff_chem_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_output_control.o model/check_data/check_output_control.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_common_all.o model/check_data/check_solids_common_all.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data_20.o model/check_data_20.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data_30.o model/check_data_30.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_drag_des.o model/des/calc_drag_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/dif_phi_source_des.o model/des/dif_phi_source_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/init_fvars.o model/init_fvars.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/read_res1.o model/io/read_res1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/rrates.o model/rrates.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/rrates0.o model/rrates0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/set_ps.o model/set_ps.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_energy_eq.o model/solve_energy_eq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_k_epsilon_eq.o model/solve_k_epsilon_eq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/solve_species_eq.o model/solve_species_eq.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/source_phi.o model/source_phi.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/source_pp_g.o model/source_pp_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/source_u_g.o model/source_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/source_v_g.o model/source_v_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/source_w_g.o model/source_w_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/tau_u_g.o model/tau_u_g.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/usr/usr_rates.o model/usr/usr_rates.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_out0.o model/io/write_out0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_out1.o model/io/write_out1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_res1.o model/io/write_res1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_spx1.o model/io/write_spx1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/allocate_arrays.o model/allocate_arrays.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_allocate_mod.o model/des/des_allocate_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_rrate_des.o model/des/calc_rrate_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_thermo_des.o model/des/calc_thermo_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_init_namelist.o model/des/des_init_namelist.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_physical_prop.o model/des/des_physical_prop.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_reaction_model.o model/des/des_reaction_model.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_thermo_newvalues.o model/des/des_thermo_newvalues.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_ic_dem.o model/des/set_ic_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr0_des.o model/des/usr0_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr1_des.o model/des/usr1_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr2_des.o model/des/usr2_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr3_des.o model/des/usr3_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr4_des.o model/des/usr4_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/usr_rates_des.o model/des/usr_rates_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/read_database.o model/read_database.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_chemical_rxns.o model/check_data/check_chemical_rxns.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_rrates0.o model/des/des_rrates0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/parse_line.o model/parse_line.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/parse_rxn.o model/parse_rxn.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_odepack_stiff_chem.o model/check_data/check_odepack_stiff_chem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/check_data/check_solids_common_discrete.o model/check_data/check_solids_common_discrete.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/chem/stiff_chem_rrates.o model/chem/stiff_chem_rrates.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/init_namelist.o model/init_namelist.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/read_namelist.o model/read_namelist.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/rrates_init.o model/rrates_init.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/write_res0.o model/io/write_res0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/desgrid_mod.o model/des/desgrid_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/nsquare.o model/des/nsquare.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/desmpi_mod.o model/des/desmpi_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/sendrecvnode_mod.o model/des/sendrecvnode_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/stl_preproc_des_mod.o model/des/stl_preproc_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mass_inflow_dem.o model/des/mass_inflow_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/neighbour.o model/des/neighbour.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/pic_bc_routines.o model/des/pic_bc_routines.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_dem_mi.o model/des/set_bc_dem_mi.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_bc_dem_mo.o model/des/set_bc_dem_mo.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_dtpic.o model/des/calc_dtpic.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/comp_mean_fields.o model/des/comp_mean_fields.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/comp_mean_fields1.o model/des/comp_mean_fields1.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_cluster_mod.o model/des/des_cluster_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_init_arrays.o model/des/des_init_arrays.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_pack_des_mod.o model/des/mpi_pack_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_unpack_des_mod.o model/des/mpi_unpack_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_comm_des_mod.o model/des/mpi_comm_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_filter_des.o model/des/set_filter_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/vtp_mod.o model/des/vtp_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_node_des_mod.o model/des/mpi_node_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/write_res1_des_mod.o model/des/write_res1_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_collision_wall_mod.o model/des/calc_collision_wall_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/generate_particles_mod.o model/des/generate_particles_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_funs_des_mod.o model/des/mpi_funs_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/comp_mean_fields0.o model/des/comp_mean_fields0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/drag_gs_des0.o model/des/drag_gs_des0.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/calc_force_dem.o model/des/calc_force_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/write_res0_des.o model/des/write_res0_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/des_time_march.o model/des/des_time_march.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/init_settling_dem.o model/des/init_settling_dem.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/mpi_init_des_mod.o model/des/mpi_init_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/particles_in_cell.o model/des/particles_in_cell.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/set_phase_index.o model/des/set_phase_index.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/make_arrays_des.o model/des/make_arrays_des.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/read_particle_input.o model/des/read_particle_input.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/read_res1_des_mod.o model/des/read_res1_des_mod.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/get_data.o model/get_data.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/cartesian_grid/vtk_out.o model/cartesian_grid/vtk_out.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/write_des_data.o model/des/write_des_data.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/io/output_manager.o model/io/output_manager.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/time_march.o model/time_march.f
+ifort -I.    -I./model/include -I./model -mod ./model    -warn uncalled -assume byterecl -FR -u -warn errors -fpp -c -o model/des/read_res0_des.o model/des/read_res0_des.f
+rm -f libmfix.a
+ar cru libmfix.a model/chem/ODEPACK.o model/solvers/BLAS.o model/solvers/DGTSV.o model/accum_resid.o model/adjust_a_u_g.o model/adjust_a_v_g.o model/adjust_a_w_g.o model/adjust_dt_mod.o model/adjust_leq.o model/allocate_arrays.o model/ambm_mod.o model/bc_mod.o model/bc_phi.o model/bodyforce_mod.o model/bound_x.o model/boundfunijk_mod.o model/calc_cell.o model/calc_coeff.o model/calc_d_e.o model/calc_d_n.o model/calc_d_t.o model/calc_dif_g.o model/calc_h.o model/calc_k_g.o model/calc_mflux.o model/calc_mu_g.o model/calc_outflow.o model/calc_resid.o model/calc_trd_g.o model/cartesian_grid/CG_set_bc0.o model/cartesian_grid/CG_set_outflow.o model/cartesian_grid/CG_source_u_g.o model/cartesian_grid/CG_source_v_g.o model/cartesian_grid/CG_source_w_g.o model/cartesian_grid/allocate_cut_cell_arrays.o model/cartesian_grid/allocate_dummy_cut_cell_arrays.o model/cartesian_grid/calc_vort_out.o model/cartesian_grid/cartesian_grid_init_namelist.o model/cartesian_grid/check_data_cartesian.o model/cartesian_grid/cut_cell_preprocessing.o model/cartesian_grid/cutcell_mod.o model/cartesian_grid/dashboard_mod.o model/cartesian_grid/deallocate_cut_cell_arrays.o model/cartesian_grid/define_quadrics.o model/cartesian_grid/dmp_cartesian.o model/cartesian_grid/eval_usr_fct.o model/cartesian_grid/get_alpha.o model/cartesian_grid/get_connectivity.o model/cartesian_grid/get_cut_cell_flags.o model/cartesian_grid/get_cut_cell_volume_area.o model/cartesian_grid/get_delh.o model/cartesian_grid/get_master.o model/cartesian_grid/get_poly_data.o model/cartesian_grid/get_stl_data.o model/cartesian_grid/polygon_mod.o model/cartesian_grid/progress_bar_mod.o model/cartesian_grid/quadric_mod.o model/cartesian_grid/set_Odxyz.o model/cartesian_grid/stl_mod.o model/cartesian_grid/update_dashboard.o model/cartesian_grid/vtk_mod.o model/cartesian_grid/vtk_out.o model/cartesian_grid/write_progress_bar.o model/cdist_mod.o model/check_ab_m.o model/check_bqend.o model/check_convergence.o model/check_data/check_axis.o model/check_data/check_bc_dem.o model/check_data/check_bc_geometry.o model/check_data/check_bc_inflow.o model/check_data/check_bc_outflow.o model/check_data/check_bc_pic.o model/check_data/check_bc_walls.o model/check_data/check_boundary_conditions.o model/check_data/check_chemical_rxns.o model/check_data/check_dmp_prereqs.o model/check_data/check_gas_phase.o model/check_data/check_geometry.o model/check_data/check_geometry_prereqs.o model/check_data/check_ic_common_discrete.o model/check_data/check_ic_dem.o model/check_data/check_ic_mppic.o model/check_data/check_initial_conditions.o model/check_data/check_internal_surfaces.o model/check_data/check_numerics.o model/check_data/check_odepack_stiff_chem.o model/check_data/check_output_control.o model/check_data/check_point_sources.o model/check_data/check_run_control.o model/check_data/check_solids_common_all.o model/check_data/check_solids_common_discrete.o model/check_data/check_solids_dem.o model/check_data/check_solids_model_prereqs.o model/check_data/check_solids_mppic.o model/check_data/check_solids_phases.o model/check_data_20.o model/check_data_30.o model/check_plane.o model/chem/stiff_chem_dbg_mod.o model/chem/stiff_chem_maps_mod.o model/chem/stiff_chem_mod.o model/chem/stiff_chem_rrates.o model/chem/stiff_chem_stats_mod.o model/chischeme_mod.o model/coeff_mod.o model/constant_mod.o model/cont_mod.o model/conv_dif_phi.o model/conv_dif_u_g.o model/conv_dif_v_g.o model/conv_dif_w_g.o model/conv_pp_g.o model/conv_rop.o model/corner.o model/corner_mod.o model/correct_0.o model/dbg_mod.o model/deprecated.o model/des/calc_collision_wall_mod.o model/des/calc_drag_des.o model/des/calc_dtpic.o model/des/calc_epg_des.o model/des/calc_force_dem.o model/des/calc_grad_des.o model/des/calc_interp_weights.o model/des/calc_pg_grad.o model/des/calc_rrate_des.o model/des/calc_thermo_des.o model/des/cfassign.o model/des/cffctowall.o model/des/cfnewvalues.o model/des/cfrelvel.o model/des/cfslide.o model/des/cfupdateold.o model/des/cfwallcontact.o model/des/cfwallposvel.o model/des/check_cell_movement.o model/des/comp_mean_fields.o model/des/comp_mean_fields0.o model/des/comp_mean_fields1.o model/des/des_allocate_mod.o model/des/des_bc_mod.o model/des/des_cluster_mod.o model/des/des_functions.o model/des/des_granular_temperature.o model/des/des_init_arrays.o model/des/des_init_namelist.o model/des/des_physical_prop.o model/des/des_reaction_model.o model/des/des_rrates0.o model/des/des_rxns_mod.o model/des/des_stl_functions_mod.o model/des/des_thermo_cond_mod.o model/des/des_thermo_conv.o model/des/des_thermo_mod.o model/des/des_thermo_newvalues.o model/des/des_thermo_rad.o model/des/des_time_march.o model/des/desgrid_mod.o model/des/desmpi_mod.o model/des/desmpi_wrapper_mod.o model/des/dif_phi_bc_des.o model/des/dif_phi_des.o model/des/dif_phi_source_des.o model/des/diffuse_mean_fields.o model/des/discretelement_mod.o model/des/drag_gp_des.o model/des/drag_gs_des0.o model/des/drag_gs_des1.o model/des/gas_drag.o model/des/generate_particles_mod.o model/des/init_settling_dem.o model/des/interpolation_mod.o model/des/layout_mi_dem.o model/des/make_arrays_des.o model/des/mass_inflow_dem.o model/des/mass_outflow_dem.o model/des/mfix_pic_mod.o model/des/mpi_comm_des_mod.o model/des/mpi_funs_des_mod.o model/des/mpi_init_des_mod.o model/des/mpi_node_des_mod.o model/des/mpi_pack_des_mod.o model/des/mpi_unpack_des_mod.o model/des/neighbour.o model/des/nsquare.o model/des/particle_filter_mod.o model/des/particles_in_cell.o model/des/pic_bc_mod.o model/des/pic_bc_routines.o model/des/pic_routines.o model/des/randomno_mod.o model/des/read_particle_input.o model/des/read_res0_des.o model/des/read_res1_des_mod.o model/des/sendrecvnode_mod.o model/des/set_bc_dem.o model/des/set_bc_dem_mi.o model/des/set_bc_dem_mo.o model/des/set_bc_pic.o model/des/set_bc_pic_mi.o model/des/set_bc_pic_mo.o model/des/set_filter_des.o model/des/set_geometry_des.o model/des/set_ic_dem.o model/des/set_phase_index.o model/des/solid_drag.o model/des/stl_preproc_des_mod.o model/des/usr0_des.o model/des/usr1_des.o model/des/usr2_des.o model/des/usr3_des.o model/des/usr4_des.o model/des/usr_rates_des.o model/des/vtp_mod.o model/des/write_des_data.o model/des/write_res0_des.o model/des/write_res1_des_mod.o model/solvers/dgtsl.o model/dif_u_is.o model/dif_v_is.o model/dif_w_is.o model/discretization_mod.o model/display_resid.o model/dmp_modules/compar_mod.o model/dmp_modules/dbg_util_mod.o model/dmp_modules/debug_mod.o model/dmp_modules/gridmap_mod.o model/dmp_modules/mpi_mod.o model/dmp_modules/mpi_utility_mod.o model/dmp_modules/parallel_mpi_mod.o model/dmp_modules/sendrecv3_mod.o model/dmp_modules/sendrecv_mod.o model/drag_mod.o model/energy_mod.o model/eos_mod.o model/equal.o model/error_manager_mod.o model/exit.o model/fldvar_mod.o model/flow_to_vel.o model/fun_avg_mod.o model/functions_mod.o model/io/funits_mod.o model/geometry_mod.o model/get_bc_area.o model/get_data.o model/get_flow_bc.o model/get_is.o model/get_ps.o model/get_walls_bc.o model/ic_mod.o model/io/in_binary_512_mod.o model/io/in_binary_512i_mod.o model/indices_mod.o model/init_ab_m.o model/init_fvars.o model/init_namelist.o model/init_resid.o model/is_mod.o model/iterate.o model/k_epsilon_prop.o model/solvers/leq_bicgs.o model/solvers/leq_bicgst.o model/solvers/leq_cg.o model/solvers/leq_gmres.o model/solvers/leq_sor.o model/solvers/leqsol_mod.o model/line_too_big.o model/location_check.o model/machine_mod.o model/make_upper_case.o model/matrix_mod.o model/mfix.o model/mflux_mod.o model/mod_bc_i.o model/mod_bc_j.o model/mod_bc_k.o model/io/open_file.o model/io/open_files.o model/io/out_array.o model/io/out_array_c.o model/io/out_array_k.o model/io/out_array_kc.o model/io/out_bin_512.o model/io/out_bin_512i.o model/io/out_bin_512r.o model/io/out_bin_r.o model/io/output_manager.o model/output_mod.o model/parallel_mod.o model/param1_mod.o model/param_mod.o model/parse_line.o model/parse_mod.o model/parse_resid_string.o model/parse_rxn.o model/pgcor_mod.o model/physical_prop.o model/physprop_mod.o model/ps_mod.o model/pscor_mod.o model/read_database.o model/read_namelist.o model/io/read_res1.o model/remove_comment.o model/reset_new.o model/residual_mod.o model/rrates.o model/rrates0.o model/rrates_init.o model/run_mod.o model/rxn_com_mod.o model/rxns_mod.o model/scales_mod.o model/set_bc0.o model/set_bc1.o model/set_bc_flow.o model/set_constants.o model/set_constprop.o model/set_flags.o model/set_fluidbed_p.o model/set_geometry.o model/set_geometry1.o model/set_ic.o model/set_icbc_flags.o model/set_increments.o model/set_index1.o model/set_index1a.o model/set_l_scale.o model/set_max2.o model/set_mw_mix_g.o model/set_outflow.o model/set_param.o model/set_ps.o model/set_ro_g.o model/set_wall_bc.o model/shift_dxyz.o model/solids_pressure_mod.o model/solve_energy_eq.o model/solve_k_epsilon_eq.o model/solve_lin_eq.o model/solve_pp_g.o model/solve_species_eq.o model/solve_vel_star.o model/source_phi.o model/source_pp_g.o model/source_u_g.o model/source_v_g.o model/source_w_g.o model/tau_g_mod.o model/tau_u_g.o model/tau_v_g.o model/tau_w_g.o model/test_lin_eq.o model/thermochemical/get_values.o model/thermochemical/read_thermochemical_mod.o model/time_cpu_mod.o model/time_march.o model/tmp_array1_mod.o model/tmp_array_mod.o model/toleranc_mod.o model/transport_prop.o model/turb_mod.o model/under_relax.o model/update_old.o model/ur_facs_mod.o model/usr/usr0.o model/usr/usr1.o model/usr/usr2.o model/usr/usr3.o model/usr/usr_drag.o model/usr/usr_init_namelist.o model/usr/usr_mod.o model/usr/usr_physical_prop.o model/usr/usr_rates.o model/usr/usr_write_out0.o model/usr/usr_write_out1.o model/utilities_mod.o model/vavg_u_g.o model/vavg_v_g.o model/vavg_w_g.o model/vf_gs.o model/visc_g_mod.o model/io/write_ab_m.o model/io/write_ab_m_var.o model/io/write_error.o model/io/write_header.o model/io/write_out0.o model/io/write_out1.o model/io/write_out3.o model/io/write_res0.o model/io/write_res1.o model/io/write_spx0.o model/io/write_spx1.o model/io/write_table.o model/usr/write_usr0.o model/usr/write_usr1.o model/solvers/xerbla.o model/xsi_array_mod.o model/xsi_mod.o model/zero_norm_vel.o 
+ranlib libmfix.a
+ifort  -g     -o mfix model/mfix.o libmfix.a 
