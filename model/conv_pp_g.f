@@ -39,7 +39,7 @@
       USE param1
       USE fldvar
       USE run
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE physprop
       USE geometry
       USE indices

@@ -11,8 +11,7 @@
 !      lock_ambm, unlock_ambm                                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-
-      MODULE ambm
+      MODULE matrix
 
 !-----------------------------------------------
 ! Modules
@@ -60,6 +59,52 @@
       ambm_locked = .false.
       END SUBROUTINE unlock_ambm
 
-      END MODULE ambm
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Module name: Init_Ab_m(A_m, b_m, IJKMAX2, M, IER)                   C                     C
+!  Author: M. Syamlal                                 Date: 16-MAY-96  C
+!                                                                      C
+!  Purpose:Initialiize the sparse matrix coefficients and the          C
+!           source vector.                                             C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+      SUBROUTINE INIT_AB_M(A_M, B_M, IJKMAX2A, M)
+
+      USE param
+      USE param1
+      USE compar
+
+      IMPLICIT NONE
+!
+!                      Phase index
+      INTEGER          M
+!
+!                      cell index
+      INTEGER          IJK
+!
+!                      Maximum dimension
+      INTEGER          IJKMAX2A
+!
+!                      Septadiagonal matrix A_m
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+!
+!                      Source vector
+      DOUBLE PRECISION b_m(DIMENSION_3, 0:DIMENSION_M)
+!
+!-----------------------------------------------
+!
+      A_M(:,B,M) = ZERO
+      A_M(:,S,M) = ZERO
+      A_M(:,W,M) = ZERO
+      A_M(:,0,M) = -ONE
+      A_M(:,E,M) = ZERO
+      A_M(:,N,M) = ZERO
+      A_M(:,T,M) = ZERO
+      B_M(:,M) = ZERO
+
+      RETURN
+      END SUBROUTINE INIT_AB_M
 
 
+      END MODULE matrix

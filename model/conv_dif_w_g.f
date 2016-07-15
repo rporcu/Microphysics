@@ -255,7 +255,7 @@
       USE indices, only: i_of, j_of, k_of
       USE indices, only: kp1, im1, jm1
 
-      use ambm, only: e, w, n, s, t, b
+      use matrix, only: e, w, n, s, t, b
       use fldvar
       IMPLICIT NONE
 
@@ -390,7 +390,7 @@
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero
-      use ambm, only: e, w, n, s, t, b
+      use matrix, only: e, w, n, s, t, b
 
       IMPLICIT NONE
 
@@ -526,7 +526,7 @@
       USE param, only: dimension_3, dimension_m
       USE param1, only: one
 
-      use ambm, only: e, w, n, s, t, b
+      use matrix, only: e, w, n, s, t, b
 
       USE run, only: discretize
 

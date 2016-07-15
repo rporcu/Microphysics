@@ -162,7 +162,6 @@ libmfix_src = \
 	model/adjust_dt_mod.f \
 	model/adjust_leq.f \
 	model/allocate_arrays.f \
-	model/ambm_mod.f \
 	model/bc_mod.f \
 	model/bodyforce_mod.f \
 	model/boundfunijk_mod.f \
@@ -359,13 +358,11 @@ libmfix_src = \
 	model/geometry_mod.f \
 	model/get_bc_area.f \
 	model/get_data.f \
-	model/get_flow_bc.f \
 	model/get_ps.f \
 	model/ic_mod.f \
 	model/io/in_binary_512_mod.f \
 	model/io/in_binary_512i_mod.f \
 	model/indices_mod.f \
-	model/init_ab_m.f \
 	model/init_fvars.f \
 	model/init_namelist.f \
 	model/iterate.f \
@@ -375,9 +372,9 @@ libmfix_src = \
 	model/solvers/leq_gmres.f \
 	model/solvers/leq_sor.f \
 	model/solvers/leqsol_mod.f \
-	model/line_too_big.f \
 	model/location_check.f \
 	model/machine_mod.f \
+	model/matrix_mod.f \
 	model/mfix.f \
 	model/mflux_mod.f \
 	model/mod_bc_i.f \

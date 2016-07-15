@@ -28,7 +28,7 @@
       USE residual
       USE leqsol
       USE run
-      Use ambm
+      use matrix
       Use tmp_array1, B_mMAX => ARRAYm1
       use ps
 

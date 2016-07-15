@@ -45,7 +45,7 @@
 
       USE indices, only: i_of, j_of, k_of
       USE indices, only: ip1, im1, kp1
-      USE ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero, one, half
@@ -254,7 +254,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE scales
       USE constant
       USE fldvar

@@ -29,7 +29,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE scales
       USE constant
       USE physprop
@@ -280,7 +280,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE scales
       USE constant
       USE physprop

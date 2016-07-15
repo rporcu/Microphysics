@@ -15,7 +15,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      Use ambm
+      use matrix
       Use drag
       Use fldvar
       Use geometry

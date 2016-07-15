@@ -21,7 +21,7 @@
 !-----------------------------------------------
       USE param, ONLY: DIMENSION_3, DIMENSION_M
       USE param1, ONLY: ZERO, ONE, UNDEFINED
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar
@@ -200,7 +200,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar
@@ -391,7 +391,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar
@@ -548,7 +548,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar
@@ -746,7 +746,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar
@@ -947,7 +947,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
       USE geometry
       USE indices
       USE compar

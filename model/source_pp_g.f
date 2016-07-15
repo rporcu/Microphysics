@@ -32,7 +32,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
       USE eos, ONLY: DROODP_G
       USE fldvar, ONLY: U_G, V_G, W_G,ROP_G, ROP_GO, RO_G, P_G, EP_G
       USE geometry, ONLY: VOL
-      use ambm, ONLY: E, W, N, S, T, B
+      use matrix, ONLY: E, W, N, S, T, B
       USE fldvar, ONLY: D_E, D_N, D_T
       USE fldvar, ONLY: RO_G0
       USE run, ONLY: ODT, UNDEFINED_I

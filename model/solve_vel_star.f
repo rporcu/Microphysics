@@ -21,7 +21,7 @@
       USE residual
       USE ur_facs
       USE leqsol
-      Use ambm
+      use matrix
       USE compar
       USE discretelement
       use ps

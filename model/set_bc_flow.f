@@ -4,7 +4,7 @@
 !  Author: P. Nicoletti                               Date: 10-DEC-91  !
 !                                                                      !
 !  Purpose: Check boundary condition specifications                    !
-!     - convert physical locations to i, j, k's (GET_FLOW_BC)          !
+!     - convert physical locations to i, j, k's                        !
 !     - compute area of boundary surfaces (GET_BC_AREA)                !
 !     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
 !     - check specification of physical quantities                     !

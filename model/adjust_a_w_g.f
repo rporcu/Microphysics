@@ -37,7 +37,7 @@
       USE sendrecv
       USE fun_avg
       USE functions
-      use ambm, only: e, w, s, n, t, b
+      use matrix, only: e, w, s, n, t, b
 
       IMPLICIT NONE
 !-----------------------------------------------

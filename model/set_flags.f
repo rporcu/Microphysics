@@ -98,8 +98,7 @@
 
 ! Define the numerical value of the variable flag for all cells based
 ! on the corresponding character value of icbc_flag.  By this point the
-! icbc_flag has been defined in all cells (see check_data_06 and
-! check_data07 -> get_flow_bc and get_wall_bc)
+! icbc_flag has been defined in all cells
 ! ---------------------------------------------------------------->>>
 !!$omp  parallel do private( IJK) &
 !!$omp&  schedule(static)

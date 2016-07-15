@@ -15,7 +15,7 @@
 ! Max bound for array sizes.
       use geometry, only: IJKMAX2
 ! Coefficient matrix and force vector.
-      use ambm, only: A_M, B_M
+      use matrix, only: A_M, B_M
 ! Method to solve linear system and max iterations
       use leqsol, only: LEQ_METHOD, LEQ_IT
 ! Preconditioner, sweep method, convergence tolerance
@@ -32,6 +32,7 @@
       use tmp_array, only: UNLOCK_TMP_ARRAY
 ! Routines to mange messages to user.
       use error_manager
+      use matrix, only: init_ab_m
       use machine, only: wall_time
 
       IMPLICIT NONE
