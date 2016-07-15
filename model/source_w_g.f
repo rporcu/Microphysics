@@ -48,7 +48,6 @@
 
       USE indices, only: i_of, j_of, k_of
       USE indices, only: ip1, im1, jm1, kp1
-      USE is, only: is_pc
       USE ambm, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
@@ -96,7 +95,7 @@
 ! Source terms (Surface)
       DOUBLE PRECISION Sdp
 ! Source terms (Volumetric)
-      DOUBLE PRECISION V0, Vpm, Vbf
+      DOUBLE PRECISION V0, Vbf
 ! Source terms (Volumetric) for GHD theory
       DOUBLE PRECISION Ghd_drag, avgRop
 ! Source terms for HYS drag relation
@@ -117,7 +116,7 @@
 !$omp  private(I, J, K, IJK, IJKT, IJKM, IJKP, IMJK, IPJK, IJMK,     &
 !$omp          IMJKP, IJPK, IJMKP, IJKTE, IJKTW, IM, IJKW, IJKE,     &
 !$omp          EPGA, PGT, SDP, ROPGA, ROGA, V0, ISV, MUGA,           &
-!$omp          vpm, Vbf, Ghd_drag, avgRop, HYS_drag,     &
+!$omp          Vbf, Ghd_drag, avgRop, HYS_drag,     &
 !$omp          avgdrag, MM, L,  UGT,      &
 !$omp          MUOX, ltau_w_g)
       DO IJK = ijkstart3, ijkend3
@@ -213,16 +212,6 @@
                   ODT/(VOL(IJK) + VOL(IJKT))
             ENDIF
 
-! pressure drop through porous media
-            IF (SIP_AT_T(IJK)) THEN
-               ISV = IS_ID_AT_T(IJK)
-               MUGA = AVG_Z(MU_G(IJK),MU_G(IJKT),K)
-               VPM = MUGA/IS_PC(ISV,1)
-               IF (IS_PC(ISV,2) /= ZERO) VPM = VPM + &
-                  HALF*IS_PC(ISV,2)*ROPGA*ABS(W_G(IJK))
-            ELSE
-               VPM = ZERO
-            ENDIF
 
 ! Body force
             VBF = ROPGA*BFZ_G(IJK)
@@ -234,11 +223,10 @@
 
             A_M(IJK,0,M) = -(A_M(IJK,E,M)+A_M(IJK,W,M)+&
                A_M(IJK,N,M)+A_M(IJK,S,M)+A_M(IJK,T,M)+A_M(IJK,B,M)+&
-               (V0+VPM)*VOL_W(IJK))
+               V0*VOL_W(IJK))
 
             B_M(IJK,M) = B_M(IJK,M) - ( SDP + lTAU_W_G  + &
-               ( (V0)*W_GO(IJK) + VBF  &
-               )*VOL_W(IJK) )
+               ( (V0)*W_GO(IJK) + VBF)*VOL_W(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
       ENDDO   ! end do loop over ijk
@@ -286,7 +274,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE bc
       USE output
       USE compar

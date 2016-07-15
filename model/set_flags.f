@@ -17,7 +17,6 @@
       USE fldvar
       USE geometry
       USE bc
-      USE is
       USE indices
       USE physprop
       USE funits
@@ -146,110 +145,6 @@
 
 
 
-
-
-! Set flag_e, flag_n and flag_b to indicate any internal surfaces. If
-! the flag is greater than or equal to 2000, then there is no internal
-! surface.
-! ---------------------------------------------------------------->>>
-
-      DO L = 1, DIMENSION_IS
-! Make sure an IS has been specified
-         IF (IS_DEFINED(L)) THEN
-            IF (IS_TYPE(L)=='IMPERMEABLE' .OR. &
-                IS_TYPE(L)(3:13)=='IMPERMEABLE') THEN
-               FLAGX = 0
-            ELSEIF (IS_TYPE(L)=='SEMIPERMEABLE' .OR. &
-                    IS_TYPE(L)(3:15)=='SEMIPERMEABLE') THEN
-               FLAGX = 1000 + L
-            ELSE
-               IF(DMP_LOG)WRITE (UNIT_LOG, 1100) L
-               call mfix_exit(myPE)
-            ENDIF
-
-            IF (IS_X_W(L)==IS_X_E(L) .AND. DO_I) THEN
-               IS_PLANE(L) = 'E'
-               I = IS_I_W(L)
-               DO K = IS_K_B(L), IS_K_T(L)
-                  DO J = IS_J_S(L), IS_J_N(L)
-                     IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                     IJK = FUNIJK(I,J,K)
-                     FLAG_E(IJK) = FLAGX
-                  ENDDO
-               ENDDO
-            ELSEIF (IS_TYPE(L)(1:1) == 'X') THEN
-               IS_PLANE(L) = 'E'
-               DO I = IS_I_W(L), IS_I_E(L)
-                  DO K = IS_K_B(L), IS_K_T(L)
-                     DO J = IS_J_S(L), IS_J_N(L)
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
-                        FLAG_E(IJK) = FLAGX
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF
-
-            IF (IS_Y_S(L)==IS_Y_N(L) .AND. DO_J) THEN
-               IS_PLANE(L) = 'N'
-               J = IS_J_S(L)
-               DO K = IS_K_B(L), IS_K_T(L)
-                  DO I = IS_I_W(L), IS_I_E(L)
-                     IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                     IJK = FUNIJK(I,J,K)
-                     FLAG_N(IJK) = FLAGX
-                  ENDDO
-               ENDDO
-            ELSEIF (IS_TYPE(L)(1:1) == 'Y') THEN
-               IS_PLANE(L) = 'N'
-               DO J = IS_J_S(L), IS_J_N(L)
-                  DO K = IS_K_B(L), IS_K_T(L)
-                     DO I = IS_I_W(L), IS_I_E(L)
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
-                        FLAG_N(IJK) = FLAGX
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF
-
-            IF (IS_Z_B(L)==IS_Z_T(L) .AND. DO_K) THEN
-               IS_PLANE(L) = 'T'
-               K = IS_K_B(L)
-               DO J = IS_J_S(L), IS_J_N(L)
-                  DO I = IS_I_W(L), IS_I_E(L)
-                     IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                     IJK = FUNIJK(I,J,K)
-                     FLAG_T(IJK) = FLAGX
-                  ENDDO
-               ENDDO
-            ELSEIF (IS_TYPE(L)(1:1) == 'Z') THEN
-               IS_PLANE(L) = 'T'
-               DO K = IS_K_B(L), IS_K_T(L)
-                  DO J = IS_J_S(L), IS_J_N(L)
-                     DO I = IS_I_W(L), IS_I_E(L)
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
-                        FLAG_T(IJK) = FLAGX
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF
-
-         ENDIF
-      call send_recv(flag,2)
-      call send_recv(flag_t,2)
-      call send_recv(flag_n,2)
-      call send_recv(flag_e,2)
-      ENDDO    ! end do loop (l = 1, dimension_is)
-! ----------------------------------------------------------------<<<
-
       IF (MYPE.EQ.PE_IO) THEN
          ALLOCATE (ARR1(IJKMAX3))
       ELSE
@@ -266,9 +161,6 @@
  1000 FORMAT(/1X,70('*')//' From: SET_FLAGS',/&
          ' Message: ICBC_FLAG(',I3,') = ',&
          A3,' is illegal',/1X,70('*')/)
- 1100 FORMAT(/1X,70('*')//' From: SET_FLAGS',/&
-         ' Message: Unknown IS_TYPE(',I3,&
-         ')',/1X,70('*')/)
 
       END SUBROUTINE SET_FLAGS
 
@@ -303,7 +195,6 @@
       USE fldvar
       USE geometry
       USE bc
-      USE is
       USE indices
       USE physprop
       USE funits

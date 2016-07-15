@@ -25,7 +25,6 @@
       USE physprop
       USE fldvar
       USE indices
-      USE is
       USE compar
       USE discretelement
       USE mfix_pic

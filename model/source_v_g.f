@@ -45,7 +45,6 @@
 
       USE indices, only: i_of, j_of, k_of
       USE indices, only: ip1, im1, kp1
-      USE is, only: is_pc
       USE ambm, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
@@ -88,7 +87,7 @@
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sdp
 ! Source terms (Volumetric)
-      DOUBLE PRECISION :: V0, Vpm, Vbf
+      DOUBLE PRECISION :: V0, Vbf
 ! Source terms (Volumetric) for GHD theory
       DOUBLE PRECISION :: Ghd_drag, avgRop
 ! Source terms for HYS drag relation
@@ -109,7 +108,7 @@
 !$omp  parallel do default(shared)                                   &
 !$omp  private(I, J, K, IJK, IJKN, IMJK, IPJK, IJMK, IJPK, IMJPK,    &
 !$omp          IJKM, IJPKM, IJKP, EPGA, PGN, SDP, ROPGA,             &
-!$omp          ROGA, ROP_MA, V0, ISV, MUGA, Vpm, Vbf, L, MM,    &
+!$omp          ROGA, ROP_MA, V0, ISV, MUGA, Vbf, L, MM,    &
 !$omp          Vsn, Vss, U_se, Usw, Vse, Vsw, Wst, Wsb, Vst,         &
 !$omp          Vsb,ghd_drag, avgRop, avgDrag, HYS_drag,      &
 !$omp          ltau_v_g)
@@ -202,17 +201,6 @@
                   ODT/(VOL(IJK) + VOL(IJKN))
             ENDIF
 
-! pressure drop through porous media
-            IF (SIP_AT_N(IJK)) THEN
-               ISV = IS_ID_AT_N(IJK)
-               MUGA = AVG_Y(MU_G(IJK),MU_G(IJKN),J)
-               VPM = MUGA/IS_PC(ISV,1)
-               IF (IS_PC(ISV,2) /= ZERO) VPM = VPM + HALF*IS_PC(ISV,2)*&
-                   ROPGA*ABS(V_G(IJK))
-            ELSE
-               VPM = ZERO
-            ENDIF
-
 ! Body force
             VBF = ROGA*BFY_G(IJK)
 
@@ -224,7 +212,7 @@
 ! Collect the terms
             A_M(IJK,0,M) = -(A_M(IJK,E,M)+A_M(IJK,W,M)+&
                A_M(IJK,N,M)+A_M(IJK,S,M)+A_M(IJK,T,M)+A_M(IJK,B,M)+&
-               (V0+VPM)*VOL_V(IJK))
+               V0*VOL_V(IJK))
             B_M(IJK,M) = B_M(IJK,M) - (SDP + lTAU_V_G +  &
                ((V0)*V_GO(IJK) + VBF)*VOL_V(IJK) )
 
@@ -275,7 +263,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE bc
       USE output
       USE compar

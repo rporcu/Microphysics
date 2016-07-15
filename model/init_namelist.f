@@ -36,7 +36,6 @@
       USE fldvar
       USE constant
       USE indices
-      USE is
       USE toleranc
       USE scales
       USE ur_facs
@@ -1483,122 +1482,6 @@
       ENDDO
 
 
-
-
-!#####################################################################!
-!                         Internal Surfaces                           !
-!#####################################################################!
-      DO LC = 1, DIMENSION_IS
-
-
-!<keyword category="Internal Surface" required="false">
-!  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_X_W(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_X_E(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Y coordinate of the south face or edge</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_Y_S(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Y coordinate of the north face or edge</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_Y_N(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Z coordinate of the bottom face or edge</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_Z_B(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Z coordinate of the top face or edge</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_Z_T(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>I index of the west-most cell.</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_I_W(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>I index of the east-most cell</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_I_E(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>J index of the south-most cell</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_J_S(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>J index of the north-most cell</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_J_N(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>K index of the bottom-most cell</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_K_B(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>K index of the top-most cell</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-         IS_K_T(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Type of internal surface</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-!  <valid value="IMPERMEABLE"
-!    note="No gas or solids flow through the surface." alias="IP"/>
-!  <valid value="SEMIPERMEABLE" alias='SP'
-!    note="Gas flows through the surface with an additional resistance.
-!      Solids velocity through the surface is set to zero or to a user-
-!      specified fixed value (i.e., solids momentum equation for this
-!      direction is not solved)." />
-         IS_TYPE(LC) = UNDEFINED_C
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>
-!    Parameters defining the internal surface. These values need to be
-!    specified for semipermeable surfaces only. The thickness used for
-!    pressure drop computation is that of the momentum cell (DX_e,
-!    DY_n, or DZ_t). To turn off the resistance, use a large value
-!    for permeability.
-!    o IDX=1: Permeability [1.0E32]
-!    o IDX=2: Inertial resistance coefficient [0.0]
-!  </description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-!  <arg index="2" id="IDX" min="1" max="2"/>
-         IS_PC(LC,1) = UNDEFINED
-         IS_PC(LC,2) = ZERO
-!</keyword>
-
-!<keyword category="Internal Surface" required="false">
-!  <description>Value of fixed solids velocity through semipermeable surfaces.</description>
-!  <arg index="1" id="IS" min="1" max="DIMENSION_IS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IS_VEL_S(LC,:DIM_M) = ZERO
-!</keyword>
-      ENDDO
 
 
 !#####################################################################!

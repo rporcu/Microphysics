@@ -38,7 +38,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE bc
       USE compar
       USE sendrecv
@@ -290,7 +289,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE bc
       USE output
       USE compar

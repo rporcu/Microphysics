@@ -48,7 +48,6 @@
       USE toleranc, only: dil_ep_s
       USE geometry
       USE indices
-      USE is
       USE compar
       USE sendrecv
       USE functions
@@ -217,7 +216,6 @@
       USE toleranc, only: dil_ep_s
       USE geometry
       USE indices
-      USE is
       USE compar
       USE fun_avg
       USE functions

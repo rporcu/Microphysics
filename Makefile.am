@@ -139,7 +139,6 @@ libmfix_a_SOURCES += \
 	model/include/gas_phase.inc \
 	model/include/geometry.inc \
 	model/include/initial_conditions.inc \
-	model/include/internal_surfaces.inc \
 	model/include/legacy.inc \
 	model/include/numerical_params.inc \
 	model/include/output_control.inc \
@@ -230,7 +229,6 @@ libmfix_src = \
 	model/check_data/check_ic_dem.f \
 	model/check_data/check_ic_mppic.f \
 	model/check_data/check_initial_conditions.f \
-	model/check_data/check_internal_surfaces.f \
 	model/check_data/check_numerics.f \
 	model/check_data/check_output_control.f \
 	model/check_data/check_point_sources.f \
@@ -363,7 +361,6 @@ libmfix_src = \
 	model/get_bc_area.f \
 	model/get_data.f \
 	model/get_flow_bc.f \
-	model/get_is.f \
 	model/get_ps.f \
 	model/ic_mod.f \
 	model/io/in_binary_512_mod.f \
@@ -372,7 +369,6 @@ libmfix_src = \
 	model/init_ab_m.f \
 	model/init_fvars.f \
 	model/init_namelist.f \
-	model/is_mod.f \
 	model/iterate.f \
 	model/solvers/leq_bicgs.f \
 	model/solvers/leq_bicgst.f \

@@ -45,7 +45,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE sendrecv
       USE compar
       USE functions
@@ -202,7 +201,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE sendrecv
       USE compar
       USE fun_avg

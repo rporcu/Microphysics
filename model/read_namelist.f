@@ -21,7 +21,6 @@
       USE geometry
       USE ic
       USE indices
-      USE is
       USE leqsol
       USE mfix_pic
       USE output
@@ -208,7 +207,6 @@
       INCLUDE 'solids_phase.inc'
       INCLUDE 'initial_conditions.inc'
       INCLUDE 'boundary_conditions.inc'
-      INCLUDE 'internal_surfaces.inc'
       INCLUDE 'point_sources.inc'
       INCLUDE 'output_control.inc'
       INCLUDE 'usr_hooks.inc'
@@ -326,20 +324,6 @@
       STRING=''; STRING = '&BOUNDARY_CONDITIONS_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=BOUNDARY_CONDITIONS_UNLOCKED, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
-! Internal surface keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&INTERNAL_SURFACES_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=INTERNAL_SURFACES_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&INTERNAL_SURFACES_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=INTERNAL_SURFACES_UNLOCKED, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
 

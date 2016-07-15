@@ -46,7 +46,6 @@
 
       USE indices, only: i_of, j_of, k_of
       USE indices, only: ip1, jm1, km1
-      USE is, only: is_pc
       USE ambm, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
@@ -91,7 +90,7 @@
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sdp
 ! Source terms (Volumetric)
-      DOUBLE PRECISION :: V0, Vpm, Vbf
+      DOUBLE PRECISION :: V0, Vbf
 ! Source terms (Volumetric) for GHD theory
       DOUBLE PRECISION :: Ghd_drag, avgRop
 ! Source terms for HYS drag relation
@@ -112,7 +111,7 @@
 !$omp  parallel do default(shared)                                   &
 !$omp  private(I, J, K, IJK, IJKE, IJKM, IPJK, IMJK, IPJKM,          &
 !$omp          IJMK, IPJMK, IJPK, IJKP, EPGA, PGE, SDP,              &
-!$omp           ROPGA, ROGA, ROP_MA, V0, ISV, MUGA, Vpm, Vbf,   &
+!$omp           ROPGA, ROGA, ROP_MA, V0, ISV, MUGA, Vbf,   &
 !$omp           U_se, Usw, Vsw, Vse, Usn, Uss, Wsb, Wst, Wse,        &
 !$omp           Usb, Ust, wGE, MUGTA,              &
 !$omp           Ghd_drag, L, MM, avgRop, HYS_drag, avgDrag,          &
@@ -210,17 +209,6 @@
                   ODT/(VOL(IJK) + VOL(IPJK))
             ENDIF
 
-! pressure drop through porous media
-            IF (SIP_AT_E(IJK)) THEN
-               ISV = IS_ID_AT_E(IJK)
-               MUGA = AVG_X(MU_G(IJK),MU_G(IJKE),I)
-               VPM = MUGA/IS_PC(ISV,1)
-               IF (IS_PC(ISV,2) /= ZERO) VPM = VPM + &
-                  HALF*IS_PC(ISV,2)*ROPGA*ABS(U_G(IJK))
-            ELSE
-               VPM = ZERO
-            ENDIF
-
 ! Body force
             VBF = ROGA*BFX_G(IJK)
 
@@ -229,11 +217,10 @@
 ! Collect the terms
             A_M(IJK,0,M) = -(A_M(IJK,E,M)+A_M(IJK,W,M)+&
                A_M(IJK,N,M)+A_M(IJK,S,M)+A_M(IJK,T,M)+A_M(IJK,B,M)+&
-               (V0+VPM)*VOL_U(IJK))
+               V0*VOL_U(IJK))
 
             B_M(IJK,M) = B_M(IJK,M) -(SDP + lTAU_U_G + &
-               ( (V0)*U_GO(IJK) + VBF &
-               )*VOL_U(IJK) )
+               ( (V0)*U_GO(IJK) + VBF)*VOL_U(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
       ENDDO   ! end do loop over ijk
@@ -284,7 +271,6 @@
       USE toleranc
       USE geometry
       USE indices
-      USE is
       USE bc
       USE output
       USE compar

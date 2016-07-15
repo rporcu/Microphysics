@@ -20,7 +20,6 @@
       USE geometry
       USE ic
       USE indices
-      USE is
       USE leqsol
       USE machine
       USE mfix_pic
@@ -392,36 +391,6 @@
             ENDIF
          ENDIF
       END DO
-      WRITE (UNIT_OUT, 1700)
-      DO L = 1, DIMENSION_IS
-         IF (IS_DEFINED(L)) THEN
-            WRITE (UNIT_OUT, 1710) L
-            WRITE (UNIT_OUT, 1711) IS_TYPE(L)
-            IF(IS_TYPE(L)=='IMPERMEABLE' .OR. &
-               IS_TYPE(L)(3:13)=='IMPERMEABLE') THEN
-               WRITE (UNIT_OUT, 1712)
-            ELSE IF (IS_TYPE(L)=='SEMIPERMEABLE' .OR. &
-               IS_TYPE(L)(3:15)=='SEMIPERMEABLE') THEN
-               WRITE (UNIT_OUT, 1713)
-            ENDIF
-            LOC(1) = LOCATION(IS_I_W(L),XMIN,DX) - HALF*DX(IS_I_W(L))
-            LOC(2) = LOCATION(IS_I_E(L),XMIN,DX) + HALF*DX(IS_I_E(L))
-            LOC(3) = LOCATION(IS_J_S(L),ZERO,DY) - HALF*DY(IS_J_S(L))
-            LOC(4) = LOCATION(IS_J_N(L),ZERO,DY) + HALF*DY(IS_J_N(L))
-            LOC(5) = LOCATION(IS_K_B(L),ZERO,DZ) - HALF*DZ(IS_K_B(L))
-            LOC(6) = LOCATION(IS_K_T(L),ZERO,DZ) + HALF*DZ(IS_K_T(L))
-            WRITE (UNIT_OUT, 1720) IS_X_W(L), LOC(1), IS_X_E(L), LOC(2), IS_Y_S&
-               (L), LOC(3), IS_Y_N(L), LOC(4), IS_Z_B(L), LOC(5), IS_Z_T(L), &
-               LOC(6)
-            WRITE (UNIT_OUT, 1730) IS_I_W(L), IS_I_E(L), IS_J_S(L), IS_J_N(L), &
-               IS_K_B(L), IS_K_T(L)
-            IF (IS_PC(L,1) /= UNDEFINED) WRITE (UNIT_OUT, 1740) IS_PC(L,1)
-            IF (IS_PC(L,2) /= UNDEFINED) WRITE (UNIT_OUT, 1741) IS_PC(L,2)
-            DO M = 1, MMAX_TOT
-               WRITE (UNIT_OUT, 1742) M, IS_VEL_S(L,M)
-            END DO
-         ENDIF
-      END DO
 
 !
 !  Print out file descriptions and write intervals.
@@ -628,28 +597,6 @@
          'Slip velociity U at wall   (BC_Uw_s) = ',G12.5,/,11X,&
          'Slip velociity V at wall   (BC_Vw_s) = ',G12.5,/,11X,&
          'Slip velociity W at wall   (BC_Ww_s) = ',G12.5)
-!
- 1700 FORMAT(//,3X,'8. INTERNAL SURFACES')
- 1710 FORMAT(/7X,'Internal surface no : ',I4)
- 1711 FORMAT(9X,'Type of internal surface : ',A16)
- 1712 FORMAT(11X,'(No gas or solids flow through the surface)')
- 1713 FORMAT(11X,'(Only gas flows through the surface)')
- 1720 FORMAT(9X,39X,' Specified  ',5X,' Simulated  ',/9X,&
-         'X coordinate of west face   (IS_X_w) = ',G12.5,5X,G12.5/,9X,&
-         'X coordinate of east face   (IS_X_e) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of south face  (IS_Y_s) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of north face  (IS_Y_n) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of bottom face (IS_Z_b) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of top face    (IS_Z_t) = ',G12.5,5X,G12.5)
- 1730 FORMAT(9X,'I index of cell at west   (IS_I_w) = ',I4,/,9X,&
-         'I index of cell at east   (IS_I_e) = ',I4,/,9X,&
-         'J index of cell at south  (IS_J_s) = ',I4,/,9X,&
-         'J index of cell at north  (IS_J_n) = ',I4,/,9X,&
-         'K index of cell at bottom (IS_K_b) = ',I4,/,9X,&
-         'K index of cell at top    (IS_K_t) = ',I4)
- 1740 FORMAT(9X,'Permeability (IS_PC1) = ',G12.5)
- 1741 FORMAT(9X,'Inertial resistance factor (IS_PC2) = ',G12.5)
- 1742 FORMAT(9X,'Solids phase-',I2,' Velocity (IS_VEL_s) = ',G12.5)
 !
  1800 FORMAT(//,3X,'9. OUTPUT DATA FILES:',/7X,'Extension',T18,&
          'Description',T59,'Interval for writing')
