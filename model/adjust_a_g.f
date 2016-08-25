@@ -29,25 +29,25 @@
       double precision function denom_v_neg(ijk)
          implicit none
          integer, intent(in) :: ijk
-         denom_v_neg = ROP_G(EAST_OF(IJK))*AYZ_U(IJK)
+         denom_v_neg = ROP_G(NORTH_OF(IJK))*AXZ_V(IJK)
       end function denom_v_neg
 
       double precision function denom_v_pos(ijk)
          implicit none
          integer, intent(in) :: ijk
-         denom_v_pos = ROP_G(ijk)*AYZ_U(IM_OF(IJK))
+         denom_v_pos = ROP_G(ijk)*AXZ_V(JM_OF(IJK))
       end function denom_v_pos
 
       double precision function denom_w_neg(ijk)
          implicit none
          integer, intent(in) :: ijk
-         denom_w_neg = ROP_G(EAST_OF(IJK))*AYZ_U(IJK)
+         denom_w_neg = ROP_G(TOP_OF(IJK))*AXY_W(IJK)
       end function denom_w_neg
 
       double precision function denom_w_pos(ijk)
          implicit none
          integer, intent(in) :: ijk
-         denom_w_pos = ROP_G(ijk)*AYZ_U(IM_OF(IJK))
+         denom_w_pos = ROP_G(ijk)*AXY_W(KM_OF(IJK))
       end function denom_w_pos
 
       SUBROUTINE ADJUST_A_G(axis, A_M, B_M)
