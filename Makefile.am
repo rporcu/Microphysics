@@ -46,7 +46,7 @@ noinst_LIBRARIES = libmfix.a
 
 # mfix.f needs to be in mfix_SOURCES (not just libmfix_a_SOURCES) for gfortran 4.4
 mfix_SOURCES = model/mfix.f
-libmfix_a_SOURCES = 
+libmfix_a_SOURCES =
 
 
 ################################################################
@@ -156,9 +156,7 @@ libmfix_a_SOURCES += \
 
 libmfix_src = \
 	model/accum_resid.f \
-	model/adjust_a_u_g.f \
-	model/adjust_a_v_g.f \
-	model/adjust_a_w_g.f \
+	model/adjust_a_g.f \
 	model/adjust_dt_mod.f \
 	model/adjust_leq.f \
 	model/allocate_arrays.f \
@@ -487,6 +485,6 @@ cases := $(shell find . -name mfix.dat)
 
 allcases:
 	for case in $(cases); do \
-	  cp build-aux/Makefile.usr $$(dirname $$case)/Makefile || exit; \
-	  $(MAKE) -C $$(dirname $$case) mfix$(EXEEXT) || exit; \
+		cp build-aux/Makefile.usr $$(dirname $$case)/Makefile || exit; \
+		$(MAKE) -C $$(dirname $$case) mfix$(EXEEXT) || exit; \
 	done

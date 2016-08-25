@@ -113,7 +113,7 @@
          ELSE
             U(IJK) = AVG_Z(U_G(IJK),U_G(IJKP),K)
             V(IJK) = AVG_Z(V_G(IJK),V_G(IJKP),K)
-            WW(IJK) = AVG_Z_T(W_G(IJK),W_G(IJKP))
+            WW(IJK) = AVG_Z_T(W_G(IJK),W_G(IJKP),0)
          ENDIF   ! end if/else cut_w_treatment_at
       ENDDO   ! end do ijk
 

@@ -8,23 +8,24 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOLVE_VEL_STAR(IER)
 
-      USE param
-      USE param1
-      USE toleranc
-      USE run
-      USE physprop
-      USE geometry
-      USE fldvar
-      USE output
-      USE indices
-      USE drag
-      USE residual
-      USE ur_facs
-      USE leqsol
-      use matrix
+      USE adjust_a
       USE compar
       USE discretelement
-      use ps
+      USE drag
+      USE fldvar
+      USE geometry
+      USE indices
+      USE leqsol
+      USE output
+      USE param
+      USE param1
+      USE physprop
+      USE ps
+      USE residual
+      USE run
+      USE toleranc
+      USE ur_facs
+      use matrix
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -82,7 +83,7 @@
       CALL CALC_D_E (A_M, IER)
 
 ! handle special case where center coefficient is zero
-      CALL ADJUST_A_U_G (A_M, B_M)
+      IF (MOMENTUM_X_EQ(0)) CALL ADJUST_A_G ('U', A_M, B_M)
 
 ! calculate modifications to the A matrix center coefficient and B
 ! source vector for treating DEM drag terms
@@ -125,7 +126,7 @@
 ! calculate coefficients for the pressure correction equation
       CALL CALC_D_N (A_M, IER)
 
-      CALL ADJUST_A_V_G (A_M, B_M)
+      IF (MOMENTUM_Y_EQ(0)) CALL ADJUST_A_G('V',A_M, B_M)
 
       IF(DES_CONTINUUM_COUPLED) THEN
          CALL GAS_DRAG_V(A_M, B_M, IER)
@@ -166,7 +167,7 @@
 ! calculate coefficients for the pressure correction equation
          CALL CALC_D_T (A_M, IER)
 
-         CALL ADJUST_A_W_G (A_M, B_M)
+         IF (MOMENTUM_Z_EQ(0)) CALL ADJUST_A_G('W',A_M, B_M)
 
          IF(DES_CONTINUUM_COUPLED) THEN
             CALL GAS_DRAG_W(A_M, B_M, IER)

@@ -427,7 +427,7 @@
                VGC(IJK) = (THETA_VN_BAR(IJMK)*lVG(IJMK) +              &
                   THETA_VN(IJMK)*lVg(IJK))
             ELSE
-               VGC(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK))
+               VGC(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
             ENDIF
 
             IF(DO_K) THEN
@@ -436,7 +436,7 @@
                   WGC(IJK) = (THETA_WT_BAR(IJKM)*lWg(IJKM) +           &
                      THETA_WT(IJKM)* lWg(IJK))
                ELSE
-                  WGC(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK))
+                  WGC(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
                ENDIF
             ELSE
                WGC(IJK) = ZERO

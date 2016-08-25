@@ -58,10 +58,11 @@
 
 ! average (of V) at j+1 location (i, j+1, k)
 ! F(IJK) F(IJPK)
-      DOUBLE PRECISION FUNCTION AVG_Y_N(XXXm,  XXXp)
+      DOUBLE PRECISION FUNCTION AVG_Y_N(XXXm,  XXXp, xL)
       USE param1, only: half
       IMPLICIT NONE
       DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
+      INTEGER, INTENT(IN) :: xL
       AVG_Y_N = HALF *( XXXm + XXXp )
       END FUNCTION AVG_Y_N
 
@@ -80,10 +81,11 @@
 
 ! average (of W) at k+1 location (i, j, k+1)
 ! F(IJK) F(IJKP)
-      DOUBLE PRECISION FUNCTION AVG_Z_T(XXXm,  XXXp)
+      DOUBLE PRECISION FUNCTION AVG_Z_T(XXXm,  XXXp, xL)
       USE param1, only: half
       IMPLICIT NONE
       DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
+      INTEGER, INTENT(IN) :: xL
       AVG_Z_T = HALF *( XXXm + XXXp )
       END FUNCTION AVG_Z_T
 

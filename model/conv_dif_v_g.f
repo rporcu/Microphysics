@@ -117,7 +117,7 @@
 
          ELSE
             U(IJK) = AVG_Y(U_G(IJK),U_G(IJPK),J)
-            V(IJK) = AVG_Y_N(V_G(IJK),V_G(IJPK))
+            V(IJK) = AVG_Y_N(V_G(IJK),V_G(IJPK),0)
             IF (DO_K) WW(IJK) = AVG_Y(W_G(IJK),W_G(IJPK),J)
          ENDIF
       ENDDO   ! end do ijk
@@ -652,4 +652,3 @@
 
       RETURN
       END SUBROUTINE STORE_A_V_G1
-
