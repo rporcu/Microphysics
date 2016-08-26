@@ -8,9 +8,9 @@
 !  U_g momentum eq. becoming zero.                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   USE geometry, only: ayz_u
+   USE geometry, only: ayz_u, axz_v, axy_w
    USE fldvar, only: rop_g
-   USE functions, only: i_of, im_of, east_of
+   USE functions, only: i_of, im_of, jm_of, km_of, east_of, north_of, top_of
 
    contains
 
