@@ -21,7 +21,7 @@ FC_MODEXT=mod
 # directory with all the *.mod files
 MODDIR=$(top_builddir)/model
 MODOUTDIR=$(MODDIR)
-CLEANFILES=$(MODOUTDIR)/*.$(FC_MODEXT) $(libmfix_src:%.f=%.d) $(postmfix_SOURCES:%.f=%.d)
+CLEANFILES=$(MODOUTDIR)/*.$(FC_MODEXT) $(libmfix_src:%.f=%.d)
 DISTCLEANFILES = build-aux/Makefile.usr
 
 AM_FCFLAGS = $(FC_MODINC)$(top_srcdir)/model/include
@@ -77,7 +77,6 @@ EXTRA_DIST += model/make_mfix.old
 
 @make_ifnotclean@
 $(eval -include $(libmfix_src:%.f=%.d) )
-$(eval -include $(postmfix_SOURCES:%.f=%.d) )
 @make_endif@
 
 ################################################################
@@ -124,7 +123,7 @@ endif
 ################################################################
 #      libmfix_a_SOURCES                                       #
 #                                                              #
-#      The majority of source files for mfix and postmfix      #
+#      The majority of source files for mfix                   #
 #      are listed here.                                        #
 ################################################################
 
