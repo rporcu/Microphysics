@@ -1,19 +1,5 @@
 #!/bin/bash -lex
 
-module load autoconf/2.69
-module load gnu/4.6.4
-
-module list
-
-MFIX=${MFIX_HOME-"../../../"}
-
-GCC_DBGFLAGS="-fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow"
-${MFIX}/configure_mfix FC=gfortran FCFLAGS="-O0 $GCC_DBGFLAGS" || exit $?
-make clean
-make || exit $?
-
-rm -f POST_*.dat &> /dev/null
-
 RUN_NAME="DEM05"
 
 rm -f ${RUN_NAME}* &> /dev/null
@@ -28,4 +14,8 @@ time -p ./mfix DES_COLL_MODEL=\"HERTZIAN\" \
   "DES_EN_INPUT(1:3)=3*1.0 DES_EN_WALL_INPUT(1:2)=2*1.0" \
   "DES_ET_INPUT(1:3)=3*1.0 DES_ET_WALL_INPUT(1:2)=2*1.0"
 
-##diff -q POST_posvel.dat AUTOTEST/POST_posvel.dat
+post_dats=AUTOTEST/POST*.dat
+
+for test_post_file in ${post_dats}; do
+    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file}) || echo "Post results differ"
+done

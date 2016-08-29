@@ -1,0 +1,29 @@
+# cache:
+#   key: "$CI_BUILD_REF_NAME"
+#   untracked: true
+#   paths:
+#     - build/
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - ./configure_mfix
+    - make
+  artifacts:
+    paths:
+    - mfix*
+  only:
+    - branches
+
+test_dem01:
+  stage: test
+  script:
+    - cd tests/DEM01
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches

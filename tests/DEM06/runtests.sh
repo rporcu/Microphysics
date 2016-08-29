@@ -1,17 +1,5 @@
 #!/bin/bash -lx
 
-module load autoconf/2.69
-module load gnu/4.6.4
-
-MFIX=${MFIX_HOME-"../../../"}
-
-GCC_DBGFLAGS="-fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow"
-${MFIX}/configure_mfix FC=gfortran FCFLAGS="-O0 $GCC_DBGFLAGS" || exit $?
-make clean
-make || exit $?
-
-rm POST_*.dat &> /dev/null
-
 RUN_NAME="DEM06"
 
 rm -f ${RUN_NAME}* &> /dev/null
@@ -46,3 +34,9 @@ rm -f ${RUN_NAME}* &> /dev/null
 time -p ./mfix DES_ONEWAY_COUPLED=.F. \
     DES_INTERP_ON=.T. DES_INTERP_MEAN_FIELDS=.T. \
     DES_INTERP_SCHEME=\'SQUARE_DPVM\' DES_INTERP_WIDTH=4.0d-3
+
+post_dats=AUTOTEST/POST*.dat
+
+for test_post_file in ${post_dats}; do
+    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file}) || echo "Post results differ"
+done

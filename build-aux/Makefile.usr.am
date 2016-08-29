@@ -82,7 +82,7 @@ species.inc: mfix.dat
 	@SRCDIR="$(srcdir)" OBJEXT="$(OBJEXT)" MODEXT="$(FC_MODEXT)" MODDIR="$(MODDIR)" \
 	SED="$(SED)" GREP="$(GREP)" $(SHELL) $(top_srcdir)/build-aux/update-usrdeps $@
 	@for main_mod in `${GREP} -o -E "\S+\.${FC_MODEXT}" $@`; do \
-	    echo "$${main_mod}: ${LIBMFIX}" >> $@; \
+			echo "$${main_mod}: ${LIBMFIX}" >> $@; \
 	done;
 	@$(GREP) -i -l 'INCLUDE.*species.inc' /dev/null $^| $(SED) 's/$$/:\ species.inc/g' >> $@
 
@@ -109,6 +109,12 @@ endif
 if MPI
 AM_FCFLAGS += $(FC_DEFINE)MPI
 AM_LDFLAGS += $(FC_DEFINE)MPI
+
+test: mfix$(EXEEXT)
+	env MPICMD="$(MPICMD)" ${top_srcdir}/build-aux/runtests.sh
+else
+test: mfix$(EXEEXT)
+	${top_srcdir}/build-aux/runtests.sh
 endif
 
 ################################################################
@@ -126,29 +132,6 @@ if USE_NETCDF
 AM_FCFLAGS += $(FC_MODINC)$(NETCDF_INCLUDE)
 mfix_LDADD += -L$(NETCDF_LIB) -lnetcdff
 endif
-
-################################################################
-#      Socket server
-################################################################
-if USE_SOCKET
-AM_FCFLAGS += $(FC_DEFINE)socket
-endif
-
-################################################################
-#      run this case
-################################################################
-
-POST_SCRIPT=AUTOTEST/post.script.NEW
-
-POST_dats := $(notdir $(wildcard AUTOTEST/POST*.dat))
-
-run: mfix$(EXEEXT)
-	./mfix$(EXEEXT)
-
-test: run
-	for test_post_file in $(POST_dats); do \
-	    numdiff -a 0.000001 -r 0.05 AUTOTEST/$$test_post_file $$test_post_file || echo "file $$test_post_file does not match"; \
-	done
 
 ################################################################
 #                                                              #

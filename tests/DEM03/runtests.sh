@@ -1,10 +1,5 @@
 #!/bin/bash -lex
 
-module load gnu/4.6.4
-
-../../../configure_mfix  FC=gfortran FCFLAGS="-O0 -g"
-make
-
 RUN_NAME="DEM03"
 
 DES_IM=ADAMS_BASHFORTH
@@ -18,5 +13,8 @@ for DES_ETA in 1.0 0.9 0.8 0.7 0.6 0.5; do
     DES_EN_WALL_INPUT\(2\)=${DES_ETA}
 done
 
+post_dats=AUTOTEST/POST*.dat
 
-#diff -q POST_posvel.dat AUTOTEST/POST_posvel.dat
+for test_post_file in ${post_dats}; do
+    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file}) || echo "Post results differ"
+done

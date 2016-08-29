@@ -1,12 +1,5 @@
 #!/bin/bash -lex
 
-module load autoconf gnu/4.6.4
-
-../../configure_mfix  FC=gfortran FCFLAGS="-O0 -g"
-make
-
-#rm POST_*.dat &> /dev/null
-
 RUN_NAME="DEM01"
 
 DES_IM=EULER
@@ -28,4 +21,9 @@ for DES_IM in EULER ADAMS_BASHFORTH; do
     done
   done
 done
-#diff -q POST_posvel.dat AUTOTEST/POST_posvel.dat
+
+post_dats=AUTOTEST/POST*.dat
+
+for test_post_file in ${post_dats}; do
+    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file}) || echo "Post results differ"
+done
