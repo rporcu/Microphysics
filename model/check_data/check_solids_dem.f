@@ -148,6 +148,10 @@
       use constant, only: PI
 
       use discretelement, only: DTSOLID
+! Flag for coupled Fluid/DES simulation
+      use discretelement, only: DES_CONTINUUM_COUPLED
+! Fluid solver (global) time step size
+      use run, only: DT
 
 ! Parameter constatns.
       USE param1, only: ZERO, HALF, ONE, UNDEFINED
@@ -342,7 +346,7 @@
 ! Store the smalled calculated collision time scale. This value is used
 ! in time-marching the DEM solids.
       DTSOLID = TCOLL/50.d0
-
+      IF(.NOT.DES_CONTINUUM_COUPLED) DT = DTSOLID
 
       CALL FINL_ERR_MSG
 
@@ -398,7 +402,10 @@
       USE discretelement, only: KT_FAC, KT_W_FAC
 ! The constant PI
       use constant, only: PI
-
+! Flag for coupled Fluid/DES simulation
+      use discretelement, only: DES_CONTINUUM_COUPLED
+! Fluid solver (global) time step size
+      use run, only: DT
 ! Parameter constatns.
       USE param1, only: ZERO, ONE, UNDEFINED
 
@@ -650,6 +657,7 @@
 ! Store the smalled calculated collision time scale. This value is used
 ! in time-marching the DEM solids.
       DTSOLID = TCOLL/50.d0
+      IF(.NOT.DES_CONTINUUM_COUPLED) DT = DTSOLID
 
 
       CALL FINL_ERR_MSG
