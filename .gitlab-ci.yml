@@ -27,3 +27,48 @@ test_dem01:
     - make test
   only:
     - branches
+
+test_dem02:
+  stage: test
+  script:
+    - cd tests/DEM02
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches
+
+test_dem03:
+  stage: test
+  script:
+    - cd tests/DEM03
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches
+
+test_dem04:
+  stage: test
+  script:
+    - cd tests/DEM04
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches
+
+test_dem05:
+  stage: test
+  script:
+    - cd tests/DEM05
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches
+
+test_dem06:
+  stage: test
+  script:
+    - cd tests/DEM06
+    - ../../configure_mfix
+    - make test
+  only:
+    - branches
