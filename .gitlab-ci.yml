@@ -5,19 +5,19 @@
 #     - build/
 
 stages:
-  - build
+  # - build
   - test
 
-build:
-  stage: build
-  script:
-    - ./configure_mfix
-    - make
-  artifacts:
-    paths:
-    - mfix*
-  only:
-    - branches
+# build:
+#   stage: build
+#   script:
+#     - ./configure_mfix
+#     - make
+#   artifacts:
+#     paths:
+#     - mfix*
+#   only:
+#     - branches
 
 test_dem01:
   stage: test
