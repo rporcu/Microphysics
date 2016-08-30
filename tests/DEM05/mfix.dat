@@ -27,15 +27,11 @@
 
   DT = 1.0d-4
 
-  ENERGY_EQ = .F.
-
-  SPECIES_EQ(0:2) = .F. .F. .F.
-
   MOMENTUM_X_EQ(0:2) = .F. .F. .F.
   MOMENTUM_Y_EQ(0:2) = .F. .F. .F.
   MOMENTUM_Z_EQ(0:2) = .F. .F. .F.
 
-! No gravity 
+! No gravity
   GRAVITY = 0.0
 
 ! Invoke UDFs
@@ -45,7 +41,7 @@
   DES_INTG_METHOD='ADAMS_BASHFORTH'
 
 #_______________________________________________________________________
-# GEOMETRY SECTION 
+# GEOMETRY SECTION
 
   COORDINATES = 'Cartesian'
 
