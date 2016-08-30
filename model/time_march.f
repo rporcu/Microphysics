@@ -201,8 +201,10 @@
 
 
 ! Other solids model implementations
-      IF (DEM_SOLIDS) CALL DES_TIME_MARCH
-
+      IF(DEM_SOLIDS) THEN
+         CALL DES_TIME_MARCH
+         IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
+      ENDIF
 
       IF (DT /= UNDEFINED) THEN
          IF(USE_DT_PREV) THEN
