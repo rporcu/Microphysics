@@ -3,7 +3,7 @@
 #  Wrapper script for running autoreconf (if necessary), running configure, and copying Makefile.usr to $PWD/Makefile
 #
 
-for target in mfix postmfix libmfix.a Makefile; do
+for target in mfix libmfix.a Makefile; do
     [ -d ${target} ] && echo "ERROR:  A directory exists named:  ${target}"
     [ -d ${target} ] && echo "ERROR:  "
     [ -d ${target} ] && echo "ERROR:  configure_mfix must be run in a directory containing only mfix.dat (and optional *usr*.f files)"
