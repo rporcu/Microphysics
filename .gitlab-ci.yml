@@ -57,8 +57,6 @@ test_dem01:
     - cd tests/DEM01
     - ../../configure_mfix
     - make test
-  only:
-    - branches
 
 test_dem02:
   stage: test
@@ -66,8 +64,6 @@ test_dem02:
     - cd tests/DEM02
     - ../../configure_mfix
     - make test
-  only:
-    - branches
 
 test_dem03:
   stage: test
@@ -75,8 +71,6 @@ test_dem03:
     - cd tests/DEM03
     - ../../configure_mfix
     - make test
-  only:
-    - branches
 
 test_dem04:
   stage: test
@@ -84,8 +78,6 @@ test_dem04:
     - cd tests/DEM04
     - ../../configure_mfix
     - make test
-  only:
-    - branches
 
 test_dem05:
   stage: test
@@ -93,8 +85,6 @@ test_dem05:
     - cd tests/DEM05
     - ../../configure_mfix
     - make test
-  only:
-    - branches
 
 test_dem06:
   stage: test
@@ -102,5 +92,3 @@ test_dem06:
     - cd tests/DEM06
     - ../../configure_mfix
     - make test
-  only:
-    - branches
