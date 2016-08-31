@@ -182,7 +182,9 @@
              xpos = des_pos_new(1,lcurpar)
              ypos = des_pos_new(2,lcurpar)
              li=iofpos(xpos);lj=jofpos(ypos)
-             write(44,*)(is_ghost(lcurpar).or.is_entering_ghost(lcurpar).or.is_exiting_ghost(lcurpar)),xpos,ypos,li,lj,dg_funijk(li,lj,1)
+             write(44,*)(is_ghost(lcurpar).or. &
+                  is_entering_ghost(lcurpar).or. &
+                  is_exiting_ghost(lcurpar)),xpos,ypos,li,lj,dg_funijk(li,lj,1)
           end do
       case (5)
          ltordimn = merge(1,3,NO_K)
