@@ -15,6 +15,9 @@ buildtest_dem01:
     - cd tests/DEM01
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 buildtest_dem02:
   stage: buildtest
@@ -22,6 +25,9 @@ buildtest_dem02:
     - cd tests/DEM02
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 buildtest_dem03:
   stage: buildtest
@@ -29,6 +35,9 @@ buildtest_dem03:
     - cd tests/DEM03
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 buildtest_dem04:
   stage: buildtest
@@ -36,6 +45,9 @@ buildtest_dem04:
     - cd tests/DEM04
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 buildtest_dem05:
   stage: buildtest
@@ -43,6 +55,9 @@ buildtest_dem05:
     - cd tests/DEM05
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 buildtest_dem06:
   stage: buildtest
@@ -50,6 +65,9 @@ buildtest_dem06:
     - cd tests/DEM06
     - ../../configure_mfix
     - make mfix
+  artifacts:
+    paths:
+    - build
 
 test_dem01:
   stage: test
