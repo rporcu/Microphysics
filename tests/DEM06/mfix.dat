@@ -189,7 +189,7 @@
 
 ! Output Control
   RES_DT =   1.0    ! frequency to write restart file (.RES)
-  SPX_DT = 9*1.0    ! frequency to updated data fliles (.SPx)
+  SPX_DT = 3*1.0    ! frequency to updated data fliles (.SPx)
 
   PRINT_DES_DATA = .F.
 

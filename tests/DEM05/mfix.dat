@@ -162,7 +162,7 @@
 
 ! Interval at which .SPX files are written
   SPX_DT(1) = 1.0d-3
-  SPX_DT(2:9) = 8*1.0d3
+  SPX_DT(2:3) = 2*1.0d3
 
   GROUP_RESID = .T.
 
