@@ -6,18 +6,50 @@
 
 stages:
   - build
+  - buildtest
   - test
 
-build:
+buildtest_dem01:
   stage: build
   script:
-    - ./configure_mfix
-    - make
-  artifacts:
-    paths:
-    - build
-  only:
-    - branches
+    - cd tests/DEM01
+    - ../../configure_mfix
+    - make mfix
+
+buildtest_dem02:
+  stage: buildtest
+  script:
+    - cd tests/DEM02
+    - ../../configure_mfix
+    - make mfix
+
+buildtest_dem03:
+  stage: buildtest
+  script:
+    - cd tests/DEM03
+    - ../../configure_mfix
+    - make mfix
+
+buildtest_dem04:
+  stage: buildtest
+  script:
+    - cd tests/DEM04
+    - ../../configure_mfix
+    - make mfix
+
+buildtest_dem05:
+  stage: buildtest
+  script:
+    - cd tests/DEM05
+    - ../../configure_mfix
+    - make mfix
+
+buildtest_dem06:
+  stage: buildtest
+  script:
+    - cd tests/DEM06
+    - ../../configure_mfix
+    - make mfix
 
 test_dem01:
   stage: test
