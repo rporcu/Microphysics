@@ -14,6 +14,7 @@ buildtest_dem01:
   script:
     - cd tests/DEM01
     - echo path is $PATH
+    - module list
     - cmake --version
     - cmake ../..
     - make mfix
