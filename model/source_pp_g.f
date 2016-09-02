@@ -48,7 +48,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
 ! maximum term in b_m expression
-      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -90,7 +90,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             bmt = A_M(IJK,T,0)*W_G(IJK)
             bmb = A_M(IJK,B,0)*W_G(IJKM)
             B_M(IJK,0) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
-            B_MMAX(IJK,0) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
+            B_MMAX(IJK) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
 
             A_M(IJK,E,0) = A_M(IJK,E,0)*D_E(IJK)
             A_M(IJK,W,0) = A_M(IJK,W,0)*D_E(IMJK)

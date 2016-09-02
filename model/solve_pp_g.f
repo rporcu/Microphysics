@@ -29,7 +29,6 @@
       USE leqsol
       USE run
       use matrix
-      Use tmp_array1, B_mMAX => ARRAYm1
       use ps
 
       IMPLICIT NONE
@@ -66,14 +65,17 @@
 ! temporary use of global arrays:
 ! arraym1 (locally b_mmax)
 ! vector B_M based on dominate term in correction equation
-!      DOUBLE PRECISION :: B_MMAX(DIMENSION_3, DIMENSION_M)
+!      DOUBLE PRECISION :: B_MMAX(DIMENSION_3)
 ! Septadiagonal matrix A_m, vector B_m
 !      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
 !-----------------------------------------------
 
+      DOUBLE PRECISION, allocatable :: B_MMAX(:)
+
+      ALLOCATE(B_MMAX(DIMENSION_3))
+
       call lock_ambm
-      call lock_tmp_array1
 
 ! initializing
       PP_G = 0.0d0
@@ -111,7 +113,6 @@
 
 !      call out_array(Pp_g, 'Pp_g')
 
-      call unlock_tmp_array1
       call unlock_ambm
 
       RETURN
@@ -150,7 +151,7 @@
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
 ! maximum term in b_m expression
-      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -180,7 +181,7 @@
                pSource = PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
 
                B_M(IJK,0) = B_M(IJK,0) - pSource
-               B_MMAX(IJK,0) = max(abs(B_MMAX(IJK,0)), abs(B_M(IJK,0)))
+               B_MMAX(IJK) = max(abs(B_MMAX(IJK)), abs(B_M(IJK,0)))
             endif
 
          enddo

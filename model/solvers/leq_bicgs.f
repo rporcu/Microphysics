@@ -338,6 +338,14 @@
                ier = 0
             endif
             call send_recv(var,2)
+            deallocate(R)
+            deallocate(Rtilde)
+            deallocate(P)
+            deallocate(Phat)
+            deallocate(Svec)
+            deallocate(Shat)
+            deallocate(Tvec)
+            deallocate(V)
             return
          endif ! rho(i-1).eq.0
 
