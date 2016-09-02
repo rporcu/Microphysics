@@ -13,7 +13,7 @@ buildtest_dem01:
   stage: build
   script:
     - cd tests/DEM01
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -23,7 +23,7 @@ buildtest_dem02:
   stage: buildtest
   script:
     - cd tests/DEM02
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -33,7 +33,7 @@ buildtest_dem03:
   stage: buildtest
   script:
     - cd tests/DEM03
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -43,7 +43,7 @@ buildtest_dem04:
   stage: buildtest
   script:
     - cd tests/DEM04
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -53,7 +53,7 @@ buildtest_dem05:
   stage: buildtest
   script:
     - cd tests/DEM05
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -63,7 +63,7 @@ buildtest_dem06:
   stage: buildtest
   script:
     - cd tests/DEM06
-    - ../../configure_mfix
+    - cmake ../..
     - make mfix
   artifacts:
     paths:
@@ -73,40 +73,40 @@ test_dem01:
   stage: test
   script:
     - cd tests/DEM01
-    - ../../configure_mfix
+    - cmake ../..
     - make test
 
 test_dem02:
   stage: test
   script:
     - cd tests/DEM02
-    - ../../configure_mfix
+    - cmake ../..
     - make test
 
 test_dem03:
   stage: test
   script:
     - cd tests/DEM03
-    - ../../configure_mfix
+    - cmake ../..
     - make test
 
 test_dem04:
   stage: test
   script:
     - cd tests/DEM04
-    - ../../configure_mfix
+    - cmake ../..
     - make test
 
 test_dem05:
   stage: test
   script:
     - cd tests/DEM05
-    - ../../configure_mfix
+    - cmake ../..
     - make test
 
 test_dem06:
   stage: test
   script:
     - cd tests/DEM06
-    - ../../configure_mfix
+    - cmake ../..
     - make test
