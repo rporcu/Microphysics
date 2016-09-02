@@ -3,7 +3,47 @@ project("MFIX" Fortran)
 
 include_directories(model/include)
 
+option(MPI "MPI support" OFF)
+
+if ( MPI )
+find_package ( MPI )
+if ( MPI_Fortran_COMPILER )
+        include_directories( ${MPI_INCLUDE_PATH} )
+        set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+else ( MPI_Fortran_COMPILER )
+        message (FATAL_ERROR " MPI support requested but MPI compiler not found ")
+endif ( MPI_Fortran_COMPILER )
+endif ( MPI )
+
+set( USR_SOURCES
+  usr0_des.f
+  usr1_des.f
+  usr2_des.f
+  usr3_des.f
+  usr0.f
+  usr1.f
+  usr2.f
+  usr3.f
+  usr_drag.f
+  usr_init_namelist.f
+  usr_mod.f
+  usr_physical_prop.f
+  usr_write_out0.f
+  usr_write_out1.f
+  write_usr0.f
+  write_usr1.f
+  )
+
+foreach( usr_f ${USR_SOURCES})
+ ADD_CUSTOM_COMMAND(
+   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f} ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
+   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f}
+   )
+endforeach( usr_f )
+
 set(SOURCES
+  ${USR_SOURCES}
   model/accum_resid.f
   model/adjust_a_g.f
   model/adjust_dt_mod.f
@@ -173,10 +213,6 @@ set(SOURCES
   model/des/set_phase_index.f
   model/des/solid_drag.f
   model/des/stl_preproc_des_mod.f
-  model/des/usr0_des.f
-  model/des/usr1_des.f
-  model/des/usr2_des.f
-  model/des/usr3_des.f
   model/des/vtp_mod.f
   model/des/write_des_data.f
   model/des/write_res0_des.f
@@ -309,18 +345,6 @@ set(SOURCES
   model/under_relax.f
   model/update_old.f
   model/ur_facs_mod.f
-  model/usr/usr0.f
-  model/usr/usr1.f
-  model/usr/usr2.f
-  model/usr/usr3.f
-  model/usr/usr_drag.f
-  model/usr/usr_init_namelist.f
-  model/usr/usr_mod.f
-  model/usr/usr_physical_prop.f
-  model/usr/usr_write_out0.f
-  model/usr/usr_write_out1.f
-  model/usr/write_usr0.f
-  model/usr/write_usr1.f
   model/utilities_mod.f
   model/vavg_u_g.f
   model/vavg_v_g.f
