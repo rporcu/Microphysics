@@ -13,6 +13,7 @@ buildtest_dem01:
   stage: build
   script:
     - cd tests/DEM01
+    - cmake --version
     - cmake ../..
     - make mfix
   artifacts:
