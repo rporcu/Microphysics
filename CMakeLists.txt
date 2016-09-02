@@ -21,7 +21,9 @@ endif ( MPI )
 set( USR_DEP_SOURCES
   model/cartesian_grid/cutcell_mod.f
   model/cartesian_grid/progress_bar_mod.f
+  model/constant_mod.f
   model/des/discretelement_mod.f
+  model/des/particle_filter_mod.f
   model/dmp_modules/compar_mod.f
   model/dmp_modules/debug_mod.f
   model/dmp_modules/mpi_mod.f
@@ -161,7 +163,6 @@ set(SOURCES
   model/check_data_20.f
   model/check_data_30.f
   model/check_plane.f
-  model/constant_mod.f
   model/conv_dif_u_g.f
   model/conv_dif_v_g.f
   model/conv_dif_w_g.f
@@ -225,7 +226,6 @@ set(SOURCES
   model/des/mpi_unpack_des_mod.f
   model/des/neighbour.f
   model/des/nsquare.f
-  model/des/particle_filter_mod.f
   model/des/particles_in_cell.f
   model/des/pic_bc_mod.f
   model/des/pic_routines.f
