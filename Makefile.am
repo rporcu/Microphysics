@@ -323,10 +323,10 @@ libmfix_src = \
 	model/des/set_phase_index.f \
 	model/des/solid_drag.f \
 	model/des/stl_preproc_des_mod.f \
-	model/des/usr0_des.f \
-	model/des/usr1_des.f \
-	model/des/usr2_des.f \
-	model/des/usr3_des.f \
+	model/usr/usr0_des.f \
+	model/usr/usr1_des.f \
+	model/usr/usr2_des.f \
+	model/usr/usr3_des.f \
 	model/des/vtp_mod.f \
 	model/des/write_des_data.f \
 	model/des/write_res0_des.f \
