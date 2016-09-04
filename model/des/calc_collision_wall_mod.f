@@ -36,17 +36,17 @@
       USE constant
       USE indices
       USE stl
-      USE des_stl_functions
+      USE stl_functions_des
       USE functions
       Implicit none
 
       INTEGER :: LL
-      INTEGER IJK, NF
-      DOUBLE PRECISION OVERLAP_N, SQRT_OVERLAP
+      INTEGER :: IJK, NF
+      DOUBLE PRECISION ::OVERLAP_N, SQRT_OVERLAP
 
-      DOUBLE PRECISION V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
+      DOUBLE PRECISION :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
 ! local normal and tangential forces
-      DOUBLE PRECISION NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
+      DOUBLE PRECISION :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
       DOUBLE PRECISION, DIMENSION(DIMN) :: FTAN, FNORM, OVERLAP_T
 
       LOGICAL :: DES_LOC_DEBUG
@@ -66,21 +66,24 @@
 
       DOUBLE PRECISION :: MAX_DISTSQ, DISTAPART, FORCE_COH, R_LM
       INTEGER :: MAX_NF, axis
-      DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX
+      DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
 
       DES_LOC_DEBUG = .false. ;      DEBUG_DES = .false.
       FOCUS_PARTICLE = -1
 
+! Skip this routine if the system is fully periodic.
+      IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
+         (DES_PERIODIC_WALLS_Z .OR. NO_K)) RETURN
 
 !$omp parallel default(none) private(LL,ijk,MAG_OVERLAP_T,             &
 !$omp    cell_id,radsq,particle_max,particle_min,tangent,              &
 !$omp    axis,nf,closest_pt,dist,r_lm,distapart,force_coh,distsq,      &
 !$omp    line_t,max_distsq,max_nf,normal,distmod,overlap_n,VREL_T,     &
 !$omp    v_rel_trans_norm,phaseLL,sqrt_overlap,kn_des_w,kt_des_w,      &
-!$omp    etan_des_w,etat_des_w,fnorm,overlap_t,ftan,ftmd,fnmd)         &
-!$omp shared(max_pip,focus_particle,debug_des,no_neighboring_facet_des,&
-!$omp    pijk,dg_pijk,list_facet_at_des,i_of,j_of,k_of,des_pos_new,    &
-!$omp    des_radius,cellneighbor_facet_num,cellneighbor_facet,vertex,  &
+!$omp    etan_des_w,etat_des_w,fnorm,overlap_t,ftan,ftmd,fnmd,pos_tmp) &
+!$omp shared(max_pip,focus_particle,debug_des,                         &
+!$omp    pijk,dg_pijk,i_of,j_of,k_of,des_pos_new,    &
+!$omp    des_radius,facets_at_dg,vertex,  &
 !$omp    hert_kwn,hert_kwt,kn_w,kt_w,des_coll_model_enum,mew_w,tow,    &
 !$omp    des_etan_wall,des_etat_wall,dtsolid,fc,norm_face,             &
 !$omp    wall_collision_facet_id,wall_collision_PFT,use_cohesion,      &
@@ -99,8 +102,7 @@
          CELL_ID = DG_PIJK(LL)
 
 ! If no neighboring facet in the surrounding 27 cells, then exit
-!        IF (NO_NEIGHBORING_FACET_DES(DG_PIJK(LL))) THEN
-         IF(CELLNEIGHBOR_FACET_NUM(CELL_ID) < 1) THEN
+         IF(facets_at_dg(CELL_ID)%COUNT < 1) THEN
             WALL_COLLISION_FACET_ID(:,LL) = -1
             WALL_COLLISION_PFT(:,:,LL) = 0.0d0
             CYCLE
@@ -112,11 +114,11 @@
          particle_max(:) = des_pos_new(:, LL) + des_radius(LL)
          particle_min(:) = des_pos_new(:, LL) - des_radius(LL)
 
-         DO CELL_COUNT = 1, cellneighbor_facet_num(cell_id)
+         DO CELL_COUNT = 1, facets_at_dg(cell_id)%count
 
-            axis = cellneighbor_facet(cell_id)%extentdir(cell_count)
+            axis = facets_at_dg(cell_id)%dir(cell_count)
 
-            NF = cellneighbor_facet(cell_id)%p(cell_count)
+            NF = facets_at_dg(cell_id)%id(cell_count)
 
 ! Compute particle-particle VDW cohesive short-range forces
             IF(USE_COHESION .AND. VAN_DER_WAALS) THEN
@@ -144,13 +146,13 @@
                ENDIF
             ENDIF
 
-            if (cellneighbor_facet(cell_id)%extentmin(cell_count) >    &
+            if (facets_at_dg(cell_id)%min(cell_count) >    &
                particle_max(axis)) then
                call remove_collision(LL, nf, wall_collision_facet_id)
                cycle
             endif
 
-            if (cellneighbor_facet(cell_id)%extentmax(cell_count) <    &
+            if (facets_at_dg(cell_id)%max(cell_count) <    &
                particle_min(axis)) then
                call remove_collision(LL, nf, wall_collision_facet_id)
                cycle
@@ -206,13 +208,14 @@
                CYCLE
             ENDIF
 
-            CALL ClosestPtPointTriangle(DES_POS_NEW(:,LL),             &
+            POS_TMP = DES_POS_NEW(:,LL)
+            CALL ClosestPtPointTriangle(POS_TMP, &
                VERTEX(:,:,NF), CLOSEST_PT(:))
 
             DIST(:) = CLOSEST_PT(:) - DES_POS_NEW(:,LL)
             DISTSQ = DOT_PRODUCT(DIST, DIST)
 
-            IF(DISTSQ .GE. RADSQ) THEN !No overlap exists
+            IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) THEN !No overlap exists
                call remove_collision(LL,nf,wall_collision_facet_id)
                CYCLE
             ENDIF
@@ -313,7 +316,10 @@
 !......................................................................!
       FUNCTION GET_COLLISION(LLL,FACET_ID,WALL_COLLISION_FACET_ID,     &
           WALL_COLLISION_PFT)
-      use stl_preproc_des
+
+      use stl_dbg_des, only: write_this_stl
+      use stl_dbg_des, only: write_stls_this_dg
+
       use error_manager
 
       IMPLICIT NONE
@@ -323,6 +329,7 @@
       INTEGER, INTENT(INOUT) :: WALL_COLLISION_FACET_ID(:,:)
       DOUBLE PRECISION, INTENT(INOUT) :: WALL_COLLISION_PFT(:,:,:)
       INTEGER :: CC, FREE_INDEX, LC, dgIJK
+
 
       free_index = -1
 
@@ -342,38 +349,71 @@
       if(-1 == free_index) then
          dgIJK=DG_PIJK(LLL)
          cc_lp: do cc=1, COLLISION_ARRAY_MAX
-            do lc=1, cellneighbor_facet_num(dgIJK)
+            do lc=1, facets_at_dg(dgIJK)%count
                if(wall_collision_facet_id(cc,LLL) == &
-                  cellneighbor_facet(dgIJK)%p(LC))  cycle cc_lp
+                  facets_at_dg(dgIJK)%id(LC))  cycle cc_lp
             enddo
             free_index = cc
             exit cc_lp
          enddo cc_lp
       endif
 
-
+! Last resort... grow the collision array
       if(-1 == free_index) then
-
-         do cc = 1, COLLISION_ARRAY_MAX
-            call write_this_stl(wall_collision_facet_id(cc,LLL))
-         enddo
-         call write_stls_this_dg(dg_pijk(LLL))
-
-         CALL INIT_ERR_MSG("CALC_COLLISION_WALL_MOD: GET_COLLISION")
-         WRITE(ERR_MSG, 1100) LLL, CC
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-      else
-         wall_collision_facet_id(free_index,LLL) = facet_id
-         wall_collision_PFT(:,free_index,LLL) = ZERO
-         get_collision(:) = wall_collision_PFT(:,free_index,LLL)
-         return
+         free_index=COLLISION_ARRAY_MAX+1
+         COLLISION_ARRAY_MAX = 2*COLLISION_ARRAY_MAX
+         CALL GROW_WALL_COLLISION(COLLISION_ARRAY_MAX)
       endif
 
- 1100 FORMAT('Error: COLLISION_ARRAY_MAX too small.'/'Particle: ',I9,/ &
-           'Facet:    ',I9)
+      wall_collision_facet_id(free_index,LLL) = facet_id
+      wall_collision_PFT(:,free_index,LLL) = ZERO
+      get_collision(:) = wall_collision_PFT(:,free_index,LLL)
+      return
 
       END FUNCTION GET_COLLISION
+
+
+!......................................................................!
+!  Subroutine: GROW_WALL_COLLISION                                     !
+!                                                                      !
+!  Purpose: Return the integrated (t0->t) tangential displacement.     !
+!......................................................................!
+      SUBROUTINE GROW_WALL_COLLISION(NEW_SIZE)
+
+      use discretelement
+
+      use stl_dbg_des, only: write_this_stl
+      use stl_dbg_des, only: write_stls_this_dg
+
+      use error_manager
+
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: NEW_SIZE
+      INTEGER :: lSIZE1, lSIZE2, lSIZE3
+      INTEGER, ALLOCATABLE :: tmpI2(:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: tmpR3(:,:,:)
+
+      lSIZE1 = size(wall_collision_facet_id,1)
+      lSIZE2 = size(wall_collision_facet_id,2)
+
+      allocate(tmpI2(NEW_SIZE, lSIZE2))
+      tmpI2(1:lSIZE1,:) = WALL_COLLISION_FACET_ID(1:lSIZE1,:)
+      call move_alloc(tmpI2, WALL_COLLISION_FACET_ID)
+      WALL_COLLISION_FACET_ID(lSIZE1+1:NEW_SIZE,:) = -1
+
+      lSIZE1 = size(wall_collision_pft,1)
+      lSIZE2 = size(wall_collision_pft,2)
+      lSIZE3 = size(wall_collision_pft,3)
+
+      allocate(tmpR3(lSIZE1, NEW_SIZE, lSIZE3))
+      tmpR3(:,1:lSIZE2,:) = WALL_COLLISION_PFT(:,1:lSIZE2,:)
+      call move_alloc(tmpR3, WALL_COLLISION_PFT)
+
+      RETURN
+      END SUBROUTINE GROW_WALL_COLLISION
+
+
 
 
 !......................................................................!

@@ -273,7 +273,6 @@ libmfix_src = \
 	model/des/des_granular_temperature.f \
 	model/des/des_init_arrays.f \
 	model/des/des_init_namelist.f \
-	model/des/des_stl_functions_mod.f \
 	model/des/des_time_march.f \
 	model/des/desgrid_mod.f \
 	model/des/desmpi_mod.f \
@@ -322,6 +321,8 @@ libmfix_src = \
 	model/des/set_geometry_des.f \
 	model/des/set_phase_index.f \
 	model/des/solid_drag.f \
+	model/des/stl_dbg_des_mod.f \
+	model/des/stl_functions_des_mod.f \
 	model/des/stl_preproc_des_mod.f \
 	model/usr/usr0_des.f \
 	model/usr/usr1_des.f \

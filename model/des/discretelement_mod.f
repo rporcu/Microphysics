@@ -131,6 +131,7 @@
 ! Logic that controls whether to print data dem simulations (granular or
 ! coupled)
       LOGICAL PRINT_DES_DATA
+      CHARACTER(LEN=255) :: VTP_DIR
 
 ! logic that controls if des run time messages are printed on screen or not
       LOGICAL PRINT_DES_SCREEN
@@ -381,7 +382,7 @@
       END TYPE iap1
 
 !     particle can collide with at most COLLISION_ARRAY_MAX facets simultaneously
-      INTEGER, PARAMETER :: COLLISION_ARRAY_MAX = 8
+      INTEGER :: COLLISION_ARRAY_MAX = 8
 
 !     -1 value indicates no collision
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: wall_collision_facet_id       ! (COLLISION_ARRAY_MAX,PARTICLES)

@@ -1,13 +1,13 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: USR0                                                   C
+!  Module name: WRITE_USR0                                             C
 !  Author:                                            Date: dd-mmm-yy  C
 !  Reviewer:                                          Date: dd-mmm-yy  C
 !                                                                      C
 !  Purpose: This routine is called before the time loop starts and is  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR0
+      SUBROUTINE WRITE_USR0
 
       use constant
       use desgrid
@@ -36,6 +36,7 @@
       double precision, parameter :: T0 = 1.0d-1
       double precision, parameter :: one_third = 1.0d0/3.0d0
 
+
       lRad = 0.5d0*D_p0(1)
       lDp2 = D_p0(1)**2
 
@@ -53,7 +54,7 @@
          do lc1=1, pip
             ldist = des_pos_new(:,lc1) - lPos
             ldmag = dot_product(ldist, ldist)
-            if(ldmag < lDp2) cycle seed_lp
+            if(ldmag + 0.001 < lDp2) cycle seed_lp
          enddo
 
          pip = pip+1
@@ -83,7 +84,7 @@
 
 ! Calc the average mean velocity in each direction 
       meanVel = meanVel/dble(pip)
- 
+
 ! Subtract mean velocity from the random velocities to get a zero
 ! mean velocity. Also, calculate the mean granular temperature.
       gTemp = 0.0d0
@@ -106,4 +107,4 @@
       call global_all_sum(particles)
 
       RETURN
-      END SUBROUTINE USR0
+      END SUBROUTINE WRITE_USR0

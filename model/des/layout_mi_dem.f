@@ -78,7 +78,7 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: N_FACETS_DES
+      use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
       use cutcell, only: USE_STL
 
@@ -97,7 +97,9 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use mpi_utility, only: GLOBAL_ALL_SUM
-      use des_stl_functions, only: TestTriangleAABB
+      use mpi_utility, only: GLOBAL_ALL_MAX
+      use mpi_utility, only: GLOBAL_ALL_MIN
+      use stl_functions_des, only: TRI_BOX_OVERLAP
       use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
@@ -138,6 +140,7 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
+      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
@@ -145,11 +148,9 @@
 ! Offset and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
 ! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: ORIGIN(3), EXTENTS(3)
-! Separating axis test dummy variable
-      INTEGER :: SEP_AXIS
+      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
 ! Indicates that a separating axis exists
-      LOGICAL :: SA_EXIST
+      LOGICAL :: OVERLAP
 ! Debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -275,18 +276,20 @@
 ! cell sizes are increased by 10% to provide a small buffer.
       IF(USE_STL) THEN
 
-         EXTENTS(2) = 6.0d0*MAX_DIA
-         EXTENTS(1) = WINDOW * 1.10d0
-         EXTENTS(3) = WINDOW * 1.10d0
+         HALFSIZE(2) = 1.10d0*MAX_DIA
+         HALFSIZE(1) = HALF*(WINDOW * 1.10d0)
+         HALFSIZE(3) = HALF*(WINDOW * 1.10d0)
 
+         minEXT(1) = HMAX+1; maxEXT(1) = 0
+         minEXT(2) = WMAX+1; maxEXT(2) = 0
          DO H=1,HMAX
          DO W=1,WMAX
 
-            ORIGIN(2) = BC_Y_s(BCV) - 3.0d0*MAX_DIA
-            ORIGIN(1) = MESH_P(W) - WINDOW * 0.05d0
-            ORIGIN(3) = MESH_Q(H) - WINDOW * 0.05d0
+            CENTER(2) = BC_Y_s(BCV)
+            CENTER(1) = MESH_P(W) + HALF*WINDOW
+            CENTER(3) = MESH_Q(H) + HALF*WINDOW
 
-            FACET_LP: DO LC=1, N_FACETS_DES
+            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
 
                IF(BC_Y_s(BCV) > maxval(VERTEX(:,2,LC))) CYCLE FACET_LP
                IF(BC_Y_s(BCV) < minval(VERTEX(:,2,LC))) CYCLE FACET_LP
@@ -297,10 +300,10 @@
                IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
                IF(BC_Z_t(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
 
-               CALL TESTTRIANGLEAABB(VERTEX(:,:,LC), NORM_FACE(:,LC),  &
-                  ORIGIN(:), EXTENTS(:), SA_EXIST, SEP_AXIS, I, J, K)
+               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
+                  VERTEX(:,:,LC), OVERLAP)
 
-               IF(.NOT.SA_EXIST) THEN
+               IF(OVERLAP) THEN
                   IF(NORM_FACE(1,LC) >= 0) THEN
                      FULL_MAP(1:W,H) = 0
                   ELSE
@@ -311,10 +314,23 @@
                   ELSE
                      FULL_MAP(W,H:HMAX) = 0
                   ENDIF
+                  minEXT(1) = min(minEXT(1),H)
+                  minEXT(2) = min(minEXT(2),W)
+
+                  maxEXT(1) = max(maxEXT(1),H)
+                  maxEXT(2) = max(maxEXT(2),W)
                ENDIF
             ENDDO FACET_LP
          ENDDO
          ENDDO
+         CALL GLOBAL_ALL_MIN(minEXT)
+         CALL GLOBAL_ALL_MAX(maxEXT)
+
+         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
+         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
+
+         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
+         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
       ENDIF
 
 ! Add up the total number of available positions in the seeding map.
@@ -342,7 +358,7 @@
       DEM_MI(BCV_I)%OCCUPANTS = OCCUPANTS
 
 ! Display the fill map if debugging
-      IF(dFlag .OR. showMAP) THEN
+      IF(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
          WRITE(*,"(2/,2x,'Displaying Fill Map:')")
          DO H=HMAX,1,-1
             WRITE(*,"(2x,'H =',I3)",advance='no')H
@@ -421,10 +437,12 @@
  8011 FORMAT(4x,I5,3(2X,I4),3(2x,g12.5))
 
 
-      if(dFlag) write(*,"(2/,2x,'Inlet area sizes:')")
-      if(dFlag) write(*,9000) 'mfix.dat: ', PLEN * QLEN
-      if(dFlag) write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
-      if(dFlag) write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      if(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
+         write(*,"(2/,2x,'Inlet area sizes:')")
+         write(*,9000) 'mfix.dat: ', PLEN * QLEN
+         write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
+         write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      endif
  9000 FORMAT(2x,A,g12.5)
 
 ! House keeping.
@@ -472,7 +490,7 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: N_FACETS_DES
+      use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
       use cutcell, only: USE_STL
 
@@ -490,8 +508,10 @@
 ! Module procedures
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
-      use des_stl_functions, only: TestTriangleAABB
+      use stl_functions_des, only: TRI_BOX_OVERLAP
       use mpi_utility, only: GLOBAL_ALL_SUM
+      use mpi_utility, only: GLOBAL_ALL_MAX
+      use mpi_utility, only: GLOBAL_ALL_MIN
       use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
@@ -532,6 +552,7 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
+      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
@@ -539,11 +560,9 @@
 ! Offset and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
 ! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: ORIGIN(3), EXTENTS(3)
-! Separating axis test dummy variable
-      INTEGER :: SEP_AXIS
+      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
 ! Indicates that a separating axis exists
-      LOGICAL :: SA_EXIST
+      LOGICAL :: OVERLAP
 ! Local debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -668,18 +687,21 @@
 ! cell sizes are increased by 10% to provide a small buffer.
       IF(USE_STL) THEN
 
-         EXTENTS(1) = 6.0d0*MAX_DIA
-         EXTENTS(2) = WINDOW * 1.10d0
-         EXTENTS(3) = WINDOW * 1.10d0
+         HALFSIZE(1) = 1.10d0*MAX_DIA
+         HALFSIZE(2) = HALF*(WINDOW * 1.10d0)
+         HALFSIZE(3) = HALF*(WINDOW * 1.10d0)
+
+         minEXT(1) = HMAX+1; maxEXT(1) = 0
+         minEXT(2) = WMAX+1; maxEXT(2) = 0
 
          DO H=1,HMAX
          DO W=1,WMAX
 
-            ORIGIN(1) = BC_X_w(BCV) - 3.0d0*MAX_DIA
-            ORIGIN(2) = MESH_P(W) - WINDOW * 0.05d0
-            ORIGIN(3) = MESH_Q(H) - WINDOW * 0.05d0
+            CENTER(1) = BC_X_w(BCV)
+            CENTER(2) = MESH_P(W) + HALF*WINDOW
+            CENTER(3) = MESH_Q(H) + HALF*WINDOW
 
-            FACET_LP: DO LC=1, N_FACETS_DES
+            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
 
                IF(BC_X_w(BCV) > maxval(VERTEX(:,1,LC))) CYCLE FACET_LP
                IF(BC_X_w(BCV) < minval(VERTEX(:,1,LC))) CYCLE FACET_LP
@@ -690,10 +712,10 @@
                IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
                IF(BC_Z_t(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
 
-               CALL TESTTRIANGLEAABB(VERTEX(:,:,LC), NORM_FACE(:,LC),  &
-                  ORIGIN(:), EXTENTS(:), SA_EXIST, SEP_AXIS, I, J, K)
+               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
+                  VERTEX(:,:,LC), OVERLAP)
 
-               IF(.NOT.SA_EXIST) THEN
+               IF(OVERLAP) THEN
                   IF(NORM_FACE(2,LC) >= 0) THEN
                      FULL_MAP(1:W,H) = 0
                   ELSE
@@ -704,10 +726,27 @@
                   ELSE
                      FULL_MAP(W,H:HMAX) = 0
                   ENDIF
+
+                  minEXT(1) = min(minEXT(1),H)
+                  minEXT(2) = min(minEXT(2),W)
+
+                  maxEXT(1) = max(maxEXT(1),H)
+                  maxEXT(2) = max(maxEXT(2),W)
+
                ENDIF
             ENDDO FACET_LP
          ENDDO
          ENDDO
+
+         CALL GLOBAL_ALL_MIN(minEXT)
+         CALL GLOBAL_ALL_MAX(maxEXT)
+
+         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
+         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
+
+         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
+         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
+
       ENDIF
 
 ! Add up the total number of available positions in the seeding map.
@@ -735,7 +774,7 @@
       DEM_MI(BCV_I)%OCCUPANTS = OCCUPANTS
 
 ! Display the fill map if debugging
-      IF(dFlag .OR. showMAP) THEN
+      IF(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
          WRITE(*,"(2/,2x,'Displaying Fill Map:')")
          DO H=HMAX,1,-1
             WRITE(*,"(2x,'H =',I3)",advance='no')H
@@ -813,11 +852,12 @@
          5X,'L',7X,'P',12X,'Q',12X,'R')
  8011 FORMAT(4x,I5,3(2X,I4),3(2x,g12.5))
 
-
-      if(dFlag) write(*,"(2/,2x,'Inlet area sizes:')")
-      if(dFlag) write(*,9000) 'mfix.dat: ', PLEN * QLEN
-      if(dFlag) write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
-      if(dFlag) write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      if(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
+         write(*,"(2/,2x,'Inlet area sizes:')")
+         write(*,9000) 'mfix.dat: ', PLEN * QLEN
+         write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
+         write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      endif
  9000 FORMAT(2x,A,g12.5)
 
 ! House keeping.
@@ -867,7 +907,7 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: N_FACETS_DES
+      use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
       use cutcell, only: USE_STL
       use compar, only: myPE
@@ -885,7 +925,9 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use mpi_utility, only: GLOBAL_ALL_SUM
-      use des_stl_functions, only: TestTriangleAABB
+      use mpi_utility, only: GLOBAL_ALL_MAX
+      use mpi_utility, only: GLOBAL_ALL_MIN
+      use stl_functions_des, only: TRI_BOX_OVERLAP
       use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
@@ -926,6 +968,7 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
+      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
@@ -933,11 +976,9 @@
 ! Offset and and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
 ! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: ORIGIN(3), EXTENTS(3)
-! Separating axis test dummy variable
-      INTEGER :: SEP_AXIS
+      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
 ! Indicates that a separating axis exists
-      LOGICAL :: SA_EXIST
+      LOGICAL :: OVERLAP
 ! Local Debug flag.
       LOGICAL :: dFlag
 
@@ -1044,18 +1085,21 @@
 ! cell sizes are increased by 10% to provide a small buffer.
       IF(USE_STL) THEN
 
-         EXTENTS(3) = 6.0d0*MAX_DIA
-         EXTENTS(1) = WINDOW * 1.10d0
-         EXTENTS(2) = WINDOW * 1.10d0
+         HALFSIZE(3) = 1.10d0*MAX_DIA
+         HALFSIZE(1) = HALF*(WINDOW * 1.10d0)
+         HALFSIZE(2) = HALF*(WINDOW * 1.10d0)
+
+         minEXT(1) = HMAX+1; maxEXT(1) = 0
+         minEXT(2) = WMAX+1; maxEXT(2) = 0
 
          DO H=1,HMAX
          DO W=1,WMAX
 
-            ORIGIN(3) = BC_Z_b(BCV) - 3.0d0*MAX_DIA
-            ORIGIN(1) = MESH_P(W) - WINDOW * 0.05d0
-            ORIGIN(2) = MESH_Q(H) - WINDOW * 0.05d0
+            CENTER(3) = BC_Z_b(BCV)
+            CENTER(1) = MESH_P(W) + HALF*WINDOW
+            CENTER(2) = MESH_Q(H) + HALF*WINDOW
 
-            FACET_LP: DO LC=1, N_FACETS_DES
+            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
 
                IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
                IF(BC_Z_b(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
@@ -1066,10 +1110,10 @@
                IF(BC_Y_s(BCV) > maxval(VERTEX(:,2,LC))) CYCLE FACET_LP
                IF(BC_Y_n(BCV) < minval(VERTEX(:,2,LC))) CYCLE FACET_LP
 
-               CALL TESTTRIANGLEAABB(VERTEX(:,:,LC), NORM_FACE(:,LC),  &
-                  ORIGIN(:), EXTENTS(:), SA_EXIST, SEP_AXIS, I, J, K)
+               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
+                  VERTEX(:,:,LC), OVERLAP)
 
-               IF(.NOT.SA_EXIST) THEN
+               IF(OVERLAP) THEN
                   IF(NORM_FACE(1,LC) >= 0) THEN
                      FULL_MAP(1:W,H) = 0
                   ELSE
@@ -1080,10 +1124,27 @@
                   ELSE
                      FULL_MAP(W,H:HMAX) = 0
                   ENDIF
+
+                  minEXT(1) = min(minEXT(1),H)
+                  minEXT(2) = min(minEXT(2),W)
+
+                  maxEXT(1) = max(maxEXT(1),H)
+                  maxEXT(2) = max(maxEXT(2),W)
+
                ENDIF
             ENDDO FACET_LP
          ENDDO
          ENDDO
+
+         CALL GLOBAL_ALL_MIN(minEXT)
+         CALL GLOBAL_ALL_MAX(maxEXT)
+
+         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
+         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
+
+         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
+         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
+
       ENDIF
 
 ! Add up the total number of available positions in the seeding map.
@@ -1111,7 +1172,7 @@
       DEM_MI(BCV_I)%OCCUPANTS = OCCUPANTS
 
 ! Display the fill map if debugging
-      IF(dFlag .OR. showMAP) THEN
+      IF(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
          WRITE(*,"(2/,2x,'Displaying Fill Map:')")
          DO H=HMAX,1,-1
             WRITE(*,"(2x,'H =',I3)",advance='no')H
@@ -1189,11 +1250,12 @@
          5X,'L',7X,'P',12X,'Q',12X,'R')
  8011 FORMAT(4x,I5,3(2X,I4),3(2x,g12.5))
 
-
-      if(dFlag) write(*,"(2/,2x,'Inlet area sizes:')")
-      if(dFlag) write(*,9000) 'mfix.dat: ', PLEN * QLEN
-      if(dFlag) write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
-      if(dFlag) write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      if(dFlag .OR. (DMP_LOG .AND. showMAP)) THEN
+         write(*,"(2/,2x,'Inlet area sizes:')")
+         write(*,9000) 'mfix.dat: ', PLEN * QLEN
+         write(*,9000) 'BC_AREA:  ', BC_AREA(BCV)
+         write(*,9000) 'DEM_MI:   ', OCCUPANTS * (WINDOW**2)
+      endif
  9000 FORMAT(2x,A,g12.5)
 
 ! House keeping.

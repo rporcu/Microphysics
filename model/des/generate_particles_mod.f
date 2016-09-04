@@ -1,5 +1,7 @@
       MODULE GENERATE_PARTICLES
 
+        DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: PARTICLE_COUNT
+
       CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -61,8 +63,6 @@
       RETURN
       END SUBROUTINE GENERATE_PARTICLE_CONFIG
 
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: GENERATE_PARTICLE_CONFIG                                !
@@ -77,8 +77,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM(ICV)
 
-
 ! Global Variables:
+!---------------------------------------------------------------------//
 ! particle radius and density
       use discretelement, only: DES_RADIUS, RO_Sol
 ! particle position new and old
@@ -95,8 +95,8 @@
       use discretelement, only: DO_OLD
 ! Angular velocity
       use discretelement, only: OMEGA_OLD, OMEGA_NEW, PIJK
-! DEM solid phase diameters and densities.
-      use physprop, only: D_p0, RO_s0, SMAX
+! solid phase diameters and densities.
+      use physprop, only: D_p0, RO_s0, MMAX
 ! IC Region solids volume fraction.
       use ic, only: IC_EP_S
 
@@ -116,27 +116,33 @@
 ! to access random number generator subroutines
       use randomno
       use mpi_utility
-      use functions, only: SET_NORMAL, FUNIJK, FLUID_AT
+      use functions, only: SET_NORMAL
 
-      use error_manager
+      use desgrid, only: dg_xstart, dg_ystart, dg_zstart
+      use desgrid, only: dg_xend, dg_yend, dg_zend
 
 ! direction wise spans of the domain and grid spacing in each direction
       use geometry, only: xlength, ylength, zlength
 
-      use cutcell, only : CARTESIAN_GRID, CUT_CELL_AT
-      use STL_PREPROC_DES, only: CHECK_IF_PARTICLE_OVERLAPS_STL
+      use cutcell, only : CARTESIAN_GRID
+      use stl_functions_des, only: CHECK_IF_PARTICLE_OVERLAPS_STL
       use run, only: solids_model
       use des_allocate, only: PARTICLE_GROW
 
-      use discretelement, only: MAX_RADIUS
+      use desgrid, only: IofPOS, JofPOS, KofPOS
+      use desgrid, only: dg_is_ON_myPE_OWNs
+      use toleranc, only: compare
 
-      use discretelement, only: XE, YN, ZT
-
-      use param, only: DIM_M, DIMENSION_I, DIMENSION_J, DIMENSION_K
-      use functions, only: IS_ON_MYPE_WOBND
+      use discretelement, only: max_pip, max_radius, xe, yn, zt
+      use error_manager
+      use functions
+      use param, only: dim_m
+      use param, only: dimension_i, dimension_j, dimension_k
 
       IMPLICIT NONE
 
+! Dummy arguments
+!---------------------------------------------------------------------//
       INTEGER, INTENT(IN) :: ICV
 
 ! Local variables
@@ -150,7 +156,7 @@
 ! Number of particles in the lattice
       INTEGER :: SEED_X, SEED_Y, SEED_Z
 ! Loop indices phase/fluid cell
-      INTEGER :: M, MM, I, J, K, IJK, LB, UB
+      INTEGER :: M, MM, I, J, K, IJK
 ! Loop indicies for seeding
       INTEGER :: II, JJ, KK
 ! Start and end bound for IC region.
@@ -172,8 +178,6 @@
 
       DOUBLE PRECISION :: SOLIDS_DATA(0:DIM_M)
 
-      LOGICAL :: VEL_FLUCT
-      DOUBLE PRECISION :: VEL_SIG
       DOUBLE PRECISION, ALLOCATABLE :: randVEL(:,:)
 
 !......................................................................!
@@ -202,8 +206,7 @@
       DOM_VOL = DOML(1)*DOML(2)*DOML(3)
 
       rPARTS=0
-      VEL_FLUCT = .FALSE.
-      DO M=1,SMAX+DES_MMAX
+      DO M=MMAX+1,MMAX+DES_MMAX
          IF(SOLIDS_MODEL(M) == 'DEM') THEN
 ! Number of particles for phase M
             rPARTS(M) = &
@@ -216,7 +219,6 @@
       IF(tPARTS == 0) RETURN
 
       ADJ_DIA = 2.0d0*MAX_RADIUS*lFAC
-
 
 ! Attempt to seed particle throughout the IC region
       FIT_FAILED=.FALSE.
@@ -256,37 +258,47 @@
       yINIT = IC_START(2)+HALF*lDY
       zINIT = IC_START(3)+HALF*lDZ
 
-
       M=1
       pCOUNT = 0
       tCOUNT = 0
-      JJ_LP: DO  JJ=1, SEED_Y
-      KK_LP: DO  KK=1, SEED_Z
-      II_LP: DO  II=1, SEED_X
+
+      JJ_LP: DO JJ=1, SEED_Y
+         POS(2) = YINIT + (JJ-1)*lDY
+         IF(compare(POS(2),dg_ystart) .OR. compare(POS(2),dg_yend))    &
+            POS(2) = POS(2) + SMALL_NUMBER
+
+      KK_LP: DO KK=1, SEED_Z
+         POS(3) = ZINIT + (KK-1)*lDZ
+         IF(DO_K) THEN
+            IF(compare(POS(3),dg_zstart) .OR. compare(POS(3),dg_zend)) &
+               POS(3) = POS(3) + SMALL_NUMBER
+         ENDIF
+
+      II_LP: DO II=1, SEED_X
+         POS(1) = xINIT + (II-1)*lDX
+         IF(compare(POS(1),dg_xstart) .OR. compare(POS(1),dg_xend))    &
+            POS(1) = POS(1) + SMALL_NUMBER
 
 ! Exit if all particles were seeded.
          IF(tCOUNT > int(tPARTS)) THEN
             EXIT JJ_LP
 ! Find the next phase that needs to be seeded
          ELSEIF(pCOUNT(M) > int(rPARTS(M))) THEN
-            MM_LP: DO MM=M+1,SMAX+DES_MMAX
+            MM_LP: DO MM=M+1,MMAX+DES_MMAX
                IF(rPARTS(MM) > 0.0) THEN
                   M=MM
                   EXIT MM_LP
                ENDIF
             ENDDO MM_LP
-            IF(MM > SMAX+DES_MMAX) THEN
-               EXIT JJ_LP
-            ENDIF
+            IF(M > MMAX+DES_MMAX) EXIT JJ_LP
          ENDIF
 
          pCOUNT(M) = pCOUNT(M) + 1
          tCOUNT = tCOUNT + 1
 
-! Position the particle
-         POS(1) = xINIT + (II-1)*lDX
-         POS(2) = YINIT + (JJ-1)*lDY
-         POS(3) = ZINIT + (KK-1)*lDZ
+! Keep only particles that belong to this process.
+         IF(.NOT.dg_is_ON_myPE_OWNs(IofPOS(POS(1)), &
+            JofPOS(POS(2)),KofPOS(POS(3)))) CYCLE
 
 ! Bin the parcel to the fuild grid.
          K=1
@@ -294,10 +306,10 @@
          CALL PIC_SEARCH(J, POS(2), YN, DIMENSION_J, JMIN2, JMAX2)
          CALL PIC_SEARCH(I, POS(1), XE, DIMENSION_I, IMIN2, IMAX2)
 
-! Skip cells that are not part of the local fuild domain.
-         IF(.NOT.IS_ON_MYPE_WOBND(I,J,K)) CYCLE
+! Skip cells that return invalid IJKs.
          IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
+! Skip cells that are not part of the local fuild domain.
          IJK = FUNIJK(I,J,K)
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
@@ -308,24 +320,19 @@
 
          PIP = PIP + 1
          CALL PARTICLE_GROW(PIP)
+         MAX_PIP = max(PIP,MAX_PIP)
 
          CALL SET_NORMAL(PIP)
 
-         IF(VEL_FLUCT) THEN
-            VEL(1) = randVEL(tCOUNT,1)
-            VEL(2) = randVEL(tCOUNT,2)
-            VEL(3) = randVEL(tCOUNT,3)
-         ELSE
-            VEL(1) = IC_U_s(ICV,M)
-            VEL(2) = IC_V_s(ICV,M)
-            VEL(3) = IC_W_s(ICV,M)
-         ENDIF
+         VEL(1) = IC_U_s(ICV,M)
+         VEL(2) = IC_V_s(ICV,M)
+         VEL(3) = IC_W_s(ICV,M)
          IF(NO_K) VEL(3) = 0.0d0
 
 
-         DES_POS_NEW(:,PIP) = POS(:)
-         DES_VEL_NEW(:,PIP) = VEL(:)
-         OMEGA_NEW(:,PIP) = 0.0d0
+         DES_POS_NEW(PIP,:) = POS(:)
+         DES_VEL_NEW(PIP,:) = VEL(:)
+         OMEGA_NEW(PIP,:) = 0.0d0
 
          DES_RADIUS(PIP) = D_P0(M)*HALF
          RO_SOL(PIP) =  RO_S0(M)
@@ -337,9 +344,9 @@
          PIJK(PIP,5) = M
 
          IF(DO_OLD) THEN
-            DES_VEL_OLD(:,PIP) = DES_VEL_NEW(:,PIP)
-            DES_POS_OLD(:,PIP) = DES_POS_NEW(:,PIP)
-            OMEGA_OLD(:,PIP) = ZERO
+            DES_VEL_OLD(PIP,:) = DES_VEL_NEW(PIP,:)
+            DES_POS_OLD(PIP,:) = DES_POS_NEW(PIP,:)
+            OMEGA_OLD(PIP,:) = ZERO
          ENDIF
 
          SOLIDS_DATA(M) = SOLIDS_DATA(M) + 1.0
@@ -356,14 +363,14 @@
          WRITE(ERR_MSG,1000) ICV, SOLIDS_DATA(0)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
- 
+
 1000 FORMAT('Error 1000: Invalid IC region volume: IC=',I3,' VOL=',&
          ES15.4,/'Please correct the mfix.dat file.')
 
       WRITE(ERR_MSG,2000) ICV
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
-      DO M=1, SMAX+DES_MMAX
+      DO M=MMAX+1, MMAX+DES_MMAX
          IF(SOLIDS_DATA(M) < SMALL_NUMBER) CYCLE
          WRITE(ERR_MSG,2010) M, int(SOLIDS_DATA(M)), IC_EP_S(ICV,M),   &
             (dble(SOLIDS_DATA(M))*(Pi/6.0d0)*D_P0(M)**3)/SOLIDS_DATA(0)
@@ -384,10 +391,8 @@
  2010 FORMAT(2x,'|  ',I3,'  |',1x,I9,1x,'|',2(1x,ES9.2,1x,'|'),/2x,    &
          '|-------|',3(11('-'),'|'))
 
+
       END SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM
-
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -408,6 +413,7 @@
       use geometry, only: VOL
 
       use functions
+      use compar, only: dead_cell_at
 
       IMPLICIT NONE
 

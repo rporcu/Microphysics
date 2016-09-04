@@ -31,11 +31,11 @@
 
   GRAVITY = 0.0d0
 
-  GENER_PART_CONFIG = .T.
   DES_INTERP_ON = .T.
 
   DES_INTERP_SCHEME = 'GARG_2012'
 
+  GENER_PART_CONFIG = .T.
   CALL_USR = .T.
 
 #_______________________________________________________________________
@@ -71,8 +71,6 @@
 ! Particle Section
 !---------------------------------------------------------------------//
   MMAX = 1
-
-  PARTICLES = 0
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
