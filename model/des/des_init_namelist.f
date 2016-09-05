@@ -287,16 +287,6 @@
 
 !<keyword category="Discrete Element Model" required="false">
 !  <description>
-!    The number of iterations of a pure granular simulation to let
-!    the initial particle configuration settle before a coupled
-!    gas-solid is started.
-!  </description>
-!  <range min="0" max="+Inf" />
-      NFACTOR = 0
-!</keyword>
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
 !    Maximum number of steps through a DEM loop before a neighbor
 !    search will be performed. The search may be called earlier
 !    based on other logic.

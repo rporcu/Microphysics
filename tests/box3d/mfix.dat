@@ -93,8 +93,6 @@
   C_E = 0.95
   E_W = 0.95
 
-  NFACTOR = 0        ! No initial settling
-
 ! Solids phase 1:
 !---------------------------------------------------------------------//
   SOLIDS_MODEL(1) = 'DEM'

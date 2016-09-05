@@ -277,7 +277,6 @@ libmfix_src = \
 	model/des/drag_gs_des1.f \
 	model/des/gas_drag.f \
 	model/des/generate_particles_mod.f \
-	model/des/init_settling_dem.f \
 	model/des/interpolation_mod.f \
 	model/des/layout_mi_dem.f \
 	model/des/make_arrays_des.f \

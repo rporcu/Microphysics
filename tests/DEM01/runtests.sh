@@ -2,6 +2,8 @@
 
 RUN_NAME="DEM01"
 
+rm -f POST_* &> /dev/null
+
 DES_IM=EULER
 for DES_IM in EULER ADAMS_BASHFORTH; do
   DES_KN=10000

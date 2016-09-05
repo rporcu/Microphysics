@@ -43,7 +43,7 @@
       use discretelement, only: PRINT_DES_DATA
       use discretelement, only: DISCRETE_ELEMENT
       use discretelement, only: DES_CONTINUUM_COUPLED
-      use discretelement, only: PARTICLES, NFACTOR
+      use discretelement, only: PARTICLES
 
 !//       USE tmp_array
       IMPLICIT NONE
@@ -140,7 +140,7 @@
 ! initial state of such a des continuum coupled system
          IF(DISCRETE_ELEMENT.AND.PRINT_DES_DATA .AND. &
             .NOT.(TRIM(RUN_TYPE)=='NEW' .AND. PARTICLES /=0 .AND. &
-                  NFACTOR >0 .AND. TIME == ZERO)) THEN
+            TIME == ZERO)) THEN
                CALL WRITE_DES_DATA
          ENDIF
 

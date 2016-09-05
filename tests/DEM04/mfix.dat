@@ -75,8 +75,6 @@
   DES_ETAT_FAC =   1.0         ! inter-particle
   DES_ETAT_W_FAC = 1.0         ! particle-wall
 
-  NFACTOR = 0                  ! No initial settling
-
   DES_NEIGHBOR_SEARCH =  4     ! Grid based neighbor search
   NEIGHBOR_SEARCH_N   = 99     ! Steps between neighbor search
 

@@ -81,8 +81,6 @@
 
   PARTICLES = 1
 
-  NFACTOR = 0                  ! No initial settling
-
 ! Normal collision spring constant. (N/m)
   KN =   0.1                   ! particle-particle
   KN_W = 0.1                   ! particle-wall

@@ -125,14 +125,6 @@
 ! not see the particles.
       LOGICAL DES_ONEWAY_COUPLED
 
-! Only used when coupled and represents the number of times a pure
-! granular flow simulation is run before the actual coupled simulation
-! is started (i.e. for particle settling w/o fluid forces)
-      INTEGER NFACTOR
-
-! Drag
-      LOGICAL TSUJI_DRAG
-
 ! Collision model, options are as follows
 !   linear spring dashpot model (default/undefined)
 !   'hertzian' model
@@ -181,7 +173,6 @@
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: PFT_NEIGHBOR
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: PFT_NEIGHBOR_OLD
 
-      INTEGER, DIMENSION(:), ALLOCATABLE :: CELLNEIGHBOR_FACET_NUM, CELLNEIGHBOR_FACET_MAX
       INTEGER :: NEIGH_NUM,NEIGH_MAX
 
 ! Quantities used for reporting: max no. neighbors and max overlap
@@ -201,9 +192,6 @@
 ! desired then it must be explicitly specified)
       INTEGER, PARAMETER :: DIMN = 3
 
-! Variable that is set to the number of walls in the system
-      INTEGER NWALLS
-
 ! Position of domain boundaries generally given as
 !   (0, xlength, 0, ylength, 0, zlength)
       DOUBLE PRECISION WX1, EX2, BY1, TY2, SZ1, NZ2
@@ -213,8 +201,6 @@
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: YN  !(0:DIMENSION_J)
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ZT  !(0:DIMENSION_K)
 
-! Wall normal vector
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: WALL_NORMAL  !(NWALLS,3)
 
 ! Gravity vector and magnitude
       DOUBLE PRECISION :: GRAV(3)

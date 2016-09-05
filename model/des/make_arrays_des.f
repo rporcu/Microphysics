@@ -160,10 +160,7 @@
       CALL DES_PAR_EXCHANGE
       CALL PARTICLES_IN_CELL
 
-      IF(DEM_SOLIDS) THEN
-         CALL NEIGHBOUR
-         CALL INIT_SETTLING_DEM
-      ENDIF
+      CALL NEIGHBOUR
 
 ! Calculate interpolation weights
       CALL CALC_INTERP_WEIGHTS
