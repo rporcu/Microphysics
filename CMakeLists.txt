@@ -364,11 +364,11 @@ enable_testing()
 
 set(TESTS
   DEM01
-  # DEM02
-  # DEM03
-  # DEM04
-  # DEM05
-  # DEM06
+  DEM02
+  DEM03
+  DEM04
+  DEM05
+  DEM06
   FLD01
   FLD02
   # FLD03
@@ -379,14 +379,18 @@ set(TESTS
 
 foreach( test ${TESTS})
   FILE(GLOB USR_OVERRIDES tests/${test}/*.f)
-  add_executable(mfix_${test} ${USR_OVERRIDES} model/mfix.f)
+  add_executable(mfix_${test} model/mfix.f)
+  add_library(usr_${test} STATIC ${USR_OVERRIDES})
+
   set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
+  set_target_properties(usr_${test} PROPERTIES Fortran_FORMAT "FREE")
 
   add_test(NAME test_${test}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${test}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test})
 
-  target_link_libraries(mfix_${test} model usr usrdep)
+  target_link_libraries(usr_${test} model usrdep)
+  target_link_libraries(mfix_${test} model usr_${test} usrdep)
 endforeach( test ${TESTS})
 
 # # with -fPIC

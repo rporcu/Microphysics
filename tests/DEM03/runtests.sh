@@ -2,10 +2,15 @@
 
 RUN_NAME="DEM03"
 
+MFIX=./mfix
+if [ -n "$1" ]; then
+    MFIX=$1
+fi
+
 DES_IM=ADAMS_BASHFORTH
 for DES_ETA in 1.0 0.9 0.8 0.7 0.6 0.5; do
   rm -f ${RUN_NAME}* &> /dev/null
-  time -p ./mfix DES_INTG_METHOD=\"${DES_IM}\" \
+  time -p ${MFIX} DES_INTG_METHOD=\"${DES_IM}\" \
     DES_EN_INPUT\(1\)=${DES_ETA} \
     DES_EN_INPUT\(2\)=${DES_ETA} \
     DES_EN_INPUT\(3\)=${DES_ETA} \
