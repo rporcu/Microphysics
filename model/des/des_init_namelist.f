@@ -243,7 +243,6 @@
 !      neighborhood surrounding a particle (9-cell neighborhood in 2D).
 !    o It is recommend that the DES_INTERP_WIDTH be set equal to the
 !      maximum particle diameter when using STL defined boundaries.
-!      Field data can be smooth by specifying DES_DIFFUSE_WIDTH.
 !  </description>
       DES_INTERP_WIDTH = UNDEFINED
 !</keyword>
@@ -276,24 +275,6 @@
 !    particle's position to the 27-cell neighborhood surrounding
 !    the particle."/>
       DES_INTERP_MEAN_FIELDS = .FALSE.
-!</keyword>
-
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    The length scale used to smooth dispersed phase averaged fields by
-!    solving a diffusion equation. This approach is typically used when
-!    particle sizes near or exceed the size of the Eulerian grid cell sizes.
-!    o  Mean filed diffusion is disabled if DES_DIFFUSE_WIDTH is not specified.
-!    o  Mean filed diffusion cannot be used with the GARG_2012
-!       interpolation scheme.
-!    o  It is recommend that mean field diffusion be used in conjunction
-!       with DES_EXPLICITLY_COUPLED to minimize the computational cost of
-!       diffusing field data.
-!    o  The DES diffusion equation is listed as equation type 10 in the
-!       Numerical Parameters section.
-!  </description>
-      DES_DIFFUSE_WIDTH = UNDEFINED
 !</keyword>
 
 

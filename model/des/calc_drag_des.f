@@ -99,7 +99,6 @@
       SUBROUTINE CALC_DRAG_DES_EXPLICIT
 
       use discretelement, only: DES_CONTINUUM_COUPLED
-      use particle_filter, only: DES_DIFFUSE_MEAN_FIELDS
 
 ! Contribution to gas momentum equation due to drag
       use discretelement, only: DRAG_BM
@@ -119,14 +118,6 @@
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) CALL DRAG_GS_GAS1
-
-! Apply the diffusion filter.
-      IF(DES_DIFFUSE_MEAN_FIELDS) THEN
-         CALL DIFFUSE_MEAN_FIELD(F_GDS,'F_GDS')
-         CALL DIFFUSE_MEAN_FIELD(DRAG_BM(:,1),'DRAG_BM(1)')
-         CALL DIFFUSE_MEAN_FIELD(DRAG_BM(:,2),'DRAG_BM(2)')
-         IF(DO_K) CALL DIFFUSE_MEAN_FIELD(DRAG_BM(:,3),'DRAG_BM(3)')
-      ENDIF
 
       RETURN
       END SUBROUTINE CALC_DRAG_DES_EXPLICIT

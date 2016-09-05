@@ -274,10 +274,6 @@ libmfix_src = \
 	model/des/desgrid_mod.f \
 	model/des/desmpi_mod.f \
 	model/des/desmpi_wrapper_mod.f \
-	model/des/dif_phi_bc_des.f \
-	model/des/dif_phi_des.f \
-	model/des/dif_phi_source_des.f \
-	model/des/diffuse_mean_fields.f \
 	model/des/discretelement_mod.f \
 	model/des/drag_gp_des.f \
 	model/des/drag_gs_des0.f \

@@ -298,10 +298,6 @@
       use particle_filter, only: DES_INTERP_GAUSS
 ! User specified filter width
       use particle_filter, only: DES_INTERP_WIDTH
-! Flag: Diffuse DES field variables.
-      use particle_filter, only: DES_DIFFUSE_MEAN_FIELDS
-! Diffusion filter width
-      use particle_filter, only: DES_DIFFUSE_WIDTH
 ! Flag: Interpolate continuum fields
       use particle_filter, only: DES_INTERP_MEAN_FIELDS
 ! Flag: Interplate variables for drag calculation.
@@ -322,9 +318,6 @@
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_INTERP")
-
-! Set the runtime flag for diffusing mean fields
-      DES_DIFFUSE_MEAN_FIELDS = (DES_DIFFUSE_WIDTH /= UNDEFINED)
 
 ! Set the interpolation ENUM value.
       SELECT CASE(trim(adjustl(DES_INTERP_SCHEME)))
@@ -387,15 +380,6 @@
             WRITE(ERR_MSG,2100) trim(adjustl(DES_INTERP_SCHEME))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-
-         IF(DES_DIFFUSE_MEAN_FIELDS) THEN
-            WRITE(ERR_MSG,2110) trim(adjustl(DES_INTERP_SCHEME))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
- 2110 FORMAT('Error 2110: The selected interpolation scheme (',A,') ', &
-         'does not',/'support diffusive filtering of mean field ',     &
-          'quantities. Please correct',/'the input file.')
 
       CASE(DES_INTERP_DPVM, DES_INTERP_GAUSS)
 
