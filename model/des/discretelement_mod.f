@@ -228,21 +228,6 @@
       LOGICAL DES_PERIODIC_WALLS_Z
 
 
-! Lees & Edwards wall BC (lost in current DEM)
-!----------------------------------------------------------------->>>
-! Logic for Lees & Edwards BC (T = turn on LE BC)
-      LOGICAL DES_LE_BC
-! Relative velocity of LE boundaries (distance/time)
-      DOUBLE PRECISION DES_LE_REL_VEL
-! Shear direction
-!   2D options are DUDY or DVDX
-!   3D options are DUDY, DUDZ, DVDX, DVDZ, DWDX or DWDY
-!   Note that all other directions are treated as periodic boundaries
-      CHARACTER(LEN=4) :: DES_LE_SHEAR_DIR
-! End LE BC
-!-----------------------------------------------------------------<<<
-
-
 
 ! Particle-particle and Particle-wall collision model parameters
 !----------------------------------------------------------------->>>
@@ -254,9 +239,6 @@
       DOUBLE PRECISION ETA_DES_N, ETA_N_W  !Normal
       DOUBLE PRECISION ETA_DES_T, ETA_T_W  !Tangential
 
-! Flag to use van der Hoef et al. (2006) model for adjusting the rotation of the
-! contact plane
-      LOGICAL :: USE_VDH_DEM_MODEL
 ! Tangential damping factors, eta_t = eta_t_factor * eta_N
       DOUBLE PRECISION DES_ETAT_FAC, DES_ETAT_W_FAC
 
@@ -489,22 +471,7 @@
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_VEL_MAX
                         !(3)
 
-!flag to convert the outside box to facets if stl facet representation is used
-!default is false
-
-      Logical :: des_convert_box_to_facets
-
-      Integer, parameter :: FACET_TYPE_NORMAL = 1, FACET_TYPE_PO = 2 &
-      , FACET_TYPE_MI = 3
-
-      !make this a short integer
-      !array to specify the facet type
-      Integer, dimension(:), allocatable :: STL_FACET_TYPE
-
-      Integer :: count_facet_type_normal, count_facet_type_po, count_facet_type_mi
-
 ! Flag to turn on/off optimizing the list of facets at each des grid cell
-
       LOGICAL :: MINIMIZE_DES_FACET_LIST
 !-----------------------------------------------------------------<<<
 

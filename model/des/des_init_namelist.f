@@ -334,14 +334,6 @@
       FACTOR_RLM = 1.2
 !</keyword>
 
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Flag to use van der Hoef et al. (2006) model for adjusting the
-!    rotation of the contact plane. See the MFIX-DEM documentation.
-!  </description>
-      USE_VDH_DEM_MODEL = .FALSE.
-!</keyword>
-
 
 !<keyword category="Discrete Element Model" required="false">
 !  <description>
@@ -560,25 +552,6 @@
 ! condition. This may be useful during long simulations or if the
 ! inlet appears to be taking a long time to randomly place particles.
       FORCE_ORD_BC = .FALSE.
-
-! Lees-Edwards boundary condition to simulate homogeneous shear
-! problem with periodic boundary conditions. Not supported in this
-! version.
-      DES_LE_BC = .FALSE.
-
-! Relative velocity needed for Lees-Edwards BC.
-! Not supported in this version.
-      DES_LE_REL_VEL = UNDEFINED
-
-! Direction of shear for Lees-Edwards BC.
-! Not supported in this version. </description>
-      DES_LE_SHEAR_DIR = UNDEFINED_C
-
-! des wall boundaries: wall velocities. I think they probably
-! defined for the Lees-Edwards BC's
-      DES_BC_Uw_s(:,:) = ZERO
-      DES_BC_Vw_s(:,:) = ZERO
-      DES_BC_Ww_s(:,:) = ZERO
 
 
 ! These need to be inialized to 0, but they are not part of the namelist

@@ -100,25 +100,6 @@
 
       INTEGER, ALLOCATABLE :: DEM_BCMI_IJK(:)
 
-
-!----------------------------------------------------------------------!
-
-
-! DES specification for solids phase velocity for WALL boundary
-! conditions. The current setup is fairly limited. The specified
-! boundary velocities are assigned to the indicated wall where a wall
-! corresponds to one of the six planes in a cubic domain. Each wall
-! corresponds to a number as follows west=1, east=2, bottom=3, top=4,
-! south=5, north=6. See cfwallposvel for details. To specify a y or z
-! velocity to the west wall set des_bc_vw_s(1,M) or des_bc_ww_s(1,M),
-! respectively (note an x velocity is not valid for a west or east wall).
-! Since these are user input, they are allocated here with a constant
-! preset size, but their actual size is represented by &
-! (nwalls, des_mmax)
-      DOUBLE PRECISION DES_BC_Uw_s(DIMENSION_BC, DIM_M)
-      DOUBLE PRECISION DES_BC_Vw_s(DIMENSION_BC, DIM_M)
-      DOUBLE PRECISION DES_BC_Ww_s(DIMENSION_BC, DIM_M)
-
       CONTAINS
 !----------------------------------------------------------------------!
 !  Function to exclude cells from DEM mass inlet.                      !

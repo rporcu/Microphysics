@@ -2,7 +2,7 @@
 
 ! USE discretelement
         DES_ONEWAY_COUPLED, DES_REPORT_MASS_INTERP, DES_INTG_METHOD, &
-        PARTICLES, NFACTOR, USE_VDH_DEM_MODEL, &
+        PARTICLES, NFACTOR, &
         GENER_PART_CONFIG, DES_NEIGHBOR_SEARCH, NEIGHBOR_SEARCH_N,&
         FACTOR_RLM, NEIGHBOR_SEARCH_RAD_RATIO, DES_USR_VAR_SIZE,&
 
@@ -20,24 +20,12 @@
 ! Additional properties for Hertzian model:
         DES_COLL_MODEL, EW_YOUNG, VW_POISSON, E_YOUNG, V_POISSON,&
 
-! Lees Edwards BC (for DEM only)
-        DES_LE_BC, DES_LE_REL_VEL, DES_LE_SHEAR_DIR,&
-
-
-! DES wall BC: wall translational velocity
-! These need to be improved to work for arbitrary geoms
-        DES_BC_Uw_s, DES_BC_Vw_s, DES_BC_Ww_s,&
-
 ! DES flow boundary condition information: J.Musser
         FORCE_ORD_BC, &
 
 ! DES output control information
         PRINT_DES_DATA, DES_OUTPUT_TYPE,  &
 
-
-! flag to convert des outside box to facets needed if outside box not part of stl geom
-
-         des_convert_box_to_facets, &
 
 ! Flag to turn on/off optimizing the list of facets at each des grid cell
          MINIMIZE_DES_FACET_LIST
