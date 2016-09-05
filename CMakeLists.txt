@@ -6,13 +6,13 @@ include_directories(model/include)
 option(MPI "MPI support" OFF)
 
 if ( MPI )
-find_package ( MPI )
-if ( MPI_Fortran_COMPILER )
-        include_directories( ${MPI_INCLUDE_PATH} )
-        set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-else ( MPI_Fortran_COMPILER )
-        message (FATAL_ERROR " MPI support requested but MPI compiler not found ")
-endif ( MPI_Fortran_COMPILER )
+  find_package ( MPI )
+  if ( MPI_Fortran_COMPILER )
+    include_directories( ${MPI_INCLUDE_PATH} )
+    set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+  else ( MPI_Fortran_COMPILER )
+    message (FATAL_ERROR " MPI support requested but MPI compiler not found ")
+  endif ( MPI_Fortran_COMPILER )
 endif ( MPI )
 
 #
@@ -48,7 +48,7 @@ set( USR_DEP_SOURCES
   model/solvers/leqsol_mod.f
   model/solvers/xerbla.f
   model/toleranc_mod.f
-)
+  )
 
 #
 # USR_SOURCES are those Fortran modules that can overridden in the RUNDIR
@@ -73,11 +73,11 @@ set( USR_SOURCES
   )
 
 foreach( usr_f ${USR_SOURCES})
- ADD_CUSTOM_COMMAND(
-   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
-   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f} ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
-   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f}
-   )
+  ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f} ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f}
+    )
 endforeach( usr_f )
 
 set(SOURCES
@@ -139,7 +139,6 @@ set(SOURCES
   model/check_data/check_bc_geometry.f
   model/check_data/check_bc_inflow.f
   model/check_data/check_bc_outflow.f
-  model/check_data/check_bc_pic.f
   model/check_data/check_bc_walls.f
   model/check_data/check_boundary_conditions.f
   model/check_data/check_dmp_prereqs.f
@@ -148,7 +147,6 @@ set(SOURCES
   model/check_data/check_geometry_prereqs.f
   model/check_data/check_ic_common_discrete.f
   model/check_data/check_ic_dem.f
-  model/check_data/check_ic_mppic.f
   model/check_data/check_initial_conditions.f
   model/check_data/check_numerics.f
   model/check_data/check_output_control.f
@@ -158,7 +156,6 @@ set(SOURCES
   model/check_data/check_solids_common_discrete.f
   model/check_data/check_solids_dem.f
   model/check_data/check_solids_model_prereqs.f
-  model/check_data/check_solids_mppic.f
   model/check_data/check_solids_phases.f
   model/check_data_20.f
   model/check_data_30.f
@@ -185,39 +182,29 @@ set(SOURCES
   model/des/cfrelvel.f
   model/des/cfslide.f
   model/des/cfupdateold.f
-  model/des/cfwallcontact.f
-  model/des/cfwallposvel.f
   model/des/check_cell_movement.f
   model/des/comp_mean_fields.f
   model/des/comp_mean_fields0.f
   model/des/comp_mean_fields1.f
   model/des/des_allocate_mod.f
   model/des/des_bc_mod.f
-  model/des/des_functions.f
   model/des/des_granular_temperature.f
   model/des/des_init_arrays.f
   model/des/des_init_namelist.f
-  model/des/des_stl_functions_mod.f
   model/des/des_time_march.f
   model/des/desgrid_mod.f
   model/des/desmpi_mod.f
   model/des/desmpi_wrapper_mod.f
-  model/des/dif_phi_bc_des.f
-  model/des/dif_phi_des.f
-  model/des/dif_phi_source_des.f
-  model/des/diffuse_mean_fields.f
   model/des/drag_gp_des.f
   model/des/drag_gs_des0.f
   model/des/drag_gs_des1.f
   model/des/gas_drag.f
   model/des/generate_particles_mod.f
-  model/des/init_settling_dem.f
   model/des/interpolation_mod.f
   model/des/layout_mi_dem.f
   model/des/make_arrays_des.f
   model/des/mass_inflow_dem.f
   model/des/mass_outflow_dem.f
-  model/des/mfix_pic_mod.f
   model/des/mpi_comm_des_mod.f
   model/des/mpi_funs_des_mod.f
   model/des/mpi_init_des_mod.f
@@ -227,19 +214,16 @@ set(SOURCES
   model/des/neighbour.f
   model/des/nsquare.f
   model/des/particles_in_cell.f
-  model/des/pic_bc_mod.f
-  model/des/pic_routines.f
   model/des/randomno_mod.f
   model/des/read_particle_input.f
   model/des/read_res0_des.f
   model/des/read_res1_des_mod.f
   model/des/sendrecvnode_mod.f
   model/des/set_bc_dem.f
+  model/des/stl_dbg_des_mod.f
+  model/des/stl_functions_des_mod.f
   model/des/set_bc_dem_mi.f
   model/des/set_bc_dem_mo.f
-  model/des/set_bc_pic.f
-  model/des/set_bc_pic_mi.f
-  model/des/set_bc_pic_mo.f
   model/des/set_filter_des.f
   model/des/set_geometry_des.f
   model/des/set_phase_index.f
@@ -292,7 +276,6 @@ set(SOURCES
   model/location_check.f
   model/machine_mod.f
   model/matrix_mod.f
-  model/mfix.f
   model/mflux_mod.f
   model/mod_bc_i.f
   model/mod_bc_j.f
@@ -361,32 +344,60 @@ set(SOURCES
   model/xsi_mod.f
   model/zero_norm_vel.f)
 
-add_executable(mfix ${SOURCES})
-add_library(usr SHARED ${USR_SOURCES})
+add_executable(mfix model/mfix.f)
+add_library(model STATIC ${SOURCES})
+add_library(usr STATIC ${USR_SOURCES})
 add_library(usrdep STATIC ${USR_DEP_SOURCES})
 
 set_source_files_properties(${SOURCES} ${USR_SOURCES} ${USR_DEP_SOURCES} PROPERTIES COMPILE_FLAGS -cpp)
 
 set_target_properties(mfix PROPERTIES Fortran_FORMAT "FREE")
+set_target_properties(model PROPERTIES Fortran_FORMAT "FREE")
 set_target_properties(usr PROPERTIES Fortran_FORMAT "FREE")
 set_target_properties(usrdep PROPERTIES Fortran_FORMAT "FREE")
 
 target_link_libraries(usr usrdep)
-target_link_libraries(mfix usr usrdep)
+target_link_libraries(model usr usrdep)
+target_link_libraries(mfix model usr usrdep)
 
 enable_testing()
 
-add_test(runtests ./runtests.sh)
+set(TESTS
+  DEM01
+  # DEM02
+  # DEM03
+  # DEM04
+  # DEM05
+  # DEM06
+  FLD01
+  FLD02
+  # FLD03
+  # box3d
+  # cyclone
+  # fluidbed_DES
+  )
 
-# with -fPIC
-IF(UNIX AND NOT WIN32)
-  FIND_PROGRAM(CMAKE_UNAME uname /bin /usr/bin /usr/local/bin )
-  IF(CMAKE_UNAME)
-    EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_PROCESSOR)
-    SET(CMAKE_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR} CACHE INTERNAL
-"processor type (i386 and x86_64)")
-    IF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-      ADD_DEFINITIONS(-fPIC)
-    ENDIF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-  ENDIF(CMAKE_UNAME)
-ENDIF(UNIX AND NOT WIN32)
+foreach( test ${TESTS})
+  FILE(GLOB USR_OVERRIDES tests/${test}/*.f)
+  add_executable(mfix_${test} ${USR_OVERRIDES} model/mfix.f)
+  set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
+
+  add_test(NAME test_${test}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${test}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test})
+
+  target_link_libraries(mfix_${test} model usr usrdep)
+endforeach( test ${TESTS})
+
+# # with -fPIC
+# IF(UNIX AND NOT WIN32)
+#   FIND_PROGRAM(CMAKE_UNAME uname /bin /usr/bin /usr/local/bin )
+#   IF(CMAKE_UNAME)
+#     EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_PROCESSOR)
+#     SET(CMAKE_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR} CACHE INTERNAL
+#       "processor type (i386 and x86_64)")
+#     IF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+#       ADD_DEFINITIONS(-fPIC)
+#     ENDIF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+#   ENDIF(CMAKE_UNAME)
+# ENDIF(UNIX AND NOT WIN32)

@@ -6,65 +6,15 @@
 
 stages:
   - build
-  - buildtest
   - test
 
-buildtest_dem01:
+build:
   stage: build
   script:
-    - cd tests/DEM01
-    - cmake ../..
-    - make mfix
-  artifacts:
-    paths:
-    - build
-
-buildtest_dem02:
-  stage: buildtest
-  script:
-    - cd tests/DEM02
-    - cmake ../..
-    - make mfix
-  artifacts:
-    paths:
-    - build
-
-buildtest_dem03:
-  stage: buildtest
-  script:
-    - cd tests/DEM03
-    - cmake ../..
-    - make mfix
-  artifacts:
-    paths:
-    - build
-
-buildtest_dem04:
-  stage: buildtest
-  script:
-    - cd tests/DEM04
-    - cmake ../..
-    - make mfix
-  artifacts:
-    paths:
-    - build
-
-buildtest_dem05:
-  stage: buildtest
-  script:
-    - cd tests/DEM05
-    - cmake ../..
-    - make mfix
-  artifacts:
-    paths:
-    - build
-
-buildtest_dem06:
-  stage: buildtest
-  script:
-    - cd tests/DEM06
-    - cmake ../..
-    - make mfix
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
   artifacts:
     paths:
     - build
@@ -72,41 +22,5 @@ buildtest_dem06:
 test_dem01:
   stage: test
   script:
-    - cd tests/DEM01
-    - cmake ../..
-    - make test
-
-test_dem02:
-  stage: test
-  script:
-    - cd tests/DEM02
-    - cmake ../..
-    - make test
-
-test_dem03:
-  stage: test
-  script:
-    - cd tests/DEM03
-    - cmake ../..
-    - make test
-
-test_dem04:
-  stage: test
-  script:
-    - cd tests/DEM04
-    - cmake ../..
-    - make test
-
-test_dem05:
-  stage: test
-  script:
-    - cd tests/DEM05
-    - cmake ../..
-    - make test
-
-test_dem06:
-  stage: test
-  script:
-    - cd tests/DEM06
-    - cmake ../..
+    - cd build
     - make test

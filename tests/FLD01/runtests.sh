@@ -3,11 +3,16 @@
 # set case directory
 RUN_NAME="FLD01"
 
+MFIX=./mfix
+if [ -n "$1" ]; then
+    MFIX=$1
+fi
+
 rm -f POST_* &> /dev/null
 
 for GMAX in 8 16 32 64; do
    rm -f ${RUN_NAME}* &> /dev/null
-   time -p ./mfix IMAX=${GMAX} JMAX=${GMAX}
+   time -p ${MFIX} IMAX=${GMAX} JMAX=${GMAX}
 done
 
 post_dats=AUTOTEST/POST*.dat
