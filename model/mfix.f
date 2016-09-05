@@ -72,7 +72,6 @@
       USE functions
       USE funits
       USE machine
-      USE mfix_pic
       USE mpi_utility
       USE output
       USE param

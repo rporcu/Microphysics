@@ -32,7 +32,6 @@
       USE interpolation
       use desmpi
       USE cutcell
-      USE mfix_pic
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -84,7 +83,7 @@
 !$omp parallel do default(none)                                         &
 !$omp shared(ijkstart3,ijkend3,pinc,i_of,j_of,k_of,no_k,interp_scheme,  &
 !$omp        funijk_map_c,xe,yn,dz,zt,avg_factor,do_k,pic,des_pos_new,  &
-!$omp        des_vel_new, mppic, mppic_pdrag_implicit,p_force,          &
+!$omp        des_vel_new, p_force,          &
 !$omp        u_g,v_g,w_g,pvol,fc,f_gp,ep_g)                     &
 !$omp private(ijk, i, j, k, pcell, iw, ie, js, jn, kb, ktp,             &
 !$omp         onew, ii, jj, kk,cur_ijk, ipjk, ijpk, ipjpk,              &
@@ -164,13 +163,7 @@
             CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(IJK))
 
 ! Calculate the gas-solids drag force on the particle
-            IF(MPPIC .AND. MPPIC_PDRAG_IMPLICIT) THEN
-! implicit treatment of the drag term for mppic
-               D_FORCE(1:3) = F_GP(NP)*(VELFP)
-            ELSE
-! default case
-               D_FORCE(1:3) = F_GP(NP)*(VELFP-VEL_NEW)
-            ENDIF
+            D_FORCE(1:3) = F_GP(NP)*(VELFP-VEL_NEW)
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
@@ -221,7 +214,6 @@
       USE interpolation
       use desmpi
       USE cutcell
-      USE mfix_pic
       USE functions
       use mpi_node_des, only: des_addnodevalues
 
@@ -258,8 +250,6 @@
 ! avg_factor=0.125 (in 3D) or =0.25 (in 2D)
 ! avg_factor=0.250 (in 3D) or =0.50 (in 2D)
       DOUBLE PRECISION :: AVG_FACTOR
-! Statistical weight of the particle. Equal to one for DEM
-      DOUBLE PRECISION :: WTP
 !Handan Liu added temporary variables on April 20 2012
       DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp,vst_tmp
       DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
@@ -293,7 +283,7 @@
 !!!$omp private(ijk,i,j,k,pcell,iw,ie,js,jn,kb,ktp,onew,                &
 !!!$omp         ii,jj,kk,cur_ijk,ipjk,ijpk,ipjpk,                       &
 !!!$omp         gst_tmp,vst_tmp,velfp,desposnew,ijpkp,ipjkp,            &
-!!!$omp         ipjpkp,ijkp,nindx,focus,np,wtp,m,weight_ft,             &
+!!!$omp         ipjpkp,ijkp,nindx,focus,np,m,weight_ft,             &
 !!!$omp             vcell,ovol)
 !!!$omp do reduction(+:drag_am) reduction(+:drag_bm)
       DO IJK = IJKSTART3,IJKEND3
@@ -377,8 +367,6 @@
 !----------------------------------------------------------------->>>
             focus = .false.
             M = pijk(np,5)
-            WTP = ONE
-            IF(MPPIC) WTP = DES_STAT_WT(NP)
 
             DO k = 1, merge(1, ONEW, NO_K)
                DO j = 1, onew
@@ -398,12 +386,12 @@
 
 !!!$omp critical
                      drag_am(cur_ijk) = drag_am(cur_ijk) + &
-                        f_gp(np)*weight_ft(i,j,k)*ovol*wtp
+                        f_gp(np)*weight_ft(i,j,k)*ovol
 
                      drag_bm(cur_ijk,1:3) = &
                         drag_bm(cur_ijk,1:3) + &
                         f_gp(np) * vel_new(1:3) * &
-                        weight_ft(i,j,k)*ovol*wtp
+                        weight_ft(i,j,k)*ovol
 !!!$omp end critical
                   ENDDO
                ENDDO

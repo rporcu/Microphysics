@@ -3,8 +3,7 @@
 !  Subroutine: CHECK_IC_COMMON_DISCRETE                                !
 !  Author:   R.Garg                                   Date: 11-Mar-14  !
 !                                                                      !
-!  Purpose: check the initial conditions input section common to both  !
-!           DEM and MPPIC models                                       !
+!  Purpose: check the initial conditions input section for DEM.        !
 !     - ensure the first IC is defined over the entire domain with     !
 !        ep_g = 1 when more than one IC has solids                     !
 !     - ensure the ICs are non-overlapping                             !

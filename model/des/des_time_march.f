@@ -168,7 +168,6 @@
 
       IF(CALL_USR) CALL USR3_DES
 
-!      CALL DIFFUSE_MEAN_FIELDS
 !      CALL CALC_EPG_DES
 
 ! When coupled, and if needed, reset the discrete time step accordingly

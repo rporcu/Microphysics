@@ -16,7 +16,6 @@
       USE discretelement
       use desgrid
       use desmpi
-      USE mfix_pic
       USE functions
       use particle_filter, only: FILTER_WEIGHT
       use particle_filter, only: FILTER_CELL
@@ -40,14 +39,7 @@
 
 !-----------------------------------------------
 
-
       SOLVOLINC(:,:) = ZERO
-
-      IF(MPPIC) THEN
-         DES_U_s(:,:) = ZERO
-         DES_V_s(:,:) = ZERO
-         DES_W_s(:,:) = ZERO
-      ENDIF
 
 ! Loop bounds for interpolation.
       LP_BND = merge(27,9,DO_K)
@@ -55,7 +47,7 @@
 ! Calculate the gas phase forces acting on each particle.
 !$omp parallel default(none)                                           &
 !$omp private(NP, VOL_WT, M, LC, IJK, VOLXWEIGHT)                      &
-!$omp shared(MAX_PIP, PVOL, DES_STAT_WT, PIJK, LP_BND, MPPIC,          &
+!$omp shared(MAX_PIP, PVOL, DES_STAT_WT, PIJK, LP_BND,          &
 !$omp    FILTER_WEIGHT, SOLVOLINC,DES_U_S, DES_V_S, DES_W_S, DO_K,     &
 !$omp    FILTER_CELL,DES_VEL_NEW)
 !$omp do
@@ -63,7 +55,6 @@
          IF(.NOT.IS_NORMAL(NP) .and. .NOT.IS_GHOST(NP)) CYCLE
 
          VOL_WT = PVOL(NP)
-         IF(MPPIC) VOL_WT = VOL_WT*DES_STAT_WT(NP)
 ! Particle phase for data binning.
          M = PIJK(NP,5)
 
@@ -74,20 +65,6 @@
 ! Accumulate total solids volume (by phase)
             !$omp atomic
             SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOLxWEIGHT
-            IF(MPPIC) THEN
-! Accumulate total solids momentum (by phase)
-               !$omp atomic
-               DES_U_S(IJK,M) = DES_U_S(IJK,M) + &
-                  DES_VEL_NEW(1,NP)*VOLxWEIGHT
-               !$omp atomic
-               DES_V_S(IJK,M) = DES_V_S(IJK,M) + &
-                  DES_VEL_NEW(2,NP)*VOLxWEIGHT
-               IF(DO_K) THEN
-                  !$omp atomic
-                  DES_W_S(IJK,M) = DES_W_S(IJK,M) + &
-                     DES_VEL_NEW(3,NP)*VOLxWEIGHT
-               ENDIF
-            ENDIF
          ENDDO
       ENDDO
 !$omp end do

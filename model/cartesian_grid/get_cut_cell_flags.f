@@ -397,7 +397,7 @@
 !  The list will be updated and duplicate nodes will be removed from
 !  the connectivity list
 !  This is done to ensure that we can assign a volume surrounding each
-!  node, that will be used to compute solids volume fraction for MPPIC
+!  node, that will be used to compute solids volume fraction
 !======================================================================
 
 !      print*,'Removing duplicate nodes...'

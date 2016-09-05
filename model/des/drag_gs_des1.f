@@ -48,10 +48,6 @@
       use tmp_array, only: UGC => ARRAY1
       use tmp_array, only: VGC => ARRAY2
       use tmp_array, only: WGC => ARRAY3
-! Flag for MPPIC runs.
-      use mfix_pic, only: MPPIC
-! Flag to use implicit drag for MPPIC
-      use mfix_pic, only: MPPIC_PDRAG_IMPLICIT
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
@@ -96,8 +92,8 @@
 
 !$omp parallel default(none) private(np,lepg,velfp,ijk,weight,lpf,d_force)    &
 !$omp          shared(max_pip,des_interp_on,lp_bnd,filter_cell,filter_weight, &
-!$omp          ep_g,pijk,des_vel_new,f_gp,mppic,ugc,vgc,wgc,p_force,          &
-!$omp          des_explicitly_coupled,drag_fc,mppic_pdrag_implicit,fc,pvol)
+!$omp          ep_g,pijk,des_vel_new,f_gp,ugc,vgc,wgc,p_force,          &
+!$omp          des_explicitly_coupled,drag_fc,fc,pvol)
 !$omp do
       DO NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP)) CYCLE
@@ -144,13 +140,7 @@
             CALL DES_DRAG_GP(NP, DES_VEL_NEW(:,NP), VELFP, lEPg)
 
 ! Calculate the gas-solids drag force on the particle
-            IF(MPPIC .AND. MPPIC_PDRAG_IMPLICIT) THEN
-! implicit treatment of the drag term for mppic
-               D_FORCE = F_GP(NP)*VELFP
-            ELSE
-! default case
-               D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
-            ENDIF
+            D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
@@ -211,10 +201,6 @@
       use discretelement, only: DRAG_BM
 ! Scalar cell center total drag force
       use discretelement, only: F_GDS
-! Flag for MPPIC runs
-      use mfix_pic, only: MPPIC
-! Statical weight of each MPPIC parcel
-      use mfix_pic, only: DES_STAT_WT
 ! Volume of scalar cell.
       use geometry, only: VOL
 ! Flag for 3D simulatoins.
@@ -272,7 +258,7 @@
 
 !$omp parallel default(none) private(np,lepg,velfp,ijk,weight,ldrag_bm,lforce) &
 !$omp          shared(max_pip,des_interp_on,lp_bnd,filter_cell,filter_weight,  &
-!$omp          ep_g,pijk,des_vel_new,f_gp,vol,des_stat_wt,mppic,drag_bm,f_gds,ugc,vgc,wgc)
+!$omp          ep_g,pijk,des_vel_new,f_gp,vol,drag_bm,f_gds,ugc,vgc,wgc)
 !$omp do
       DO NP=1,MAX_PIP
          IF(IS_NONEXISTENT(NP)) CYCLE
@@ -312,7 +298,6 @@
          CALL DES_DRAG_GP(NP, DES_VEL_NEW(:,NP), VELFP, lEPg)
 
          lFORCE = F_GP(NP)
-         IF(MPPIC) lFORCE = lFORCE*DES_STAT_WT(NP)
 
          lDRAG_BM = lFORCE*DES_VEL_NEW(:,NP)
 

@@ -22,13 +22,11 @@
       USE ic
       USE indices
       USE leqsol
-      USE mfix_pic
       USE output
       USE param
       USE param1
       USE particle_filter
       USE physprop
-      USE pic_bc
       USE polygon
       USE ps
       USE quadric

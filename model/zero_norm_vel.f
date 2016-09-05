@@ -27,7 +27,6 @@
       USE indices
       USE compar
       USE discretelement
-      USE mfix_pic
       USE functions
 
       IMPLICIT NONE

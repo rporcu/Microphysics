@@ -30,7 +30,6 @@
       use des_bc
       use desmpi_wrapper
       use sendrecvnode
-      use mfix_pic
       use param, only: DIMENSION_N_s
       use desmpi
 

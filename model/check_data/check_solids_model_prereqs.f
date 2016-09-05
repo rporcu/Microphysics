@@ -22,8 +22,6 @@
 
 ! Flag: Use DES E-L model
       use discretelement, only: DISCRETE_ELEMENT
-! Flag: Use MPPIC E-L model
-      use mfix_pic, only: MPPIC
 ! Flag: Use TFM and DEM solids models.
       use discretelement, only: DES_CONTINUUM_HYBRID
 ! Flag: gas/solids E-L simulation, otherwise granular flow.
@@ -108,39 +106,27 @@
       DEM_SOLIDS = (DEM_COUNT > 0)
       PIC_SOLIDS = (PIC_COUNT > 0)
 
-! MPPIC and continuum solids don't mix.
-      IF(PIC_SOLIDS .AND. TFM_SOLIDS)THEN
+      IF(TFM_SOLIDS)THEN
          WRITE(ERR_MSG, 1002)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
- 1002 FORMAT('Error 1002: MPPIC solids and continuum solids cannot ',&
-         'be combined.',/'Please correct the mfix.dat file.')
-
-
-! MPPIC and DEM solids don't mix.
-      IF(PIC_SOLIDS .AND. DEM_SOLIDS)THEN
+      ELSEIF(PIC_SOLIDS)THEN
          WRITE(ERR_MSG, 1003)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
- 1003 FORMAT('Error 1003: MPPIC solids and DES solids cannot be ',     &
-         'combined.',/'Please correct the mfix.dat file.')
+
+ 1002 FORMAT('Error 1002: TFM solids are not supported in this&
+         & version of MFIX.',/'Please correct the mfix.dat file.')
+
+ 1003 FORMAT('Error 1003: PIC solids are not supported in this&
+         & version of MFIX.',/'Please correct the mfix.dat file.')
 
 ! temporary move for now since these rely on definition of mmax/smax
       M = max(SMAX, DES_MMAX)
 
- 1004 FORMAT('Error 1004: Illegal or unknown input: ',A,' = ',A,/  &
-         'Please correct the mfix.dat file.')
-
 ! Set the DEM runtime flag.
-      DISCRETE_ELEMENT = DEM_SOLIDS .OR. PIC_SOLIDS
-! Set the MMPIC runtime flag.
-      MPPIC = PIC_SOLIDS
-! Set the Hybird flag.
-      DES_CONTINUUM_HYBRID = (DEM_SOLIDS .AND. TFM_SOLIDS)
+      DISCRETE_ELEMENT = DEM_SOLIDS
 ! Set flag for coupled simulations
       DES_CONTINUUM_COUPLED = .NOT.(RO_g0 == 0.0d0)
-
-      IF(DES_CONTINUUM_HYBRID) CALL HYBRID_HACK
 
 ! Overwrite user settings if no Lagrangian solids
       IF(.NOT.DISCRETE_ELEMENT) THEN

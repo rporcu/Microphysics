@@ -10,7 +10,6 @@
 !  solids phase model:                                                 !
 !                                                                      !
 !    > CHECK_SOLIDS_DEM       :: DEM solids phase model                !
-!    > CHECK_SOLIDS_MPPIC     :: MPPIC solids phase model              !
 !                                                                      !
 !  Author: J.Musser                                  Date: 03-FEB-14   !
 !                                                                      !
@@ -22,7 +21,7 @@
 !---------------------------------------------------------------------//
 ! Number of continuum solids phases.
       use physprop, only: SMAX
-! Number of discrete (DEM/MPPIC) solids.
+! Number of discrete (DEM) solids.
       use discretelement, only: DES_MMAX
 ! User specified: Initial solids diameter.
       use physprop, only: D_P0

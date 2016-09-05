@@ -13,8 +13,6 @@
 !---------------------------------------------------------------------//
 ! Runtime Flag: Generate initial particle configuration.
       USE discretelement, only: GENER_PART_CONFIG
-! Runtime Flag: Invoke MPPIC model.
-      USE mfix_pic, only: MPPIC
 ! Runtime Flag: Store DES_*_OLD arrays.
       USE discretelement, only: DO_OLD
 ! Number of DEM solids phases.
@@ -173,7 +171,7 @@
 
       END SELECT
 
-      DO_OLD = INTG_ADAMS_BASHFORTH .OR. MPPIC
+      DO_OLD = INTG_ADAMS_BASHFORTH
 
 ! Check interpolation input.
       CALL CHECK_SOLIDS_COMMON_DISCRETE_INTERP
@@ -231,7 +229,7 @@
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
 
 
- 1100 FORMAT('Error: 1100: DES and MPPIC models only support ',        &
+ 1100 FORMAT('Error: 1100: The DES model only supports ',        &
          'CARTESIAN coordinates.')
 
 
@@ -241,7 +239,7 @@
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
- 1200 FORMAT('Error 1200: Illegal geometry for DEM/MPPIC. 2D ',        &
+ 1200 FORMAT('Error 1200: Illegal geometry for DEM. 2D ',        &
          'simulations are',/'restricted to the XY plane. Please ',     &
          'correct the mfix.dat file.')
 
@@ -290,8 +288,6 @@
 
 ! Runtime Flag: Invoke gas/solids coupled simulation.
       use discretelement, only: DES_CONTINUUM_COUPLED
-! Runtime Flag: Invoke MPPIC model.
-      USE mfix_pic, only: MPPIC
 ! User input for DES interpolation scheme.
       use particle_filter, only: DES_INTERP_SCHEME
 ! Enumerated interpolation scheme for faster access
@@ -343,13 +339,6 @@
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
          ELSEIF(DES_CONTINUUM_COUPLED) THEN
-            IF(MPPIC) THEN
-               WRITE(ERR_MSG,2002) 'MPPIC solids'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ELSEIF(MPPIC) THEN
-               WRITE(ERR_MSG,2002) 'Cartesian grid cut-cells'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
          ENDIF
 
       CASE ('GARG_2012')

@@ -214,7 +214,6 @@ libmfix_src = \
 	model/check_data/check_bc_geometry.f \
 	model/check_data/check_bc_inflow.f \
 	model/check_data/check_bc_outflow.f \
-	model/check_data/check_bc_pic.f \
 	model/check_data/check_bc_walls.f \
 	model/check_data/check_boundary_conditions.f \
 	model/check_data/check_dmp_prereqs.f \
@@ -223,7 +222,6 @@ libmfix_src = \
 	model/check_data/check_geometry_prereqs.f \
 	model/check_data/check_ic_common_discrete.f \
 	model/check_data/check_ic_dem.f \
-	model/check_data/check_ic_mppic.f \
 	model/check_data/check_initial_conditions.f \
 	model/check_data/check_numerics.f \
 	model/check_data/check_output_control.f \
@@ -233,7 +231,6 @@ libmfix_src = \
 	model/check_data/check_solids_common_discrete.f \
 	model/check_data/check_solids_dem.f \
 	model/check_data/check_solids_model_prereqs.f \
-	model/check_data/check_solids_mppic.f \
 	model/check_data/check_solids_phases.f \
 	model/check_data_20.f \
 	model/check_data_30.f \
@@ -293,7 +290,6 @@ libmfix_src = \
 	model/des/make_arrays_des.f \
 	model/des/mass_inflow_dem.f \
 	model/des/mass_outflow_dem.f \
-	model/des/mfix_pic_mod.f \
 	model/des/mpi_comm_des_mod.f \
 	model/des/mpi_funs_des_mod.f \
 	model/des/mpi_init_des_mod.f \
@@ -304,8 +300,6 @@ libmfix_src = \
 	model/des/nsquare.f \
 	model/des/particle_filter_mod.f \
 	model/des/particles_in_cell.f \
-	model/des/pic_bc_mod.f \
-	model/des/pic_routines.f \
 	model/des/randomno_mod.f \
 	model/des/read_particle_input.f \
 	model/des/read_res0_des.f \
@@ -314,9 +308,6 @@ libmfix_src = \
 	model/des/set_bc_dem.f \
 	model/des/set_bc_dem_mi.f \
 	model/des/set_bc_dem_mo.f \
-	model/des/set_bc_pic.f \
-	model/des/set_bc_pic_mi.f \
-	model/des/set_bc_pic_mo.f \
 	model/des/set_filter_des.f \
 	model/des/set_geometry_des.f \
 	model/des/set_phase_index.f \

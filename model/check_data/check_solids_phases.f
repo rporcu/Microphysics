@@ -11,12 +11,8 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Runtime flag specifying TFM solids
-      use run, only: TFM_SOLIDS
 ! Runtime flag specifying DEM solids
       use run, only: DEM_SOLIDS
-! Runtime flag specifying MPPIC solids
-      use run, only: PIC_SOLIDS
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//
@@ -38,9 +34,8 @@
 ! Checks common to all solids models.
       CALL CHECK_SOLIDS_COMMON_ALL
 
-! Checks common to discrete solids phases (DEM, MPPIC).
-      IF(DEM_SOLIDS .OR. PIC_SOLIDS) &
-         CALL CHECK_SOLIDS_COMMON_DISCRETE
+! Checks common to discrete solids phases (DEM).
+      IF(DEM_SOLIDS) CALL CHECK_SOLIDS_COMMON_DISCRETE
 
 ! Checks specific to the particular solids phase.
       IF(DEM_SOLIDS) CALL CHECK_SOLIDS_DEM
@@ -66,15 +61,6 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Runtime Flag: TFM solids present.
-      use run, only: TFM_SOLIDS
-! Runtime Flag: DEM solids present.
-      use run, only: DEM_SOLIDS
-! Runtime Flag: PIC solids present.
-      use run, only: PIC_SOLIDS
-! Runtime Flag: Invoke a cohesion model for DES simulation.
-      use discretelement, only: USE_COHESION
-
 ! Number of solid phases specified by the user/TFM model.
       use physprop, only: SMAX
 ! Number of discrete solids.
@@ -86,26 +72,19 @@
 
       implicit none
 
-
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Total number of solids phases.
       INTEGER :: MMAX_TOT
-
-
 !......................................................................!
-
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_MODEL_LIMITATIONS")
 
-
 ! Set up the total number of solids.
       MMAX_TOT = SMAX + DES_MMAX
 
-
 ! The cohesion model is only implemented for DEM simulations
-
 
       CALL FINL_ERR_MSG
 

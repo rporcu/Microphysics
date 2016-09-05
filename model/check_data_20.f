@@ -40,7 +40,6 @@
       USE compar
       USE sendrecv
       USE discretelement
-      USE mfix_pic
       USE functions
 
       use mpi_utility

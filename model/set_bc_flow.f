@@ -318,7 +318,6 @@
       USE compar
       USE sendrecv
       USE discretelement
-      USE mfix_pic
       USE cutcell
 
       use error_manager

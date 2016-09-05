@@ -23,9 +23,7 @@
 
       USE param1
       USE discretelement
-      USE mfix_pic
       USE des_bc
-      USE pic_bc
       USE particle_filter
 
       IMPLICIT NONE
@@ -107,25 +105,6 @@
 !  <dependent keyword="DEBUG_DES" value=".TRUE."/>
       FOCUS_PARTICLE = 0
 !</keyword>
-
-!<keyword category="Output Control" required="false" pic="true">
-!  <description>
-!    Flag to print processor level parcel seeding statistics for inflow
-!    BC with PIC model.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      PIC_REPORT_SEEDING_STATS = .false.
-!</keyword>
-
-!<keyword category="Output Control" required="false" pic="true">
-!  <description>
-!     Flag to print processor level parcel deletion statistics for
-!     outflow BC with PIC model. Not recommended for production runs.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      PIC_REPORT_DELETION_STATS = .false.
-!</keyword>
-
 
 
 
@@ -606,122 +585,6 @@
 !  </description>
 !  <dependent keyword="USE_STL" value=".TRUE."/>
       MINIMIZE_DES_FACET_LIST =.TRUE.
-!</keyword>
-
-!#####################################################################!
-!                          Particle In Cell                           !
-!#####################################################################!
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    Turn on snider's version of frictional model.
-!    Does not run very stably.
-!  </description>
-      MPPIC_SOLID_STRESS_SNIDER = .false.
-!</keyword>
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    First coefficient of restitution for the frictional stress model
-!    in the MPPIC model. See the MPPIC documentation for more details.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_COEFF_EN1 = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    Second coefficient of restitution for the frictional stress model
-!    in the MPPIC model. See the MPPIC documentation for more details.
-!</description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_COEFF_EN2 = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    Normal coefficient of restitution for parcel-wall collisions
-!    in the MPPIC model.
-!</description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_COEFF_EN_WALL = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description> Tangential coefficient of restitution for
-! parcel-wall collisions in the MPPIC model.
-! Currently not implemented in the code.
-!</description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_COEFF_ET_WALL = 1.0
-!</keyword>
-
-
-!<keyword category="Particle In Cell" required="false">
-!  <description> Turn on the implicit treatment for interphase drag force.
-! Valid only for MPPIC model.
-!</description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_PDRAG_IMPLICIT = .false.
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!     Variable to decide if special treatment is needed or not in the
-!     direction of gravity in the frictional stress tensor. See the
-!     MPPIC documentation for details.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      MPPIC_GRAV_TREATMENT = .true.
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    A run time flag to report minimum value and location of gas
-!    voidage. This is useful only for debugging and is not
-!    recommended for production runs.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      PIC_REPORT_MIN_EPG = .FALSE.
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    P_s term in the frictional stress model of Snider.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      PSFAC_FRIC_PIC = 100
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    Beta term in the frictional stress model of Snider.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      FRIC_EXP_PIC = 2.5
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>
-!    Non-singularity term (epsilon) in the frictional stress model of
-!    Snider.
-!  </description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      FRIC_NON_SING_FAC = 1E-07
-!</keyword>
-
-!<keyword category="Particle In Cell" required="false">
-!  <description>CFL number used to decide maximum time
-! step size for parcels evolution equations.
-! Relevant to MPPIC model only.
-!</description>
-!  <dependent keyword="MPPIC" value=".TRUE."/>
-      CFL_PIC = 0.1
 !</keyword>
 
 

@@ -21,7 +21,6 @@
       USE interpolation
       use desmpi
       USE cutcell
-      USE mfix_pic
       USE mpi_utility
 
 
@@ -60,8 +59,6 @@
       INTEGER :: M
 ! particle number index, used for looping
       INTEGER :: NP, NINDX
-! Statistical weight of the particle. Equal to one for DEM
-      DOUBLE PRECISION :: WTP
 
       DOUBLE PRECISION :: MASS_SOL1, MASS_SOL2
 ! sum of mass_sol1 and mass_sol2 across all processors
@@ -109,7 +106,7 @@
 
 !$omp parallel default(shared)                                             &
 !$omp private(IJK, I, J, K, PCELL, IW, IE, JS, JN, KB, KTP, ONEW, GST_TMP, &
-!$omp    COUNT_NODES_INSIDE, II, JJ, KK, CUR_IJK, NINDX, NP, WTP, M,       &
+!$omp    COUNT_NODES_INSIDE, II, JJ, KK, CUR_IJK, NINDX, NP, M,       &
 !$omp    WEIGHT_FT, I1, I2, J1, J2, K1, K2, IDIM,                          &
 !$omp    IJK2, NORM_FACTOR, RESID_ROPS, RESID_VEL,COUNT_NODES_OUTSIDE, TEMP1)
 !$omp do reduction(+:MASS_SOL1) reduction(+:DES_ROPS_NODE,DES_VEL_NODE)
@@ -164,12 +161,10 @@
             call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(:,np),weight_ft)
 
             M = PIJK(NP,5)
-            WTP = ONE
-            IF(MPPIC) WTP = DES_STAT_WT(NP)
 
-            MASS_SOL1 = MASS_SOL1 + PMASS(NP)*WTP
+            MASS_SOL1 = MASS_SOL1 + PMASS(NP)
 
-            TEMP2 = DES_RO_S(M)*PVOL(NP)*WTP
+            TEMP2 = DES_RO_S(M)*PVOL(NP)
 
             DO K = 1, merge(1, ONEW, NO_K)
             DO J = 1, ONEW
@@ -381,35 +376,8 @@
 !omp end parallel do
 
 
-      IF (MPPIC) CALL SEND_RECV(DES_ROP_S,2)
-
       CALL CALC_EPG_DES
 
-
-      IF(MPPIC) THEN
-
-! Now calculate Eulerian mean velocity fields like U_S, V_S, and W_S.
-         CALL SEND_RECV(DES_U_S,2)
-         CALL SEND_RECV(DES_V_S,2)
-         IF(DO_K) CALL SEND_RECV(DES_W_S,2)
-
-! The Eulerian velocity field is used to set up the stencil to interpolate
-! mean solid velocity at the parcel's location. DES_U_S could have also been
-! used, but that also would have require the communication at this stage.
-! The final interpolated value does not change if the stencil is formed by
-! first obtaining face centered Eulerian velocities (U_S, etc.)
-! and then computing the node velocities from them or directly computing
-! the node velocities from cell centered average velocity field (DES_U_S,
-! etc.). We are using the first approach as it is more natural to set
-! BC's on solid velocity field in the face centered represenation (U_S,
-! etc.)
-
-         IF(.NOT.CARTESIAN_GRID) THEN
-            CALL MPPIC_COMP_EULERIAN_VELS_NON_CG
-         ELSE
-            CALL MPPIC_COMP_EULERIAN_VELS_CG
-         ENDIF
-      ENDIF   ! end if (.not.mppic)
 
 ! turn on the below statements to check if the mass is conserved
 ! between discrete and continuum representations. Should be turned to

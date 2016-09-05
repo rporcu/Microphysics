@@ -20,8 +20,7 @@
 
 ! Switch to decide if the mean fields (such as solids volume fraction
 ! and mean solids velocity) are obtained by interpolation or by the more
-! crude cell artihmetic averages. For MPPIC, this will switch will always
-! be true.
+! crude cell artihmetic averages.
       LOGICAL DES_INTERP_MEAN_FIELDS
 
 ! Flag to check if mass is conserved between discrete and continuum

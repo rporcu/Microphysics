@@ -161,14 +161,10 @@
       use desmpi, only: dSENDBUF
 ! Buffer offset
       use desmpi, only: iBUFOFFSET
-! Runtime flag for MPPIC solids
-      use mfix_pic, only: MPPIC
 ! DES grid cell containing each particle: current/previous
       use discretelement, only: DG_PIJKPRV
 ! The neighbor processor's rank
       use desmpi, only: iNEIGHPROC
-! The statistical weight of each particle.
-      use mfix_pic, only: DES_STAT_WT
 ! The global ID for each particle
       use discretelement, only: iGLOBAL_ID
 ! Particle positions: current/previous

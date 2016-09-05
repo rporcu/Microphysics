@@ -22,7 +22,6 @@
       USE indices
       USE leqsol
       USE machine
-      USE mfix_pic
       USE mpi_utility
       USE output
       USE param

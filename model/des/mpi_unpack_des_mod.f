@@ -253,14 +253,10 @@
       use desmpi, only: dRECVBUF
 ! Buffer offset
       use desmpi, only: iBUFOFFSET
-! Runtime flag for MPPIC solids
-      use mfix_pic, only: MPPIC
 ! DES grid cell containing each particle: current/previous
       use discretelement, only: DG_PIJK, DG_PIJKPRV
 ! The neighbor processor's rank
       use desmpi, only: iNEIGHPROC
-! The statistical weight of each particle.
-      use mfix_pic, only: DES_STAT_WT
 ! The global ID for each particle
       use discretelement, only: iGLOBAL_ID
 ! Particle positions: current/previous
@@ -332,7 +328,7 @@
 ! loop through particles and locate them and make changes
       lparcnt = drecvbuf(1+mod(pface,2))%facebuf(1)
 
-! if mppic make sure enough space available
+! make sure enough space available
       call PARTICLE_GROW(pip+lparcnt)
 
       do lcurpar =1,lparcnt
@@ -346,32 +342,19 @@
 ! 3) DES grid IJK - previous
          call unpack_dbuf(lbuf,lprvijk,pface)
 
-! PIC particles are always 'new' to the receiving process. Find the
-! first available array position and store the global ID. Increment
-! the PIP counter to include the new particle.
-         IF(MPPIC) THEN
-            DO WHILE(.NOT.IS_NONEXISTENT(ISPOT))
-               ISPOT = ISPOT + 1
-            ENDDO
-            lLOCPAR = iSPOT
-            iGLOBAL_ID(lLOCPAR) = lPARID
-            PIP = PIP + 1
-
 ! A DEM particle should already exist on the current processor as a
 ! ghost particle. Match the sent particle to the local ghost particle
 ! by matching the global IDs. Decrement the iGHOST_CNT counter to
 ! account for the switch from ghost to real particle.
-         ELSE
-            lFOUND  = LOCATE_PAR(lPARID,lPRVIJK,lLOCPAR)
-            IF (.NOT. lFOUND) THEN
-               lFOUND = exten_locate_par(lPARID, lPARIJK, lLOCPAR)
-               IF(.NOT.lFOUND) THEN
-                  WRITE(*,1000) iNEIGHPROC(PFACE), MYPE, lPARID
-                  CALL DES_MPI_STOP
-               ENDIF
+         lFOUND  = LOCATE_PAR(lPARID,lPRVIJK,lLOCPAR)
+         IF (.NOT. lFOUND) THEN
+            lFOUND = exten_locate_par(lPARID, lPARIJK, lLOCPAR)
+            IF(.NOT.lFOUND) THEN
+               WRITE(*,1000) iNEIGHPROC(PFACE), MYPE, lPARID
+               CALL DES_MPI_STOP
             ENDIF
-            iGHOST_CNT = iGHOST_CNT - 1
          ENDIF
+         iGHOST_CNT = iGHOST_CNT - 1
 
  1000 FORMAT(2/1X,72('*'),/1x,'From: DESMPI_UNPACK_PARCROSS: ',/       &
          ' Error 1000: Unable to match particles crossing processor ', &
@@ -433,8 +416,6 @@
 ! 30) Rotational acceleration (previous)
             call unpack_dbuf(lbuf,rot_acc_old(:,llocpar),pface)
          ENDIF
-! 32) Statistical weight
-         IF(MPPIC) call unpack_dbuf(lbuf,des_stat_wt(llocpar),pface)
 
       end do
 

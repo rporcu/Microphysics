@@ -21,7 +21,6 @@
       USE param1
       USE physprop
       USE run
-      USE mfix_pic
       use mpi_utility
 
       use bc
@@ -41,8 +40,6 @@
 
 ! If the system is started without any particles and an inlet is not
 ! specified, the run is likely aborted.
-! Inlet/outlet for MPPIC are based off the regular mfix declarations,
-! and so DEM_BCMI could still be zero.
       IF(PARTICLES == 0 .AND. DEM_BCMI == 0) THEN
          WRITE(ERR_MSG, 1202)
          CALL FLUSH_ERR_MSG

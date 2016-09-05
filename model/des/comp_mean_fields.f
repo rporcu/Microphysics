@@ -76,7 +76,6 @@
       USE discretelement
       use desgrid
       use desmpi
-      USE mfix_pic
       USE functions
 
       IMPLICIT NONE
@@ -107,7 +106,6 @@
          IF(IS_GHOST(NP) .or. IS_ENTERING_GHOST(NP) .or. IS_EXITING_GHOST(NP)) CYCLE
 
          VOL_WT = PVOL(NP)
-         IF(MPPIC) VOL_WT = VOL_WT*DES_STAT_WT(NP)
 ! Fluid cell containing the particle
          IJK = PIJK(NP,4)
 ! Particle phase for data binning.

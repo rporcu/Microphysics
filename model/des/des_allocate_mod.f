@@ -33,9 +33,7 @@ CONTAINS
       Use compar
       Use physprop
       Use des_bc
-      Use pic_bc
       use funits
-      USE mfix_pic
       USE cutcell
       USE functions
 
@@ -78,9 +76,6 @@ CONTAINS
 ! processing for ghost
       ALLOCATE( PARTICLE_STATE (MAX_PIP) )
       ALLOCATE (iglobal_id(max_pip))
-
-! R.Garg: Allocate necessary arrays for PIC mass inlet/outlet BCs
-      IF(PIC_BCMI /= 0 .OR. PIC_BCMO /=0) CALL ALLOCATE_PIC_MIO
 
 ! Particle attributes
 ! Radius, density, mass, moment of inertia
@@ -267,57 +262,6 @@ CONTAINS
       RETURN
       END SUBROUTINE ALLOCATE_DEM_MI
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: ALLOCATE_PIC_MIO                                        !
-!                                                                      !
-!  Purpose:                                                            !
-!                                                                      !
-!  Author: R. Garg                                    Date: 11-Jun-14  !
-!                                                                      !
-!  Comments:                                                           !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-
-      SUBROUTINE ALLOCATE_PIC_MIO
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE pic_bc
-      USE discretelement
-      IMPLICIT NONE
-!-----------------------------------------------
-
-! Allocate/Initialize for inlets
-      IF(PIC_BCMI /= 0)THEN
-
-         allocate( PIC_BCMI_IJKSTART(PIC_BCMI) )
-         allocate( PIC_BCMI_IJKEND  (PIC_BCMI) )
-         allocate( PIC_BCMI_NORMDIR (PIC_BCMI,3) )
-
-         ALLOCATE( PIC_BCMI_OFFSET  (PIC_BCMI,3))
-
-         ALLOCATE( PIC_BCMI_INCL_CUTCELL(PIC_BCMI) )
-
-         PIC_BCMI_IJKSTART = -1
-         PIC_BCMI_IJKEND   = -1
-
-      ENDIF  ! end if PIC_BCMI /= 0
-
-
-
-      IF(PIC_BCMO > 0)THEN
-         allocate( PIC_BCMO_IJKSTART(PIC_BCMO) )
-         allocate( PIC_BCMO_IJKEND(PIC_BCMO) )
-
-         PIC_BCMO_IJKSTART = -1
-         PIC_BCMO_IJKEND   = -1
-      ENDIF
-
-
-      RETURN
-      END SUBROUTINE ALLOCATE_PIC_MIO
 
 !``````````````````````````````````````````````````````````````````````!
 ! Subroutine: ADD_PAIR                                                 !
@@ -394,7 +338,6 @@ CONTAINS
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE PARTICLE_GROW(new_max_pip)
 
-        USE mfix_pic
         USE discretelement
         USE particle_filter
         USE run

@@ -19,8 +19,6 @@
       use run, only: DEM_SOLIDS
 ! Flag: New run or a restart.
       use run, only: RUN_TYPE
-! Runtime flag specifying MPPIC solids
-      use run, only: PIC_SOLIDS
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -62,13 +60,9 @@
          ENDIF
       ENDDO
 
-
-
-! Check the initial conditions for the DEM and MPPIC models as well
-      IF(DEM_SOLIDS.OR.PIC_SOLIDS) &
-      CALL CHECK_IC_COMMON_DISCRETE
+! Check the initial conditions for the DEM model as well
+      IF(DEM_SOLIDS) CALL CHECK_IC_COMMON_DISCRETE
       IF(DEM_SOLIDS) CALL CHECK_IC_DEM
-      IF(PIC_SOLIDS) CALL CHECK_IC_MPPIC
 
 ! Finalize the error manager.
       CALL FINL_ERR_MSG
@@ -530,7 +524,7 @@
       DOUBLE PRECISION :: IC_ROs(1:DIM_M)
 ! Flag to skip checks on indexed solid phase.
       LOGICAL :: SKIP(1:DIM_M)
-! Total number of solids phases (TFM + DEM + MPPIC)
+! Total number of solids phases
       INTEGER :: MMAX_TOT
 ! Flag for PATCH IC regions
       LOGICAL :: BASIC_IC

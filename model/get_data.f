@@ -21,7 +21,6 @@
       USE funits
       USE gridmap
       USE leqsol
-      USE mfix_pic
       USE param
       USE param1
       USE run

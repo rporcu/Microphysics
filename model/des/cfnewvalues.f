@@ -25,7 +25,6 @@
       USE des_bc
       USE discretelement
       USE fldvar
-      USE mfix_pic
       USE mpi_utility
       USE param
       USE param1
@@ -40,16 +39,6 @@
       LOGICAL, SAVE :: FIRST_PASS = .TRUE.
       DOUBLE PRECISION :: OMEGA_MAG,OMEGA_UNIT(3),ROT_ANGLE
 !-----------------------------------------------
-
-      IF(MPPIC) THEN
-         IF(MPPIC_SOLID_STRESS_SNIDER) THEN
-            CALL CFNEWVALUES_MPPIC_SNIDER
-         ELSE
-! call the coloring function like approach
-            CALL CFNEWVALUES_MPPIC
-         ENDIF
-         RETURN
-      ENDIF
 
 ! Adams-Bashforth defaults to Euler for the first time step.
       IF(FIRST_PASS .AND. INTG_ADAMS_BASHFORTH) THEN
@@ -173,59 +162,3 @@
         include 'functions.inc'
 
       END SUBROUTINE CFNEWVALUES
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: CFNEWVALUES_MPPIC_SNIDER                               C
-!
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES_MPPIC_SNIDER
-      END SUBROUTINE CFNEWVALUES_MPPIC_SNIDER
-
-
-      SUBROUTINE CFNEWVALUES_MPPIC
-      END SUBROUTINE CFNEWVALUES_MPPIC
-
-
-      subroutine des_dbgpic (pstart,pend,pfreq)
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use discretelement
-      use fldvar
-      use functions
-      implicit none
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-      INTEGER, INTENT(IN) :: pstart,pend
-      INTEGER, INTENT(IN), OPTIONAL :: pfreq
-      END SUBROUTINE des_dbgpic
-
-!------------------------------------------------------------------------
-! subroutine       : des_dbgtecplot
-! Author           : Pradeep G.
-! Purpose          : prints the tecplot file for particle location
-! Parameters       : pstart - start indices of the particle
-!                    pend - end indices of the particle
-!                    pfreq - optional frequency (when the local count matches the
-!                    frequency the filw will be written)
-!                    if not send then it prints the file
-!------------------------------------------------------------------------
-
-      subroutine des_dbgtecplot (pstart,pend,pfreq)
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE discretelement
-      USE fldvar
-      USE functions
-      implicit none
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-      INTEGER, INTENT(IN) :: pstart,pend
-      INTEGER, INTENT(IN), OPTIONAL :: pfreq
-      END SUBROUTINE DES_DBGTECPLOT

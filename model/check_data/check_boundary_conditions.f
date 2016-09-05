@@ -133,8 +133,6 @@
       ENDDO
 ! Additional checks needed for DEM boundaries
       IF(DEM_SOLIDS) CALL CHECK_BC_DEM(MMAX_TOT)
-! Additional checks needed for PIC inflow/outflow boundaries
-      IF(PIC_SOLIDS) CALL CHECK_BC_PIC(MMAX_TOT)
 
 ! Cleanup and exit.
       CALL FINL_ERR_MSG

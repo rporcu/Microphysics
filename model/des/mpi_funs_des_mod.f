@@ -41,7 +41,6 @@
 
       use discretelement, only: DO_NSEARCH, DES_PERIODIC_WALLS
 
-      use mfix_pic, only: MPPIC
       use desmpi, only: iEXCHFLAG
       use desmpi, only: dSENDBUF, dRECVBUF
       use discretelement, only: iGHOST_UPDATED
@@ -117,40 +116,38 @@
 !      call des_dbgmpi(5)
 
 
-      IF(.NOT.MPPIC) THEN
 ! call ghost particle exchange in E-W, N-S, T-B order
 
-         do ii=1, size(dsendbuf)
-            dsendbuf(ii)%facebuf(1) = 0
-            drecvbuf(ii)%facebuf(1) = 0
-         end do
+      do ii=1, size(dsendbuf)
+         dsendbuf(ii)%facebuf(1) = 0
+         drecvbuf(ii)%facebuf(1) = 0
+      end do
 
-         ighost_updated(:) = .false.
-         ispot = 1
-         do linter = 1,merge(2,3,NO_K)
-            do lface = linter*2-1,linter*2
-               if(.not.iexchflag(lface))cycle
-               call desmpi_pack_ghostpar(lface)
-               call desmpi_sendrecv_init(lface)
-            end do
-            do lface = linter*2-1,linter*2
-               if(.not.iexchflag(lface)) cycle
-               call desmpi_sendrecv_wait(lface)
-               call desmpi_unpack_ghostpar(lface)
-            end do
+      ighost_updated(:) = .false.
+      ispot = 1
+      do linter = 1,merge(2,3,NO_K)
+         do lface = linter*2-1,linter*2
+            if(.not.iexchflag(lface))cycle
+            call desmpi_pack_ghostpar(lface)
+            call desmpi_sendrecv_init(lface)
+         end do
+         do lface = linter*2-1,linter*2
+            if(.not.iexchflag(lface)) cycle
+            call desmpi_sendrecv_wait(lface)
+            call desmpi_unpack_ghostpar(lface)
+         end do
 
 ! Rebin particles to the DES grid as ghost particles may be moved.
-            do lface = linter*2-1,linter*2
-               if(dsendbuf(1+mod(lface,2))%facebuf(1) .gt.0.or.&
-                  drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
-                  call desgrid_pic(plocate=.false.)
-                  exit
-               end if
-            end do
+         do lface = linter*2-1,linter*2
+            if(dsendbuf(1+mod(lface,2))%facebuf(1) .gt.0.or.&
+               drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
+               call desgrid_pic(plocate=.false.)
+               exit
+            end if
          end do
-         if(do_nsearch) call desmpi_cleanup
-         call des_mpi_barrier
-      ENDIF   ! end if(.not.mppic)
+      end do
+      if(do_nsearch) call desmpi_cleanup
+      call des_mpi_barrier
 
 !      call des_dbgmpi(2)
 !      call des_dbgmpi(3)

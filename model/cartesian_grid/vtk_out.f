@@ -50,7 +50,6 @@
       USE functions
       USE geometry
       USE indices
-      USE mfix_pic
       USE mpi_utility
       USE output
       USE parallel_mpi

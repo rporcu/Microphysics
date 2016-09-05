@@ -1011,29 +1011,6 @@
           IC_DES_FIT_TO_REGION(LC) = .FALSE.
 !</keyword>
 
-
-!<keyword category="Initial Condition" required="false">
-!  <description>Flag to specify the initial constant number
-! of particles per cell for the PIC method initialization.
-!Statistical weight of parcels will be calculated by the code.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <dependent keyword="SOLIDS_MODEL" value="PIC"/>
-!  <conflict keyword="IC_PIC_CONST_STATWT" value="DEFINED"/>
-          IC_PIC_CONST_NPC(LC, :DIM_M) = 0
-!</keyword>
-
-
-!<keyword category="Initial Condition" required="false">
-!  <description>Flag to specify the initial constant statistical
-! weight for computational particles/parcels. Actual number of
-! parcels will be automatically computed. </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <dependent keyword="SOLIDS_MODEL" value="PIC"/>
-!  <conflict keyword="IC_PIC_CONST_NPC" value="DEFINED"/>
-          IC_PIC_CONST_STATWT(LC, :DIM_M) = ZERO
-!</keyword>
       ENDDO
 
 

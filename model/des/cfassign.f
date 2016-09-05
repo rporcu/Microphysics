@@ -14,7 +14,6 @@
 !                                                                      C
 !  Reviewer: Rahul Garg                               Date: 25-Mar-14  C
 !  Comments: Breaking this subroutine into several subroutines for DEM C
-!            and PIC models                                            C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       SUBROUTINE CFASSIGN
@@ -25,12 +24,9 @@
       USE param1
       USE constant, only : GRAVITY_X, GRAVITY_Y, GRAVITY_Z
       USE discretelement
-      USE mfix_pic
       use error_manager
 ! Flag: DEM solids present.
       use run, only: DEM_SOLIDS
-! Runtime flag specifying MPPIC solids
-      use run, only: PIC_SOLIDS
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -47,71 +43,12 @@
       GRAV(3) = GRAVITY_Z
       GRAV_MAG = sqrt(dot_product(GRAV,GRAV))
 
-      IF(DEM_SOLIDS) CALL CFASSIGN_DEM
-
 ! Finalize the error manager.
       CALL FINL_ERR_MSG
 
       RETURN
       END SUBROUTINE CFASSIGN
 
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CFASSIGN_PIC                                            C
-!                                                                      C
-!  Purpose: PIC related cfassign source code moved here                C
-!           example:                                                   C
-!     - calculating DTSOLID based on particle response time            C
-!                                                                      C
-!                                                                      C
-!  Reviewer: Rahul Garg                               Date: 25-Mar-14  C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE CFASSIGN_PIC
-
-
-      END SUBROUTINE CFASSIGN_PIC
-
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CFASSIGN_DEM                                            C
-!                                                                      C
-!  Purpose: DEM related cfassign source code moved here                C
-!           example:                                                   C
-!     - calculating DTSOLID based on particle properties: spring       C
-!       coefficient, damping factor & mass                             C
-!                                                                      C
-!                                                                      C
-!  Reviewer: Rahul Garg                               Date: 25-Mar-14  C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE CFASSIGN_DEM
-
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param1
-      USE discretelement
-      use error_manager
-      IMPLICIT NONE
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-
-      CALL INIT_ERR_MSG("CFASSIGN_DEM")
-
-!      WRITE(ERR_MSG,'(A)') 'Setting collision model parameters for DEM'
-!      CALL FLUSH_ERR_MSG (Footer = .false.)
-
-! Finalize the error manager.
-      CALL FINL_ERR_MSG
-      END SUBROUTINE CFASSIGN_DEM
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 ! subroutine: compute_volume_of_nodes                                      C

@@ -97,7 +97,6 @@
       use discretelement, only: DES_RADIUS
       use discretelement, only: USE_COHESION, PostCohesive
       use param, only: DIMENSION_N_S
-      USE mfix_pic, only: des_stat_wt, mppic
 
       use error_manager
 
@@ -146,8 +145,6 @@
 
       IF(DES_USR_VAR_SIZE > 0) &
          CALL VTP_WRITE_DATA('User Defined Var', DES_USR_VAR)
-!      IF(MPPIC) CALL VTP_WRITE_DATA('Statwt', DES_STAT_WT)
-
 
       CALL VTP_WRITE_ELEMENT('</PointData>')
 

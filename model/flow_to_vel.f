@@ -277,7 +277,6 @@
       USE funits
       USE compar
       USE discretelement
-      USE mfix_pic
 
       use error_manager
       use toleranc
@@ -398,7 +397,6 @@
       USE funits
       USE compar
       USE discretelement
-      USE mfix_pic
 
       use error_manager
       use toleranc
