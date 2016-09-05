@@ -86,32 +86,8 @@
 ! If gener_part_config is true, then the particle_input.dat file does
 ! not need to be supplied nor does the total number of particles as
 ! these are determined based on the specified volume fraction (vol_frac)
-! in the specified domain (des_eps_xyzstart)
+! in the specified domain
       LOGICAL :: GENER_PART_CONFIG
-      DOUBLE PRECISION ::  VOL_FRAC(DIM_M)
-      DOUBLE PRECISION :: DES_EPS_XSTART, &
-      DES_EPS_YSTART, DES_EPS_ZSTART
-! volume of the IC region for computing number of particles to be seeded
-      DOUBLE PRECISION, dimension(:), allocatable :: VOL_IC_REGION!(DIMENSION_IC)
-! number of particles for each phase corresponding to the IC number. This will
-! be real particles for DEM but parcels or computational particles for PIC model
-      INTEGER, dimension(:,:), allocatable :: PART_MPHASE_BYIC!(DIMENSION_IC, DIM_M)
-
-! Number of real particles by IC and by solid phase. Only relevant for PIC model
-      double precision, dimension(:,:), allocatable :: REALPART_MPHASE_BYIC!(DIMENSION_IC, DIM_M)
-! The number of particles that belong to solid phase M according to the
-! vol_frac and particle diameter. this information is used when
-! gener_part_config is invoked for initialization
-! This will be removed soon as PART_MPHASE_BYIC will be used from now on
-      INTEGER PART_MPHASE(DIM_M)
-
-! The number of real particles that belong to solid phase M during the initialization.
-! It is equal to Part_mphase for DEM but implies real number of particles for PIC model
-      double precision REALPART_MPHASE(DIM_M)
-! Assigns the initial particle velocity distribution based on user
-! specified mean and standard deviation (regardless if already set
-! within particle_input.dat)
-      DOUBLE PRECISION pvel_mean, PVEL_StDev
 
 ! Output/debug controls
 !----------------------------------------------------------------->>>
@@ -128,12 +104,6 @@
 !    TECPLOT - data is written in Tecplot format
 !    undefined - data is written in ParaView format (default)
       CHARACTER(LEN=64) :: DES_OUTPUT_TYPE
-
-! Used sporadically to control screen dumps (for debug purposes)
-      LOGICAL :: DEBUG_DES
-
-! Single particle no. index that is followed if debugging
-      INTEGER FOCUS_PARTICLE
 
 ! Output file count for .vtp type files and for tecplot files;
 ! for vtp output used to label .vtp file names in sequential order
@@ -539,38 +509,6 @@
 !-----------------------------------------------------------------<<<
 
 
-! Start Cohesion
-!----------------------------------------------------------------->>>
-! Includes square-well type model and a van der waals type model
-
-! Switch to turn cohesion on and off (set in mfix.dat)
-      LOGICAL USE_COHESION
-
-
-! Van der Waals constants (set in mfix.dat)
-      LOGICAL SQUARE_WELL, VAN_DER_WAALS
-      DOUBLE PRECISION HAMAKER_CONSTANT
-      DOUBLE PRECISION VDW_INNER_CUTOFF ! (in cm)
-      DOUBLE PRECISION VDW_OUTER_CUTOFF
-      DOUBLE PRECISION WALL_HAMAKER_CONSTANT
-      DOUBLE PRECISION WALL_VDW_INNER_CUTOFF
-      DOUBLE PRECISION WALL_VDW_OUTER_CUTOFF
-      DOUBLE PRECISION Asperities ! average radius of asperities (default zero)
-
-! Store postcohesive
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: PostCohesive
-                        !(PARTICLES)
-! Store cluster information array for postprocessing
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: PostCluster
-
-! Variables for van der waals cohesion calculations:
-! Surface energy used to calculate cohesive force for low separation distances
-! in Van der Waals model (this variable is calculated at the beginning of each
-! simulation to ensure the van der Waals force is continuous at the inner cutoff)
-      DOUBLE PRECISION SURFACE_ENERGY
-      DOUBLE PRECISION WALL_SURFACE_ENERGY
-
-! END Cohesion
 !-----------------------------------------------------------------<<<
 
       LOGICAL :: DES_EXPLICITLY_COUPLED

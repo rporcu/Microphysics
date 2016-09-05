@@ -258,7 +258,6 @@ libmfix_src = \
 	model/des/cfrelvel.f \
 	model/des/cfslide.f \
 	model/des/cfupdateold.f \
-	model/des/cfwallcontact.f \
 	model/des/cfwallposvel.f \
 	model/des/check_cell_movement.f \
 	model/des/comp_mean_fields.f \

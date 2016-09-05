@@ -32,7 +32,6 @@
         FORCE_ORD_BC, &
 
 ! DES output control information
-        DEBUG_DES, FOCUS_PARTICLE,&
         PRINT_DES_DATA, DES_OUTPUT_TYPE,  &
 
 

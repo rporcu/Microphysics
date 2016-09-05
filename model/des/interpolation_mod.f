@@ -547,21 +547,6 @@ MODULE interpolation
          ENDDO
       ENDDO
 
-! Local debugging
-      IF(FOCUS .AND. DEBUG_DES)THEN
-         WRITE(*,"(3X,A,1X,A3,4X,A,I2)") &
-            'Interpolation Scheme:','LPI','Interpolation Order:',2
-         WRITE(*,"(3X,A,I5,3X,A,I6)")'Particle: ',NP,'IJK: ',PIJK(NP,4)
-         WRITE(*,"(/5X,'|',29('-'),'|')")
-         WRITE(*,"(5X,A)")'| Fluid Cell | Interp. Weight |'
-         WRITE(*,"(5X,'|',12('-'),'|',16('-'),'|')")
-         DO LC = 1, 2**DIMN
-            WRITE(*,"(5X,'|',2X,I8,2X,'|',2X,F13.10,2X,'|')")&
-               INTP_IJK(LC), INTP_WEIGHTS(LC)
-         ENDDO
-         WRITE(*,"(5X,'|',29('-'),'|'//)")
-      ENDIF ! Local Debugging
-
       END SUBROUTINE INTERPOLATE_CC
 
 

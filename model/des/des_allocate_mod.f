@@ -381,10 +381,6 @@ CONTAINS
               call real_grow2(FILTER_WEIGHT,MAX_PIP)
            ENDIF
 
-           IF(USE_COHESION) THEN
-              call real_grow(PostCohesive,MAX_PIP)
-           ENDIF
-
            IF (DO_OLD) THEN
               call real_grow2(DES_POS_OLD,MAX_PIP)
               call real_grow2(DES_VEL_OLD,MAX_PIP)

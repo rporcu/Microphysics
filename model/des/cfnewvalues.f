@@ -4,16 +4,6 @@
 !
 !  Purpose: DES - Calculate the new values of particle velocity,
 !           position, angular velocity etc
-!
-!                                                                      C
-!  Comments: Implements Eqns 1, 2, 3, 4 & 5  from the following paper:
-!    Tsuji Y., Kawaguchi T., and Tanak T., "Lagrangian numerical
-!    simulation of plug glow of cohesionless particles in a
-!    horizontal pipe", Powder technology, 71, 239-250, 1992
-!
-!  pradeep : changes for parallel processing
-!          1. periodic boundaries might lie in different proc. so adjust
-!             particle position for periodic removed
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CFNEWVALUES

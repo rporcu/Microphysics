@@ -95,7 +95,6 @@
       use discretelement, only: DES_POS_NEW, DES_VEL_NEW, DES_USR_VAR
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
       use discretelement, only: DES_RADIUS
-      use discretelement, only: USE_COHESION, PostCohesive
       use param, only: DIMENSION_N_S
 
       use error_manager
@@ -239,28 +238,6 @@
 ! set the total variable based on dimension
       ltotvar = merge(8,9,NO_K)
 
-! set the file name and unit number and open file
-      des_data = 2000
-      des_ex = 2100
-      des_eps = 2200
-      if (bdist_io) then
-         write(fname_data,'(A,"_DES_DATA",I4.4,"_",I4.4,".dat")') trim(run_name),tecplot_findex,mype
-         write(fname_extra,'(A,"_DES_EXTRA",I4.4,"_",I4.4,".dat")') trim(run_name),tecplot_findex,mype
-         write(fname_eps,'(A,"_DES_EPS",I4.4,"_",I4.4,".dat")') trim(run_name),tecplot_findex,mype
-         open(convert='big_endian',unit=des_data,file=fname_data,status='new',err=999)
-         open(convert='big_endian',unit=des_ex,file=fname_extra,status='new',err=999)
-         open(convert='big_endian',unit=des_eps,file=fname_eps,status='new',err=999)
-      else
-         if(mype.eq.pe_io) then
-            write(fname_data,'(A,"_DES_DATA_",I4.4,".dat")') trim(run_name),tecplot_findex
-            write(fname_extra,'(A,"_DES_EXTRA_",I4.4,".dat")') trim(run_name),tecplot_findex
-            write(fname_eps,'(A,"_DES_EPS_",I4.4,".dat")') trim(run_name),tecplot_findex
-            open(convert='big_endian',unit=des_data,file=fname_data,status='new',err=999)
-            open(convert='big_endian',unit=des_ex,file=fname_extra,status='new',err=999)
-            open(convert='big_endian',unit=des_eps,file=fname_eps,status='new',err=999)
-         end if
-      end if
-      tecplot_findex = tecplot_findex + 1
 
 ! write header
       if (bdist_io .or. mype .eq. pe_io) then

@@ -56,17 +56,12 @@
 ! local values used spring constants and damping coefficients
       DOUBLE PRECISION :: ETAN_DES, ETAT_DES
       DOUBLE PRECISION :: KN_DES, KT_DES
-! local values used for calculating cohesive forces
-      DOUBLE PRECISION :: FORCE_COH, EQ_RADIUS, DistApart
 
       LOGICAL, PARAMETER :: report_excess_overlap = .FALSE.
 
       DOUBLE PRECISION :: FNMD, FTMD, MAG_OVERLAP_T, TANGENT(3)
 
 !-----------------------------------------------
-
-! Initialize cohesive forces
-      IF(USE_COHESION) PostCohesive(:) = ZERO
 
       CALL CALC_DEM_FORCE_WITH_WALL_STL
 
@@ -82,7 +77,7 @@
 !$omp shared(max_pip,neighbors,neighbor_index,des_pos_new,des_radius,  &
 !$omp    des_coll_model_enum,kn,kt,pft_neighbor,pijk,neigh_max,        &
 !$omp    des_etan,des_etat,mew, dtsolid,   &
-!$omp    tow, fc, grav_mag, postcohesive, pmass, q_source)
+!$omp    tow, fc, grav_mag, pmass, q_source)
 
 !$omp do
 
@@ -194,7 +189,7 @@
             TOW_TMP(:,2) = DIST_CI*TOW_force(:)
 
 ! Calculate the total force FC of a collision pair
-! total contact force ( FC_TMP may already include cohesive force)
+! total contact force
             FC_TMP(:) = FC_TMP(:) + FN(:) + FT(:)
 
             FC(:,LL) = FC(:,LL) + FC_TMP(:)
@@ -222,10 +217,6 @@
 
 !$omp end parallel
 
-! just for post-processing mag. of cohesive forces on each particle
-      IF(USE_COHESION .AND. VAN_DER_WAALS .AND. GRAV_MAG > ZERO) THEN
-         PostCohesive(:) = PostCohesive(:)/GRAV_MAG
-      ENDIF
 
       RETURN
 

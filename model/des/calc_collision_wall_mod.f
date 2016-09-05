@@ -49,7 +49,6 @@
       DOUBLE PRECISION :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
       DOUBLE PRECISION, DIMENSION(DIMN) :: FTAN, FNORM, OVERLAP_T
 
-      LOGICAL :: DES_LOC_DEBUG
       INTEGER :: CELL_ID, cell_count
       INTEGER :: PHASELL
 
@@ -68,8 +67,6 @@
       INTEGER :: MAX_NF, axis
       DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
 
-      DES_LOC_DEBUG = .false. ;      DEBUG_DES = .false.
-      FOCUS_PARTICLE = -1
 
 ! Skip this routine if the system is fully periodic.
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
@@ -81,18 +78,13 @@
 !$omp    line_t,max_distsq,max_nf,normal,distmod,overlap_n,VREL_T,     &
 !$omp    v_rel_trans_norm,phaseLL,sqrt_overlap,kn_des_w,kt_des_w,      &
 !$omp    etan_des_w,etat_des_w,fnorm,overlap_t,ftan,ftmd,fnmd,pos_tmp) &
-!$omp shared(max_pip,focus_particle,debug_des,                         &
-!$omp    pijk,dg_pijk,i_of,j_of,k_of,des_pos_new,    &
+!$omp shared(max_pip, pijk,dg_pijk,i_of,j_of,k_of,des_pos_new,         &
 !$omp    des_radius,facets_at_dg,vertex,  &
 !$omp    hert_kwn,hert_kwt,kn_w,kt_w,des_coll_model_enum,mew_w,tow,    &
 !$omp    des_etan_wall,des_etat_wall,dtsolid,fc,norm_face,             &
-!$omp    wall_collision_facet_id,wall_collision_PFT,use_cohesion,      &
-!$omp    van_der_waals,wall_hamaker_constant,wall_vdw_outer_cutoff,    &
-!$omp    wall_vdw_inner_cutoff,asperities,surface_energy)
+!$omp    wall_collision_facet_id,wall_collision_PFT)
 !$omp do
       DO LL = 1, MAX_PIP
-
-         IF(LL.EQ.FOCUS_PARTICLE) DEBUG_DES = .TRUE.
 
 ! skipping non-existent particles or ghost particles
 ! make sure the particle is not classified as a new 'entering' particle
@@ -119,32 +111,6 @@
             axis = facets_at_dg(cell_id)%dir(cell_count)
 
             NF = facets_at_dg(cell_id)%id(cell_count)
-
-! Compute particle-particle VDW cohesive short-range forces
-            IF(USE_COHESION .AND. VAN_DER_WAALS) THEN
-
-               CALL ClosestPtPointTriangle(DES_POS_NEW(:,LL),          &
-                  VERTEX(:,:,NF), CLOSEST_PT(:))
-
-               DIST(:) = CLOSEST_PT(:) - DES_POS_NEW(:,LL)
-               DISTSQ = DOT_PRODUCT(DIST, DIST)
-               R_LM = 2*DES_RADIUS(LL)
-
-               IF(DISTSQ < (R_LM+WALL_VDW_OUTER_CUTOFF)**2) THEN
-                  IF(DISTSQ > (WALL_VDW_INNER_CUTOFF+R_LM)**2) THEN
-                     DistApart = (SQRT(DISTSQ)-R_LM)
-                     FORCE_COH = WALL_HAMAKER_CONSTANT*DES_RADIUS(LL) /&
-                        (12d0*DistApart**2)*(Asperities/(Asperities +  &
-                        DES_RADIUS(LL)) + ONE/(ONE+Asperities/         &
-                        DistApart)**2)
-                  ELSE
-                     FORCE_COH = 2d0*PI*SURFACE_ENERGY*DES_RADIUS(LL)* &
-                        (Asperities/(Asperities+DES_RADIUS(LL)) + ONE/ &
-                        (ONE+Asperities/WALL_VDW_INNER_CUTOFF)**2 )
-                  ENDIF
-                  FC(:,LL) = FC(:,LL) + DIST(:)*FORCE_COH/SQRT(DISTSQ)
-               ENDIF
-            ENDIF
 
             if (facets_at_dg(cell_id)%min(cell_count) >    &
                particle_max(axis)) then

@@ -14,7 +14,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: DEBUG_DES
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -45,17 +44,10 @@
          IF(ALL(V_TANG.EQ.0)) THEN
             FT_tmp(:) =  MU * FT_tmp(:) * SQRT(FNMD/FTMD)
          ELSE
-            FT_tmp(:) = -MU * V_TANG(:) * SQRT(FNMD/dot_product(V_TANG,V_TANG))
+            FT_tmp(:) = -MU * V_TANG(:) * &
+               SQRT(FNMD/dot_product(V_TANG,V_TANG))
          ENDIF
 
-         IF(DEBUG_DES) THEN
-            WRITE(*,'(7X,A)') &
-                 'FROM CFSLIDE.F ---------->'
-            WRITE(*,'(9X,A)') 'PARTICLE_SLIDE = T'
-            WRITE(*,'(9X,A,2(ES15.7,1X))')&
-                 'FTMD, mu*FNMD = ', FTMD, MU*FNMD
-            WRITE(*,'(7X,A)') '<----------END CFSLIDE.F'
-         ENDIF
 
       ENDIF
 

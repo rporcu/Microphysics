@@ -89,23 +89,6 @@
       DES_OUTPUT_TYPE = "PARAVIEW"
 !</keyword>
 
-!<keyword category="Output Control" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Runtime flag to generate debugging information. Additional data for
-!    FOCUS_PARTICLE is saved.
-!  </description>
-      DEBUG_DES = .FALSE.
-!</keyword>
-
-!<keyword category="Output Control" required="false" dem="true" pic="true">
-!  <description>
-!    Specify particle number for particle level debugging details.
-!  </description>
-!  <dependent keyword="DEBUG_DES" value=".TRUE."/>
-      FOCUS_PARTICLE = 0
-!</keyword>
-
 
 
 !#####################################################################!
