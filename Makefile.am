@@ -266,7 +266,6 @@ libmfix_src = \
 	model/des/comp_mean_fields1.f \
 	model/des/des_allocate_mod.f \
 	model/des/des_bc_mod.f \
-	model/des/des_functions.f \
 	model/des/des_granular_temperature.f \
 	model/des/des_init_arrays.f \
 	model/des/des_init_namelist.f \

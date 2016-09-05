@@ -16,19 +16,6 @@
       IMPLICIT NONE
 !-----------------------------------------------
 
-! Define interface - needed when passing arrays of assumed size
-! This function is used to identify fluid grid index (i,j or k) of a
-! particle in a given x-, y-, z- line of space
-      INTERFACE
-         INTEGER FUNCTION DES_GETINDEXFROMPOS(LIM1,LIM2,PART_POS,&
-            GRID_POS,AXIS,AXIS_INDEX)
-            INTEGER :: LIM1, LIM2
-            DOUBLE PRECISION :: PART_POS
-            DOUBLE PRECISION, DIMENSION(:) :: GRID_POS
-            CHARACTER(LEN=1) :: AXIS,AXIS_INDEX
-         END FUNCTION DES_GETINDEXFROMPOS
-      END INTERFACE
-
 
 ! Total number of particles in simulation: read from input or generated
       INTEGER PARTICLES
