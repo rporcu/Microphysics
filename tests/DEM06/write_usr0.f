@@ -35,8 +35,6 @@
       use particle_filter, only: DES_INTERP_SCHEME
       use particle_filter, only: DES_INTERP_MEAN_FIELDS
       use particle_filter, only: DES_INTERP_WIDTH
-      use particle_filter, only: DES_DIFFUSE_MEAN_FIELDS
-      use particle_filter, only: DES_DIFFUSE_WIDTH
 
       use run, only: DESCRIPTION
 
@@ -76,13 +74,6 @@
          WRITE(fUNIT, *) '   '
       ENDIF
 
-      WRITE(fUNIT, 1130, ADVANCE='NO') DES_DIFFUSE_MEAN_FIELDS
-      IF(DES_DIFFUSE_MEAN_FIELDS) THEN
-         WRITE(fUNIT, 1131, ADVANCE='YES') DES_DIFFUSE_WIDTH
-      ELSE
-         WRITE(fUNIT, *) '   '
-      ENDIF
-
       WRITE(fUNIT, 1140, ADVANCE='YES') DES_EXPLICITLY_COUPLED
 
       WRITE(fUNIT, 1250) VAR, VAR
@@ -96,9 +87,6 @@
 
  1120 FORMAT(7x,'DES_INTERP_MEAN_FIELDS =',2x,L1)
  1121 FORMAT(5x,'DES_INTERP_WIDTH =  ',F9.6)
-
- 1130 FORMAT(7x,'DES_DIFFUSE_MEAN_FIELDS =',1x,L1)
- 1131 FORMAT(5x,'DES_DIFFUSE_WIDTH = ',F7.2)
 
  1140 FORMAT(7x,'DES_EXPLICITLY_COUPLED =',2x,L1)
 
