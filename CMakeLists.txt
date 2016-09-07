@@ -354,7 +354,7 @@ set(TESTS
 
 foreach( test ${TESTS})
   FILE(GLOB USR_OVERRIDES tests/${test}/*.f)
-  add_executable(mfix_${test} model/mfix.f ${USR_OVERRIDES})
+  add_executable(mfix_${test} EXCLUDE_FROM_ALL model/mfix.f ${USR_OVERRIDES})
 
   set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
   set_source_files_properties(${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
