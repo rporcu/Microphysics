@@ -15,71 +15,6 @@ if ( MPI )
   endif ( MPI_Fortran_COMPILER )
 endif ( MPI )
 
-#
-# USR_DEP_SOURCES are those Fortran modules that can be USEd by usr code
-#
-set( USR_DEP_SOURCES
-  model/cartesian_grid/cutcell_mod.f
-  model/cartesian_grid/progress_bar_mod.f
-  model/constant_mod.f
-  model/des/discretelement_mod.f
-  model/des/particle_filter_mod.f
-  model/dmp_modules/compar_mod.f
-  model/dmp_modules/debug_mod.f
-  model/dmp_modules/mpi_mod.f
-  model/dmp_modules/mpi_utility_mod.f
-  model/dmp_modules/parallel_mpi_mod.f
-  model/dmp_modules/sendrecv3_mod.f
-  model/dmp_modules/sendrecv_mod.f
-  model/error_manager_mod.f
-  model/exit.f
-  model/fldvar_mod.f
-  model/functions_mod.f
-  model/geometry_mod.f
-  model/indices_mod.f
-  model/io/funits_mod.f
-  model/io/open_file.f
-  model/output_mod.f
-  model/param1_mod.f
-  model/param_mod.f
-  model/physprop_mod.f
-  model/run_mod.f
-  model/solvers/DGTSV.f
-  model/solvers/leqsol_mod.f
-  model/solvers/xerbla.f
-  model/toleranc_mod.f
-  )
-
-#
-# USR_SOURCES are those Fortran modules that can overridden in the RUNDIR
-#
-set( USR_SOURCES
-  usr0_des.f
-  usr1_des.f
-  usr2_des.f
-  usr3_des.f
-  usr0.f
-  usr1.f
-  usr2.f
-  usr3.f
-  usr_drag.f
-  usr_init_namelist.f
-  usr_mod.f
-  usr_physical_prop.f
-  usr_write_out0.f
-  usr_write_out1.f
-  write_usr0.f
-  write_usr1.f
-  )
-
-foreach( usr_f ${USR_SOURCES})
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f} ${CMAKE_CURRENT_BINARY_DIR}/${usr_f}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/model/usr/${usr_f}
-    )
-endforeach( usr_f )
-
 set(SOURCES
   model/accum_resid.f
   model/adjust_a_g.f
@@ -110,6 +45,7 @@ set(SOURCES
   model/cartesian_grid/cartesian_grid_init_namelist.f
   model/cartesian_grid/check_data_cartesian.f
   model/cartesian_grid/cut_cell_preprocessing.f
+  model/cartesian_grid/cutcell_mod.f
   model/cartesian_grid/dashboard_mod.f
   model/cartesian_grid/deallocate_cut_cell_arrays.f
   model/cartesian_grid/define_quadrics.f
@@ -124,6 +60,7 @@ set(SOURCES
   model/cartesian_grid/get_poly_data.f
   model/cartesian_grid/get_stl_data.f
   model/cartesian_grid/polygon_mod.f
+  model/cartesian_grid/progress_bar_mod.f
   model/cartesian_grid/quadric_mod.f
   model/cartesian_grid/set_Odxyz.f
   model/cartesian_grid/stl_mod.f
@@ -160,6 +97,7 @@ set(SOURCES
   model/check_data_20.f
   model/check_data_30.f
   model/check_plane.f
+  model/constant_mod.f
   model/conv_dif_u_g.f
   model/conv_dif_v_g.f
   model/conv_dif_w_g.f
@@ -195,6 +133,7 @@ set(SOURCES
   model/des/desgrid_mod.f
   model/des/desmpi_mod.f
   model/des/desmpi_wrapper_mod.f
+  model/des/discretelement_mod.f
   model/des/drag_gp_des.f
   model/des/drag_gs_des0.f
   model/des/drag_gs_des1.f
@@ -213,6 +152,7 @@ set(SOURCES
   model/des/mpi_unpack_des_mod.f
   model/des/neighbour.f
   model/des/nsquare.f
+  model/des/particle_filter_mod.f
   model/des/particles_in_cell.f
   model/des/randomno_mod.f
   model/des/read_particle_input.f
@@ -220,14 +160,14 @@ set(SOURCES
   model/des/read_res1_des_mod.f
   model/des/sendrecvnode_mod.f
   model/des/set_bc_dem.f
-  model/des/stl_dbg_des_mod.f
-  model/des/stl_functions_des_mod.f
   model/des/set_bc_dem_mi.f
   model/des/set_bc_dem_mo.f
   model/des/set_filter_des.f
   model/des/set_geometry_des.f
   model/des/set_phase_index.f
   model/des/solid_drag.f
+  model/des/stl_dbg_des_mod.f
+  model/des/stl_functions_des_mod.f
   model/des/stl_preproc_des_mod.f
   model/des/vtp_mod.f
   model/des/write_des_data.f
@@ -235,20 +175,35 @@ set(SOURCES
   model/des/write_res1_des_mod.f
   model/discretization_mod.f
   model/display_resid.f
+  model/dmp_modules/compar_mod.f
   model/dmp_modules/dbg_util_mod.f
+  model/dmp_modules/debug_mod.f
   model/dmp_modules/gridmap_mod.f
+  model/dmp_modules/mpi_mod.f
+  model/dmp_modules/mpi_utility_mod.f
+  model/dmp_modules/parallel_mpi_mod.f
+  model/dmp_modules/sendrecv3_mod.f
+  model/dmp_modules/sendrecv_mod.f
   model/drag_mod.f
   model/eos_mod.f
+  model/error_manager_mod.f
+  model/exit.f
+  model/fldvar_mod.f
   model/flow_to_vel.f
   model/fun_avg_mod.f
+  model/functions_mod.f
+  model/geometry_mod.f
   model/get_bc_area.f
   model/get_data.f
   model/get_ps.f
   model/ic_mod.f
+  model/indices_mod.f
   model/init_fvars.f
   model/init_namelist.f
+  model/io/funits_mod.f
   model/io/in_binary_512_mod.f
   model/io/in_binary_512i_mod.f
+  model/io/open_file.f
   model/io/open_files.f
   model/io/out_array.f
   model/io/out_array_c.f
@@ -280,14 +235,19 @@ set(SOURCES
   model/mod_bc_i.f
   model/mod_bc_j.f
   model/mod_bc_k.f
+  model/output_mod.f
+  model/param1_mod.f
+  model/param_mod.f
   model/parse_line.f
   model/parse_resid_string.f
   model/physical_prop.f
+  model/physprop_mod.f
   model/ps_mod.f
   model/read_namelist.f
   model/remove_comment.f
   model/reset_new.f
   model/residual_mod.f
+  model/run_mod.f
   model/scales_mod.f
   model/set_bc0.f
   model/set_bc1.f
@@ -313,14 +273,17 @@ set(SOURCES
   model/solve_pp_g.f
   model/solve_vel_star.f
   model/solvers/BLAS.f
+  model/solvers/DGTSV.f
   model/solvers/dgtsl.f
   model/solvers/leq_bicgs.f
   model/solvers/leq_bicgst.f
   model/solvers/leq_cg.f
   model/solvers/leq_gmres.f
   model/solvers/leq_sor.f
+  model/solvers/leqsol_mod.f
   model/solvers/solve_lin_eq.f
   model/solvers/test_lin_eq.f
+  model/solvers/xerbla.f
   model/source_pp_g.f
   model/source_u_g.f
   model/source_v_g.f
@@ -332,9 +295,26 @@ set(SOURCES
   model/time_march.f
   model/tmp_array1_mod.f
   model/tmp_array_mod.f
+  model/toleranc_mod.f
   model/under_relax.f
   model/update_old.f
   model/ur_facs_mod.f
+  model/usr/usr0.f
+  model/usr/usr0_des.f
+  model/usr/usr1.f
+  model/usr/usr1_des.f
+  model/usr/usr2.f
+  model/usr/usr2_des.f
+  model/usr/usr3.f
+  model/usr/usr3_des.f
+  model/usr/usr_drag.f
+  model/usr/usr_init_namelist.f
+  model/usr/usr_mod.f
+  model/usr/usr_physical_prop.f
+  model/usr/usr_write_out0.f
+  model/usr/usr_write_out1.f
+  model/usr/write_usr0.f
+  model/usr/write_usr1.f
   model/utilities_mod.f
   model/vavg_u_g.f
   model/vavg_v_g.f
@@ -344,21 +324,16 @@ set(SOURCES
   model/xsi_mod.f
   model/zero_norm_vel.f)
 
-add_executable(mfix model/mfix.f)
+FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f)
+add_executable(mfix model/mfix.f ${USR_OVERRIDES})
 add_library(model STATIC ${SOURCES})
-add_library(usr STATIC ${USR_SOURCES})
-add_library(usrdep STATIC ${USR_DEP_SOURCES})
 
-set_source_files_properties(${SOURCES} ${USR_SOURCES} ${USR_DEP_SOURCES} PROPERTIES COMPILE_FLAGS -cpp)
+set_source_files_properties(${SOURCES} ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
 set_target_properties(mfix PROPERTIES Fortran_FORMAT "FREE")
 set_target_properties(model PROPERTIES Fortran_FORMAT "FREE")
-set_target_properties(usr PROPERTIES Fortran_FORMAT "FREE")
-set_target_properties(usrdep PROPERTIES Fortran_FORMAT "FREE")
 
-target_link_libraries(usr usrdep)
-target_link_libraries(model usr usrdep)
-target_link_libraries(mfix model usr usrdep)
+target_link_libraries(mfix model)
 
 enable_testing()
 
@@ -379,29 +354,14 @@ set(TESTS
 
 foreach( test ${TESTS})
   FILE(GLOB USR_OVERRIDES tests/${test}/*.f)
-  add_executable(mfix_${test} model/mfix.f)
-  add_library(usr_${test} STATIC ${USR_OVERRIDES})
+  add_executable(mfix_${test} model/mfix.f ${USR_OVERRIDES})
 
   set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
-  set_target_properties(usr_${test} PROPERTIES Fortran_FORMAT "FREE")
+  set_source_files_properties(${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
   add_test(NAME test_${test}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${test}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test})
 
-  target_link_libraries(usr_${test} model usrdep)
-  target_link_libraries(mfix_${test} model usr_${test} usrdep)
+  target_link_libraries(mfix_${test} model)
 endforeach( test ${TESTS})
-
-# # with -fPIC
-# IF(UNIX AND NOT WIN32)
-#   FIND_PROGRAM(CMAKE_UNAME uname /bin /usr/bin /usr/local/bin )
-#   IF(CMAKE_UNAME)
-#     EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_PROCESSOR)
-#     SET(CMAKE_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR} CACHE INTERNAL
-#       "processor type (i386 and x86_64)")
-#     IF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-#       ADD_DEFINITIONS(-fPIC)
-#     ENDIF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-#   ENDIF(CMAKE_UNAME)
-# ENDIF(UNIX AND NOT WIN32)
