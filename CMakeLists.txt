@@ -359,9 +359,13 @@ foreach( test ${TESTS})
   set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
   set_source_files_properties(${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
+  add_test(buildtest_${test} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${test})
+
   add_test(NAME test_${test}
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${test}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test})
+
+  set_tests_properties ( test_${test} PROPERTIES DEPENDS buildtest_${test})
 
   target_link_libraries(mfix_${test} model)
 endforeach( test ${TESTS})
