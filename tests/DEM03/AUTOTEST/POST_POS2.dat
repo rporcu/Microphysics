@@ -5,7 +5,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 
@@ -121,7 +121,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 
@@ -236,7 +236,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 
@@ -351,7 +351,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 
@@ -467,7 +467,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 
@@ -583,7 +583,7 @@
 
        Time Stepping Scheme: ADAMS_BASHFORTH
 
-       Normal collision spring sonstant. (N/m)
+       Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    
 

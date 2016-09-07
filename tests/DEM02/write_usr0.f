@@ -64,7 +64,7 @@
 
  1100 FORMAT(2/,7x,'Time Stepping Scheme: ',A)
 
- 1110 FORMAT(/7x,'Normal collision spring sonstant. (N/m)',/&
+ 1110 FORMAT(/7x,'Normal collision spring constant. (N/m)',/&
          10x,'KN = ',T30,G12.4,/&
          10x,'KN_W = ',T30,G12.4)
 
