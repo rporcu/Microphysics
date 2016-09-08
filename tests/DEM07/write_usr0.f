@@ -9,6 +9,53 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_USR0
 
+      CALL GEN_PARTICLES
+      CALL WRITE_DAT_HEADER('POST_GRAN_TEMP.dat')
+      contains
+
+!----------------------------------------------------------------------!
+!                                                                      !
+!                                                                      !
+!                                                                      !
+!----------------------------------------------------------------------!
+      SUBROUTINE WRITE_DAT_HEADER(FNAME)
+
+      use run, only: DESCRIPTION
+
+      IMPLICIT NONE
+
+      CHARACTER(len=*) :: FNAME
+
+! logical used for testing is the data file already exists
+      LOGICAL :: EXISTS
+! file unit for heat transfer data
+      INTEGER, PARAMETER :: fUNIT = 2030
+
+      INQUIRE(FILE=FNAME,EXIST=EXISTS)
+      IF (.NOT.EXISTS) THEN
+         OPEN(UNIT=fUNIT,FILE=FNAME,STATUS='NEW')
+         WRITE(fUNIT, 1000) trim(DESCRIPTION)
+      ELSE
+         OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
+      ENDIF
+
+      WRITE(fUNIT, 1100) 
+
+ 1000 FORMAT(2/,12x,A)
+ 1100 FORMAT(2/,2x,'t*sqrt(T0)/dp',5x,'T(t)/T0',10x,'MFIX')
+
+
+      CLOSE(fUNIT)
+      RETURN
+      END SUBROUTINE WRITE_DAT_HEADER
+
+!----------------------------------------------------------------------!
+!                                                                      !
+!                                                                      !
+!                                                                      !
+!----------------------------------------------------------------------!
+      SUBROUTINE GEN_PARTICLES()
+
       use constant
       use desgrid
       use des_allocate
@@ -25,10 +72,10 @@
 
       double precision :: x0, y0, z0, xLen, yLen, zLen
 
-      double precision :: lRad, lDp2
+      double precision :: lRad, lDp
       double precision :: lPos(3), lVel(3), meanVel(3), vScale
 
-      integer :: lc1
+      integer :: lc1, fail
 
       double precision :: gTemp, ldist(3), ldmag
 
@@ -38,7 +85,7 @@
 
 
       lRad = 0.5d0*D_p0(1)
-      lDp2 = D_p0(1)**2
+      lDp = D_p0(1)
 
       x0 = dg_xStart + lRad
       y0 = dg_yStart + lRad
@@ -48,13 +95,29 @@
       yLen = dg_yEnd - dg_yStart - D_p0(1)
       zLen = dg_zEnd - dg_zStart - D_p0(1)
 
+      pip = 0
+      fail = 0
       seed_lp: do while(pip < pCount)
+
+         if(fail > 100) then
+            write(*,*) 'failed',pip
+            stop 23
+         endif
+
          call random_number(rand3)
-         lPos = x0 + xLen*rand3
+
+         lPos(1) = x0 + xLen*rand3(1)
+         lPos(2) = y0 + yLen*rand3(2)
+         lPos(3) = z0 + zLen*rand3(3)
+
          do lc1=1, pip
             ldist = des_pos_new(:,lc1) - lPos
-            ldmag = dot_product(ldist, ldist)
-            if(ldmag + 0.001 < lDp2) cycle seed_lp
+            ldmag = sqrt(dot_product(ldist, ldist))
+
+            if(ldmag - ldp < 100.0d-8) then
+              fail = fail + 1
+              cycle seed_lp
+            endif
          enddo
 
          pip = pip+1
@@ -90,10 +153,10 @@
       gTemp = 0.0d0
       do lc1 = 1, pip
         des_vel_new(:,lc1) = des_vel_new(:,lc1) - meanVel
-        gTemp = gTemp + one_third * dot_product &
+        gTemp = gTemp + dot_product &
            (des_vel_new(:,lc1), des_vel_new(:,lc1))
       enddo
-      gTemp = gTemp/DBLE(pip)
+      gTemp = gTemp/(3.0d0*DBLE(pip))
 
 ! Scale velocities so the mean granular temperature is equal to
 ! the targeted valued.
@@ -106,5 +169,18 @@
       particles = pip
       call global_all_sum(particles)
 
+! This is a test of the setup
+      meanVel = 0.0d0
+      gTemp = 0.0d0
+      do lc1 = 1, pip
+        meanVel = meanVel + des_vel_new(:,lc1)
+        gTemp = gTemp + dot_product &
+           (des_vel_new(:,lc1), des_vel_new(:,lc1))
+      enddo
+      gTemp = gTemp/(3.0d0*DBLE(pip))
+      meanVel = meanVel / dble(pip)
+
       RETURN
+      END SUBROUTINE GEN_PARTICLES
+
       END SUBROUTINE WRITE_USR0
