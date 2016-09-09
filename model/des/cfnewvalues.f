@@ -28,6 +28,9 @@
       DOUBLE PRECISION :: DD(3), NEIGHBOR_SEARCH_DIST
       LOGICAL, SAVE :: FIRST_PASS = .TRUE.
       DOUBLE PRECISION :: OMEGA_MAG,OMEGA_UNIT(3),ROT_ANGLE
+
+      DOUBLE PRECISION :: lVELo(3), lPOSo(3)
+
 !-----------------------------------------------
 
 ! Adams-Bashforth defaults to Euler for the first time step.
@@ -43,8 +46,8 @@
 
 !$omp parallel do if(max_pip .ge. 10000) default(none)                    &
 !$omp shared(MAX_PIP,INTG_EULER,INTG_ADAMS_BASHFORTH,fc,tow,              &
-!$omp       omega_new,omega_old,pmass,grav,des_vel_new,des_pos_new,       &
-!$omp       des_vel_old,des_pos_old,dtsolid,omoi,des_acc_old,rot_acc_old, &
+!$omp       omega_new,pmass,grav,des_vel_new,des_pos_new,                 &
+!$omp       dtsolid,omoi,des_acc_old,rot_acc_old,                         &
 !$omp       ppos,neighbor_search_rad_ratio,des_radius,DO_OLD, iGlobal_ID, &
 !$omp       particle_orientation, orientation) &
 !$omp private(l,dd,neighbor_search_dist,rot_angle,omega_mag,omega_unit)   &
@@ -75,48 +78,23 @@
             OMEGA_NEW(:,L)   = OMEGA_NEW(:,L) + TOW(:,L)*OMOI(L)*DTSOLID
          ELSEIF (INTG_ADAMS_BASHFORTH) THEN
 
+            lVELo = DES_VEL_NEW(:,L)
+            lPOSo = DES_POS_NEW(:,L)
+
 ! Second-order Adams-Bashforth/Trapezoidal scheme
-            DES_VEL_NEW(:,L) = DES_VEL_OLD(:,L) + 0.5d0*&
+            DES_VEL_NEW(:,L) = lVELo(:) + 0.5d0*&
                ( 3.d0*FC(:,L)-DES_ACC_OLD(:,L) )*DTSOLID
-            OMEGA_NEW(:,L)   =  OMEGA_OLD(:,L) + 0.5d0*&
+
+            OMEGA_NEW(:,L)   =  OMEGA_NEW(:,L) + 0.5d0*&
                ( 3.d0*TOW(:,L)*OMOI(L)-ROT_ACC_OLD(:,L) )*DTSOLID
-            DD(:) = 0.5d0*( DES_VEL_OLD(:,L)+DES_VEL_NEW(:,L) )*DTSOLID
-            DES_POS_NEW(:,L) = DES_POS_OLD(:,L) + DD(:)
+
+            DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(:,L) )*DTSOLID
+
+            DES_POS_NEW(:,L) = lPOSo(:) + DD(:)
             DES_ACC_OLD(:,L) = FC(:,L)
             ROT_ACC_OLD(:,L) = TOW(:,L)*OMOI(L)
          ENDIF
 
-! Update particle orientation - Always first order
-! When omega is non-zero, compute the rotation angle, and apply the
-! Rodrigues' rotation formula
-
-         IF(PARTICLE_ORIENTATION) THEN
-            OMEGA_MAG = OMEGA_NEW(1,L)**2 +OMEGA_NEW(2,L)**2 + OMEGA_NEW(3,L)**2
-
-            IF(OMEGA_MAG>ZERO) THEN
-               OMEGA_MAG=DSQRT(OMEGA_MAG)
-               OMEGA_UNIT(:) = OMEGA_NEW(:,L)/OMEGA_MAG
-               ROT_ANGLE = OMEGA_MAG * DTSOLID
-
-               ORIENTATION(:,L) = ORIENTATION(:,L)*DCOS(ROT_ANGLE) &
-                                 + DES_CROSSPRDCT(OMEGA_UNIT,ORIENTATION(:,L))*DSIN(ROT_ANGLE) &
-                                 + OMEGA_UNIT(:)*DOT_PRODUCT(OMEGA_UNIT,ORIENTATION(:,L))*(ONE-DCOS(ROT_ANGLE))
-            ENDIF
-         ENDIF
-
-! Check if the particle has moved a distance greater than or equal to
-! its radius during one solids time step. if so, call stop
-         IF(dot_product(DD,DD).GE.DES_RADIUS(L)**2) THEN
-            WRITE(*,1002) iGlobal_ID(L), sqrt(dot_product(DD,DD)), DES_RADIUS(L)
-            IF (DO_OLD) WRITE(*,'(5X,A,3(ES17.9))') &
-               'old particle pos = ', DES_POS_OLD(:,L)
-            WRITE(*,'(5X,A,3(ES17.9))') &
-               'new particle pos = ', DES_POS_NEW(:,L)
-            WRITE(*,'(5X,A,3(ES17.9))')&
-               'new particle vel = ', DES_VEL_NEW(:,L)
-            WRITE(*,1003)
-            STOP 1
-         ENDIF
 
 ! Check if the particle has moved a distance greater than or equal to
 ! its radius since the last time a neighbor search was called. if so,

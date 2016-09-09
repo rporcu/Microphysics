@@ -110,9 +110,6 @@
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES
 
-! Update the old values of particle position and velocity with the new
-! values computed
-         IF (DO_OLD) CALL CFUPDATEOLD
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities

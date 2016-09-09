@@ -142,16 +142,9 @@
 
 ! Higher order time integration variables.
       IF (DO_OLD) THEN
-         DES_POS_OLD(:,LB:UB) = ZERO
-         DES_VEL_OLD(:,LB:UB) = ZERO
          DES_ACC_OLD(:,LB:UB) = ZERO
-         OMEGA_OLD(:,LB:UB) = ZERO
          ROT_ACC_OLD(:,LB:UB) = ZERO
       ENDIF
 
-
       RETURN
       END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
-
-
-

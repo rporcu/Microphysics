@@ -81,10 +81,10 @@
 !---------------------------------------------------------------------//
 ! particle radius and density
       use discretelement, only: DES_RADIUS, RO_Sol
-! particle position new and old
-      use discretelement, only: DES_POS_NEW, DES_POS_OLD
-! particle velocity new and old
-      use discretelement, only: DES_VEL_NEW, DES_VEL_OLD
+! particle position
+      use discretelement, only: DES_POS_NEW
+! particle velocity
+      use discretelement, only: DES_VEL_NEW
 ! Simulation dimension (2D/3D)
       use discretelement, only: DIMN
 ! Number of particles in the system (current)
@@ -94,7 +94,7 @@
 ! Flag to use _OLD variables
       use discretelement, only: DO_OLD
 ! Angular velocity
-      use discretelement, only: OMEGA_OLD, OMEGA_NEW, PIJK
+      use discretelement, only: OMEGA_NEW, PIJK
 ! solid phase diameters and densities.
       use physprop, only: D_p0, RO_s0, MMAX
 ! IC Region solids volume fraction.
@@ -342,12 +342,6 @@
          PIJK(PIP,3) = K
          PIJK(PIP,4) = IJK
          PIJK(PIP,5) = M
-
-         IF(DO_OLD) THEN
-            DES_VEL_OLD(PIP,:) = DES_VEL_NEW(PIP,:)
-            DES_POS_OLD(PIP,:) = DES_POS_NEW(PIP,:)
-            OMEGA_OLD(PIP,:) = ZERO
-         ENDIF
 
          SOLIDS_DATA(M) = SOLIDS_DATA(M) + 1.0
 

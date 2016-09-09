@@ -46,12 +46,12 @@
       use discretelement, only: DG_PIJK, DG_PIJKPRV
 ! The global ID for each particle
       use discretelement, only: iGLOBAL_ID
-! Particle positions: current/previous
-      use discretelement, only: DES_POS_NEW, DES_POS_OLD
-! Particle tangential velocities: current/previous
-      use discretelement, only: DES_VEL_NEW, DES_VEL_OLD
-! Particle rotational velocities: current/previous
-      use discretelement, only: OMEGA_NEW, OMEGA_OLD
+! Particle positions
+      use discretelement, only: DES_POS_NEW
+! Particle tangential velocities
+      use discretelement, only: DES_VEL_NEW
+! Particle rotational velocities
+      use discretelement, only: OMEGA_NEW
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS, PVOL
 ! Number of cells used in interpolation
@@ -159,13 +159,6 @@
             ighost_updated(llocpar) = .true.
             lnewcnt = lnewcnt-1
 
-! Copy the current value to the previous value if needed.
-            IF (DO_OLD) THEN
-               des_pos_old(:,llocpar)= des_pos_new(:,llocpar)
-               des_vel_old(:,llocpar)= des_vel_new(:,llocpar)
-               omega_old(:,llocpar)= omega_new(:,llocpar)
-            ENDIF
-
          else
             lnewpic(lparijk) = lnewpic(lparijk) + 1
          endif
@@ -222,11 +215,6 @@
 
             PVOL(ispot) = (4.0D0/3.0D0)*PI*DES_RADIUS(ispot)**3
 
-            IF (DO_OLD) THEN
-               des_pos_old(1:dimn,ispot) = des_pos_new(1:dimn,ispot)
-               des_vel_old(1:dimn,ispot) = des_vel_new(1:dimn,ispot)
-               omega_old(1:3,ispot) = omega_new(1:3,ispot)
-            ENDIF
          enddo
       endif
 
@@ -259,12 +247,12 @@
       use desmpi, only: iNEIGHPROC
 ! The global ID for each particle
       use discretelement, only: iGLOBAL_ID
-! Particle positions: current/previous
-      use discretelement, only: DES_POS_NEW, DES_POS_OLD
-! Particle tangential velocities: current/previous
-      use discretelement, only: DES_VEL_NEW, DES_VEL_OLD
-! Particle rotational velocities: current/previous
-      use discretelement, only: OMEGA_NEW, OMEGA_OLD
+! Particle positions
+      use discretelement, only: DES_POS_NEW
+! Particle tangential velocities
+      use discretelement, only: DES_VEL_NEW
+! Particle rotational velocities
+      use discretelement, only: OMEGA_NEW
 !Particle orientation
       use discretelement, only: PARTICLE_ORIENTATION,ORIENTATION
 ! Particle radius, volume, density, mass
@@ -399,18 +387,9 @@
 ! 24) User defined variable
          IF(DES_USR_VAR_SIZE > 0) &
             call unpack_dbuf(lbuf,des_usr_var(:,llocpar),pface)
-! 25) Particle orientation
-         IF(PARTICLE_ORIENTATION) &
-            call unpack_dbuf(lbuf,orientation(:,llocpar),pface)
 
 ! -- Higher order integration variables
          IF (DO_OLD) THEN
-! 26) Position (previous)
-            call unpack_dbuf(lbuf,des_pos_old(:,llocpar),pface)
-! 27) Translational velocity (previous)
-            call unpack_dbuf(lbuf,des_vel_old(:,llocpar),pface)
-! 28) Rotational velocity (previous)
-            call unpack_dbuf(lbuf,omega_old(:,llocpar),pface)
 ! 29) Translational acceleration (previous)
             call unpack_dbuf(lbuf,des_acc_old(:,llocpar),pface)
 ! 30) Rotational acceleration (previous)

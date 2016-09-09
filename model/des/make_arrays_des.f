@@ -108,26 +108,12 @@
             ORIENTATION(3,:) = INIT_ORIENTATION(3)
          ENDIF
 
-
-         IF (DO_OLD) THEN
-            omega_old(:,:)   = zero
-            des_pos_old(:,:) = des_pos_new(:,:)
-            des_vel_old(:,:) = des_vel_new(:,:)
-         ENDIF
-
 ! Read the restart file.
       ELSEIF(RUN_TYPE == 'RESTART_1' .OR. RUN_TYPE == 'RESTART_2') THEN
 
          CALL READ_RES0_DES
          imax_global_id = maxval(iglobal_id(1:pip))
          call global_all_max(imax_global_id)
-
-! Initizlie the old values.
-         IF (DO_OLD) THEN
-            omega_old(:,:)   = omega_new(:,:)
-            des_pos_old(:,:) = des_pos_new(:,:)
-            des_vel_old(:,:) = des_vel_new(:,:)
-         ENDIF
 
       ELSE
 

@@ -167,12 +167,12 @@
       use desmpi, only: iNEIGHPROC
 ! The global ID for each particle
       use discretelement, only: iGLOBAL_ID
-! Particle positions: current/previous
-      use discretelement, only: DES_POS_NEW, DES_POS_OLD
-! Particle tangential velocities: current/previous
-      use discretelement, only: DES_VEL_NEW, DES_VEL_OLD
-! Particle rotational velocities: current/previous
-      use discretelement, only: OMEGA_NEW, OMEGA_OLD
+! Particle positions
+      use discretelement, only: DES_POS_NEW
+! Particle tangential velocities
+      use discretelement, only: DES_VEL_NEW
+! Particle rotational velocities
+      use discretelement, only: OMEGA_NEW
 ! Particle orientation
       use discretelement, only: PARTICLE_ORIENTATION,ORIENTATION
 ! Particle radius, volume, density, mass
@@ -312,13 +312,6 @@
 
 ! -- Higher order integration variables
             IF (DO_OLD) THEN
-! 26) Position (previous)
-               call pack_dbuf(lbuf,des_pos_old(:,lcurpar) +            &
-                  dcycl_offset(pface,:),pface)
-! 27) Translational velocity (previous)
-               call pack_dbuf(lbuf,des_vel_old(:,lcurpar),pface)
-! 28) Rotational velocity (previous)
-               call pack_dbuf(lbuf,omega_old(:,lcurpar),pface)
 ! 29) Translational acceleration (previous)
                call pack_dbuf(lbuf,des_acc_old(:,lcurpar),pface)
 ! 30) Rotational acceleration (previous)

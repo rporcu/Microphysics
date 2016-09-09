@@ -161,12 +161,6 @@
 
       IF(PARTICLE_ORIENTATION) ORIENTATION(1:3,NP) = INIT_ORIENTATION
 
-      IF (DO_OLD) THEN
-         DES_POS_OLD(:,NP) = ZERO
-         DES_VEL_OLD(:,NP) = ZERO
-         OMEGA_OLD(:,NP) = ZERO
-      ENDIF
-
       DES_RADIUS(NP) = ZERO
       PMASS(NP) = ZERO
       PVOL(NP) = ZERO

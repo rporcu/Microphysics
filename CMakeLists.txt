@@ -121,7 +121,6 @@ set(SOURCES
   model/des/cfnewvalues.f
   model/des/cfrelvel.f
   model/des/cfslide.f
-  model/des/cfupdateold.f
   model/des/check_cell_movement.f
   model/des/comp_mean_fields.f
   model/des/comp_mean_fields0.f

@@ -220,7 +220,6 @@
                   write(44,'(5(2x,f8.4))') (dsendbuf(1+mod(lface,2))%facebuf(lindx),lindx=lbuf,lbuf+lsize-1)
                   lbuf = lbuf + lsize
 
-                  write(44,*) "omega_old     omega_new"
                   write(44,*) &
                  "-----------------------------------------------------"
                   lsize = ltordimn*2

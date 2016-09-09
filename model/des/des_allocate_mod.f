@@ -94,10 +94,7 @@ CONTAINS
       IF(PARTICLE_ORIENTATION) Allocate(  ORIENTATION (DIMN,MAX_PIP) )
 
       IF (DO_OLD) THEN
-         Allocate(  DES_POS_OLD (DIMN,MAX_PIP) )
-         Allocate(  DES_VEL_OLD (DIMN,MAX_PIP) )
          Allocate(  DES_ACC_OLD (DIMN,MAX_PIP) )
-         Allocate(  OMEGA_OLD (DIMN,MAX_PIP) )
          Allocate(  ROT_ACC_OLD (DIMN,MAX_PIP))
       ENDIF
 
@@ -379,13 +376,9 @@ CONTAINS
            ENDIF
 
            IF (DO_OLD) THEN
-              call real_grow2(DES_POS_OLD,MAX_PIP)
-              call real_grow2(DES_VEL_OLD,MAX_PIP)
               call real_grow2(DES_ACC_OLD,MAX_PIP)
-              call real_grow2(OMEGA_OLD,MAX_PIP)
               call real_grow2(ROT_ACC_OLD,MAX_PIP)
            ENDIF
-
 
            IF(DES_USR_VAR_SIZE > 0) &
               call real_grow2(DES_USR_VAR,MAX_PIP)

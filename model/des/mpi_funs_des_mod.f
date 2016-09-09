@@ -237,8 +237,8 @@
       SUBROUTINE DESMPI_CLEANUP
 
       use discretelement, only: DIMN
-      use discretelement, only: DES_POS_NEW, DES_POS_OLD
-      use discretelement, only: DES_VEL_NEW, DES_VEL_OLD
+      use discretelement, only: DES_POS_NEW
+      use discretelement, only: DES_VEL_NEW
       use discretelement, only: OMEGA_NEW
       use discretelement, only: PARTICLE_ORIENTATION,ORIENTATION,INIT_ORIENTATION
       use discretelement, only: FC
@@ -276,10 +276,6 @@
                fc(:,lcurpar) = 0.0
                des_pos_new(:,lcurpar)=0
                pijk(lcurpar,:) = -10
-               IF (DO_OLD) THEN
-                  des_pos_old(:,lcurpar)=0
-                  des_vel_old(:,lcurpar)=0
-               ENDIF
                des_vel_new(:,lcurpar)=0
                omega_new(:,lcurpar)=0
 
