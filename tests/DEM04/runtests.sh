@@ -17,5 +17,5 @@ done
 post_dats=AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
-    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
+    numdiff -a 0.000001 -r 0.05  -X 1:4 -X 2:4 ${test_post_file} $(basename ${test_post_file})
 done
