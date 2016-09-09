@@ -1,13 +1,13 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: PARSE_LINE(LINE, LMAX, RXN_FLAG, READ_FLAG)            C
+!  Module name: PARSE_LINE(LINE, LMAX,           READ_FLAG)            C
 !  Author: M. Syamlal                                 Date: 27-JUN-97  C
 !                                                                      C
 !  Purpose: Parse input line                                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE PARSE_LINE(LINE, LMAX, RXN_FLAG, READ_FLAG)
+      SUBROUTINE PARSE_LINE(LINE, LMAX, READ_FLAG)
 !
 !-----------------------------------------------
 !   M o d u l e s
@@ -26,10 +26,6 @@
 
 ! Length of of LINE.
       INTEGER, INTENT(IN) :: LMAX
-
-! Indicate whether currently reading chemical reaction data. The
-! namelist read is skipped when reading a chemical reaction.
-      LOGICAL, INTENT(OUT) :: RXN_FLAG
 
 ! Indicate whether to do a namelist read on the line. A namelist read
 ! is still preformed when an arithmetic operation is found.

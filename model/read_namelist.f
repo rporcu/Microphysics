@@ -71,7 +71,7 @@
       INTEGER :: IOS, II
 
 ! Flags restricting what data from the mfix.dat to process
-      LOGICAL :: READ_LOCKED, READ_FULL, RXN_FLAG
+      LOGICAL :: READ_LOCKED, READ_FULL
 
 ! Local Parameters:
 !---------------------------------------------------------------------//
@@ -89,7 +89,6 @@
 !      LOGICAL, EXTERNAL :: BLANK_LINE
 
       E = UNDEFINED
-      RXN_FLAG = .FALSE.
       READ_FLAG = .TRUE.
       LINE_NO = 0
 
@@ -220,7 +219,7 @@
       CALL REMOVE_PAR_BLANKS(LINE_STRING)
 
 ! Complete arithmetic operations and expand line
-      CALL PARSE_LINE (LINE_STRING, LINE_LEN, RXN_FLAG, READ_FLAG)
+      CALL PARSE_LINE (LINE_STRING, LINE_LEN, READ_FLAG)
 
 ! Write the current line to a scratch file
 ! and read the scratch file in NAMELIST format
