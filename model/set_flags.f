@@ -22,7 +22,6 @@
       USE funits
       USE compar
       USE sendrecv
-      USE sendrecv3
       USE boundfunijk
       use mpi_utility
       USE functions

@@ -12,6 +12,7 @@ if ( MPI )
   if ( MPI_Fortran_COMPILER )
     include_directories( ${MPI_INCLUDE_PATH} )
     set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+    add_definitions(-DMPI)
   else ( MPI_Fortran_COMPILER )
     message (FATAL_ERROR " MPI support requested but MPI compiler not found ")
   endif ( MPI_Fortran_COMPILER )
@@ -183,7 +184,6 @@ set(SOURCES
   model/dmp_modules/mpi_mod.f
   model/dmp_modules/mpi_utility_mod.f
   model/dmp_modules/parallel_mpi_mod.f
-  model/dmp_modules/sendrecv3_mod.f
   model/dmp_modules/sendrecv_mod.f
   model/drag_mod.f
   model/eos_mod.f
