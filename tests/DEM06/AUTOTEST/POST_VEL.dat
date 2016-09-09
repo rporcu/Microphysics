@@ -6,7 +6,6 @@
        DES_ONEWAY_COUPLED =      T
        DES_INTERP_ON =           F    
        DES_INTERP_MEAN_FIELDS =  F    
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -51,7 +50,6 @@
        DES_ONEWAY_COUPLED =      T
        DES_INTERP_ON =           T     DES_INTERP_SCHEME = GARG_2012                       
        DES_INTERP_MEAN_FIELDS =  T    
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -96,7 +94,6 @@
        DES_ONEWAY_COUPLED =      T
        DES_INTERP_ON =           T     DES_INTERP_SCHEME = SQUARE_DPVM                     
        DES_INTERP_MEAN_FIELDS =  T     DES_INTERP_WIDTH =   0.002000
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -141,7 +138,6 @@
        DES_ONEWAY_COUPLED =      F
        DES_INTERP_ON =           F    
        DES_INTERP_MEAN_FIELDS =  F    
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -186,7 +182,6 @@
        DES_ONEWAY_COUPLED =      F
        DES_INTERP_ON =           T     DES_INTERP_SCHEME = GARG_2012                       
        DES_INTERP_MEAN_FIELDS =  T    
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -231,7 +226,6 @@
        DES_ONEWAY_COUPLED =      F
        DES_INTERP_ON =           T     DES_INTERP_SCHEME = SQUARE_DPVM                     
        DES_INTERP_MEAN_FIELDS =  T     DES_INTERP_WIDTH =   0.003000
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
@@ -276,7 +270,6 @@
        DES_ONEWAY_COUPLED =      F
        DES_INTERP_ON =           T     DES_INTERP_SCHEME = SQUARE_DPVM                     
        DES_INTERP_MEAN_FIELDS =  T     DES_INTERP_WIDTH =   0.004000
-       DES_DIFFUSE_MEAN_FIELDS = F    
        DES_EXPLICITLY_COUPLED =  F
 
           Time                 Vel             Vel_MFIX         %REL DIFF
