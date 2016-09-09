@@ -136,7 +136,7 @@
       CALL WRITE_SIMPLE_PROGRESS_BAR(DT,DTMAX)
       IF(Sm_flag) THEN
          WRITE(111,40,ADVANCE='NO')' Sm      ',0.0,0.0,0.0
-         CALL WRITE_SIMPLE_PROGRESS_BAR(0.0,0.0)
+         CALL WRITE_SIMPLE_PROGRESS_BAR(0.0d0,0.0d0)
       ELSE
       WRITE(111,30) ' | Sm      |         |         |         |         |                           |'
       ENDIF

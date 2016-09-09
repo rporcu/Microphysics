@@ -50,7 +50,7 @@
 !$omp       dtsolid,omoi,des_acc_old,rot_acc_old,                         &
 !$omp       ppos,neighbor_search_rad_ratio,des_radius,DO_OLD, iGlobal_ID, &
 !$omp       particle_orientation, orientation) &
-!$omp private(l,dd,neighbor_search_dist,rot_angle,omega_mag,omega_unit)   &
+!$omp private(l,dd,neighbor_search_dist,rot_angle,omega_mag,omega_unit, lVELo, lPOSo)   &
 !$omp reduction(.or.:do_nsearch) schedule (auto)
 
       DO L = 1, MAX_PIP

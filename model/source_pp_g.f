@@ -74,7 +74,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !$omp parallel default(none) &
 !$omp          private(IJK, IMJK, IJMK, IJKM, M, bma,bme,bmw,bmn,bms,bmt,bmb,line)  &
 !$omp          shared(ijkstart3,ijkend3,cartesian_grid,rop_g,rop_go,vol,odt,u_g,v_g,w_g,b_m, &
-!$omp                 b_mmax,d_e,d_n,d_t,a_m,a_upg_e,a_vpg_n,a_wpg_t,mmax,ro_g0)
+!$omp                 b_mmax,d_e,d_n,d_t,a_m,a_upg_e,a_vpg_n,a_wpg_t,ro_g0)
 !$omp do
       DO IJK = ijkstart3, ijkend3
          IF (FLUID_AT(IJK)) THEN

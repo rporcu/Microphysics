@@ -89,7 +89,7 @@
 !$omp         do_k, ltau_w_g,              &
 !$omp         ep_g, MU_G, LAMBDA_G, trd_g, v_g, w_g, u_g,          &
 !$omp         axy,  axy_w, ayz_w, axz_w, vol_w,                        &
-!$omp         dy, dz, ox, ox_e, odz, odz_t, LAMBDA_G)
+!$omp         dy, dz, ox, ox_e, odz, odz_t)
          DO IJK = IJKSTART3, IJKEND3
             K = K_OF(IJK)
             IJKT = TOP_OF(IJK)
@@ -262,13 +262,13 @@
 !$omp          v_node_at_sb, v_node_at_st, v_node_at_nb, v_node_at_nt) &
 !$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of, im1, jm1, kp1,     &
 !$omp         do_k, ltau_w_g,                &
-!$omp         ep_g, mu_g, MU_G, LAMBDA_G, trd_g, v_g, w_g, u_g,    &
+!$omp         ep_g, mu_g, LAMBDA_G, trd_g, v_g, w_g, u_g,    &
 !$omp         axy,  axy_w, ayz_w, axz_w, vol, ox,                      &
 !$omp         bc_type, bc_w_id, bc_hw_g, bc_uw_g, bc_vw_g, bc_ww_g,    &
 !$omp         oneodz_t_u, oneodz_t_v, oneodz_t_w,                      &
 !$omp         x_u, y_u, z_u, x_v, y_v, z_v, x_w, y_w, z_w,             &
 !$omp         wall_u_at, wall_v_at, area_w_cut, cut_w_cell_at,         &
-!$omp         blocked_u_cell_at, blocked_v_cell_at, LAMBDA_G)
+!$omp         blocked_u_cell_at, blocked_v_cell_at)
       DO IJK = IJKSTART3, IJKEND3
          K = K_OF(IJK)
          IJKT = TOP_OF(IJK)

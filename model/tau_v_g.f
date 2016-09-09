@@ -80,7 +80,7 @@
 !$omp          EPGA, SBV, SSX, SSY, SSZ)                               &
 !$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of, im1, jp1, km1,     &
 !$omp         do_k, ltau_v_g,                            &
-!$omp         ep_g, LAMBDA_G, trd_g, MU_G, mu_g, u_g, v_g, w_g,      &
+!$omp         ep_g, LAMBDA_G, trd_g, MU_G, u_g, v_g, w_g,      &
 !$omp         ayz_v, axz_v, axz, axy_v,                                &
 !$omp         ody_n, ody)
          DO IJK = IJKSTART3, IJKEND3

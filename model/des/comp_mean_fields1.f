@@ -47,7 +47,7 @@
 ! Calculate the gas phase forces acting on each particle.
 !$omp parallel default(none)                                           &
 !$omp private(NP, VOL_WT, M, LC, IJK, VOLXWEIGHT)                      &
-!$omp shared(MAX_PIP, PVOL, DES_STAT_WT, PIJK, LP_BND,          &
+!$omp shared(MAX_PIP, PVOL, PIJK, LP_BND,          &
 !$omp    FILTER_WEIGHT, SOLVOLINC,DES_U_S, DES_V_S, DES_W_S, DO_K,     &
 !$omp    FILTER_CELL,DES_VEL_NEW)
 !$omp do
