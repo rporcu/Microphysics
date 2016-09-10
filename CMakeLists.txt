@@ -324,9 +324,7 @@ set(SOURCES
   model/usr/write_usr0.f
   model/usr/write_usr1.f
   model/utilities_mod.f
-  model/vavg_u_g.f
-  model/vavg_v_g.f
-  model/vavg_w_g.f
+  model/vavg_g.f
   model/vf_gs.f
   model/xsi_array_mod.f
   model/xsi_mod.f

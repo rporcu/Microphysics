@@ -68,7 +68,7 @@
 !-----------------------------------------------
 ! External functions
 !-----------------------------------------------
-      DOUBLE PRECISION, EXTERNAL :: VAVG_U_G, VAVG_V_G, VAVG_W_G
+      DOUBLE PRECISION, EXTERNAL :: VAVG_G
 
 !-----------------------------------------------
 ! Include statement functions
@@ -229,15 +229,15 @@
 
             IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
                IF (DO_I) THEN
-                 Vavg = VAVG_U_G()
+                 Vavg = VAVG_G(U_G, VOL_U)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
                ENDIF
                IF (DO_J) THEN
-                 Vavg = VAVG_V_G()
+                 Vavg = VAVG_G(V_G, VOL_V)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
                ENDIF
                IF (DO_K) THEN
-                 Vavg = VAVG_W_G()
+                 Vavg = VAVG_G(W_G, VOL_W)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
                ENDIF
             ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
@@ -389,9 +389,10 @@
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE geometry
-      USE constant
       USE compar
+      USE constant
+      USE geometry
+      USE mflux, ONLY: flux_ge, flux_gn, flux_gt
       USE run
       USE time_cpu
       USE utilities, ONLY: mfix_isnan
@@ -416,8 +417,7 @@
 !-----------------------------------------------
 ! Functions
 !-----------------------------------------------
-      DOUBLE PRECISION, EXTERNAL :: VAVG_Flux_U_G, VAVG_Flux_V_G, &
-                                    VAVG_Flux_W_G
+      DOUBLE PRECISION, EXTERNAL :: VAVG_Flux_G
 !-----------------------------------------------
 
       IF(CYCLIC_X_MF)THEN
@@ -443,14 +443,13 @@
 
       mdot_0 = Flux_g
 
-
       ! calculate the average gas mass flux and error
       IF(CYCLIC_X_MF)THEN
-        mdot_n = VAVG_Flux_U_G()
+        mdot_n = VAVG_Flux_G(flux_ge, ayz)
       ELSEIF(CYCLIC_Y_MF)THEN
-        mdot_n = VAVG_Flux_V_G()
+        mdot_n = VAVG_Flux_G(flux_gn, axz)
       ELSEIF(CYCLIC_Z_MF)THEN
-        mdot_n = VAVG_Flux_W_G()
+        mdot_n = VAVG_Flux_G(flux_gt, axy)
       ENDIF
 
       IF (mfix_isnan(mdot_n) .OR. mfix_isnan(delp_n)) THEN
@@ -507,4 +506,3 @@
       G12.5, ' Gas Flux=', G12.5)
 
       END SUBROUTINE GoalSeekMassFlux
-

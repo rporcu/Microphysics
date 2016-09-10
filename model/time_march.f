@@ -73,12 +73,6 @@
       END INTERFACE
 
 !-----------------------------------------------
-! External functions
-!-----------------------------------------------
-! use function vavg_v_g to catch NaN's
-      DOUBLE PRECISION, EXTERNAL :: VAVG_U_G, VAVG_V_G, VAVG_W_G, X_vavg
-
-!-----------------------------------------------
 
       FINISH  = .FALSE.
       NCHECK  = NSTEP
@@ -226,4 +220,3 @@
       IF(SOLVER_STATISTICS) CALL REPORT_SOLVER_STATS(NIT_TOTAL, NSTEP)
 
       END SUBROUTINE TIME_MARCH
-
