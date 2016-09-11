@@ -9,6 +9,7 @@
       SUBROUTINE SOLVE_VEL_STAR(IER)
 
       USE adjust_a
+      USE calc_d_mod, ONLY: calc_d
       USE compar
       USE discretelement
       USE drag
@@ -16,6 +17,7 @@
       USE geometry
       USE indices
       USE leqsol
+      USE matrix
       USE output
       USE param
       USE param1
@@ -25,7 +27,6 @@
       USE run
       USE toleranc
       USE ur_facs
-      use matrix
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -80,7 +81,9 @@
       CALL VF_GS_X
 
 ! calculate coefficients for the pressure correction equation
-      CALL CALC_D_E (A_M, IER)
+      IF (MOMENTUM_X_EQ(0)) THEN
+         CALL CALC_D(D_E, "X", A_M)
+      ENDIF
 
 ! handle special case where center coefficient is zero
       IF (MOMENTUM_X_EQ(0)) CALL ADJUST_A_G ('U', A_M, B_M)
@@ -124,7 +127,9 @@
       CALL VF_GS_Y
 
 ! calculate coefficients for the pressure correction equation
-      CALL CALC_D_N (A_M, IER)
+      IF (MOMENTUM_Y_EQ(0)) THEN
+         CALL CALC_D(D_N, "Y", A_M)
+      ENDIF
 
       IF (MOMENTUM_Y_EQ(0)) CALL ADJUST_A_G('V',A_M, B_M)
 
@@ -165,7 +170,9 @@
          CALL VF_GS_Z
 
 ! calculate coefficients for the pressure correction equation
-         CALL CALC_D_T (A_M, IER)
+         IF (MOMENTUM_Z_EQ(0)) THEN
+            CALL CALC_D(D_T, "Z", A_M)
+         ENDIF
 
          IF (MOMENTUM_Z_EQ(0)) CALL ADJUST_A_G('W',A_M, B_M)
 

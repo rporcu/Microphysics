@@ -46,9 +46,7 @@ set(SOURCES
   model/boundfunijk_mod.f
   model/calc_cell.f
   model/calc_coeff.f
-  model/calc_d_e.f
-  model/calc_d_n.f
-  model/calc_d_t.f
+  model/calc_d.f
   model/calc_mflux.f
   model/calc_mu_g.f
   model/calc_outflow.f
