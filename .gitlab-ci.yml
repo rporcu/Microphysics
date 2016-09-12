@@ -15,7 +15,7 @@ build:
   script:
     - mkdir build
     - cd build
-    - FC='gfortran -g -std=f2008 -fcheck=all -Wall' cmake ..
+    - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
     - make
   artifacts:
     paths:
@@ -25,4 +25,4 @@ test:
   stage: test
   script:
     - cd build
-    - env CTEST_OUTPUT_ON_FAILURE=1 make test
+    - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 make test

@@ -196,7 +196,6 @@ set(SOURCES
   model/dmp_modules/dbg_util_mod.f
   model/dmp_modules/debug_mod.f
   model/dmp_modules/gridmap_mod.f
-  model/dmp_modules/mpi_mod.f
   model/dmp_modules/mpi_utility_mod.f
   model/dmp_modules/parallel_mpi_mod.f
   model/dmp_modules/sendrecv_mod.f

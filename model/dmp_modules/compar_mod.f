@@ -13,7 +13,11 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE mpi
+
+#ifdef MPI
+         use mpi
+#endif
+
 !-----------------------------------------------
 
 ! myPE - my processor id (it varies from 0 to nproc-1)
@@ -159,4 +163,3 @@
 
 
       END MODULE compar
-

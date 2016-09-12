@@ -98,8 +98,6 @@
       DOUBLE PRECISION :: TIME_SAVE
 ! Temporary storage for DT
       DOUBLE PRECISION :: DT_tmp
-! loop counter
-      INTEGER :: L
 ! DISTIO variable for specifying the mfix version
       CHARACTER(LEN=512) :: version
 ! environment variable
@@ -147,7 +145,7 @@
 !$      if (status.eq.0 .and. length.ne.0) then
 !$        read(omp_num_threads,*) threads_specified
 !$      else
-!$        WRITE(*,'(A,$)') 'Enter the number of threads to be used for SMP: '
+!$        WRITE(*,'(A)') 'Enter the number of threads to be used for SMP: '
 !$        READ(*,*) threads_specified
 !$      endif
 
@@ -193,12 +191,7 @@
 !  setup for PC quickwin application
       CALL PC_QUICKWIN
 
-
       CALL INIT_ERR_MSG('MFIX')
-
-
-  101 CONTINUE
-
 
       DT_TMP = DT
       SELECT CASE (TRIM(RUN_TYPE))
@@ -351,8 +344,6 @@
       CALL FINL_ERR_MSG
 
       STOP
-
- 1000 FORMAT(/1X,'MFIX ',A,' Simulation:'/)
 
  1010 FORMAT('Message 1010: Read in data from .RES file for TIME = ',&
          G12.5,/'Time step number (NSTEP) =',I7)
