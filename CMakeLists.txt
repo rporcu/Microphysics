@@ -348,36 +348,23 @@ target_link_libraries(mfix model)
 
 enable_testing()
 
-set(TESTS
-  DEM01
-  DEM02
-  DEM03
-  DEM04
-  DEM05
-  DEM06
-  DEM07
-  FLD01
-  FLD02
-  # FLD03
-  # box3d
-  # cyclone
-  # fluidbed_DES
-  )
+foreach( testdir ${TESTS})
 
-foreach( test ${TESTS})
-  FILE(GLOB USR_OVERRIDES tests/${test}/*.f)
-  add_executable(mfix_${test} EXCLUDE_FROM_ALL model/mfix.f ${USR_OVERRIDES})
+  STRING(REPLACE "/" "_" testname ${testdir} )
 
-  set_target_properties(mfix_${test} PROPERTIES Fortran_FORMAT "FREE")
+  FILE(GLOB USR_OVERRIDES ${testdir}/*.f)
+  add_executable(mfix_${testname} EXCLUDE_FROM_ALL model/mfix.f ${USR_OVERRIDES})
+
+  set_target_properties(mfix_${testname} PROPERTIES Fortran_FORMAT "FREE")
   set_source_files_properties(${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
-  add_test(buildtest_${test} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${test})
+  add_test(build_${testname} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${testname})
 
-  add_test(NAME test_${test}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${test}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test})
+  add_test(NAME ${testname}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${testdir}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${testname}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${testdir})
 
-  set_tests_properties ( test_${test} PROPERTIES DEPENDS buildtest_${test})
+  set_tests_properties ( ${testname} PROPERTIES DEPENDS buildtest_${testname})
 
-  target_link_libraries(mfix_${test} model)
-endforeach( test ${TESTS})
+  target_link_libraries(mfix_${testname} model)
+endforeach( testdir ${TESTS})

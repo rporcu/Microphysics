@@ -9,6 +9,7 @@ image: mfixexa
 stages:
   - build
   - test
+  - benchmarks
 
 build:
   stage: build
@@ -25,4 +26,11 @@ test:
   stage: test
   script:
     - cd build
-    - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 make test
+    - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 ctest -R tests
+
+
+benchmarks:
+  stage: benchmarks
+  script:
+    - cd build
+    - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 ctest -R benchmarks
