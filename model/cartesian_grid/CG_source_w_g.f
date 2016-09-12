@@ -62,7 +62,7 @@
 !-----------------------------------------------
 !
 !                      Indices
-      INTEGER          I, J, K, IJK, IJKT, IMJK, IJKP, IMJKP,&
+      INTEGER          I, J, K, IJK, IJKT, IMJK, IJKP, &
                        IJKE, IJKW, IJKTE, IM, IPJK
 !
 !                      Phase index
@@ -80,7 +80,7 @@
 !=======================================================================
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
-      INTEGER :: JM,IP,JP,IJMK,IJPK,IJKC,IJKN,IJKNE,IJKS,IJKSE,IPJMK,IJKM,KM,KP,IJMKP
+      INTEGER :: JM,IP,IJMK,IJPK,IJKC,IJKN,IJKNE,IJKS,IJKSE,IPJMK,IJKM,KP
       INTEGER :: IJKTN,IJKWT,IJKST
       DOUBLE PRECISION :: We,Ww,Wn,Ws,Wt,Wb
       DOUBLE PRECISION :: B_NOC
@@ -88,8 +88,6 @@
       DOUBLE PRECISION :: WW_g
       INTEGER :: BCV
       CHARACTER(LEN=9) :: BCT
-!                       virtual (added) mass
-      DOUBLE PRECISION ROP_MA, U_se, Usw, Wse, Wsw, Wsn, Wss, Wst, Wsb, Usc,Vsc,Vsn,Vss
 ! Wall function
       DOUBLE PRECISION :: W_F_Slip
 !=======================================================================

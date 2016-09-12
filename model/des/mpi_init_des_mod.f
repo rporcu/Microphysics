@@ -556,11 +556,6 @@
       enddo
       call des_mpi_barrier
 
- 800  FORMAT(/2X,'From: DES_RESTART_GHOST: ',/2X,&
-         'WARNING: Unable to locate neighbor during restart (0)',/)
- 801  FORMAT(/2X,'From: DES_RESTART_GHOST: ',/2X,&
-         'WARNING: Unable to locate neighbor during restart (1)',/)
-
       end subroutine DES_RESTART_GHOST
 
       end module mpi_init_des

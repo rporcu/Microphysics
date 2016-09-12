@@ -28,6 +28,7 @@ endif ( MPI )
 if (CMAKE_Fortran_COMPILER MATCHES "gfortran.*")
   # gfortran
   set (CMAKE_Fortran_FLAGS "-fconvert=big-endian ${CMAKE_Fortran_FLAGS}")
+  set (CMAKE_Fortran_FLAGS "-ffree-form ${CMAKE_Fortran_FLAGS}")
 elseif (CMAKE_Fortran_COMPILER MATCHES "ifort.*")
   # ifort
   set (CMAKE_Fortran_FLAGS "-convert big_endian ${CMAKE_Fortran_FLAGS}")
