@@ -79,15 +79,6 @@
       INTEGER, PARAMETER :: READ_POST = 1
       INTEGER, PARAMETER :: READ_INIT = 2
 
-! External Functions
-!---------------------------------------------------------------------//
-! Returns integer if data past column MAXCOL.
-!      INTEGER, EXTERNAL :: LINE_TOO_BIG
-! Integer function which returns COMMENT_INDEX
-!      INTEGER, EXTERNAL :: SEEK_COMMENT
-! Blank line function
-!      LOGICAL, EXTERNAL :: BLANK_LINE
-
       E = UNDEFINED
       READ_FLAG = .TRUE.
       LINE_NO = 0

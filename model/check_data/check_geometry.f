@@ -35,13 +35,7 @@
 
       implicit none
 
-
       LOGICAL, intent(IN) :: SHIFT
-      LOGICAL, external :: COMPARE
-
-! Local Variables:
-!---------------------------------------------------------------------//
-
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_GEOMETRY")
