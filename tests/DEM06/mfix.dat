@@ -50,7 +50,7 @@
   NORM_G = 0
 
 ! Sweep Direction
-  LEQ_SWEEP(1) = 9*'ISIS'
+  LEQ_SWEEP(1:3)= 3*'ISIS'
 
 #_______________________________________________________________________
 # GEOMETRY SECTION
