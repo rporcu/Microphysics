@@ -116,7 +116,7 @@
 ! to access random number generator subroutines
       use randomno
       use mpi_utility
-      use functions, only: SET_NORMAL
+      use functions, only: SET_NORMAL, FLUID_AT, FUNIJK
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -135,7 +135,6 @@
 
       use discretelement, only: max_pip, max_radius, xe, yn, zt
       use error_manager
-      use functions
       use param, only: dim_m
       use param, only: dimension_i, dimension_j, dimension_k
 

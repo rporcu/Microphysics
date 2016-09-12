@@ -1,7 +1,9 @@
+MODULE VAVG_MOD
+CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: VAVG_U_g                                               C
-!  Purpose: Volume average U_g                                         C
+!  Module name: VAVG_g                                                 C
+!  Purpose: Volume average                                             C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 28-APR-94  C
 !  Reviewer:                                          Date: dd-mmm-yy  C
@@ -114,3 +116,4 @@
 
       RETURN
       END FUNCTION VAVG_Flux_G
+END MODULE VAVG_MOD

@@ -28,6 +28,7 @@
       USE run
       USE time_cpu
       USE toleranc
+      USE vavg_mod, ONLY: vavg_g
       USE vtk
 
       use error_manager
@@ -64,16 +65,6 @@
 
 ! Error Message
       CHARACTER(LEN=32) :: lMsg
-
-!-----------------------------------------------
-! External functions
-!-----------------------------------------------
-      DOUBLE PRECISION, EXTERNAL :: VAVG_G
-
-!-----------------------------------------------
-! Include statement functions
-!-----------------------------------------------
-!-----------------------------------------------
 
 ! initializations
       DT_prev = DT
@@ -396,6 +387,7 @@
       USE run
       USE time_cpu
       USE utilities, ONLY: mfix_isnan
+      USE vavg_mod, ONLY: vavg_flux_g
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -413,12 +405,6 @@
 
       DOUBLE PRECISION, SAVE  :: mdot_n, mdot_nm1, delp_n, delp_nm1, err
       DOUBLE PRECISION        :: mdot_0, delp_xyz
-
-!-----------------------------------------------
-! Functions
-!-----------------------------------------------
-      DOUBLE PRECISION, EXTERNAL :: VAVG_Flux_G
-!-----------------------------------------------
 
       IF(CYCLIC_X_MF)THEN
          delp_n = delp_x
