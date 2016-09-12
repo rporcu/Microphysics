@@ -222,7 +222,7 @@
             100.0d0+100.0d0*dble(iMAXBUF-pbuf)/dble(pbuf)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
- 1000 FORMAT(/'Resizeing DES MPI buffers: ',F7.1,' MB  (+',F5.1'%)')
+ 1000 FORMAT(/'Resizing DES MPI buffers: ',F7.1,' MB  (+',F5.1,'%)')
 
       endif
 

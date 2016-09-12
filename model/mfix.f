@@ -338,8 +338,9 @@
       IF (CALL_USR) CALL USR3
 
 ! Compute the CPU time and write it out in the .OUT file.
+      CPUTIME_USED = 0.0d0
       WALLTIME_USED = WALL_TIME() - WALL0
-      CALL WRITE_OUT3 (0.0d0, WALLTIME_USED, CPU_IO)
+      CALL WRITE_OUT3 (CPUTIME_USED, WALLTIME_USED, CPU_IO)
 
 ! JFD: cartesian grid implementation
       IF(WRITE_DASHBOARD) THEN
@@ -402,7 +403,3 @@
 
       RETURN
       END SUBROUTINE GEN_LOG_BASENAME
-
-
-
-

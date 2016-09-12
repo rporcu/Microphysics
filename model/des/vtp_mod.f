@@ -254,7 +254,7 @@
 
 ! Open the file and record any erros.
          IF(IER == 0) THEN
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=DES_UNIT, FILE=FNAME_VTP,                        &
+            OPEN(UNIT=DES_UNIT, FILE=FNAME_VTP,                        &
                STATUS=STATUS_VTP, IOSTAT=IOS)
             IF(IOS /= 0) IER = 2
          ENDIF
@@ -351,7 +351,7 @@
                IF(EXISTS_PVD) THEN
                   IER = 1
                ELSE
-                  OPEN(CONVERT='BIG_ENDIAN',UNIT=PVD_UNIT,FILE=FNAME_PVD,STATUS='NEW')
+                  OPEN(UNIT=PVD_UNIT,FILE=FNAME_PVD,STATUS='NEW')
                   WRITE(PVD_UNIT,"(A)")'<?xml version="1.0"?>'
                   WRITE(PVD_UNIT,"(A)")'<VTKFile type="Collection" &
                      &version="0.1" byte_order="LittleEndian">'
@@ -363,7 +363,7 @@
             ELSE ! a restart run
                IF(EXISTS_PVD) THEN
 ! Open the file at the beginning.
-                  OPEN(CONVERT='BIG_ENDIAN',UNIT=PVD_UNIT,FILE=FNAME_PVD,&
+                  OPEN(UNIT=PVD_UNIT,FILE=FNAME_PVD,&
                      POSITION="REWIND",STATUS='OLD',IOSTAT=IOS)
                   IF(IOS /= 0) IER = 2
                ELSE ! a pvd file does not exist
@@ -405,7 +405,7 @@
             ENDIF ! run_type new or restart
 
          ELSE ! not FIRST_PASS
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=PVD_UNIT,FILE=FNAME_PVD,&
+            OPEN(UNIT=PVD_UNIT,FILE=FNAME_PVD,&
                POSITION="APPEND",STATUS='OLD',IOSTAT=IOS)
             IF (IOS /= 0) IER = 2
          ENDIF

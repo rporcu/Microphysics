@@ -184,7 +184,7 @@
 ! Check for convergence
       CALL ACCUM_RESID ! Accumulating residuals from all the processors
       RESG = RESID(RESID_P,0)
-      CALL CHECK_CONVERGENCE (NIT, 0.0, MUSTIT)
+      CALL CHECK_CONVERGENCE (NIT, 0.0d+0, MUSTIT)
 
       IF(CYCLIC)THEN
         IF(MUSTIT==0 .OR. NIT >= MAX_NIT) &

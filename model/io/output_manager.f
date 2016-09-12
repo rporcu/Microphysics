@@ -516,7 +516,7 @@
       INQUIRE(FILE=trim(pFN0),EXIST=EXISTS)
       IF(EXISTS) THEN
          CMD=''; WRITE(CMD,1000)trim(ACT), trim(pFN0),trim(pFN1)
-         CALL SYSTEM(trim(CMD))
+         CALL EXECUTE_COMMAND_LINE(trim(CMD))
       ENDIF
 
  1000 FORMAT(A,1x,A,1X,A)

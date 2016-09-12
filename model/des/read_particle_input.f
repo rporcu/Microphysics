@@ -63,7 +63,7 @@
             CALL FLUSH_ERR_MSG
             IOS = 1
          ELSE
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=lUNIT, FILE=lFILENAME, FORM="FORMATTED")
+            OPEN(UNIT=lUNIT, FILE=lFILENAME, FORM="FORMATTED")
          ENDIF
       ENDIF
 
@@ -151,4 +151,3 @@
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE READ_PAR_INPUT
-

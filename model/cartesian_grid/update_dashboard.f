@@ -89,7 +89,7 @@
 
 
 
-      OPEN(CONVERT='BIG_ENDIAN',UNIT     =  111           , &
+      OPEN(UNIT     =  111           , &
            FILE     = 'DASHBOARD.TXT', &
            FORM     = 'FORMATTED'    , &
            ACCESS   = 'SEQUENTIAL'   , &
@@ -236,6 +236,3 @@
 
       RETURN
       END SUBROUTINE WRITE_SIMPLE_PROGRESS_BAR
-
-
-

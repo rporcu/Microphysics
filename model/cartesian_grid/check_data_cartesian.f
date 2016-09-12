@@ -4352,7 +4352,7 @@
          ENDIF                  ! DOMAIN DECOMPOSITION IN K-DIRECTION
 
 
-         OPEN(CONVERT='BIG_ENDIAN',UNIT=777, FILE='suggested_gridmap.dat')
+         OPEN(UNIT=777, FILE='suggested_gridmap.dat')
          WRITE (777, 1005) NODESI,NODESJ,NODESK, '     ! NODESI, NODESJ, NODESK'
          DO IPROC = 0,NODESI-1
                WRITE(777,1060) IPROC,Isize_all(IPROC)
@@ -5059,7 +5059,7 @@
             ENDIF
 
 
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=777, FILE='suggested_gridmap.dat')
+            OPEN(UNIT=777, FILE='suggested_gridmap.dat')
             WRITE (777, 1000) 'J-SIZE DISTRIBUTION'
             WRITE (777, 1010) 'NUMBER OF PROCESSORS = ',NumPEs
             WRITE (777, 1000) '================================================='
@@ -5446,5 +5446,3 @@
 
       RETURN
       END SUBROUTINE MINIMIZE_LOAD_IMBALANCE0
-
-

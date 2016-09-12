@@ -102,11 +102,11 @@
 !
 !     OPEN geometry.msh ASCII FILE
 !
-      OPEN(UNIT=333, FILE='geometry.msh', STATUS='OLD', ERR=910,CONVERT='BIG_ENDIAN')
+      OPEN(UNIT=333, FILE='geometry.msh', STATUS='OLD', ERR=910)
 
       IF(MyPE == PE_IO) WRITE(*,2000)'MSH file opened. Starting reading data...'
 
-      OPEN(UNIT=444, FILE='checkgeometry.stl',CONVERT='BIG_ENDIAN')
+      OPEN(UNIT=444, FILE='checkgeometry.stl')
       write(444,*)'solid vcg'
 
       CALL SKIP(333,3)
@@ -510,7 +510,7 @@
 
       CLOSE(333)
 
-      OPEN(UNIT=444, FILE='msgeometry.stl',CONVERT='BIG_ENDIAN')
+      OPEN(UNIT=444, FILE='msgeometry.stl')
 
          DO ZONE = 1,N_FACE_ZONES
             IF(BC_ASSIGNED(ZONE)) THEN
@@ -813,7 +813,7 @@
 !
 !     OPEN geometry.stl ASCII FILE
 !
-         OPEN(UNIT=333, FILE=TRIM(geometryfile(N)), STATUS='OLD', ERR=910,CONVERT='BIG_ENDIAN')
+         OPEN(UNIT=333, FILE=TRIM(geometryfile(N)), STATUS='OLD', ERR=910)
 
          IF(MyPE == PE_IO) WRITE(*,2000)'STL file opened. Starting reading data...'
 
@@ -1003,7 +1003,7 @@
       IF(mype.eq.pe_io.and..false.) then
          WRITE(fname,'(A,"_FACETS_READ", ".stl")') &
          TRIM(RUN_NAME)
-         open(stl_unit, file = fname, form='formatted',convert='big_endian')
+         open(stl_unit, file = fname, form='formatted')
          write(stl_unit,*)'solid vcg'
 
 
@@ -1422,7 +1422,3 @@
       RETURN
 
       END SUBROUTINE IS_POINT_INSIDE_FACET
-
-
-
-

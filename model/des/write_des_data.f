@@ -418,7 +418,7 @@
 ! If the file does not exist, then create it with the necessary
 ! header information.
          IF (.NOT.F_EXISTS) THEN
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=BH_UNIT,FILE=FNAME_BH,&
+            OPEN(UNIT=BH_UNIT,FILE=FNAME_BH,&
                FORM="formatted",STATUS="new")
          ELSE
 ! To prevent overwriting existing files accidently, exit if the file
@@ -429,13 +429,13 @@
                CALL MFIX_EXIT(myPE)
             ELSE
 ! Open the file for appending of new data (RESTART_1 Case)
-               OPEN(CONVERT='BIG_ENDIAN',UNIT=BH_UNIT,FILE=FNAME_BH,POSITION="append")
+               OPEN(UNIT=BH_UNIT,FILE=FNAME_BH,POSITION="append")
             ENDIF
          ENDIF
          FIRST_PASS = .FALSE.
       ELSE
 ! Open the file and mark for appending
-         OPEN(CONVERT='BIG_ENDIAN',UNIT=BH_UNIT,FILE=FNAME_BH,POSITION="append")
+         OPEN(UNIT=BH_UNIT,FILE=FNAME_BH,POSITION="append")
       ENDIF
 
       WRITE(BH_UNIT, '(10(2X,E20.12))') s_time, &
@@ -502,7 +502,7 @@
          IF (.NOT.F_EXISTS) THEN
 ! If the file does not exist, then create it with the necessary
 ! header information.
-            OPEN(CONVERT='BIG_ENDIAN',UNIT=GT_UNIT,FILE=FNAME_GT,STATUS='NEW')
+            OPEN(UNIT=GT_UNIT,FILE=FNAME_GT,STATUS='NEW')
          ELSE
             IF(RUN_TYPE .EQ. 'NEW') THEN
 ! If the run is new and the GT file already exists replace it with a
@@ -515,13 +515,13 @@
                CALL MFIX_EXIT(myPE)
             ELSE
 ! Open the file for appending of new data (RESTART_1 Case)
-               OPEN(CONVERT='BIG_ENDIAN',UNIT=GT_UNIT, FILE=FNAME_GT, POSITION='APPEND')
+               OPEN(UNIT=GT_UNIT, FILE=FNAME_GT, POSITION='APPEND')
             ENDIF
          ENDIF
          FIRST_PASS =  .FALSE.
       ELSE
 ! Open file and mark for appending
-         OPEN(CONVERT='BIG_ENDIAN',UNIT=GT_UNIT,FILE=FNAME_GT,POSITION='APPEND')
+         OPEN(UNIT=GT_UNIT,FILE=FNAME_GT,POSITION='APPEND')
       ENDIF   ! endif (first_pass)
 
       WRITE(GT_UNIT,*) ''

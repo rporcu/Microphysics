@@ -58,7 +58,7 @@
 !
 !     OPEN poly.dat ASCII FILE
 !
-      OPEN(CONVERT='BIG_ENDIAN',UNIT=333, FILE='poly.dat', STATUS='OLD', ERR=910)
+      OPEN(UNIT=333, FILE='poly.dat', STATUS='OLD', ERR=910)
 
       NSKIP = 13
       DO N=1,NSKIP

@@ -205,7 +205,7 @@
       inquire(file=trim(lFile),exist=lExists)
       if(lExists) then
          open(lUnit,file=trim(adjustl(lFile)),                         &
-            status='old', position='append', convert='big_endian')
+            status='old', position='append')
       else
          open(lUnit,file=trim(adjustl(lFile)), status='new')
       endif

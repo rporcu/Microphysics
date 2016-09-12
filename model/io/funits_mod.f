@@ -97,11 +97,11 @@
          write(*,*) 'The directory already exists.'
          close(tUNIT)
          WRITE(CMD,"('rm ',A,'/tmp')")adjustl(trim(pDIR))
-         CALL SYSTEM(trim(CMD))
+         CALL EXECUTE_COMMAND_LINE(trim(CMD))
       ELSE
          write(*,*) 'Creating the directory.'
          WRITE(CMD,"('mkdir ',A)")pDIR
-         CALL SYSTEM(trim(CMD))
+         CALL EXECUTE_COMMAND_LINE(trim(CMD))
       ENDIF
 
       RETURN
