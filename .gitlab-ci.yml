@@ -4,6 +4,8 @@
 #   paths:
 #     - build/
 
+image: mfix/exa
+
 stages:
   - build
   - test
