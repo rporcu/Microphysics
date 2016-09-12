@@ -1,6 +1,7 @@
-#!/bin/bash -lex
+#!/bin/bash -exl
 
-RUN_NAME="FLD02"
+# set case directory
+RUN_NAME="FLD03"
 
 MFIX=./mfix
 if [ -n "$1" ]; then
@@ -8,14 +9,8 @@ if [ -n "$1" ]; then
 fi
 
 rm -f POST_* &> /dev/null
-
-for DELP_X in -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0; do
-  for JMAX in 8 16 32; do
-    rm -f ${RUN_NAME}* &> /dev/null
-    time -p ${MFIX} JMAX=${JMAX} DELP_X=${DELP_X}
-  done
-done
-
+rm -f ${RUN_NAME}* &> /dev/null
+time -p ${MFIX}
 
 post_dats=AUTOTEST/POST*.dat
 

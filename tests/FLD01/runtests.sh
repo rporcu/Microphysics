@@ -10,7 +10,7 @@ fi
 
 rm -f POST_* &> /dev/null
 
-for GMAX in 8 16 32 64; do
+for GMAX in 8 16 32; do
    rm -f ${RUN_NAME}* &> /dev/null
    time -p ${MFIX} IMAX=${GMAX} JMAX=${GMAX}
 done

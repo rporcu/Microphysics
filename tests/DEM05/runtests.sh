@@ -7,6 +7,8 @@ if [ -n "$1" ]; then
     MFIX=$1
 fi
 
+rm -f POST_* &> /dev/null
+
 rm -f ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} DES_COLL_MODEL=\"LSD\" \
   KN=1.72d7 KT_FAC="@(1.48/1.72)" KN_W=1.72d7 KT_W_FAC="@(1.48/1.72)" \

@@ -358,9 +358,10 @@ set(TESTS
   DEM04
   DEM05
   DEM06
+  DEM07
   FLD01
   FLD02
-  # FLD03
+  FLD03
   # box3d
   # cyclone
   # fluidbed_DES
