@@ -15,7 +15,7 @@ build:
   script:
     - mkdir build
     - cd build
-    - FC='gfortran -g -std=2008 -fcheck=all -Wall' cmake ..
+    - FC='gfortran -g -std=f2008 -fcheck=all -Wall' cmake ..
     - make
   artifacts:
     paths:
