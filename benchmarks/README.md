@@ -1,10 +1,11 @@
 # Benchmark cases for MFIX-Exa
 
 
-## Overview of cases
+## Overview of benchmark cases
 
 * **_DEM01_ Homogeneous Cooling System** [1]
-  User files create the initial particle layout for all processors and collect/report the granular temperature of the system over time. The run script (runtests) is mainly for local testing but could be modified to generatue queue submission scripts.
+
+User files create the initial particle layout for all processors and collect/report the granular temperature of the system over time. The run script (runtests) is mainly for local testing but could be modified to generatue queue submission scripts.
 
 
 
