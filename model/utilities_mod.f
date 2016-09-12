@@ -76,7 +76,7 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: L, I, J, K, IJK, IJK2, M
+      INTEGER :: L, I, J, K, IJK, IJK2
 !-----------------------------------------------
 
 ! initializing
@@ -164,7 +164,6 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: M
 ! Indices
       INTEGER :: IJK
       LOGICAL :: ALL_IS_ERROR
@@ -199,14 +198,8 @@ LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
             G12.5, '(to change this adjust the scale factor MAX_INLET_VEL_FAC)'/&
             'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
             '  ','Epg = ', G12.5, 'Ug = ', G12.5, 'Vg = ', G12.5, 'Wg = ', G12.5)
- 1010 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
-            'WARNING: velocity higher than maximum allowed velocity: ', &
-            G12.5,/&
-            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4)
 
       END FUNCTION CHECK_VEL_BOUND
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

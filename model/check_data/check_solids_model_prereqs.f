@@ -54,8 +54,6 @@
       INTEGER :: M ! Phase index
 ! Error indicator for mmax
       LOGICAL :: ERR_MMAX
-! Dummy integer
-      INTEGER :: N
 !......................................................................!
 
 

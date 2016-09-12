@@ -117,8 +117,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_TRD_AND_TAU()
 
-! Stress tensor trace.
-      USE fldvar, only : TRD_g
 ! Stress tensor cross terms.
       USE fldvar, only : TAU_U_G, TAU_V_G, TAU_W_G
 

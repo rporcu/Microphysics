@@ -58,7 +58,6 @@
          USE matrix, only: e, w, s, n, t, b
          USE param, only: dimension_3, dimension_m
          USE param1, only: ONE, ZERO, small_number
-         USE run, only: momentum_y_eq
 
       IMPLICIT NONE
 
@@ -76,7 +75,6 @@
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
 
       DOUBLE PRECISION :: denominator, xxxm, xxxp
-      INTEGER :: k
 
       abstract interface
          function denom (ijk)

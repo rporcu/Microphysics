@@ -146,7 +146,7 @@ contains
     integer, optional, intent(in) ::  idebug
 
 #ifdef MPI
-    integer :: sendtype,recvtype,sendcnt,recvcnt,ierr,lidebug,mpierr
+    integer :: sendtype,recvtype,sendcnt,recvcnt,ierr,lidebug
 
     if (.not. present(idebug)) then
        lidebug = 0
@@ -4428,7 +4428,7 @@ contains
     integer, optional, intent(in) :: mroot, idebug
 
 #ifdef MPI
-    integer :: i,j,lroot, lidebug
+    integer :: j,lroot, lidebug
 
     if (.not. present(mroot)) then
        lroot = 0
@@ -4577,7 +4577,7 @@ contains
     integer, optional, intent(in) :: mroot, idebug
 
 #ifdef MPI
-    integer :: i,j,lroot, lidebug
+    integer :: j,lroot, lidebug
 
     if (.not. present(mroot)) then
        lroot = 0
@@ -4868,7 +4868,7 @@ contains
     integer, optional, intent(in) :: mroot, idebug
 
 #ifdef MPI
-    integer :: i,j,lroot, lidebug
+    integer :: j,lroot, lidebug
 
     if (.not. present(mroot)) then
        lroot = 0
@@ -5013,7 +5013,7 @@ contains
     integer, optional, intent(in) :: mroot, idebug
 
 #ifdef MPI
-    integer :: i,j,lroot, lidebug
+    integer :: j,lroot, lidebug
 
     if (.not. present(mroot)) then
        lroot = 0
@@ -5158,7 +5158,7 @@ contains
     integer, optional, intent(in) :: mroot, idebug
 
 #ifdef MPI
-    integer :: i,j,lroot, lidebug
+    integer :: j,lroot, lidebug
 
     if (.not. present(mroot)) then
        lroot = 0
@@ -5432,9 +5432,6 @@ contains
   ! by calling MFIX_EXIT                                                 !
   !......................................................................!
   SUBROUTINE ExitMPI(myid)
-
-    USE funits, only: UNIT_LOG
-    USE funits, only: DMP_LOG
 
     implicit none
 

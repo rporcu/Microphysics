@@ -11,8 +11,6 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Flag: Set optimal LEQ solver parameters for parallel runs.
-      use leqsol, only: OPT_PARALLEL
 ! Discretization scheme for various equations
       USE run, only: DISCRETIZE
 ! Solve system transpose
@@ -21,8 +19,6 @@
       use leqsol, only: MINIMIZE_DOTPRODUCTS
 ! Report solver stats.
       use leqsol, only: SOLVER_STATISTICS
-! Controls reduction of global sums for residuals.
-      use run, only: DEBUG_RESID
 ! Linear equation, preconditioner sweep method.
       use leqsol, only: LEQ_SWEEP
 ! Linear equation solution method.

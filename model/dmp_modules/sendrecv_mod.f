@@ -2289,27 +2289,19 @@ contains
     !       ---------------
     character(len=80), parameter :: name = 'sendrecv_init'
 
-    character(len=80), pointer, dimension(:) :: line
-    integer :: ip, lmax
-
     integer :: layer,request, source, tag, datatype
 
     integer :: lidebug
-    integer :: isize,jsize,ksize, ijksize
     integer :: recvsize1, recvsize2, &
          sendsize1, sendsize2
 
-    integer :: iter, i,j,k, ii, jj,kk, &
-         ntotal, icount,ipos, &
-         ilayer,        i1,i2,  j1,j2, k1,k2,  &
-         ijk, ijk2, iproc, jproc, src,dest, &
+    integer :: ii, &
+         icount, &
+         i2,  j1,j2, &
+         src,dest, &
          ierror
 
-    logical :: isok, isvalid, ismine, is_halobc
-
-    integer, dimension(:,:,:), pointer :: ijk2proc
     integer, pointer, dimension(:) :: &
-         istartx,iendx, jstartx,jendx, kstartx,kendx, &
          ncount, &
          recvproc, recvtag, xrecv, recvijk,  &
          sendproc, sendtag, xsend, sendijk
@@ -2318,12 +2310,6 @@ contains
 
 
     integer, parameter :: message_tag_offset = 11
-
-
-    !       ----------------
-    !       inline functions
-    !       ----------------
-    integer :: message_tag
 
 #ifdef MPI
     !  NEW SEND_RECV INIT HERE

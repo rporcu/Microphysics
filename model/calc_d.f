@@ -77,12 +77,8 @@ MODULE CALC_D_MOD
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Volume x average at momentum cell center drag for DEM/PIC
       use discretelement, only: VXF_GDS
-! Volume fractions of gas and solids phases.
-      use fldvar, only: EP_G
 ! Pressure scale factor
       use scales, only: P_SCALE
-! Flag: Cartesian grid simulation
-      use cutcell, only: CARTESIAN_GRID
 ! Volume of V-momentum cell.
       use geometry, only: VOL_V
 ! Fluid grid loop bounds.
@@ -103,8 +99,6 @@ MODULE CALC_D_MOD
       DOUBLE PRECISION, INTENT(OUT) :: d(:)
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
-    ! North face area - U cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXZ_U
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN):: A_m(DIMENSION_3,-3:3,0:DIMENSION_M)
 

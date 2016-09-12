@@ -21,7 +21,6 @@
       use bc, only: bc_mout_s, bc_vout_s
       use geometry, only: dx, dy, dz
       use geometry, only: x_e, x
-      use physprop, only: smax
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
       use functions, only: im_of, ip_of, jm_of, jp_of, km_of, kp_of
@@ -40,8 +39,6 @@
 !--------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IJK
-! Solids phase
-      INTEGER :: M
 ! ijk index of fluid cell adjacent to boundary cell
       INTEGER :: IJK2
 !--------------------------------------------------------------------//

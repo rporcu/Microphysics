@@ -296,12 +296,6 @@
 
       RETURN
 
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
-
- 1001 FORMAT('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-         'Please correct the mfix.dat file.')
-
       END SUBROUTINE CHECK_PS_GAS_PHASE
 
 

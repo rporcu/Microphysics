@@ -110,8 +110,8 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, IJKSTART3, IJKEND3, nlayers_bicgs, c0, c1, c2, mype
-    USE cutcell, ONLY: re_indexing, CARTESIAN_GRID
+    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, IJKSTART3, IJKEND3, nlayers_bicgs, c0, c1, c2
+    USE cutcell, ONLY: re_indexing
     USE geometry, ONLY: do_k, use_corecell_loop, CORE_ISTART, CORE_IEND, CORE_JSTART, CORE_JEND, CORE_KSTART, CORE_KEND
     USE indices
     USE param, ONLY: DIMENSION_3
