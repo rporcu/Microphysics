@@ -401,12 +401,6 @@
          '.LOG','Log file containing messages (ASCII)',UNDEFINED
       WRITE (UNIT_OUT, 1801) &
          '.RES','Restart file (Binary)', RES_DT
-      WRITE (UNIT_OUT, 1801) &
-         '.SP1','EP_g (Binary, single precision)',SPX_DT(1)
-      WRITE (UNIT_OUT, 1801) &
-         '.SP2','P_g (Binary, single precision)',SPX_DT(2)
-      WRITE (UNIT_OUT, 1801) &
-         '.SP3','U_g, V_g, W_g (Binary, single precision)',SPX_DT(3)
 !
 !  Print out tolerance values from TOLERANCE.INC
 !

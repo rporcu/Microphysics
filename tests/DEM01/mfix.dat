@@ -141,9 +141,6 @@
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
 
-! Interval at which .SPX files are written
-  SPX_DT(1:3) = 3*1.0d3
-
   GROUP_RESID = .T.
 
   PRINT_DES_DATA = .F.

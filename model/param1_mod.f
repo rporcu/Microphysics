@@ -1,8 +1,5 @@
       MODULE param1
 
-! Number of single precision .SPx files
-      INTEGER, PARAMETER :: N_SPX = 3
-
 ! Maximum number of cell classes
       INTEGER, PARAMETER :: MAX_CLASS = 1000000
 ! Maximum number of corner cells

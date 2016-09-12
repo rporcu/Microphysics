@@ -6,7 +6,7 @@
 !  Purpose: open all the files for this run                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE OPEN_FILES(RUN_NAME, RUN_TYPE, N_SPX)
+      SUBROUTINE OPEN_FILES(RUN_NAME, RUN_TYPE)
 
       USE machine
       USE funits
@@ -22,8 +22,6 @@
       CHARACTER(LEN=*) :: RUN_NAME
 ! Run_type (as specified in input file)
       CHARACTER(LEN=*) :: RUN_TYPE
-! Number of single precision output files (param.inc)
-      INTEGER :: N_SPX
 ! local variables
       CHARACTER(len=4) :: EXT
 ! run_name + extension
@@ -45,12 +43,6 @@
 ! Initialize the error flag array.
       IER = 0
 
-! Initialize the generic SPx extension.
-      EXT = '.SPx'
-
-! Generic SPx end characters in order.
-      EXT_END = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
 ! Get the length of RUN_NAME. Note that len_trim would allow the
 ! name to still contain spaces. The following approach truncates
 ! RUN_NAME at the first blank character.
@@ -67,11 +59,11 @@
       ENDIF
 
 
-! Open the RES and SPx files. By default, only PE_IO opens these files,
+! Open the RES file. By default, only PE_IO opens these files,
 ! but all ranks open a rank-specific copy for distributed IO runs.
       SELECT CASE (TRIM(RUN_TYPE))
 
-! Open the RES and SPx files for a new run.
+! Open the RES file for a new run.
 !......................................................................
       CASE ('NEW')
 
@@ -91,28 +83,10 @@
                CALL FLUSH_ERR_MSG
                GO TO 100
             ENDIF
-
-! Open the SPx files.
-            DO LC = 1, N_SPX
-               EXT(4:4) = ext_end(LC:LC)
-               CALL OPEN_FILE(RUN_NAME, NB, UNIT_SPX+LC, EXT,FILE_NAME,&
-                  'NEW', 'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
-! Report errors.
-               IF (IER(myPE) == 100) THEN
-                  WRITE(ERR_MSG, 1000)EXT(2:4), 'NEW', trim(FILE_NAME)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ELSEIF(IER(myPE) /= 0) THEN
-                  CER=''; WRITE(CER,*)
-                  WRITE(ERR_MSG, 2000) trim(FILE_NAME), trim(CER)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ENDIF
-            ENDDO
          ENDIF
 
 
-! Open the RES and SPx files for a typical restart run.
+! Open the RES file for a typical restart run.
 !......................................................................
       CASE ('RESTART_1')
 
@@ -132,28 +106,10 @@
                GO TO 100
             ENDIF
 
-! Open the SPx files.
-            DO LC = 1, N_SPX
-               EXT(4:4) = EXT_END(LC:LC)
-               CALL OPEN_FILE (RUN_NAME,NB, UNIT_SPX+LC,EXT, FILE_NAME,&
-                  'OLD', 'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
-! Report errors.
-               IF (IER(myPE) == 101) THEN
-                  WRITE(ERR_MSG, 1001) EXT(2:4), 'RESTART_1',         &
-                     trim(FILE_NAME)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ELSEIF(IER(myPE) /= 0) THEN
-                  CER=''; WRITE(CER,*)
-                  WRITE(ERR_MSG, 2000) trim(FILE_NAME), trim(CER)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ENDIF
-            END DO
          ENDIF
 
 
-! Open the RES and SPx files for a typical restart run.
+! Open the RES file for a typical restart run.
 !......................................................................
       CASE ('RESTART_2')
 ! Open the RES file.
@@ -173,24 +129,6 @@
                GO TO 100
             ENDIF
 
-! Open the SPx files.
-            DO LC = 1, N_SPX
-               EXT(4:4) = EXT_END(LC:LC)
-               CALL OPEN_FILE (RUN_NAME,NB,UNIT_SPX+LC, EXT, FILE_NAME,&
-                  'NEW' , 'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
-! Report errors.
-               IF (IER(myPE) == 100) THEN
-                  WRITE(ERR_MSG, 1000)EXT(2:4), 'RESTART_2',          &
-                     trim(FILE_NAME)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ELSEIF(IER(myPE) /= 0) THEN
-                  CER=''; WRITE(CER,*)
-                  WRITE(ERR_MSG, 2000) trim(FILE_NAME), trim(CER)
-                  CALL FLUSH_ERR_MSG
-                  GO TO 100
-               ENDIF
-            END DO
          ENDIF
 
       CASE DEFAULT

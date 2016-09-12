@@ -49,7 +49,7 @@
 ! Integer Error index:
 ! 000 - no error
 ! 100 - NEW run with existing files in directory
-! 101 - OLD run missing RES and/or SPx files
+! 101 - OLD run missing RES file
 ! 102 - Unknown OPEN_STAT
       INTEGER, INTENT(OUT) :: IER
 
@@ -60,7 +60,6 @@
 
 ! Logicals that determine if files should be index.
       LOGICAL :: RES_IDX  ! Index RES files
-      LOGICAL :: SPX_IDX  ! Index SPx files
       LOGICAL :: USE_IDX  ! Use the IDX value
 
 ! Initialize the error flag.
@@ -68,8 +67,6 @@
 
 ! Conditions for indexing the RES files for distributed IO.
       RES_IDX = (myPE .NE. PE_IO)
-! Conditions for indexing the SPX files for distributed IO.
-      SPX_IDX = .TRUE.
 
 ! Flag for indexing files.
       USE_IDX = .FALSE.

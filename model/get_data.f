@@ -51,7 +51,7 @@
       CALL WRITE_HEADER
 
 ! Open files
-      CALL OPEN_FILES(RUN_NAME, RUN_TYPE, N_SPX)
+      CALL OPEN_FILES(RUN_NAME, RUN_TYPE)
 
 ! These checks verify that sufficient information was provided
 ! to setup the domain indices and DMP gridmap.

@@ -240,8 +240,6 @@ set(SOURCES
   model/io/write_out3.f
   model/io/write_res0.f
   model/io/write_res1.f
-  model/io/write_spx0.f
-  model/io/write_spx1.f
   model/io/write_table.f
   model/iterate.f
   model/location_check.f
@@ -361,7 +359,7 @@ set(TESTS
   DEM07
   FLD01
   FLD02
-  FLD03
+  # FLD03
   # box3d
   # cyclone
   # fluidbed_DES

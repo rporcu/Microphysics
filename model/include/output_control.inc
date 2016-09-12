@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / OUTPUT_CONTROL_LOCKED /&
 
-      SPX_DT, DBGPRN_LAYOUT, ENABLE_DMP_LOG, RES_BACKUPS
+      DBGPRN_LAYOUT, ENABLE_DMP_LOG, RES_BACKUPS
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

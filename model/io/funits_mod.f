@@ -26,9 +26,6 @@
 ! RUN_NAME.RES file unit number
       INTEGER, PARAMETER :: UNIT_RES = 55
 
-! RUN_NAME.SPx file unit offset number
-      INTEGER, PARAMETER :: UNIT_SPX = 60
-
       CONTAINS
 
 

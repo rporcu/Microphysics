@@ -9,7 +9,6 @@
       MODULE output
 
       use param, only: DIMENSION_USR
-      use param1, only: N_SPX
 
 ! Interval at which restart (.RES) file data is updated.
       DOUBLE PRECISION :: RES_DT
@@ -17,8 +16,6 @@
       DOUBLE PRECISION :: RES_BACKUP_DT
 ! Number of RES file copies to retain.
       INTEGER :: RES_BACKUPS
-! Interval at which REAL restart (.SPx) files data are updated.
-      DOUBLE PRECISION :: SPX_DT(N_SPX)
 ! Interval at which standard output (.OUT) file data is updated.
       DOUBLE PRECISION :: OUT_DT
 ! Interval at which user-defined output files are updated.
@@ -40,14 +37,9 @@
       DOUBLE PRECISION :: RES_TIME
 ! Time at which restart backup file is to be written
       DOUBLE PRECISION :: RES_BACKUP_TIME
-! Time at which REAL restart file is to be written
-      DOUBLE PRECISION :: SPX_TIME(N_SPX)
 ! Time at which standard output is to be written
       DOUBLE PRECISION :: OUT_TIME
 
-! The approximate amount (in MB) of space needed to write
-! one time step of data into the indexed SPX file.
-      DOUBLE PRECISION :: DISK(N_SPX) = 0.0d0
 ! The approximated total disk space (in MB)
       DOUBLE PRECISION :: DISK_TOT = 0.0d0
 ! One megabite (MB)

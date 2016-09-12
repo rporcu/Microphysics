@@ -9,8 +9,8 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Time intervalue between updating the RES and SPx files.
-      use output, only: RES_DT, SPX_DT
+! Time intervalue between updating the RES file.
+      use output, only: RES_DT
 ! Time-step intervalue between updating the .LOG file.
       use output, only: NLOG
 ! VTK
@@ -26,8 +26,6 @@
 !---------------------------------------------------------------------//
 ! Number aliases
       use param1, only: UNDEFINED, UNDEFINED_I, ZERO, LARGE_NUMBER
-! Number of SPx files.
-      USE param1, only: N_SPX
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//
@@ -58,28 +56,6 @@
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-
-! Check the SPx Files
-      SPx_LP: DO LC = 1, N_SPX
-
-! Disable writing the .SPB file if K-Epsilon is unspecified.
-         IF(LC == 11) THEN
-            IF (SPX_DT(LC)==UNDEFINED)SPX_DT(LC) = LARGE_NUMBER
-            CYCLE SPx_LP
-
-! Verify the remaining SPx files.
-         ELSE
-            IF(SPX_DT(LC) == UNDEFINED) THEN
-               WRITE(ERR_MSG,1000) iVar('SPX_DT',LC)
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-            ELSEIF(SPX_DT(LC) <= ZERO) THEN
-               WRITE(ERR_MSG,1001) iVar('SPX_DT',LC), SPX_DT(LC)
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-         ENDIF
-      ENDDO SPx_LP
-
 ! Verify that the LOG frequency is valid.
       IF(NLOG <= 0) THEN
          WRITE(ERR_MSG,1003) 'NLOG', NLOG
@@ -87,7 +63,6 @@
       ENDIF
 
 ! Check VTK regions
-
       IF(FRAME(1)<-1) THEN
          WRITE(ERR_MSG, 2000) trim(iVAL(FRAME(1)))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -148,96 +123,40 @@
 
             SELECT CASE (VTK_VARLIST(L,LV))
 
-               CASE (1)
-                  VTK_EP_g(L) = .TRUE.
+               CASE (   1); VTK_EP_g(L) = .TRUE.
+               CASE (   2); VTK_P_g(L) = .TRUE.
+               CASE (   3); VTK_VEL_G(L) = .TRUE.
+               CASE ( 100); VTK_PARTITION(L) = .TRUE.
+               CASE ( 101); VTK_BC_ID(L) = .TRUE.
+               CASE ( 102); VTK_DWALL(L) = .TRUE.
 
-               CASE (2)
-                  VTK_P_g(L)    = .TRUE.
-
-               CASE (3)
-                  VTK_VEL_G(L) = .TRUE.
-
-               CASE (4)
-                  DO M = 1,MMAX
-                     VTK_VEL_S(L,M) = .TRUE.
-                  END DO
-
-               CASE (5)
-                  DO M = 1,MMAX
-                     VTK_ROP_s(L,M) = .TRUE.
-                  END DO
-
-
-               CASE (100)
-                  VTK_PARTITION(L) = .TRUE.
-
-               CASE (101)
-                  VTK_BC_ID(L) = .TRUE.
-
-               CASE (102)
-                  VTK_DWALL(L) = .TRUE.
-
-               CASE (103)
+               CASE ( 103)
                   IF(DISCRETE_ELEMENT.AND.USE_STL) THEN
                      VTK_FACET_COUNT_DES(L) = .TRUE.
                   ENDIF
 
-               CASE (104)
+               CASE ( 104)
                   IF(DISCRETE_ELEMENT.AND.USE_STL) THEN
                      VTK_NB_FACET_DES(L) = .TRUE.
                   ENDIF
 
-               CASE(999)
-                  VTK_IJK(L) = .TRUE.
-
-               CASE(1000)
-                  VTK_NORMAL(L) = .TRUE.
-
-               CASE (1001)
-                  VTK_DEBUG(L,1) = .TRUE.
-
-               CASE (1002)
-                  VTK_DEBUG(L,2) = .TRUE.
-
-               CASE (1003)
-                  VTK_DEBUG(L,3) = .TRUE.
-
-               CASE (1004)
-                  VTK_DEBUG(L,4) = .TRUE.
-
-               CASE (1005)
-                  VTK_DEBUG(L,5) = .TRUE.
-
-               CASE (1006)
-                  VTK_DEBUG(L,6) = .TRUE.
-
-               CASE (1007)
-                  VTK_DEBUG(L,7) = .TRUE.
-
-               CASE (1008)
-                  VTK_DEBUG(L,8) = .TRUE.
-
-               CASE (1009)
-                  VTK_DEBUG(L,9) = .TRUE.
-
-               CASE (1010)
-                  VTK_DEBUG(L,10) = .TRUE.
-
-               CASE (1011)
-                  VTK_DEBUG(L,11) = .TRUE.
-
-               CASE (1012)
-                  VTK_DEBUG(L,12) = .TRUE.
-
-               CASE (1013)
-                  VTK_DEBUG(L,13) = .TRUE.
-
-               CASE (1014)
-                  VTK_DEBUG(L,14) = .TRUE.
-
-               CASE (1015)
-                  VTK_DEBUG(L,15) = .TRUE.
-
+               CASE ( 999); VTK_IJK(L) = .TRUE.
+               CASE (1000); VTK_NORMAL(L) = .TRUE.
+               CASE (1001); VTK_DEBUG(L,1) = .TRUE.
+               CASE (1002); VTK_DEBUG(L,2) = .TRUE.
+               CASE (1003); VTK_DEBUG(L,3) = .TRUE.
+               CASE (1004); VTK_DEBUG(L,4) = .TRUE.
+               CASE (1005); VTK_DEBUG(L,5) = .TRUE.
+               CASE (1006); VTK_DEBUG(L,6) = .TRUE.
+               CASE (1007); VTK_DEBUG(L,7) = .TRUE.
+               CASE (1008); VTK_DEBUG(L,8) = .TRUE.
+               CASE (1009); VTK_DEBUG(L,9) = .TRUE.
+               CASE (1010); VTK_DEBUG(L,10) = .TRUE.
+               CASE (1011); VTK_DEBUG(L,11) = .TRUE.
+               CASE (1012); VTK_DEBUG(L,12) = .TRUE.
+               CASE (1013); VTK_DEBUG(L,13) = .TRUE.
+               CASE (1014); VTK_DEBUG(L,14) = .TRUE.
+               CASE (1015); VTK_DEBUG(L,15) = .TRUE.
 
                CASE (0) ! do nothing
 
@@ -255,11 +174,7 @@
          '  3 : Gas velocity (U_g, V_g, W_g)',                        /&
          'Please correct the mfix.dat file.')
 
-
          ENDDO
-
-! Activate particle orientation calculation if one vtk region needs it.
-         IF(VTK_PART_ORIENTATION(L)) PARTICLE_ORIENTATION = .TRUE.
 
       ENDDO   ! end loop over (l = 1,dimension_vtk)
 

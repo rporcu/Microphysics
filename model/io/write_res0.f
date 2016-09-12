@@ -213,12 +213,6 @@
       WRITE (UNIT_RES, REC=NEXT_RECA) TIME, TSTOP, RES_DT, OUT_DT, &
          NLOG, NO_I, NO_J, NO_K, CALL_USR
       NEXT_RECA = NEXT_RECA + 1
-      write (unit_res,rec=next_reca) n_spx
-      NEXT_RECA = NEXT_RECA + 1
-      DO LC = 1, N_SPX
-         WRITE (UNIT_RES, REC=NEXT_RECA) SPX_DT(LC)
-         NEXT_RECA = NEXT_RECA + 1
-      END DO
 
 
       CALL OUT_BIN_512 (UNIT_RES, USR_DT, DIMENSION_USR, NEXT_RECA)

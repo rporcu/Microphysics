@@ -110,7 +110,6 @@
 # OUTPUT CONTROL SECTION
 
   RES_DT =   1.0
-  SPX_DT = 3*1.0
 
   FULL_LOG = .T.
 

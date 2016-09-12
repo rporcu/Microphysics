@@ -76,14 +76,13 @@
 
 !<keyword category="Run Control" required="true">
 !  <description>Type of run.</description>
-!  <valid value="new" note="A new run. There should be no .RES, .SPx,
+!  <valid value="new" note="A new run. There should be no .RES,
 !    .OUT, or .LOG files in the run directory."/>
 !  <valid value="RESTART_1" note="Traditional restart. The run continues
-!    from the last time the .RES file was updated and new data is added
-!    to the SPx files."/>
+!    from the last time the .RES file was updated."/>
 !  <valid value="RESTART_2"
 !    note="Start a new run with initial conditions from a .RES file
-!      created from another run. No other data files (SPx) should be
+!      created from another run. No other data files (VTU/VTP) should be
 !      in the run directory."/>
       RUN_TYPE = UNDEFINED_C
 !</keyword>
@@ -1648,16 +1647,6 @@
 !</keyword>
 
 !<keyword category="Output Control" required="false">
-!  <description>
-!    Interval at which .SPX files are updated.
-!    o SP1: void fraction (EP_G)
-!    o SP3: Gas velocity (U_G, V_G, W_G)
-!  </description>
-!  <arg index="1" id="SP Value" min="1" max="N_SPX"/>
-      SPX_DT(:N_SPX) = UNDEFINED
-!</keyword>
-
-!<keyword category="Output Control" required="false">
 !  <description> Interval at which standard output (.OUT) file is updated.
 !    Only run configuration information is written if left undefined. Otherwise
 !    all field variables for the entire domain are written in ASCII
@@ -1725,7 +1714,7 @@
 
 !<keyword category="Output Control" required="false">
 !  <description>
-!    Use distributed IO :: Each MPI process generates RES/SPx files.
+!    Use distributed IO :: Each MPI process generates RES files.
 !  </description>
       bDist_IO = .FALSE.
 !</keyword>

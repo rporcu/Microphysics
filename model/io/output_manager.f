@@ -3,8 +3,8 @@
 !  Subroutine: OUTPUT_MANAGER                                          !
 !  Author: J.Musser                                   Date:            !
 !                                                                      !
-!  Purpose: Relocate calls to write output files (RES, SPx, VTP). This !
-!  was done to simplify the time_march code.                           !
+!  Purpose: Relocate calls to write output files (RES,VTP). This was   !
+!  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
       SUBROUTINE OUTPUT_MANAGER(EXIT_SIGNAL, FINISHED)
@@ -13,31 +13,18 @@
 !---------------------------------------------------------------------//
 
       use output, only: RES_TIME, RES_DT
-      use output, only: SPX_TIME, SPX_DT
       use output, only: OUT_TIME, OUT_DT
       use output, only: USR_TIME, USR_DT
       use vtk, only:    VTK_TIME, VTK_DT
-
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
-
-      use output, only: DISK, DISK_TOT
-
-      use param1, only: N_SPX
       use param, only: DIMENSION_USR
       use vtk, only: DIMENSION_VTK
-
       use run, only: TIME, DT, TSTOP
-
       use time_cpu, only: CPU_IO
-
       use compar, only: myPE, PE_IO
-
       use discretelement, only: DISCRETE_ELEMENT
-
       use vtk, only: WRITE_VTK_FILES
-
       use param1, only: UNDEFINED
-
       use machine, only: wall_time
 
       IMPLICIT NONE
@@ -56,16 +43,15 @@
       INTEGER :: LC, IDX
 ! Flag that the header (time) has not be written.
       LOGICAL :: HDR_MSG
-! SPX file extensions.
-      CHARACTER(LEN=35) ::  EXT_END
 ! Wall time at the start of IO operations.
       DOUBLE PRECISION :: WALL_START
-
+! SPX file extensions.
+      CHARACTER(LEN=35) ::  EXT_END
 !......................................................................!
 
-
-! Initialize the SPx file extension array.
+! Initialize the file extension array.
       EXT_END = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
 ! Initial the header flag.
       HDR_MSG = .TRUE.
 
@@ -91,24 +77,6 @@
          ENDIF
 
       ENDIF
-
-! Write SPx files, if needed
-      IDX = 0
-
-      DO LC=1, N_SPX
-         IF(CHECK_TIME(SPX_TIME(LC))) THEN
-            SPX_TIME(LC) = NEXT_TIME(SPX_DT(LC))
-
-            CALL WRITE_SPX1(LC, 0)
-            CALL NOTIFY_USER('SPx:',EXT_END(LC:LC))
-
-            DISK_TOT = DISK_TOT + DISK(LC)
-            IDX = IDX + 1
-
-         ENDIF
-      ENDDO
-      IF(IDX /=0) CALL FLUSH_LIST
-
 
 ! Write standard output, if needed
       IF(CHECK_TIME(OUT_TIME)) THEN
@@ -344,16 +312,13 @@
 
       use geometry, only: IJKMAX2
       use machine, only: wall_time
-      use output, only: DISK, DISK_TOT
       use output, only: ONEMEG
       use output, only: OUT_TIME, OUT_DT
       use output, only: RES_TIME, RES_DT
-      use output, only: SPX_TIME, SPX_DT
       use output, only: USR_TIME, USR_DT
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
       use output, only: RES_BACKUPS
       use param, only: DIMENSION_USR
-      use param1, only: N_SPX
       use param1, only: UNDEFINED
       use param1, only: ZERO
       use physprop, only: MMAX
@@ -374,9 +339,6 @@
 
       IMPLICIT NONE
 
-! Disk space needed for one variable and each SPX file
-      DOUBLE PRECISION :: DISK_ONE
-
 ! Loop counter
       INTEGER :: LC
 
@@ -386,24 +348,13 @@
 ! Initialize the amount of time spent on IO
       CPU_IO = 0.0d0
 
-! Initialize disk space calculations
-      DISK_TOT = ZERO
-      DISK_ONE = 4.0*IJKMAX2/ONEMEG
-
-      DISK(1) = 1.0*DISK_ONE                           ! EPg
-      DISK(2) = 2.0*DISK_ONE                           ! Pg, Ps
-      DISK(3) = 3.0*DISK_ONE                           ! Ug, Vg, Wg
-
-! Initizle RES and SPX_TIME
+! Initizle RES
       IF (RUN_TYPE == 'NEW') THEN
          RES_TIME = TIME
-         SPX_TIME(:N_SPX) = TIME
       ELSE
          IF (DT /= UNDEFINED) THEN
             RES_TIME = RES_DT *                                        &
                (INT((TIME + 0.1d0*DT)/RES_DT) + 1)
-            SPX_TIME(:N_SPX) = SPX_DT(:N_SPX) *                        &
-               (INT((TIME + 0.1d0*DT)/SPX_DT(:N_SPX)) + 1)
          ENDIF
       ENDIF
 

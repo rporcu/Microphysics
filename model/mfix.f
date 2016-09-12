@@ -206,9 +206,6 @@
       CASE ('NEW')
 ! Write the initial part of the restart files
          CALL WRITE_RES0
-         DO L = 1, N_SPX
-            CALL WRITE_SPX0 (L, 0)
-         ENDDO
 
        CASE ('RESTART_1')
 ! Read the time-dependent part of the restart file
@@ -227,17 +224,11 @@
 
          CALL WRITE_RES0
 
-! Writing the RES1 and SPX1 can only be done here when re-indexing is turned off
+! Writing the RES1 can only be done here when re-indexing is turned off
 ! This will be done after the cell re-indexing is done later in this file.
 ! This allows restarting independently of the re-indexing setting between
 ! the previous and current run.
-         IF(.NOT.RE_INDEXING) THEN
-            CALL WRITE_RES1
-            DO L = 1, N_SPX
-               CALL WRITE_SPX0 (L, 0)
-               CALL WRITE_SPX1 (L, 0)
-            END DO
-         ENDIF
+         IF(.NOT.RE_INDEXING)  CALL WRITE_RES1
 
       CASE DEFAULT
          CALL START_LOG

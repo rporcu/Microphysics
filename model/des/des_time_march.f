@@ -152,7 +152,7 @@
 ! Keep track of TIME and number of steps for DEM simulations
             TIME = S_TIME
             NSTEP = NSTEP + 1
-! Call the output manager to write RES and SPx data.
+! Call the output manager to write RES data.
             CALL OUTPUT_MANAGER(.FALSE., .FALSE.)
          ENDIF  ! end if (.not.des_continuum_coupled)
 

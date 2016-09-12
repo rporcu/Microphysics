@@ -23,7 +23,7 @@ time -p ${MFIX} DES_ONEWAY_COUPLED=.F. \
     DES_INTERP_ON=.T. DES_INTERP_MEAN_FIELDS=.T. \
     DES_INTERP_SCHEME=\'SQUARE_DPVM\' DES_INTERP_WIDTH=2.0d-3
 
-post_dats=AUTOTEST/POST*.da2
+post_dats=AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
     numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
