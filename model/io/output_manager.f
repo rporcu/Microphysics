@@ -100,6 +100,7 @@
 
       IF(DISCRETE_ELEMENT) THEN
          IF(CHECK_TIME(VTP_TIME)) THEN
+            VTP_TIME = NEXT_TIME(VTP_DT)
             CALL WRITE_DES_DATA
             CALL NOTIFY_USER('DES.vtp;')
          ENDIF
