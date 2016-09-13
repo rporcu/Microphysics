@@ -167,10 +167,10 @@
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
-            FC(:3,NP) = FC(:3,NP) + D_FORCE(:3)
+            FC(NP,:) = FC(NP,:) + D_FORCE(:3)
 
 ! P_force is evaluated as -dp/dx
-            FC(:3,NP) = FC(:3,NP) + P_FORCE(:,IJK)*PVOL(NP)
+            FC(NP,:) = FC(NP,:) + P_FORCE(:,IJK)*PVOL(NP)
          ENDDO       ! end do (nindx = 1,pinc(ijk))
 
       ENDDO   ! end do (ijk=ijkstart3,ijkend3)

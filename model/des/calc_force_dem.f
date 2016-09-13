@@ -192,24 +192,24 @@
 ! total contact force
             FC_TMP(:) = FC_TMP(:) + FN(:) + FT(:)
 
-            FC(:,LL) = FC(:,LL) + FC_TMP(:)
+            FC(LL,:) = FC(LL,:) + FC_TMP(:)
 
             !$omp atomic
-            FC(1,I) = FC(1,I) - FC_TMP(1)
+            FC(I,1) = FC(I,1) - FC_TMP(1)
             !$omp atomic
-            FC(2,I) = FC(2,I) - FC_TMP(2)
+            FC(I,2) = FC(I,2) - FC_TMP(2)
             !$omp atomic
-            FC(3,I) = FC(3,I) - FC_TMP(3)
+            FC(I,3) = FC(I,3) - FC_TMP(3)
 
 ! for each particle the signs of norm and ft both flip, so add the same torque
-            TOW(:,LL) = TOW(:,LL) + TOW_TMP(:,1)
+            TOW(LL,:) = TOW(LL,:) + TOW_TMP(:,1)
 
             !$omp atomic
-            TOW(1,I)  = TOW(1,I)  + TOW_TMP(1,2)
+            TOW(I,1)  = TOW(I,1)  + TOW_TMP(1,2)
             !$omp atomic
-            TOW(2,I)  = TOW(2,I)  + TOW_TMP(2,2)
+            TOW(I,2)  = TOW(I,2)  + TOW_TMP(2,2)
             !$omp atomic
-            TOW(3,I)  = TOW(3,I)  + TOW_TMP(3,2)
+            TOW(I,3)  = TOW(I,3)  + TOW_TMP(3,2)
 
          ENDDO
       ENDDO

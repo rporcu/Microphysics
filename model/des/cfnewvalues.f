@@ -39,8 +39,8 @@
             IF(IS_NONEXISTENT(L)) CYCLE                       ! Only real particles
             IF(IS_ENTERING(L).or.IS_ENTERING_GHOST(L)) CYCLE  ! Only non-entering
             IF(IS_GHOST(L)) CYCLE                             ! Skip ghost particles
-            DES_ACC_OLD(:,L) = FC(:,L)/PMASS(L) + GRAV(:)
-            ROT_ACC_OLD(:,L) = TOW(:,L)
+            DES_ACC_OLD(:,L) = FC(L,:)/PMASS(L) + GRAV(:)
+            ROT_ACC_OLD(:,L) = TOW(L,:)
          ENDDO
       ENDIF
 
@@ -63,19 +63,19 @@
 ! Classification from new to existing is performed in routine
 ! des_check_new_particle.f
          IF(.NOT.IS_ENTERING(L) .AND. .NOT.IS_ENTERING_GHOST(L))THEN
-            FC(:,L) = FC(:,L)/PMASS(L) + GRAV(:)
+            FC(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
          ELSE
-            FC(:,L) = ZERO
-            TOW(:,L) = ZERO
+            FC(L,:) = ZERO
+            TOW(L,:) = ZERO
          ENDIF
 
 ! Advance particle position, velocity
         IF (INTG_EULER) THEN
 ! first-order method
-            DES_VEL_NEW(:,L) = DES_VEL_NEW(:,L) + FC(:,L)*DTSOLID
+            DES_VEL_NEW(:,L) = DES_VEL_NEW(:,L) + FC(L,:)*DTSOLID
             DD(:) = DES_VEL_NEW(:,L)*DTSOLID
             DES_POS_NEW(:,L) = DES_POS_NEW(:,L) + DD(:)
-            OMEGA_NEW(:,L)   = OMEGA_NEW(:,L) + TOW(:,L)*OMOI(L)*DTSOLID
+            OMEGA_NEW(:,L)   = OMEGA_NEW(:,L) + TOW(L,:)*OMOI(L)*DTSOLID
          ELSEIF (INTG_ADAMS_BASHFORTH) THEN
 
             lVELo = DES_VEL_NEW(:,L)
@@ -83,16 +83,16 @@
 
 ! Second-order Adams-Bashforth/Trapezoidal scheme
             DES_VEL_NEW(:,L) = lVELo(:) + 0.5d0*&
-               ( 3.d0*FC(:,L)-DES_ACC_OLD(:,L) )*DTSOLID
+               ( 3.d0*FC(L,:)-DES_ACC_OLD(:,L) )*DTSOLID
 
             OMEGA_NEW(:,L)   =  OMEGA_NEW(:,L) + 0.5d0*&
-               ( 3.d0*TOW(:,L)*OMOI(L)-ROT_ACC_OLD(:,L) )*DTSOLID
+               ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(:,L) )*DTSOLID
 
             DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(:,L) )*DTSOLID
 
             DES_POS_NEW(:,L) = lPOSo(:) + DD(:)
-            DES_ACC_OLD(:,L) = FC(:,L)
-            ROT_ACC_OLD(:,L) = TOW(:,L)*OMOI(L)
+            DES_ACC_OLD(:,L) = FC(L,:)
+            ROT_ACC_OLD(:,L) = TOW(L,:)*OMOI(L)
          ENDIF
 
 
@@ -107,8 +107,8 @@
          ENDIF
 
 ! Reset total contact force and torque
-         FC(:,L) = ZERO
-         TOW(:,L) = ZERO
+         FC(L,:) = ZERO
+         TOW(L,:) = ZERO
 
       ENDDO
 !$omp end parallel do

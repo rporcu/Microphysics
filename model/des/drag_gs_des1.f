@@ -144,9 +144,9 @@
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
-            FC(:,NP) = FC(:,NP) + D_FORCE(:)
+            FC(NP,:) = FC(NP,:) + D_FORCE(:)
 
-            FC(:,NP) = FC(:,NP) + lPF*PVOL(NP)
+            FC(NP,:) = FC(NP,:) + lPF*PVOL(NP)
 
          ENDIF
 

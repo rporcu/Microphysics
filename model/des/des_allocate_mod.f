@@ -106,10 +106,10 @@ CONTAINS
       Allocate(  PPOS (DIMN,MAX_PIP) )
 
 ! Total, normal and tangetial forces
-      Allocate(  FC (DIMN,MAX_PIP) )
+      Allocate(  FC (MAX_PIP,DIMN) )
 
 ! Torque
-      Allocate(  TOW (DIMN,MAX_PIP) )
+      Allocate(  TOW (MAX_PIP,DIMN) )
 
 
 ! allocate variable for des grid binning

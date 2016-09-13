@@ -37,7 +37,7 @@
 !------------------------------------------------
 
 ! total contact force
-      FC(:,L) = FC(:,L) + FN(:) + FT(:)
+      FC(L,:) = FC(L,:) + FN(:) + FT(:)
 
 ! calculate the distance from the particle center to the wall
       DIST_CL = DIST_LI - DES_RADIUS(L)
@@ -48,5 +48,3 @@
 
       RETURN
       END SUBROUTINE CFFCTOWALL
-
-

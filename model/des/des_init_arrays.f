@@ -118,8 +118,8 @@
       PIJK(LB:UB,:) = 0
 
 ! Translation and rotational forces
-      FC(:,LB:UB) = ZERO
-      TOW(:,LB:UB) = ZERO
+      FC(LB:UB,:) = ZERO
+      TOW(LB:UB,:) = ZERO
 
 ! Collision data
       WALL_COLLISION_FACET_ID(:,LB:UB) = -1
