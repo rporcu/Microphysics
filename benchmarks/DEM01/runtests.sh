@@ -14,13 +14,13 @@ for LEVEL in 2; do
 
   PROCS=$(expr ${LEVEL} \* ${LEVEL} \* ${LEVEL})
   CELLS=$(expr 20 \* ${LEVEL})
-  LEN=$(bc <<< "0.004*${LEVEL}")
+  LEN=$(awk "BEGIN {printf \"%.10f\n\", 0.004*${LEVEL}}")
 
   time -p mpirun -np ${PROCS} ${MFIX} \
     XLENGTH=${LEN} IMAX=${CELLS} NODESI=${LEVEL} \
     YLENGTH=${LEN} JMAX=${CELLS} NODESJ=${LEVEL} \
     ZLENGTH=${LEN} KMAX=${CELLS} NODESK=${LEVEL} \
-    IC_X_E\(1\)=${LEN} IC_Y_N\(1\)=${LEN} IC_Z_T\(1\)=${LEN} 
+    IC_X_E\(1\)=${LEN} IC_Y_N\(1\)=${LEN} IC_Z_T\(1\)=${LEN}
 done
 
 #post_dats=AUTOTEST/POST*.dat
