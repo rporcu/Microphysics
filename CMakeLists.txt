@@ -350,6 +350,7 @@ enable_testing()
 
 set(TESTS
   benchmarks/DEM01
+  benchmarks/FLD01
   tests/DEM01
   tests/DEM02
   tests/DEM03
@@ -359,7 +360,6 @@ set(TESTS
   tests/DEM07
   tests/FLD01
   tests/FLD02
-  # FLD03
   # box3d
   # cyclone
   # fluidbed_DES

@@ -1,7 +1,7 @@
 #!/bin/bash -exl
 
 # set case directory
-RUN_NAME="FLD03"
+RUN_NAME="FLD01"
 
 MFIX=./mfix
 if [ -n "$1" ]; then

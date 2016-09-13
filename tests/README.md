@@ -5,7 +5,6 @@
 
 * **_FLD01:_ 2D Channel (Poiseuille) flow** [1]
 * **_FLD02:_ 2D Couette flow** [1]
-* **_FLD03:_ Lid-driven cavity flow** [1]
 
 
 
