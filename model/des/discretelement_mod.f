@@ -93,7 +93,7 @@
 !----------------------------------------------------------------->>>
 ! Logic that controls whether to print data dem simulations (granular or
 ! coupled)
-      LOGICAL PRINT_DES_DATA
+      LOGICAL :: PRINT_DES_DATA
       CHARACTER(LEN=255) :: VTP_DIR
 
 ! logic that controls if des run time messages are printed on screen or not

@@ -11,17 +11,19 @@
       use param, only: DIMENSION_USR
 
 ! Interval at which restart (.RES) file data is updated.
-      DOUBLE PRECISION :: RES_DT
+      DOUBLE PRECISION :: RES_DT, RES_TIME
 ! Interval to create a backup copy of the RES file.
-      DOUBLE PRECISION :: RES_BACKUP_DT
-! Number of RES file copies to retain.
-      INTEGER :: RES_BACKUPS
+      DOUBLE PRECISION :: RES_BACKUP_DT, RES_BACKUP_TIME
 ! Interval at which standard output (.OUT) file data is updated.
-      DOUBLE PRECISION :: OUT_DT
+      DOUBLE PRECISION :: OUT_DT, OUT_TIME
 ! Interval at which user-defined output files are updated.
-      DOUBLE PRECISION :: USR_DT (DIMENSION_USR)
+      DOUBLE PRECISION :: USR_DT (DIMENSION_USR), USR_TIME(DIMENSION_USR)
+! Interval to write DES VTP files
+      DOUBLE PRECISION :: VTP_DT, VTP_TIME
 ! Interval to check and report the mass balance
       DOUBLE PRECISION :: REPORT_MASS_BALANCE_DT
+! Number of RES file copies to retain.
+      INTEGER :: RES_BACKUPS
 ! Interval in number of time steps at which LOG file is written
       INTEGER :: NLOG
 ! Flag to display messages and residuals on the screen
@@ -30,16 +32,6 @@
       LOGICAL :: ENABLE_DMP_LOG
 ! Flag to print the index layout for  ijk<=>i,j,k  debugging tasks
       LOGICAL :: DBGPRN_LAYOUT
-
-! Time at which special output is to be written
-      DOUBLE PRECISION :: USR_TIME(DIMENSION_USR)
-! Time at which restart file is to be written
-      DOUBLE PRECISION :: RES_TIME
-! Time at which restart backup file is to be written
-      DOUBLE PRECISION :: RES_BACKUP_TIME
-! Time at which standard output is to be written
-      DOUBLE PRECISION :: OUT_TIME
-
 ! The approximated total disk space (in MB)
       DOUBLE PRECISION :: DISK_TOT = 0.0d0
 ! One megabite (MB)

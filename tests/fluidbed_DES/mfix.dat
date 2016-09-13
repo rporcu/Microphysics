@@ -144,16 +144,14 @@
   NLOG = 25       ! time steps between updates to (.LOG) file
   FULL_LOG = .T.  ! display residuals on screen
 
-! Interval at which .SPX files are written
-  SPX_DT(1) = 0.10   ! EP_g
-  SPX_DT(2) = 0.10   ! P_g, P_star
-  SPX_DT(3) = 0.10   ! U_g, V_g, W_g
-
   GROUP_RESID = .F.  ! Group residuals by equation
 
   RESID_STRING  = 'P0' 'U0', 'V0'
 
-  PRINT_DES_DATA = .T.  ! write DES vtk files
+  VTP_DT = 0.05
+
+
+
 #_______________________________________________________________________
 # DMP SETUP
 

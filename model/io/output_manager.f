@@ -15,6 +15,7 @@
       use output, only: RES_TIME, RES_DT
       use output, only: OUT_TIME, OUT_DT
       use output, only: USR_TIME, USR_DT
+      use output, only: VTP_TIME, VTP_DT
       use vtk, only:    VTK_TIME, VTK_DT
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
       use param, only: DIMENSION_USR
@@ -96,6 +97,13 @@
          ENDIF
       ENDDO
       IF(IDX /=0) CALL FLUSH_LIST
+
+      IF(DISCRETE_ELEMENT) THEN
+         IF(CHECK_TIME(VTP_TIME)) THEN
+            CALL WRITE_DES_DATA
+            CALL NOTIFY_USER('DES.vtp;')
+         ENDIF
+      ENDIF
 
       CALL FLUSH_NOTIFY_USER
 
@@ -316,6 +324,7 @@
       use output, only: OUT_TIME, OUT_DT
       use output, only: RES_TIME, RES_DT
       use output, only: USR_TIME, USR_DT
+      use output, only: VTP_TIME, VTP_DT
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
       use output, only: RES_BACKUPS
       use param, only: DIMENSION_USR
@@ -332,7 +341,7 @@
       use vtk, only: DIMENSION_VTK
       use vtk, only: VTK_TIME, VTK_DT
       use vtk, only: WRITE_VTK_FILES
-
+      use discretelement, only: PRINT_DES_DATA
       use param1, only:  UNDEFINED_I
 
       use funits, only: CREATE_DIR
@@ -376,8 +385,17 @@
          ENDIF
       ENDDO
 
-! Initialize VTK_TIME
+      VTP_TIME = UNDEFINED
+      IF(VTP_DT /= UNDEFINED) THEN
+         PRINT_DES_DATA = .TRUE.
+         IF (RUN_TYPE == 'NEW'.OR.RUN_TYPE=='RESTART_2') THEN
+            VTP_TIME = TIME
+         ELSE
+            VTP_TIME = VTP_DT*(INT((TIME + 0.1d0*DT)/VTP_DT)+1)
+         ENDIF
+      ENDIF
 
+! Initialize VTK_TIME
       IF(WRITE_VTK_FILES) THEN
          DO LC = 1, DIMENSION_VTK
             VTK_TIME(LC) = UNDEFINED

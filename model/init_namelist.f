@@ -1667,24 +1667,23 @@
       FULL_LOG = .FALSE.
 !</keyword>
 
+!<keyword category="Output Control" required="false"
+!  dem="true" pic="true">
+!  <description>
+!    Allows writing of discrete particle data to output files. Relevant
+!    to both granular and coupled simulations.
+!  </description>
+      VTP_DT = UNDEFINED
+!</keyword>
+
 !<keyword category="Output Control" required="false">
 !  <description>Specifies the residuals to display. </description>
 !  <arg index="1" id="Residual Index" max="8" min="1"/>
 !  <valid value="P0" note="Gas pressure"/>
-!  <valid value="PM" note="Solids phase M pressure"/>
 !  <valid value="R0" note="Gas density"/>
-!  <valid value="RM" note="Solids phase M density"/>
 !  <valid value="U0" note="Gas phase U-velocity"/>
 !  <valid value="V0" note="Gas phase V-velocity"/>
 !  <valid value="W0" note="Gas phase W-velocity"/>
-!  <valid value="UM" note="Solids phase M U-velocity"/>
-!  <valid value="VM" note="Solids phase M V-velocity"/>
-!  <valid value="WM" note="Solids phase M W-velocity"/>
-!  <valid value="T0" note="Gas temperature"/>
-!  <valid value="TM" note="Solids phase M temperature"/>
-!  <valid value="X0NN" note="Gas phase species NN mass fraction"/>
-!  <valid value="XMNN" note="Solids phase M species NN mass fraction"/>
-!  <valid value="K0" note="K-Epsilon model residuals"/>
       RESID_STRING(:8) = UNDEFINED_C
 !</keyword>
 
