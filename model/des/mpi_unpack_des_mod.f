@@ -378,9 +378,9 @@
 ! 18) Rotational velocity
          call unpack_dbuf(lbuf,omega_new(:,llocpar),pface)
 ! 19) Accumulated translational forces
-         call unpack_dbuf(lbuf,fc(:,llocpar),pface)
+         call unpack_dbuf(lbuf,fc(llocpar,:),pface)
 ! 20) Accumulated torque forces
-         call unpack_dbuf(lbuf,tow(:,llocpar),pface)
+         call unpack_dbuf(lbuf,tow(llocpar,:),pface)
 ! 23) Explicit drag force
          IF(DES_EXPLICITLY_COUPLED) &
             call unpack_dbuf(lbuf,drag_fc(:,llocpar),pface)

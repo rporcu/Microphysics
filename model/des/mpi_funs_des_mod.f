@@ -273,7 +273,7 @@
                pip = pip - 1
                ighost_cnt = ighost_cnt-1
                call set_nonexistent(lcurpar)
-               fc(:,lcurpar) = 0.0
+               fc(lcurpar,:) = 0.0
                des_pos_new(:,lcurpar)=0
                pijk(lcurpar,:) = -10
                des_vel_new(:,lcurpar)=0

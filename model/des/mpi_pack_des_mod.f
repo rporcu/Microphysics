@@ -300,9 +300,9 @@
 ! 18) Rotational velocity
             call pack_dbuf(lbuf,omega_new(:,lcurpar),pface)
 ! 19) Accumulated translational forces
-            call pack_dbuf(lbuf,fc(:,lcurpar),pface)
+            call pack_dbuf(lbuf,fc(lcurpar,:),pface)
 ! 20) Accumulated torque forces
-            call pack_dbuf(lbuf,tow(:,lcurpar),pface)
+            call pack_dbuf(lbuf,tow(lcurpar,:),pface)
 ! 23) Explicit drag force
             IF(DES_EXPLICITLY_COUPLED) &
                call pack_dbuf(lbuf, drag_fc(:,lcurpar),pface)
@@ -330,7 +330,7 @@
             ighost_cnt = ighost_cnt + 1
 
 ! Clear out the force array.
-            fc(:,lcurpar) = 0.
+            fc(lcurpar,:) = 0.
             lparcnt = lparcnt + 1
          end do
       end do
@@ -371,7 +371,7 @@
           call pack_dbuf(lbuf,dg_ijkconv(dg_pijkprv(lneigh),pface,     &
                ineighproc(pface)),pface)
 ! 38) Tangential collision history.
-          call pack_dbuf(lbuf,PFT_NEIGHBOR(:,CC),pface) 
+          call pack_dbuf(lbuf,PFT_NEIGHBOR(:,CC),pface)
 ! Increment the number of pairs being sent.
           num_neighborlists_to_send = num_neighborlists_to_send + 1
        enddo
