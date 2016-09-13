@@ -18,6 +18,7 @@ build:
     - cd build
     - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
     - make
+    - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 ctest -R build_
   artifacts:
     paths:
     - build
@@ -32,5 +33,7 @@ test:
 benchmarks:
   stage: benchmarks
   script:
-    - cd build
+    - mkdir build-benchmarks
+    - cd build-benchmarks
+    - FC='mpifort -g' cmake -DMPI=1 -DSMP=1 ..
     - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 ctest -R benchmarks
