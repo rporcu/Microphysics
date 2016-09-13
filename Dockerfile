@@ -21,4 +21,6 @@ ENV PATH /opt/conda/bin:$PATH
 ENV LANG C.UTF-8
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
+RUN groupadd -r gitlab && useradd -r -g gitlab gitlab
+USER gitlab
 CMD [ "/bin/bash" ]
