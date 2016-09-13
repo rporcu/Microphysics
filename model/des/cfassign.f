@@ -68,13 +68,7 @@
 ! also not extendable to cut-cell. So this routine computes the geoemetric C
 ! volume of the nodes.                                                     C
 !                                                                          C
-! des_vol_node_ratio was defined in order to develop an estimation         C
-! algorithm for computing mean fields when Cartesian grid is on.           C
-! Subsequently, another algorithm was developed that negated the need for  C
-! des_vol_node_ratio.                                                      C
-! However, still keeping this variable for now (RG: July 27, 2012)         C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
       SUBROUTINE compute_volume_of_nodes
 
 !-----------------------------------------------

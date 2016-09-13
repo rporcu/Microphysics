@@ -192,8 +192,8 @@
       ENDIF
 
       WINDOW = DEM_MI(lBCV_I)%WINDOW
-      RAND1 = HALF*DES_D_p0(lM) + (WINDOW - DES_D_p0(lM))*lRAND(1)
-      RAND2 = HALF*DES_D_p0(lM) + (WINDOW - DES_D_p0(lM))*lRAND(2)
+      RAND1 = HALF*D_p0(lM) + (WINDOW - D_p0(lM))*lRAND(1)
+      RAND2 = HALF*D_p0(lM) + (WINDOW - D_p0(lM))*lRAND(2)
 
 
 ! Set the physical location and I/J/K location of the particle.
@@ -310,14 +310,11 @@
 ! Set the initial angular velocity values
       OMEGA_NEW(:,lNP) = 0
 
-! Set the initial angular position values
-      IF(PARTICLE_ORIENTATION) ORIENTATION(1:3,lNP) = INIT_ORIENTATION
-
 ! Set the particle radius value
-      DES_RADIUS(lNP) = HALF * DES_D_P0(lM)
+      DES_RADIUS(lNP) = HALF * D_P0(lM)
 
 ! Set the particle density value
-      RO_Sol(lNP) = DES_RO_S(lM)
+      RO_Sol(lNP) = RO_S0(lM)
 
 ! Store the I/J/K indices of the particle.
       PIJK(lNP,1:3) = lIJKP(:)

@@ -253,8 +253,6 @@
       use discretelement, only: DES_VEL_NEW
 ! Particle rotational velocities
       use discretelement, only: OMEGA_NEW
-!Particle orientation
-      use discretelement, only: PARTICLE_ORIENTATION,ORIENTATION
 ! Particle radius, volume, density, mass
       use discretelement, only: DES_RADIUS, PVOL, RO_SOL, PMASS
 ! Previous value for particle acceleration (tangential/rotational)

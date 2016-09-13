@@ -101,13 +101,6 @@
 ! Initialize old values
          omega_new(:,:)   = zero
 
-! Particle orientation
-         IF(PARTICLE_ORIENTATION) THEN
-            ORIENTATION(1,:) = INIT_ORIENTATION(1)
-            ORIENTATION(2,:) = INIT_ORIENTATION(2)
-            ORIENTATION(3,:) = INIT_ORIENTATION(3)
-         ENDIF
-
 ! Read the restart file.
       ELSEIF(RUN_TYPE == 'RESTART_1' .OR. RUN_TYPE == 'RESTART_2') THEN
 

@@ -298,8 +298,8 @@
       use bc, only: bc_type, bc_ep_g
       use fldvar, only: rop_g, ro_g, ep_g
       use discretelement, only: discrete_element
-      use discretelement, only: des_rop_s, des_ro_s
-      use physprop, only: mmax
+      use discretelement, only: des_rop_s
+      use physprop, only: mmax, ro_s0
 
 ! Global parameters
 !---------------------------------------------------------------------//
@@ -352,7 +352,7 @@
 ! therefore use the bulk density of the adjacent fluid cell
             DES_ROP_S(IJK,M) = DES_ROP_S(FIJK,M)
             SUM_ROPS = SUM_ROPS + DES_ROP_S(IJK,M)
-            EPS = DES_ROP_S(IJK,M)/DES_RO_S(M)
+            EPS = DES_ROP_S(IJK,M)/RO_S0(M)
             SUM_EPS = SUM_EPS + EPS
          ENDDO
       ENDIF

@@ -392,7 +392,7 @@
 ! Tangential damping factors := ET/EN
       USE discretelement, only: DES_ETAT_FAC, DES_ETAT_W_FAC
 ! Particle and wall Young's modulus and Shear modulus
-      USE discretelement, only: E_YOUNG, Ew_YOUNG, G_MOD
+      USE discretelement, only: E_YOUNG, Ew_YOUNG
 ! Particle and wall Poisson ratio
       USE discretelement, only: V_POISSON, Vw_POISSON
 ! Solids time step-size.
@@ -407,10 +407,11 @@
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
       use run, only: DT
-! Parameter constatns.
+! Parameter constants.
       USE param1, only: ZERO, ONE, UNDEFINED
+! Maximum number of solids
+      USE param, only: DIM_M
 
-!      USE mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -429,8 +430,8 @@
       DOUBLE PRECISION :: R_EFF, E_EFF, G_MOD_EFF, RED_MASS_EFF
 ! Alias for coefficient restitution
       DOUBLE PRECISION :: EN, ET
-! Shear modules for wall
-      DOUBLE PRECISION :: G_MOD_WALL
+! Shear modules for particles and wall
+      DOUBLE PRECISION :: G_MOD(DIM_M), G_MOD_WALL
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_DEM_COLL_HERTZ")

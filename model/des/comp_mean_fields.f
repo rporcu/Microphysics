@@ -63,7 +63,7 @@
       use desgrid
       use desmpi
       USE functions
-      use physprop, only:MMAX
+      use physprop, only:MMAX, RO_S0
 
       IMPLICIT NONE
 
@@ -109,7 +109,7 @@
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell
-            DES_ROP_S(IJK,M) = DES_RO_S(M)*SOLVOLINC(IJK,M)/VOL(IJK)
+            DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(IJK,M)/VOL(IJK)
 
          ENDDO   ! end loop over M=1,MMAX
 

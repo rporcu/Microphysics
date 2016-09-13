@@ -91,8 +91,6 @@ CONTAINS
       Allocate(  DES_VEL_NEW (DIMN,MAX_PIP) )
       Allocate(  OMEGA_NEW (DIMN,MAX_PIP) )
 
-      IF(PARTICLE_ORIENTATION) Allocate(  ORIENTATION (DIMN,MAX_PIP) )
-
       IF (DO_OLD) THEN
          Allocate(  DES_ACC_OLD (DIMN,MAX_PIP) )
          Allocate(  ROT_ACC_OLD (DIMN,MAX_PIP))
@@ -178,7 +176,6 @@ CONTAINS
 ! Bulk density in a computational fluid cell / for communication with
 ! MFIX continuum
       ALLOCATE( DES_ROP_S(DIMENSION_3, MMAX) )
-      ALLOCATE( DES_ROP_SO(DIMENSION_3, MMAX) )
 
 
 
@@ -354,8 +351,6 @@ CONTAINS
 
            call integer_grow(NEIGHBOR_INDEX,MAX_PIP)
            call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP)
-
-           IF(PARTICLE_ORIENTATION) call real_grow2(ORIENTATION,MAX_PIP)
 
            IF(FILTER_SIZE > 0) THEN
               call integer_grow2(FILTER_CELL,MAX_PIP)

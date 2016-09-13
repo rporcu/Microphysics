@@ -77,9 +77,6 @@
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
 
-! There is some issue associated to gstencil, vstencil which are
-! allocatable variables
-
 !$omp parallel do default(none)                                         &
 !$omp shared(ijkstart3,ijkend3,pinc,i_of,j_of,k_of,no_k,interp_scheme,  &
 !$omp        funijk_map_c,xe,yn,dz,zt,avg_factor,do_k,pic,des_pos_new,  &
@@ -275,9 +272,6 @@
 ! sets several quantities including interp_scheme, scheme, and
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
-! There is some issue associated to gstencil, vstencil which are
-! allocatable variables
-
 
 !!!$omp parallel default(shared)                                        &
 !!!$omp private(ijk,i,j,k,pcell,iw,ie,js,jn,kb,ktp,onew,                &

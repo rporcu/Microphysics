@@ -81,14 +81,6 @@
       PRINT_DES_DATA = .FALSE.
 !</keyword>
 
-!<keyword category="Output Control" required="false"
-!   dem="true" pic="true">
-!  <description> The output file format for DES data.</description>
-!  <valid value="PARAVIEW" note="ParaView formatted files (.vtp)"/>
-!  <valid value="TECPLOT" note="Tecplot formatted files (.dat)"/>
-      DES_OUTPUT_TYPE = "PARAVIEW"
-!</keyword>
-
 
 
 !#####################################################################!
@@ -293,15 +285,6 @@
 !  </description>
 !  <range min="0.0" max="+Inf" />
       NEIGHBOR_SEARCH_N = 25
-!</keyword>
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Flag to set the neighbor search algorithm.
-!  </description>
-!  <valid value="1" note="N-Square search algorithm (most expensive)"/>
-!  <valid value="4" note="Grid-Based Neighbor Search (Recommended)"/>
-      DES_NEIGHBOR_SEARCH = 4
 !</keyword>
 
 
@@ -546,7 +529,6 @@
 
 ! These need to be inialized to 0, but they are not part of the namelist
       VTP_FINDEX = 0
-      TECPLOT_FINDEX = 0
 
       RETURN
       END SUBROUTINE DES_INIT_NAMELIST

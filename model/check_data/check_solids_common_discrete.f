@@ -17,8 +17,6 @@
       USE discretelement, only: DO_OLD
 ! Number of solids phases.
       USE physprop, only: MMAX
-! DEM solid phase diameters and densities.
-      USE discretelement, only: DES_D_p0, DES_RO_s
 ! TFM solids phase diameters and densities. (DEM default)
       USE physprop, only: D_p0, RO_s0
 
@@ -26,10 +24,6 @@
       USE discretelement, only: DES_INTG_METHOD
       USE discretelement, only: INTG_ADAMS_BASHFORTH
       USE discretelement, only: INTG_EULER
-! User specified neighbor search method.
-      USE discretelement, only: DES_NEIGHBOR_SEARCH
-! User specified data out format (VTP, TecPlot)
-      USE discretelement, only: DES_OUTPUT_TYPE
 ! Max/Min particle radii
       USE discretelement, only: MAX_RADIUS, MIN_RADIUS
 ! Runtime Flag: Periodic boundaries
@@ -74,27 +68,14 @@
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE")
 
-
-      DES_D_p0 = UNDEFINED
-      DES_RO_s = UNDEFINED
-
       MAX_RADIUS = -UNDEFINED
       MIN_RADIUS =  UNDEFINED
 
-      M = 0
-      DO lM=1, MMAX
-
-! The accounts for an offset between the DEM and TFM phase indices
-         M = M+1
-
-! Copy of the input keyword values into discrete solids arrays. We may be
-! able to remove the DES_ specific variables moving forward.
-         DES_D_p0(M) = D_p0(lM)
-         DES_RO_s(M) = RO_s0(lM)
 ! Determine the maximum particle size in the system (MAX_RADIUS), which
 ! in turn is used for various tasks
-         MAX_RADIUS = MAX(MAX_RADIUS, 0.5d0*DES_D_P0(M))
-         MIN_RADIUS = MIN(MIN_RADIUS, 0.5d0*DES_D_P0(M))
+      DO lM=1, MMAX
+         MAX_RADIUS = MAX(MAX_RADIUS, 0.5d0*D_P0(lM))
+         MIN_RADIUS = MIN(MIN_RADIUS, 0.5d0*D_P0(lM))
       ENDDO
 
 
@@ -115,41 +96,6 @@
 
 ! Overwrite for restart cases.
       IF(TRIM(RUN_TYPE) .NE. 'NEW') GENER_PART_CONFIG = .FALSE.
-
-! Check for valid neighbor search option.
-      SELECT CASE(DES_NEIGHBOR_SEARCH)
-      CASE (1) ! N-Square
-      CASE (2)
-         WRITE(ERR_MSG,2001) 2, 'QUADTREE'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      CASE (3)
-         WRITE(ERR_MSG,2001) 3, 'OCTREE'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      CASE (4) ! Grid based
-      CASE DEFAULT
-         WRITE(ERR_MSG,2001) DES_NEIGHBOR_SEARCH,'UNKNOWN'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 2001 FORMAT('Error 2001:Invalid DES_NEIGHBOR_SEARCH method: ',I2,1X,  &
-         A,/'Please correct the mfix.dat file.')
-
-      END SELECT
-
-
-! Check the output file format
-      IF(DES_OUTPUT_TYPE == UNDEFINED_C) DES_OUTPUT_TYPE = 'PARAVIEW'
-      SELECT CASE(trim(DES_OUTPUT_TYPE))
-      CASE ('PARAVIEW')
-      CASE ('TECPLOT')
-      CASE DEFAULT
-         WRITE(ERR_MSG,2010) trim(DES_OUTPUT_TYPE)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 2010 FORMAT('Error 2010:Invalid DES_OUTPUT_TYPE: ',A,/'Please ',       &
-         'correct the mfix.dat file.')
-
-      END SELECT
-
 
 ! Check for valid integration method
       SELECT CASE(trim(DES_INTG_METHOD))

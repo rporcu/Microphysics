@@ -3,7 +3,7 @@
 ! USE discretelement
         DES_ONEWAY_COUPLED, DES_REPORT_MASS_INTERP, DES_INTG_METHOD, &
         PARTICLES, &
-        GENER_PART_CONFIG, DES_NEIGHBOR_SEARCH, NEIGHBOR_SEARCH_N,&
+        GENER_PART_CONFIG, NEIGHBOR_SEARCH_N,&
         FACTOR_RLM, NEIGHBOR_SEARCH_RAD_RATIO, DES_USR_VAR_SIZE,&
 
         DES_INTERP_SCHEME, DES_INTERP_WIDTH, DES_INTERP_ON, &
@@ -24,8 +24,7 @@
         FORCE_ORD_BC, &
 
 ! DES output control information
-        PRINT_DES_DATA, DES_OUTPUT_TYPE,  &
-
+        PRINT_DES_DATA,  &
 
 ! Flag to turn on/off optimizing the list of facets at each des grid cell
          MINIMIZE_DES_FACET_LIST

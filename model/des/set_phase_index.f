@@ -10,11 +10,10 @@
 
       use param1, only: small_number
 
-      USE physprop, only: MMAX
+      USE physprop, only: MMAX, D_P0, RO_s0
 
       use discretelement, only: PIJK
       USE discretelement, only: DES_RADIUS, RO_SOL
-      USE discretelement, only: DES_D_P0, DES_RO_s
       USE discretelement, only: MAX_PIP
       USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
       use mpi_funs_des, only: des_par_exchange
@@ -55,8 +54,8 @@
 ! Determining the solids phase of each particle by matching the diameter
 ! and density to those specified in the data file.
          M_LP: DO M = 1, MMAX
-            dDp  = ABS(2.0d0*DES_RADIUS(L)-DES_D_P0(M))
-            dRho = ABS( RO_Sol(L)-DES_RO_S(M))
+            dDp  = ABS(2.0d0*DES_RADIUS(L)-D_P0(M))
+            dRho = ABS( RO_Sol(L)-RO_S0(M))
             IF( dDp < SMALL_NUMBER .AND. dRho < SMALL_NUMBER) THEN
                PIJK(L,5) = M
                EXIT M_LP
@@ -101,7 +100,7 @@
          5X,'Diameter',5x,'Density')
 
       DO M = 1, MMAX
-         WRITE(ERR_MSG, 9000) M, DES_D_P0(M), DES_RO_S(M)
+         WRITE(ERR_MSG, 9000) M, D_P0(M), RO_S0(M)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ENDDO
 

@@ -19,7 +19,6 @@
       USE physprop, only: MMAX
       USE mpi_utility, only: XLENGTH,YLENGTH,ZLENGTH
       USE DISCRETELEMENT, only:DISCRETE_ELEMENT
-      USE DISCRETELEMENT, only: PARTICLE_ORIENTATION
       USE cutcell, only: USE_STL
 
 ! Global Parameters:

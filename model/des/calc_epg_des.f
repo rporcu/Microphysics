@@ -22,9 +22,9 @@
 ! Particle positions
       use discretelement, only: DES_POS_NEW
 ! Number of continuum solids phases
-      use physprop, only: MMAX
+      use physprop, only: MMAX, RO_S0
 ! Discrete particle material and bulk densities
-      use discretelement, only: DES_RO_S, DES_ROP_s
+      use discretelement, only: DES_ROP_s
 ! Number of particles in indexed fluid cell
       use discretelement, only: PINC
 ! List of particles in each cell.
@@ -73,7 +73,7 @@
 !---------------------------------------------------------------------//
 !$omp parallel do if(ijkend3 .ge. 2000) default(none) reduction(+:IER) &
 !$omp shared(IJKSTART3, IJKEND3, DES_CONTINUUM_COUPLED, MMAX, &
-!$omp    EP_G, RO_G, ROP_G, DES_ROP_S, DES_RO_S) &
+!$omp    EP_G, RO_G, ROP_G, DES_ROP_S, RO_S0) &
 !$omp private(IJK, SUM_EPs, M)
       DO IJK = IJKSTART3, IJKEND3
 ! Skip wall cells.
@@ -83,7 +83,7 @@
          SUM_EPS = ZERO
 ! Sum the DES solids volume fraction.
          DO M = 1, MMAX
-            SUM_EPS = SUM_EPS + DES_ROP_S(IJK,M)/DES_RO_S(M)
+            SUM_EPS = SUM_EPS + DES_ROP_S(IJK,M)/RO_S0(M)
          ENDDO
 ! Calculate the gas phase volume fraction and bulk density.
          EP_G(IJK) = ONE - SUM_EPS

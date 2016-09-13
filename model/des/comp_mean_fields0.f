@@ -161,7 +161,7 @@
 
             MASS_SOL1 = MASS_SOL1 + PMASS(NP)
 
-            TEMP2 = DES_RO_S(M)*PVOL(NP)
+            TEMP2 = RO_S0(M)*PVOL(NP)
 
             DO K = 1, merge(1, ONEW, NO_K)
             DO J = 1, ONEW

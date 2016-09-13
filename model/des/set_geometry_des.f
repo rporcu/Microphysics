@@ -13,8 +13,6 @@
 !---------------------------------------------------------------------//
 ! Arrays for DEM simulations delineating cell edges.
       use discretelement, only: XE, YN, ZT, DIMN
-! Domain bounds (max/min).
-      use discretelement, only: EX2, TY2, NZ2, WX1, BY1, SZ1
 ! Fluid grid cell dimensions and mesh size
       USE geometry, only: DX, IMIN2, IMAX2
       USE geometry, only: DY, JMIN2, JMAX2
@@ -51,15 +49,6 @@
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.
       CALL GLOBAL_ALL_SUM(IER)
-
-
-! Set boundary edges.
-! In some instances wx1,ex2, etc have been used and in others
-! xlength,zero, etc are used. the code should be modified for
-! consistency throughout
-      EX2 = XLENGTH;    WX1 = ZERO  ! East/West
-      TY2 = YLENGTH;    BY1 = ZERO  ! North/South
-      NZ2 = ZLENGTH;    SZ1 = ZERO  ! Top/Bottom
 
 ! Initialize arrays.
       XE(:) = ZERO

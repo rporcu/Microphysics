@@ -102,7 +102,7 @@
             IF(COMPARE(BC_ROP_s(BCV,M),ZERO)) CYCLE
             PHASE_CNT = PHASE_CNT + 1
             PHASE_LIST(PHASE_CNT) = M
-            MAX_DIA = MAX(MAX_DIA,DES_D_P0(M))
+            MAX_DIA = MAX(MAX_DIA,D_P0(M))
          ENDDO
 ! Set the polydispersity flag.
          DEM_MI(BCV_I)%POLYDISPERSE = (PHASE_CNT > 1)
@@ -133,7 +133,7 @@
             VOL_FLOW = VEL_TMP(M) * BC_AREA(BCV) * BC_EP_S(BCV,M)
 ! Calculate the number of particles of mass phase M are injected per
 ! second for each solid phase present at the boundary
-            NPMpSEC(M) = VOL_FLOW / (PI/6.d0*DES_D_P0(M)**3)
+            NPMpSEC(M) = VOL_FLOW / (PI/6.d0*D_P0(M)**3)
 ! Write some debugging information if needed.
             if(dFlag) write(*,1100) M, VEL_TMP(M), NPMpSEC(M)
          ENDDO

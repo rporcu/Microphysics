@@ -15,10 +15,7 @@
       USE discretelement, only : gener_part_config
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
-! DEM solid phase diameters and densities.
-      USE discretelement, only: DES_D_p0
-
-      use physprop, only: MMAX
+      use physprop, only: MMAX, D_p0
 ! direction wise spans of the domain and grid spacing in each direction
       Use geometry, only: zlength
 ! Use the error manager for posting error messages.
@@ -45,7 +42,7 @@
 ! diameter as it may cause problems for coupled simulations.
 ! The user should also be aware of this when interpreting
 ! volume/void fraction calculations (including bulk density).
-            IF(.NOT.COMPARE(ZLENGTH,DES_D_P0(1))) THEN
+            IF(.NOT.COMPARE(ZLENGTH,D_P0(1))) THEN
                WRITE(ERR_MSG, 1000)
                CALL FLUSH_ERR_MSG
             ENDIF

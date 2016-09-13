@@ -43,11 +43,7 @@ LOGICAL :: found
 
       NEIGHBOR_INDEX(:) = 0
 
-      IF (DES_NEIGHBOR_SEARCH.EQ.1) THEN
-         CALL NSQUARE
-      ELSEIF (DES_NEIGHBOR_SEARCH.EQ.4) THEN
-          CALL DESGRID_NEIGH_BUILD
-      ENDIF
+      CALL DESGRID_NEIGH_BUILD
 
 !$omp parallel do default(none)                                         &
 !$omp private(cc,ll,found,cc_start,cc_end,cc_start_old,cc_end_old)      &

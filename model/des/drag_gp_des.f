@@ -117,7 +117,7 @@
          CALL DRAG_KOCH_HILL(DgA,EPg,Mu,ROPg,VREL,DPM,DPM,phis)
 
       CASE (USER_DRAG)
-         CALL DRAG_USR(IJK,NP,DgA,EPg,Mu,ROg,VREL,DPM,DES_RO_S(M), &
+         CALL DRAG_USR(IJK,NP,DgA,EPg,Mu,ROg,VREL,DPM,RO_S0(M), &
             FLUID_VEL(1), FLUID_VEL(2), FLUID_VEL(3))
 
       CASE DEFAULT
@@ -127,9 +127,9 @@
          DO lM = 1,MMAX
             IF(PHIS > ZERO) THEN
                tSUM = tSUM + DES_ROP_S(IJK,lM) / &
-                  (PHIS*DES_RO_S(lM)*DES_D_p0(lM))
+                  (PHIS*RO_S0(lM)*D_p0(lM))
              ELSE
-               tSUM = tSUM + ONE/DES_D_p0(lM)
+               tSUM = tSUM + ONE/D_p0(lM)
              ENDIF
          ENDDO
 

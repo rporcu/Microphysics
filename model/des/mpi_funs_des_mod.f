@@ -240,7 +240,6 @@
       use discretelement, only: DES_POS_NEW
       use discretelement, only: DES_VEL_NEW
       use discretelement, only: OMEGA_NEW
-      use discretelement, only: PARTICLE_ORIENTATION,ORIENTATION,INIT_ORIENTATION
       use discretelement, only: FC
       use discretelement, only: DO_OLD
       use discretelement, only: PIP
@@ -278,8 +277,6 @@
                pijk(lcurpar,:) = -10
                des_vel_new(:,lcurpar)=0
                omega_new(:,lcurpar)=0
-
-               IF(PARTICLE_ORIENTATION) ORIENTATION(1:3,lcurpar) = INIT_ORIENTATION
 
                IF(DES_USR_VAR_SIZE > 0)&
                   des_usr_var(:,lcurpar)= 0

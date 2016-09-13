@@ -320,7 +320,6 @@ MODULE interpolation
          IF (IE .EQ. IMAX2) IW = IMAX2 - 1
       ELSE
 ! If the YZ walls are periodic, the starting index can been less than 1.
-! This is accounted for when filling GSTENCIL. corrected later.
          IF (IW .EQ. 1) IW = IE - 1
       ENDIF
 
@@ -2343,8 +2342,6 @@ MODULE interpolation
   SUBROUTINE set_interpolation_scheme(choice)
 
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    !USE discretelement, ONLY : scheme, interp_scheme, order,ob2l,ob2r,&
-    !     & gstencil, vstencil, sstencil, wtderivp
       USE param
     IMPLICIT NONE
 !-----------------------------------------------
@@ -2382,49 +2379,6 @@ MODULE interpolation
 ! discarded (truncated)
     ob2l = (order+1)/2
     ob2r = order/2
-
-    IF(.not.allocated(gstencil)) THEN
-! max(1*(3-dimn), order*(dimn-2)) =order (in 3D) or =1 (in 2D)
-       ALLOCATE(gstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ELSEIF(ALLOCATED(gstencil).AND.order_orig.NE.order) THEN
-       DEALLOCATE(gstencil)
-       ALLOCATE(gstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ENDIF
-
-    IF(.not.allocated(vstencil)) THEN
-       ALLOCATE(vstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ELSEIF(ALLOCATED(vstencil).AND.order_orig.NE.order) THEN
-       DEALLOCATE(vstencil)
-       ALLOCATE(vstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ENDIF
-
-    IF(.not.allocated(pgradstencil)) THEN
-       ALLOCATE(pgradstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ELSEIF(ALLOCATED(pgradstencil).AND.order_orig.NE.order) THEN
-       DEALLOCATE(pgradstencil)
-       ALLOCATE(pgradstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ENDIF
-
-    IF(.not.allocated(psgradstencil)) THEN
-       ALLOCATE(psgradstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ELSEIF(ALLOCATED(psgradstencil).AND.order_orig.NE.order) THEN
-       DEALLOCATE(psgradstencil)
-       ALLOCATE(psgradstencil  (order,order,max(1*(3-dimn), order*(dimn-2)),3))
-    ENDIF
-
-    IF(.not.allocated(VEL_SOL_STENCIL)) THEN
-       ALLOCATE(VEL_SOL_STENCIL  (order,order,max(1*(3-dimn), order*(dimn-2)),3, DIM_M))
-    ELSEIF(ALLOCATED(VEL_SOL_STENCIL).AND.order_orig.NE.order) THEN
-       DEALLOCATE(VEL_SOL_STENCIL)
-       ALLOCATE(VEL_SOL_STENCIL  (order,order,max(1*(3-dimn), order*(dimn-2)),3, DIM_M))
-    ENDIF
-
-    IF(.not.allocated(sstencil)) THEN
-       ALLOCATE(sstencil  (order,order,max(1*(3-dimn), order*(dimn-2))))
-    ELSEIF(ALLOCATED(sstencil).AND.order_orig.NE.order) THEN
-       DEALLOCATE(sstencil)
-       ALLOCATE(sstencil  (order,order,max(1*(3-dimn), order*(dimn-2))))
-    ENDIF
 
   END SUBROUTINE set_interpolation_scheme
 

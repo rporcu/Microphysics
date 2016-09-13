@@ -44,8 +44,6 @@
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize
-! Particle orientation
-      use discretelement, only: PARTICLE_ORIENTATION
       use discretelement, only: DES_USR_VAR_SIZE
 
       use error_manager
