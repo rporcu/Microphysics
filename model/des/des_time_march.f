@@ -183,9 +183,6 @@
       ELSE
          call send_recv(ep_g,2)
          call send_recv(rop_g,2)
-         call send_recv(des_u_s,2)
-         call send_recv(des_v_s,2)
-         if(do_K) call send_recv(des_w_s,2)
 
          TMP_WALL = WALL_TIME() - TMP_WALL
          IF(TMP_WALL > 1.0d-10) THEN

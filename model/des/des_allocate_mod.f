@@ -160,11 +160,6 @@ CONTAINS
 ! force due to gas-pressure gradient
       ALLOCATE(P_FORCE(DIMN, DIMENSION_3))
 
-! Volume averaged solids volume in a computational fluid cell
-      Allocate(  DES_U_s (DIMENSION_3, MMAX) )
-      Allocate(  DES_V_s (DIMENSION_3, MMAX) )
-      Allocate(  DES_W_s (DIMENSION_3, MMAX) )
-
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(DIMENSION_3))
 
@@ -180,14 +175,6 @@ CONTAINS
          ALLOCATE(DES_VEL_NODE(DIMENSION_3, DIMN, MMAX))
       END SELECT
 
-! Variables for hybrid model
-      IF (DES_CONTINUUM_HYBRID) THEN
-         ALLOCATE(SDRAG_AM(DIMENSION_3,DIMENSION_M))
-         ALLOCATE(SDRAG_BM(DIMENSION_3, DIMN,DIMENSION_M))
-
-         ALLOCATE(F_SDS(DIMENSION_3,DIMENSION_M))
-         ALLOCATE(VXF_SDS(DIMENSION_3,DIMENSION_M))
-      ENDIF
 ! Bulk density in a computational fluid cell / for communication with
 ! MFIX continuum
       ALLOCATE( DES_ROP_S(DIMENSION_3, MMAX) )

@@ -15,8 +15,6 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Flag: Coupled gas-solids DEM simulation
-      use discretelement, only: DES_CONTINUUM_HYBRID
 ! Flag: Discrete and continuum solids co-exist
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Global ID of particles
@@ -74,8 +72,8 @@
 ! Calculate gas volume fraction from solids volume fraction:
 !---------------------------------------------------------------------//
 !$omp parallel do if(ijkend3 .ge. 2000) default(none) reduction(+:IER) &
-!$omp shared(IJKSTART3, IJKEND3, DES_CONTINUUM_COUPLED, MMAX, MMAX,&
-!$omp    EP_G, RO_G, ROP_G, DES_ROP_S, DES_RO_S, DES_CONTINUUM_HYBRID) &
+!$omp shared(IJKSTART3, IJKEND3, DES_CONTINUUM_COUPLED, MMAX, &
+!$omp    EP_G, RO_G, ROP_G, DES_ROP_S, DES_RO_S) &
 !$omp private(IJK, SUM_EPs, M)
       DO IJK = IJKSTART3, IJKEND3
 ! Skip wall cells.

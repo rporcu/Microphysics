@@ -50,8 +50,7 @@
 !$omp parallel default(none)                                           &
 !$omp private(NP, VOL_WT, M, LC, IJK, VOLXWEIGHT)                      &
 !$omp shared(MAX_PIP, PVOL, PIJK, LP_BND,          &
-!$omp    FILTER_WEIGHT, SOLVOLINC,DES_U_S, DES_V_S, DES_W_S, DO_K,     &
-!$omp    FILTER_CELL,DES_VEL_NEW)
+!$omp    FILTER_WEIGHT, SOLVOLINC, DO_K, FILTER_CELL,DES_VEL_NEW)
 !$omp do
       do NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP) .and. .NOT.IS_GHOST(NP)) CYCLE
@@ -82,12 +81,6 @@
 
 ! calculating the cell average solids velocity for each solids phase
          DO M = 1, MMAX
-            IF(SOLVOLINC(IJK,M).GT.ZERO) THEN
-               OoSOLVOL = ONE/SOLVOLINC(IJK,M)
-               DES_U_s(IJK,M) = DES_U_s(IJK,M)*OoSOLVOL
-               DES_V_s(IJK,M) = DES_V_s(IJK,M)*OoSOLVOL
-               IF(DO_K) DES_W_s(IJK,M) = DES_W_s(IJK,M)*OoSOLVOL
-            ENDIF
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell

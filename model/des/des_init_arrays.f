@@ -29,9 +29,6 @@
 
       PINC(:) = ZERO
 
-      DES_U_s(:,:) = ZERO
-      DES_V_s(:,:) = ZERO
-      DES_W_s(:,:) = ZERO
       DES_ROP_S(:,:) = ZERO
       DES_ROP_SO(:,:) = ZERO
 
@@ -42,13 +39,6 @@
 
       F_GDS = ZERO
       VXF_GDS = ZERO
-
-      IF (DES_CONTINUUM_HYBRID) THEN
-         F_SDS = ZERO
-         VXF_SDS = ZERO
-         SDRAG_AM = ZERO
-         SDRAG_BM = ZERO
-      ENDIF
 
       GRAV(:) = ZERO
 

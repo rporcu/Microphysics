@@ -548,8 +548,5 @@
       VTP_FINDEX = 0
       TECPLOT_FINDEX = 0
 
-! not a well supported feature and not generic either. So removing
-! from namelists
-      DES_CALC_BEDHEIGHT = .FALSE.
       RETURN
       END SUBROUTINE DES_INIT_NAMELIST

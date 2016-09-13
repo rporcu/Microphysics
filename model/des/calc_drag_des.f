@@ -10,7 +10,6 @@
       SUBROUTINE CALC_DRAG_DES
 
       use discretelement, only: DES_CONTINUUM_COUPLED
-      use discretelement, only: DES_CONTINUUM_HYBRID
 
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
       use particle_filter, only: DES_INTERP_GARG
@@ -65,7 +64,6 @@
       SUBROUTINE CALC_DRAG_DES_2FLUID
 
       use discretelement, only: DES_CONTINUUM_COUPLED
-      use discretelement, only: DES_CONTINUUM_HYBRID
 
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
       use particle_filter, only: DES_INTERP_GARG

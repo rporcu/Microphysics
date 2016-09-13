@@ -782,15 +782,11 @@
 
 !<keyword category="Solids Phase" required="false">
 !  <description>
-!    Defines the model used for the solids phase. For TFM/DEM
-!    hybrid simulations, first define all TFM solids, then
-!    define the DEM solids phases.
+!    Defines the model used for the solids phase.
 !  </description>
 !  <arg index="1" id="Phase" min="1" max="DIM_M"/>
-!  <valid value='TFM' note='Two-fluid Model (continuum)' />
 !  <valid value='DEM' note='Discrete Element Model' />
-!  <valid value='PIC' note='Multiphase-Particle in Cell' />
-      SOLIDS_MODEL(:DIM_M) = 'TFM'
+      SOLIDS_MODEL(:DIM_M) = '---'
 !</keyword>
 
 !<keyword category="Solids Phase" required="false"

@@ -116,10 +116,6 @@
       LOGICAL DISCRETE_ELEMENT
       LOGICAL DES_CONTINUUM_COUPLED
 
-! DES - Invoke hybrid model where both the DEM and continuum model
-! are employed to describe solids
-      LOGICAL DES_CONTINUUM_HYBRID
-
 ! DES -
 ! With this logic the particles see the fluid but the fluid does
 ! not see the particles.
@@ -412,45 +408,11 @@
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S,&
                                                        DES_ROP_SO
 
-! Volume averaged solids velocity in a fluid cell
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_U_s
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_V_s
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_W_s
-
 ! Granular temperature in a fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_THETA
 
-! Global average velocity: obtained by averaging over all the particles
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_VEL_AVG
-                        !(3)
-
-! Global granular energy & temp: obtained by averaging over all the particles
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: GLOBAL_GRAN_ENERGY
-                        !(3)
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: GLOBAL_GRAN_TEMP
-                        !(3)
-
-! Kinetic and potential energy of the system: obtained by averaging
-! over all particles
-! Added rotational kinetic energy (DES_ROTE)
-      DOUBLE PRECISION DES_KE, DES_PE, DES_ROTE
-
-! Logic for bed height calculations (T = turn on bed height
-! calculations)
-      LOGICAL DES_CALC_BEDHEIGHT
-! Used to track bed height of solids phase M
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: bed_height
-
-! MAX velocity of particles in each direction
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_VEL_MAX
-                        !(3)
-
 ! Flag to turn on/off optimizing the list of facets at each des grid cell
       LOGICAL :: MINIMIZE_DES_FACET_LIST
-!-----------------------------------------------------------------<<<
-
-
-!-----------------------------------------------------------------<<<
 
       LOGICAL :: DES_EXPLICITLY_COUPLED
 

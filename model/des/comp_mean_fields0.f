@@ -95,9 +95,6 @@
       DES_VEL_NODE = ZERO
       DES_ROPS_NODE = ZERO
       DES_ROP_S = zero
-      DES_U_S = ZERO
-      DES_V_S = ZERO
-      IF(DO_K) DES_W_S = ZERO
 
 
 ! sets several quantities including interp_scheme, scheme, and
@@ -313,7 +310,7 @@
 !$omp   DES_VEL_NODE)                                                  &
 !$omp private(I, J, K, IJK, M, II, JJ, KK, IJK2, DES_ROP_DENSITY,      &
 !$omp   DES_VEL_DENSITY)                                               &
-!$omp reduction(+:DES_ROP_S, DES_U_S, DES_V_S, DES_W_S)
+!$omp reduction(+:DES_ROP_S)
       DO K = KSTART2, KEND1
       DO J = JSTART2, JEND1
       DO I = ISTART2, IEND1
@@ -339,9 +336,6 @@
 ! mess up the total mass value that is computed below to ensure mass conservation
 ! between Lagrangian and continuum representations
                   DES_ROP_S(IJK2, M) = DES_ROP_S(IJK2, M) + DES_ROP_DENSITY*VOL(IJK2)
-                  DES_U_S(IJK2, M) = DES_U_S(IJK2, M) + DES_VEL_DENSITY(1)*VOL(IJK2)
-                  DES_V_S(IJK2, M) = DES_V_S(IJK2, M) + DES_VEL_DENSITY(2)*VOL(IJK2)
-                  IF(DO_K) DES_W_S(IJK2, M) = DES_W_S(IJK2, M) + DES_VEL_DENSITY(3)*VOL(IJK2)
                ENDIF
             ENDDO  ! end do (ii=i1,i2)
             ENDDO  ! end do (jj=j1,j2)
@@ -356,16 +350,12 @@
 
 
 !$omp parallel do default(none) private(IJK, M)                        &
-!$omp shared(IJKSTART3, IJKEND3, DO_K, MMAX, DES_ROP_s, DES_U_S,   &
-!$omp   DES_V_S, DES_W_S, VOL)
+!$omp shared(IJKSTART3, IJKEND3, DO_K, MMAX, DES_ROP_s, VOL)
       DO IJK = IJKSTART3, IJKEND3
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
          DO M = 1, MMAX
             IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
-               DES_U_S(IJK, M) = DES_U_S(IJK,M)/DES_ROP_S(IJK, M)
-               DES_V_S(IJK, M) = DES_V_S(IJK,M)/DES_ROP_S(IJK, M)
-               IF(DO_K) DES_W_S(IJK, M) = DES_W_S(IJK,M)/DES_ROP_S(IJK, M)
 
 ! Divide by scalar cell volume to obtain the bulk density
                DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL(IJK)

@@ -3,8 +3,8 @@
 !  Subroutine: COMP_MEAN_FIELDS                                        !
 !  Author: J.Musser                                   Date: 11-NOV-14  !
 !                                                                      !
-!  Purpose: Driver routine for calculating field variables (DES_ROP_s, !
-!   DES_U_S, DES_V_S, DES_W_S) from particle data.                     !
+!  Purpose: Driver routine for calculating field variables (DES_ROP_s) !
+!  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE COMP_MEAN_FIELDS
@@ -83,10 +83,6 @@
 
       SOLVOLINC(:,:) = ZERO
 
-      DES_U_s(:,:) = ZERO
-      DES_V_s(:,:) = ZERO
-      DES_W_s(:,:) = ZERO
-
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
          IF(IS_NONEXISTENT(NP)) CYCLE
@@ -100,12 +96,6 @@
 ! Accumulate total solids volume (by phase)
          SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOL_WT
 ! Accumulate total solids momenum-ish (by phase)
-         DES_U_S(IJK,M) = DES_U_S(IJK,M) +                             &
-            DES_VEL_NEW(1,NP)*VOL_WT
-         DES_V_S(IJK,M) = DES_V_S(IJK,M) +                             &
-            DES_VEL_NEW(2,NP)*VOL_WT
-         IF(DO_K) DES_W_S(IJK,M) = DES_W_S(IJK,M) +                    &
-            DES_VEL_NEW(3,NP)*VOL_WT
       ENDDO
 
 ! Calculate the cell average solids velocity, the bulk density,
@@ -116,12 +106,6 @@
 
 ! calculating the cell average solids velocity for each solids phase
          DO M = 1, MMAX
-            IF(SOLVOLINC(IJK,M).GT.ZERO) THEN
-               OoSOLVOL = ONE/SOLVOLINC(IJK,M)
-               DES_U_s(IJK,M) = DES_U_s(IJK,M)*OoSOLVOL
-               DES_V_s(IJK,M) = DES_V_s(IJK,M)*OoSOLVOL
-               IF(DO_K) DES_W_s(IJK,M) = DES_W_s(IJK,M)*OoSOLVOL
-            ENDIF
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell

@@ -73,7 +73,7 @@ MODULE CALC_D_MOD
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Flag: Coupled DEM, PIC, or Hybrid simulation
+! Flag: Coupled DEM simulation
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Volume x average at momentum cell center drag for DEM/PIC
       use discretelement, only: VXF_GDS
