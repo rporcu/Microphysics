@@ -14,7 +14,7 @@
       use particle_filter, only: DES_INTERP_NONE
       use particle_filter, only: DES_INTERP_GARG
 
-      use discretelement, only: DES_MMAX
+      use physprop, only: MMAX
       use discretelement, only: DES_ROP_S
 
       IMPLICIT NONE
@@ -63,6 +63,7 @@
       use desgrid
       use desmpi
       USE functions
+      use physprop, only:MMAX
 
       IMPLICIT NONE
 
@@ -74,7 +75,7 @@
 ! Fluid cell index
       INTEGER IJK
 ! Total Mth solids phase volume in IJK
-      DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,DES_MMAX)
+      DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
 ! One divided by the total solids volume.
       DOUBLE PRECISION :: OoSOLVOL
 ! PVOL times statistical weight
@@ -114,7 +115,7 @@
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
-         DO M = 1, DES_MMAX
+         DO M = 1, MMAX
             IF(SOLVOLINC(IJK,M).GT.ZERO) THEN
                OoSOLVOL = ONE/SOLVOLINC(IJK,M)
                DES_U_s(IJK,M) = DES_U_s(IJK,M)*OoSOLVOL
@@ -126,7 +127,7 @@
 ! number of particles having their center in the cell
             DES_ROP_S(IJK,M) = DES_RO_S(M)*SOLVOLINC(IJK,M)/VOL(IJK)
 
-         ENDDO   ! end loop over M=1,DES_MMAX
+         ENDDO   ! end loop over M=1,MMAX
 
       ENDDO     ! end loop over IJK=ijkstart3,ijkend3
 

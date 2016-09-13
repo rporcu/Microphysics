@@ -439,7 +439,7 @@
       ENDIF
 
       WRITE(BH_UNIT, '(10(2X,E20.12))') s_time, &
-         (bed_height(M), M=1,DES_MMAX), height_avg, height_rms
+         (bed_height(M), M=1,MMAX), height_avg, height_rms
 ! Close the file and keep
       CLOSE(BH_UNIT, STATUS="KEEP")
 
@@ -528,7 +528,7 @@
       WRITE(GT_UNIT,'(A6,ES24.16)') 'Time=', S_TIME
       WRITE(GT_UNIT,'(A6,2X,3(A6,2X),A8)',ADVANCE="NO") 'IJK', &
          'I', 'J', 'K', 'NP'
-      DO M = 1,DES_MMAX
+      DO M = 1,MMAX
          WRITE(GT_UNIT,'(7X,A6,I1)',ADVANCE="NO") 'THETA_',M
       ENDDO
       WRITE(GT_UNIT,*) ''
@@ -539,7 +539,7 @@
             K = K_OF(IJK)
             NP = PINC(IJK)
             WRITE(GT_UNIT,'(I6,2X,3(I6,2X),I8,(2X,ES15.5))') &
-               IJK, I, J, K, NP, (DES_THETA(IJK,M), M = 1,DES_MMAX)
+               IJK, I, J, K, NP, (DES_THETA(IJK,M), M = 1,MMAX)
          ENDIF
       ENDDO
 

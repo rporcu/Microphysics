@@ -507,7 +507,7 @@
 !    Youngs modulus for the particle [barye in CGS]. Required when using
 !    the Hertzian spring-dashpot model.
 !  </description>
-!  <arg index="1" id="Phase" min="1" max="DES_MMAX"/>
+!  <arg index="1" id="Phase" min="1" max="MMAX"/>
 !  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
       E_YOUNG(:DIM_M) = UNDEFINED
 !</keyword>
@@ -518,7 +518,7 @@
 !    Poissons ratio for the particle. Required when using the Hertzian
 !    spring-dashpot model.
 !  </description>
-!  <arg index="1" id="Phase" min="1" max="DES_MMAX"/>
+!  <arg index="1" id="Phase" min="1" max="MMAX"/>
 !  <dependent keyword="DES_COLL_MODEL" value="HERTZIAN"/>
       V_POISSON(:DIM_M) = UNDEFINED
 !</keyword>

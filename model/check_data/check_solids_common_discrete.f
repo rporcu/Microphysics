@@ -15,8 +15,8 @@
       USE discretelement, only: GENER_PART_CONFIG
 ! Runtime Flag: Store DES_*_OLD arrays.
       USE discretelement, only: DO_OLD
-! Number of DEM solids phases.
-      USE discretelement, only: DES_MMAX
+! Number of solids phases.
+      USE physprop, only: MMAX
 ! DEM solid phase diameters and densities.
       USE discretelement, only: DES_D_p0, DES_RO_s
 ! TFM solids phase diameters and densities. (DEM default)
@@ -82,10 +82,9 @@
       MIN_RADIUS =  UNDEFINED
 
       M = 0
-      DO lM=1, MMAX+DES_MMAX
+      DO lM=1, MMAX
 
 ! The accounts for an offset between the DEM and TFM phase indices
-         IF(SOLIDS_MODEL(lM) == 'TFM') CYCLE
          M = M+1
 
 ! Copy of the input keyword values into discrete solids arrays. We may be

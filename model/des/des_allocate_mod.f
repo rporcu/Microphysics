@@ -161,9 +161,9 @@ CONTAINS
       ALLOCATE(P_FORCE(DIMN, DIMENSION_3))
 
 ! Volume averaged solids volume in a computational fluid cell
-      Allocate(  DES_U_s (DIMENSION_3, DES_MMAX) )
-      Allocate(  DES_V_s (DIMENSION_3, DES_MMAX) )
-      Allocate(  DES_W_s (DIMENSION_3, DES_MMAX) )
+      Allocate(  DES_U_s (DIMENSION_3, MMAX) )
+      Allocate(  DES_V_s (DIMENSION_3, MMAX) )
+      Allocate(  DES_W_s (DIMENSION_3, MMAX) )
 
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(DIMENSION_3))
@@ -176,8 +176,8 @@ CONTAINS
          ALLOCATE(FILTER_CELL(FILTER_SIZE, MAX_PIP))
          ALLOCATE(FILTER_WEIGHT(FILTER_SIZE, MAX_PIP))
       CASE(DES_INTERP_GARG)
-         ALLOCATE(DES_ROPS_NODE(DIMENSION_3, DES_MMAX))
-         ALLOCATE(DES_VEL_NODE(DIMENSION_3, DIMN, DES_MMAX))
+         ALLOCATE(DES_ROPS_NODE(DIMENSION_3, MMAX))
+         ALLOCATE(DES_VEL_NODE(DIMENSION_3, DIMN, MMAX))
       END SELECT
 
 ! Variables for hybrid model
@@ -190,8 +190,8 @@ CONTAINS
       ENDIF
 ! Bulk density in a computational fluid cell / for communication with
 ! MFIX continuum
-      ALLOCATE( DES_ROP_S(DIMENSION_3, DES_MMAX) )
-      ALLOCATE( DES_ROP_SO(DIMENSION_3, DES_MMAX) )
+      ALLOCATE( DES_ROP_S(DIMENSION_3, MMAX) )
+      ALLOCATE( DES_ROP_SO(DIMENSION_3, MMAX) )
 
 
 

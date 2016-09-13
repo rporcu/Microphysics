@@ -18,9 +18,6 @@
 ! Number of solids phases
       INTEGER :: MMAX
 
-! Real number of solids phases for GHD theory
-      INTEGER :: SMAX
-
 ! Particle diameters
       DOUBLE PRECISION :: D_p0(DIM_M)
 

@@ -1,21 +1,9 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: WRITE_RES0                                              C
-!  Purpose: write out the initial restart records (namelist data)      C
-!                                                                      C
 !  Author: P. Nicoletti                               Date: 13-DEC-91  C
-!  Reviewer: P. Nicoletti, W. Rogers, M. Syamlal      Date: 24-JAN-92  C
 !                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-! TODO:                                                                C
-!    this file may need work for GHD which has internally incremented  C
-!    user mmax to mmax+1 to represent a mixture solids phase and the   C
-!    number of real soldis phases is now smax... consequently several  C
-!    physical properties will not be set at 'mmax' the mixture phase   C
+!  Purpose: write out the initial restart records (namelist data)      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 

@@ -68,7 +68,7 @@
 
       if (myPE.ne.PE_IO) return
 
-      MMAX_TOT = MMAX + DES_MMAX
+      MMAX_TOT = MMAX
 !
 !  Write Headers for .OUT file
 !
@@ -248,8 +248,8 @@
             ELSEIF(DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
                WRITE(UNIT_OUT,1450) 'Hertzian spring-dashpot'
 
-               DO M = 1, DES_MMAX
-                  DO N = M, DES_MMAX
+               DO M = 1, MMAX
+                  DO N = M, MMAX
                      IF(M==N) THEN
                        WRITE(UNIT_OUT,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
                      ELSE
@@ -263,8 +263,8 @@
             WRITE(UNIT_OUT,1451)
  1451 FORMAT(/10X,'Damping Coefficients:',T37,'Normal',7x,'Tangential')
 
-            DO M = 1, DES_MMAX
-               DO N = M, DES_MMAX
+            DO M = 1, MMAX
+               DO N = M, MMAX
                   IF(M==N) THEN
                      WRITE(UNIT_OUT,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
                   ELSE

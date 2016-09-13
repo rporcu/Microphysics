@@ -124,7 +124,7 @@
 
 ! calculate the average particle diameter and particle ratio
          tSUM = ZERO
-         DO lM = 1,DES_MMAX
+         DO lM = 1,MMAX
             IF(PHIS > ZERO) THEN
                tSUM = tSUM + DES_ROP_S(IJK,lM) / &
                   (PHIS*DES_RO_S(lM)*DES_D_p0(lM))

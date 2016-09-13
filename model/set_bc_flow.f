@@ -16,8 +16,8 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Total number of discrete solids.
-      use discretelement, only: DES_MMAX
+! Total number of solids.
+      use physprop, only: MMAX
 ! Flag: BC dimensions or Type is specified
       use bc, only: BC_DEFINED
 ! Use specified BC type
@@ -60,7 +60,7 @@
       CALL INIT_ERR_MSG("SET_BC_FLOW")
 
 ! Total number of solids.
-      MMAX_TOT = DES_MMAX
+      MMAX_TOT = MMAX
 
 ! Loop over each defined BC and check the user data.
       DO BCV = 1, DIMENSION_BC

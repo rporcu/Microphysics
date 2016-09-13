@@ -16,7 +16,7 @@
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
 ! Number of DEM solids phases.
-      USE discretelement, only: DES_MMAX
+      USE physprop, only: MMAX
 ! Flag indicating that the IC region is defined.
       USE ic, only: IC_DEFINED
 ! IC Region gas volume fraction.

@@ -128,7 +128,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of discrete solids phases
-      USE discretelement, only: DES_MMAX, DES_D_P0, DES_RO_s
+      USE physprop, only: D_P0, RO_s0
 ! Particle and wall normal and tangential spring constants
       USE discretelement, only: KN, KN_W
       USE discretelement, only: KT, KT_W
@@ -152,6 +152,7 @@
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
       use run, only: DT
+      use physprop, only: MMAX
 
 ! Parameter constatns.
       USE param1, only: ZERO, HALF, ONE, UNDEFINED
@@ -245,13 +246,13 @@
 
 
       LC = 0
-      DO M = 1, DES_MMAX
+      DO M = 1, MMAX
 
 ! Calculate the mass of a phase M particle.
-         MASS_M = (PI/6.d0)*(DES_D_P0(M)**3)*DES_RO_S(M)
+         MASS_M = (PI/6.d0)*(D_P0(M)**3)*RO_S0(M)
 
 ! Particle-Particle Collision Parameters ------------------------------>
-         DO L = M, DES_MMAX
+         DO L = M, MMAX
             LC = LC+1
 
 ! Check particle-particle normal restitution coefficient
@@ -267,7 +268,7 @@
             EN = DES_EN_INPUT(LC)
 
 ! Calculate masses used for collision calculations.
-            MASS_L = (PI/6.d0)*(DES_D_P0(L)**3)*DES_RO_S(L)
+            MASS_L = (PI/6.d0)*(D_P0(L)**3)*RO_S0(L)
             MASS_EFF = MASS_M*MASS_L/(MASS_M+MASS_L)
 
 ! Calculate the M-L normal and tangential damping coefficients.
@@ -323,7 +324,7 @@
 
 ! if following are assigned warn user they are discarded
       FLAG_WARN = .FALSE.
-      DO M = 1, DES_MMAX+DES_MMAX*(DES_MMAX-1)/2
+      DO M = 1, MMAX+MMAX*(MMAX-1)/2
          IF(DES_ET_INPUT(M) .NE. UNDEFINED) FLAG_WARN = .TRUE.
       ENDDO
       IF (FLAG_WARN) THEN
@@ -332,7 +333,7 @@
       ENDIF
 
       FLAG_WARN = .FALSE.
-      DO M = 1, DES_MMAX
+      DO M = 1, MMAX
          IF(DES_ET_WALL_INPUT(M) .NE. UNDEFINED) FLAG_WARN = .TRUE.
       ENDDO
       IF (FLAG_WARN)THEN
@@ -378,7 +379,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of discrete solids phases, diameters and densities
-      USE discretelement, only: DES_MMAX, DES_D_P0, DES_RO_s
+      use physprop, only: MMAX, D_P0, RO_s0
 ! User defined coefficients of restitution: Normal and Tangential
       USE discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
       USE discretelement, only: DES_ET_INPUT, DES_ET_WALL_INPUT
@@ -455,7 +456,7 @@
 
       G_MOD_WALL = 0.5d0*Ew_YOUNG/(1.d0+Vw_POISSON)
 
-      DO M=1,DES_MMAX
+      DO M=1,MMAX
 
          IF(E_YOUNG(M) == UNDEFINED) THEN
             MSG=''; WRITE(MSG,"('Phase ',I2,' Youngs modulus')") M
@@ -478,12 +479,12 @@
 
 
       LC = 0
-      DO M=1,DES_MMAX
+      DO M=1,MMAX
 ! Calculate the mass of a phase M particle.
-         MASS_M = (PI/6.d0)*(DES_D_P0(M)**3)*DES_RO_S(M)
+         MASS_M = (PI/6.d0)*(D_P0(M)**3)*RO_S0(M)
 
 ! Particle-Particle Collision Parameters ------------------------------>
-         DO L=M,DES_MMAX
+         DO L=M,MMAX
             LC = LC+1
 
 ! Check particle-particle normal restitution coefficient
@@ -513,12 +514,12 @@
 
 
 ! Calculate masses used for collision calculations.
-            MASS_L = (PI/6.d0)*(DES_D_P0(L)**3)*DES_RO_S(L)
+            MASS_L = (PI/6.d0)*(D_P0(L)**3)*RO_S0(L)
             MASS_EFF = (MASS_M*MASS_L)/(MASS_M+MASS_L)
             RED_MASS_EFF = (2.d0/7.d0)*MASS_EFF
 ! Calculate the effective radius, Youngs modulus, and shear modulus.
-            R_EFF = 0.5d0*(DES_D_P0(M)*DES_D_P0(L)/                    &
-               (DES_D_P0(M) + DES_D_P0(L)))
+            R_EFF = 0.5d0*(D_P0(M)*D_P0(L)/                    &
+               (D_P0(M) + D_P0(L)))
             E_EFF = E_YOUNG(M)*E_YOUNG(L) /                            &
                (E_YOUNG(M)*(1.d0 - V_POISSON(L)**2) +                  &
                 E_YOUNG(L)*(1.d0 - V_POISSON(M)**2))
@@ -588,7 +589,7 @@
          MASS_EFF = MASS_M
          RED_MASS_EFF = (2.d0/7.d0)*MASS_EFF
 ! Calculate the effective radius, Youngs modulus, and shear modulus.
-         R_EFF = 0.5d0*DES_D_P0(M)
+         R_EFF = 0.5d0*D_P0(M)
          E_EFF = E_YOUNG(M)*Ew_YOUNG /                                 &
             (E_YOUNG(M)*(1.d0-Vw_POISSON**2) +                         &
              Ew_YOUNG  *(1.d0-V_POISSON(M)**2))

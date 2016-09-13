@@ -10,10 +10,8 @@
 
 ! Global Varialbes:
 !---------------------------------------------------------------------//
-! Number of TFM solids
+! Number of solids
       use physprop, only: MMAX
-! Number of DES solids
-      use discretelement, only: DES_MMAX
 
 ! Domain indices.
       use geometry, only: IMAX3, JMAX3, KMAX3, IJKMAX3
@@ -55,7 +53,7 @@
 !......................................................................!
 
 ! The total number of solids.
-      DIMENSION_M = MMAX+DES_MMAX
+      DIMENSION_M = MMAX
 
 ! Number of gas phase species.
       DIMENSION_N_g = 1

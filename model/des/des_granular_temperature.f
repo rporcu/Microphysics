@@ -38,9 +38,9 @@
 !
       INTEGER :: M, LL
 ! counter for no. of particles in phase m in cell ijk
-      INTEGER :: NP_PHASE(DIMENSION_3, DES_MMAX)
+      INTEGER :: NP_PHASE(DIMENSION_3, MMAX)
 ! temporary variable for mth phase granular temperature in cell ijk
-      DOUBLE PRECISION :: TEMP(DIMENSION_3, DES_MMAX)
+      DOUBLE PRECISION :: TEMP(DIMENSION_3, MMAX)
 ! accounted for particles
       INTEGER :: PC
 ! squared particle velocity v.v
@@ -89,7 +89,7 @@
       DO IJK = IJKSTART3, IJKEND3
          IF(FLUID_AT(IJK)) THEN
 
-            DO M = 1,DES_MMAX
+            DO M = 1,MMAX
                IF (NP_PHASE(IJK,M) > 0 ) THEN
                   DES_THETA(IJK,M) = TEMP(IJK,M)/&
                      DBLE(DIMN*NP_PHASE(IJK,M))
@@ -227,7 +227,7 @@
 ! volume fraction of phase M in fluid cell
       DOUBLE PRECISION :: EP_SM
 ! tmp variables for calculations
-      DOUBLE PRECISION :: tmp_num(DES_MMAX), tmp_den(DES_MMAX)
+      DOUBLE PRECISION :: tmp_num(MMAX), tmp_den(MMAX)
 !-----------------------------------------------
 
 ! calculation of bed height following the formulation of Goldschmidt et
@@ -236,7 +236,7 @@
       tmp_den(:) = ZERO
       DO IJK = IJKSTART3, IJKEND3
          J = J_OF(IJK)
-         DO M = 1, DES_MMAX
+         DO M = 1, MMAX
             IF(DES_ROP_S(IJK,M) > ZERO) THEN
                hcell = 0.5d0*(YN(J)+YN(J-1))
                EP_SM = DES_ROP_S(IJK,M)/DES_RO_S(M)

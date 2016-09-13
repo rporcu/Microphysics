@@ -291,8 +291,7 @@
 ! Global phase index
       INTEGER :: BC_M
 
-! Shift the phase index by SMAX to refernece global variables.
-      BC_M = lM + SMAX
+      BC_M = lM
 
 ! The particle exists and is entering, not exiting nor a ghost particle
       IF (IS_GHOST(lNP)) THEN

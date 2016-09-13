@@ -20,9 +20,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of continuum solids phases.
-      use physprop, only: SMAX
-! Number of discrete (DEM) solids.
-      use discretelement, only: DES_MMAX
+      use physprop, only: MMAX
 ! User specified: Initial solids diameter.
       use physprop, only: D_P0
 
@@ -56,7 +54,7 @@
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_ALL")
 
 ! Set the number of solids phases to be checked.
-      MMAX_L = SMAX + DES_MMAX
+      MMAX_L = MMAX
 
 ! Check D_p0
       DO M = 1, MMAX_L

@@ -488,10 +488,8 @@
 ! IC Type: UNDEFINED or PATCH.
       use ic, only: IC_TYPE
 
-! Number of TFM solids phases.
-      use physprop, only: SMAX
-! Number of DEM or PIC solids.
-      use discretelement, only: DES_MMAX
+! Number of solids phases.
+      use physprop, only: MMAX
 ! Flag: Do not solve in specified direction.
       use geometry, only: NO_I, NO_J, NO_K
 
@@ -524,8 +522,6 @@
       DOUBLE PRECISION :: IC_ROs(1:DIM_M)
 ! Flag to skip checks on indexed solid phase.
       LOGICAL :: SKIP(1:DIM_M)
-! Total number of solids phases
-      INTEGER :: MMAX_TOT
 ! Flag for PATCH IC regions
       LOGICAL :: BASIC_IC
 !......................................................................!
@@ -536,20 +532,17 @@
 ! Patch ICs skip various checks.
       BASIC_IC = (IC_TYPE(ICV) /= 'PATCH')
 
-! The total number of solids phases (all models).
-      MMAX_TOT = SMAX + DES_MMAX
-
 ! Calculate EP_s from EP_g if there is only one solids phase.
-      IF(MMAX_TOT == 1 .AND. IC_EP_S(ICV,1) == UNDEFINED) THEN
+      IF(MMAX == 1 .AND. IC_EP_S(ICV,1) == UNDEFINED) THEN
          IF(IC_EP_g(ICV) /= UNDEFINED) IC_EP_S(ICV,1) = ONE-IC_EP_g(ICV)
       ENDIF
 
 ! Bulk density or solids volume fraction must be explicitly defined
 ! if there are more than one solids phase.
-      IF(MMAX_TOT > 1 .AND. .NOT.COMPARE(IC_EP_g(ICV),ONE)) THEN
+      IF(MMAX > 1 .AND. .NOT.COMPARE(IC_EP_g(ICV),ONE)) THEN
 ! IC_EP_g may be undefined for PATCH IC regions.
          IF(IC_EP_g(ICV) /= UNDEFINED) THEN
-            DO M = 1, MMAX_TOT
+            DO M = 1, MMAX
                IF(IC_ROP_S(ICV,M) == UNDEFINED .AND. &
                   IC_EP_S(ICV,M) == UNDEFINED) THEN
                   WRITE(ERR_MSG, 1400) M, ICV, 'IC_ROP_s and IC_EP_s'
@@ -559,7 +552,7 @@
 
 ! If IC_EP_G is undefined, then ROP_s and EP_s should be too.
          ELSE
-            DO M = 1, MMAX_TOT
+            DO M = 1, MMAX
                IF(IC_ROP_S(ICV,M) /= UNDEFINED .AND. &
                   IC_EP_S(ICV,M) /= UNDEFINED) THEN
                   WRITE(ERR_MSG, 1400) M, ICV, 'IC_ROP_s and IC_EP_s'
@@ -574,14 +567,14 @@
          'Please correct the mfix.dat file.')
 
 ! Determine which solids phases are present.
-      DO M = 1, MMAX_TOT
+      DO M = 1, MMAX
          SKIP(M)=(IC_ROP_S(ICV,M)==UNDEFINED.OR.IC_ROP_S(ICV,M)==ZERO) &
             .AND.(IC_EP_S(ICV,M)==UNDEFINED .OR.IC_EP_S(ICV,M)==ZERO)
       ENDDO
 
-      IF(MMAX_TOT == 1 .AND. IC_EP_g(ICV)/=ONE) SKIP(1) = .FALSE.
+      IF(MMAX == 1 .AND. IC_EP_g(ICV)/=ONE) SKIP(1) = .FALSE.
 
-      DO M=1, MMAX_TOT
+      DO M=1, MMAX
 
 ! check that solids phase m velocity components are initialized
          IF(BASIC_IC) THEN
@@ -617,13 +610,13 @@
 
          IC_ROs(M) = RO_s0(M)
 
-      ENDDO   ! end loop over (m=1,smax)
+      ENDDO   ! end loop over (m=1)
 
 
 ! Initialize the sum of the total volume fraction.
       SUM_EP = IC_EP_G(ICV)
 
-      DO M=1, MMAX_TOT
+      DO M=1, MMAX
 
 ! Clear out both varaibles if this phase is skipped.
          IF(BASIC_IC .AND. SKIP(M)) THEN

@@ -71,8 +71,8 @@
 
       INTEGER :: COUNT_NODES_OUTSIDE, COUNT_NODES_INSIDE, &
                  COUNT_NODES_INSIDE_MAX
-      double precision :: RESID_ROPS(DES_MMAX), &
-                          RESID_VEL(3, DES_MMAX)
+      double precision :: RESID_ROPS(MMAX), &
+                          RESID_VEL(3, MMAX)
       double precision :: NORM_FACTOR
 !Handan Liu added on Jan 17 2013
           DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp
@@ -205,8 +205,8 @@
             IF(COUNT_NODES_INSIDE.LT.COUNT_NODES_INSIDE_MAX) THEN
 
 ! initializing
-               RESID_ROPS(1:DES_MMAX) = ZERO
-               RESID_VEL(:, 1:DES_MMAX) = ZERO
+               RESID_ROPS(1:MMAX) = ZERO
+               RESID_VEL(:, 1:MMAX) = ZERO
 
 ! Convention used to number node numbers
 ! i=1, j=2           i=2, j=2
@@ -235,15 +235,15 @@
                   IJK2 = funijk(II, JJ, KK)
 
                   IF(SCALAR_NODE_ATWALL(IJK2)) THEN
-                     RESID_ROPS(1:DES_MMAX) = RESID_ROPS(1:DES_MMAX) + &
-                        DES_ROPS_NODE(IJK2,1:DES_MMAX)
+                     RESID_ROPS(1:MMAX) = RESID_ROPS(1:MMAX) + &
+                        DES_ROPS_NODE(IJK2,1:MMAX)
 
-                     DES_ROPS_NODE(IJK2,1:DES_MMAX) = ZERO
+                     DES_ROPS_NODE(IJK2,1:MMAX) = ZERO
                      DO IDIM = 1, merge(2,3,NO_K)
-                        RESID_VEL(IDIM, 1:DES_MMAX) =                  &
-                            RESID_VEL(IDIM, 1:DES_MMAX) +              &
-                           DES_VEL_NODE(IJK2,IDIM, 1:DES_MMAX)
-                        DES_VEL_NODE(IJK2,IDIM, 1:DES_MMAX) = ZERO
+                        RESID_VEL(IDIM, 1:MMAX) =                  &
+                            RESID_VEL(IDIM, 1:MMAX) +              &
+                           DES_VEL_NODE(IJK2,IDIM, 1:MMAX)
+                        DES_VEL_NODE(IJK2,IDIM, 1:MMAX) = ZERO
                      ENDDO
                   ENDIF
                ENDDO
@@ -258,13 +258,13 @@
                   IJK2 = funijk(II, JJ, KK)
 
                   IF(.NOT.SCALAR_NODE_ATWALL(IJK2)) THEN
-                     DES_ROPS_NODE(IJK2,1:DES_MMAX) =                  &
-                        DES_ROPS_NODE(IJK2,1:DES_MMAX) +               &
-                        RESID_ROPS(1:DES_MMAX)*NORM_FACTOR
+                     DES_ROPS_NODE(IJK2,1:MMAX) =                  &
+                        DES_ROPS_NODE(IJK2,1:MMAX) +               &
+                        RESID_ROPS(1:MMAX)*NORM_FACTOR
                      DO IDIM = 1, merge(2,3,NO_K)
-                        DES_VEL_NODE(IJK2,IDIM, 1:DES_MMAX) =          &
-                           DES_VEL_NODE(IJK2,IDIM, 1:DES_MMAX) +       &
-                           RESID_VEL(IDIM, 1:DES_MMAX)*NORM_FACTOR
+                        DES_VEL_NODE(IJK2,IDIM, 1:MMAX) =          &
+                           DES_VEL_NODE(IJK2,IDIM, 1:MMAX) +       &
+                           RESID_VEL(IDIM, 1:MMAX)*NORM_FACTOR
                      ENDDO
                   ENDIF
 
@@ -309,7 +309,7 @@
 !---------------------------------------------------------------------//
 !$omp parallel do default(none) collapse (3)                           &
 !$omp shared(KSTART2, KEND1, JSTART2, JEND1, ISTART2, IEND1, DO_K, VOL,&
-!$omp   DEAD_CELL_AT, FUNIJK_MAP_C, VOL_SURR, DES_MMAX, DES_ROPS_NODE, &
+!$omp   DEAD_CELL_AT, FUNIJK_MAP_C, VOL_SURR, MMAX, DES_ROPS_NODE, &
 !$omp   DES_VEL_NODE)                                                  &
 !$omp private(I, J, K, IJK, M, II, JJ, KK, IJK2, DES_ROP_DENSITY,      &
 !$omp   DES_VEL_DENSITY)                                               &
@@ -322,7 +322,7 @@
          if (VOL_SURR(IJK).eq.ZERO) CYCLE ! no FLUID_AT any of the stencil points have
 
 ! looping over stencil points (NODE VALUES)
-         DO M = 1, DES_MMAX
+         DO M = 1, MMAX
 
             DES_ROP_DENSITY = DES_ROPS_NODE(IJK, M)/VOL_SURR(IJK)
             DES_VEL_DENSITY(:) = DES_VEL_NODE(IJK, :, M)/VOL_SURR(IJK)
@@ -356,12 +356,12 @@
 
 
 !$omp parallel do default(none) private(IJK, M)                        &
-!$omp shared(IJKSTART3, IJKEND3, DO_K, DES_MMAX, DES_ROP_s, DES_U_S,   &
+!$omp shared(IJKSTART3, IJKEND3, DO_K, MMAX, DES_ROP_s, DES_U_S,   &
 !$omp   DES_V_S, DES_W_S, VOL)
       DO IJK = IJKSTART3, IJKEND3
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
-         DO M = 1, DES_MMAX
+         DO M = 1, MMAX
             IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
                DES_U_S(IJK, M) = DES_U_S(IJK,M)/DES_ROP_S(IJK, M)
                DES_V_S(IJK, M) = DES_V_S(IJK,M)/DES_ROP_S(IJK, M)
@@ -371,7 +371,7 @@
                DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL(IJK)
 
             ENDIF
-         ENDDO   ! end loop over M=1,DES_MMAX
+         ENDDO   ! end loop over M=1,MMAX
       ENDDO  ! end loop over IJK=ijkstart3,ijkend3
 !omp end parallel do
 
@@ -394,7 +394,7 @@
 
 ! It is important to check both FLUID_AT and IS_ON_MYPE_WOBND.
             IF(IS_ON_myPE_wobnd(I,J,K)) MASS_SOL2 = MASS_SOL2 +        &
-               sum(DES_ROP_S(IJK,1:DES_MMAX))*VOL(IJK)
+               sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
          ENDDO
 
 

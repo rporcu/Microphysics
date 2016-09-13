@@ -297,8 +297,10 @@
 !---------------------------------------------------------------------//
       use bc, only: bc_type, bc_ep_g
       use fldvar, only: rop_g, ro_g, ep_g
-      use discretelement, only: discrete_element, des_mmax
+      use discretelement, only: discrete_element
       use discretelement, only: des_rop_s, des_ro_s
+      use physprop, only: mmax
+
 ! Global parameters
 !---------------------------------------------------------------------//
       use param, only: dimension_m
@@ -343,7 +345,7 @@
 ! discrete element portion of the simulation (set_bc1 is called once
 ! before the initial setup).
       IF (DISCRETE_ELEMENT .AND. ALLOCATED(DES_ROP_S)) THEN
-         DO M = 1, DES_MMAX
+         DO M = 1, MMAX
 ! unlike in the two fluid model, in the discrete element model it is
 ! possible to actually calculate the bulk density in a flow boundary
 ! cell. Currently, however, such calculations are not strictly enforced.

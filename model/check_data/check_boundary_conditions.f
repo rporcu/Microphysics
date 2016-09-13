@@ -17,9 +17,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Total number of (actual) continuum solids.
-      use physprop, only: SMAX
-! Total number of discrete solids.
-      use discretelement, only: DES_MMAX
+      use physprop, only: MMAX
 ! Flag: BC dimensions or Type is specified
       use bc, only: BC_DEFINED
 ! Use specified BC type
@@ -55,8 +53,6 @@
 !---------------------------------------------------------------------//
 ! Loop counter for BCs
       INTEGER :: BCV
-! Total number of solids phases (continuum + discrete)
-      INTEGER :: MMAX_TOT
 ! Flag to skip checks on indexed solid phase.
       LOGICAL :: SKIP(1:DIM_M)
 !......................................................................!
@@ -68,9 +64,6 @@
 ! Determine which BCs are DEFINED
       CALL CHECK_BC_GEOMETRY
 
-! Total number of solids.
-      MMAX_TOT = SMAX + DES_MMAX
-
 ! Loop over each defined BC and check the user data.
       DO BCV = 1, DIMENSION_BC
 
@@ -80,46 +73,46 @@
             SKIP=(BC_ROP_S(BCV,:)==UNDEFINED.OR.BC_ROP_S(BCV,:)==ZERO) &
                .AND.(BC_EP_S(BCV,:)==UNDEFINED.OR.BC_EP_S(BCV,:)==ZERO)
 
-            IF(MMAX_TOT == 1 .AND. BC_EP_g(BCV)/=ONE) SKIP(1) = .FALSE.
+            IF(MMAX == 1 .AND. BC_EP_g(BCV)/=ONE) SKIP(1) = .FALSE.
 
             SELECT CASE (TRIM(BC_TYPE(BCV)))
 
             CASE ('MASS_INFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV)
-               CALL CHECK_BC_MASS_INFLOW(MMAX_TOT, SKIP, BCV)
-               CALL CHECK_BC_INFLOW(MMAX_TOT,SKIP,BCV)
+               CALL CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
+               CALL CHECK_BC_INFLOW(MMAX,SKIP,BCV)
 
             CASE ('P_INFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV)
-               CALL CHECK_BC_P_INFLOW(MMAX_TOT, SKIP, BCV)
-               CALL CHECK_BC_INFLOW(MMAX_TOT, SKIP, BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX_TOT, BCV)
+               CALL CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
+               CALL CHECK_BC_INFLOW(MMAX, SKIP, BCV)
+               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('OUTFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX_TOT, BCV)
+               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('MASS_OUTFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV)
-               CALL CHECK_BC_MASS_OUTFLOW(MMAX_TOT, BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX_TOT, BCV)
+               CALL CHECK_BC_MASS_OUTFLOW(MMAX, BCV)
+               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('P_OUTFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV)
-               CALL CHECK_BC_P_OUTFLOW(MMAX_TOT, BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX_TOT, BCV)
+               CALL CHECK_BC_P_OUTFLOW(MMAX, BCV)
+               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('FREE_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV)
-               CALL CHECK_BC_WALLS(MMAX_TOT, SKIP, BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             CASE ('NO_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV)
-               CALL CHECK_BC_WALLS(MMAX_TOT, SKIP, BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             CASE ('PAR_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV)
-               CALL CHECK_BC_WALLS(MMAX_TOT, SKIP, BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             END SELECT
 
@@ -132,7 +125,7 @@
          ENDIF
       ENDDO
 ! Additional checks needed for DEM boundaries
-      IF(DEM_SOLIDS) CALL CHECK_BC_DEM(MMAX_TOT)
+      IF(DEM_SOLIDS) CALL CHECK_BC_DEM(MMAX)
 
 ! Cleanup and exit.
       CALL FINL_ERR_MSG

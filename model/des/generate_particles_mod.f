@@ -89,8 +89,6 @@
       use discretelement, only: DIMN
 ! Number of particles in the system (current)
       use discretelement, only: PIP
-! Number of DEM solids phases.
-      use discretelement, only: DES_MMAX
 ! Flag to use _OLD variables
       use discretelement, only: DO_OLD
 ! Angular velocity
@@ -205,7 +203,7 @@
       DOM_VOL = DOML(1)*DOML(2)*DOML(3)
 
       rPARTS=0
-      DO M=MMAX+1,MMAX+DES_MMAX
+      DO M=1,MMAX
          IF(SOLIDS_MODEL(M) == 'DEM') THEN
 ! Number of particles for phase M
             rPARTS(M) = &
@@ -283,13 +281,13 @@
             EXIT JJ_LP
 ! Find the next phase that needs to be seeded
          ELSEIF(pCOUNT(M) > int(rPARTS(M))) THEN
-            MM_LP: DO MM=M+1,MMAX+DES_MMAX
+            MM_LP: DO MM=M+1,MMAX
                IF(rPARTS(MM) > 0.0) THEN
                   M=MM
                   EXIT MM_LP
                ENDIF
             ENDDO MM_LP
-            IF(M > MMAX+DES_MMAX) EXIT JJ_LP
+            IF(M > MMAX) EXIT JJ_LP
          ENDIF
 
          pCOUNT(M) = pCOUNT(M) + 1
@@ -363,7 +361,7 @@
       WRITE(ERR_MSG,2000) ICV
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
-      DO M=MMAX+1, MMAX+DES_MMAX
+      DO M=1, MMAX
          IF(SOLIDS_DATA(M) < SMALL_NUMBER) CYCLE
          WRITE(ERR_MSG,2010) M, int(SOLIDS_DATA(M)), IC_EP_S(ICV,M),   &
             (dble(SOLIDS_DATA(M))*(Pi/6.0d0)*D_P0(M)**3)/SOLIDS_DATA(0)

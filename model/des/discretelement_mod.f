@@ -270,8 +270,6 @@
       DOUBLE PRECISION DES_D_P0 (DIM_M)
 ! 'solids phase' particle densities
       DOUBLE PRECISION DES_RO_s (DIM_M)
-! number of 'solids phases'
-      INTEGER DES_MMAX
 
 ! Old and new particle positions, velocities (translational and
 ! rotational)
@@ -368,12 +366,10 @@
 ! An intermediate array used in calculation of mean solids velocity
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
       DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE ::DES_VEL_NODE
-                        !(DIMENSION_3,3,DES_MMAX)
 
 ! An intermediate array used in calculation of solids volume fraction
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE ::  DES_ROPS_NODE
-                        !(DIMENSION_3,DES_MMAX)
 
       DOUBLE PRECISION, DIMENSION(:,:,:), POINTER :: weightp
 
@@ -411,22 +407,18 @@
 
 ! Variable to track pressure force in computational fluid cell (ijk)
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: P_FORCE
-                        !(DIMENSION_3,DES_MMAX)
 
 ! Bulk density of particles in fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S,&
                                                        DES_ROP_SO
-                        !(DIMENSION_3,DES_MMAX)
 
 ! Volume averaged solids velocity in a fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_U_s
-                        !(DIMENSION_3,DES_MMAX)
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_V_s
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_W_s
 
 ! Granular temperature in a fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_THETA
-                        !(DIMENSION_3,DES_MMAX)
 
 ! Global average velocity: obtained by averaging over all the particles
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_VEL_AVG
@@ -448,7 +440,6 @@
       LOGICAL DES_CALC_BEDHEIGHT
 ! Used to track bed height of solids phase M
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: bed_height
-                       !(DES_MMAX)
 
 ! MAX velocity of particles in each direction
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_VEL_MAX

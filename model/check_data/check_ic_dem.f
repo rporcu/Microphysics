@@ -15,13 +15,10 @@
       USE discretelement, only : gener_part_config
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
-! Number of DEM solids phases.
-      USE discretelement, only: DES_MMAX
 ! DEM solid phase diameters and densities.
       USE discretelement, only: DES_D_p0
 
-      USE discretelement, only: DES_CONTINUUM_HYBRID
-
+      use physprop, only: MMAX
 ! direction wise spans of the domain and grid spacing in each direction
       Use geometry, only: zlength
 ! Use the error manager for posting error messages.
@@ -43,7 +40,7 @@
 ! then dz(1) is set to zlength (and vice versa).  If both are defined
 ! they must be equal.
       IF(DIMN.EQ.2) THEN
-         IF (DES_MMAX.EQ.1) THEN
+         IF (MMAX.EQ.1) THEN
 ! Warn the user if the domain depth is not equal to the particle
 ! diameter as it may cause problems for coupled simulations.
 ! The user should also be aware of this when interpreting
@@ -73,18 +70,6 @@
       'number of particles in the 2D simulation when ',&
       'GENER_PART_CONFIG is T and DIMN = 2.')
 
-
-      IF (Gener_part_config.and.DES_CONTINUUM_HYBRID) THEN
-         WRITE(ERR_MSG, 999)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 999  format('Error # 999: Gener_part_config set to', &
-      ' true for DES_continuum hybrid', /, &
-      ' This is not allowed, specify the initial particle', &
-      ' configuration explicitly', /, &
-      ' See MFIX readme', /,  &
-      ' Please correct the data file.')
 
       CALL FINL_ERR_MSG
 
