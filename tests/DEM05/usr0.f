@@ -13,24 +13,36 @@
       SUBROUTINE USR0
 
       use usr
-      use discretelement, only: PIP
-      use discretelement, only: VEL => DES_VEL_NEW
+      use discretelement, only: PARTICLES
+      use discretelement, only: DES_VEL_NEW
       use constant, only: PI
+      use compar, only: myPE, PE_IO
 
       IMPLICIT NONE
 
       INTEGER :: NP
+      double precision :: lTMP(62,3)
 
-      IF(PIP /= 93) THEN
+      IF(PARTICLES /= 93) THEN
          write(*,"(3x, 'invalid setup for test case')")
          call mfix_exit(0)
       ENDIF
 
+      INIT_VEL_T = 0.0d0
+      INIT_ANGLE = 0.0d0
+
+! Collect initial translational velocity to IO processor.
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(1,:), lTMP(:,1))
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(2,:), lTMP(:,2))
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(3,:), lTMP(:,3))
+
 ! Store the collision angle and initial tangential velocity
-      DO NP=1, 62
-         INIT_VEL_T(NP) = sqrt(VEL(1,NP)**2 + VEL(3,NP)**2)
-         INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/VEL(2,NP)))*180.0/PI
-      ENDDO
+      IF(myPE == PE_IO) THEN
+         DO NP=1, 62
+            INIT_VEL_T(NP) = sqrt(lTMP(NP,1)**2 + lTMP(NP,3)**2)
+            INIT_ANGLE(NP) = abs(atan(INIT_VEL_T(NP)/lTMP(NP,2)))*180.0/PI
+         ENDDO
+      ENDIF
 
       return
       END SUBROUTINE USR0
