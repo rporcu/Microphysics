@@ -32,8 +32,8 @@
 
       use run, only: DESCRIPTION
       use discretelement, only: DES_INTG_METHOD
-!      use discretelement, only: MEW, MEW_W
       use discretelement
+      use physprop, only: MMAX
 
       use param1, only: UNDEFINED
 
@@ -78,8 +78,8 @@
       ELSEIF(DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
          WRITE(fUNIT,1450) 'HERTZIAN SPRING-DASHPOT'
 
-         DO M = 1, DES_MMAX
-            DO N = M, DES_MMAX
+         DO M = 1, MMAX
+            DO N = M, MMAX
                IF(M==N) THEN
                  WRITE(fUNIT,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
                ELSE
@@ -93,8 +93,8 @@
       WRITE(fUNIT,1451)
  1451 FORMAT(/4X,'Damping Coefficients:',T29,'Normal',7x,'Tangential')
 
-      DO M = 1, DES_MMAX
-         DO N = M, DES_MMAX
+      DO M = 1, MMAX
+         DO N = M, MMAX
             IF(M==N) THEN
                WRITE(fUNIT,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
             ELSE
