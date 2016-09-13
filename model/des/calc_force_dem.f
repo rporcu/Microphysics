@@ -70,13 +70,13 @@
 
 !$omp parallel default(none) private(pos,rad,cc,cc_start,cc_end,ll,i,  &
 !$omp    overlap_n,vrel_t,v_rel_trans_norm,sqrt_overlap,dist,r_lm,     &
-!$omp    kn_des,kt_des,hert_kn,hert_kt,phasell,phasei,etan_des,        &
+!$omp    kn_des,kt_des,phasell,phasei,etan_des,        &
 !$omp    etat_des,fn,ft,overlap_t,tangent,mag_overlap_t,               &
 !$omp                                  dist_mag,NORMAL,ftmd,fnmd,      &
 !$omp    dist_cl, dist_ci, fc_tmp, tow_tmp, tow_force)                 &
 !$omp shared(max_pip,neighbors,neighbor_index,des_pos_new,des_radius,  &
 !$omp    des_coll_model_enum,kn,kt,pft_neighbor,pijk,neigh_max,        &
-!$omp    des_etan,des_etat,mew, dtsolid,   &
+!$omp    des_etan,des_etat,mew, dtsolid, hert_kn, hert_kt,             &
 !$omp    tow, fc, grav_mag, pmass)
 
 !$omp do
