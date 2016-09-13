@@ -339,7 +339,7 @@ FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f)
 add_executable(mfix model/mfix.f ${USR_OVERRIDES})
 add_library(model STATIC ${SOURCES})
 
-set_source_files_properties(${SOURCES} ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
+set_source_files_properties(model/mfix.f ${SOURCES} ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
 set_target_properties(mfix PROPERTIES Fortran_FORMAT "FREE")
 set_target_properties(model PROPERTIES Fortran_FORMAT "FREE")
@@ -347,6 +347,23 @@ set_target_properties(model PROPERTIES Fortran_FORMAT "FREE")
 target_link_libraries(mfix model)
 
 enable_testing()
+
+set(TESTS
+  benchmarks/DEM01
+  tests/DEM01
+  tests/DEM02
+  tests/DEM03
+  tests/DEM04
+  tests/DEM05
+  tests/DEM06
+  tests/DEM07
+  tests/FLD01
+  tests/FLD02
+  # FLD03
+  # box3d
+  # cyclone
+  # fluidbed_DES
+  )
 
 foreach( testdir ${TESTS})
 
@@ -356,7 +373,7 @@ foreach( testdir ${TESTS})
   add_executable(mfix_${testname} EXCLUDE_FROM_ALL model/mfix.f ${USR_OVERRIDES})
 
   set_target_properties(mfix_${testname} PROPERTIES Fortran_FORMAT "FREE")
-  set_source_files_properties(${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
+  set_source_files_properties(model/mfix.f ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
 
   add_test(build_${testname} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${testname})
 
@@ -364,7 +381,7 @@ foreach( testdir ${TESTS})
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${testdir}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${testname}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${testdir})
 
-  set_tests_properties ( ${testname} PROPERTIES DEPENDS buildtest_${testname})
+  set_tests_properties ( ${testname} PROPERTIES DEPENDS build_${testname})
 
   target_link_libraries(mfix_${testname} model)
 endforeach( testdir ${TESTS})

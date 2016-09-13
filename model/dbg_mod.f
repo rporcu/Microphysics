@@ -207,10 +207,10 @@
             write(*,"(5x,'I start/end 1:',2(2x,I3))") istart1, iend1
             write(*,"(5x,'J start/end 1:',2(2x,I3))") jstart1, jend1
             if(do_K)write(*,"(5x,'K start/end 1:',2(2x,I3))") kstart1, kend1
-            CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
-         else
-            CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
          endif
+#ifdef MPI
+            CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
+#endif
       enddo
 
 ! Unlock dbg routines.
@@ -316,7 +316,9 @@
       ENDIF
 
 ! Everyone waits for the file to open.
+#ifdef MPI
       CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
+#endif
 
       do K = kLB, kUB
       do I = iLB, iUB
@@ -360,7 +362,9 @@
          endif
 
 ! Everyone waits for the owner to complete this cycle.
+#ifdef MPI
          CALL MPI_Barrier(MPI_COMM_WORLD, mpierr)
+#endif
 
       enddo
       enddo
@@ -586,10 +590,10 @@
          if(myPE == PE_IO) then
             if(lFlush) write(*,"(' ')")
             write(*,"(3x,A)") trim(lMsg)
-            CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
-         else
-            CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
          endif
+#ifdef MPI
+         CALL MPI_Barrier(MPI_COMM_WORLD,mpierr)
+#endif
       endif
 
       RETURN

@@ -2026,7 +2026,9 @@
 !
 
 !      print*,'Entering test',MyPE
+#ifdef MPI
       CALL MPI_BARRIER(MPI_COMM_WORLD,mpierr)
+#endif
 
 ! Each procesor waits for its turn to find cells where to add a point source and updates the list of point sources
 
@@ -2098,7 +2100,10 @@
 
          endif  ! Work done by each processor in same order as rank
 
+#ifdef MPI
          CALL MPI_BARRIER(MPI_COMM_WORLD,mpierr)
+#endif
+
          call bcast(POINT_SOURCE,iproc)
          call bcast(PS_DEFINED,iproc)
          call bcast(PS_I_w,iproc)
@@ -2123,7 +2128,10 @@
 
       enddo
 
+#ifdef MPI
       CALL MPI_BARRIER(MPI_COMM_WORLD,mpierr)
+#endif
+
 !      print*,'Leaving test',MyPE
 !      call mfix_exit(myPE)
 

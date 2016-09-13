@@ -233,7 +233,9 @@
 
       END SELECT
 
-      call MPI_Barrier(MPI_COMM_WORLD,mpierr)
+#ifdef MPI
+      CALL MPI_BARRIER(MPI_COMM_WORLD,mpierr)
+#endif
 
       IF (DT_TMP /= UNDEFINED) THEN
          DT = MAX(DT_MIN,MIN(DT_MAX,DT))
