@@ -111,7 +111,7 @@
       enddo
       close(fUnit)
 
- 1000 Format(2/4x,'Position',8x,'Ghia',11x'MFIX')
+ 1000 Format(2/4x,'Position',8x,'Ghia',11x,'MFIX')
  1100 Format(3(2x,es13.6))
 
       END SUBROUTINE MFIX_to_GHIA
