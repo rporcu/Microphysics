@@ -31,7 +31,7 @@
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
-      USE fldvar, only: u_g, w_g, w_go
+      USE fldvar, only: w_g, w_go
 
       USE fun_avg, only: avg_x, avg_z, avg_y
       USE fun_avg, only: avg_x_h, avg_z_h
@@ -42,17 +42,13 @@
       USE functions, only: zmax
       USE geometry, only: kmax1, cyclic_z_pd
       USE geometry, only: vol, vol_w
-      USE geometry, only: axy, ayz, axz, ayz_w
-      USE geometry, only: ox, ox_e, dy, dz, odx_e
-
+      USE geometry, only: axy
 
       USE indices, only: i_of, j_of, k_of
-      USE indices, only: ip1, im1, jm1, kp1
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero, one, half
-      USE fldvar, only: mu_g
       USE run, only: momentum_z_eq
       USE run, only: odt
       USE scales, only: p_scale
@@ -100,9 +96,6 @@
       DOUBLE PRECISION Ghd_drag, avgRop
 ! Source terms for HYS drag relation
       DOUBLE PRECISION HYS_drag, avgDrag
-! virtual (added) mass
-      DOUBLE PRECISION :: ROP_MA, U_se, Usw, Ust, Vsb, Vst, &
-                          Wse, Wsw, Wsn, Wss, Wst, Wsb
 ! jackson terms: local stress tensor quantity
       DOUBLE PRECISION :: ltau_w_g
 !---------------------------------------------------------------------//
@@ -305,8 +298,6 @@
                  IM, JM, IJKB, IJKM, IJKP
 ! Phase index
       INTEGER :: M
-! Turbulent shear at walls
-      DOUBLE PRECISION W_F_Slip
 
 !-----------------------------------------------
 

@@ -31,7 +31,7 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: IJK, M, I, J
+      INTEGER :: IJK
 !-----------------------------------------------
 
 ! First, initialize certain transport coefficients, physical
@@ -60,7 +60,6 @@
          ENDIF
 
       ENDDO
-
 
       RETURN
       END SUBROUTINE SET_CONSTPROP

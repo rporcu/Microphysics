@@ -31,7 +31,7 @@
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
-      USE fldvar, only: u_g, w_g, u_go
+      USE fldvar, only: u_g, u_go
 
       USE fun_avg, only: avg_x, avg_z, avg_y
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
@@ -39,18 +39,16 @@
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: east_of, west_of
       USE functions, only: zmax
-      USE geometry, only: imax1, cyclic_x_pd, do_k
+      USE geometry, only: imax1, cyclic_x_pd
       USE geometry, only: vol, vol_u
-      USE geometry, only: axy, ayz, axz, ox_e
+      USE geometry, only: ayz
 
 
       USE indices, only: i_of, j_of, k_of
-      USE indices, only: ip1, jm1, km1
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero, one, half
-      USE fldvar, only: mu_g
       USE run, only: momentum_x_eq
       USE run, only: odt
       USE scales, only: p_scale
@@ -294,8 +292,6 @@
                   JM, KM, IJKW, IMJK, IP, IPJK
 ! Phase index
       INTEGER :: M
-! Turbulent shear stress
-      DOUBLE PRECISION  :: W_F_Slip
 !-----------------------------------------------
 
 ! Set reference phase to gas

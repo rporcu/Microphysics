@@ -477,7 +477,6 @@
         delp_z = delp_xyz
       ENDIF
 
-
       RETURN
 
 5400 FORMAT(/1X,70('*')//' From: GoalSeekMassFlux',/&

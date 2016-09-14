@@ -25,7 +25,6 @@
       USE geometry
       USE indices
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
-      USE output, only: RES_DT
       USE param
       USE param1
       USE physprop
@@ -36,7 +35,7 @@
       USE utilities, ONLY: MAX_VEL_INLET
       USE vtk
       USE vtp
-      use output, only: RES_DT, NLOG
+      use output, only: RES_DT
       use adjust_dt
 
       IMPLICIT NONE
@@ -47,20 +46,12 @@
 ! state conditions.
       LOGICAL :: FINISH
 
-! Loop indices
-      INTEGER :: L, M
 ! Error index
       INTEGER :: IER
 ! Number of iterations
       INTEGER :: NIT, NIT_TOTAL
 ! used for activating check_data_30
       INTEGER :: NCHECK, DNCHECK
-! dummy logical variable for initializing adjust_dt
-      LOGICAL :: dummy
-
-! AEOLUS : stop trigger mechanism to terminate MFIX normally before
-! batch queue terminates
-      DOUBLE PRECISION :: CPU_STOP
 
 ! Flag to save results and cleanly exit.
       LOGICAL :: EXIT_SIGNAL = .FALSE.

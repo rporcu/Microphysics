@@ -43,13 +43,7 @@
 ! MPI-Domain decompoint and rank flags.
       use compar, only: myPE
 
-
       IMPLICIT NONE
-
-! Local Variables:
-!---------------------------------------------------------------------//
-! Loop index
-      INTEGER :: M, MMAX_TOT
 !......................................................................!
 
 ! The total number of solids.
@@ -82,4 +76,3 @@
 
       RETURN
       END SUBROUTINE SET_PARAMETERS
-

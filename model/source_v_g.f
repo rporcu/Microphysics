@@ -37,19 +37,15 @@
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: north_of, south_of
       USE functions, only: zmax
-      USE geometry, only: jmax1, cyclic_y_pd, do_k, xlength
+      USE geometry, only: jmax1, cyclic_y_pd
       USE geometry, only: vol, vol_v
-      USE geometry, only: axy, ayz, axz
-      USE geometry, only: ox, odx_e
-
+      USE geometry, only: axz
 
       USE indices, only: i_of, j_of, k_of
-      USE indices, only: ip1, im1, kp1
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3, dimension_m
       USE param1, only: zero, one, half
-      USE fldvar, only: mu_g
       USE run, only: momentum_y_eq
       USE run, only: odt
       USE scales, only: p_scale
@@ -286,8 +282,6 @@
                  IM, KM, IJKS, IJMK, IJPK
 ! Phase index
       INTEGER :: M
-! Turbulent shear stress
-      DOUBLE PRECISION :: W_F_Slip
 !-----------------------------------------------
 
 ! Set reference phase to gas

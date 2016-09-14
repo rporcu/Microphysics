@@ -22,7 +22,7 @@
 
       implicit none
 
-      INTEGER :: IJK, I, J, K, M, N
+      INTEGER :: IJK, I, J, K
 
       INTEGER PSV
 
@@ -41,7 +41,6 @@
       L50: do PSV = 1, DIMENSION_PS
 
          IF(.NOT.PS_DEFINED(PSV)) cycle L50
-
 
 ! Calculate the velocity magnitude and normalize the axial components.
          CALL CALC_PS_VEL_MAG(PS_VEL_MAG_g(PSV), PS_U_g(PSV),          &
@@ -208,7 +207,7 @@
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
 
-      INTEGER :: IJK, I, J, K, M, N
+      INTEGER :: IJK, I, J, K, M
 
       INTEGER :: lc1
 
@@ -305,4 +304,3 @@
       if(allocated(gFlags_i)) deallocate(gFlags_i)
 
       END SUBROUTINE DEBUG_PS
-
