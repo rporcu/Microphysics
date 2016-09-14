@@ -358,8 +358,8 @@ CONTAINS
            ENDIF
 
            IF (DO_OLD) THEN
-              call real_grow2(DES_ACC_OLD,MAX_PIP)
-              call real_grow2(ROT_ACC_OLD,MAX_PIP)
+              call real_grow2_reverse(DES_ACC_OLD,MAX_PIP)
+              call real_grow2_reverse(ROT_ACC_OLD,MAX_PIP)
            ENDIF
 
            IF(DES_USR_VAR_SIZE > 0) &
