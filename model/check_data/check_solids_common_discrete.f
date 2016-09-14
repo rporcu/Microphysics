@@ -169,10 +169,6 @@
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
 
 
- 1100 FORMAT('Error: 1100: The DES model only supports ',        &
-         'CARTESIAN coordinates.')
-
-
 ! Check dimension. This is redundant with check_data_03.
       IF(NO_I .OR. NO_J) THEN
          WRITE(ERR_MSG, 1200)

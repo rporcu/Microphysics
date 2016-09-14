@@ -162,7 +162,7 @@
 !                      I, J, and K
       INTEGER ::  I, J, K , IJK, IJK2
 
-      CHARACTER(LEN=9) :: BCT
+      INTEGER :: BCT
 !-----------------------------------------------
 
       DO BCV = 1, DIMENSION_BC
@@ -171,7 +171,7 @@
             BC_AREA(BCV) = ZERO
             BC_VOL(BCV) = ZERO
 
-            IF(BC_TYPE(BCV)(1:2)=='CG') THEN
+            IF(IS_CG(BC_TYPE_ENUM(BCV))) THEN
 
 ! For cut-cell boundaries, add the area of each cut face
 
@@ -180,7 +180,7 @@
                   IF(CUT_CELL_AT(IJK)) THEN
                      BCID = BC_ID(IJK)
                      IF(BCID > 0 ) THEN
-                        BCT = BC_TYPE(BCID)
+                        BCT = BC_TYPE_ENUM(BCID)
                         IF(BCID==BCV) BC_AREA(BCV) = BC_AREA(BCV) + Area_CUT(IJK)
                         IF(BCID==BCV) BC_VOL(BCV)  = BC_VOL(BCV)  + VOL(IJK)
                      ENDIF
