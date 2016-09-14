@@ -18,7 +18,6 @@
       use bc, only: bc_i_w, bc_i_e
       use bc, only: bc_out_n
       use bc, only: bc_mout_g, bc_vout_g
-      use bc, only: bc_mout_s, bc_vout_s
       use geometry, only: dx, dy, dz
       use geometry, only: x_e, x
       use fldvar, only: u_g, v_g, w_g

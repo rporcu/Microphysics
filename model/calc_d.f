@@ -79,8 +79,6 @@ MODULE CALC_D_MOD
       use discretelement, only: VXF_GDS
 ! Pressure scale factor
       use scales, only: P_SCALE
-! Volume of V-momentum cell.
-      use geometry, only: VOL_V
 ! Fluid grid loop bounds.
       use compar, only: IJKStart3, IJKEnd3
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
@@ -105,7 +103,7 @@ MODULE CALC_D_MOD
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Usual Indices
-      INTEGER :: J, IJK, IJKN
+      INTEGER :: IJK
 ! Temp variable for double precision values.
       DOUBLE PRECISION :: TMPdp
 !......................................................................!

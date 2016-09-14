@@ -244,7 +244,7 @@ contains
     integer :: layer,request, source, tag, datatype
 
     integer :: lidebug
-    integer :: isize,jsize,ksize, ijksize
+    integer :: isize
     integer :: recvsize1, recvsize2, &
          sendsize1, sendsize2
 
@@ -254,7 +254,7 @@ contains
          ijk, ijk2, iproc, jproc, src,dest, &
          ierror
 
-    logical :: isok, isvalid, ismine, is_halobc
+    logical :: isvalid, ismine, is_halobc
 
     integer, dimension(:,:,:), pointer :: ijk2proc
     integer, pointer, dimension(:) :: &
@@ -2292,17 +2292,14 @@ contains
     integer :: layer,request, source, tag, datatype
 
     integer :: lidebug
-    integer :: recvsize1, recvsize2, &
-         sendsize1, sendsize2
 
     integer :: ii, &
          icount, &
-         i2,  j1,j2, &
-         src,dest, &
+         j1,j2, &
+         dest, &
          ierror
 
     integer, pointer, dimension(:) :: &
-         ncount, &
          recvproc, recvtag, xrecv, recvijk,  &
          sendproc, sendtag, xsend, sendijk
 

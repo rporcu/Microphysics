@@ -167,7 +167,7 @@
 !----------------------------------------------------------------------!
       SUBROUTINE DESMPI_CHECK_SENDRECVBUF
 
-      use discretelement, only: DIMN, dg_pic
+      use discretelement, only: dg_pic
       use desmpi, only: iMAXBUF
       use desmpi, only: iBUFOFFSET
       use desmpi, only: dSENDBUF, dRECVBUF
@@ -176,6 +176,7 @@
 
       use mpi_utility, only: global_all_max
       use error_manager
+      use discretelement, only: dimn
       implicit none
 
 ! Local variables:
@@ -236,7 +237,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE DESMPI_CLEANUP
 
-      use discretelement, only: DIMN
       use discretelement, only: DES_POS_NEW
       use discretelement, only: DES_VEL_NEW
       use discretelement, only: OMEGA_NEW
@@ -252,8 +252,8 @@
       use desmpi, only: iRECVINDICES
       use desmpi, only: iEXCHFLAG
 
-      use param, only: DIMENSION_N_s
       use param1, only: ZERO
+      use discretelement, only: dimn
 
       implicit none
 

@@ -39,7 +39,7 @@
       CHARACTER(len=*), INTENT(in) :: NAME
       DOUBLE PRECISION, INTENT(in) :: DATA(:)
 
-      INTEGER :: LC, PC
+      INTEGER :: LC
 
          allocate (dProcBuf(LOCAL_CNT) )
          allocate (dRootBuf(GLOBAL_CNT))
@@ -78,7 +78,7 @@
 
       CHARACTER(len=16) :: NOC
       INTEGER :: LB, UB
-      INTEGER :: PC, LC1, LC2
+      INTEGER :: LC1, LC2
 
       LB = LBOUND(DATA,1)
       UB = UBOUND(DATA,1)
@@ -130,7 +130,7 @@
       CHARACTER(len=*), INTENT(in) :: NAME
       INTEGER, INTENT(in) :: DATA(:)
 
-      INTEGER :: LC, PC
+      INTEGER :: LC
 
 
          allocate (iProcBuf(LOCAL_CNT) )

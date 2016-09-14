@@ -30,13 +30,6 @@
 ! Vector b_m
       DOUBLE PRECISION :: B_M(DIMENSION_3, 0:DIMENSION_M)
 !-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: IJK, IJKE, I
-! Solids phase indices
-      INTEGER :: M
-!-----------------------------------------------
 
 ! currently no difference between interpolated and non-interpolated
 ! implementation of solid-solid drag
@@ -78,14 +71,6 @@
       DOUBLE PRECISION :: A_M(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
       DOUBLE PRECISION :: B_M(DIMENSION_3, 0:DIMENSION_M)
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: IJK, IJKN, J
-! Solids phase indices
-      INTEGER :: M
-
 
       RETURN
       END SUBROUTINE SOLID_DRAG_V
@@ -123,14 +108,6 @@
       DOUBLE PRECISION :: A_M(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
       DOUBLE PRECISION :: B_M(DIMENSION_3, 0:DIMENSION_M)
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: IJK, IJKT, K
-! Solids phase indices
-      INTEGER :: M
-
 
       RETURN
       END SUBROUTINE SOLID_DRAG_W

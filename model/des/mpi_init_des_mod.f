@@ -53,7 +53,7 @@
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
-      integer :: lfaces,lfactor=4
+      integer :: lfaces
       integer :: lmaxlen1,lmaxlen2,lmaxarea,lmaxghostpar,ii
 
       DOUBLE PRECISION, PARAMETER :: ONEMBo8 = 131072.0

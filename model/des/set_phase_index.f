@@ -18,8 +18,6 @@
       USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
       use mpi_funs_des, only: des_par_exchange
 
-      USE run, only: RUN_TYPE
-
       use mpi_utility
       use sendrecv
 

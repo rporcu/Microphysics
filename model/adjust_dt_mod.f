@@ -14,8 +14,6 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! User defined type of run: new or restart
-      use run, only: RUN_TYPE
 ! User defined aximum number of iterations
       use leqsol, only: MAX_NIT
 ! User defined: min, max DT and adjustment factor
