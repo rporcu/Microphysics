@@ -290,8 +290,6 @@
       INTEGER :: ijkt, ijkte, ijkb, ijkbe
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-! avg voidage
-      DOUBLE PRECISION :: EPGA
 !---------------------------------------------------------------------//
 
       IMJK = IM_OF(IJK)
@@ -631,7 +629,6 @@
                A_U_G(IJK,S,0) = D_Fs + (ONE - XSI_N(IJMK)) * Flux_s
             ENDIF
 
-
 ! Top face (i+1/2, j, k+1/2)
             IF (DO_K) THEN
                IJKP = KP_OF(IJK)
@@ -652,4 +649,3 @@
 
       RETURN
       END SUBROUTINE STORE_A_U_G1
-

@@ -290,8 +290,6 @@
       INTEGER :: ijkt, ijktn, ijkb, ijkbn
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-! avg voidage
-      DOUBLE PRECISION :: EPGA
 !---------------------------------------------------------------------//
 
       IMJK = IM_OF(IJK)
@@ -630,7 +628,6 @@
             IF (.NOT.FLOW_AT_N(IJMK)) THEN
                A_V_G(IJK,S) = D_Fs + (ONE - XSI_N(IJMK))*Flux_s
             ENDIF
-
 
             IF (DO_K) THEN
                IJKP = KP_OF(IJK)

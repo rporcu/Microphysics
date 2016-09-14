@@ -15,7 +15,6 @@
       use compar, only: JSTART2, JEND2
       use compar, only: KSTART2, KEND2
       use param1, only: ZERO, ONE
-      use param, only: DIMENSION_M
 
       use error_manager
 
@@ -62,7 +61,6 @@
 !---------------------------------------------------------------------//
 ! Loop counters
       INTEGER :: I, J, K, IJK
-      INTEGER :: M, N
 ! Integer error flag.
       INTEGER :: IER
 !......................................................................!
@@ -126,7 +124,6 @@
 !---------------------------------------------------------------------//
       use toleranc, only: TMIN, TMAX, TOL_COM
       use fldvar, only: MU_G
-      use fldvar, only: MW_AVG
 
       use mpi_utility, only: GLOBAL_ALL_SUM
       use mpi_utility, only: GLOBAL_ALL_OR
@@ -140,7 +137,6 @@
 ! Local variables:
 !---------------------------------------------------------------------//
       INTEGER :: I, J, K, IJK
-      INTEGER :: M, N
 ! Integer error flag.
       INTEGER :: IER
 

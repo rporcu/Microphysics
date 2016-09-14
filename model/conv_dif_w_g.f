@@ -277,8 +277,6 @@
       INTEGER :: ijkn, ijktn, ijks, ijkst
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-! average voidage
-      DOUBLE PRECISION :: EPGA
 !---------------------------------------------------------------------//
 
       IMJK = IM_OF(IJK)
@@ -606,7 +604,6 @@
             IF (.NOT.FLOW_AT_T(IJMK)) THEN
                A_W_G(IJK,S,0) = D_Fs + (ONE - XSI_N(IJMK))*Flux_s
             ENDIF
-
 
 ! Top face (i, j, k+1)
             A_W_G(IJK,T,0) = D_Ft - XSI_T(IJK)*Flux_t
