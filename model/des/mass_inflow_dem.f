@@ -310,7 +310,7 @@
       DES_VEL_NEW(3,lNP) = BC_W_s(lBCV,BC_M)
 
 ! Set the initial angular velocity values
-      OMEGA_NEW(:,lNP) = 0
+      OMEGA_NEW(lNP,:) = 0
 
 ! Set the particle radius value
       DES_RADIUS(lNP) = HALF * D_P0(lM)

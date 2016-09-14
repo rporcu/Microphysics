@@ -251,7 +251,7 @@
 
 ! Defining user defined allocatable array
       INTEGER :: DES_USR_VAR_SIZE
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_USR_VAR  !(PARTICLES,3)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_USR_VAR  !(3,PARTICLES)
 
 ! Total force and torque on each particle
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: FC    !(3,PARTICLES)

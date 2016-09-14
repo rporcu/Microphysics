@@ -89,7 +89,7 @@ CONTAINS
 ! rotational)
       Allocate(  DES_POS_NEW (DIMN,MAX_PIP) )
       Allocate(  DES_VEL_NEW (DIMN,MAX_PIP) )
-      Allocate(  OMEGA_NEW (DIMN,MAX_PIP) )
+      Allocate(  OMEGA_NEW (MAX_PIP,DIMN) )
 
       IF (DO_OLD) THEN
          Allocate(  DES_ACC_OLD (MAX_PIP,DIMN) )
@@ -334,7 +334,7 @@ CONTAINS
            call real_grow(OMOI,MAX_PIP)
            call real_grow2(DES_POS_NEW,MAX_PIP)
            call real_grow2(DES_VEL_NEW,MAX_PIP)
-           call real_grow2(OMEGA_NEW,MAX_PIP)
+           call real_grow2_reverse(OMEGA_NEW,MAX_PIP)
            call real_grow2(PPOS,MAX_PIP)
            call byte_grow(PARTICLE_STATE,MAX_PIP)
            call integer_grow(iglobal_id,MAX_PIP)
@@ -363,7 +363,7 @@ CONTAINS
            ENDIF
 
            IF(DES_USR_VAR_SIZE > 0) &
-              call real_grow2(DES_USR_VAR,MAX_PIP)
+              call real_grow2_reverse(DES_USR_VAR,MAX_PIP)
 
            CALL DES_INIT_PARTICLE_ARRAYS(MAX_PIP/2+1,MAX_PIP)
 

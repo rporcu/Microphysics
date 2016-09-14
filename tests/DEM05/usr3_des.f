@@ -91,9 +91,9 @@
       ENDIF
 
 ! Collect rotational velocity to IO processor.
-      CALL COLLECT_DEM05_DATA(OMEGA_NEW(1,:), lTMP(:,1))
-      CALL COLLECT_DEM05_DATA(OMEGA_NEW(2,:), lTMP(:,2))
-      CALL COLLECT_DEM05_DATA(OMEGA_NEW(3,:), lTMP(:,3))
+      CALL COLLECT_DEM05_DATA(OMEGA_NEW(:,1), lTMP(:,1))
+      CALL COLLECT_DEM05_DATA(OMEGA_NEW(:,2), lTMP(:,2))
+      CALL COLLECT_DEM05_DATA(OMEGA_NEW(:,3), lTMP(:,3))
 
 ! Particle-wall Angular velocity (rad/sec)
 !---------------------------------------------------------------------//

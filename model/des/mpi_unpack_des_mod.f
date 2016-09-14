@@ -140,7 +140,7 @@
 ! 7) Translational Velocity
             call unpack_dbuf(lbuf,des_vel_new(1:dimn,llocpar),pface)
 ! 8) Rotational Velocity
-            call unpack_dbuf(lbuf,omega_new(1:3,llocpar),pface)
+            call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
 ! 9) Exiting particle flag
             call unpack_dbuf(lbuf,tmp,pface)
             if (tmp) call set_exiting_ghost(llocpar)
@@ -195,13 +195,13 @@
 !  7) Translational velocity
             call unpack_dbuf(lbuf,des_vel_new(1:dimn,ispot),pface)
 !  8) Rotational velocity
-            call unpack_dbuf(lbuf,omega_new(1:dimn,ispot),pface)
+            call unpack_dbuf(lbuf,omega_new(ispot,1:dimn),pface)
 !  9) Exiting particle flag
             call unpack_dbuf(lbuf,tmp,pface)
             if (tmp) call set_exiting_ghost(ispot)
 ! 11) User varaible
             IF(DES_USR_VAR_SIZE > 0)&
-               call unpack_dbuf(lbuf,des_usr_var(:,ispot),pface)
+               call unpack_dbuf(lbuf,des_usr_var(ispot,:),pface)
 ! 12) Interpolation verights
             IF(FILTER_SIZE > 0) THEN
                call unpack_dbuf(lbuf,filter_cell(:,ispot),pface)
@@ -365,7 +365,7 @@
 ! 17) Translational velocity
          call unpack_dbuf(lbuf,des_vel_new(:,llocpar),pface)
 ! 18) Rotational velocity
-         call unpack_dbuf(lbuf,omega_new(:,llocpar),pface)
+         call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
 ! 19) Accumulated translational forces
          call unpack_dbuf(lbuf,fc(llocpar,:),pface)
 ! 20) Accumulated torque forces
@@ -375,7 +375,7 @@
             call unpack_dbuf(lbuf,drag_fc(:,llocpar),pface)
 ! 24) User defined variable
          IF(DES_USR_VAR_SIZE > 0) &
-            call unpack_dbuf(lbuf,des_usr_var(:,llocpar),pface)
+            call unpack_dbuf(lbuf,des_usr_var(llocpar,:),pface)
 
 ! -- Higher order integration variables
          IF (DO_OLD) THEN

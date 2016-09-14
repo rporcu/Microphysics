@@ -327,7 +327,7 @@
 
          DES_POS_NEW(PIP,:) = POS(:)
          DES_VEL_NEW(PIP,:) = VEL(:)
-         OMEGA_NEW(PIP,:) = 0.0d0
+         OMEGA_NEW(:,PIP) = 0.0d0
 
          DES_RADIUS(PIP) = D_P0(M)*HALF
          RO_SOL(PIP) =  RO_S0(M)

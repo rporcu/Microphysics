@@ -85,7 +85,7 @@
 ! Particle position, velocity, etc
       DES_POS_NEW(:,LB:UB) = ZERO
       DES_VEL_NEW(:,LB:UB) = ZERO
-      OMEGA_NEW(:,LB:UB) = ZERO
+      OMEGA_NEW(LB:UB,:) = ZERO
 
 ! Particle state flag
       DO II = LB, UB
@@ -111,7 +111,7 @@
 
 ! Initializing user defined array
       IF(DES_USR_VAR_SIZE > 0) &
-         DES_USR_VAR(:,LB:UB) = ZERO
+         DES_USR_VAR(LB:UB,:) = ZERO
 
 ! Particle center drag coefficient and explicit drag force
       F_GP(LB:UB) = ZERO

@@ -142,7 +142,7 @@
          des_pos_new(:,pip) = lPos
          des_vel_new(:,pip) = lVel
 
-         omega_new(:,pip) = 0.0d0
+         omega_new(pip,:) = 0.0d0
 
          des_radius(pip) = lRad
          ro_sol(pip) = RO_s0(1)

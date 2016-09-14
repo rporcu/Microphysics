@@ -484,7 +484,7 @@
       DOUBLE PRECISION, DIMENSION(DIMN) :: VRELTRANS
 
 ! Total relative velocity + rotational contribution
-      V_ROT = DIST*OMEGA_NEW(:,LL)
+      V_ROT = DIST*OMEGA_NEW(LL,:)
       VRELTRANS(:) =  DES_VEL_NEW(:,LL) + DES_CROSSPRDCT(V_ROT, NORM)
 
 ! magnitude of normal component of relative velocity (scalar)

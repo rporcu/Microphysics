@@ -125,12 +125,12 @@
 ! 7) Translational Velocity
             call pack_dbuf(lbuf,des_vel_new(:,lcurpar),pface)
 ! 8) Rotational Velocity
-            call pack_dbuf(lbuf,omega_new(:,lcurpar),pface)
+            call pack_dbuf(lbuf,omega_new(lcurpar,:),pface)
 ! 9) Exiting particle flag
             call pack_dbuf(lbuf,merge(1,0,is_exiting(lcurpar).or.is_exiting_ghost(lcurpar)),pface)
 ! 11) User Variable
             IF(DES_USR_VAR_SIZE > 0) &
-               call pack_dbuf(lbuf,des_usr_var(:,lcurpar),pface)
+               call pack_dbuf(lbuf,des_usr_var(lcurpar,:),pface)
 ! 12) Interpolation weights
             IF(FILTER_SIZE > 0) THEN
                call pack_dbuf(lbuf,filter_cell(:,lcurpar),pface)
@@ -292,7 +292,7 @@
 ! 17) Translational velocity
             call pack_dbuf(lbuf,des_vel_new(:,lcurpar),pface)
 ! 18) Rotational velocity
-            call pack_dbuf(lbuf,omega_new(:,lcurpar),pface)
+            call pack_dbuf(lbuf,omega_new(lcurpar,:),pface)
 ! 19) Accumulated translational forces
             call pack_dbuf(lbuf,fc(lcurpar,:),pface)
 ! 20) Accumulated torque forces
@@ -302,7 +302,7 @@
                call pack_dbuf(lbuf, drag_fc(:,lcurpar),pface)
 ! 24) User defined variable
             IF(DES_USR_VAR_SIZE > 0) &
-               call pack_dbuf(lbuf, des_usr_var(:,lcurpar),pface)
+               call pack_dbuf(lbuf, des_usr_var(lcurpar,:),pface)
 
 ! -- Higher order integration variables
             IF (DO_OLD) THEN

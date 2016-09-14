@@ -39,7 +39,7 @@
          OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
       ENDIF
 
-      WRITE(fUNIT, 1100) 
+      WRITE(fUNIT, 1100)
 
  1000 FORMAT(2/,12x,A)
  1100 FORMAT(2/,2x,'t*sqrt(T0)/dp',5x,'T(t)/T0',10x,'MFIX')
@@ -136,7 +136,7 @@
          des_pos_new(:,pip) = lPos
          des_vel_new(:,pip) = lVel
 
-         omega_new(:,pip) = 0.0d0
+         omega_new(pip,:) = 0.0d0
 
          des_radius(pip) = lRad
          ro_sol(pip) = RO_s0(1)
@@ -145,7 +145,7 @@
 
       enddo seed_lp
 
-! Calc the average mean velocity in each direction 
+! Calc the average mean velocity in each direction
       meanVel = meanVel/dble(pip)
 
 ! Subtract mean velocity from the random velocities to get a zero

@@ -74,7 +74,7 @@
             DES_VEL_NEW(:,L) = DES_VEL_NEW(:,L) + FC(L,:)*DTSOLID
             DD(:) = DES_VEL_NEW(:,L)*DTSOLID
             DES_POS_NEW(:,L) = DES_POS_NEW(:,L) + DD(:)
-            OMEGA_NEW(:,L)   = OMEGA_NEW(:,L) + TOW(L,:)*OMOI(L)*DTSOLID
+            OMEGA_NEW(L,:)   = OMEGA_NEW(L,:) + TOW(L,:)*OMOI(L)*DTSOLID
          ELSEIF (INTG_ADAMS_BASHFORTH) THEN
 
             lVELo = DES_VEL_NEW(:,L)
@@ -84,7 +84,7 @@
             DES_VEL_NEW(:,L) = lVELo(:) + 0.5d0*&
                ( 3.d0*FC(L,:)-DES_ACC_OLD(L,:) )*DTSOLID
 
-            OMEGA_NEW(:,L)   =  OMEGA_NEW(:,L) + 0.5d0*&
+            OMEGA_NEW(L,:)   =  OMEGA_NEW(L,:) + 0.5d0*&
                ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(L,:) )*DTSOLID
 
             DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(:,L) )*DTSOLID

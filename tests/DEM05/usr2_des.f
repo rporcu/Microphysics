@@ -36,7 +36,7 @@
             DES_POS_NEW(1,LL) = DES_POS_NEW(1,LL-31)
             DES_POS_NEW(3,LL) = DES_POS_NEW(3,LL-31)
             DES_POS_NEW(2,LL) = 0.0475d0
-            OMEGA_NEW(:,LL) = 0.0d0
+            OMEGA_NEW(LL,:) = 0.0d0
          ENDIF
       ENDDO
 

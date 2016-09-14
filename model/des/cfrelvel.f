@@ -57,8 +57,8 @@
             (2.d0*DIST_LI)
          DIST_CI = DIST_LI - DIST_CL
 
-         OMEGA_SUM(:) = OMEGA_NEW(:,L)*DIST_CL + &
-              OMEGA_NEW(:,II)*DIST_CI
+         OMEGA_SUM(:) = OMEGA_NEW(L,:)*DIST_CL + &
+              OMEGA_NEW(II,:)*DIST_CI
 
 ! calculate the rotational relative velocity
       V_ROT = DES_CROSSPRDCT(OMEGA_SUM, NORM)
