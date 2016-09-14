@@ -87,7 +87,7 @@
       DOUBLE PRECISION :: MU_G_E,MU_G_W,MU_G_N,MU_G_S,MU_G_T,MU_G_B,MU_G_CUT
       DOUBLE PRECISION :: WW_g
       INTEGER :: BCV
-      CHARACTER(LEN=9) :: BCT
+      INTEGER :: BCT
 !=======================================================================
 ! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
@@ -125,23 +125,23 @@
             BCV = BC_W_ID(IJK)
 
             IF(BCV > 0 ) THEN
-               BCT = BC_TYPE(BCV)
+               BCT = BC_TYPE_ENUM(BCV)
             ELSE
-               BCT = 'NONE'
+               BCT = NONE
             ENDIF
 
             SELECT CASE (BCT)
-               CASE ('CG_NSW')
+               CASE (CG_NSW)
                   NOC_WG = .TRUE.
                   WW_g = ZERO
                   MU_G_CUT =  (VOL(IJK)*MU_G(IJK) + VOL(IJKT)*MU_G(IJKT))/(VOL(IJK) + VOL(IJKT))
 
                   A_M(IJK,0,M) = A_M(IJK,0,M) - MU_G_CUT * Area_W_CUT(IJK)/DELH_W(IJK)
 
-               CASE ('CG_FSW')
+               CASE (CG_FSW)
                   NOC_WG = .FALSE.
                   WW_g = ZERO
-               CASE('CG_PSW')
+               CASE(CG_PSW)
                   IF(BC_HW_G(BCV)==UNDEFINED) THEN   ! same as NSW
                      NOC_WG = .TRUE.
                      WW_g = BC_WW_G(BCV)
@@ -159,7 +159,7 @@
                      B_M(IJK,M) = B_M(IJK,M) - MU_G_CUT * WW_g * Area_W_CUT(IJK)*(BC_HW_G(BCV))
 
                   ENDIF
-               CASE ('NONE')
+               CASE (NONE,CG_MI)
                   NOC_WG = .FALSE.
             END SELECT
 

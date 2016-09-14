@@ -290,11 +290,6 @@
  2001 FORMAT('Error 2001: No interpolation scheme specified when ',A,/ &
          'is enabled. Please correct the mfix.dat file.')
 
- 2002 FORMAT('Error 2002: DES simulations utilizing ',A,' require',/   &
-         'interpolation (DES_INTERP_ON and DES_INTERP_MEANFIELDS). ',/ &
-         'Please correct the mfix.dat file.')
-
-
       SELECT CASE(DES_INTERP_SCHEME_ENUM)
 
       CASE(DES_INTERP_NONE)
