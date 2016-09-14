@@ -3,11 +3,15 @@
 
 ## Overview of benchmark cases
 
-* **DEM01** _Homogeneous Cooling System_ [1]
+### DEM01: _Homogeneous Cooling System_ [1]
 
-User files create the initial particle layout for all processors and collect/report the granular temperature of the system over time. The run script (runtests) is mainly for local testing but could be modified to generatue queue submission scripts.
+User files create the initial particle layout for all processors and collect/report the granular temperature of the system over time. The run script (runtests) is mainly for local testing but could be modified to generate queue submission scripts.
 
-* **FLD01:** _Lid-driven cavity flow_ [2]
+### DEM02: _Settling_ [1]
+
+Initially, particles are uniformly, randomly distributed throughout the domain with near-zero initial velocity. The gas velocity (if present) is zero everywhere. Particles are allowed to settle under gravity for 0.05 seconds.
+
+### FLD01: _Lid-driven cavity flow_ [2]
 
 
 ## References

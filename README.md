@@ -22,6 +22,16 @@ cd test/DEM01
 cmake ../..
 make -j
 ```
+
+### Example: Compiler specific flags
+```shell
+cd <path to>/mfix
+mkdir build
+cd build
+cmake -D CMAKE_Fortran_FLAGS="-O2 -g -ffpe-trap=invalid -fimplicit-none" ..
+ctest -R DEM01
+```
+
 ### Example: Distributed memory (MPI) executable
 ```shell
 cd <path to>/mfix
