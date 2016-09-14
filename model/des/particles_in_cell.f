@@ -24,7 +24,7 @@
 ! Flag for 2D simulations.
       use geometry, only: NO_K
 ! The accumulated number of particles in each IJK.
-      use tmp_array, only: PARTICLE_COUNT => ARRAY1
+      use tmp_array, only: PARTICLE_COUNT => ARRAY1I
 ! The start and end indices of IJK loops
       use compar, only: IJKStart3, IJKEnd3
 ! The Upper and Loper indices covered by the current process.

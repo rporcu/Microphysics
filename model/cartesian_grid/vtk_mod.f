@@ -71,7 +71,7 @@ use param, only: DIMENSION_N_S
       LOGICAL :: WRITE_ANI_CUTCELL
 
 
-      INTEGER :: VTU_offset
+      INTEGER(KIND=8) :: VTU_offset
 
       LOGICAL, allocatable :: BELONGS_TO_VTK_SUBDOMAIN(:)
       ! LOGICAL, allocatable :: PART_BELONGS_TO_VTK_SUBDOMAIN(:)
@@ -249,4 +249,3 @@ use param, only: DIMENSION_N_S
       LOGICAL :: VTK_PART_COHESION(DIMENSION_VTK)
 
       END MODULE vtk
-

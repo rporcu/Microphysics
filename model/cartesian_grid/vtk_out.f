@@ -451,8 +451,8 @@
       REAL(c_float) :: float
       INTEGER(c_int) :: int
 
-      INTEGER ::     nbytes_xyz,nbytes_connectivity,nbytes_offset,nbytes_type
-      INTEGER ::     offset_xyz,offset_connectivity,offset_offset,offset_type
+      INTEGER(KIND=8) ::     nbytes_xyz,nbytes_connectivity,nbytes_offset,nbytes_type
+      INTEGER(KIND=8) ::     offset_xyz,offset_connectivity,offset_offset,offset_type
 
       INTEGER :: PASS
       INTEGER :: WRITE_HEADER = 1
@@ -793,7 +793,7 @@
 
       REAL(c_float) :: float
 
-      INTEGER :: nbytes_scalar
+      INTEGER(KIND=8) :: nbytes_scalar
 
       INTEGER :: PASS
       INTEGER :: WRITE_HEADER = 1
@@ -943,7 +943,7 @@
 
       REAL(c_float) :: float
 
-      INTEGER :: nbytes_vector
+      INTEGER(KIND=8) :: nbytes_vector
 
       INTEGER :: PASS
       INTEGER :: WRITE_HEADER = 1

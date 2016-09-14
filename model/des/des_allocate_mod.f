@@ -247,7 +247,7 @@ CONTAINS
 ! Purpose: Adds a neighbor pair to the pairs array.                    !
 !                                                                      !
 !``````````````````````````````````````````````````````````````````````!
-      DOUBLE PRECISION FUNCTION add_pair(ii,jj)
+      INTEGER FUNCTION add_pair(ii,jj)
       USE discretelement
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ii,jj
