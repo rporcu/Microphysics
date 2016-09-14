@@ -39,8 +39,8 @@
             IF(IS_NONEXISTENT(L)) CYCLE                       ! Only real particles
             IF(IS_ENTERING(L).or.IS_ENTERING_GHOST(L)) CYCLE  ! Only non-entering
             IF(IS_GHOST(L)) CYCLE                             ! Skip ghost particles
-            DES_ACC_OLD(:,L) = FC(L,:)/PMASS(L) + GRAV(:)
-            ROT_ACC_OLD(:,L) = TOW(L,:)
+            DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
+            ROT_ACC_OLD(L,:) = TOW(L,:)
          ENDDO
       ENDIF
 
@@ -82,16 +82,16 @@
 
 ! Second-order Adams-Bashforth/Trapezoidal scheme
             DES_VEL_NEW(:,L) = lVELo(:) + 0.5d0*&
-               ( 3.d0*FC(L,:)-DES_ACC_OLD(:,L) )*DTSOLID
+               ( 3.d0*FC(L,:)-DES_ACC_OLD(L,:) )*DTSOLID
 
             OMEGA_NEW(:,L)   =  OMEGA_NEW(:,L) + 0.5d0*&
-               ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(:,L) )*DTSOLID
+               ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(L,:) )*DTSOLID
 
             DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(:,L) )*DTSOLID
 
             DES_POS_NEW(:,L) = lPOSo(:) + DD(:)
-            DES_ACC_OLD(:,L) = FC(L,:)
-            ROT_ACC_OLD(:,L) = TOW(L,:)*OMOI(L)
+            DES_ACC_OLD(L,:) = FC(L,:)
+            ROT_ACC_OLD(L,:) = TOW(L,:)*OMOI(L)
          ENDIF
 
 

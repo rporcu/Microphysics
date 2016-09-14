@@ -126,8 +126,8 @@
 
 ! Higher order time integration variables.
       IF (DO_OLD) THEN
-         DES_ACC_OLD(:,LB:UB) = ZERO
-         ROT_ACC_OLD(:,LB:UB) = ZERO
+         DES_ACC_OLD(LB:UB,:) = ZERO
+         ROT_ACC_OLD(LB:UB,:) = ZERO
       ENDIF
 
       RETURN

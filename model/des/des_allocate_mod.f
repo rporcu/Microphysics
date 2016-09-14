@@ -92,8 +92,8 @@ CONTAINS
       Allocate(  OMEGA_NEW (DIMN,MAX_PIP) )
 
       IF (DO_OLD) THEN
-         Allocate(  DES_ACC_OLD (DIMN,MAX_PIP) )
-         Allocate(  ROT_ACC_OLD (DIMN,MAX_PIP))
+         Allocate(  DES_ACC_OLD (MAX_PIP,DIMN) )
+         Allocate(  ROT_ACC_OLD (MAX_PIP,DIMN))
       ENDIF
 
 ! Allocating user defined array

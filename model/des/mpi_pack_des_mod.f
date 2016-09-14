@@ -307,9 +307,9 @@
 ! -- Higher order integration variables
             IF (DO_OLD) THEN
 ! 29) Translational acceleration (previous)
-               call pack_dbuf(lbuf,des_acc_old(:,lcurpar),pface)
+               call pack_dbuf(lbuf,des_acc_old(lcurpar,:),pface)
 ! 30) Rotational acceleration (previous)
-               call pack_dbuf(lbuf,rot_acc_old(:,lcurpar),pface)
+               call pack_dbuf(lbuf,rot_acc_old(lcurpar,:),pface)
             ENDIF
 
 ! DEM particles are converted to ghost particles. This action does not
