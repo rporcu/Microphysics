@@ -894,7 +894,6 @@
       IF(MyPE == PE_IO) THEN
          WRITE(*,*)'INTERSECTING GEOMETRY WITH V-MOMENTUM CELLS...'
       ENDIF
-10    FORMAT(1X,A)
 !======================================================================
 !  Intersection between quadric Grid
 !======================================================================
@@ -1321,7 +1320,6 @@
       IF(MyPE == PE_IO) THEN
          WRITE(*,*)'SETTING CUT CELL TREATMENT FLAGS...'
       ENDIF
-10    FORMAT(1X,A)
 !======================================================================
 !  Set flags identifying cells requiring cut cell treatment:
 !  These are the cut cells and their neighbours

@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: GET_CUT_CELL_VOLUME_AND_AREAS                          C
@@ -1033,12 +1032,7 @@
             CALL MFIX_EXIT(myPE)
       END SELECT
 
-
-999        FORMAT(A,I6,3(F12.8))
-
-
       RETURN
-
 
       END SUBROUTINE GET_CUT_CELL_VOLUME_AND_AREAS
 
@@ -1188,8 +1182,6 @@
          SUM_A  = SUM_A  + A
       ENDDO
       CENTROID = SUM_AR / SUM_A
-
-1010  FORMAT(A,3(F12.8))
 
       RETURN
 
@@ -1384,12 +1376,7 @@
 
       END SELECT
 
-
-1000       FORMAT(A,I6,3(F12.8))
-1010       FORMAT(A,3(F12.8))
-
       RETURN
-
 
       END SUBROUTINE REORDER_POLYGON
 

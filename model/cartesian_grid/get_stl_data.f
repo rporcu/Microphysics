@@ -556,15 +556,12 @@
  910  CONTINUE
       WRITE (*, 1500)
       CALL MFIX_EXIT(myPE)
- 920  CONTINUE
       WRITE (*, 1600)
       CALL MFIX_EXIT(myPE)
- 930  CONTINUE
       WRITE (*, 1700)
       CALL MFIX_EXIT(myPE)
 
  1000 FORMAT(1X,I4,7X,A8,I8,1X,A20,1X,A20)
- 1010 FORMAT(1X,I4,5X,A20,1X,A20)
  1020 FORMAT(5X,I3,2X,3(I10,2X))
 !
  1500 FORMAT(/1X,70('*')//' From: GET_STL_DATA',/' Message: ',&
@@ -574,7 +571,6 @@
  1700 FORMAT(/1X,70('*')//' From: GET_STL_DATA',/' Message: ',&
       'End of file reached while reading stl file',/1X,70('*')/)
  2000 FORMAT(1X,A)
- 2010 FORMAT(1X,A,I4,A)
  3000 FORMAT(1X,A,'(',F10.4,';',F10.4,';',F10.4,')')
  4000 FORMAT(1X,A,F10.4,' to ',F10.4)
  5000 FORMAT(1X,A,F10.4)
@@ -1048,10 +1044,7 @@
       'Unable to open stl file',/1X,70('*')/)
  1600 FORMAT(/1X,70('*')//' From: GET_STL_DATA',/' Message: ',&
       'Error while reading stl file',/1X,70('*')/)
- 1700 FORMAT(/1X,70('*')//' From: GET_STL_DATA',/' Message: ',&
-      'End of file reached while reading stl file',/1X,70('*')/)
  2000 FORMAT(1X,A)
- 2010 FORMAT(1X,A,I4,A)
  3000 FORMAT(1X,A,'(',F10.4,';',F10.4,';',F10.4,')')
  4000 FORMAT(1X,A,F10.4,' to ',F10.4)
  5000 FORMAT(1X,A,F10.4)
@@ -1294,10 +1287,6 @@
          INTERSECT_FLAG = .FALSE.             ! Exclude corner intersection
       ENDIF
 
-
- 1000 FORMAT(A,3(2X,G12.5))
-
-
       RETURN
 
       END SUBROUTINE INTERSECT_LINE_WITH_FACET
@@ -1417,7 +1406,6 @@
       UPVL1 = ((u+v)<=ONE+TOL_STL)
 
       INSIDE_FACET = (U_POSITIVE.AND.V_POSITIVE.AND.UPVL1)
-
 
       RETURN
 
