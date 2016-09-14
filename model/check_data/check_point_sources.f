@@ -206,8 +206,6 @@
       use ps, only: PS_MASSFLOW_G
 ! Gas phase velocity for PS
       use ps, only: PS_U_g, PS_V_g, PS_W_g
-! Gas phase tempture and species mass fractions
-      use ps, only: PS_T_g, PS_X_g
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -226,12 +224,6 @@
 !---------------------------------------------------------------------//
       INTEGER, INTENT(in) :: PSV
 
-! Local Variables:
-!---------------------------------------------------------------------//
-! Loop counter
-      INTEGER :: N
-! Sum of solids mass fractions.
-      DOUBLE PRECISION :: SUM
 !......................................................................!
 
 ! Initialze the error manager.
@@ -331,11 +323,6 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
       INTEGER, INTENT(in) :: PSV
-
-! Local Variables:
-!---------------------------------------------------------------------//
-! Loop counters
-      INTEGER :: M, N
 !......................................................................!
 
 

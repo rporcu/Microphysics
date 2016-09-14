@@ -11,13 +11,13 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Domain decomposition and dimensions
-      use geometry, only: DX, XLENGTH, oDX, oDX_E
+      use geometry, only: DX, oDX, oDX_E
       use geometry, only: DY, oDZ, oDZ_T
-      use geometry, only: DZ, ZLENGTH, oDY, oDY_N
-      use geometry, only: X, X_E, oX, oX_E, XMIN
+      use geometry, only: DZ, oDY, oDY_N
+      use geometry, only: X, X_E, oX, oX_E
       use geometry, only: Z, Z_T
 ! Domain indices.
-      use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3, IMAX
+      use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3
       use geometry, only: DO_J, JMIN1, JMAX1, JMAX2, JMAX3, JMIN3
       use geometry, only: DO_K, KMIN1, KMAX1, KMAX2, KMAX3, KMIN3
 ! Averaging factors.

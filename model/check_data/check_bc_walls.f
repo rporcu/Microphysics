@@ -8,12 +8,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE CHECK_BC_WALLS(M_TOT, SKIP, BCV)
 
-
-! Global Variables:
-!---------------------------------------------------------------------//
-! Flag: Identifies solids model (TFM,DEM,PIC)
-      use run, only: SOLIDS_MODEL
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Maximum number of solids phases
@@ -34,12 +28,7 @@
 ! Flag. Solids not present at this BC (used for flow BCs).
       LOGICAL, INTENT(in) :: SKIP(DIM_M)
 
-! Local Variables:
-!---------------------------------------------------------------------//
-! Local total number of solids phases
-      INTEGER :: MTOT_L
 !......................................................................!
-
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_BC_WALLS")
@@ -119,8 +108,5 @@
 
  1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
             'correct the mfix.dat file.')
-
- 1001 FORMAT('Error 1001: Illegal or unphysical input: ',A,' = ',A,/   &
-         'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_BC_WALLS_GAS

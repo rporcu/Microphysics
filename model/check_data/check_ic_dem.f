@@ -10,9 +10,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_IC_DEM
 
-
-! Runtime Flag: Generate initial particle configuration.
-      USE discretelement, only : gener_part_config
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
       use physprop, only: MMAX, D_p0

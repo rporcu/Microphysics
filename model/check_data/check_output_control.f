@@ -16,7 +16,6 @@
 ! VTK
       use vtk
       USE run, only: RUN_NAME
-      USE physprop, only: MMAX
       USE mpi_utility, only: XLENGTH,YLENGTH,ZLENGTH
       USE DISCRETELEMENT, only:DISCRETE_ELEMENT
       USE cutcell, only: USE_STL
@@ -34,10 +33,8 @@
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Loop counter
-      INTEGER :: LC
 
-      INTEGER :: L,M,N,LV,N_VTK_REGIONS,R
+      INTEGER :: L,LV,N_VTK_REGIONS
 
 !......................................................................!
 
@@ -184,9 +181,6 @@
 
  1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
          'correct the mfix.dat file.')
-
- 1001 FORMAT('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-         'Please correct the mfix.dat file.')
 
  1002 FORMAT('Error 1002: Illegal or unknown input: ',A,' = ',E14.6,/  &
          'Please correct the mfix.dat file.')

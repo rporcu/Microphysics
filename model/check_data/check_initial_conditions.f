@@ -361,9 +361,7 @@
       use ic, only: IC_TYPE
 
 ! Specified constant gas density and viscosity.
-      use fldvar, only: RO_G0, MU_G0
-! Specified average molecular weight
-      use fldvar, only: MW_AVG
+      use fldvar, only: RO_G0
 ! Flag: Do not solve in specified direction.
       use geometry, only: NO_I, NO_J, NO_K
 
@@ -386,10 +384,6 @@
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Loop index
-      INTEGER :: N
-! Sum of mass fraction.
-      DOUBLE PRECISION :: SUM
 ! Flag for regular IC regions
       LOGICAL :: BASIC_IC
 !......................................................................!
@@ -459,9 +453,6 @@
  1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
          'correct the mfix.dat file.')
 
- 1001 FORMAT('Error 1001: Illegal or unknown input: ',A,' = ',A,/   &
-         'Please correct the mfix.dat file.')
-
       END SUBROUTINE CHECK_IC_GAS_PHASE
 
 
@@ -515,9 +506,9 @@
 ! Index of IC region.
       INTEGER, INTENT(IN) :: ICV
 ! Loop/variable index
-      INTEGER :: M, N
+      INTEGER :: M
 ! Various sums.
-      DOUBLE PRECISION SUM, SUM_EP
+      DOUBLE PRECISION SUM_EP
 ! Solids phase density in IC region.
       DOUBLE PRECISION :: IC_ROs(1:DIM_M)
 ! Flag to skip checks on indexed solid phase.
@@ -700,13 +691,6 @@
  1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
          'correct the mfix.dat file.')
 
- 1001 FORMAT('Error 1001: Illegal or unknown input: ',A,' = ',A,/   &
-         'Please correct the mfix.dat file.')
-
- 1002 FORMAT('Error 1002: Illegal data in initial condition region ', &
-         I3,/A,' defined for unknown solids phase ',I2,'.',/          &
-         'Please correct the mfix.dat file.')
-
       END SUBROUTINE CHECK_IC_SOLIDS_PHASES
 
 
@@ -758,7 +742,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counters
-      INTEGER :: M, N
+      INTEGER :: M
 !......................................................................!
 
       IF (IC_TYPE(ICV) == 'PATCH') RETURN

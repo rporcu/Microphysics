@@ -15,14 +15,10 @@
       USE discretelement, only : gener_part_config
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
-! Number of DEM solids phases.
-      USE physprop, only: MMAX
 ! Flag indicating that the IC region is defined.
       USE ic, only: IC_DEFINED
 ! IC Region gas volume fraction.
       USE ic, only: IC_EP_G
-! IC Region solid volume fraction.
-      USE ic, only: IC_EP_S
 
       USE ic, only: IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t
 
@@ -41,7 +37,7 @@
 
       implicit none
 
-      INTEGER :: ICV, ICV2, M, IDIM
+      INTEGER :: ICV, ICV2, IDIM
       INTEGER :: COUNT_IC, COUNT_IC_WITH_SOLS
       INTEGER :: FIRST_DEF_IC
 
@@ -166,8 +162,5 @@
       CALL FINL_ERR_MSG
 
       RETURN
-
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_IC_COMMON_DISCRETE

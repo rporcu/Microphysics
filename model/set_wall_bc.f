@@ -33,7 +33,7 @@
 ! Local index for boundary condition
       INTEGER :: L
 ! indices
-      INTEGER :: IJK, IPJK
+      INTEGER :: IJK
 ! Starting & ending I index
       INTEGER :: I1, I2
 ! Starting & ending J index

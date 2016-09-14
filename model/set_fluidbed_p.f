@@ -36,7 +36,7 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K, IJK, M
+      INTEGER :: I, J, K, IJK
 ! Local loop counter
       INTEGER :: L
 ! Gas pressure at the axial location j
@@ -208,5 +208,3 @@
          'condition need to be specified',/1X,70('*')/)
 
       END SUBROUTINE SET_FLUIDBED_P
-
-

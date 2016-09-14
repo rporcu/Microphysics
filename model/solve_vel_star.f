@@ -37,8 +37,6 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! solids phase index
-      INTEGER :: M
 ! fluid cell index
       INTEGER :: IJK
 ! temporary velocity arrays

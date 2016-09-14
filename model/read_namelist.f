@@ -113,11 +113,7 @@
             CALL MFIX_EXIT(myPE)
          ENDIF
 
- 1001 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1001: ',    &
-         'Unable to open the mfix.dat file. Aborting.',/1x,70('*'),2/)
       ENDIF
-
-
 ! Loop through the mfix.dat file and process the input data.
       READ_LP: DO
          READ (UNIT_DAT,"(A)",IOSTAT=IOS) LINE_STRING

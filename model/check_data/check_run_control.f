@@ -113,10 +113,4 @@
  1002 FORMAT('Error 1002: Illegal or unknown input: ',A,' = ',G14.4,/  &
          'Please correct the mfix.dat file.')
 
- 1003 FORMAT('Error 1003: Illegal or unknown input: ',A,' = ',I4,/     &
-         'Please correct the mfix.dat file.')
-
       END SUBROUTINE CHECK_RUN_CONTROL
-
-
-

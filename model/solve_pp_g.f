@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOLVE_Pp_g
@@ -55,8 +54,6 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! phase index
-      INTEGER :: M
 ! Normalization factor for gas pressure correction residual
       DOUBLE PRECISION :: NORMGloc
 ! linear equation solver method and iterations

@@ -33,11 +33,8 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-!
-      INTEGER :: ISV
 ! Indicies
       INTEGER :: IJK, IMJK, IJMK, IJKM
-      INTEGER :: M
 
 !!$omp  parallel do private( IMJK, IJMK, IJKM)
 
@@ -67,6 +64,3 @@
       RETURN
 
       END SUBROUTINE ZERO_NORM_VEL
-
-
-

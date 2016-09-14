@@ -13,16 +13,6 @@
 !---------------------------------------------------------------------//
 ! Discretization scheme for various equations
       USE run, only: DISCRETIZE
-! Solve system transpose
-      use leqsol, only: DO_TRANSPOSE
-! Minimize dot products in BiCGSTAB
-      use leqsol, only: MINIMIZE_DOTPRODUCTS
-! Report solver stats.
-      use leqsol, only: SOLVER_STATISTICS
-! Linear equation, preconditioner sweep method.
-      use leqsol, only: LEQ_SWEEP
-! Linear equation solution method.
-      use leqsol, only: LEQ_METHOD
 
       use param, only: dim_eqs
 

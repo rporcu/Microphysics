@@ -31,10 +31,6 @@
 !-----------------------------------------------
 ! Indices
       INTEGER :: I, J, K, IJK, IJK1
-! Local DO loop index for b.c. specification
-      INTEGER :: L
-! Temporary storage for FLAG value
-      INTEGER :: FLAGX
       integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
@@ -314,5 +310,3 @@
 
       RETURN
       END SUBROUTINE SET_FLAGS1
-
-

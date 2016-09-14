@@ -36,7 +36,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      use bc, only: bc_type
       use bc, only: bc_k_b, bc_k_t
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_i_w, bc_i_e
@@ -62,7 +61,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, M
+      INTEGER :: I, J, K
 ! index for boundary cell
       INTEGER :: IJK
 ! index for a fluid cell adjacent to the boundary cell
@@ -295,7 +294,7 @@
 
 ! Global variables
 !---------------------------------------------------------------------//
-      use bc, only: bc_type, bc_ep_g
+      use bc, only: bc_ep_g
       use fldvar, only: rop_g, ro_g, ep_g
       use discretelement, only: discrete_element
       use discretelement, only: des_rop_s

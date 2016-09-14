@@ -29,8 +29,6 @@
       use bc, only: BC_EP_g
 ! Run-time flag for DEM solids
       use run, only: DEM_SOLIDS
-! Run-time flag for PIC solids
-      use run, only: PIC_SOLIDS
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
