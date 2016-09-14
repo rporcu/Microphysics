@@ -1,18 +1,28 @@
 #!/bin/bash -l
 
 RUN_NAME="DEM02"
+rm -f ${RUN_NAME}* &> /dev/null
 
 MFIX=./mfix
 if [ -n "$1" ]; then
    MFIX=$1
 fi
 
-rm -f ${RUN_NAME}* &> /dev/null
+LEVEL=1
+if [ -n "$2" ]; then
+   LEVEL=$2
+fi
 
-time -p ${MFIX}
+PROCS=$(expr ${LEVEL} \* ${LEVEL})
+CELLS=$(expr 10 \* ${LEVEL})
+LEN=$(awk "BEGIN {printf \"%.10f\n\", 0.0015*${LEVEL}}")
 
-#post_dats=AUTOTEST/POST*.dat
-#
-#for test_post_file in ${post_dats}; do
-#    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
-#done
+if [ "${LEVEL}" -eq 1 ]; then
+  time -p ${MFIX}
+else
+  time -p mpirun -np ${PROCS} ${MFIX} \
+    XLENGTH=${LEN} IMAX=${CELLS} NODESI=${LEVEL} \
+    ZLENGTH=${LEN} KMAX=${CELLS} NODESK=${LEVEL} \
+    IC_X_E\(1\)=${LEN} IC_Z_T\(1\)=${LEN}
+fi
+
