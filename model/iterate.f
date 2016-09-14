@@ -52,13 +52,11 @@
 ! complete convergence, non-covergence and divergence respectively
       INTEGER :: MUSTIT
 ! Normalization factor for gas & solids pressure residual
-      DOUBLE PRECISION :: NORMg, NORMs
+      DOUBLE PRECISION :: NORMg
 ! Set normalization factor for gas and solids pressure residual
       LOGICAL :: SETg
 ! gas & solids pressure residual
       DOUBLE PRECISION :: RESg
-! phase index
-      INTEGER :: M
 ! average velocity
       DOUBLE PRECISION :: Vavg
       CHARACTER(LEN=4) :: TUNIT
@@ -206,9 +204,6 @@
             WRITE(ERR_MSG,5001) TIME, DT, NIT, 0.0, CPU_NOW
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
- 5000 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,' NIT=',I3,' Sm=',G12.5, &
-         ' Hl=',G12.5,T84,'CPU=',F8.0,' s')
-
  5001 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,' NIT=',I3,' Sm=',G12.5, &
          T84,'CPU=',F8.0,' s')
 
@@ -273,7 +268,6 @@
       RETURN
 
  5050 FORMAT(5X,'Average ',A,G12.5)
- 5060 FORMAT(5X,'Average ',A,I2,A,G12.5)
  5100 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,&
          ' NIT>',I3,' Sm= ',G12.5, 'MbErr%=', G11.4)
  5200 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,' NIT=',&

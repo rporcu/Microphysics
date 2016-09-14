@@ -71,11 +71,6 @@
          'the input line,',/' but no ending parenthesis was located:',/&
          ' INPUT: ',A,/1X,70('*')//)
 
- 1010 FORMAT(/1X,70('*')/': From: PARSE_LINE',/&
-         ' Error: END keyword before a start keyword in line: ',       &
-          /1X,A,/1X,70('*')/)
-
-
       END SUBROUTINE PARSE_LINE
 
 

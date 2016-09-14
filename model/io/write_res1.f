@@ -54,10 +54,6 @@
       double precision, allocatable :: array1(:)
       double precision, allocatable :: array2(:)
 
-
-!             loop counter
-      INTEGER :: LC, N
-!
 !             pointer to first time-dependent record in restart file
       INTEGER :: NEXT_REC
 !-----------------------------------------------
@@ -130,7 +126,7 @@
 
       double precision, dimension(ijkmax2) :: array1
       double precision, dimension(ijkmax3) :: array2
-      double precision, dimension(DIMENSION_3) :: VAR,TMP_VAR
+      double precision, dimension(DIMENSION_3) :: VAR
 
       INTEGER :: NEXT_REC
 

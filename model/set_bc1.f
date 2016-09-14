@@ -151,8 +151,8 @@
 !---------------------------------------------------------------------//
       use bc, only: bc_dt_0, bc_time
       use bc, only: bc_out_n
-      use bc, only: bc_mout_g, bc_mout_s
-      use bc, only: bc_vout_g, bc_vout_s
+      use bc, only: bc_mout_g
+      use bc, only: bc_vout_g
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero
       use machine, only: start_log, end_log
@@ -163,11 +163,6 @@
 !---------------------------------------------------------------------//
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
-
-! Local variables
-!---------------------------------------------------------------------//
-! Solids phase index
-      INTEGER :: M
 
       IF (BC_DT_0(BCV) == UNDEFINED) RETURN
 
@@ -193,8 +188,6 @@
 
  1000 FORMAT(/,1X,'Average outflow rates at BC No. ',I2,'  At Time = ',G12.5)
  1100 FORMAT(3X,'Gas : Mass flow = ',G12.5,'     Volumetric flow = ',G12.5)
- 1200 FORMAT(3X,'Solids-',I1,' : Mass flow = ',G12.5,&
-         '     Volumetric flow = ',G12.5)
 
       RETURN
       END SUBROUTINE SET_BC1_REPORT_OUTFLOW
@@ -215,13 +208,13 @@
       use bc, only: bc_i_w, bc_i_e
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_k_b, bc_k_t
-      use bc, only: bc_massflow_g, bc_massflow_s
-      use bc, only: bc_mout_g, bc_mout_s
+      use bc, only: bc_massflow_g
+      use bc, only: bc_mout_g
       use bc, only: bc_out_n
       use bc, only: bc_plane
       use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use bc, only: bc_volflow_g, bc_volflow_s
-      use bc, only: bc_vout_g, bc_vout_s
+      use bc, only: bc_volflow_g
+      use bc, only: bc_vout_g
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
       use functions, only: funijk
@@ -244,10 +237,6 @@
       INTEGER :: I, J, K, IJK
 ! IJK index for setting velocity bc
       INTEGER :: IJK2
-! Solids phase index
-      INTEGER :: M
-! local solids velocity for mixture (for ghd)
-      DOUBLE PRECISION :: lvel_s
 !---------------------------------------------------------------------//
 
       CALL CALC_OUTFLOW(BCV)
@@ -342,8 +331,6 @@
 
  1000 FORMAT(/,1X,'Average outflow rates at BC No. ',I2,'  At Time = ',G12.5)
  1100 FORMAT(3X,'Gas : Mass flow = ',G12.5,'     Volumetric flow = ',G12.5)
- 1200 FORMAT(3X,'Solids-',I1,' : Mass flow = ',G12.5,&
-         '     Volumetric flow = ',G12.5)
 
       RETURN
       END SUBROUTINE SET_BC1_ADJUST_OUTFLOW

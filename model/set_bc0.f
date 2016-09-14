@@ -13,7 +13,6 @@
 
 ! Modules
 !--------------------------------------------------------------------//
-      use bc, only: ijk_p_g
       use bc, only: bc_type, bc_defined
       use fldvar, only: p_g
 
@@ -116,9 +115,7 @@
 ! Local variables
 !--------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK, M
-! number densities for use in GHD theory only
-      DOUBLE PRECISION :: nM, nTOT
+      INTEGER :: I, J, K, IJK
 !--------------------------------------------------------------------//
 
 
@@ -235,13 +232,9 @@
 ! Local variables
 !--------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK, M
+      INTEGER :: I, J, K, IJK
 ! ijk index for setting normal component of velocity
       INTEGER :: FIJK
-! number densities for use in GHD theory only
-      DOUBLE PRECISION :: nM, nTOT
-! calculation for normal component of mixture velocity
-      DOUBLE PRECISION :: lvel_s
 !--------------------------------------------------------------------//
 
       DO K = BC_K_B(BCV), BC_K_T(BCV)
@@ -296,9 +289,9 @@
 ! Modules
 !--------------------------------------------------------------------//
       use bc, only: bc_dt_0, bc_time
+      use bc, only: bc_mout_g
       use bc, only: bc_out_n
-      use bc, only: bc_mout_g, bc_mout_s
-      use bc, only: bc_vout_g, bc_vout_s
+      use bc, only: bc_vout_g
       use param1, only: undefined, zero
       use run, only: time
       IMPLICIT NONE

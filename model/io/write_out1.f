@@ -19,8 +19,6 @@
 
       IMPLICIT NONE
 
-      INTEGER :: LC, N
-
       double precision, allocatable :: array1(:)    !//d
 
 
@@ -66,28 +64,10 @@
  1000 FORMAT(1X,A1,/5X,'--- Gas pressure (P_g) at time ',G12.5,' ---',2/)
  1100 FORMAT(1X,A1,/5X,'--- Void fraction (EP_g) at time ',G12.5,' ---',2/)
  1200 FORMAT(1X,A1,/5X,'--- Gas density (RO_g) at time ',G12.5,' ---',2/)
- 1400 FORMAT(1X,A1,/5X,'--- Solids Phase-',I1,' density x volume',&
-         ' fraction (ROP_s) at time ',G12.5,' ---',2/)
- 1500 FORMAT(1X,A1,/5X,'--- Gas temperature (T_g) at time ',G12.5,' ---',2/)
- 1600 FORMAT(1X,A1,/5X,'--- Solids Phase-',I1,' temperature (T_s)',' at time ',&
-         G12.5,' ---',2/)
- 1710 FORMAT(1X,A1,/5X,'--- Mass fraction of gas species (X_g) ',&
-         I2,' at time ',&
-         G12.5,' ---',2/)
- 1720 FORMAT(1X,A1,/5X,'--- Mass fraction of solids-',I1,' species (X_s)',I2,&
-         ' at time ',G12.5,' ---',2/)
  1800 FORMAT(1X,A1,/5X,'--- X-component of gas velocity (U_g) at time ',G12.5,&
          ' ---',2/)
  1900 FORMAT(1X,A1,/5X,'--- Y-component of gas velocity (V_g) at time ',G12.5,&
          ' ---',2/)
  2000 FORMAT(1X,A1,/5X,'--- Z-component of gas velocity (W_g) at time ',G12.5,&
          ' ---',2/)
- 2100 FORMAT(1X,A1,/5X,'--- X-component of Solids Phase-',I1,&
-         ' velocity (U_s) at time ',G12.5,' ---',2/)
- 2200 FORMAT(1X,A1,/5X,'--- Y-component of Solids Phase-',I1,&
-         ' velocity (V_s) at time ',G12.5,' ---',2/)
- 2300 FORMAT(1X,A1,/5X,'--- Z-component of Solids Phase-',I1,&
-         ' velocity (W_s) at time ',G12.5,' ---',2/)
- 2500 FORMAT(1X,A1,/5X,'--- Scalar Field-',I2, ' (Scalar) at time ',G12.5,' ---',2/)
- 2600 FORMAT(1X,A1,/5X,'--- Turbulence Field-', ' (K-Epsilon) at time ',G12.5,' ---',2/)
       END SUBROUTINE WRITE_OUT1

@@ -33,7 +33,6 @@
       use geometry
       use indices
       use mpi_utility
-      use param, only: dimension_m
       use param1
       use fldvar
       use physprop
@@ -138,8 +137,6 @@
 
 ! Local Variables:
 !-----------------------------------------------------------------------
-! Average molecular weight
-      DOUBLE PRECISION :: MW
 ! Loop indicies
       INTEGER :: IJK   ! Computational cell
 ! Flag to write log header

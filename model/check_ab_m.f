@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: Check_Ab_m(A_m, b_m, M, src, IER)                      C                     C
+!  Module name: Check_Ab_m(A_m, b_m, M, src, IER)                      C
 !  Purpose: Check the entries of the sparse matrix coefficients and theC
 !           source vector, if src is set true.                         C
 !                                                                      C
@@ -50,12 +50,6 @@
 !                      variables, such as temperatures and
 !                      mass fractions, that are always positive.
       LOGICAL          SRC
-!
-!                      Error message
-      CHARACTER(LEN=80) :: LINE(1)
-!
-!                      cell index
-      INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
@@ -109,9 +103,6 @@
 !                      Phase index
       INTEGER          M
 
-!                      cell index
-      INTEGER          IJK, ipjk, ijpk, ijkp, i, j, k
-!
 !                      Septadiagonal matrix A_m
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !-----------------------------------------------

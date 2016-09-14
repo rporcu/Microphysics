@@ -204,16 +204,6 @@
          'Close_Packed')
  1406 FORMAT(6x,I2,4x,A3,5X,G12.5,3x,G12.5,9x,L1)
 
- 1410 FORMAT(/7X,'Number of solids-',I2,' species (NMAX(',I2,')) = ',I3)
-
- 1411 FORMAT(9x,'Solid',5x,'Molecular')
- 1412 FORMAT(26x,'Density',4x,'Mass Fraction')
-
- 1415 FORMAT(8x,'Species',5x,'weight',7x,'Alias',5x,'Name')
- 1416 FORMAT(7x,'(RO_Xs0)',6x,'(X_s0)')
-
-
-
 
          IF(DEM_SOLIDS) THEN
             IF(.NOT.DES_CONTINUUM_COUPLED) THEN
@@ -432,11 +422,8 @@
          'Time: ',I2,':',I2,20X,'Date: ',I2,'-',I2,'-',I4)
  1010 FORMAT(/7X,'Computer : ',A50,/,1X,79('_'))
  1100 FORMAT(//,3X,'1. RUN CONTROL',/)
- 1103 FORMAT(/7X, I4,'               ',I4)
- 1104 FORMAT(/7X,'* K and Epsilon equations are solved.')
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
- 1123 FORMAT(14X,'Kinetic Theory : ',A50)
  1130 FORMAT(7X,'Units (UNITS) : ',A16)
  1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X,'Stop_time (TSTOP) = ',G12.5,/7X&
          ,'Time step (DT) = ',G12.5,/7X,'Max time step (DT_MAX) = ',G12.5,/7X&
@@ -447,10 +434,6 @@
  1138 FORMAT(30X,'(Initial conditions from the input (.DAT) file)')
  1139 FORMAT(30X,'(Initial conditions from the restart (.RES) file)')
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
- 1141 FORMAT(/7X,'* Solids-',I2,' momentum equation-',A,' is',A,'solved.')
- 1142 FORMAT(/7X,'* Granular energy equation(s) is solved.')
- 1143 FORMAT(/7X,'* Energy equations are solved.')
- 1144 FORMAT(/7X,'* Energy equations are NOT solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')
 !
  1150 FORMAT(//,3X,'2. PHYSICAL AND NUMERICAL PARAMETERS',/)
@@ -490,7 +473,6 @@
          '  (A constant value is used everywhere)')
  1310 FORMAT(7X,'Viscosity (MU_g0) = ',G12.5,&
          '  (A constant value is used everywhere)')
- 1317 FORMAT(7X,3X,I3,15X,G12.5)
  1320 FORMAT(7X,'Average molecular weight (MW_avg) = ',G12.5,&
          '  (A constant value is used everywhere)')
 !
@@ -512,23 +494,15 @@
          'K index of cell at top    (IC_K_t) = ',I4)
  1540 FORMAT(9X,'Void fraction (IC_EP_g) = ',G12.5)
  1541 FORMAT(9X,'Gas pressure (IC_P_g) = ',G12.5)
- 1542 FORMAT(9X,'Gas temperature (IC_T_g) = ',G12.5)
- 1543 FORMAT(9X,'Gas species',5X,'Mass fraction (IC_X_g)')
- 1544 FORMAT(9X,3X,I3,15X,G12.5)
  1550 FORMAT(9X,'X-component of gas velocity (IC_U_g) = ',G12.5,/9X,&
          'Y-component of gas velocity (IC_V_g) = ',G12.5,/9X,&
          'Z-component of gas velocity (IC_W_g) = ',G12.5)
  1560 FORMAT(9X,'Solids phase-',I2,' Density x Volume fr. (IC_ROP_s) = ',G12.5)
- 1561 FORMAT(9X,'Solids phase-',I2,' temperature (IC_T_s) = ',G12.5)
- 1563 FORMAT(9X,'Solids-',I2,' species',5X,'Mass fraction (IC_X_s)')
- 1564 FORMAT(9X,3X,I3,20X,G12.5)
  1570 FORMAT(9X,'X-component of solids phase-',I2,' velocity (IC_U_s) =',G12.5,&
          /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
          ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)
 !
  1600 FORMAT(//,3X,'7. BOUNDARY CONDITIONS')
- 1601 FORMAT(/7X,'Average value of ',A,G12.5)
- 1602 FORMAT(/7X,'Average value of ',A,I2,A,G12.5)
  1610 FORMAT(/7X,'Boundary condition no : ',I4)
  1611 FORMAT(9X,'Type of boundary condition : ',A16)
  1612 FORMAT(11X,'(Inlet with specified gas and solids mass flux)')
@@ -556,25 +530,13 @@
  1640 FORMAT(9X,'Void fraction (BC_EP_g) = ',G12.5)
  1641 FORMAT(9X,'Gas pressure (BC_P_g) = ',G12.5)
  1642 FORMAT(9X,'Gas temperature (BC_T_g) = ',G12.5)
- 1643 FORMAT(9X,'Gas species',5X,'Mass fraction (BC_X_g)')
- 1644 FORMAT(9X,3X,I3,15X,G12.5)
  1648 FORMAT(9X,'Gas mass flow rate (BC_MASSFLOW_g) = ',G12.5)
  1649 FORMAT(9X,'Gas volumetric flow rate (BC_VOLFLOW_g) = ',G12.5)
  1650 FORMAT(9X,'X-component of gas velocity (BC_U_g) = ',G12.5)
  1651 FORMAT(9X,'Y-component of gas velocity (BC_V_g) = ',G12.5)
  1652 FORMAT(9X,'Z-component of gas velocity (BC_W_g) = ',G12.5)
- 1655 FORMAT(9X,'Initial interval when jet vel= BC_Jet_g0 (BC_DT_0) = ',G12.5,/9X,&
-         'Initial jet velocity (BC_Jet_g0) = ',G12.5,/9X,&
-         'Interval when jet vel= BC_Jet_gl (BC_DT_l) = ',G12.5,/9X,&
-         'Low value of jet velocity (BC_Jet_gl) = ',G12.5,/9X,&
-         'Interval when jet vel = BC_Jet_gh (BC_DT_h) = ',G12.5,/9X,&
-         'High value of jet velocity (BC_Jet_gh) = ',G12.5)
- 1656 FORMAT(9X,'Interval for averaging outflow rates= (BC_DT_0) = ',G12.5)
  1660 FORMAT(9X,'Solids phase-',I2,' Density x Volume fr. (BC_ROP_s) = ',G12.5)
- 1661 FORMAT(9X,'Solids phase-',I2,' temperature (BC_T_s) = ',G12.5)
 
- 1663 FORMAT(9X,'Solids-',I2,' species',5X,'Mass fraction (BC_X_s)')
- 1664 FORMAT(9X,3X,I3,20X,G12.5)
  1668 FORMAT(9X,'Solids phase-',I2,' mass flow rate (BC_MASSFLOW_s) =',G12.5)
  1669 FORMAT(9X,'Solids phase-',I2,' volumetric flow rate (BC_VOLFLOW_s) =',&
          G12.5)
@@ -599,8 +561,6 @@
          'The following values are specified in the file TOLERANCE.INC.')
  1901 FORMAT(/7X,'Minimum value of EP_s tracked (ZERO_EP_s) = ',G12.5)
  1905 FORMAT(7X,'Tolerance for species and energy balances (TOL_COM) = ',G12.5)
- 1906 FORMAT(7X,'Tolerance for scalar mass balances (TOL_RESID_Scalar) = ',G12.5)
- 1908 FORMAT(7X,'Tolerance for Granular Temp.  balances (TOL_RESID_Th) = ',G12.5)
 !
 
     CONTAINS
@@ -774,5 +734,3 @@
          'the characters will be over-written in the above order',/1X,A1)
          RETURN
          END SUBROUTINE WRITE_FLAGS
-
-

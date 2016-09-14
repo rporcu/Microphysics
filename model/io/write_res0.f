@@ -39,9 +39,8 @@
 !-----------------------------------------------
       integer, allocatable :: arr1(:)
       integer, allocatable :: arr2(:)
-      integer :: work_around(100)
 ! loop counters
-      INTEGER :: LC, L, N, IDX
+      INTEGER :: LC, L
 ! Pointer to the next record
       INTEGER :: NEXT_RECA
 ! file version id
