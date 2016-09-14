@@ -14,15 +14,9 @@
 !---------------------------------------------------------------------//
       USE fldvar, only: rop_g, u_g, v_g, w_g
       USE mflux, only: rop_ge, rop_gn, rop_gt
-      USE physprop, only: mmax
       USE run, only: discretize
       IMPLICIT NONE
 
-!---------------------------------------------------------------------//
-! Local variables
-!---------------------------------------------------------------------//
-! solids phase index
-      INTEGER :: M
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding

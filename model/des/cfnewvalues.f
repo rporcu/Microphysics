@@ -114,14 +114,6 @@
 
       FIRST_PASS = .FALSE.
 
-
- 1002 FORMAT(/1X,70('*')//&
-         ' From: CFNEWVALUES -',/&
-         ' Message: Particle ',I10, ' moved a distance ', ES17.9, &
-         ' during a',/10X, 'single solids time step, which is ',&
-         ' greater than',/10X,'its radius: ', ES17.9)
- 1003 FORMAT(1X,70('*')/)
-
       RETURN
 
       contains

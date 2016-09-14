@@ -14,13 +14,7 @@
       use particle_filter, only: DES_INTERP_NONE
       use particle_filter, only: DES_INTERP_GARG
 
-      use physprop, only: MMAX
-      use discretelement, only: DES_ROP_S
-
       IMPLICIT NONE
-
-! Loop counter.
-      INTEGER :: M
 
 !......................................................................!
 
@@ -76,8 +70,6 @@
       INTEGER IJK
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
-! One divided by the total solids volume.
-      DOUBLE PRECISION :: OoSOLVOL
 ! PVOL times statistical weight
       DOUBLE PRECISION :: VOL_WT
 

@@ -89,8 +89,6 @@
       use discretelement, only: DIMN
 ! Number of particles in the system (current)
       use discretelement, only: PIP
-! Flag to use _OLD variables
-      use discretelement, only: DO_OLD
 ! Angular velocity
       use discretelement, only: OMEGA_NEW, PIJK
 ! solid phase diameters and densities.

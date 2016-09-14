@@ -20,9 +20,6 @@
       INTEGER, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
-      CHARACTER(len=256) :: STRING
-      INTEGER :: IOS
-
 ! 2015-2 Deprecated list:
 !-----------------------------------------------------------------------
 !     NAMELIST / DEP_2015_2 / SOME_KEYWORD

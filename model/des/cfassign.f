@@ -25,8 +25,6 @@
       USE constant, only : GRAVITY_X, GRAVITY_Y, GRAVITY_Z
       USE discretelement
       use error_manager
-! Flag: DEM solids present.
-      use run, only: DEM_SOLIDS
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -232,4 +230,3 @@
       RETURN
       RETURN
       END SUBROUTINE compute_volume_of_nodes
-

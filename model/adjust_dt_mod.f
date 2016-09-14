@@ -20,8 +20,6 @@
       use run, only: DT_MIN, DT_MAX, DT_FAC
 ! Flag: Use stored DT value for advancing TIME
       use run, only: USE_DT_PREV
-! The current number of time steps (value at restart).
-      use run, only: NSTEP
 ! Current DT (1/DT) and direction of last change (+/-)
       use run, only: DT, oDT, DT_DIR
 

@@ -74,8 +74,6 @@
       DOUBLE PRECISION :: lEPg, VELFP(3), lPF(3)
 ! Drag force acting on each particle.
       DOUBLE PRECISION :: D_FORCE(3)
-! Flag for Model A momentum equation
-      LOGICAL :: MODEL_A
 ! Loop bound for filter
       INTEGER :: LP_BND
 

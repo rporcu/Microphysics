@@ -60,8 +60,6 @@
       use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
       use discretelement, only: PIJK
-! Flag to send/recv old (previous) values
-      use discretelement, only: DO_OLD
 ! Number of particles on the process (max particle array size)
       use discretelement, only: PIP
 ! Number of ghost particles on the current process
@@ -235,8 +233,6 @@
 !---------------------------------------------------------------------//
 ! Size of ghost particle data packet
       use desmpi, only: iParticlePacketSize
-! Index of last particle added to this process.
-      use desmpi, only: iSPOT
 ! The MPI receive buffer
       use desmpi, only: dRECVBUF
 ! Buffer offset

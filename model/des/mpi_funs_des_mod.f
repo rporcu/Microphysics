@@ -237,7 +237,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE DESMPI_CLEANUP
 
-      use discretelement, only: DES_POS_NEW
       use discretelement, only: DES_VEL_NEW
       use discretelement, only: OMEGA_NEW
       use discretelement, only: FC

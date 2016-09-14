@@ -98,13 +98,6 @@
 
       use discretelement, only: DES_CONTINUUM_COUPLED
 
-! Contribution to gas momentum equation due to drag
-      use discretelement, only: DRAG_BM
-! Scalar cell center total drag force
-      use discretelement, only: F_GDS
-! Flag for 3D simulatoins.
-      use geometry, only: DO_K
-
       IMPLICIT NONE
 
 ! Bin particles to the fluid grid.
