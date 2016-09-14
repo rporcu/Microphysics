@@ -265,7 +265,7 @@
 !$omp         do_k, ltau_u_g,                            &
 !$omp         ep_g, MU_G, LAMBDA_G, trd_g, u_g, v_g, w_g,          &
 !$omp         axy_u, axz_u, ayz, ayz_u, vol,                           &
-!$omp         bc_type, bc_u_id, bc_uw_g, bc_vw_g, bc_ww_g, bc_hw_g,    &
+!$omp         bc_type_enum, bc_u_id, bc_uw_g, bc_vw_g, bc_ww_g, bc_hw_g, &
 !$omp         oneodx_e_u, oneodx_e_v, oneodx_e_w,                      &
 !$omp         x_u, y_u, z_u, x_v, y_v, z_v, x_w, y_w, z_w,             &
 !$omp         wall_v_at, wall_w_at, area_u_cut, cut_u_cell_at,         &

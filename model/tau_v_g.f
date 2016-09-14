@@ -254,7 +254,7 @@
 !$omp         im1, jm1, jp1, km1, ltau_v_g,                 &
 !$omp         MU_G, ep_g, LAMBDA_G, trd_g, v_g, w_g, u_g,          &
 !$omp         ayz_v, axz_v, axz, axy_v, vol,                           &
-!$omp         bc_type, bc_v_id, bc_hw_g, bc_uw_g, bc_vw_g, bc_ww_g,    &
+!$omp         bc_type_enum, bc_v_id, bc_hw_g, bc_uw_g, bc_vw_g, bc_ww_g, &
 !$omp         x_u, y_u, z_u, x_v, y_v, z_v, x_w, y_w, z_w,             &
 !$omp         oneody_n_v, oneody_n_w, oneody_n_u,                      &
 !$omp         cut_v_cell_at, wall_u_at, wall_w_at, area_v_cut,         &

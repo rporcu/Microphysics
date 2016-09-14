@@ -326,7 +326,7 @@
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
       INTEGER :: BCV
-      CHARACTER(LEN=9) :: BCT
+      INTEGER :: BCT
 
 !-----------------------------------------------
 
@@ -340,15 +340,14 @@
          BCV = BC_W_ID(IJK)
 
          IF(BCV > 0 ) THEN
-            BCT = BC_TYPE(BCV)
+            BCT = BC_TYPE_ENUM(BCV)
          ELSE
-            BCT = 'NONE'
+            BCT = NONE
          ENDIF
 
          SELECT CASE (BCT)
 
-            CASE ('CG_NSW')
-
+            CASE (CG_NSW)
                IF(WALL_W_AT(IJK)) THEN
 
                   A_M(IJK,E,M) = ZERO
@@ -363,7 +362,7 @@
 
                ENDIF
 
-            CASE ('CG_FSW')
+            CASE (CG_FSW)
 
                IF(WALL_W_AT(IJK)) THEN
 
@@ -399,8 +398,7 @@
 
                ENDIF
 
-            CASE ('CG_PSW')
-
+            CASE (CG_PSW)
                IF(WALL_W_AT(IJK)) THEN
 
                   A_M(IJK,E,M) = ZERO
@@ -437,17 +435,11 @@
 
                   ELSE                              ! partial slip
 
-
-
-
-
                   ENDIF
 
                ENDIF
 
-
-            CASE ('CG_MI')
-
+            CASE (CG_MI)
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
                A_M(IJK,N,M) = ZERO
@@ -483,8 +475,7 @@
 
                ENDIF
 
-            CASE ('CG_PO')
-
+            CASE (CG_PO)
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
                A_M(IJK,N,M) = ZERO
@@ -507,15 +498,14 @@
          BCV = BC_ID(IJK)
 
          IF(BCV > 0 ) THEN
-            BCT = BC_TYPE(BCV)
+            BCT = BC_TYPE_ENUM(BCV)
          ELSE
-            BCT = 'NONE'
+            BCT = NONE
          ENDIF
 
          SELECT CASE (BCT)
 
-            CASE ('CG_MI')
-
+         CASE (CG_MI)
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
                A_M(IJK,N,M) = ZERO
@@ -551,8 +541,7 @@
 
                ENDIF
 
-            CASE ('CG_PO')
-
+            CASE (CG_PO)
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
                A_M(IJK,N,M) = ZERO
