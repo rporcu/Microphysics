@@ -14,7 +14,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE GET_3D_ALPHA_U_CUT_CELL
 
-      USE bc, ONLY: BC_TYPE
+      USE bc
       USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
       USE cutcell
       USE functions, ONLY: FUNIJK
@@ -33,7 +33,7 @@
       LOGICAL :: V_NODE_AT_NE,V_NODE_AT_NW
       LOGICAL :: W_NODE_AT_TE,W_NODE_AT_TW
       INTEGER :: BCV
-      CHARACTER(LEN=9) ::BCT
+      INTEGER ::BCT
 
       IF(MyPE == PE_IO) THEN
          WRITE(*,10)'COMPUTING INTERPOLATION FACTORS IN U-MOMENTUM CELLS...'
@@ -166,12 +166,12 @@
             BCV = BC_U_ID(IJK)
 
             IF(BCV>0) THEN
-               BCT = BC_TYPE(BCV)
+               BCT = BC_TYPE_ENUM(BCV)
             ELSE
-               BCT = ''
+               BCT = BLANK
             ENDIF
 
-            IF(BCT =='CG_NSW'.OR.BCT =='CG_PSW') THEN
+            IF(BCT ==CG_NSW.OR.BCT ==CG_PSW) THEN
 
                CALL GET_DEL_H(IJK,'U_MOMENTUM',X_U(IJK),Y_U(IJK),Z_U(IJK),DELH_U(IJK),Nx,Ny,Nz)
 
@@ -418,7 +418,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE GET_3D_ALPHA_V_CUT_CELL
 
-      USE bc, ONLY: BC_TYPE
+      USE bc
       USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
       USE cutcell
       USE functions, ONLY: FUNIJK
@@ -437,7 +437,7 @@
       LOGICAL :: U_NODE_AT_NE, U_NODE_AT_SE
       LOGICAL :: W_NODE_AT_NT, W_NODE_AT_ST
       INTEGER :: BCV
-      CHARACTER(LEN=9) ::BCT
+      INTEGER ::BCT
 
       IF(MyPE == PE_IO) THEN
          WRITE(*,10)'COMPUTING INTERPOLATION FACTORS IN V-MOMENTUM CELLS...'
@@ -572,12 +572,12 @@
 
             BCV = BC_V_ID(IJK)
             IF(BCV>0) THEN
-               BCT = BC_TYPE(BCV)
+               BCT = BC_TYPE_ENUM(BCV)
             ELSE
-               BCT = ''
+               BCT = BLANK
             ENDIF
 
-            IF(BCT =='CG_NSW'.OR.BCT =='CG_PSW') THEN
+            IF(BCT ==CG_NSW.OR.BCT ==CG_PSW) THEN
 
                CALL GET_DEL_H(IJK,'V_MOMENTUM',X_V(IJK),Y_V(IJK),Z_V(IJK),DELH_V(IJK),Nx,Ny,Nz)
 
@@ -822,7 +822,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE GET_3D_ALPHA_W_CUT_CELL
 
-      USE bc, ONLY: BC_TYPE
+      USE bc
       USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
       USE cutcell
       USE functions, ONLY: FUNIJK
@@ -841,7 +841,7 @@
       LOGICAL :: U_NODE_AT_TE, U_NODE_AT_BE
       LOGICAL :: V_NODE_AT_TN, V_NODE_AT_BN
       INTEGER :: BCV
-      CHARACTER(LEN=9) ::BCT
+      INTEGER ::BCT
 
       IF(MyPE == PE_IO) THEN
          WRITE(*,10)'COMPUTING INTERPOLATION FACTORS IN W-MOMENTUM CELLS...'
@@ -965,12 +965,12 @@
 
             BCV = BC_W_ID(IJK)
             IF(BCV>0) THEN
-               BCT = BC_TYPE(BCV)
+               BCT = BC_TYPE_ENUM(BCV)
             ELSE
-               BCT = ''
+               BCT = BLANK
             ENDIF
 
-            IF(BCT =='CG_NSW'.OR.BCT =='CG_PSW') THEN
+            IF(BCT ==CG_NSW.OR.BCT ==CG_PSW) THEN
 
                CALL GET_DEL_H(IJK,'W_MOMENTUM',X_W(IJK),Y_W(IJK),Z_W(IJK),DELH_W(IJK),Nx,Ny,Nz)
 
