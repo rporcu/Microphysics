@@ -53,7 +53,7 @@
       INTEGER          L
 !
 !                      indices
-      INTEGER          IJK, M, N ,IJKW,IJKS,IJKB
+      INTEGER          IJK, N ,IJKW,IJKS,IJKB
 !
 !----------------------------------------------
 

@@ -54,7 +54,7 @@
 ! max of residuals
       DOUBLE PRECISION :: maxres
 ! index
-      INTEGER :: L, M, maxL, maxM, N, maxN
+      INTEGER :: L, M, maxL, maxM, maxN
 !-----------------------------------------------
 
 ! sum the residuals from correction equation (pressure and/or
@@ -169,5 +169,3 @@
 
       RETURN
       END SUBROUTINE CHECK_CONVERGENCE
-
-

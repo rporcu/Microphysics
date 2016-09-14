@@ -976,11 +976,11 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: IJK,IJKW,IJKS,IJKB,M,N
+      INTEGER :: IJK,IJKW,IJKS,IJKB,M
       INTEGER :: IJKWW,IJKSS,IJKBB
       INTEGER :: BCV,BCV_U,BCV_V,BCV_W
 !-----------------------------------------------
-      DOUBLE PRECISION SUM, SUM_EP
+      DOUBLE PRECISION SUM_EP
 !-----------------------------------------------
 !======================================================================
 ! Boundary conditions
@@ -2017,7 +2017,7 @@
 !-----------------------------------------------
 !
 !     loop/variable indices
-      INTEGER :: IJK, M, N, BCV
+      INTEGER :: IJK, BCV
 !
       INTEGER :: iproc
       INTEGER :: NPS,PSV

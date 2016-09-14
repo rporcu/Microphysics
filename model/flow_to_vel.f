@@ -110,7 +110,6 @@
       use bc, only: BC_P_g
       use bc, only: BC_T_g
       use bc, only: BC_VOLFLOW_g
-      use bc, only: BC_X_g
       use eos, only: EOSG
       use error_manager
       use param, only: DIMENSION_BC
@@ -197,7 +196,6 @@
 
       USE bc, only: BC_MASSFLOW_s
       USE bc, only: BC_VOLFLOW_s
-      USE bc, only: BC_X_s
       USE param1, only: UNDEFINED, ZERO
       USE physprop, only: RO_s0
       use error_manager
@@ -211,8 +209,6 @@
 
 ! Volumetric flow rate computed from mass flow rate
       DOUBLE PRECISION :: VOLFLOW
-! Index of inert species
-      INTEGER :: INERT
 
       CALL INIT_ERR_MSG("SOLIDS_MASSFLOW_TO_VOLFLOW")
 

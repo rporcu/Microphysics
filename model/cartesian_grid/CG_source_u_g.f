@@ -79,7 +79,7 @@
 !=======================================================================
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
-      INTEGER :: J,K,IM,JM,IP,JP,KM,KP
+      INTEGER :: J,K,JM,IP,KM
       INTEGER :: IMJK,IJMK,IJPK,IJKC,IJKN,IJKNE,IJKS,IJKSE,IPJMK,IJKP
       INTEGER :: IJKT,IJKTE,IJKB,IJKBE
       DOUBLE PRECISION :: Ue,Uw,Un,Us,Ut,Ub
@@ -89,8 +89,6 @@
       INTEGER :: BCV
       CHARACTER(LEN=9) :: BCT
 
-!                       virtual (added) mass
-      DOUBLE PRECISION F_vir, ROP_MA, U_se, Usw, Vsn, Vss, Vsc, Usn, Uss, Wsb, Wst, Wsc, Usb, Ust
 !=======================================================================
 ! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================

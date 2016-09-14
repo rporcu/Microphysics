@@ -47,12 +47,6 @@
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
 !
-!             loop counter
-      INTEGER LC
-!
-!                      Local species index
-      INTEGER          N
-!
 !             pointer to the next record
       INTEGER NEXT_REC
 !
@@ -232,7 +226,6 @@
 !-----------------------------------------------
 ! indices
       INTEGER :: I,J,K, IJK, IJKNB
-      INTEGER :: M,N
       INTEGER :: NB
       INTEGER, DIMENSION(6) :: NBCELL
       LOGICAL :: NB_FOUND

@@ -319,7 +319,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE INIT_OUTPUT_VARS
 
-      use geometry, only: IJKMAX2
       use machine, only: wall_time
       use output, only: ONEMEG
       use output, only: OUT_TIME, OUT_DT
@@ -331,7 +330,6 @@
       use param, only: DIMENSION_USR
       use param1, only: UNDEFINED
       use param1, only: ZERO
-      use physprop, only: MMAX
       use run, only: RUN_TYPE
       use run, only: TIME, DT
       use time_cpu, only: CPU_IO

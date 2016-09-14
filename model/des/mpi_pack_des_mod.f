@@ -58,8 +58,6 @@
       use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
       use discretelement, only: PIJK
-! Number of particles on the process (max particle array size)
-      use discretelement, only: MAX_PIP
 ! User-defined variables for each particle.
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
 ! Function to convert DES grid IJK to new proc value.
@@ -186,7 +184,7 @@
 ! Flag to send/recv old (previous) values
       use discretelement, only: DO_OLD
 ! Number of particles on the process (max particle array size)
-      use discretelement, only: PIP, MAX_PIP
+      use discretelement, only: MAX_PIP
 ! Number of ghost particles on the current process
       use discretelement, only: iGHOST_CNT
 ! User-defined variables for each particle.
@@ -201,8 +199,6 @@
       use discretelement, only: DES_EXPLICITLY_COUPLED
 ! Explicit particle drag force
       use discretelement, only: DRAG_FC
-! Cells and weights for interpolation
-      use particle_filter, only: FILTER_WEIGHT
 
       use desgrid, only: dg_ijkconv, icycoffset
       use desmpi, only: dcycl_offset, isendcnt

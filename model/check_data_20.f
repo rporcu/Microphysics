@@ -52,14 +52,8 @@
 !-----------------------------------------------
 ! Indices
       INTEGER :: I, J, K, IJK, IMJK, IJMK, IJKM
-! Solids phase
-      INTEGER :: M
-! Species index
-      INTEGER :: N
 ! Logical variable to set, if there is an error
       LOGICAL :: ABORT
-! 1.0 - sum of all volume fractions
-      DOUBLE PRECISION DIF
 !-----------------------------------------------
 
       CALL INIT_ERR_MSG("CHECK_DATA_20")

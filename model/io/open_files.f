@@ -22,15 +22,10 @@
       CHARACTER(LEN=*) :: RUN_NAME
 ! Run_type (as specified in input file)
       CHARACTER(LEN=*) :: RUN_TYPE
-! local variables
-      CHARACTER(len=4) :: EXT
 ! run_name + extension
       CHARACTER(len=255) :: FILE_NAME
-! Loop counter
-      INTEGER :: LC
 ! index to first blank character in run_name
       INTEGER :: NB
-      CHARACTER(len=35) :: EXT_END
       CHARACTER(len=10) :: CSTATUS
 ! Character error code.
       CHARACTER(len=32) :: CER

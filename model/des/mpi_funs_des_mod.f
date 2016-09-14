@@ -240,7 +240,6 @@
       use discretelement, only: DES_VEL_NEW, DES_POS_NEW
       use discretelement, only: OMEGA_NEW
       use discretelement, only: FC
-      use discretelement, only: DO_OLD
       use discretelement, only: PIP
       use discretelement, only: iGHOST_CNT
       use discretelement, only: DES_USR_VAR_SIZE, DES_USR_VAR

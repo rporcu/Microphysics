@@ -14,7 +14,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_DBG_VTU_AND_VTP_FILES
 
-      use discretelement, only: DISCRETE_ELEMENT
       use vtk, only: DIMENSION_VTK
 
       IMPLICIT NONE
@@ -45,7 +44,6 @@
       USE compar
       USE constant
       USE cutcell
-      USE discretelement, Only :  DISCRETE_ELEMENT
       USE fldvar
       USE functions
       USE geometry
@@ -65,13 +63,9 @@
       USE vtp
 
       IMPLICIT NONE
-      INTEGER :: I,J,K,L,M,N,R,IJK,LCV
+      INTEGER :: I,J,K,L,N,IJK,LCV
 
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  FACET_COUNT_DES, NEIGHBORING_FACET
-
-      INTEGER :: SPECIES_COUNTER,LT
-
-      CHARACTER (LEN=32) :: SUBM,SUBN,SUBR
+      CHARACTER (LEN=32) :: SUBN
       CHARACTER (LEN=64) :: VAR_NAME
 
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  DP_BC_ID, IJK_ARRAY

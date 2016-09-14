@@ -33,7 +33,7 @@
 !-----------------------------------------------
 !
 !                      indices
-      INTEGER          I, J, K, M, N
+      INTEGER          I, J, K
 !
 !                      Local index for boundary cell
       INTEGER          IJK

@@ -241,8 +241,6 @@
       use discretelement, only: DG_PIJK, DG_PIJKPRV
 ! The neighbor processor's rank
       use desmpi, only: iNEIGHPROC
-! The global ID for each particle
-      use discretelement, only: iGLOBAL_ID
 ! Particle positions
       use discretelement, only: DES_POS_NEW
 ! Particle tangential velocities

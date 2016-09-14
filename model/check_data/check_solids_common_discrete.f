@@ -18,7 +18,7 @@
 ! Number of solids phases.
       USE physprop, only: MMAX
 ! TFM solids phase diameters and densities. (DEM default)
-      USE physprop, only: D_p0, RO_s0
+      USE physprop, only: D_p0
 
 ! User specified integration method.
       USE discretelement, only: DES_INTG_METHOD
@@ -31,10 +31,6 @@
       USE discretelement, only: DES_PERIODIC_WALLS_X
       USE discretelement, only: DES_PERIODIC_WALLS_Y
       USE discretelement, only: DES_PERIODIC_WALLS_Z
-
-
-! Number of ranks.
-      use run, only: SOLIDS_MODEL
 
 ! Subroutine access.
       use physprop, only: MMAX
@@ -63,7 +59,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop index.
-      INTEGER :: M, lM  ! Solids phase Index
+      INTEGER :: lM  ! Solids phase Index
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE")
@@ -148,7 +144,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE geometry, only: COORDINATES
       USE geometry, only: NO_I, NO_J
       USE geometry, only: ZLENGTH
 ! Flag: Use DES E-L model

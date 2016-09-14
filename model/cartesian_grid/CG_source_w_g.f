@@ -88,8 +88,6 @@
       DOUBLE PRECISION :: WW_g
       INTEGER :: BCV
       CHARACTER(LEN=9) :: BCT
-! Wall function
-      DOUBLE PRECISION :: W_F_Slip
 !=======================================================================
 ! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================

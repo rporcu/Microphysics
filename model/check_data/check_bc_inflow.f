@@ -43,13 +43,12 @@
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_ep_g, bc_p_g
-      use bc, only: bc_rop_s, bc_ep_s, bc_x_s
+      use bc, only: bc_rop_s, bc_ep_s
       use bc, only: bc_massflow_g
       use param, only: dim_m
       use param1, only: undefined, one, zero
       use fldvar, only: ro_g0
       use physprop, only: ro_s0
-      use run, only: solve_ros
       use toleranc, only: compare
       use error_manager
       IMPLICIT NONE

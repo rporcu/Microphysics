@@ -1451,14 +1451,11 @@
       USE geometry, ONLY: axy, axz, ayz, ayz_u, ayz_v, ayz_w, axy_u, axy_v, axy_w, axz_u, axz_v, axz_w
       USE geometry, ONLY: flag, do_k, flag_e, flag_n, flag_t
 
-      USE indices, ONLY: i_of, j_of, k_of
-
       USE bc, only:BC_TYPE
       USE sendrecv
 
       IMPLICIT NONE
       INTEGER :: IJK,I,J,K,I23,J23,K23
-      INTEGER :: IM,IP,JM,JP,KM,KP
       INTEGER :: BCID
       INTEGER :: IPJK,IMJK,IJPK,IJMK,IJKP,IJKM
 
