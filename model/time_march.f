@@ -148,7 +148,7 @@
       MAX_INLET_VEL = MAX_INLET_VEL * MAX_INLET_VEL_FAC
 
 ! Advance the solution in time by iteratively solving the equations
- 150  CALL ITERATE (IER, NIT)
+      CALL ITERATE (IER, NIT)
 
 
       DO WHILE (ADJUSTDT(IER,NIT))

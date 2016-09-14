@@ -35,7 +35,6 @@
       IF(MyPE == PE_IO) THEN
          WRITE(*,*)'FINDING MASTER CELLS FOR U-MOMENTUM CELLS...'
       ENDIF
-10    FORMAT(1X,A)
 
 !======================================================================
 ! Loop though all BC's and create a default NSW BC in case it is needed

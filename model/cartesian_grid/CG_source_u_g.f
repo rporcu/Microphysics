@@ -87,7 +87,7 @@
       DOUBLE PRECISION :: MU_G_E,MU_G_W,MU_G_N,MU_G_S,MU_G_T,MU_G_B,MU_G_CUT
       DOUBLE PRECISION :: UW_g
       INTEGER :: BCV
-      CHARACTER(LEN=9) :: BCT
+      INTEGER(4) :: BCT
 
 !=======================================================================
 ! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
@@ -126,22 +126,22 @@
             BCV = BC_U_ID(IJK)
 
             IF(BCV > 0 ) THEN
-               BCT = BC_TYPE(BCV)
+               BCT = BC_TYPE_ENUM(BCV)
             ELSE
-               BCT = 'NONE'
+               BCT = NONE
             ENDIF
 
             SELECT CASE (BCT)
-               CASE ('CG_NSW')
+               CASE (CG_NSW)
                   NOC_UG = .TRUE.
                   UW_g = ZERO
                   MU_G_CUT =  (VOL(IJK)*MU_G(IJK) + VOL(IPJK)*MU_G(IJKE))/(VOL(IJK) + VOL(IPJK))
 
                   A_M(IJK,0,M) = A_M(IJK,0,M) - MU_G_CUT * Area_U_CUT(IJK)/DELH_U(IJK)
-               CASE ('CG_FSW')
+               CASE (CG_FSW)
                   NOC_UG = .FALSE.
                   UW_g = ZERO
-               CASE('CG_PSW')
+               CASE(CG_PSW)
                   IF(BC_HW_G(BCV)==UNDEFINED) THEN   ! same as NSW
                      NOC_UG = .TRUE.
                      UW_g = BC_UW_G(BCV)
@@ -158,7 +158,7 @@
                      A_M(IJK,0,M) = A_M(IJK,0,M) - MU_G_CUT * Area_U_CUT(IJK)*(BC_HW_G(BCV))
                      B_M(IJK,M) = B_M(IJK,M) - MU_G_CUT * UW_g * Area_U_CUT(IJK)*(BC_HW_G(BCV))
                   ENDIF
-               CASE ('NONE', 'CG_MI')
+               CASE (NONE, CG_MI)
                   NOC_UG = .FALSE.
             END SELECT
 
@@ -330,7 +330,8 @@
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
       INTEGER :: BCV
-      CHARACTER(LEN=9) :: BCT
+      INTEGER :: BCT
+!---------------------------------------------------------------------//
 
       IF(CG_SAFE_MODE(3)==1) RETURN
 
@@ -341,16 +342,15 @@
          BCV = BC_U_ID(IJK)
 
          IF(BCV > 0 ) THEN
-            BCT = BC_TYPE(BCV)
+            BCT = BC_TYPE_ENUM(BCV)
          ELSE
-            BCT = 'NONE'
+            BCT = NONE
          ENDIF
 
 
          SELECT CASE (BCT)
 
-            CASE ('CG_NSW')
-
+            CASE (CG_NSW)
                IF(WALL_U_AT(IJK)) THEN
 
                   A_M(IJK,E,M) = ZERO
@@ -365,7 +365,7 @@
 
                ENDIF
 
-            CASE ('CG_FSW')
+            CASE (CG_FSW)
 
               IF(WALL_U_AT(IJK)) THEN
 
@@ -402,7 +402,7 @@
                ENDIF
 
 
-            CASE ('CG_PSW')
+            CASE (CG_PSW)
 
                IF(WALL_U_AT(IJK)) THEN
 
@@ -518,14 +518,13 @@
 
                ENDIF
 
-            CASE ('CG_MI')
-
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
+            CASE (CG_MI)
+               A_M(IJK,e,M) = ZERO
+               A_M(IJK,w,M) = ZERO
+               A_M(IJK,n,M) = ZERO
+               A_M(IJK,s,M) = ZERO
+               A_M(IJK,t,M) = ZERO
+               A_M(IJK,b,M) = ZERO
                A_M(IJK,0,M) = -ONE
 
                IF(BC_U_g(BCV)/=UNDEFINED) THEN
@@ -555,14 +554,13 @@
 
                ENDIF
 
-            CASE ('CG_PO')
-
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
+            CASE (CG_PO)
+               A_M(IJK,e,M) = ZERO
+               A_M(IJK,w,M) = ZERO
+               A_M(IJK,n,M) = ZERO
+               A_M(IJK,s,M) = ZERO
+               A_M(IJK,t,M) = ZERO
+               A_M(IJK,b,M) = ZERO
                A_M(IJK,0,M) = -ONE
                B_M(IJK,M) = ZERO
 
@@ -579,21 +577,19 @@
          BCV = BC_ID(IJK)
 
          IF(BCV > 0 ) THEN
-            BCT = BC_TYPE(BCV)
+            BCT = BC_TYPE_ENUM(BCV)
          ELSE
-            BCT = 'NONE'
+            BCT = NONE
          ENDIF
 
          SELECT CASE (BCT)
-
-            CASE ('CG_MI')
-
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
+            CASE (CG_MI)
+               A_M(IJK,e,M) = ZERO
+               A_M(IJK,w,M) = ZERO
+               A_M(IJK,n,M) = ZERO
+               A_M(IJK,s,M) = ZERO
+               A_M(IJK,t,M) = ZERO
+               A_M(IJK,b,M) = ZERO
                A_M(IJK,0,M) = -ONE
 
                IF(BC_U_g(BCV)/=UNDEFINED) THEN
@@ -623,14 +619,13 @@
 
                ENDIF
 
-            CASE ('CG_PO')
-
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
+            CASE (CG_PO)
+               A_M(IJK,e,M) = ZERO
+               A_M(IJK,w,M) = ZERO
+               A_M(IJK,n,M) = ZERO
+               A_M(IJK,s,M) = ZERO
+               A_M(IJK,t,M) = ZERO
+               A_M(IJK,b,M) = ZERO
                A_M(IJK,0,M) = -ONE
                B_M(IJK,M) = ZERO
 
