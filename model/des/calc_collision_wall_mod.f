@@ -284,7 +284,6 @@
           WALL_COLLISION_PFT)
 
       use stl_dbg_des, only: write_this_stl
-      use stl_dbg_des, only: write_stls_this_dg
 
       use error_manager
 
@@ -349,7 +348,6 @@
       use discretelement
 
       use stl_dbg_des, only: write_this_stl
-      use stl_dbg_des, only: write_stls_this_dg
 
       use error_manager
 

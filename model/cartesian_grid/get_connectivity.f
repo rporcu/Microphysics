@@ -433,6 +433,7 @@
             WRITE(*,*)'V_MOMENTUM'
             WRITE(*,*)'W_MOMENTUM'
             CALL MFIX_EXIT(myPE)
+            STOP __LINE__
       END SELECT
 
 !     CELL CENTER :
@@ -608,6 +609,7 @@
             WRITE(*,*)'V_MOMENTUM'
             WRITE(*,*)'W_MOMENTUM'
             CALL MFIX_EXIT(myPE)
+            STOP __LINE__
       END SELECT
 
 !     CELL CENTER :

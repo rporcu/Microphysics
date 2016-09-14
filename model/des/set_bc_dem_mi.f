@@ -390,6 +390,8 @@
                max(IofPOS(BC_X_w(BCV))-1,dg_IMIN1)
             BND2 = min(JofPOS(BC_Y_n(BCV))+1,dg_JMAX1) - &
                max(JofPOS(BC_Y_s(BCV))-1,dg_JMIN1)
+         CASE DEFAULT
+            STOP __LINE__
          END SELECT
 
          MAX_CELLS = MAX_CELLS + (BND1 + 1)*(BND2 + 1)

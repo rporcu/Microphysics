@@ -154,6 +154,8 @@
                   ENDIF
                CASE (NONE, CG_MI)
                   NOC_VG = .FALSE.
+               CASE DEFAULT
+                  STOP __LINE__
             END SELECT
 
 

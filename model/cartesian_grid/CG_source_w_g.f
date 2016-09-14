@@ -161,6 +161,8 @@
                   ENDIF
                CASE (NONE,CG_MI)
                   NOC_WG = .FALSE.
+               CASE DEFAULT
+                  STOP __LINE__
             END SELECT
 
             IF(NOC_WG) THEN

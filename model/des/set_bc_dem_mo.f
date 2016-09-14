@@ -78,6 +78,8 @@
          CASE('T','B')
             BND1 = IofPOS(BC_X_e(BCV)) - IofPOS(BC_X_w(BCV))
             BND2 = JofPOS(BC_Y_n(BCV)) - JofPOS(BC_Y_s(BCV))
+         CASE DEFAULT
+            STOP __LINE__
          END SELECT
 
          MAX_CELLS = MAX_CELLS +                                      &

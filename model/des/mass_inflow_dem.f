@@ -48,6 +48,8 @@
                CASE('W'); DIST = XE(BC_I_w(BCV)-1) - DES_POS_NEW(1,NP)
                CASE('T'); DIST = DES_POS_NEW(3,NP) - ZT(BC_K_b(BCV))
                CASE('B'); DIST = ZT(BC_K_b(BCV)-1) - DES_POS_NEW(3,NP)
+               CASE DEFAULT
+                  STOP __LINE__
                END SELECT
 ! The particle is still inside the domain
                IF(DIST > DES_RADIUS(NP)) THEN
@@ -345,111 +347,3 @@
 
       RETURN
       END SUBROUTINE SET_NEW_PARTICLE_PROPS
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine:  DES_NEW_PARTICLE_TEST                                  !
-!                                                                      !
-!  Purpose:  This routine checks if a new particle placed using the    !
-!  random inlet was placed in contact with an existing particle.  If   !
-!  so a flag is set indicating contact, and the new particle is        !
-!  repositioned within the inlet domain.                               !
-!                                                                      !
-!  Author: J.Musser                                   Date: 14-Aug-09  !
-!                                                                      !
-!  Purpose: This routine has to be modified for parallel version       !
-!           the parameter now accepts the lpar_rad and lpar_pos and    !
-!           tests if it touches any particles                          !
-!  Comments:                                                           !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-
-      SUBROUTINE DES_NEW_PARTICLE_TEST(BCV_I,ppar_rad,ppar_pos,TOUCHING)
-
-      USE compar
-      USE constant
-      USE des_bc
-      USE discretelement
-      USE funits
-      USE geometry
-      USE indices
-      USE param1
-      USE physprop
-      USE functions
-
-      IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! index of boundary condition
-      INTEGER, INTENT(IN) :: BCV_I
-      DOUBLE PRECISION, INTENT(IN) :: ppar_pos(DIMN)
-      DOUBLE PRECISION, INTENT(IN) :: ppar_rad
-      LOGICAL, INTENT(INOUT) :: TOUCHING
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! particle number id of a potential overlapping/contacting particle
-      INTEGER NP2
-! total number of particles in current ijk cell and loop counter
-      INTEGER NPG, LL
-! i, j, k indices along boundary used for loop counters
-      INTEGER I, J, K, IJK
-! for parallel processing
-      integer listart,liend,ljstart,ljend,lkstart,lkend
-
-      DOUBLE PRECISION  DISTVEC(DIMN), DIST, R_LM
-!-----------------------------------------------
-
-      TOUCHING = .FALSE.
-
-! For parallel processing the arrays has to be limited
-!      select case (des_mi_class(bcv_i))
-!      case ('XW','XE', 'YZw','YZe')
-!         listart = gs_array(bcv_i,1)
-!         liend = gs_array(bcv_i,2)
-!         ljstart = max(gs_array(bcv_i,3),jstart)
-!         ljend = min(gs_array(bcv_i,4),jend)
-!         lkstart = max(gs_array(bcv_i,5),jstart)
-!         lkend = min(gs_array(bcv_i,6),jend)
-!      case ('YN','YS', 'XZn','XZs')
-!         listart = max(gs_array(bcv_i,1),istart)
-!         liend = min(gs_array(bcv_i,2),iend)
-!         ljstart = gs_array(bcv_i,3)
-!         ljend = gs_array(bcv_i,4)
-!         lkstart = max(gs_array(bcv_i,5),jstart)
-!         lkend = min(gs_array(bcv_i,6),jend)
-!      case ('ZT','ZB', 'XYt','XYb')
-!         listart = max(gs_array(bcv_i,1),istart)
-!         liend = min(gs_array(bcv_i,2),iend)
-!         ljstart = max(gs_array(bcv_i,3),jstart)
-!         ljend = min(gs_array(bcv_i,4),jend)
-!         lkstart = gs_array(bcv_i,5)
-!         lkend = gs_array(bcv_i,6)
-!      end select
-
-      DO k = lkstart,lkend
-      DO j = ljstart,ljend
-      DO i = listart,liend
-!      DO K = GS_ARRAY(BCV_I,5), GS_ARRAY(BCV_I,6)
-!         DO J = GS_ARRAY(BCV_I,3), GS_ARRAY(BCV_I,4)
-!           DO I =  GS_ARRAY(BCV_I,1), GS_ARRAY(BCV_I,2)
-             IJK = FUNIJK(I,J,K)
-             IF(ASSOCIATED(PIC(IJK)%P)) THEN
-               NPG =  SIZE(PIC(IJK)%P)
-               DO LL = 1, NPG
-                  NP2 = PIC(IJK)%P(LL)
-                  DISTVEC(:) = ppar_pos(:) - DES_POS_NEW(:,NP2)
-                  DIST = DOT_PRODUCT(DISTVEC,DISTVEC)
-                  R_LM = ppar_rad + DES_RADIUS(NP2)
-                  IF(DIST .LE. R_LM*R_LM) TOUCHING = .TRUE.
-               ENDDO
-             ENDIF
-           ENDDO
-         ENDDO
-       ENDDO
-
-      RETURN
-      END SUBROUTINE DES_NEW_PARTICLE_TEST

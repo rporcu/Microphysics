@@ -3074,6 +3074,7 @@
            ELSE
               IF(MyPE==0) WRITE(*,*)' ERROR, IN FUNCTION F: POS MUST BE FIRST OR LAST.'
               call mfix_exit(myPE)
+              STOP __LINE__
            ENDIF
         ENDIF
 

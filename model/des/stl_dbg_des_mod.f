@@ -122,6 +122,8 @@
          lSTART = 1
          lEND=N_FACETS_DES
          FNAME='ALL_FACETS.stl'
+      CASE DEFAULT
+         STOP __LINE__
       END SELECT
 
       IF(lEND < lSTART) THEN
@@ -228,6 +230,8 @@
             LSTART = 1
             LEND=N_FACETS_DES
             FID='ALL'
+         CASE DEFAULT
+            STOP __LINE__
          END SELECT
       ELSE
          LSTART = 1
@@ -276,110 +280,6 @@
 
       RETURN
       END SUBROUTINE STL_DBG_WRITE_STL_FROM_DG
-
-
-
-
-!----------------------------------------------------------------------!
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!----------------------------------------------------------------------!
-      SUBROUTINE WRITE_STLS_THIS_DG(DG, STL_TYPE)
-
-! STL Vertices
-      use stl, only: VERTEX
-! STL Facet normals
-      use stl, only: NORM_FACE
-! Facets binned to DES grid
-      use stl, only: FACETS_AT_DG
-! Start/End position of different STLs
-      use stl, only: STL_START, STL_END
-! STLs read from geometry files
-      use stl, only: BASE_STL
-! STLs for user specified walls (NSW, PSW, FSW)
-      use stl, only: BCWALLS_STL
-! STLs for impermeable surfaces
-      use stl, only: IMPRMBL_STL
-! STLs for default walls
-      use stl, only: DEFAULT_STL
-! All STLs
-      use stl, only: ALL_STL
-! Total number of STLs for DES
-      use stl, only: N_FACETS_DES
-
-
-      IMPLICIT NONE
-!-----------------------------------------------
-      INTEGER, INTENT(IN) :: DG
-      INTEGER, INTENT(IN), OPTIONAL :: STL_TYPE
-
-      INTEGER :: ID, FACET, lCOUNT
-      INTEGER :: lSTART, lEND
-
-      CHARACTER(LEN=8) :: IDX, FID
-
-      IF(present(STL_TYPE)) THEN
-         SELECT CASE(STL_TYPE)
-         CASE(BASE_STL)
-            lSTART = STL_START(BASE_STL)
-            lEND=STL_END(BASE_STL)
-            FID='base'
-         CASE(BCWALLS_STL)
-            lSTART = STL_START(BCWALLS_STL)
-            lEND=STL_END(BCWALLS_STL)
-            FID='bcwalls'
-         CASE(IMPRMBL_STL)
-            lSTART = STL_START(IMPRMBL_STL)
-            lEND=STL_END(IMPRMBL_STL)
-            FID='imprmbl'
-         CASE(DEFAULT_STL)
-            lSTART = STL_START(DEFAULT_STL)
-            lEND=STL_END(DEFAULT_STL)
-            FID='default'
-         CASE(ALL_STL)
-            lSTART = 1
-            lEND=N_FACETS_DES
-            FID='all'
-         END SELECT
-      ELSE
-         lSTART = 1
-         lEND=N_FACETS_DES
-         FID='all'
-      ENDIF
-
-      lCOUNT = 0
-      DO FACET=1, FACETS_AT_DG(DG)%COUNT
-         ID = FACETS_AT_DG(DG)%ID(FACET)
-         IF(ID >= lSTART .AND. ID <= lEND) lCOUNT = lCOUNT+1
-      ENDDO
-
-      IF(FACETS_AT_DG(DG)%COUNT < 1) RETURN
-
-      write(idx,"(I8.8)") dg
-      open(unit=555,file='dg_'//idx//'_'//trim(FID)//&
-         '.stl',status='UNKNOWN')
-
-      write(555,*) 'solid vcg'
-
-      DO FACET=1, FACETS_AT_DG(DG)%COUNT
-
-         ID = FACETS_AT_DG(DG)%ID(FACET)
-         IF(ID < lSTART .OR. ID > lEND) CYCLE
-
-         write(555,*) '   facet normal ', NORM_FACE(:,ID)
-         write(555,*) '      outer loop'
-         write(555,*) '         vertex ', VERTEX(1,1:3,ID)
-         write(555,*) '         vertex ', VERTEX(2,1:3,ID)
-         write(555,*) '         vertex ', VERTEX(3,1:3,ID)
-         write(555,*) '      endloop'
-         write(555,*) '   endfacet'
-      ENDDO
-      CLOSE(555)
-
-      RETURN
-      END SUBROUTINE write_stls_this_dg
-
 
 !----------------------------------------------------------------------!
 !                                                                      !

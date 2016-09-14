@@ -125,6 +125,9 @@
                         WW_g = ZERO
                      ELSE                              ! partial slip
                         NOC_TRDG = .FALSE.
+                        UW_g = ZERO
+                        VW_g = ZERO
+                        WW_g = ZERO
                      ENDIF
                   CASE (CG_MI)
                      TRD_G(IJK) = ZERO
@@ -135,6 +138,8 @@
                   CASE (NONE)
                      TRD_G(IJK) = ZERO
                      RETURN
+                  CASE DEFAULT
+                     STOP __LINE__
                END SELECT
 
 
@@ -389,6 +394,9 @@
                WW_g = ZERO
             ELSE                              ! partial slip
                NOC_TRDG = .FALSE.
+               UW_g = ZERO
+               VW_g = ZERO
+               WW_g = ZERO
             ENDIF
          CASE (CG_MI)
             DELV = ZERO
@@ -399,6 +407,8 @@
          CASE (NONE)
             DELV = ZERO
             RETURN
+         CASE DEFAULT
+            STOP __LINE__
       END SELECT
 
       IF(FLOW_AT(IJK)) THEN
@@ -458,7 +468,6 @@
          dudy = ZERO
          dudz = ZERO
       ENDIF
-
 
       DELV(1,1) = dudx
       DELV(1,2) = dudy

@@ -231,6 +231,8 @@ MODULE interpolation
           IF (KTP.EQ.km) KTP = KB + order - 1
        ENDIF
        ordernewtmp = order
+    CASE DEFAULT
+       STOP __LINE__
 
     END SELECT
 
@@ -636,6 +638,8 @@ MODULE interpolation
           IF (ke.EQ.km) kb = ke - order + 1
 
        ordernewtmp = order
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
     IF(dimprob == 2) THEN
        kb = pc(3)
@@ -903,6 +907,8 @@ MODULE interpolation
              yval(i) = shape6(zeta(2),i,dy)
              !zval(i) = shape6(zeta(3),i,dz)
           ENDDO
+       CASE DEFAULT
+          STOP __LINE__
        END SELECT
 
     CASE('csi')
@@ -1263,6 +1269,8 @@ MODULE interpolation
              end do
           end DO
        END SELECT
+    CASE DEFAULT
+       STOP __LINE__
 
     END SELECT !SCHEME
     !-------
@@ -1816,6 +1824,8 @@ MODULE interpolation
        shape2 = 1 - zeta
     CASE (2)
        shape2 = zeta
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape2
 
@@ -1852,6 +1862,8 @@ MODULE interpolation
        denom = dx(2)*(dx(1)+dx(2))
        num   = zh*(zh - dx(1))
        shape3 = num/denom
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape3
 
@@ -1894,6 +1906,8 @@ MODULE interpolation
        c3 = 1.0/(1.0 + r1 + r1*r2)
        shape4 = (c3*c2/r2)*(zeta)*(zeta*r1+1.0)*(zeta-1.0)
        ! shape4 = (one/6.)*(zeta)*(zeta+one)*(zeta-one)
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape4
 
@@ -1966,6 +1980,8 @@ MODULE interpolation
        num = (zh +dx(1))*(zh)*(zh -dx(2)) &
             *(zh -dx(2) -dx(3))
        shape5 = num/denom
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape5
 
@@ -2053,6 +2069,8 @@ MODULE interpolation
        num = (zh +dx(1) +dx(2))*(zh +dx(2))*(zh) &
             *(zh -dx(3))*(zh - dx(3) -dx(4))
        shape6 = num/denom
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape6
 
@@ -2088,6 +2106,8 @@ MODULE interpolation
        shape3deriv_csi = -two*zeta+two*(1-zeta)
     CASE (3)
        shape3deriv_csi = two*zeta
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape3deriv_csi
 
@@ -2170,6 +2190,8 @@ MODULE interpolation
             +(zeta)*(r1)*(zeta-1.0)&
             +(zeta)*(zeta*r1+1.0)*(1.0)
        shape4deriv = tmp*shape4deriv
+    CASE DEFAULT
+       STOP __LINE__
     END SELECT
   END FUNCTION shape4deriv
 

@@ -1533,6 +1533,7 @@
             WRITE(*,*)'V_MOMENTUM'
             WRITE(*,*)'W_MOMENTUM'
             CALL MFIX_EXIT(myPE)
+            STOP __LINE__
       END SELECT
 
 

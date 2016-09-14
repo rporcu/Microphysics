@@ -488,7 +488,12 @@
 ! set grid size based on user input desgridsearch_<ijk>max
       ltempdx = xlength/desgridsearch_imax
       ltempdy = ylength/desgridsearch_jmax
-      if(do_k) ltempdz = zlength/desgridsearch_kmax
+
+      if(do_k) then
+         ltempdz = zlength/desgridsearch_kmax
+      else
+         ltempdz = 0
+      endif
       dg_ksize_all(:) = 1
 
       lijkproc = 0

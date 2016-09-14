@@ -139,6 +139,7 @@
             WRITE(*,*)'V_MOMENTUM'
             WRITE(*,*)'W_MOMENTUM'
             CALL MFIX_EXIT(myPE)
+            STOP __LINE__
       END SELECT
 
 
@@ -299,6 +300,7 @@
             WRITE(*,*)'V_MOMENTUM'
             WRITE(*,*)'W_MOMENTUM'
             CALL MFIX_EXIT(myPE)
+            STOP __LINE__
       END SELECT
 
       DEL_H = Nx * (X0 - Xref) + Ny * (Y0 - Yref) + Nz * (Z0 - Zref)

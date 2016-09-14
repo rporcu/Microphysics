@@ -160,6 +160,8 @@
                   ENDIF
                CASE (NONE, CG_MI)
                   NOC_UG = .FALSE.
+               CASE DEFAULT
+                  STOP __LINE__
             END SELECT
 
             IF(NOC_UG) THEN

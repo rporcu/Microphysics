@@ -395,6 +395,7 @@
 
 
                IF(NO_K)   THEN
+                  W_NODE = .FALSE.
                   VEL_NODE = ((U_NODE).AND.(V_NODE))
                ELSE
                   W_NODE = ((.NOT.BLOCKED_W_CELL_AT(IJKC)).AND.(.NOT.WALL_W_AT(IJKC)))
