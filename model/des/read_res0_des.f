@@ -45,7 +45,7 @@
       ENDDO
 
       DO LC1 = 1, merge(1,3,NO_K)
-         CALL READ_RES_pARRAY(lNEXT_REC, OMEGA_NEW(LC1,:))
+         CALL READ_RES_pARRAY(lNEXT_REC, OMEGA_NEW(:,LC1))
       ENDDO
 
       CALL READ_RES_pARRAY(lNEXT_REC, DES_RADIUS)
