@@ -77,7 +77,6 @@
   DES_EN_INPUT(1) = 0.9        ! e11
   DES_EN_WALL_INPUT = 1.0      ! e1w
 
-  DES_NEIGHBOR_SEARCH =  4     ! Grid based neighbor search
   NEIGHBOR_SEARCH_N   = 20     ! Steps between neighbor search
 
 ! Solids phase 1

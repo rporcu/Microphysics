@@ -358,6 +358,8 @@ set(TESTS
   tests/FLD01
   tests/FLD02
   benchmarks/DEM01
+  benchmarks/DEM02
+  benchmarks/DEM03
   benchmarks/FLD01
   # box3d
   # cyclone

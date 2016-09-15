@@ -35,5 +35,5 @@ benchmarks:
   script:
     - mkdir build-benchmarks
     - cd build-benchmarks
-    - FC='mpifort -g' cmake -DMPI=1 -DSMP=1 ..
+    - cmake CMAKE_Fortran_FLAGS="-O3 -g" -DMPI=1 -DSMP=1 ..
     - env CTEST_OUTPUT_ON_FAILURE=1 OMP_NUM_THREADS=4 ctest -R benchmarks
