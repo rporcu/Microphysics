@@ -60,7 +60,9 @@
 ! average velocity
       DOUBLE PRECISION :: Vavg
       CHARACTER(LEN=4) :: TUNIT
-
+! Number of outer iterations goalSeekMassFlux
+      INTEGER :: GSMF
+      DOUBLE PRECISION :: delP_MF, lMFlux
 ! Error Message
       CHARACTER(LEN=32) :: lMsg
 
@@ -68,6 +70,10 @@
       DT_prev = DT
       NIT = 0
       MUSTIT = 0
+      GSMF = 0
+      delP_MF = 0.
+      lMFlux = 0.
+
       RESG = ZERO
 
       SETG = (NORM_G /= ONE)
@@ -77,9 +83,6 @@
 
 ! Initialize residuals
       RESID = ZERO
-
-! Initialize the routine for holding gas mass flux constant with cyclic bc
-      IF(CYCLIC) CALL GoalSeekMassFlux(NIT, MUSTIT, .false.)
 
 ! CPU time left
       IF (FULL_LOG) THEN
@@ -164,7 +167,6 @@
 ! JFD: modification for cartesian grid implementation
       IF(CARTESIAN_GRID) CALL CG_SET_OUTFLOW
 
-
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration
       IF (.NOT.CYCLIC) LEQ_ADJUST = .TRUE.
@@ -175,10 +177,8 @@
       RESG = RESID(RESID_P,0)
       CALL CHECK_CONVERGENCE (NIT, 0.0d+0, MUSTIT)
 
-      IF(CYCLIC)THEN
-        IF(MUSTIT==0 .OR. NIT >= MAX_NIT) &
-           CALL GoalSeekMassFlux(NIT, MUSTIT, .true.)
-      ENDIF
+      IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
+         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux)
 
 
 !  If not converged continue iterations; else exit subroutine.
@@ -192,6 +192,12 @@
       IF (MUSTIT == 0) THEN
 ! ---------------------------------------------------------------->>>
          IF (DT==UNDEFINED .AND. NIT==1) GOTO 50   !Iterations converged
+
+         IF(CYCLIC .AND. GSMF > 0) THEN
+            Write(ERR_MSG,5500) GSMF, delP_MF, lMFlux
+            CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+         ENDIF
+
 
 ! Perform checks and dump to screen every NLOG time steps
          IF (MOD(NSTEP,NLOG) == 0) THEN
@@ -213,6 +219,10 @@
                IF(DMP_LOG)WRITE (UNIT_LOG, '(46X,A,F9.3,1X,A)')
             ENDIF
 
+
+5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
+      G12.5, ' Gas Flux=', G12.5)
+
             IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
                IF (DO_I) THEN
                  Vavg = VAVG_G(U_G, VOL_U)
@@ -230,7 +240,6 @@
 
             CALL END_LOG
          ENDIF   ! end IF (MOD(NSTEP,NLOG) == 0)
-
 
          IER = 0
          RETURN   ! for if mustit =0 (converged)
@@ -367,8 +376,7 @@
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-      subroutine GoalSeekMassFlux(NIT, MUSTIT, doit)
+      subroutine GoalSeekMassFlux(NIT, MUSTIT, OUTIT, delp_n, mdot_n)
 
 !-----------------------------------------------
 ! Modules
@@ -382,54 +390,48 @@
       USE time_cpu
       USE utilities, ONLY: mfix_isnan
       USE vavg_mod, ONLY: vavg_flux_g
+      use compar
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
       INTEGER, INTENT(INOUT) :: NIT, MUSTIT
-      LOGICAL, INTENT(IN) :: doit
+      INTEGER, INTENT(INOUT) :: OUTIT
+      DOUBLE PRECISION, INTENT(INOUT) :: delp_n, mdot_n
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
       INTEGER, PARAMETER :: MAXOUTIT = 500
-      DOUBLE PRECISION, PARAMETER          :: omega = 0.9
-      DOUBLE PRECISION, PARAMETER          :: TOL = 1E-03
-      INTEGER, SAVE :: OUTIT
-      LOGICAL, SAVE :: firstPass = .true.
+      DOUBLE PRECISION, PARAMETER :: omega = 0.9
+      DOUBLE PRECISION, PARAMETER :: TOL = 1E-03
 
-      DOUBLE PRECISION, SAVE  :: mdot_n, mdot_nm1, delp_n, delp_nm1, err
-      DOUBLE PRECISION        :: mdot_0, delp_xyz
+      DOUBLE PRECISION :: mdot_nm1, delp_nm1
+      DOUBLE PRECISION :: err, delp_xyz
 
+! Store previous values (only used for OUTIT>1)
+      mdot_nm1 = mdot_n
+      delp_nm1 = delp_n
+
+! Calculate the average gas mass flux and error
       IF(CYCLIC_X_MF)THEN
          delp_n = delp_x
+         mdot_n = VAVG_Flux_G(flux_ge, ayz)
       ELSEIF(CYCLIC_Y_MF)THEN
          delp_n = delp_y
+         mdot_n = VAVG_Flux_G(flux_gn, axz)
       ELSEIF(CYCLIC_Z_MF)THEN
          delp_n = delp_z
+         mdot_n = VAVG_Flux_G(flux_gt, axy)
       ELSE
          RETURN
       ENDIF
 
-      IF(.NOT.doit) THEN
-         OUTIT = 0
-         RETURN
-      ENDIF
-
       OUTIT = OUTIT + 1
+
       IF(OUTIT > MAXOUTIT) THEN
          IF (myPE.EQ.PE_IO) write(*,5400) MAXOUTIT
          CALL mfix_exit(0)
-      ENDIF
-
-      mdot_0 = Flux_g
-
-      ! calculate the average gas mass flux and error
-      IF(CYCLIC_X_MF)THEN
-        mdot_n = VAVG_Flux_G(flux_ge, ayz)
-      ELSEIF(CYCLIC_Y_MF)THEN
-        mdot_n = VAVG_Flux_G(flux_gn, axz)
-      ELSEIF(CYCLIC_Z_MF)THEN
-        mdot_n = VAVG_Flux_G(flux_gt, axy)
       ENDIF
 
       IF (mfix_isnan(mdot_n) .OR. mfix_isnan(delp_n)) THEN
@@ -439,35 +441,26 @@
          RETURN
       ENDIF
 
-      err = abs((mdot_n - mdot_0)/mdot_0)
-      IF( err < TOL) THEN
+
+! correct delP
+      if(OUTIT > 1)then
+! Fail-Safe Newton's method
+         delp_xyz = delp_n - omega * (delp_n - delp_nm1) * &
+            ((mdot_n - FLUX_g)/(mdot_nm1 - FLUX_g)) / &
+            ((mdot_n - FLUX_g)/(mdot_nm1 - FLUX_g) - ONE)
+      else
+         delp_xyz = delp_n*0.99
+      endif
+
+! Check for convergence
+      IF(abs((mdot_n - FLUX_g)/FLUX_g) < TOL) THEN
          MUSTIT = 0
+         delp_n = delp_xyz
       ELSE
         MUSTIT = 1
         NIT = 1
       ENDIF
 
-! correct delp
-      if(.not.firstPass)then
-!        delp_xyz = delp_n - omega * (delp_n - delp_nm1) * (mdot_n - mdot_0) &
-!                          / (mdot_n - mdot_nm1)
-! Fail-Safe Newton's method (below) works better than the regular
-! Newton method (above)
-
-         delp_xyz = delp_n - omega * (delp_n - delp_nm1) * &
-                     ((mdot_n - mdot_0)/(mdot_nm1 - mdot_0)) / &
-                     ((mdot_n - mdot_0)/(mdot_nm1 - mdot_0) - ONE)
-      else
-         firstPass=.false.
-         delp_xyz = delp_n*0.99
-      endif
-
-      IF(MUSTIT == 0) then
-        IF(myPE.eq.PE_IO) Write(*,5500) TIME, OUTIT, delp_xyz, mdot_n
-      ENDIF
-
-      mdot_nm1 = mdot_n
-      delp_nm1 = delp_n
 
       IF(CYCLIC_X_MF)THEN
         delp_x = delp_xyz
@@ -481,7 +474,5 @@
 
 5400 FORMAT(/1X,70('*')//' From: GoalSeekMassFlux',/&
       ' Message: Number of outer iterations exceeded ', I4,/1X,70('*')/)
-5500  Format('  Time=', G12.5, ' MassFluxIterations=', I4, ' DelP=', &
-      G12.5, ' Gas Flux=', G12.5)
 
       END SUBROUTINE GoalSeekMassFlux
