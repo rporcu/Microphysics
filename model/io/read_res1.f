@@ -64,21 +64,11 @@
       double precision, allocatable :: array2(:)
 !-----------------------------------------------
 !
-      if (myPE .eq. PE_IO) then
-         allocate (array1(ijkmax2))
-         allocate (array2(ijkmax3))
-      else
-         allocate (array1(1))
-         allocate (array2(1))
-      end if
+      allocate (array1(ijkmax2))
+      allocate (array2(ijkmax3))
 
-!      call MPI_barrier(MPI_COMM_WORLD,mpierr)
-!
-!     Use DT from data file if DT_FAC is set to 1.0
       IF (DT_FAC == ONE) DT_SAVE = DT
-!
 
-!//PAR_I/O only PE_IO reads the restart file
       if (myPE == PE_IO) then
          READ (UNIT_RES, REC=1) VERSION
          READ (VERSION(6:512), *) VERSION_NUMBER
