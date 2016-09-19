@@ -42,12 +42,12 @@
                NP = DG_PIC(IJK)%P(LS)
                IF(IS_EXITING(NP) .or. IS_EXITING_GHOST(NP)) CYCLE
                SELECT CASE (BC_PLANE(BCV))
-               CASE('N'); DIST = DES_POS_NEW(2,NP) - YN(BC_J_s(BCV))
-               CASE('S'); DIST = YN(BC_J_s(BCV)-1) - DES_POS_NEW(2,NP)
-               CASE('E'); DIST = DES_POS_NEW(1,NP) - XE(BC_I_w(BCV))
-               CASE('W'); DIST = XE(BC_I_w(BCV)-1) - DES_POS_NEW(1,NP)
-               CASE('T'); DIST = DES_POS_NEW(3,NP) - ZT(BC_K_b(BCV))
-               CASE('B'); DIST = ZT(BC_K_b(BCV)-1) - DES_POS_NEW(3,NP)
+               CASE('N'); DIST = DES_POS_NEW(NP,2) - YN(BC_J_s(BCV))
+               CASE('S'); DIST = YN(BC_J_s(BCV)-1) - DES_POS_NEW(NP,2)
+               CASE('E'); DIST = DES_POS_NEW(NP,1) - XE(BC_I_w(BCV))
+               CASE('W'); DIST = XE(BC_I_w(BCV)-1) - DES_POS_NEW(NP,1)
+               CASE('T'); DIST = DES_POS_NEW(NP,3) - ZT(BC_K_b(BCV))
+               CASE('B'); DIST = ZT(BC_K_b(BCV)-1) - DES_POS_NEW(NP,3)
                CASE DEFAULT
                   STOP __LINE__
                END SELECT
@@ -303,11 +303,11 @@
       ENDIF
 
 ! Set the initial position values based on mass inlet class
-      DES_POS_NEW(:,lNP) = lPOS(:)
-      PPOS(:,lNP) = lPOS(:)
-      DES_VEL_NEW(1,lNP) = BC_U_s(lBCV,BC_M)
-      DES_VEL_NEW(2,lNP) = BC_V_s(lBCV,BC_M)
-      DES_VEL_NEW(3,lNP) = BC_W_s(lBCV,BC_M)
+      DES_POS_NEW(lNP,:) = lPOS(:)
+      PPOS(lNP,:) = lPOS(:)
+      DES_VEL_NEW(lNP,1) = BC_U_s(lBCV,BC_M)
+      DES_VEL_NEW(lNP,2) = BC_V_s(lBCV,BC_M)
+      DES_VEL_NEW(lNP,3) = BC_W_s(lBCV,BC_M)
 
 ! Set the initial angular velocity values
       OMEGA_NEW(lNP,:) = 0
@@ -326,12 +326,12 @@
       PIJK(lNP,5) = lM
 
 ! Calculate the DES grid cell indices.
-      lI = min(DG_IEND2,max(DG_ISTART2,IOFPOS(DES_POS_NEW(1,lNP))))
-      lJ = min(DG_JEND2,max(DG_JSTART2,JOFPOS(DES_POS_NEW(2,lNP))))
+      lI = min(DG_IEND2,max(DG_ISTART2,IOFPOS(DES_POS_NEW(lNP,1))))
+      lJ = min(DG_JEND2,max(DG_JSTART2,JOFPOS(DES_POS_NEW(lNP,2))))
       IF(NO_K) THEN
          lK = 1
       ELSE
-         lK = min(DG_KEND2,max(DG_KSTART2,KOFPOS(DES_POS_NEW(3,lNP))))
+         lK = min(DG_KEND2,max(DG_KSTART2,KOFPOS(DES_POS_NEW(lNP,3))))
       ENDIF
 ! Store the triple
       DG_PIJK(lNP) = DG_FUNIJK(lI,lJ,lK)

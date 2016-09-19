@@ -120,10 +120,10 @@
 ! 5) Phase index
             call pack_dbuf(lbuf,pijk(lcurpar,5),pface)
 ! 6) Position
-            call pack_dbuf(lbuf,des_pos_new(:,lcurpar)+                &
+            call pack_dbuf(lbuf,des_pos_new(lcurpar,:)+                &
                dcycl_offset(pface,:),pface)
 ! 7) Translational Velocity
-            call pack_dbuf(lbuf,des_vel_new(:,lcurpar),pface)
+            call pack_dbuf(lbuf,des_vel_new(lcurpar,:),pface)
 ! 8) Rotational Velocity
             call pack_dbuf(lbuf,omega_new(lcurpar,:),pface)
 ! 9) Exiting particle flag
@@ -287,10 +287,10 @@
 ! 15) 1/Moment of Inertia
             call pack_dbuf(lbuf,omoi(lcurpar),pface)
 ! 16) Position with cyclic shift
-            call pack_dbuf(lbuf,des_pos_new(:,lcurpar) +               &
+            call pack_dbuf(lbuf,des_pos_new(lcurpar,:) +               &
                dcycl_offset(pface,:),pface)
 ! 17) Translational velocity
-            call pack_dbuf(lbuf,des_vel_new(:,lcurpar),pface)
+            call pack_dbuf(lbuf,des_vel_new(lcurpar,:),pface)
 ! 18) Rotational velocity
             call pack_dbuf(lbuf,omega_new(lcurpar,:),pface)
 ! 19) Accumulated translational forces

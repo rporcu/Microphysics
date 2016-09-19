@@ -103,8 +103,8 @@
 ! Check particle LL for wall contacts
          RADSQ = DES_RADIUS(LL)*DES_RADIUS(LL)
 
-         particle_max(:) = des_pos_new(:, LL) + des_radius(LL)
-         particle_min(:) = des_pos_new(:, LL) - des_radius(LL)
+         particle_max(:) = des_pos_new(LL,:) + des_radius(LL)
+         particle_min(:) = des_pos_new(LL,:) - des_radius(LL)
 
          DO CELL_COUNT = 1, facets_at_dg(cell_id)%count
 
@@ -157,7 +157,7 @@
 ! same as plane's normal. For moving particles, the line's normal will
 ! be along the point joining new and old positions.
 
-            line_t = DOT_PRODUCT(VERTEX(1,:,NF) - des_pos_new(:,LL),&
+            line_t = DOT_PRODUCT(VERTEX(1,:,NF) - des_pos_new(LL,:),&
                NORM_FACE(:,NF))
 
 ! k - rad >= tol_orth, where k = -line_t, then orthogonal
@@ -174,11 +174,11 @@
                CYCLE
             ENDIF
 
-            POS_TMP = DES_POS_NEW(:,LL)
+            POS_TMP = DES_POS_NEW(LL,:)
             CALL ClosestPtPointTriangle(POS_TMP, &
                VERTEX(:,:,NF), CLOSEST_PT(:))
 
-            DIST(:) = CLOSEST_PT(:) - DES_POS_NEW(:,LL)
+            DIST(:) = CLOSEST_PT(:) - DES_POS_NEW(LL,:)
             DISTSQ = DOT_PRODUCT(DIST, DIST)
 
             IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) THEN !No overlap exists
@@ -485,7 +485,7 @@
 
 ! Total relative velocity + rotational contribution
       V_ROT = DIST*OMEGA_NEW(LL,:)
-      VRELTRANS(:) =  DES_VEL_NEW(:,LL) + DES_CROSSPRDCT(V_ROT, NORM)
+      VRELTRANS(:) =  DES_VEL_NEW(LL,:) + DES_CROSSPRDCT(V_ROT, NORM)
 
 ! magnitude of normal component of relative velocity (scalar)
       VRN = DOT_PRODUCT(VRELTRANS,NORM)

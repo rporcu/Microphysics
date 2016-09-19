@@ -50,7 +50,7 @@
       do lc1=1, max_pip
          if(is_normal(lc1)) then
             gTemp = gTemp + dot_product &
-               (des_vel_new(:,lc1),des_vel_new(:,lc1))
+               (des_vel_new(lc1,:),des_vel_new(lc1,:))
             lc2 = lc2 + 1
          endif
       enddo

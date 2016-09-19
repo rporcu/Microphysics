@@ -41,7 +41,7 @@
       CALL READ_RES_pARRAY(lNEXT_REC, particle_state)
 
       DO LC1 = 1, lDIMN
-         CALL READ_RES_pARRAY(lNEXT_REC, DES_VEL_NEW(LC1,:))
+         CALL READ_RES_pARRAY(lNEXT_REC, DES_VEL_NEW(:,LC1))
       ENDDO
 
       DO LC1 = 1, merge(1,3,NO_K)

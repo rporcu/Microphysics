@@ -271,9 +271,9 @@
                ighost_cnt = ighost_cnt-1
                call set_nonexistent(lcurpar)
                fc(lcurpar,:) = 0.0
-               des_pos_new(:,lcurpar)=0
+               des_pos_new(lcurpar,:)=0
                pijk(lcurpar,:) = -10
-               des_vel_new(:,lcurpar)=0
+               des_vel_new(lcurpar,:)=0
                omega_new(lcurpar,:)=0
 
                IF(DES_USR_VAR_SIZE > 0)&

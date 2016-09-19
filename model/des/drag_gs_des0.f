@@ -146,7 +146,7 @@
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
 
-            desposnew(:) = des_pos_new(:,np)
+            desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
 
 ! Calculate the particle centered drag coefficient (F_GP) using the
@@ -156,7 +156,7 @@
 ! The drag force on each particle is equal to:
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
-            VEL_NEW(:) = DES_VEL_NEW(:,NP)
+            VEL_NEW(:) = DES_VEL_NEW(NP,:)
             CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(IJK))
 
 ! Calculate the gas-solids drag force on the particle
@@ -342,7 +342,7 @@
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
-            desposnew(:) = des_pos_new(:,np)
+            desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
 !
 ! Calculate the particle centered drag coefficient (F_GP) using the
@@ -352,7 +352,7 @@
 ! The drag force on each particle is equal to:
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
-            VEL_NEW(:) = DES_VEL_NEW(:,NP)
+            VEL_NEW(:) = DES_VEL_NEW(NP,:)
             CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(IJK))
 
 !-----------------------------------------------------------------<<<

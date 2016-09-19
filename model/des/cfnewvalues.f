@@ -71,25 +71,25 @@
 ! Advance particle position, velocity
         IF (INTG_EULER) THEN
 ! first-order method
-            DES_VEL_NEW(:,L) = DES_VEL_NEW(:,L) + FC(L,:)*DTSOLID
-            DD(:) = DES_VEL_NEW(:,L)*DTSOLID
-            DES_POS_NEW(:,L) = DES_POS_NEW(:,L) + DD(:)
+           DES_VEL_NEW(L,:) = DES_VEL_NEW(L,:) + FC(L,:)*DTSOLID
+           DD(:) = DES_VEL_NEW(L,:)*DTSOLID
+           DES_POS_NEW(L,:) = DES_POS_NEW(L,:) + DD(:)
             OMEGA_NEW(L,:)   = OMEGA_NEW(L,:) + TOW(L,:)*OMOI(L)*DTSOLID
          ELSEIF (INTG_ADAMS_BASHFORTH) THEN
 
-            lVELo = DES_VEL_NEW(:,L)
-            lPOSo = DES_POS_NEW(:,L)
+            lVELo = DES_VEL_NEW(L,:)
+            lPOSo = DES_POS_NEW(L,:)
 
 ! Second-order Adams-Bashforth/Trapezoidal scheme
-            DES_VEL_NEW(:,L) = lVELo(:) + 0.5d0*&
+            DES_VEL_NEW(L,:) = lVELo(:) + 0.5d0*&
                ( 3.d0*FC(L,:)-DES_ACC_OLD(L,:) )*DTSOLID
 
             OMEGA_NEW(L,:)   =  OMEGA_NEW(L,:) + 0.5d0*&
                ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(L,:) )*DTSOLID
 
-            DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(:,L) )*DTSOLID
+            DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(L,:) )*DTSOLID
 
-            DES_POS_NEW(:,L) = lPOSo(:) + DD(:)
+            DES_POS_NEW(L,:) = lPOSo(:) + DD(:)
             DES_ACC_OLD(L,:) = FC(L,:)
             ROT_ACC_OLD(L,:) = TOW(L,:)*OMOI(L)
          ENDIF
@@ -99,7 +99,7 @@
 ! its radius since the last time a neighbor search was called. if so,
 ! make sure that neighbor is called in des_time_march
          IF(.NOT.DO_NSEARCH) THEN
-            DD(:) = DES_POS_NEW(:,L) - PPOS(:,L)
+            DD(:) = DES_POS_NEW(L,:) - PPOS(L,:)
             NEIGHBOR_SEARCH_DIST = NEIGHBOR_SEARCH_RAD_RATIO*&
                DES_RADIUS(L)
             IF(dot_product(DD,DD).GE.NEIGHBOR_SEARCH_DIST**2) DO_NSEARCH = .TRUE.

@@ -83,8 +83,8 @@
       OMOI(LB:UB) = ZERO
 
 ! Particle position, velocity, etc
-      DES_POS_NEW(:,LB:UB) = ZERO
-      DES_VEL_NEW(:,LB:UB) = ZERO
+      DES_POS_NEW(LB:UB,:) = ZERO
+      DES_VEL_NEW(LB:UB,:) = ZERO
       OMEGA_NEW(LB:UB,:) = ZERO
 
 ! Particle state flag

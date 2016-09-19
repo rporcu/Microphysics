@@ -87,8 +87,8 @@ CONTAINS
 
 ! Old and new particle positions, velocities (translational and
 ! rotational)
-      Allocate(  DES_POS_NEW (DIMN,MAX_PIP) )
-      Allocate(  DES_VEL_NEW (DIMN,MAX_PIP) )
+      Allocate(  DES_POS_NEW (MAX_PIP,DIMN) )
+      Allocate(  DES_VEL_NEW (MAX_PIP,DIMN) )
       Allocate(  OMEGA_NEW (MAX_PIP,DIMN) )
 
       IF (DO_OLD) THEN
@@ -98,10 +98,10 @@ CONTAINS
 
 ! Allocating user defined array
       IF(DES_USR_VAR_SIZE > 0) &
-         Allocate( DES_USR_VAR(DES_USR_VAR_SIZE,MAX_PIP) )
+         Allocate( DES_USR_VAR(MAX_PIP,DES_USR_VAR_SIZE) )
 
 ! Particle positions at the last call neighbor search algorithm call
-      Allocate(  PPOS (DIMN,MAX_PIP) )
+      Allocate(  PPOS (MAX_PIP,DIMN) )
 
 ! Total, normal and tangetial forces
       Allocate(  FC (MAX_PIP,DIMN) )
@@ -332,10 +332,10 @@ CONTAINS
            call real_grow(PVOL,MAX_PIP)
            call real_grow(PMASS,MAX_PIP)
            call real_grow(OMOI,MAX_PIP)
-           call real_grow2(DES_POS_NEW,MAX_PIP)
-           call real_grow2(DES_VEL_NEW,MAX_PIP)
+           call real_grow2_reverse(DES_POS_NEW,MAX_PIP)
+           call real_grow2_reverse(DES_VEL_NEW,MAX_PIP)
            call real_grow2_reverse(OMEGA_NEW,MAX_PIP)
-           call real_grow2(PPOS,MAX_PIP)
+           call real_grow2_reverse(PPOS,MAX_PIP)
            call byte_grow(PARTICLE_STATE,MAX_PIP)
            call integer_grow(iglobal_id,MAX_PIP)
            call integer_grow2_reverse(pijk,MAX_PIP)

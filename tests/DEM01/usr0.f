@@ -31,7 +31,7 @@
       endif
 
       lRad  = des_radius(1)
-      h0    = des_pos_new(2,1)
+      h0    = des_pos_new(1,2)
       lGrav = -grav(2)
 
 ! Calculate the start time of particle/wall collision.
@@ -148,7 +148,7 @@
          ck = bk
          if(fa*fs < 0) then
             bk = s
-            fb = fs 
+            fb = fs
          else
             ak = s
             fa = fs

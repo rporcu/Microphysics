@@ -130,15 +130,15 @@
 ! gas phase drag calculations.
          IF(DES_EXPLICITLY_COUPLED) THEN
 
-            DRAG_FC(NP,:) = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
+            DRAG_FC(NP,:) = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
 
          ELSE
 
 ! Calculate the drag coefficient.
-            CALL DES_DRAG_GP(NP, DES_VEL_NEW(:,NP), VELFP, lEPg)
+            CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
 
 ! Calculate the gas-solids drag force on the particle
-            D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
+            D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
@@ -293,11 +293,11 @@
          IF(lEPg == ZERO) lEPG = EP_g(PIJK(NP,4))
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(:,NP), VELFP, lEPg)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
 
          lFORCE = F_GP(NP)
 
-         lDRAG_BM = lFORCE*DES_VEL_NEW(:,NP)
+         lDRAG_BM = lFORCE*DES_VEL_NEW(NP,:)
 
          IF(DES_INTERP_ON) THEN
             DO LC=1,LP_BND

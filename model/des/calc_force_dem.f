@@ -83,7 +83,7 @@
 
       DO LL = 1, MAX_PIP
          IF(IS_NONEXISTENT(LL)) CYCLE
-         pos = DES_POS_NEW(:,LL)
+         pos = DES_POS_NEW(LL,:)
          rad = DES_RADIUS(LL)
 
          CC_START = 1
@@ -95,7 +95,7 @@
             IF(IS_NONEXISTENT(I)) CYCLE
 
             R_LM = rad + DES_RADIUS(I)
-            DIST(:) = DES_POS_NEW(:,I) - POS(:)
+            DIST(:) = DES_POS_NEW(I,:) - POS(:)
             DIST_MAG = dot_product(DIST,DIST)
 
             FC_TMP(:) = ZERO

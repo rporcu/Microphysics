@@ -32,9 +32,9 @@
       INIT_ANGLE = 0.0d0
 
 ! Collect initial translational velocity to IO processor.
-      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(1,:), lTMP(:,1))
-      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(2,:), lTMP(:,2))
-      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(3,:), lTMP(:,3))
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(:,1), lTMP(:,1))
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(:,2), lTMP(:,2))
+      CALL COLLECT_DEM05_DATA(DES_VEL_NEW(:,3), lTMP(:,3))
 
 ! Store the collision angle and initial tangential velocity
       IF(myPE == PE_IO) THEN

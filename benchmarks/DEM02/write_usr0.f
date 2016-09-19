@@ -75,7 +75,7 @@
          lPos(3) = z0 + zLen*rand3(3)
 
          do lc1=1, pip
-            ldist = des_pos_new(:,lc1) - lPos
+            ldist = des_pos_new(lc1,:) - lPos
             ldmag = sqrt(dot_product(ldist, ldist))
 
             if(ldmag - ldp < 100.0d-8) then
@@ -97,8 +97,8 @@
          lVel(2) = DSQRT(-2.0d0*DLOG(DBLE(ru1)))*SIN(2.0d0*PI*ru2)
          lVel(3) = DSQRT(-2.0d0*DLOG(DBLE(ru3)))*COS(2.0d0*PI*ru4)
 
-         des_pos_new(:,pip) = lPos
-         des_vel_new(:,pip) = lVel
+         des_pos_new(pip,:) = lPos
+         des_vel_new(pip,:) = lVel
 
          omega_new(pip,:) = 0.0d0
 
@@ -116,9 +116,9 @@
 ! mean velocity. Also, calculate the mean granular temperature.
       gTemp = 0.0d0
       do lc1 = 1, pip
-        des_vel_new(:,lc1) = des_vel_new(:,lc1) - meanVel
-        gTemp = gTemp + dot_product &
-           (des_vel_new(:,lc1), des_vel_new(:,lc1))
+         des_vel_new(lc1,:) = des_vel_new(lc1,:) - meanVel
+         gTemp = gTemp + dot_product &
+            (des_vel_new(lc1,:), des_vel_new(lc1,:))
       enddo
       gTemp = gTemp/(3.0d0*DBLE(pip))
 
@@ -126,7 +126,7 @@
 ! the targeted valued.
       gTemp = dsqrt(T0/gTemp)
 
-     des_vel_new(:,:pip) = des_vel_new(:,:pip)*gTemp
+      des_vel_new(:pip,:) = des_vel_new(:pip,:)*gTemp
 
       particles = pip
       call global_all_sum(particles)
@@ -134,7 +134,7 @@
 
 ! This write statement keeps the gfortran v6.1.0 version of the code from
 ! inserting a NAN. This only appears with O3 opt flag.
-      if(myPE == PE_IO) write(*,*) 'debug:',des_vel_new(:,924)
+      if(myPE == PE_IO) write(*,*) 'debug:',des_vel_new(924,:)
 
       RETURN
       END SUBROUTINE GEN_PARTICLES

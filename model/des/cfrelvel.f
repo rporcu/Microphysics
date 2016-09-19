@@ -48,7 +48,7 @@
 !-----------------------------------------------
 
 ! translational relative velocity
-         VRELTRANS(:) = (DES_VEL_NEW(:,L) - DES_VEL_NEW(:,II))
+      VRELTRANS(:) = (DES_VEL_NEW(L,:) - DES_VEL_NEW(II,:))
 
 ! calculate the distance from the particle center to the contact point,
 ! which is taken as the radical line

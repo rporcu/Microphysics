@@ -246,16 +246,16 @@
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_VEL_NEW  !(PARTICLES,3)
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: OMEGA_NEW    !(PARTICLES,3)
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: PPOS         !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ACC_OLD  !(3,PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ROT_ACC_OLD  !(3,PARTICLES)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ACC_OLD  !(PARTICLES,3)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ROT_ACC_OLD  !(PARTICLES,3)
 
 ! Defining user defined allocatable array
       INTEGER :: DES_USR_VAR_SIZE
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_USR_VAR  !(3,PARTICLES)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_USR_VAR  !(PARTICLES,3)
 
 ! Total force and torque on each particle
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: FC    !(3,PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: TOW   !(3,PARTICLES)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: FC    !(PARTICLES,3)
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: TOW   !(PARTICLES,3)
 
 ! Dynamic information related to computational (eulerian) fluid grid
 !----------------------------------------------------------------->>>
@@ -305,7 +305,7 @@
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_BM
 
 ! Explicitly calculated fluid-particle drag force.
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)
 
 ! An intermediate array used in calculation of mean solids velocity
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
