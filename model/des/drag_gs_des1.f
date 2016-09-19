@@ -130,7 +130,7 @@
 ! gas phase drag calculations.
          IF(DES_EXPLICITLY_COUPLED) THEN
 
-            DRAG_FC(:,NP) = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
+            DRAG_FC(NP,:) = F_GP(NP)*(VELFP - DES_VEL_NEW(:,NP))
 
          ELSE
 

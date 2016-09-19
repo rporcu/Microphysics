@@ -372,7 +372,7 @@
          call unpack_dbuf(lbuf,tow(llocpar,:),pface)
 ! 23) Explicit drag force
          IF(DES_EXPLICITLY_COUPLED) &
-            call unpack_dbuf(lbuf,drag_fc(:,llocpar),pface)
+            call unpack_dbuf(lbuf,drag_fc(llocpar,:),pface)
 ! 24) User defined variable
          IF(DES_USR_VAR_SIZE > 0) &
             call unpack_dbuf(lbuf,des_usr_var(llocpar,:),pface)

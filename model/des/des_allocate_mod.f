@@ -153,7 +153,7 @@ CONTAINS
       F_gp(1:MAX_PIP)  = ZERO
 
 ! Explicit drag force acting on a particle.
-      Allocate(DRAG_FC (DIMN,MAX_PIP) )
+      Allocate(DRAG_FC (MAX_PIP,DIMN) )
 
 ! force due to gas-pressure gradient
       ALLOCATE(P_FORCE(DIMN, DIMENSION_3))
@@ -347,7 +347,7 @@ CONTAINS
            call real_grow(F_GP,MAX_PIP)
            call integer_grow2(WALL_COLLISION_FACET_ID,MAX_PIP)
            call real_grow3(WALL_COLLISION_PFT,MAX_PIP)
-           call real_grow2(DRAG_FC,MAX_PIP)
+           call real_grow2_reverse(DRAG_FC,MAX_PIP)
 
            call integer_grow(NEIGHBOR_INDEX,MAX_PIP)
            call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP)

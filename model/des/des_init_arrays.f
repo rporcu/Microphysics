@@ -115,7 +115,7 @@
 
 ! Particle center drag coefficient and explicit drag force
       F_GP(LB:UB) = ZERO
-      DRAG_FC(:,LB:UB) = ZERO
+      DRAG_FC(LB:UB,:) = ZERO
 
 
 ! Interpolation variables.

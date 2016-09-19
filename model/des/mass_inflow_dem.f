@@ -342,7 +342,7 @@
       OMOI(lNP) = 5.d0 / (2.d0 * PMASS(lNP) * DES_RADIUS(lNP)**2)
 
 ! Clear the drag force
-      IF(DES_EXPLICITLY_COUPLED) DRAG_FC(:,lNP) = ZERO
+      IF(DES_EXPLICITLY_COUPLED) DRAG_FC(lNP,:) = ZERO
 
 
       RETURN

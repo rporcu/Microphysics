@@ -299,7 +299,7 @@
             call pack_dbuf(lbuf,tow(lcurpar,:),pface)
 ! 23) Explicit drag force
             IF(DES_EXPLICITLY_COUPLED) &
-               call pack_dbuf(lbuf, drag_fc(:,lcurpar),pface)
+               call pack_dbuf(lbuf, drag_fc(lcurpar,:),pface)
 ! 24) User defined variable
             IF(DES_USR_VAR_SIZE > 0) &
                call pack_dbuf(lbuf, des_usr_var(lcurpar,:),pface)
