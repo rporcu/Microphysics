@@ -23,7 +23,6 @@
       USE geometry
       USE ic
       USE indices
-      USE machine, only: start_log, end_log
       USE mpi_utility
       USE param
       USE param1
@@ -143,7 +142,6 @@
 ! if a case is compressible and pressure in any of the initial
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
-            CALL START_LOG
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
             CALL MFIX_EXIT(myPE)
          ENDIF

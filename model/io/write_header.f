@@ -37,8 +37,6 @@
 !-----------------------------------------------
 !
 !
-      CALL START_LOG
-!
       IF(DMP_LOG)WRITE (UNIT_LOG, *) ' '
       IF(DMP_LOG)WRITE (UNIT_LOG, 1005) ID_VERSION, ID_NODE
       IF(DMP_LOG)WRITE (UNIT_LOG,1010)RUN_NAME,ID_HOUR,ID_MINUTE,ID_MONTH,ID_DAY,ID_YEAR
@@ -60,7 +58,6 @@
       ENDIF
 !
       IF(DMP_LOG)WRITE (UNIT_LOG, 1015)
-      CALL END_LOG
 !
       RETURN
  1005 FORMAT(1X,'MFIX (',A10,') simulation on computer: ',A20)

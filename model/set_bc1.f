@@ -155,7 +155,6 @@
       use bc, only: bc_vout_g
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero
-      use machine, only: start_log, end_log
       use run, only: time, dt, tstop
       IMPLICIT NONE
 
@@ -176,13 +175,11 @@
 ! Average and print out the flow rates
          BC_MOUT_G(BCV) = ABS(BC_MOUT_G(BCV))/BC_OUT_N(BCV)
          BC_VOUT_G(BCV) = ABS(BC_VOUT_G(BCV))/BC_OUT_N(BCV)
-         CALL START_LOG
          IF(DMP_LOG)WRITE (UNIT_LOG, 1000) BCV, TIME
          IF(DMP_LOG)WRITE (UNIT_LOG, 1100) BC_MOUT_G(BCV), &
             BC_VOUT_G(BCV)
          BC_MOUT_G(BCV) = ZERO
          BC_VOUT_G(BCV) = ZERO
-         CALL END_LOG
          BC_OUT_N(BCV) = 0
       ENDIF
 
@@ -221,7 +218,6 @@
       use functions, only: im_of, jm_of, km_of
       use functions, only: is_on_mype_plus2layers
       use funits, only: dmp_log, unit_log
-      use machine, only: start_log, end_log
       use param1, only: undefined, zero, small_number
       use run, only: time, dt, tstop
 
@@ -249,11 +245,9 @@
 ! Average and print out the flow rates
          BC_MOUT_G(BCV) = ABS(BC_MOUT_G(BCV))/BC_OUT_N(BCV)
          BC_VOUT_G(BCV) = ABS(BC_VOUT_G(BCV))/BC_OUT_N(BCV)
-         CALL START_LOG
          IF(DMP_LOG)WRITE (UNIT_LOG, 1000) BCV, TIME
          IF(DMP_LOG)WRITE (UNIT_LOG, 1100) BC_MOUT_G(BCV), &
             BC_VOUT_G(BCV)
-         CALL END_LOG
          BC_OUT_N(BCV) = 0
 
 ! Now that we know the mass and volume outflow update the bc velocities

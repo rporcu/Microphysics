@@ -15,7 +15,6 @@
       USE fldvar
       USE funits
       USE geometry
-      USE machine, only: flush_res
       USE mpi_utility
       USE output
       USE param
@@ -74,10 +73,10 @@
 !     Version 1.6
 !---------------------------------------------------------------------
 
-      if(myPE.eq.PE_IO)CALL FLUSH_res (UNIT_RES)
+      if(myPE.eq.PE_IO) FLUSH(UNIT_RES)
 
-      deallocate (array1)  !//d pnicol
-      deallocate (array2)  !//d pnicol
+      deallocate (array1)
+      deallocate (array2)
 
       RETURN
       END SUBROUTINE WRITE_RES1
@@ -86,9 +85,9 @@
 
       USE geometry
       USE funits
-      USE compar           !//
-      USE mpi_utility      !//d pnicol : for gather
-      USE sendrecv         !//d pnicol : for gather
+      USE compar
+      USE mpi_utility
+      USE sendrecv
 
       USE cutcell
       USE in_binary_512

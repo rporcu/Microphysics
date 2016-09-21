@@ -18,7 +18,6 @@
       USE geometry
       USE indices
       USE leqsol
-      USE machine, only: start_log, end_log
       USE mpi_utility
       USE output
       USE param
@@ -238,7 +237,6 @@
                ENDIF
             ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
 
-            CALL END_LOG
          ENDIF   ! end IF (MOD(NSTEP,NLOG) == 0)
 
          IER = 0

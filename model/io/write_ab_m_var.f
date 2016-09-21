@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: Write_Ab_m_var(A_m, b_m, var, IER)                  C
+!  Module name: Write_Ab_m_var(A_m, b_m, var, IER)                     C
 !  Purpose: Write the sparse matrix coefficients and the               C
 !           source vector.                                             C
 !                                                                      C
@@ -13,13 +13,8 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE WRITE_AB_M_VAR(A_M, B_M, VAR)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!  Include param.inc file to specify parameter values
-!
+
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
@@ -57,8 +52,8 @@
 !                      Source vector
       DOUBLE PRECISION var(DIMENSION_3)
 
-      double precision, allocatable :: array1(:) , array2(:)   !//
-      double precision, allocatable :: am(:,:)                !//
+      double precision, allocatable :: array1(:) , array2(:)
+      double precision, allocatable :: am(:,:)
 !
 !-----------------------------------------------
 !
@@ -75,7 +70,6 @@
       end if
 
       if (myPE == PE_IO) then
-         CALL START_LOG
          IF(DMP_LOG)WRITE (UNIT_LOG,*) ' Note : write_am_m is VERY inefficient '
          WRITE (*,*) ' Note : write_am_m is VERY inefficient '
          IF(DMP_LOG)WRITE (UNIT_LOG,*) '  '
@@ -122,15 +116,14 @@
 !     IJK = FUNIJK_GL(I,J,K)
       IJK = FUNIJK_GL(IMAP_C(I),JMAP_C(J),KMAP_C(K))
 
-        if (myPE == PE_IO .AND. DMP_LOG)WRITE (UNIT_LOG, '(I5, 3(I3), 9(1X,G9.2))') FUNIJK_IO(I,J,K), I, J, K,&
-                                    (AM(ijk,L),L=-3,3), array2(IJK), array1(IJK)
+      if (myPE == PE_IO .AND. DMP_LOG)&
+         WRITE (UNIT_LOG, '(I5, 3(I3), 9(1X,G9.2))') &
+         FUNIJK_IO(I,J,K), I, J, K,&
+         (AM(ijk,L),L=-3,3), array2(IJK), array1(IJK)
 
       END DO
       END DO
       END DO
-
-      if (myPE == PE_IO) CALL END_LOG
-
 
       deallocate (array1)    !//
       deallocate (array2)    !//

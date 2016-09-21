@@ -15,7 +15,6 @@
       USE funits
       USE geometry
       USE indices
-      USE machine, only: start_log, end_log
       use matrix, only: e, w, s, n, t, b
       USE param
       USE param1
@@ -236,7 +235,6 @@
          ENDIF
       END DO
       IF (NCORN > 0) THEN
-            CALL START_LOG
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
 !
          DO L = 1, NCORN
@@ -244,7 +242,6 @@
             IF(DMP_LOG)WRITE (UNIT_LOG, 1100) IJK, I_OF(IJK), J_OF(IJK), K_OF(IJK)
          END DO
          IF(DMP_LOG)WRITE (UNIT_LOG, 1300)
-         CALL END_LOG
       ENDIF
 !
       RETURN
@@ -303,4 +300,3 @@
 !// Comments on the modifications for DMP version implementation
 !// 001 Include header file and common declarations for parallelization
 !// 350 Changed do loop limits: 1,ijkmax2-> ijkstart3, ijkend3
-

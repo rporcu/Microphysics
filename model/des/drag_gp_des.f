@@ -30,7 +30,6 @@
       USE functions
       USE geometry
       USE indices
-      USE machine, only: start_log, end_log
       USE param
       USE param1
       USE physprop
@@ -151,11 +150,9 @@
             CALL DRAG_BVK(DgA,EPg,Mu,ROPg,VREL,DPM,DPA,phis)
 
          CASE DEFAULT
-            CALL START_LOG
             IF(DMP_LOG) WRITE (*, '(A,A)') &
                'Unknown DRAG_TYPE: ', DRAG_TYPE
             WRITE (UNIT_LOG, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
-            CALL END_LOG
             CALL mfix_exit(myPE)
          END SELECT   ! end selection of drag_type
 

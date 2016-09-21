@@ -24,7 +24,6 @@
 !   M o d u l e s
 !-----------------------------------------------
       USE funits
-      USE machine, only: start_log, end_log
       USE param
       USE param1
       IMPLICIT NONE
@@ -47,13 +46,11 @@
 !-----------------------------------------------
 !
 
-      CALL START_LOG
       IF(DMP_LOG)WRITE (UNIT_LOG, 1000) NAME
       DO L = 1, LMAX
          IF(DMP_LOG)WRITE (UNIT_LOG, 1010) LINE(L)
       END DO
       IF(DMP_LOG)WRITE (UNIT_LOG, 1020)
-      CALL END_LOG
       RETURN
  1000 FORMAT(1X,70('*'),/,/,1X,'From : ',A)
  1010 FORMAT(1X,A)

@@ -1,29 +1,13 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: Write_Ab_m(A_m, b_m, IJKMAX2, M, IER)                  C                     C
+!  Author: M. Syamlal                                 Date: 16-MAY-96  C
+!                                                                      C
 !  Purpose: Write the sparse matrix coefficients and the               C
 !           source vector.                                             C
 !                                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 16-MAY-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE WRITE_AB_M(A_M, B_M, M)    ! pnicol
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!  Include param.inc file to specify parameter values
-!
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
@@ -77,7 +61,6 @@
       end if
 
       if (myPE == PE_IO) then
-         CALL START_LOG
          IF(DMP_LOG)WRITE (UNIT_LOG,*) ' Note : write_am_m is VERY inefficient '
          IF(DMP_LOG)WRITE (UNIT_LOG,*) '  '
          IF(DMP_LOG)WRITE (UNIT_LOG,*) ' A_m and B_m arrays below are in the '
@@ -123,15 +106,13 @@
 
       IJK = FUNIJK_GL(I,J,K)
 
-        if (myPE == PE_IO .AND. DMP_LOG)WRITE (UNIT_LOG, '(I5, 3(I3), 8(1X,G9.2))') FUNIJK_IO(I,J,K), I, J, K,&
-                                    (AM(ijk,L),L=-3,3), array2(IJK)
+      if (myPE == PE_IO .AND. DMP_LOG) &
+         WRITE (UNIT_LOG, '(I5, 3(I3), 8(1X,G9.2))') &
+         FUNIJK_IO(I,J,K), I, J, K,(AM(ijk,L),L=-3,3), array2(IJK)
 
       END DO
       END DO
       END DO
-
-      if (myPE == PE_IO) CALL END_LOG
-
 
       deallocate (array1)    !//
       deallocate (array2)    !//

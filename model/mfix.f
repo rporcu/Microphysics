@@ -99,72 +99,12 @@
 ! Temporary storage for DT
       DOUBLE PRECISION :: DT_tmp
 ! DISTIO variable for specifying the mfix version
-      CHARACTER(LEN=512) :: version
-! environment variable
-!$      CHARACTER(LEN=512) :: omp_num_threads
-!$      INTEGER :: length
-!$      INTEGER :: status
-
-!$      INTEGER num_threads, threads_specified, omp_id
-!$      INTEGER omp_get_num_threads
-!$      INTEGER omp_get_thread_num
-
-! C Function
-      INTERFACE
-         SUBROUTINE INIT_CMD_SOCKET(port) BIND ( C )
-           use, INTRINSIC :: iso_c_binding
-           CHARACTER(KIND=C_CHAR), INTENT(IN) :: port(*)
-         END SUBROUTINE INIT_CMD_SOCKET
-         SUBROUTINE INIT_LOG_SOCKET(port) BIND ( C )
-           use, INTRINSIC :: iso_c_binding
-           CHARACTER(KIND=C_CHAR), INTENT(IN) :: port(*)
-         END SUBROUTINE INIT_LOG_SOCKET
-      END INTERFACE
+      CHARACTER(LEN=512) :: version = 'RES = 01.6'
 
 !-----------------------------------------------
 
-! DISTIO
-! If you change the value below in this subroutine, you must also
-! change it in write_res0.f and the value should also be consistent
-! with the check in read_res0
-      version = 'RES = 01.6'
-
 ! Invoke MPI initialization routines and get rank info.
       CALL PARALLEL_INIT
-      CALL GEN_LOG_BASENAME
-
-! we want only PE_IO to write out common error messages
-      DMP_LOG = (myPE == PE_IO)
-
-! set the version.release of the software
-      ID_VERSION = '2015-2'
-
-
-! specify the number of processors to be used
-!$        call get_environment_variable("OMP_NUM_THREADS",omp_num_threads,length,status, .true.)
-!$      if (status.eq.0 .and. length.ne.0) then
-!$        read(omp_num_threads,*) threads_specified
-!$      else
-!$        WRITE(*,'(A)') 'Enter the number of threads to be used for SMP: '
-!$        READ(*,*) threads_specified
-!$      endif
-
-!$      call omp_set_num_threads(threads_specified)
-
-! Find the number of processors used
-!$omp  parallel
-!$      num_threads = omp_get_num_threads()
-!$      omp_id = omp_get_thread_num()
-!$      if(omp_id.eq.0) Write(*,*)' Number of threads used for SMP = ',  num_threads
-!$omp  end parallel
-
-
-! Set machine dependent constants
-      CALL MACHINE_CONS
-
-! Get the date and time. They give the unique run_id in binary output
-! files
-      CALL GET_RUN_ID
 
 ! AEOLUS: stop trigger mechanism to terminate MFIX normally before batch
 ! queue terminates. timestep at the beginning of execution
@@ -181,15 +121,6 @@
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
-
-!$    CALL START_LOG
-!$    IF(DMP_LOG)WRITE (UNIT_LOG, *) ' '
-!$    IF(DMP_LOG)WRITE (UNIT_LOG, *) ' Number of processors used = ', threads_specified
-!$    IF(DMP_LOG)WRITE (UNIT_LOG, *) ' '
-!$    CALL END_LOG
-
-!  setup for PC quickwin application
-      CALL PC_QUICKWIN
 
       CALL INIT_ERR_MSG('MFIX')
 
@@ -224,11 +155,9 @@
          IF(.NOT.RE_INDEXING)  CALL WRITE_RES1
 
       CASE DEFAULT
-         CALL START_LOG
          IF(DMP_LOG)WRITE (UNIT_LOG, *) &
             ' MFIX: Do not know how to process'
          IF(DMP_LOG)WRITE (UNIT_LOG, *) ' RUN_TYPE in data file'
-         CALL END_LOG
          call mfix_exit(myPE)
 
       END SELECT
@@ -245,10 +174,7 @@
 
 ! Set arrays for computing indices. A secondary call is made
 ! after cut cell-preprocessing to update array indices.
-      IF(CARTESIAN_GRID) THEN
-         CALL SET_INCREMENTS
-      ENDIF
-
+      IF(CARTESIAN_GRID) CALL SET_INCREMENTS
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
@@ -351,39 +277,3 @@
          G12.5,/'Time step number (NSTEP) =',I7)
 
       END PROGRAM MFIX
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: GEN_LOG_BASENAME                                        !
-!  Author: Aytekin Gel                                Date: 19-SEP-03  !
-!                                                                      !
-!  Purpose: Generate the file base for DMP logs.                       !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GEN_LOG_BASENAME
-
-      use compar, only: myPE
-      use compar, only: fbname
-
-      implicit none
-
-! Variables for generating file basename with processor id
-      INTEGER :: i1, i10, i100, i1000, i10000
-
-! PAR_I/O Generate file basename for LOG files
-      i10000 = int(myPE/10000)
-      i1000  = int((myPE-i10000*10000)/1000)
-      i100   = int((myPE-i10000*10000-i1000*1000)/100)
-      i10    = int((myPE-i10000*10000-i1000*1000-i100*100)/10)
-      i1     = int((myPE-i10000*10000-i1000*1000-i100*100-i10*10)/1)
-
-      i10000 = i10000 + 48
-      i1000  = i1000  + 48
-      i100   = i100   + 48
-      i10    = i10    + 48
-      i1     = i1     + 48
-
-      fbname=char(i10000)//char(i1000)//char(i100)//char(i10)//char(i1)
-
-      RETURN
-      END SUBROUTINE GEN_LOG_BASENAME
