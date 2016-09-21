@@ -12,8 +12,9 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE fldvar, only: u_g, v_g, w_g
-      USE mflux, only: rop_ge, rop_gn, rop_gt
-      USE mflux, only: flux_ge, flux_gn, flux_gt
+      USE fldvar, only: rop_ge, rop_gn, rop_gt
+      USE fldvar, only: flux_ge, flux_gn, flux_gt
+
       IMPLICIT NONE
 !---------------------------------------------------------------------//
          CALL CALC_MFLUX0 (U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, &

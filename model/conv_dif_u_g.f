@@ -145,7 +145,7 @@
       USE cutcell, only: alpha_ue_c, alpha_un_c, alpha_ut_c
       USE functions, only: ip_of, im_of, jm_of, km_of
       USE geometry, only: do_k
-      USE mflux, only: flux_ge, flux_gn, flux_gt
+      USE fldvar, only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
       IMPLICIT NONE

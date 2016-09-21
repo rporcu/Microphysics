@@ -13,7 +13,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE fldvar, only: rop_g, u_g, v_g, w_g
-      USE mflux, only: rop_ge, rop_gn, rop_gt
+      USE fldvar, only: rop_ge, rop_gn, rop_gt
       USE run, only: discretize
       IMPLICIT NONE
 

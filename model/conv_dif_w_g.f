@@ -142,7 +142,7 @@
 
       USE functions, only: kp_of, im_of, jm_of, km_of
 
-      USE mflux, only: flux_ge, flux_gn, flux_gt
+      USE fldvar, only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
       IMPLICIT NONE

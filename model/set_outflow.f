@@ -388,7 +388,7 @@
 
 ! Global variables
 !---------------------------------------------------------------------//
-      use mflux, only: flux_ge, flux_gn, flux_gt
+      use fldvar, only: flux_ge, flux_gn, flux_gt
 
 ! Dummy arguments
 !---------------------------------------------------------------------//

@@ -17,7 +17,6 @@
       USE functions
       USE geometry
       USE indices
-      USE mflux
       USE param
       USE param1
       USE physprop

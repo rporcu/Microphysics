@@ -150,7 +150,7 @@
 
       USE geometry, only: do_k
 
-      USE mflux, only: flux_ge, flux_gn, flux_gt
+      USE fldvar, only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
       IMPLICIT NONE

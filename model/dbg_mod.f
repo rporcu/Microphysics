@@ -959,7 +959,6 @@
       use fldvar
       use geometry
       use indices
-      use mflux
       use param
       use param1
       use physprop
@@ -1066,7 +1065,6 @@
       use fldvar
       use geometry
       use indices
-      use mflux
       use param
       use param1
       use physprop
@@ -1172,7 +1170,6 @@
       use fldvar
       use geometry
       use indices
-      use mflux
       use param
       use param1
       use physprop

@@ -385,7 +385,7 @@
       USE compar
       USE constant
       USE geometry
-      USE mflux, ONLY: flux_ge, flux_gn, flux_gt
+      USE fldvar, ONLY: flux_ge, flux_gn, flux_gt
       USE run
       USE time_cpu
       USE utilities, ONLY: mfix_isnan

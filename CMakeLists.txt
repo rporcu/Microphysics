@@ -241,7 +241,6 @@ set(SOURCES
   model/location_check.f
   model/machine_mod.f
   model/matrix_mod.f
-  model/mflux_mod.f
   model/mod_bc_i.f
   model/mod_bc_j.f
   model/mod_bc_k.f

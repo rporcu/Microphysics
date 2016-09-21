@@ -188,7 +188,6 @@
       use geometry
       use ic
       use indices
-      use mflux
       use param
       use param1
       use physprop

@@ -44,7 +44,6 @@
       USE geometry
       USE indices
       USE compar
-      USE mflux
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
