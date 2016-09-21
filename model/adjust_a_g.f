@@ -56,7 +56,7 @@
          USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
          USE indices, only: ip1
          USE matrix, only: e, w, s, n, t, b
-         USE param, only: dimension_3, dimension_m
+         USE param, only: dimension_3
          USE param1, only: ONE, ZERO, small_number
 
       IMPLICIT NONE
@@ -69,7 +69,7 @@
 !
       CHARACTER, INTENT(IN) :: axis
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 !
 !                      Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
@@ -113,14 +113,14 @@
       endif
 
       DO IJK = ijkstart3, ijkend3
-         IF (ABS(A_M(IJK,0,M)) < SMALL_NUMBER) THEN
-            A_M(IJK,E,M) = ZERO
-            A_M(IJK,W,M) = ZERO
-            A_M(IJK,N,M) = ZERO
-            A_M(IJK,S,M) = ZERO
-            A_M(IJK,T,M) = ZERO
-            A_M(IJK,B,M) = ZERO
-            A_M(IJK,0,M) = -ONE
+         IF (ABS(A_M(IJK,0)) < SMALL_NUMBER) THEN
+            A_M(IJK,E) = ZERO
+            A_M(IJK,W) = ZERO
+            A_M(IJK,N) = ZERO
+            A_M(IJK,S) = ZERO
+            A_M(IJK,T) = ZERO
+            A_M(IJK,B) = ZERO
+            A_M(IJK,0) = -ONE
             IF (B_M(IJK) < ZERO) THEN
                IP = IP1(I_OF(IJK))
 

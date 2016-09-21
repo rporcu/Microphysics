@@ -65,7 +65,7 @@
 
 ! Calculate U_m_star and residuals
 ! ---------------------------------------------------------------->>>
-      CALL INIT_AB_M (A_M, B_M, IJKMAX2, 0)
+      CALL INIT_AB_M (A_M, B_M)
 
 ! calculate the convection-diffusion terms
       CALL CONV_DIF_U_G (A_M, B_M)
@@ -115,7 +115,7 @@
 
 ! Calculate V_m_star and residuals
 ! ---------------------------------------------------------------->>>
-      CALL INIT_AB_M (A_M, B_M, IJKMAX2, 0)
+      CALL INIT_AB_M (A_M, B_M)
 
       CALL CONV_DIF_V_G (A_M, B_M, IER)
 
@@ -158,7 +158,7 @@
 ! Calculate W_m_star and residuals
 ! ---------------------------------------------------------------->>>
       IF (DO_K)THEN
-         CALL INIT_AB_M (A_M, B_M, IJKMAX2, 0)
+         CALL INIT_AB_M (A_M, B_M)
 
          CALL CONV_DIF_W_G (A_M, B_M)
 

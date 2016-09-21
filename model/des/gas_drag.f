@@ -28,7 +28,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3, DIMENSION_M
+      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       use compar, only: IJKStart3, IJKEnd3
 ! The I, J, and K values that comprise an IJK
@@ -50,7 +50,7 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3,0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
@@ -109,7 +109,7 @@
                   (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
             ENDIF
 
-            A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_U(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_U(IJK)
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_U(IJK)
 
          ENDDO
@@ -128,7 +128,7 @@
                tmp_A = AVG_X(F_GDS(IJK), F_GDS(IJKE), I)
                tmp_B = AVG_X(DRAG_BM(IJK,1), DRAG_BM(IJKE,1), I)
 
-               A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_U(IJK) * tmp_A
+               A_M(IJK,0) = A_M(IJK,0) - VOL_U(IJK) * tmp_A
                B_M(IJK) = B_M(IJK) - VOL_U(IJK) * tmp_B
             ENDIF
          ENDDO
@@ -170,7 +170,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3, DIMENSION_M
+      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       use compar, only: IJKStart3, IJKEnd3
 ! The I, J, and K values that comprise an IJK
@@ -193,7 +193,7 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
@@ -250,7 +250,7 @@
                   (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
             ENDIF
 
-            A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_V(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_V(IJK)
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_V(IJK)
 
          ENDDO
@@ -269,7 +269,7 @@
                tmp_A = AVG_Y(F_GDS(IJK), F_GDS(IJKN), J)
                tmp_B = AVG_Y(DRAG_BM(IJK,2), DRAG_BM(IJKN,2), J)
 
-               A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_V(IJK) * tmp_A
+               A_M(IJK,0) = A_M(IJK,0) - VOL_V(IJK) * tmp_A
                B_M(IJK) = B_M(IJK) - VOL_V(IJK) * tmp_B
             ENDIF
          ENDDO
@@ -306,7 +306,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3, DIMENSION_M
+      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       use compar, only: IJKStart3, IJKEnd3
 ! The I, J, and K values that comprise an IJK
@@ -328,7 +328,7 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3,0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
@@ -380,7 +380,7 @@
             tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
                DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
 
-            A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_W(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_W(IJK)
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_W(IJK)
 
          ENDDO
@@ -399,7 +399,7 @@
                tmp_A = AVG_Z(F_GDS(IJK), F_GDS(IJKT), K)
                tmp_B = AVG_Z(DRAG_BM(IJK,3), DRAG_BM(IJKT,3), K)
 
-               A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_W(IJK) * tmp_A
+               A_M(IJK,0) = A_M(IJK,0) - VOL_W(IJK) * tmp_A
                B_M(IJK) = B_M(IJK) - VOL_W(IJK) * tmp_B
             ENDIF
          ENDDO

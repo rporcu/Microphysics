@@ -52,7 +52,7 @@
       LOGICAL          SRC
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Source vector
       DOUBLE PRECISION b_m(DIMENSION_3)
@@ -104,7 +104,7 @@
       INTEGER          M
 
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !-----------------------------------------------
       RETURN
       END SUBROUTINE CHECK_Symmetry

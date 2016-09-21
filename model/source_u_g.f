@@ -47,7 +47,7 @@
       USE indices, only: i_of, j_of, k_of
       use matrix, only: e, w, s, n, t, b
 
-      USE param, only: dimension_3, dimension_m
+      USE param, only: dimension_3
       USE param1, only: zero, one, half
       USE run, only: momentum_x_eq
       USE run, only: odt
@@ -62,7 +62,7 @@
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 
@@ -132,44 +132,44 @@
 
 ! Impermeable internal surface
          IF (IP_AT_E(IJK)) THEN
-            A_M(IJK,E,M) = ZERO
-            A_M(IJK,W,M) = ZERO
-            A_M(IJK,N,M) = ZERO
-            A_M(IJK,S,M) = ZERO
-            A_M(IJK,T,M) = ZERO
-            A_M(IJK,B,M) = ZERO
-            A_M(IJK,0,M) = -ONE
+            A_M(IJK,E) = ZERO
+            A_M(IJK,W) = ZERO
+            A_M(IJK,N) = ZERO
+            A_M(IJK,S) = ZERO
+            A_M(IJK,T) = ZERO
+            A_M(IJK,B) = ZERO
+            A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
 
 ! Dilute flow
          ELSEIF (EPGA <= DIL_EP_S) THEN
-            A_M(IJK,E,M) = ZERO
-            A_M(IJK,W,M) = ZERO
-            A_M(IJK,N,M) = ZERO
-            A_M(IJK,S,M) = ZERO
-            A_M(IJK,T,M) = ZERO
-            A_M(IJK,B,M) = ZERO
-            A_M(IJK,0,M) = -ONE
+            A_M(IJK,E) = ZERO
+            A_M(IJK,W) = ZERO
+            A_M(IJK,N) = ZERO
+            A_M(IJK,S) = ZERO
+            A_M(IJK,T) = ZERO
+            A_M(IJK,B) = ZERO
+            A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
 ! set velocity equal to that of west or east cell if solids are present
 ! in those cells else set velocity equal to known value
             IF (EP_G(WEST_OF(IJK)) > DIL_EP_S) THEN
-               A_M(IJK,W,M) = ONE
+               A_M(IJK,W) = ONE
             ELSE IF (EP_G(EAST_OF(IJK)) > DIL_EP_S) THEN
-               A_M(IJK,E,M) = ONE
+               A_M(IJK,E) = ONE
             ELSE
                B_M(IJK) = -U_G(IJK)
             ENDIF
 
 ! Cartesian grid implementation
          ELSEIF (BLOCKED_U_CELL_AT(IJK)) THEN
-            A_M(IJK,E,M) = ZERO
-            A_M(IJK,W,M) = ZERO
-            A_M(IJK,N,M) = ZERO
-            A_M(IJK,S,M) = ZERO
-            A_M(IJK,T,M) = ZERO
-            A_M(IJK,B,M) = ZERO
-            A_M(IJK,0,M) = -ONE
+            A_M(IJK,E) = ZERO
+            A_M(IJK,W) = ZERO
+            A_M(IJK,N) = ZERO
+            A_M(IJK,S) = ZERO
+            A_M(IJK,T) = ZERO
+            A_M(IJK,B) = ZERO
+            A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
 
 ! Normal case
@@ -213,8 +213,8 @@
             ltau_u_g = tau_u_g(ijk)
 
 ! Collect the terms
-            A_M(IJK,0,M) = -(A_M(IJK,E,M)+A_M(IJK,W,M)+&
-               A_M(IJK,N,M)+A_M(IJK,S,M)+A_M(IJK,T,M)+A_M(IJK,B,M)+&
+            A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+&
+               A_M(IJK,N)+A_M(IJK,S)+A_M(IJK,T)+A_M(IJK,B)+&
                V0*VOL_U(IJK))
 
             B_M(IJK) = B_M(IJK) -(SDP + lTAU_U_G + &
@@ -279,7 +279,7 @@
 ! Dummy Arguments
 !-----------------------------------------------
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 !-----------------------------------------------
@@ -318,24 +318,24 @@
                IF (NS_WALL_AT(IJK)) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
-                  A_M(IJK,E,M) = ZERO
-                  A_M(IJK,W,M) = ZERO
-                  A_M(IJK,N,M) = ZERO
-                  A_M(IJK,S,M) = ZERO
-                  A_M(IJK,T,M) = -ONE
-                  A_M(IJK,B,M) = ZERO
-                  A_M(IJK,0,M) = -ONE
+                  A_M(IJK,E) = ZERO
+                  A_M(IJK,W) = ZERO
+                  A_M(IJK,N) = ZERO
+                  A_M(IJK,S) = ZERO
+                  A_M(IJK,T) = -ONE
+                  A_M(IJK,B) = ZERO
+                  A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ELSEIF (FS_WALL_AT(IJK)) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
-                  A_M(IJK,E,M) = ZERO
-                  A_M(IJK,W,M) = ZERO
-                  A_M(IJK,N,M) = ZERO
-                  A_M(IJK,S,M) = ZERO
-                  A_M(IJK,T,M) = ONE
-                  A_M(IJK,B,M) = ZERO
-                  A_M(IJK,0,M) = -ONE
+                  A_M(IJK,E) = ZERO
+                  A_M(IJK,W) = ZERO
+                  A_M(IJK,N) = ZERO
+                  A_M(IJK,S) = ZERO
+                  A_M(IJK,T) = ONE
+                  A_M(IJK,B) = ZERO
+                  A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ENDIF
             ENDDO
@@ -349,22 +349,22 @@
                IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I1,J1,K1)
                IF (NS_WALL_AT(IJK)) THEN
-                  A_M(IJK,E,M) = ZERO
-                  A_M(IJK,W,M) = ZERO
-                  A_M(IJK,N,M) = ZERO
-                  A_M(IJK,S,M) = ZERO
-                  A_M(IJK,T,M) = ZERO
-                  A_M(IJK,B,M) = -ONE
-                  A_M(IJK,0,M) = -ONE
+                  A_M(IJK,E) = ZERO
+                  A_M(IJK,W) = ZERO
+                  A_M(IJK,N) = ZERO
+                  A_M(IJK,S) = ZERO
+                  A_M(IJK,T) = ZERO
+                  A_M(IJK,B) = -ONE
+                  A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ELSEIF (FS_WALL_AT(IJK)) THEN
-                  A_M(IJK,E,M) = ZERO
-                  A_M(IJK,W,M) = ZERO
-                  A_M(IJK,N,M) = ZERO
-                  A_M(IJK,S,M) = ZERO
-                  A_M(IJK,T,M) = ZERO
-                  A_M(IJK,B,M) = ONE
-                  A_M(IJK,0,M) = -ONE
+                  A_M(IJK,E) = ZERO
+                  A_M(IJK,W) = ZERO
+                  A_M(IJK,N) = ZERO
+                  A_M(IJK,S) = ZERO
+                  A_M(IJK,T) = ZERO
+                  A_M(IJK,B) = ONE
+                  A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ENDIF
             ENDDO
@@ -379,22 +379,22 @@
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IJK = FUNIJK(I1,J1,K1)
             IF (NS_WALL_AT(IJK)) THEN
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = -ONE
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
-               A_M(IJK,0,M) = -ONE
+               A_M(IJK,E) = ZERO
+               A_M(IJK,W) = ZERO
+               A_M(IJK,N) = -ONE
+               A_M(IJK,S) = ZERO
+               A_M(IJK,T) = ZERO
+               A_M(IJK,B) = ZERO
+               A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
             ELSEIF (FS_WALL_AT(IJK)) THEN
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ONE
-               A_M(IJK,S,M) = ZERO
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
-               A_M(IJK,0,M) = -ONE
+               A_M(IJK,E) = ZERO
+               A_M(IJK,W) = ZERO
+               A_M(IJK,N) = ONE
+               A_M(IJK,S) = ZERO
+               A_M(IJK,T) = ZERO
+               A_M(IJK,B) = ZERO
+               A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
             ENDIF
          ENDDO
@@ -408,22 +408,22 @@
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IJK = FUNIJK(I1,J1,K1)
             IF (NS_WALL_AT(IJK)) THEN
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = -ONE
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
-               A_M(IJK,0,M) = -ONE
+               A_M(IJK,E) = ZERO
+               A_M(IJK,W) = ZERO
+               A_M(IJK,N) = ZERO
+               A_M(IJK,S) = -ONE
+               A_M(IJK,T) = ZERO
+               A_M(IJK,B) = ZERO
+               A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
             ELSEIF (FS_WALL_AT(IJK)) THEN
-               A_M(IJK,E,M) = ZERO
-               A_M(IJK,W,M) = ZERO
-               A_M(IJK,N,M) = ZERO
-               A_M(IJK,S,M) = ONE
-               A_M(IJK,T,M) = ZERO
-               A_M(IJK,B,M) = ZERO
-               A_M(IJK,0,M) = -ONE
+               A_M(IJK,E) = ZERO
+               A_M(IJK,W) = ZERO
+               A_M(IJK,N) = ZERO
+               A_M(IJK,S) = ONE
+               A_M(IJK,T) = ZERO
+               A_M(IJK,B) = ZERO
+               A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
             ENDIF
          ENDDO
@@ -452,22 +452,22 @@
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
                         IF (.NOT.WALL_AT(IJK)) CYCLE  ! skip redefined cells
-                        A_M(IJK,E,M) = ZERO
-                        A_M(IJK,W,M) = ZERO
-                        A_M(IJK,N,M) = ZERO
-                        A_M(IJK,S,M) = ZERO
-                        A_M(IJK,T,M) = ZERO
-                        A_M(IJK,B,M) = ZERO
-                        A_M(IJK,0,M) = -ONE
+                        A_M(IJK,E) = ZERO
+                        A_M(IJK,W) = ZERO
+                        A_M(IJK,N) = ZERO
+                        A_M(IJK,S) = ZERO
+                        A_M(IJK,T) = ZERO
+                        A_M(IJK,B) = ZERO
+                        A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
-                           A_M(IJK,N,M) = -ONE
+                           A_M(IJK,N) = -ONE
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
-                           A_M(IJK,S,M) = -ONE
+                           A_M(IJK,S) = -ONE
                         ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
-                           A_M(IJK,T,M) = -ONE
+                           A_M(IJK,T) = -ONE
                         ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
-                           A_M(IJK,B,M) = -ONE
+                           A_M(IJK,B) = -ONE
                         ENDIF
                      ENDDO
                   ENDDO
@@ -487,22 +487,22 @@
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
                         IF (.NOT.WALL_AT(IJK)) CYCLE  ! skip redefined cells
-                        A_M(IJK,E,M) = ZERO
-                        A_M(IJK,W,M) = ZERO
-                        A_M(IJK,N,M) = ZERO
-                        A_M(IJK,S,M) = ZERO
-                        A_M(IJK,T,M) = ZERO
-                        A_M(IJK,B,M) = ZERO
-                        A_M(IJK,0,M) = -ONE
+                        A_M(IJK,E) = ZERO
+                        A_M(IJK,W) = ZERO
+                        A_M(IJK,N) = ZERO
+                        A_M(IJK,S) = ZERO
+                        A_M(IJK,T) = ZERO
+                        A_M(IJK,B) = ZERO
+                        A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
-                           A_M(IJK,N,M) = ONE
+                           A_M(IJK,N) = ONE
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
-                           A_M(IJK,S,M) = ONE
+                           A_M(IJK,S) = ONE
                         ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
-                           A_M(IJK,T,M) = ONE
+                           A_M(IJK,T) = ONE
                         ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
-                           A_M(IJK,B,M) = ONE
+                           A_M(IJK,B) = ONE
                         ENDIF
                      ENDDO
                   ENDDO
@@ -524,53 +524,53 @@
                         IF (.NOT.WALL_AT(IJK)) CYCLE  ! skip redefined cells
                         JM = JM1(J)
                         KM = KM1(K)
-                        A_M(IJK,E,M) = ZERO
-                        A_M(IJK,W,M) = ZERO
-                        A_M(IJK,N,M) = ZERO
-                        A_M(IJK,S,M) = ZERO
-                        A_M(IJK,T,M) = ZERO
-                        A_M(IJK,B,M) = ZERO
-                        A_M(IJK,0,M) = -ONE
+                        A_M(IJK,E) = ZERO
+                        A_M(IJK,W) = ZERO
+                        A_M(IJK,N) = ZERO
+                        A_M(IJK,S) = ZERO
+                        A_M(IJK,T) = ZERO
+                        A_M(IJK,B) = ZERO
+                        A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
-                              A_M(IJK,N,M) = -HALF
-                              A_M(IJK,0,M) = -HALF
+                              A_M(IJK,N) = -HALF
+                              A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODY_N(J))
-                              A_M(IJK,N,M) = -(HALF*BC_HW_G(L)-ODY_N(J))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY_N(J))
+                              A_M(IJK,N) = -(HALF*BC_HW_G(L)-ODY_N(J))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
-                              A_M(IJK,S,M) = -HALF
-                              A_M(IJK,0,M) = -HALF
+                              A_M(IJK,S) = -HALF
+                              A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,S,M) = -(HALF*BC_HW_G(L)-ODY_N(JM))
-                              A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODY_N(JM))
+                              A_M(IJK,S) = -(HALF*BC_HW_G(L)-ODY_N(JM))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY_N(JM))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
-                              A_M(IJK,T,M) = -HALF
-                              A_M(IJK,0,M) = -HALF
+                              A_M(IJK,T) = -HALF
+                              A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,0,M)=-(HALF*BC_HW_G(L)+ODZ_T(K)*OX_E(I))
-                              A_M(IJK,T,M)=-(HALF*BC_HW_G(L)-ODZ_T(K)*OX_E(I))
+                              A_M(IJK,0)=-(HALF*BC_HW_G(L)+ODZ_T(K)*OX_E(I))
+                              A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ_T(K)*OX_E(I))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
-                              A_M(IJK,B,M) = -HALF
-                              A_M(IJK,0,M) = -HALF
+                              A_M(IJK,B) = -HALF
+                              A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,B,M) = -(HALF*BC_HW_G(L)-ODZ_T(KM)*OX_E(I&
+                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM)*OX_E(I&
                                  ))
-                              A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODZ_T(KM)*OX_E(I&
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM)*OX_E(I&
                                  ))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
@@ -599,13 +599,13 @@
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            IJK = FUNIJK(I,J,K)
-                           A_M(IJK,E,M) = ZERO
-                           A_M(IJK,W,M) = ONE
-                           A_M(IJK,N,M) = ZERO
-                           A_M(IJK,S,M) = ZERO
-                           A_M(IJK,T,M) = ZERO
-                           A_M(IJK,B,M) = ZERO
-                           A_M(IJK,0,M) = -ONE
+                           A_M(IJK,E) = ZERO
+                           A_M(IJK,W) = ONE
+                           A_M(IJK,N) = ZERO
+                           A_M(IJK,S) = ZERO
+                           A_M(IJK,T) = ZERO
+                           A_M(IJK,B) = ZERO
+                           A_M(IJK,0) = -ONE
                            B_M(IJK) = ZERO
                         ENDDO
                      ENDDO
@@ -630,23 +630,23 @@
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            IJK = FUNIJK(I,J,K)
-                           A_M(IJK,E,M) = ZERO
-                           A_M(IJK,W,M) = ONE
-                           A_M(IJK,N,M) = ZERO
-                           A_M(IJK,S,M) = ZERO
-                           A_M(IJK,T,M) = ZERO
-                           A_M(IJK,B,M) = ZERO
-                           A_M(IJK,0,M) = -ONE
+                           A_M(IJK,E) = ZERO
+                           A_M(IJK,W) = ONE
+                           A_M(IJK,N) = ZERO
+                           A_M(IJK,S) = ZERO
+                           A_M(IJK,T) = ZERO
+                           A_M(IJK,B) = ZERO
+                           A_M(IJK,0) = -ONE
                            B_M(IJK) = ZERO
                            IM = IM1(I)
                            IMJK = IM_OF(IJK)
-                           A_M(IMJK,E,M) = ZERO
-                           A_M(IMJK,W,M) = X_E(IM)/X_E(IM1(IM))
-                           A_M(IMJK,N,M) = ZERO
-                           A_M(IMJK,S,M) = ZERO
-                           A_M(IMJK,T,M) = ZERO
-                           A_M(IMJK,B,M) = ZERO
-                           A_M(IMJK,0,M) = -ONE
+                           A_M(IMJK,E) = ZERO
+                           A_M(IMJK,W) = X_E(IM)/X_E(IM1(IM))
+                           A_M(IMJK,N) = ZERO
+                           A_M(IMJK,S) = ZERO
+                           A_M(IMJK,T) = ZERO
+                           A_M(IMJK,B) = ZERO
+                           A_M(IMJK,0) = -ONE
                            B_M(IMJK) = ZERO
                         ENDDO
                      ENDDO
@@ -666,13 +666,13 @@
                            IJK = FUNIJK(I,J,K)
                            IP = IP1(I)
                            IPJK = IP_OF(IJK)
-                           A_M(IPJK,E,M) = X_E(IP)/X_E(I)
-                           A_M(IPJK,W,M) = ZERO
-                           A_M(IPJK,N,M) = ZERO
-                           A_M(IPJK,S,M) = ZERO
-                           A_M(IPJK,T,M) = ZERO
-                           A_M(IPJK,B,M) = ZERO
-                           A_M(IPJK,0,M) = -ONE
+                           A_M(IPJK,E) = X_E(IP)/X_E(I)
+                           A_M(IPJK,W) = ZERO
+                           A_M(IPJK,N) = ZERO
+                           A_M(IPJK,S) = ZERO
+                           A_M(IPJK,T) = ZERO
+                           A_M(IPJK,B) = ZERO
+                           A_M(IPJK,0) = -ONE
                            B_M(IPJK) = ZERO
                         ENDDO
                      ENDDO
@@ -699,26 +699,26 @@
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
 ! setting the velocity in the boundary cell equal to what is known
-                        A_M(IJK,E,M) = ZERO
-                        A_M(IJK,W,M) = ZERO
-                        A_M(IJK,N,M) = ZERO
-                        A_M(IJK,S,M) = ZERO
-                        A_M(IJK,T,M) = ZERO
-                        A_M(IJK,B,M) = ZERO
-                        A_M(IJK,0,M) = -ONE
+                        A_M(IJK,E) = ZERO
+                        A_M(IJK,W) = ZERO
+                        A_M(IJK,N) = ZERO
+                        A_M(IJK,S) = ZERO
+                        A_M(IJK,T) = ZERO
+                        A_M(IJK,B) = ZERO
+                        A_M(IJK,0) = -ONE
                         B_M(IJK) = -U_G(IJK)
                         IF (BC_PLANE(L) == 'W') THEN
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
 ! known in that cell
                            IJKW = WEST_OF(IJK)
-                           A_M(IJKW,E,M) = ZERO
-                           A_M(IJKW,W,M) = ZERO
-                           A_M(IJKW,N,M) = ZERO
-                           A_M(IJKW,S,M) = ZERO
-                           A_M(IJKW,T,M) = ZERO
-                           A_M(IJKW,B,M) = ZERO
-                           A_M(IJKW,0,M) = -ONE
+                           A_M(IJKW,E) = ZERO
+                           A_M(IJKW,W) = ZERO
+                           A_M(IJKW,N) = ZERO
+                           A_M(IJKW,S) = ZERO
+                           A_M(IJKW,T) = ZERO
+                           A_M(IJKW,B) = ZERO
+                           A_M(IJKW,0) = -ONE
                            B_M(IJKW) = -U_G(IJKW)
                         ENDIF
                      ENDDO
@@ -763,7 +763,7 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 !-----------------------------------------------

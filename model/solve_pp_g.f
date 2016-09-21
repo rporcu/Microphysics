@@ -64,7 +64,7 @@
 ! vector B_M based on dominate term in correction equation
 !      DOUBLE PRECISION :: B_MMAX(DIMENSION_3)
 ! Septadiagonal matrix A_m, vector B_m
-!      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+!      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !      DOUBLE PRECISION B_m(DIMENSION_3)
 !-----------------------------------------------
 
@@ -76,7 +76,7 @@
 
 ! initializing
       PP_G = 0.0d0
-      CALL INIT_AB_M (A_M, B_M, IJKMAX2, 0)
+      CALL INIT_AB_M (A_M, B_M)
 
 ! Forming the sparse matrix equation.
       CALL CONV_PP_G (A_M, B_M)
@@ -116,7 +116,7 @@
       END SUBROUTINE SOLVE_PP_G
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: POINT_SOURCE_Pp_g                                       C
 !  Purpose: Adds point sources to the Pressure correction equation.    C

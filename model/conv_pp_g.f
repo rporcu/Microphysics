@@ -51,7 +51,7 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 !-----------------------------------------------
@@ -78,33 +78,33 @@
 
 ! East face (i+1/2, j, k)
             AM = ROP_GE(IJK)*AYZ(IJK)
-            A_M(IJK,E,0) = AM
-            A_M(IPJK,W,0) = AM
+            A_M(IJK,E) = AM
+            A_M(IPJK,W) = AM
 
 ! North face (i, j+1/2, k)
             AM = ROP_GN(IJK)*AXZ(IJK)
-            A_M(IJK,N,0) = AM
-            A_M(IJPK,S,0) = AM
+            A_M(IJK,N) = AM
+            A_M(IJPK,S) = AM
 
 ! Top face (i, j, k+1/2)
             IF (DO_K) THEN
                AM = ROP_GT(IJK)*AXY(IJK)
-               A_M(IJK,T,0) = AM
-               A_M(IJKP,B,0) = AM
+               A_M(IJK,T) = AM
+               A_M(IJKP,B) = AM
             ENDIF
 
 ! West face (i-1/2, j, k)
             IMJK = IM_OF(IJK)
             IF (.NOT.FLUID_AT(IMJK)) THEN
                AM = ROP_GE(IMJK)*AYZ(IMJK)
-               A_M(IJK,W,0) = AM
+               A_M(IJK,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
             IJMK = JM_OF(IJK)
             IF (.NOT.FLUID_AT(IJMK)) THEN
                AM = ROP_GN(IJMK)*AXZ(IJMK)
-               A_M(IJK,S,0) = AM
+               A_M(IJK,S) = AM
             ENDIF
 
 ! Bottom face (i, j, k-1/2)
@@ -112,7 +112,7 @@
                IJKM = KM_OF(IJK)
                IF (.NOT.FLUID_AT(IJKM)) THEN
                   AM = ROP_GT(IJKM)*AXY(IJKM)
-                  A_M(IJK,B,0) = AM
+                  A_M(IJK,B) = AM
                ENDIF
             ENDIF
          ENDIF   ! end if (fluid_at(ijk))

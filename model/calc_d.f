@@ -87,7 +87,7 @@ MODULE CALC_D_MOD
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and size of solids phase arrays.
-      use param, only: DIMENSION_3, DIMENSION_M
+      use param, only: DIMENSION_3
 
       IMPLICIT NONE
 
@@ -98,7 +98,7 @@ MODULE CALC_D_MOD
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN):: A_m(DIMENSION_3,-3:3,0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN):: A_m(DIMENSION_3,-3:3)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -128,7 +128,7 @@ MODULE CALC_D_MOD
 
       DO IJK = IJKSTART3, IJKEND3
 
-         TMPdp = -A_M(IJK,0,0)
+         TMPdp = -A_M(IJK,0)
          IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN

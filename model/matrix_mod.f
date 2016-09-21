@@ -21,7 +21,7 @@
 !-----------------------------------------------
 
 ! linear equation matrix and vector
-      DOUBLE PRECISION, DIMENSION(:, :, :), ALLOCATABLE :: A_m
+      DOUBLE PRECISION, DIMENSION(:, :), ALLOCATABLE :: A_m
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: B_m
 
       LOGICAL :: ambm_locked = .false.
@@ -62,42 +62,35 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: Init_Ab_m(A_m, b_m, IJKMAX2, M, IER)                   C                     C
+!  Module name: Init_Ab_m(A_m, b_m)                                    C
 !  Author: M. Syamlal                                 Date: 16-MAY-96  C
 !                                                                      C
 !  Purpose:Initialiize the sparse matrix coefficients and the          C
 !           source vector.                                             C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE INIT_AB_M(A_M, B_M, IJKMAX2A, M)
+      SUBROUTINE INIT_AB_M(A_M, B_M)
 
       USE param
       USE param1
       USE compar
 
       IMPLICIT NONE
-!
-!                      Phase index
-      INTEGER          M
-!
-!                      Maximum dimension
-      INTEGER          IJKMAX2A
-!
-!                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
-!
-!                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3)
-!
+
+! Septadiagonal matrix A_m
+      DOUBLE PRECISION :: A_m(DIMENSION_3, -3:3)
+
+! Source vector
+      DOUBLE PRECISION :: b_m(DIMENSION_3)
 !-----------------------------------------------
 !
-      A_M(:,B,M) = ZERO
-      A_M(:,S,M) = ZERO
-      A_M(:,W,M) = ZERO
-      A_M(:,0,M) = -ONE
-      A_M(:,E,M) = ZERO
-      A_M(:,N,M) = ZERO
-      A_M(:,T,M) = ZERO
+      A_M(:,B) = ZERO
+      A_M(:,S) = ZERO
+      A_M(:,W) = ZERO
+      A_M(:,0) = -ONE
+      A_M(:,E) = ZERO
+      A_M(:,N) = ZERO
+      A_M(:,T) = ZERO
       B_M = ZERO
 
       RETURN

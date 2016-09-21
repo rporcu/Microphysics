@@ -45,7 +45,7 @@
 ! variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 ! phase index
@@ -117,7 +117,7 @@
       SELECT CASE (METHOD)
       CASE (1)
 ! SOR: Successive Sver Relaxation method from Templates
-        CALL LEQ_SOR (VNAME, VNO, VAR, A_M(:,:,M), B_M(:), &
+        CALL LEQ_SOR (VNAME, VNO, VAR, A_M(:,:), B_M(:), &
                       ITMAX, IER)
 
       CASE (2)
@@ -127,44 +127,44 @@
 !!$omp parallel do private(ijk,ii)
             DO ijk=ijkstart3,ijkend3
                do ii=-3,3
-                  A_mt(ii,ijk) = A_m(ijk,ii,M)
+                  A_mt(ii,ijk) = A_m(ijk,ii)
                enddo
             ENDDO
             call leq_bicgst(VNAME, VNO, VAR, A_Mt(:,:), B_M(:), &
                             SWEEP, TOL, PC, ITMAX, IER)
             deallocate( A_mt )
          ELSE
-            call leq_bicgs(VNAME, VNO, VAR, A_M(:,:,M), B_M(:),&
+            call leq_bicgs(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
                            SWEEP, TOL, PC, ITMAX, IER)
          ENDIF
 
 
       CASE (3)
 ! GMRES: A Generalized Minimal RESidual Algorithm
-         call leq_gmres(VNAME, VNO, VAR, A_M(:,:,M), B_M(:),&
+         call leq_gmres(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
                         SWEEP, TOL, ITMAX, MAX_IT, IER)
 
       CASE (4)
 ! Mix:
          IER = 0
-         call leq_bicgs(VNAME,VNO, VAR, A_M(:,:,M), B_M(:), SWEEP,&
+         call leq_bicgs(VNAME,VNO, VAR, A_M(:,:), B_M(:), SWEEP,&
                        TOL, PC, ITMAX, IER)
          IF (IER .eq. -2) THEN
             IER = 0
             print*,'calling leq_gmres', Vname
-            call leq_gmres(VNAME, VNO, VAR, A_M(:,:,M), B_M(:),&
+            call leq_gmres(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
                            SWEEP, TOL, ITMAX, MAX_IT, IER)
          ENDIF
 
 
       CASE (5)
 ! CG: Conjugate Gradients
-         call leq_cg(VNAME, VNO, VAR, A_M(:,:,M), B_M(:), SWEEP,&
+         call leq_cg(VNAME, VNO, VAR, A_M(:,:), B_M(:), SWEEP,&
                      TOL, PC, ITMAX, IER)
 
 !     CASE (6) - Disabled
 ! LSOR: Line Successive Over Relaxation method
-!       CALL LEQ_LSOR(VNAME, VAR, A_M(:,:,M), B_M(:), ITMAX, IER)
+!       CALL LEQ_LSOR(VNAME, VAR, A_M(:,:), B_M(:), ITMAX, IER)
 
 
       CASE DEFAULT

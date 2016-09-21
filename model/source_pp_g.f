@@ -26,7 +26,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G, DIMENSION_3, DIMENSION_M
+      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G, DIMENSION_3
       USE compar, ONLY: IJKSTART3, IJKEND3
       USE cutcell, ONLY: CARTESIAN_GRID, A_UPG_E, A_VPG_N, A_WPG_T
       USE eos, ONLY: DROODP_G
@@ -44,7 +44,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Dummy arguments
 !-----------------------------------------------
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 ! maximum term in b_m expression
@@ -83,38 +83,38 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJKM = KM_OF(IJK)
 
             bma = (ROP_G(IJK)-ROP_GO(IJK))*VOL(IJK)*ODT
-            bme = A_M(IJK,E,0)*U_G(IJK)
-            bmw = A_M(IJK,W,0)*U_G(IMJK)
-            bmn = A_M(IJK,N,0)*V_G(IJK)
-            bms = A_M(IJK,S,0)*V_G(IJMK)
-            bmt = A_M(IJK,T,0)*W_G(IJK)
-            bmb = A_M(IJK,B,0)*W_G(IJKM)
+            bme = A_M(IJK,E)*U_G(IJK)
+            bmw = A_M(IJK,W)*U_G(IMJK)
+            bmn = A_M(IJK,N)*V_G(IJK)
+            bms = A_M(IJK,S)*V_G(IJMK)
+            bmt = A_M(IJK,T)*W_G(IJK)
+            bmb = A_M(IJK,B)*W_G(IJKM)
             B_M(IJK) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
             B_MMAX(IJK) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
 
-            A_M(IJK,E,0) = A_M(IJK,E,0)*D_E(IJK)
-            A_M(IJK,W,0) = A_M(IJK,W,0)*D_E(IMJK)
-            A_M(IJK,N,0) = A_M(IJK,N,0)*D_N(IJK)
-            A_M(IJK,S,0) = A_M(IJK,S,0)*D_N(IJMK)
-            A_M(IJK,T,0) = A_M(IJK,T,0)*D_T(IJK)
-            A_M(IJK,B,0) = A_M(IJK,B,0)*D_T(IJKM)
+            A_M(IJK,E) = A_M(IJK,E)*D_E(IJK)
+            A_M(IJK,W) = A_M(IJK,W)*D_E(IMJK)
+            A_M(IJK,N) = A_M(IJK,N)*D_N(IJK)
+            A_M(IJK,S) = A_M(IJK,S)*D_N(IJMK)
+            A_M(IJK,T) = A_M(IJK,T)*D_T(IJK)
+            A_M(IJK,B) = A_M(IJK,B)*D_T(IJKM)
 
             IF(CARTESIAN_GRID) THEN
-               A_M(IJK,E,0) = A_M(IJK,E,0) * A_UPG_E(IJK)
-               A_M(IJK,W,0) = A_M(IJK,W,0) * A_UPG_E(IMJK)
-               A_M(IJK,N,0) = A_M(IJK,N,0) * A_VPG_N(IJK)
-               A_M(IJK,S,0) = A_M(IJK,S,0) * A_VPG_N(IJMK)
-               A_M(IJK,T,0) = A_M(IJK,T,0) * A_WPG_T(IJK)
-               A_M(IJK,B,0) = A_M(IJK,B,0) * A_WPG_T(IJKM)
+               A_M(IJK,E) = A_M(IJK,E) * A_UPG_E(IJK)
+               A_M(IJK,W) = A_M(IJK,W) * A_UPG_E(IMJK)
+               A_M(IJK,N) = A_M(IJK,N) * A_VPG_N(IJK)
+               A_M(IJK,S) = A_M(IJK,S) * A_VPG_N(IJMK)
+               A_M(IJK,T) = A_M(IJK,T) * A_WPG_T(IJK)
+               A_M(IJK,B) = A_M(IJK,B) * A_WPG_T(IJKM)
             ENDIF
 
 
-            A_M(IJK,0,0) = -(A_M(IJK,E,0)+A_M(IJK,W,0)+A_M(IJK,N,0)+A_M(IJK,S,0&
-               )+A_M(IJK,T,0)+A_M(IJK,B,0))
+            A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+A_M(IJK,N)+A_M(IJK,S) + &
+               A_M(IJK,T)+A_M(IJK,B))
 
-            IF (ABS(A_M(IJK,0,0)) < SMALL_NUMBER) THEN
+            IF (ABS(A_M(IJK,0)) < SMALL_NUMBER) THEN
                IF (ABS(B_M(IJK)) < SMALL_NUMBER) THEN
-                  A_M(IJK,0,0) = -ONE
+                  A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
 !!$omp             critical
@@ -130,13 +130,13 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! note the matrix coefficients and source vector should already be zero
 ! from the initialization of A and B but the following ensures the zero
 ! value.
-            A_M(IJK,E,0) = ZERO
-            A_M(IJK,W,0) = ZERO
-            A_M(IJK,N,0) = ZERO
-            A_M(IJK,S,0) = ZERO
-            A_M(IJK,T,0) = ZERO
-            A_M(IJK,B,0) = ZERO
-            A_M(IJK,0,0) = -ONE
+            A_M(IJK,E) = ZERO
+            A_M(IJK,W) = ZERO
+            A_M(IJK,N) = ZERO
+            A_M(IJK,S) = ZERO
+            A_M(IJK,T) = ZERO
+            A_M(IJK,B) = ZERO
+            A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
          ENDIF   ! end if/else branch fluid_at(ijk)
       ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
@@ -153,7 +153,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
          DO IJK = ijkstart3, ijkend3
             IF (FLUID_AT(IJK)) THEN
 
-               A_M(IJK,0,0) = A_M(IJK,0,0) - &
+               A_M(IJK,0) = A_M(IJK,0) - &
                   fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
                   EP_G(IJK)*VOL(IJK)*ODT
 
@@ -172,26 +172,26 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !               IJKS = SOUTH_OF(IJK)
 !               IJKT = TOP_OF(IJK)
 !               IJKB = BOTTOM_OF(IJK)
-!               A_M(IJK,0,0) = A_M(IJK,0,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*EP_G(&
+!               A_M(IJK,0) = A_M(IJK,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*EP_G(&
 !                  IJK)*((ONE - XSI_E(IJK))*U_G(IJK)*AYZ(IJK)-XSI_E(IMJK)*U_G(&
 !                  IMJK)*AYZ(IMJK)+(ONE-XSI_N(IJK))*V_G(IJK)*AXZ(IJK)-XSI_N(IJMK&
 !                  )*V_G(IJMK)*AXZ(IJMK))
 
-!               A_M(IJK,E,0) = A_M(IJK,E,0) - EP_G(IJKE)*fac*DROODP_G(RO_G(IJKE),P_G&
+!               A_M(IJK,E) = A_M(IJK,E) - EP_G(IJKE)*fac*DROODP_G(RO_G(IJKE),P_G&
 !                  (IJKE))*XSI_E(IJK)*U_G(IJK)*AYZ(IJK)
-!               A_M(IJK,W,0) = A_M(IJK,W,0) + EP_G(IJKW)*fac*DROODP_G(RO_G(IJKW),P_G&
+!               A_M(IJK,W) = A_M(IJK,W) + EP_G(IJKW)*fac*DROODP_G(RO_G(IJKW),P_G&
 !                  (IJKW))*(ONE - XSI_E(IMJK))*U_G(IMJK)*AYZ(IMJK)
-!               A_M(IJK,N,0) = A_M(IJK,N,0) - EP_G(IJKN)*fac*DROODP_G(RO_G(IJKN),P_G&
+!               A_M(IJK,N) = A_M(IJK,N) - EP_G(IJKN)*fac*DROODP_G(RO_G(IJKN),P_G&
 !                  (IJKN))*XSI_N(IJK)*V_G(IJK)*AXZ(IJK)
-!               A_M(IJK,S,0) = A_M(IJK,S,0) + EP_G(IJKS)*fac*DROODP_G(RO_G(IJKS),P_G&
+!               A_M(IJK,S) = A_M(IJK,S) + EP_G(IJKS)*fac*DROODP_G(RO_G(IJKS),P_G&
 !                  (IJKS))*(ONE - XSI_N(IJMK))*V_G(IJMK)*AXZ(IJMK)
 !               IF (DO_K) THEN
-!                  A_M(IJK,0,0) = A_M(IJK,0,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
+!                  A_M(IJK,0) = A_M(IJK,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
 !                     EP_G(IJK)*((ONE - XSI_T(IJK))*W_G(IJK)*AXY(IJK)-XSI_T(IJKM&
 !                     )*W_G(IJKM)*AXY(IJKM))
-!                  A_M(IJK,T,0) = A_M(IJK,T,0) - EP_G(IJKT)*fac*DROODP_G(RO_G(IJKT),&
+!                  A_M(IJK,T) = A_M(IJK,T) - EP_G(IJKT)*fac*DROODP_G(RO_G(IJKT),&
 !                     P_G(IJKT))*XSI_T(IJK)*W_G(IJK)*AXY(IJK)
-!                  A_M(IJK,B,0) = A_M(IJK,B,0) + EP_G(IJKB)*fac*DROODP_G(RO_G(IJKB),&
+!                  A_M(IJK,B) = A_M(IJK,B) + EP_G(IJKB)*fac*DROODP_G(RO_G(IJKB),&
 !                     P_G(IJKB))*(ONE - XSI_T(IJKM))*W_G(IJKM)*AXY(IJKM)
 !               ENDIF
 !
@@ -215,12 +215,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJKM = KM_OF(IJK)
             IJKP = KP_OF(IJK)
 ! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
-            if(p_flow_at(imjk)) A_m(IJK, w, 0) = ZERO
-            if(p_flow_at(ipjk)) A_m(IJK, e, 0) = ZERO
-            if(p_flow_at(ijmk)) A_m(IJK, s, 0) = ZERO
-            if(p_flow_at(ijpk)) A_m(IJK, n, 0) = ZERO
-            if(p_flow_at(ijkm)) A_m(IJK, b, 0) = ZERO
-            if(p_flow_at(ijkp)) A_m(IJK, t, 0) = ZERO
+            if(p_flow_at(imjk)) A_m(IJK,W) = ZERO
+            if(p_flow_at(ipjk)) A_m(IJK,E) = ZERO
+            if(p_flow_at(ijmk)) A_m(IJK,S) = ZERO
+            if(p_flow_at(ijpk)) A_m(IJK,N) = ZERO
+            if(p_flow_at(ijkm)) A_m(IJK,B) = ZERO
+            if(p_flow_at(ijkp)) A_m(IJK,T) = ZERO
          ENDIF
       ENDDO
 
@@ -228,8 +228,8 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! for details on selection of IJK_P_g.
       IF (IJK_P_G /= UNDEFINED_I) THEN
          B_M(IJK_P_G) = ZERO
-         A_M(IJK_P_G,:,0) = ZERO
-         A_M(IJK_P_G,0,0) = -ONE
+         A_M(IJK_P_G,:) = ZERO
+         A_M(IJK_P_G,0) = -ONE
       ENDIF
 
       call unlock_xsi_array

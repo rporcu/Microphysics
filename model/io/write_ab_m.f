@@ -54,7 +54,7 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Source vector
       DOUBLE PRECISION b_m(DIMENSION_3)
@@ -95,7 +95,7 @@
 
       do L = -3,3
 
-      call gather(a_m(:,L,M),array1,root)
+      call gather(a_m(:,L),array1,root)
 
       DO K = Kmin2, Kmax2
       DO I = Imin2, Imax2

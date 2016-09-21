@@ -47,7 +47,7 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Vector b_m
       DOUBLE PRECISION B_m(DIMENSION_3)
@@ -70,9 +70,9 @@
 !!!$omp    parallel do private(IJK,AP)
       DO IJK = ijkstart3, ijkend3
          IF (FLUID_AT(IJK)) THEN
-            AP = A_M(IJK,0,M)
+            AP = A_M(IJK,0)
             IF (AP /= (-ONE)) THEN
-               A_M(IJK,0,M) = AP*F1
+               A_M(IJK,0) = AP*F1
                B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
@@ -130,7 +130,7 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Vector b_m
       DOUBLE PRECISION B_m(DIMENSION_3)
@@ -153,9 +153,9 @@
 !!!$omp    parallel do private(IJK,AP)
       DO IJK = ijkstart3, ijkend3
          IF (FLOW_AT_E(IJK)) THEN
-            AP = A_M(IJK,0,M)
+            AP = A_M(IJK,0)
             IF (AP /= (-ONE)) THEN
-               A_M(IJK,0,M) = AP*F1
+               A_M(IJK,0) = AP*F1
                B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
@@ -213,7 +213,7 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Vector b_m
       DOUBLE PRECISION B_m(DIMENSION_3)
@@ -236,9 +236,9 @@
 !!!$omp    parallel do private(IJK,AP)
       DO IJK = ijkstart3, ijkend3
          IF (FLOW_AT_N(IJK)) THEN
-            AP = A_M(IJK,0,M)
+            AP = A_M(IJK,0)
             IF (AP /= (-ONE)) THEN
-               A_M(IJK,0,M) = AP*F1
+               A_M(IJK,0) = AP*F1
                B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
@@ -296,7 +296,7 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
+      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
 !
 !                      Vector b_m
       DOUBLE PRECISION B_m(DIMENSION_3)
@@ -319,9 +319,9 @@
 !!!$omp    parallel do private(IJK,AP)
       DO IJK = ijkstart3, ijkend3
          IF (FLOW_AT_T(IJK)) THEN
-            AP = A_M(IJK,0,M)
+            AP = A_M(IJK,0)
             IF (AP /= (-ONE)) THEN
-               A_M(IJK,0,M) = AP*F1
+               A_M(IJK,0) = AP*F1
                B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
