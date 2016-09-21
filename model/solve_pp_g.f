@@ -88,18 +88,18 @@
       IF(NORMG == ZERO) THEN
 ! calculating the residual based on dominate term in correction equation
 ! and use this to form normalization factor
-        CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P,0), &
-         DEN_RESID(RESID_P,0), RESID(RESID_P,0), MAX_RESID(RESID_P,0), &
-         IJK_RESID(RESID_P,0))
-         NORMGloc = RESID(RESID_P,0)/DEN
+        CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P), &
+         DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
+         IJK_RESID(RESID_P))
+         NORMGloc = RESID(RESID_P)/DEN
       ENDIF
-      CALL CALC_RESID_PP (B_M, NORMGloc, NUM_RESID(RESID_P,0),  &
-         DEN_RESID(RESID_P,0), RESID(RESID_P,0), MAX_RESID(RESID_P,0), &
-         IJK_RESID(RESID_P,0))
-      RESG = RESID(RESID_P,0)
+      CALL CALC_RESID_PP (B_M, NORMGloc, NUM_RESID(RESID_P),  &
+         DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
+         IJK_RESID(RESID_P))
+      RESG = RESID(RESID_P)
 
-!      write(*,*) resid(resid_p, 0), max_resid(resid_p, 0), &
-!         ijk_resid(resid_p, 0)
+!      write(*,*) resid(resid_p), max_resid(resid_p), &
+!         ijk_resid(resid_p)
 
 ! Solve P_g_prime equation
        LEQI = LEQ_IT(1)
@@ -116,7 +116,7 @@
       END SUBROUTINE SOLVE_PP_G
 
 
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: POINT_SOURCE_Pp_g                                       C
 !  Purpose: Adds point sources to the Pressure correction equation.    C

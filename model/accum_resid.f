@@ -51,16 +51,11 @@
       LOCAL_INDEX = 0
 
 ! Pack the numerators and denominators into one vector for performing single global operation
-
-!!!$omp parallel do private( NN,M )&
-!!!$omp&  REDUCTION(+:LOCAL_INDEX)
       DO NN = 2, NRESID
-         DO M = 0, DIMENSION_M
-            LOCAL_INDEX = LOCAL_INDEX + 1
-            RESID_PACK(LOCAL_INDEX) = NUM_RESID(NN,M)
-            LOCAL_INDEX = LOCAL_INDEX + 1
-            RESID_PACK(LOCAL_INDEX) = DEN_RESID(NN,M)
-         ENDDO
+         LOCAL_INDEX = LOCAL_INDEX + 1
+         RESID_PACK(LOCAL_INDEX) = NUM_RESID(NN)
+         LOCAL_INDEX = LOCAL_INDEX + 1
+         RESID_PACK(LOCAL_INDEX) = DEN_RESID(NN)
       ENDDO
 
       call global_all_sum(RESID_PACK)
@@ -69,30 +64,23 @@
 
       LOCAL_INDEX = 0
 
-!!!$omp parallel do private( NN,M )&
-!!!$omp&  REDUCTION(+:LOCAL_INDEX)
       DO NN = 2, NRESID
-         DO M = 0, DIMENSION_M
-            LOCAL_INDEX = LOCAL_INDEX + 1
-            NUM_RESID(NN,M) = RESID_PACK(LOCAL_INDEX)
-            LOCAL_INDEX = LOCAL_INDEX + 1
-            DEN_RESID(NN,M) = RESID_PACK(LOCAL_INDEX)
-         ENDDO
+         LOCAL_INDEX = LOCAL_INDEX + 1
+         NUM_RESID(NN) = RESID_PACK(LOCAL_INDEX)
+         LOCAL_INDEX = LOCAL_INDEX + 1
+         DEN_RESID(NN) = RESID_PACK(LOCAL_INDEX)
       ENDDO
 
-!!!$omp parallel do private( NN,M )
       DO NN = 2, NRESID
-         DO M = 0, DIMENSION_M
-            IF (DEN_RESID(NN,M) > ZERO) THEN
-               RESID(NN,M) = NUM_RESID(NN,M)/DEN_RESID(NN,M)
-            ELSE IF (NUM_RESID(NN,M) == ZERO) THEN
-               RESID(NN,M) = ZERO
-            ELSE
-               RESID(NN,M) = UNDEFINED
+         IF (DEN_RESID(NN) > ZERO) THEN
+            RESID(NN) = NUM_RESID(NN)/DEN_RESID(NN)
+         ELSE IF (NUM_RESID(NN) == ZERO) THEN
+            RESID(NN) = ZERO
+         ELSE
+            RESID(NN) = UNDEFINED
 !     WRITE (LINE, *) 'Warning: All center coefficients are zero.'
 !     CALL WRITE_ERROR ('ACCUM_RESID', LINE, 1)
-            ENDIF
-         ENDDO
+         ENDIF
       ENDDO
 
       RETURN

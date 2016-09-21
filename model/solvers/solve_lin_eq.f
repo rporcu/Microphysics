@@ -95,13 +95,13 @@
 ! Adjusting the tolerances
 ! ---------------------------------------------------------------->>>
       IF(adjust_leq_tol) THEN
-         max_resid_local = maxval(resid(:,M),1)
+         max_resid_local = maxval(resid(:),1)
          tol_resid_max   = TOL_RESID
-         IF(leq_tol_scheme1.AND.resid(Vno,M).LT.1.0D-1) THEN
+         IF(leq_tol_scheme1.AND.resid(Vno).LT.1.0D-1) THEN
             if(Vno.le.5) then
-               TOL = MAX(TOL1,TOL1*RESID(Vno,M)/TOL_RESID)
+               TOL = MAX(TOL1,TOL1*RESID(Vno)/TOL_RESID)
             endif
-            Write(*,*) 'Adjusting LEQ_Tolerance', Vname, tol, resid(Vno,M)
+            Write(*,*) 'Adjusting LEQ_Tolerance', Vname, tol, resid(Vno)
          ELSEIF(max_resid_local.LT.1.0D-1) THEN
             TOL = MAX(TOL1,TOL1*max_resid_local/TOL_RESID_max)
             Write(*,*) 'Adjusting LEQ_Tolerance', Vname, tol, max_resid_local

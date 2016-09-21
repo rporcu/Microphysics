@@ -76,7 +76,7 @@
             LS= 6+10*(LC-1)
             LE= 5+10*(LC)
             WRITE(ERR_MSG(1)(LS:LE),'(2X,1PG8.1)') &
-               RESID(RESID_INDEX(LL,1),RESID_INDEX(LL,2))
+               RESID(RESID_INDEX(LL,1))
             LC=LC+1
          ENDIF
       ENDDO

@@ -68,16 +68,6 @@
       Allocate(  MU_g (DIMENSION_3) )
 
 
-!residual
-      Allocate( RESID(NRESID, 0:DIMENSION_M) )
-      Allocate( MAX_RESID(NRESID, 0:DIMENSION_M) )
-      Allocate( IJK_RESID(NRESID, 0:DIMENSION_M) )
-      Allocate( NUM_RESID(NRESID, 0:DIMENSION_M) )
-      Allocate( DEN_RESID(NRESID, 0:DIMENSION_M) )
-      Allocate( RESID_PACK(NRESID*2*(DIMENSION_M+1)))
-
-
-
 !tmp_array
       Allocate(  Array1(DIMENSION_3) )
       Allocate(  Array2(DIMENSION_3) )

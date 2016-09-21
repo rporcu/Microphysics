@@ -95,14 +95,14 @@
 
       IF (MOMENTUM_X_EQ(0)) THEN
          CALL CALC_RESID_U (U_G, V_G, W_G, A_M, B_M, 0, &
-            NUM_RESID(RESID_U,0), DEN_RESID(RESID_U,0), &
-            RESID(RESID_U,0), MAX_RESID(RESID_U,0), &
-            IJK_RESID(RESID_U,0))
+            NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
+            RESID(RESID_U), MAX_RESID(RESID_U), &
+            IJK_RESID(RESID_U))
          CALL UNDER_RELAX_U (U_G, A_M, B_M, 0, UR_FAC(3))
       ENDIF
 
       IF (MOMENTUM_X_EQ(0)) THEN
-         CALL ADJUST_LEQ (RESID(RESID_U,0), LEQ_IT(3), LEQ_METHOD(3), &
+         CALL ADJUST_LEQ (RESID(RESID_U), LEQ_IT(3), LEQ_METHOD(3), &
             LEQI, LEQM)
          CALL SOLVE_LIN_EQ ('U_g', 3, U_Gtmp, A_M, B_M, 0, LEQI, LEQM, &
             LEQ_SWEEP(3), LEQ_TOL(3),  LEQ_PC(3), IER)
@@ -138,14 +138,14 @@
 
       IF (MOMENTUM_Y_EQ(0)) THEN
          CALL CALC_RESID_V (U_G, V_G, W_G, A_M, B_M, 0, &
-            NUM_RESID(RESID_V,0), DEN_RESID(RESID_V,0), &
-            RESID(RESID_V,0), MAX_RESID(RESID_V,0), &
-            IJK_RESID(RESID_V,0))
+            NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
+            RESID(RESID_V), MAX_RESID(RESID_V), &
+            IJK_RESID(RESID_V))
          CALL UNDER_RELAX_V (V_G, A_M, B_M, 0, UR_FAC(4))
       ENDIF
 
       IF (MOMENTUM_Y_EQ(0)) THEN
-         CALL ADJUST_LEQ (RESID(RESID_V,0), LEQ_IT(4), LEQ_METHOD(4), &
+         CALL ADJUST_LEQ (RESID(RESID_V), LEQ_IT(4), LEQ_METHOD(4), &
             LEQI, LEQM)
          CALL SOLVE_LIN_EQ ('V_g', 4, V_Gtmp, A_M, B_M, 0, LEQI, LEQM, &
             LEQ_SWEEP(4), LEQ_TOL(4),  LEQ_PC(4), IER)
@@ -180,9 +180,9 @@
 
          IF (MOMENTUM_Z_EQ(0)) THEN
             CALL CALC_RESID_W (U_G, V_G, W_G, A_M, B_M, 0, &
-               NUM_RESID(RESID_W,0), DEN_RESID(RESID_W,0), &
-               RESID(RESID_W,0), MAX_RESID(RESID_W,0), &
-               IJK_RESID(RESID_W,0))
+               NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
+               RESID(RESID_W), MAX_RESID(RESID_W), &
+               IJK_RESID(RESID_W))
             CALL UNDER_RELAX_W (W_G, A_M, B_M, 0, UR_FAC(5))
          ENDIF
 
@@ -190,7 +190,7 @@
          IF (MOMENTUM_Z_EQ(0)) THEN
 !            call test_lin_eq(ijkmax2, ijmax2, imax2, a_m(1, -3, 0), &
 !               1, DO_K, ier)
-            CALL ADJUST_LEQ (RESID(RESID_W,0), LEQ_IT(5), &
+            CALL ADJUST_LEQ (RESID(RESID_W), LEQ_IT(5), &
                LEQ_METHOD(5), LEQI, LEQM)
             CALL SOLVE_LIN_EQ ('W_g', 5, W_Gtmp, A_M, B_M, 0, LEQI,&
                LEQM, LEQ_SWEEP(5), LEQ_TOL(5), LEQ_PC(5), IER)

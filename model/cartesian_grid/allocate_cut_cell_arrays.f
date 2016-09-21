@@ -1,4 +1,3 @@
-
       SUBROUTINE ALLOCATE_CUT_CELL_ARRAYS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -326,10 +325,6 @@
       Allocate(  V_g_CC (DIMENSION_3) )
       Allocate(  W_g_CC (DIMENSION_3) )
 
-      Allocate(  U_s_CC (DIMENSION_3, DIMENSION_M) )
-      Allocate(  V_s_CC (DIMENSION_3, DIMENSION_M) )
-      Allocate(  W_s_CC (DIMENSION_3, DIMENSION_M) )
-
       ALLOCATE(N_FACET_AT(DIMENSION_3))
       N_FACET_AT = 0
 
@@ -345,5 +340,3 @@
 
       RETURN
       END SUBROUTINE ALLOCATE_CUT_CELL_ARRAYS
-
-
