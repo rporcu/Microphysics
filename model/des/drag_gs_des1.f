@@ -44,11 +44,7 @@
       use discretelement, only: PVOL
 ! Particle drag force
       use discretelement, only: DRAG_FC
-! Cell-center gas velocities.
-      use tmp_array, only: UGC => ARRAY1
-      use tmp_array, only: VGC => ARRAY2
-      use tmp_array, only: WGC => ARRAY3
-! Flag for 3D simulatoins.
+! Flag for 3D simulations.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
       use functions, only: FLUID_AT
@@ -57,15 +53,15 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
+! Size of local fluid arrays
+      use param, only: DIMENSION_3
 ! Double precision values.
       use param1, only: ZERO
 
-! Lock/Unlock the temp arrays to prevent double usage.
-      use tmp_array, only: LOCK_TMP_ARRAY
-      use tmp_array, only: UNLOCK_TMP_ARRAY
-
       IMPLICIT NONE
 
+! Local variables
+!---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, IJK, LC
 ! Interpolation weight
@@ -76,15 +72,21 @@
       DOUBLE PRECISION :: D_FORCE(3)
 ! Loop bound for filter
       INTEGER :: LP_BND
+! Cell-center gas velocities.
+      DOUBLE PRECISION, ALLOCATABLE :: UGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: VGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: WGC(:)
+!......................................................................!
+
+      allocate( UGC(DIMENSION_3) )
+      allocate( VGC(DIMENSION_3) )
+      allocate( WGC(DIMENSION_3) )
 
 ! Loop bounds for interpolation.
       LP_BND = merge(27,9,DO_K)
 
-! Lock the temp arrays.
-      CALL LOCK_TMP_ARRAY
-
 ! Calculate the cell center gas velocities.
-      CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G)
+      CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
 
 ! Calculate the gas phase forces acting on each particle.
 
@@ -151,8 +153,7 @@
       ENDDO
 !$omp end parallel
 
-! Unlock the temp arrays.
-      CALL UNLOCK_TMP_ARRAY
+      deallocate( UGC, VGC, WGC )
 
       RETURN
       END SUBROUTINE DRAG_GS_DES1
@@ -203,25 +204,23 @@
       use geometry, only: VOL
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
-! Cell-center gas velocities.
-      use tmp_array, only: UGC => ARRAY1
-      use tmp_array, only: VGC => ARRAY2
-      use tmp_array, only: WGC => ARRAY3
-! Lock/Unlock the temp arrays to prevent double usage.
-      use tmp_array, only: LOCK_TMP_ARRAY
-      use tmp_array, only: UNLOCK_TMP_ARRAY
 ! MPI wrapper for halo exchange.
       use sendrecv, only: SEND_RECV
 
-      use functions, only: IS_NONEXISTENT, IS_ENTERING, IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
+      use functions, only: IS_NONEXISTENT, IS_ENTERING, &
+         IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
+! Size of local fluid arrays
+      use param, only: DIMENSION_3
 ! Double precision values.
       use param1, only: ZERO, ONE
 
       IMPLICIT NONE
 
+! Local variables
+!---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, IJK, LC
 ! Interpolation weight
@@ -234,6 +233,15 @@
       DOUBLE PRECISION :: lFORCE
 ! Drag sources for fluid (intermediate calculation)
       DOUBLE PRECISION :: lDRAG_BM(3)
+! Cell-center gas velocities.
+      DOUBLE PRECISION, ALLOCATABLE :: UGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: VGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: WGC(:)
+!......................................................................!
+
+      allocate( UGC(DIMENSION_3) )
+      allocate( VGC(DIMENSION_3) )
+      allocate( WGC(DIMENSION_3) )
 
 ! Initialize fluid cell values.
       F_GDS = ZERO
@@ -242,14 +250,11 @@
 ! Loop bounds for interpolation.
       LP_BND = merge(27,9,DO_K)
 
-! Lock the temp arrays.
-      CALL LOCK_TMP_ARRAY
-
 ! Calculate the cell center gas velocities.
       IF(DES_EXPLICITLY_COUPLED) THEN
-         CALL CALC_CELL_CENTER_GAS_VEL(U_GO, V_GO, W_GO)
+         CALL CALC_CELL_CENTER_GAS_VEL(U_GO, V_GO, W_GO, UGC, VGC, WGC)
       ELSE
-         CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G)
+         CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
       ENDIF
 
 ! Calculate the gas phase forces acting on each particle.
@@ -331,12 +336,11 @@
       ENDDO
 !$omp end parallel
 
-! Unlock the temp arrays.
-      CALL UNLOCK_TMP_ARRAY
-
 ! Update the drag force and sources in ghost layers.
       CALL SEND_RECV(F_GDS, 2)
       CALL SEND_RECV(DRAG_BM, 2)
+
+      deallocate( UGC, VGC, WGC )
 
       RETURN
       END SUBROUTINE DRAG_GS_GAS1
@@ -351,7 +355,7 @@
 !  routines.                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_CELL_CENTER_GAS_VEL(lUg, lVg, lWg)
+      SUBROUTINE CALC_CELL_CENTER_GAS_VEL(lUg, lVg, lWg, Uc, Vc, Wc)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -371,10 +375,6 @@
 ! Function to deterine if a cell contains fluid.
       use functions, only: FLUID_AT
 
-      use tmp_array, only: UGC => ARRAY1
-      use tmp_array, only: VGC => ARRAY2
-      use tmp_array, only: WGC => ARRAY3
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Double precision parameters.
@@ -389,6 +389,10 @@
       DOUBLE PRECISION, INTENT(IN) :: lVg(DIMENSION_3)
       DOUBLE PRECISION, INTENT(IN) :: lWg(DIMENSION_3)
 
+      DOUBLE PRECISION, INTENT(OUT) :: Uc(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: Vc(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: Wc(DIMENSION_3)
+
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Indices of adjacent cells
@@ -399,35 +403,35 @@
          IF(FLUID_AT(IJK)) THEN
             IMJK = IM_OF(IJK)
             IF(CUT_U_TREATMENT_AT(IMJK)) THEN
-               UGC(IJK) = (THETA_UE_BAR(IMJK)*lUG(IMJK) +              &
+               Uc(IJK) = (THETA_UE_BAR(IMJK)*lUG(IMJK) +              &
                   THETA_UE(IMJK)*lUg(IJK))
             ELSE
-               UGC(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
+               Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
             ENDIF
 
             IJMK = JM_OF(IJK)
             IF(CUT_V_TREATMENT_AT(IJMK)) THEN
-               VGC(IJK) = (THETA_VN_BAR(IJMK)*lVG(IJMK) +              &
+               Vc(IJK) = (THETA_VN_BAR(IJMK)*lVG(IJMK) +              &
                   THETA_VN(IJMK)*lVg(IJK))
             ELSE
-               VGC(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
+               Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
             ENDIF
 
             IF(DO_K) THEN
                IJKM = KM_OF(IJK)
                IF(CUT_W_TREATMENT_AT(IJKM)) THEN
-                  WGC(IJK) = (THETA_WT_BAR(IJKM)*lWg(IJKM) +           &
+                  Wc(IJK) = (THETA_WT_BAR(IJKM)*lWg(IJKM) +           &
                      THETA_WT(IJKM)* lWg(IJK))
                ELSE
-                  WGC(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
+                  Wc(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
                ENDIF
             ELSE
-               WGC(IJK) = ZERO
+               Wc(IJK) = ZERO
             ENDIF
          ELSE
-            UGC(IJK) = ZERO
-            VGC(IJK) = ZERO
-            WGC(IJK) = ZERO
+            Uc(IJK) = ZERO
+            Vc(IJK) = ZERO
+            Wc(IJK) = ZERO
          ENDIF
       ENDDO
 

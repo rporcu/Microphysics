@@ -44,44 +44,33 @@
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-!
-!                       array to print out
+
+! Array to print out
       CHARACTER(LEN=4) :: ARRAY(*)
-!
-!                       message to print out
+
+! Message to print out
       CHARACTER(LEN=*) :: MESSAGE
-!
-! local variables
-!
-!                       pointer into array (points to start of a k-plane)
-      INTEGER           IJK
-!
-!                       K
-      INTEGER           K
+
+! Pointer into array (points to start of a k-plane)
+      INTEGER :: IJK, K
 
       character(LEN=4),  allocatable :: array1c(:)
 
 !-----------------------------------------------
-!
-!//d      call lock_tmp_array
+
 
       allocate (array1c(ijkmax2))
       call convert_to_io_c(array,array1c,ijkmax2)
-!
+
       DO K = 1, KMAX2
          IJK = FUNIJK_IO(1,1,K)
-!
+
          WRITE (UNIT_OUT, 1100) MESSAGE, K
          CALL OUT_ARRAY_KC (ARRAY1C(IJK))
       END DO
  1100 FORMAT(/,1X,A,' at K = ',I4,/)
-!
-!//d      call unlock_tmp_array
+
       deallocate (array1c)
 
       RETURN
       END SUBROUTINE OUT_ARRAY_C
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 020 New local variables for parallelization, array1c(ijkmax2)

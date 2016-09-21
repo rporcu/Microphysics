@@ -548,12 +548,10 @@
 
       USE run, only: discretize
 
-      USE tmp_array, only: U => Array1, V => Array2, WW => Array3
-      USE tmp_array, only: lock_tmp_array, unlock_tmp_array
-
       USE xsi, only: calc_xsi
       USE xsi_array, only: xsi_e, xsi_n, xsi_t
       USE xsi_array, only: lock_xsi_array, unlock_xsi_array
+
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -574,16 +572,19 @@
       DOUBLE PRECISION :: flux_t, flux_b
 
 ! temporary use of global arrays:
-! array1 (locally u)  - the x directional velocity
-!      DOUBLE PRECISION :: U(DIMENSION_3)
-! array2 (locally v)  - the y directional velocity
-!      DOUBLE PRECISION :: V(DIMENSION_3)
-! array3 (locally ww) - the z directional velocity
-!      DOUBLE PRECISION :: WW(DIMENSION_3)
+! x directional velocity
+      DOUBLE PRECISION, allocatable :: U(:)
+! y directional velocity
+      DOUBLE PRECISION, allocatable :: V(:)
+! z directional velocity
+      DOUBLE PRECISION, allocatable :: WW(:)
 !---------------------------------------------------------------------//
 
-      call lock_tmp_array
       call lock_xsi_array
+
+      allocate(  U(DIMENSION_3) )
+      allocate(  V(DIMENSION_3) )
+      allocate( WW(DIMENSION_3) )
 
       CALL GET_UCELL_GVTERMS(U, V, WW)
 
@@ -644,7 +645,8 @@
          ENDIF   ! end if flow_at_e
       ENDDO   ! end do ijk
 
-      call unlock_tmp_array
+      deallocate( U, V, WW )
+
       call unlock_xsi_array
 
       RETURN

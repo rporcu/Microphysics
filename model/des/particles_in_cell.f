@@ -23,8 +23,6 @@
       use discretelement, only: XE, YN, ZT
 ! Flag for 2D simulations.
       use geometry, only: NO_K
-! The accumulated number of particles in each IJK.
-      use tmp_array, only: PARTICLE_COUNT => ARRAY1I
 ! The start and end indices of IJK loops
       use compar, only: IJKStart3, IJKEnd3
 ! The Upper and Loper indices covered by the current process.
@@ -42,6 +40,8 @@
 
       use discretelement, only: DES_POS_NEW
       use functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
+! Size of local fluid arrays
+      use param, only: DIMENSION_3
 
       IMPLICIT NONE
 
@@ -55,10 +55,14 @@
       INTEGER I, J, K, IJK
 ! variables that count/store the number of particles in i, j, k cell
       INTEGER:: npic, pos
+! The accumulated number of particles in each IJK.
+      INTEGER, ALLOCATABLE :: PARTICLE_COUNT(:)
 !......................................................................!
+
 
 ! following quantities are reset every call to particles_in_cell
       PINC(:) = 0
+
 
 ! Use an incremental approach to determine the new particle location.
 !-----------------------------------------------------------------------
@@ -174,6 +178,7 @@
       ENDDO
 !!$omp end parallel do
 
+      allocate( PARTICLE_COUNT(DIMENSION_3) )
       PARTICLE_COUNT(:) = 1
       PC = 1
       DO L = 1, MAX_PIP
@@ -190,6 +195,8 @@
          PIC(IJK)%P(POS) = L
          PARTICLE_COUNT(IJK) = PARTICLE_COUNT(IJK) + 1
       ENDDO
+
+      deallocate(PARTICLE_COUNT)
 
       RETURN
       END SUBROUTINE PARTICLES_IN_CELL

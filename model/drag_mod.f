@@ -9,12 +9,6 @@
 
 MODULE drag
 
-! Gas-solids drag
-  DOUBLE PRECISION, DIMENSION(:, :), ALLOCATABLE ::  F_gs
-
-! Solids-solids drag
-  DOUBLE PRECISION, DIMENSION(:, :), ALLOCATABLE ::  F_ss
-
 ! Off diagonal friction coefficient in HYS drag relation
   DOUBLE PRECISION, DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
 

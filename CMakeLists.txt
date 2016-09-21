@@ -304,8 +304,6 @@ set(SOURCES
   model/tau_w_g.f
   model/time_cpu_mod.f
   model/time_march.f
-  model/tmp_array1_mod.f
-  model/tmp_array_mod.f
   model/toleranc_mod.f
   model/under_relax.f
   model/update_old.f

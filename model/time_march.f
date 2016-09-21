@@ -87,7 +87,6 @@
       where(rop_g == undefined) rop_g = 0.0
 
 ! Initialize d's and e's to zero
-      F_gs = 0.0d0
       D_E = 0.0d0
       D_N = 0.0d0
       D_T = 0.0d0

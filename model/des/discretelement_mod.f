@@ -284,10 +284,6 @@
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: PIJK ! (PARTICLES,5)=>I,J,K,IJK,M
 !-----------------------------------------------------------------<<<
 
-
-! note that thse variables are needed since the existing variables (i.e.
-! f_gs, f_ss, etc) are also being used to store the information between
-! the gas and continuous solids phases.
 ! drag coefficient between gas phase and discrete particle 'phases'
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: F_GDS
 

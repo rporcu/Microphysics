@@ -23,8 +23,6 @@
       Use physprop
       Use residual
       Use run
-      Use tmp_array
-      Use tmp_array1
       Use xsi_array
       Use mflux
 
@@ -38,61 +36,43 @@
       Allocate( A_m(DIMENSION_3, -3:3) )
       Allocate( B_m(DIMENSION_3) )
 
-!drag
-      Allocate(  F_gs(DIMENSION_3, DIMENSION_M) )
-
 !fldvar
-      Allocate(  EP_g (DIMENSION_3) )
-      Allocate(  EP_go (DIMENSION_3p) )
-      Allocate(  P_g (DIMENSION_3) )
-      Allocate(  P_go (DIMENSION_3p) )
-      Allocate(  RO_g (DIMENSION_3) )
-      Allocate(  RO_go (DIMENSION_3p) )
-      Allocate(  ROP_g (DIMENSION_3) )
-      Allocate(  ROP_go (DIMENSION_3p) )
+      Allocate( EP_g (DIMENSION_3) )
+      Allocate( EP_go (DIMENSION_3p) )
+      Allocate( P_g (DIMENSION_3) )
+      Allocate( P_go (DIMENSION_3p) )
+      Allocate( RO_g (DIMENSION_3) )
+      Allocate( RO_go (DIMENSION_3p) )
+      Allocate( ROP_g (DIMENSION_3) )
+      Allocate( ROP_go (DIMENSION_3p) )
 
-      Allocate(  U_g (DIMENSION_3) )
-      Allocate(  U_go (DIMENSION_3p) )
-      Allocate(  V_g (DIMENSION_3) )
-      Allocate(  V_go (DIMENSION_3p) )
-      Allocate(  W_g (DIMENSION_3) )
-      Allocate(  W_go (DIMENSION_3p) )
+      Allocate( U_g (DIMENSION_3) )
+      Allocate( U_go (DIMENSION_3p) )
+      Allocate( V_g (DIMENSION_3) )
+      Allocate( V_go (DIMENSION_3p) )
+      Allocate( W_g (DIMENSION_3) )
+      Allocate( W_go (DIMENSION_3p) )
 
 
-      Allocate(  d_e(DIMENSION_3p) )
-      Allocate(  d_n(DIMENSION_3p) )
-      Allocate(  d_t(DIMENSION_3p) )
-      Allocate(  Pp_g(DIMENSION_3p) )
+      Allocate( d_e(DIMENSION_3p) )
+      Allocate( d_n(DIMENSION_3p) )
+      Allocate( d_t(DIMENSION_3p) )
+      Allocate( Pp_g(DIMENSION_3p) )
 
 !physprop
-      Allocate(  MU_g (DIMENSION_3) )
-
-
-!tmp_array
-      Allocate(  Array1(DIMENSION_3) )
-      Allocate(  Array2(DIMENSION_3) )
-      Allocate(  Array3(DIMENSION_3) )
-      Allocate(  Array4(DIMENSION_3) )
-      Allocate(  Array1i(DIMENSION_3) )
-      Allocate(  Array1c(DIMENSION_3) )
-      Allocate(  TMP4(DIMENSION_4) )
-      Allocate(  ArrayLM (DIMENSION_3, DIMENSION_LM) )  !S. Dartevelle, LANL, Feb. 2004
-
-
-!tmp_array1
-      Allocate(  Arraym1(DIMENSION_3, DIMENSION_M) )
+      Allocate( MU_g (DIMENSION_3) )
 
 !visc_g
-      Allocate(  trD_g(DIMENSION_3) )
-      Allocate(  LAMBDA_g (DIMENSION_3p) )
-      Allocate(  TAU_U_g(DIMENSION_3p) )
-      Allocate(  TAU_V_g(DIMENSION_3p) )
-      Allocate(  TAU_W_g(DIMENSION_3p) )
+      Allocate( trD_g(DIMENSION_3) )
+      Allocate( LAMBDA_g (DIMENSION_3p) )
+      Allocate( TAU_U_g(DIMENSION_3p) )
+      Allocate( TAU_V_g(DIMENSION_3p) )
+      Allocate( TAU_W_g(DIMENSION_3p) )
 
 !xsi_array
-      Allocate(  Xsi_e(DIMENSION_3) )
-      Allocate(  Xsi_n(DIMENSION_3) )
-      Allocate(  Xsi_t(DIMENSION_3) )
+      Allocate( Xsi_e(DIMENSION_3) )
+      Allocate( Xsi_n(DIMENSION_3) )
+      Allocate( Xsi_t(DIMENSION_3) )
 
 !mflux
       Allocate( Flux_gE(DIMENSION_3p) )
