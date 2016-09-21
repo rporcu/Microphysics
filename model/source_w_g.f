@@ -24,7 +24,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE bodyforce, only: bfz_g
+      USE constant, only: gravity_z
       USE bc, only: delp_z
 
       USE compar, only: ijkstart3, ijkend3, kmap
@@ -207,7 +207,7 @@
 
 
 ! Body force
-            VBF = ROPGA*BFZ_G(IJK)
+            VBF = ROPGA*GRAVITY_Z
 
 
             ltau_w_g = tau_w_g(ijk)

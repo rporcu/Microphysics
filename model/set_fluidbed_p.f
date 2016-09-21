@@ -13,7 +13,6 @@
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE bodyforce
       USE compar
       USE constant
       USE discretelement
@@ -168,10 +167,10 @@
                   DAREA = DX(I)*DZ(K)
                   AREA = AREA + DAREA
                   IF (RO_G0 == UNDEFINED) THEN
-                     BED_WEIGHT = BED_WEIGHT - DY(J)*BFY_G(IJK)*EP_G(IJK)*EOSG(&
+                     BED_WEIGHT = BED_WEIGHT - DY(J)*GRAVITY_Y*EP_G(IJK)*EOSG(&
                         MW_AVG,PJ,295.15d0)*DAREA
                   ELSE
-                     BED_WEIGHT = BED_WEIGHT - DY(J)*BFY_G(IJK)*EP_G(IJK)*RO_G0&
+                     BED_WEIGHT = BED_WEIGHT - DY(J)*GRAVITY_Y*EP_G(IJK)*RO_G0&
                         *DAREA
                   ENDIF
                ENDIF  ! end if (fluid_at(ijk))

@@ -24,7 +24,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE bodyforce, only: bfx_g
+      USE constant, only: gravity_x
       USE bc, only: delp_x
 
       USE compar, only: ijkstart3, ijkend3, imap
@@ -208,7 +208,7 @@
             ENDIF
 
 ! Body force
-            VBF = ROGA*BFX_G(IJK)
+            VBF = ROGA*GRAVITY_X
 
             ltau_u_g = tau_u_g(ijk)
 

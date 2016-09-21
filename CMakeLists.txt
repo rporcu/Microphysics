@@ -42,7 +42,6 @@ set(SOURCES
   model/adjust_leq.f
   model/allocate_arrays.f
   model/bc_mod.f
-  model/bodyforce_mod.f
   model/boundfunijk_mod.f
   model/calc_cell.f
   model/calc_coeff.f

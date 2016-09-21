@@ -22,7 +22,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE bodyforce, only: bfy_g
+      USE constant, only: gravity_y
       USE bc, only: delp_y
 
       USE compar, only: ijkstart3, ijkend3, jmap
@@ -198,7 +198,7 @@
             ENDIF
 
 ! Body force
-            VBF = ROGA*BFY_G(IJK)
+            VBF = ROGA*GRAVITY_Y
 
 ! if jackson, implement jackson form of governing equations (ep_g dot
 ! del tau_g): multiply by void fraction otherwise by 1
