@@ -522,7 +522,7 @@
 ! set do_nsearch true so that the ghost cell will be updated
       do_nsearch = .true.
       call desgrid_pic(plocate=.true.)
-      call desmpi_check_sendrecvbuf
+      call desmpi_check_sendrecvbuf(check_global = .true.)
 
 !call ghost particle exchange in E-W, N-S, T-B order
 
@@ -546,8 +546,9 @@
          enddo
 ! update pic required as particles in ghost cell can move between ghost cells
          do lface = linter*2-1,linter*2
-            if(dsendbuf(1+mod(lface,2))%facebuf(1).gt.0.or.drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
-               call desgrid_pic(plocate=.false.)
+            if(dsendbuf(1+mod(lface,2))%facebuf(1).gt.0.or.&
+               drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
+               call desgrid_pic(plocate=.true.)
                exit
             endif
          enddo

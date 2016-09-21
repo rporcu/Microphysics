@@ -78,9 +78,11 @@
 
 ! Check that the send/recv buffer is sufficient every 100 calls to
 ! avoid the related global communications.
-      if (mod(lcheckbuf,100) .eq. 0) then
-         call desmpi_check_sendrecvbuf
+      if (mod(lcheckbuf,100) == 0) then
+         call desmpi_check_sendrecvbuf(check_global=.true.)
          lcheckbuf = 0
+      elseif (mod(lcheckbuf,5) == 0) then
+         call desmpi_check_sendrecvbuf(check_global=.false.)
       end if
       lcheckbuf = lcheckbuf + 1
 
@@ -146,7 +148,7 @@
             end if
          end do
       end do
-      if(do_nsearch) call desmpi_cleanup
+      call desmpi_cleanup
       call des_mpi_barrier
 
 !      call des_dbgmpi(2)
@@ -165,7 +167,7 @@
 ! Purpose: Checks if the sendrecvbuf size is large enough. If the      !
 !    buffers are not sufficent, they are resized.                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE DESMPI_CHECK_SENDRECVBUF
+      SUBROUTINE DESMPI_CHECK_SENDRECVBUF(check_global)
 
       use discretelement, only: dg_pic
       use desmpi, only: iMAXBUF
@@ -179,6 +181,7 @@
       use discretelement, only: dimn
       implicit none
 
+      logical, intent(in) :: check_global
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Loop counters
@@ -192,7 +195,7 @@
 ! Previous Buffer
       INTEGER :: pBUF
 ! Growth factor when resizing send/recv buffers.
-      REAL :: lfactor = 1.5
+      REAL :: lfactor = 0.5
       DOUBLE PRECISION, PARAMETER :: ONEMBo8 = 131072.0
 !......................................................................!
 
@@ -204,16 +207,18 @@
             lijk = isendindices(lindx,lface)
             lparcnt = lparcnt + dg_pic(lijk)%isize
          enddo
-         if(lparcnt.gt.lmaxcnt) lmaxcnt = lparcnt
+         if(lparcnt > lmaxcnt) lmaxcnt = lparcnt
       enddo
 
-      call global_all_max(lmaxcnt)
-      if (imaxbuf .lt. lmaxcnt*iGhostPacketSize+ibufoffset) then
+      if(check_global) call global_all_max(lmaxcnt)
+
+      if (imaxbuf < (1.0+0.5*lfactor)*lmaxcnt*iGhostPacketSize) then
          pbuf = imaxbuf
-         imaxbuf = lmaxcnt*iGhostPacketSize*lfactor
+         imaxbuf = (1.0+lfactor)*lmaxcnt*iGhostPacketSize
          do lface = 1,2*dimn
             if(allocated(dsendbuf(1+mod(lface,2))%facebuf)) then
-               deallocate(dsendbuf(1+mod(lface,2))%facebuf,drecvbuf(1+mod(lface,2))%facebuf)
+               deallocate(dsendbuf(1+mod(lface,2))%&
+                  facebuf,drecvbuf(1+mod(lface,2))%facebuf)
             endif
             allocate(dsendbuf(1+mod(lface,2))%facebuf(imaxbuf),&
                drecvbuf(1+mod(lface,2))%facebuf(imaxbuf))
@@ -223,7 +228,7 @@
             100.0d0+100.0d0*dble(iMAXBUF-pbuf)/dble(pbuf)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
- 1000 FORMAT(/'Resizing DES MPI buffers: ',F7.1,' MB  (+',F5.1,'%)')
+ 1000 FORMAT(/'Resizeing DES MPI buffers: ',F7.1,' MB  (+',F5.1, '%)')
 
       endif
 
