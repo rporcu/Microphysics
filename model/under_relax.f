@@ -50,7 +50,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable
       DOUBLE PRECISION Var(DIMENSION_3)
@@ -73,7 +73,7 @@
             AP = A_M(IJK,0,M)
             IF (AP /= (-ONE)) THEN
                A_M(IJK,0,M) = AP*F1
-               B_M(IJK,M) = B_M(IJK,M) + AP*VAR(IJK)*F2
+               B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
       END DO
@@ -133,7 +133,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable
       DOUBLE PRECISION Var(DIMENSION_3)
@@ -156,7 +156,7 @@
             AP = A_M(IJK,0,M)
             IF (AP /= (-ONE)) THEN
                A_M(IJK,0,M) = AP*F1
-               B_M(IJK,M) = B_M(IJK,M) + AP*VAR(IJK)*F2
+               B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
       END DO
@@ -216,7 +216,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable
       DOUBLE PRECISION Var(DIMENSION_3)
@@ -239,7 +239,7 @@
             AP = A_M(IJK,0,M)
             IF (AP /= (-ONE)) THEN
                A_M(IJK,0,M) = AP*F1
-               B_M(IJK,M) = B_M(IJK,M) + AP*VAR(IJK)*F2
+               B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
       END DO
@@ -299,7 +299,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable
       DOUBLE PRECISION Var(DIMENSION_3)
@@ -322,7 +322,7 @@
             AP = A_M(IJK,0,M)
             IF (AP /= (-ONE)) THEN
                A_M(IJK,0,M) = AP*F1
-               B_M(IJK,M) = B_M(IJK,M) + AP*VAR(IJK)*F2
+               B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
             ENDIF
          ENDIF
       END DO

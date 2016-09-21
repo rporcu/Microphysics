@@ -22,7 +22,7 @@
 
 ! linear equation matrix and vector
       DOUBLE PRECISION, DIMENSION(:, :, :), ALLOCATABLE :: A_m
-      DOUBLE PRECISION, DIMENSION(:, :), ALLOCATABLE :: B_m
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: B_m
 
       LOGICAL :: ambm_locked = .false.
 
@@ -87,7 +87,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION b_m(DIMENSION_3)
 !
 !-----------------------------------------------
 !
@@ -98,7 +98,7 @@
       A_M(:,E,M) = ZERO
       A_M(:,N,M) = ZERO
       A_M(:,T,M) = ZERO
-      B_M(:,M) = ZERO
+      B_M = ZERO
 
       RETURN
       END SUBROUTINE INIT_AB_M

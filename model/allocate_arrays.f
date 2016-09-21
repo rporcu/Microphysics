@@ -36,7 +36,7 @@
 
 !ambm
       Allocate( A_m(DIMENSION_3, -3:3, 0:DIMENSION_M) )
-      Allocate( B_m(DIMENSION_3, 0:DIMENSION_M) )
+      Allocate( B_m(DIMENSION_3) )
 
 !drag
       Allocate(  F_gs(DIMENSION_3, DIMENSION_M) )

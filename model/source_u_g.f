@@ -64,7 +64,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -139,7 +139,7 @@
             A_M(IJK,T,M) = ZERO
             A_M(IJK,B,M) = ZERO
             A_M(IJK,0,M) = -ONE
-            B_M(IJK,M) = ZERO
+            B_M(IJK) = ZERO
 
 ! Dilute flow
          ELSEIF (EPGA <= DIL_EP_S) THEN
@@ -150,7 +150,7 @@
             A_M(IJK,T,M) = ZERO
             A_M(IJK,B,M) = ZERO
             A_M(IJK,0,M) = -ONE
-            B_M(IJK,M) = ZERO
+            B_M(IJK) = ZERO
 ! set velocity equal to that of west or east cell if solids are present
 ! in those cells else set velocity equal to known value
             IF (EP_G(WEST_OF(IJK)) > DIL_EP_S) THEN
@@ -158,7 +158,7 @@
             ELSE IF (EP_G(EAST_OF(IJK)) > DIL_EP_S) THEN
                A_M(IJK,E,M) = ONE
             ELSE
-               B_M(IJK,M) = -U_G(IJK)
+               B_M(IJK) = -U_G(IJK)
             ENDIF
 
 ! Cartesian grid implementation
@@ -170,7 +170,7 @@
             A_M(IJK,T,M) = ZERO
             A_M(IJK,B,M) = ZERO
             A_M(IJK,0,M) = -ONE
-            B_M(IJK,M) = ZERO
+            B_M(IJK) = ZERO
 
 ! Normal case
          ELSE
@@ -217,7 +217,7 @@
                A_M(IJK,N,M)+A_M(IJK,S,M)+A_M(IJK,T,M)+A_M(IJK,B,M)+&
                V0*VOL_U(IJK))
 
-            B_M(IJK,M) = B_M(IJK,M) -(SDP + lTAU_U_G + &
+            B_M(IJK) = B_M(IJK) -(SDP + lTAU_U_G + &
                ( (V0)*U_GO(IJK) + VBF)*VOL_U(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
@@ -281,7 +281,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -325,7 +325,7 @@
                   A_M(IJK,T,M) = -ONE
                   A_M(IJK,B,M) = ZERO
                   A_M(IJK,0,M) = -ONE
-                  B_M(IJK,M) = ZERO
+                  B_M(IJK) = ZERO
                ELSEIF (FS_WALL_AT(IJK)) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
@@ -336,7 +336,7 @@
                   A_M(IJK,T,M) = ONE
                   A_M(IJK,B,M) = ZERO
                   A_M(IJK,0,M) = -ONE
-                  B_M(IJK,M) = ZERO
+                  B_M(IJK) = ZERO
                ENDIF
             ENDDO
          ENDDO
@@ -356,7 +356,7 @@
                   A_M(IJK,T,M) = ZERO
                   A_M(IJK,B,M) = -ONE
                   A_M(IJK,0,M) = -ONE
-                  B_M(IJK,M) = ZERO
+                  B_M(IJK) = ZERO
                ELSEIF (FS_WALL_AT(IJK)) THEN
                   A_M(IJK,E,M) = ZERO
                   A_M(IJK,W,M) = ZERO
@@ -365,7 +365,7 @@
                   A_M(IJK,T,M) = ZERO
                   A_M(IJK,B,M) = ONE
                   A_M(IJK,0,M) = -ONE
-                  B_M(IJK,M) = ZERO
+                  B_M(IJK) = ZERO
                ENDIF
             ENDDO
          ENDDO
@@ -386,7 +386,7 @@
                A_M(IJK,T,M) = ZERO
                A_M(IJK,B,M) = ZERO
                A_M(IJK,0,M) = -ONE
-               B_M(IJK,M) = ZERO
+               B_M(IJK) = ZERO
             ELSEIF (FS_WALL_AT(IJK)) THEN
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
@@ -395,7 +395,7 @@
                A_M(IJK,T,M) = ZERO
                A_M(IJK,B,M) = ZERO
                A_M(IJK,0,M) = -ONE
-               B_M(IJK,M) = ZERO
+               B_M(IJK) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -415,7 +415,7 @@
                A_M(IJK,T,M) = ZERO
                A_M(IJK,B,M) = ZERO
                A_M(IJK,0,M) = -ONE
-               B_M(IJK,M) = ZERO
+               B_M(IJK) = ZERO
             ELSEIF (FS_WALL_AT(IJK)) THEN
                A_M(IJK,E,M) = ZERO
                A_M(IJK,W,M) = ZERO
@@ -424,7 +424,7 @@
                A_M(IJK,T,M) = ZERO
                A_M(IJK,B,M) = ZERO
                A_M(IJK,0,M) = -ONE
-               B_M(IJK,M) = ZERO
+               B_M(IJK) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -459,7 +459,7 @@
                         A_M(IJK,T,M) = ZERO
                         A_M(IJK,B,M) = ZERO
                         A_M(IJK,0,M) = -ONE
-                        B_M(IJK,M) = ZERO
+                        B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
                            A_M(IJK,N,M) = -ONE
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
@@ -494,7 +494,7 @@
                         A_M(IJK,T,M) = ZERO
                         A_M(IJK,B,M) = ZERO
                         A_M(IJK,0,M) = -ONE
-                        B_M(IJK,M) = ZERO
+                        B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
                            A_M(IJK,N,M) = ONE
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
@@ -531,48 +531,48 @@
                         A_M(IJK,T,M) = ZERO
                         A_M(IJK,B,M) = ZERO
                         A_M(IJK,0,M) = -ONE
-                        B_M(IJK,M) = ZERO
+                        B_M(IJK) = ZERO
                         IF (FLUID_AT(NORTH_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,N,M) = -HALF
                               A_M(IJK,0,M) = -HALF
-                              B_M(IJK,M) = -BC_UW_G(L)
+                              B_M(IJK) = -BC_UW_G(L)
                            ELSE
                               A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODY_N(J))
                               A_M(IJK,N,M) = -(HALF*BC_HW_G(L)-ODY_N(J))
-                              B_M(IJK,M) = -BC_HW_G(L)*BC_UW_G(L)
+                              B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,S,M) = -HALF
                               A_M(IJK,0,M) = -HALF
-                              B_M(IJK,M) = -BC_UW_G(L)
+                              B_M(IJK) = -BC_UW_G(L)
                            ELSE
                               A_M(IJK,S,M) = -(HALF*BC_HW_G(L)-ODY_N(JM))
                               A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODY_N(JM))
-                              B_M(IJK,M) = -BC_HW_G(L)*BC_UW_G(L)
+                              B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,T,M) = -HALF
                               A_M(IJK,0,M) = -HALF
-                              B_M(IJK,M) = -BC_UW_G(L)
+                              B_M(IJK) = -BC_UW_G(L)
                            ELSE
                               A_M(IJK,0,M)=-(HALF*BC_HW_G(L)+ODZ_T(K)*OX_E(I))
                               A_M(IJK,T,M)=-(HALF*BC_HW_G(L)-ODZ_T(K)*OX_E(I))
-                              B_M(IJK,M) = -BC_HW_G(L)*BC_UW_G(L)
+                              B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,B,M) = -HALF
                               A_M(IJK,0,M) = -HALF
-                              B_M(IJK,M) = -BC_UW_G(L)
+                              B_M(IJK) = -BC_UW_G(L)
                            ELSE
                               A_M(IJK,B,M) = -(HALF*BC_HW_G(L)-ODZ_T(KM)*OX_E(I&
                                  ))
                               A_M(IJK,0,M) = -(HALF*BC_HW_G(L)+ODZ_T(KM)*OX_E(I&
                                  ))
-                              B_M(IJK,M) = -BC_HW_G(L)*BC_UW_G(L)
+                              B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ENDIF
                      ENDDO
@@ -606,7 +606,7 @@
                            A_M(IJK,T,M) = ZERO
                            A_M(IJK,B,M) = ZERO
                            A_M(IJK,0,M) = -ONE
-                           B_M(IJK,M) = ZERO
+                           B_M(IJK) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -637,7 +637,7 @@
                            A_M(IJK,T,M) = ZERO
                            A_M(IJK,B,M) = ZERO
                            A_M(IJK,0,M) = -ONE
-                           B_M(IJK,M) = ZERO
+                           B_M(IJK) = ZERO
                            IM = IM1(I)
                            IMJK = IM_OF(IJK)
                            A_M(IMJK,E,M) = ZERO
@@ -647,7 +647,7 @@
                            A_M(IMJK,T,M) = ZERO
                            A_M(IMJK,B,M) = ZERO
                            A_M(IMJK,0,M) = -ONE
-                           B_M(IMJK,M) = ZERO
+                           B_M(IMJK) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -673,7 +673,7 @@
                            A_M(IPJK,T,M) = ZERO
                            A_M(IPJK,B,M) = ZERO
                            A_M(IPJK,0,M) = -ONE
-                           B_M(IPJK,M) = ZERO
+                           B_M(IPJK) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -706,7 +706,7 @@
                         A_M(IJK,T,M) = ZERO
                         A_M(IJK,B,M) = ZERO
                         A_M(IJK,0,M) = -ONE
-                        B_M(IJK,M) = -U_G(IJK)
+                        B_M(IJK) = -U_G(IJK)
                         IF (BC_PLANE(L) == 'W') THEN
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
@@ -719,7 +719,7 @@
                            A_M(IJKW,T,M) = ZERO
                            A_M(IJKW,B,M) = ZERO
                            A_M(IJKW,0,M) = -ONE
-                           B_M(IJKW,M) = -U_G(IJKW)
+                           B_M(IJKW) = -U_G(IJKW)
                         ENDIF
                      ENDDO
                   ENDDO
@@ -765,7 +765,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -806,7 +806,7 @@
 
             pSource =  PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
 
-            B_M(IJK,M) = B_M(IJK,M) - pSource *                        &
+            B_M(IJK) = B_M(IJK) - pSource *                        &
                PS_U_g(PSV) * PS_VEL_MAG_g(PSV)
 
          enddo

@@ -36,7 +36,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -88,7 +88,7 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK,M) - (A_M(IJK,0,M)*VAR(IJK)+A_M(IJK,E,M)*VAR(IJKE)+&
+            NUM1 = B_M(IJK) - (A_M(IJK,0,M)*VAR(IJK)+A_M(IJK,E,M)*VAR(IJKE)+&
                A_M(IJK,W,M)*VAR(IJKW)+A_M(IJK,N,M)*VAR(IJKN)+A_M(IJK,S,M)*VAR(&
                IJKS))
 
@@ -220,7 +220,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -277,7 +277,7 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK,M) - (A_M(IJK,0,M)*VAR(IJK)+A_M(IJK,E,M)*VAR(IPJK)+&
+            NUM1 = B_M(IJK) - (A_M(IJK,0,M)*VAR(IJK)+A_M(IJK,E,M)*VAR(IPJK)+&
                A_M(IJK,W,M)*VAR(IMJK)+A_M(IJK,N,M)*VAR(IJPK)+A_M(IJK,S,M)*VAR(&
                IJMK))
             IF (DO_K) THEN
@@ -402,7 +402,7 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Normalization factor
       DOUBLE PRECISION, INTENT(IN) :: NORM
 ! Numerator and denominator
@@ -441,7 +441,7 @@
          IF (FLUID_AT(IJK)) THEN
 
 ! evaluating the residual at cell ijk:
-            NUM1 = ABS(B_M(IJK,0))
+            NUM1 = ABS(B_M(IJK))
             IF (NUM1 > MAX_RESID) THEN
                MAX_RESID = NUM1
                IJK_RESID = IJK
@@ -572,7 +572,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -633,7 +633,7 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK,M) - (A_M(IJK,0,M)*U_M(IJK)+&
+            NUM1 = B_M(IJK) - (A_M(IJK,0,M)*U_M(IJK)+&
                A_M(IJK,E,M)*U_M(IPJK)+A_M(IJK,W,M)*U_M(IMJK)+&
                A_M(IJK,N,M)*U_M(IJPK)+A_M(IJK,S,M)*U_M(IJMK))
             IF (DO_K) THEN
@@ -770,7 +770,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -831,7 +831,7 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK,M) - (A_M(IJK,0,M)*V_M(IJK)+&
+            NUM1 = B_M(IJK) - (A_M(IJK,0,M)*V_M(IJK)+&
                A_M(IJK,E,M)*V_M(IPJK)+A_M(IJK,W,M)*V_M(IMJK)+&
                A_M(IJK,N,M)*V_M(IJPK)+A_M(IJK,S,M)*V_M(IJMK))
             IF (DO_K) THEN
@@ -971,7 +971,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -1032,7 +1032,7 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK,M) - (A_M(IJK,0,M)*W_M(IJK)+&
+            NUM1 = B_M(IJK) - (A_M(IJK,0,M)*W_M(IJK)+&
                A_M(IJK,E,M)*W_M(IPJK)+A_M(IJK,W,M)*W_M(IMJK)+&
                A_M(IJK,N,M)*W_M(IJPK)+A_M(IJK,S,M)*W_M(IJMK))
             IF (DO_K) THEN

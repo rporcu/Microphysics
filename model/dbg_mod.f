@@ -247,7 +247,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, intent(in) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, intent(in) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, intent(in) :: B_m(DIMENSION_3)
 
       INTEGER, intent(in) :: M
 
@@ -334,7 +334,7 @@
          if(IS_ON_myPE_owns(I,J,K)) then
             IJK = funIJK(I,J,K)
             lA_m(-3:3) = A_M(IJK,-3:3,M)
-            lB_m = B_M(IJK,M)
+            lB_m = B_M(IJK)
 ! Incorporate neighbor information for debugging.
             if(dbgMode) then
                OWNER = myPE

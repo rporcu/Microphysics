@@ -52,7 +52,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3,0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -110,7 +110,7 @@
             ENDIF
 
             A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_U(IJK)
-            B_M(IJK,0) = B_M(IJK,0) + tmp_B*VOL_U(IJK)
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL_U(IJK)
 
          ENDDO
 !!$omp end parallel do
@@ -129,7 +129,7 @@
                tmp_B = AVG_X(DRAG_BM(IJK,1), DRAG_BM(IJKE,1), I)
 
                A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_U(IJK) * tmp_A
-               B_M(IJK,0) = B_M(IJK,0) - VOL_U(IJK) * tmp_B
+               B_M(IJK) = B_M(IJK) - VOL_U(IJK) * tmp_B
             ENDIF
          ENDDO
 !$omp end parallel do
@@ -195,7 +195,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -251,7 +251,7 @@
             ENDIF
 
             A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_V(IJK)
-            B_M(IJK,0) = B_M(IJK,0) + tmp_B*VOL_V(IJK)
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL_V(IJK)
 
          ENDDO
 !!$omp end parallel do
@@ -270,7 +270,7 @@
                tmp_B = AVG_Y(DRAG_BM(IJK,2), DRAG_BM(IJKN,2), J)
 
                A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_V(IJK) * tmp_A
-               B_M(IJK,0) = B_M(IJK,0) - VOL_V(IJK) * tmp_B
+               B_M(IJK) = B_M(IJK) - VOL_V(IJK) * tmp_B
             ENDIF
          ENDDO
 !$omp end parallel do
@@ -330,7 +330,7 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3,0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -381,7 +381,7 @@
                DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
 
             A_M(IJK,0,0) = A_M(IJK,0,0) + tmp_A*VOL_W(IJK)
-            B_M(IJK,0) = B_M(IJK,0) + tmp_B*VOL_W(IJK)
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL_W(IJK)
 
          ENDDO
 !!$omp end parallel do
@@ -400,7 +400,7 @@
                tmp_B = AVG_Z(DRAG_BM(IJK,3), DRAG_BM(IJKT,3), K)
 
                A_M(IJK,0,0) = A_M(IJK,0,0) - VOL_W(IJK) * tmp_A
-               B_M(IJK,0) = B_M(IJK,0) - VOL_W(IJK) * tmp_B
+               B_M(IJK) = B_M(IJK) - VOL_W(IJK) * tmp_B
             ENDIF
          ENDDO
 !$omp end parallel do

@@ -65,7 +65,7 @@
 !      DOUBLE PRECISION :: B_MMAX(DIMENSION_3)
 ! Septadiagonal matrix A_m, vector B_m
 !      DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
-!      DOUBLE PRECISION B_m(DIMENSION_3, 0:DIMENSION_M)
+!      DOUBLE PRECISION B_m(DIMENSION_3)
 !-----------------------------------------------
 
       DOUBLE PRECISION, allocatable :: B_MMAX(:)
@@ -146,7 +146,7 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 ! maximum term in b_m expression
       DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
 !-----------------------------------------------
@@ -177,8 +177,8 @@
             if(fluid_at(ijk)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
 
-               B_M(IJK,0) = B_M(IJK,0) - pSource
-               B_MMAX(IJK) = max(abs(B_MMAX(IJK)), abs(B_M(IJK,0)))
+               B_M(IJK) = B_M(IJK) - pSource
+               B_MMAX(IJK) = max(abs(B_MMAX(IJK)), abs(B_M(IJK)))
             endif
 
          enddo

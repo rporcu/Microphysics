@@ -181,7 +181,6 @@ set(SOURCES
   model/des/set_filter_des.f
   model/des/set_geometry_des.f
   model/des/set_phase_index.f
-  model/des/solid_drag.f
   model/des/stl_dbg_des_mod.f
   model/des/stl_functions_des_mod.f
   model/des/stl_preproc_des_mod.f

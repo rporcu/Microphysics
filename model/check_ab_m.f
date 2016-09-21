@@ -55,7 +55,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION b_m(DIMENSION_3)
 !-----------------------------------------------
 
       END SUBROUTINE CHECK_AB_M

@@ -46,7 +46,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 ! maximum term in b_m expression
       DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
 !-----------------------------------------------
@@ -89,7 +89,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             bms = A_M(IJK,S,0)*V_G(IJMK)
             bmt = A_M(IJK,T,0)*W_G(IJK)
             bmb = A_M(IJK,B,0)*W_G(IJKM)
-            B_M(IJK,0) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
+            B_M(IJK) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
             B_MMAX(IJK) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
 
             A_M(IJK,E,0) = A_M(IJK,E,0)*D_E(IJK)
@@ -113,13 +113,13 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                )+A_M(IJK,T,0)+A_M(IJK,B,0))
 
             IF (ABS(A_M(IJK,0,0)) < SMALL_NUMBER) THEN
-               IF (ABS(B_M(IJK,0)) < SMALL_NUMBER) THEN
+               IF (ABS(B_M(IJK)) < SMALL_NUMBER) THEN
                   A_M(IJK,0,0) = -ONE
-                  B_M(IJK,0) = ZERO
+                  B_M(IJK) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
 !!$omp             critical
                   WRITE (LINE, '(A,I6,A,I1,A,G12.5)') 'Error: At IJK = ', IJK, &
-                     ' M = ', 0, ' A = 0 and b = ', B_M(IJK,0)
+                     ' M = ', 0, ' A = 0 and b = ', B_M(IJK)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
 !!$omp             end critical
                ENDIF
@@ -137,7 +137,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             A_M(IJK,T,0) = ZERO
             A_M(IJK,B,0) = ZERO
             A_M(IJK,0,0) = -ONE
-            B_M(IJK,0) = ZERO
+            B_M(IJK) = ZERO
          ENDIF   ! end if/else branch fluid_at(ijk)
       ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
 !$omp end parallel
@@ -227,7 +227,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Specify P' to zero for incompressible flows. Check set_bc0
 ! for details on selection of IJK_P_g.
       IF (IJK_P_G /= UNDEFINED_I) THEN
-         B_M(IJK_P_G,0) = ZERO
+         B_M(IJK_P_G) = ZERO
          A_M(IJK_P_G,:,0) = ZERO
          A_M(IJK_P_G,0,0) = -ONE
       ENDIF

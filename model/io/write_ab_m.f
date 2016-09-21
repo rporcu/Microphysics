@@ -57,7 +57,7 @@
       DOUBLE PRECISION A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION b_m(DIMENSION_3)
 
       double precision, allocatable :: array1(:) , array2(:)   !//
       double precision, allocatable :: am(:,:)                !//
@@ -90,7 +90,7 @@
 
 
 
-      call gather(b_m(:,M),array2,root)
+      call gather(b_m(:),array2,root)
 
 
       do L = -3,3

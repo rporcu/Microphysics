@@ -72,7 +72,7 @@
       DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3, 0:DIMENSION_M)
 !
 !                      Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3, 0:DIMENSION_M)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 
       DOUBLE PRECISION :: denominator, xxxm, xxxp
 
@@ -121,13 +121,13 @@
             A_M(IJK,T,M) = ZERO
             A_M(IJK,B,M) = ZERO
             A_M(IJK,0,M) = -ONE
-            IF (B_M(IJK,M) < ZERO) THEN
+            IF (B_M(IJK) < ZERO) THEN
                IP = IP1(I_OF(IJK))
 
                denominator = denom_neg(ijk)
                xxxm = ONE
                xxxp = ZERO
-            ELSE IF (B_M(IJK,M) > ZERO) THEN
+            ELSE IF (B_M(IJK) > ZERO) THEN
                IP = I_OF(IJK)
                denominator = denom_pos(ijk)
                xxxm = ZERO
@@ -137,9 +137,9 @@
             ENDIF
 
             IF (denominator > SMALL_NUMBER) THEN
-               B_M(IJK,M) = SQRT(ABS(B_M(IJK,M))/(denominator*AVG(xxxm,xxxp,IP)))
+               B_M(IJK) = SQRT(ABS(B_M(IJK))/(denominator*AVG(xxxm,xxxp,IP)))
             ELSE
-               B_M(IJK,M) = ZERO
+               B_M(IJK) = ZERO
             ENDIF
          ENDIF
       END DO
