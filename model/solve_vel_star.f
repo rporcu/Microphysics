@@ -98,7 +98,7 @@
             NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
             RESID(RESID_U), MAX_RESID(RESID_U), &
             IJK_RESID(RESID_U))
-         CALL UNDER_RELAX_U (U_G, A_M, B_M, 0, UR_FAC(3))
+         CALL UNDER_RELAX (U_G, A_M, B_M, 'U', 3)
       ENDIF
 
       IF (MOMENTUM_X_EQ(0)) THEN
@@ -141,7 +141,7 @@
             NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
             RESID(RESID_V), MAX_RESID(RESID_V), &
             IJK_RESID(RESID_V))
-         CALL UNDER_RELAX_V (V_G, A_M, B_M, 0, UR_FAC(4))
+         CALL UNDER_RELAX (V_G, A_M, B_M, 'V', 4)
       ENDIF
 
       IF (MOMENTUM_Y_EQ(0)) THEN
@@ -183,7 +183,7 @@
                NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
                RESID(RESID_W), MAX_RESID(RESID_W), &
                IJK_RESID(RESID_W))
-            CALL UNDER_RELAX_W (W_G, A_M, B_M, 0, UR_FAC(5))
+            CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
          ENDIF
 
 

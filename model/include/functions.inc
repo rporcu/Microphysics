@@ -560,7 +560,7 @@
       LOGICAL FUNCTION FLOW_AT_E(IJK)
       USE geometry
       IMPLICIT NONE
-      INTEGER IJK
+      INTEGER, INTENT(IN) :: IJK
       FLOW_AT_E   = FLAG_E(IJK) .GE. 2000 .AND.&
          FLAG_E(IJK) .LE. 2011
       END FUNCTION FLOW_AT_E
@@ -569,7 +569,7 @@
       LOGICAL FUNCTION FLOW_AT_N(IJK)
       USE geometry
       IMPLICIT NONE
-      INTEGER IJK
+      INTEGER, INTENT(IN) :: IJK
       FLOW_AT_N   = FLAG_N(IJK) .GE. 2000 .AND.&
          FLAG_N(IJK) .LE. 2011
       END FUNCTION FLOW_AT_N
@@ -578,7 +578,7 @@
       LOGICAL FUNCTION FLOW_AT_T(IJK)
       USE geometry
       IMPLICIT NONE
-      INTEGER IJK
+      INTEGER, INTENT(IN) :: IJK
       FLOW_AT_T   = FLAG_T(IJK) .GE. 2000 .AND.&
          FLAG_T(IJK) .LE. 2011
       END FUNCTION FLOW_AT_T
