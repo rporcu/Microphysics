@@ -35,5 +35,5 @@ benchmarks:
   script:
     - mkdir build-benchmarks
     - cd build-benchmarks
-    - cmake CMAKE_Fortran_FLAGS="-O3 -g" -DMPI=1 ..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DMPI=1 ..
     - env CTEST_OUTPUT_ON_FAILURE=1 ctest -R benchmarks
