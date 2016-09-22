@@ -26,13 +26,7 @@ MODULE ur_facs
    use param1, only: one
    use compar, only: ijkstart3, ijkend3
 
-   use functions, only: FLUID_AT  ! Scalar Equations
-   use functions, only: FLOW_AT_E ! U-Momentum Equation
-   use functions, only: FLOW_AT_N ! V-Momentum Equation
-   use functions, only: FLOW_AT_T ! W-Momentum Equation
-
    implicit none
-
 
 ! Dummy arguments:
 !---------------------------------------------------------------------//
@@ -56,42 +50,63 @@ MODULE ur_facs
 ! Center coefficient
       DOUBLE PRECISION :: Ap
 
-! Local interfaces:
-!---------------------------------------------------------------------//
-
-      abstract interface
-         logical function lflow_iface(xLLL)
-            INTEGER, INTENT(IN) :: xLLL
-         end function lflow_iface
-      end interface
-
-      procedure (lflow_iface), pointer :: lFLOW_AT => null ()
-
 !.......................................................................!
-
-      if (axis.eq.'S') then
-         lFLOW_AT => FLUID_AT
-      else if (axis.eq.'U') then
-         lFLOW_AT => FLOW_AT_E
-      else if (axis.eq.'V') then
-         lFLOW_AT => FLOW_AT_N
-      else if (axis.eq.'W') then
-         lFLOW_AT => FLOW_AT_T
-      endif
-
       F1 = ONE/UR_FAC(EQ)
       F2 = F1 - ONE
 
-      DO IJK = ijkstart3, ijkend3
-         IF (lFLOW_AT(IJK)) THEN
-            AP = A_M(IJK,0)
-            IF (AP /= (-ONE)) THEN
-               A_M(IJK,0) = AP*F1
-               B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+      if (axis.eq.'S') then
+
+         DO IJK = ijkstart3, ijkend3
+            IF (FLUID_AT(IJK)) THEN
+               AP = A_M(IJK,0)
+               IF (AP /= (-ONE)) THEN
+                  A_M(IJK,0) = AP*F1
+                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+               ENDIF
             ENDIF
-         ENDIF
-      END DO
+         END DO
+
+      else if (axis.eq.'U') then
+         DO IJK = ijkstart3, ijkend3
+            IF (FLOW_AT_E(IJK)) THEN
+               AP = A_M(IJK,0)
+               IF (AP /= (-ONE)) THEN
+                  A_M(IJK,0) = AP*F1
+                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+               ENDIF
+            ENDIF
+         END DO
+
+      else if (axis.eq.'V') then
+         DO IJK = ijkstart3, ijkend3
+            IF (FLOW_AT_N(IJK)) THEN
+               AP = A_M(IJK,0)
+               IF (AP /= (-ONE)) THEN
+                  A_M(IJK,0) = AP*F1
+                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+               ENDIF
+            ENDIF
+         END DO
+
+      else if (axis.eq.'W') then
+         DO IJK = ijkstart3, ijkend3
+            IF (FLOW_AT_T(IJK)) THEN
+               AP = A_M(IJK,0)
+               IF (AP /= (-ONE)) THEN
+                  A_M(IJK,0) = AP*F1
+                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+               ENDIF
+            ENDIF
+         END DO
+
+      endif
+
       RETURN
+
+   contains
+
+      include 'functions.inc'
+
    END SUBROUTINE UNDER_RELAX
 
 END MODULE ur_facs
