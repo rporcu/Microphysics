@@ -9,8 +9,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_USR0
 
-      CALL GEN_PARTICLES
+      use run, only: RUN_TYPE
+
+      IF(RUN_TYPE == 'NEW') CALL GEN_PARTICLES
       CALL WRITE_DAT_HEADER('POST_GRAN_TEMP.dat')
+
       contains
 
 !----------------------------------------------------------------------!

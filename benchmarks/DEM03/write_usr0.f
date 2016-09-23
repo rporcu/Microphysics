@@ -9,7 +9,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_USR0
 
-      CALL GET_PARTICLES
+      use run, only: RUN_TYPE
+
+      IF(RUN_TYPE == 'NEW') CALL GET_PARTICLES
 
       contains
 

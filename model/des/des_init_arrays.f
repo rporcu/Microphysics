@@ -74,6 +74,7 @@
       INTEGER :: II
 
       IGLOBAL_ID(LB:UB) = 0
+      PARTICLE_STATE(LB:UB) = NONEXISTENT
 
 ! Physical properties:
       DES_RADIUS(LB:UB) = ZERO

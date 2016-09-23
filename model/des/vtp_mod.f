@@ -85,29 +85,27 @@
       NOC=''; WRITE(NOC,*) (UB-LB)+1
 
 
-         allocate (dProcBuf(LOCAL_CNT) )
-         allocate (dRootBuf(GLOBAL_CNT))
-         allocate (ltemp_array((UB-LB)+1,GLOBAL_CNT))
+      allocate (dProcBuf(LOCAL_CNT) )
+      allocate (dRootBuf(GLOBAL_CNT))
+      allocate (ltemp_array((UB-LB)+1,GLOBAL_CNT))
 
-         DO LC1 = LB, UB
-            CALL DES_GATHER(DATA(:,LC1))
-            ltemp_array(LC1,:) = drootbuf(:)
-         ENDDO
+      DO LC1 = LB, UB
+         CALL DES_GATHER(DATA(:,LC1))
+         ltemp_array(LC1,:) = drootbuf(:)
+      ENDDO
 
-         IF(myPE == PE_IO) THEN
-            WRITE(DES_UNIT,1000) NAME, trim(adjustl(NOC))
-            DO LC1=1, GLOBAL_CNT
-               DO LC2=LB, UB
-                  WRITE(DES_UNIT,1001,ADVANCE="NO") &
-                     real(ltemp_array(LC2,LC1))
-               ENDDO
+      IF(myPE == PE_IO) THEN
+         WRITE(DES_UNIT,1000) NAME, trim(adjustl(NOC))
+         DO LC1=1, GLOBAL_CNT
+            DO LC2=LB, UB
+               WRITE(DES_UNIT,1001,ADVANCE="NO") &
+                  real(ltemp_array(LC2,LC1))
             ENDDO
-            WRITE(DES_UNIT,1002)
-         ENDIF
+         ENDDO
+         WRITE(DES_UNIT,1002)
+      ENDIF
 
-         deallocate (dProcBuf, dRootBuf, ltemp_array)
-
-
+      deallocate (dProcBuf, dRootBuf, ltemp_array )
 
  1000 FORMAT('<DataArray type="Float32" Name="',A,'" NumberOf',        &
          'Components="',A,'" format="ascii">')
@@ -205,34 +203,33 @@
 ! status of the vtp file to be written
       CHARACTER(LEN=8) :: STATUS_VTP
 
-
 ! Initial the global count.
       GLOBAL_CNT = 10
 ! Calculate the number of 'real' particles on the local process.
       LOCAL_CNT = PIP - iGHOST_CNT
 
 ! Calculate the total number of particles system-wide.
-         call global_sum(LOCAL_CNT, GLOBAL_CNT)
-         NumberOfPoints = GLOBAL_CNT
-         WRITE(NoPc,"(I10.10)") NumberOfPoints
+      call global_sum(LOCAL_CNT, GLOBAL_CNT)
+      NumberOfPoints = GLOBAL_CNT
+      WRITE(NoPc,"(I10.10)") NumberOfPoints
 
 ! Set the send count from the local process.
-         igath_sendcnt = LOCAL_CNT
+      igath_sendcnt = LOCAL_CNT
 
 ! Collect the number of particles on each rank.all ranks.
-         lgathercnts = 0
-         lgathercnts(myPE) = LOCAL_CNT
-         call global_sum(lgathercnts,igathercnts)
+      lgathercnts = 0
+      lgathercnts(myPE) = LOCAL_CNT
+      call global_sum(lgathercnts,igathercnts)
 
 ! Calculate the rank displacements.
-         idispls(0) = 0
-         DO lPROC = 1,NUMPEs-1
-            idispls(lproc) = idispls(lproc-1) + igathercnts(lproc-1)
-         ENDDO
+      idispls(0) = 0
+      DO lPROC = 1,NUMPEs-1
+         idispls(lproc) = idispls(lproc-1) + igathercnts(lproc-1)
+      ENDDO
 
 ! set the file name and unit number and open file
-         WRITE(fname_vtp,'(A,"_DES_",I5.5,".vtp")') &
-            trim(run_name), vtp_findex
+      WRITE(fname_vtp,'(A,"_DES_",I5.5,".vtp")') &
+         trim(run_name), vtp_findex
 
       IER = 0
       IF(myPE == PE_IO) THEN
@@ -252,7 +249,7 @@
             ENDIF
          ENDIF
 
-! Open the file and record any erros.
+! Open the file and record any errors.
          IF(IER == 0) THEN
             OPEN(UNIT=DES_UNIT, FILE=FNAME_VTP,                        &
                STATUS=STATUS_VTP, IOSTAT=IOS)
@@ -273,9 +270,7 @@
          'existing. or an error code',/' returned by the OPEN ',       &
          'function.'/'Error code: ',I2,4x,'Aborting.')
 
-
       END SUBROUTINE VTP_OPEN_FILE
-
 
 
 !......................................................................!

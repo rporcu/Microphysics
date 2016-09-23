@@ -7,22 +7,18 @@
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE SET_ICBC_FLAG
-
+      use mpi_utility
+      use functions
 
       CALL INIT_ICBC_FLAG
-
       CALL SET_IC_FLAGS
-
       CALL SET_BC_FLAGS_WALL
-
       CALL SET_BC_FLAGS_FLOW
 
 ! Verify that ICBC flags are set for all fluid cells.
       CALL CHECK_ICBC_FLAG
 
       END SUBROUTINE SET_ICBC_FLAG
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -53,50 +49,6 @@
 ! Initialize the ICBC Flag
          ICBC_FLAG(IJK) = merge('   ', '.--', RUN_TYPE == 'NEW')
 
-! If at domain boundaries then set default values (wall or, if
-! specified, cyclic)
-         IF (DO_K) THEN
-            IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
-               IF (CYCLIC_Z_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
-               ELSEIF (CYCLIC_Z) THEN
-                  ICBC_FLAG(IJK) = 'c--'
-               ELSE
-                  ICBC_FLAG(IJK) = 'W--'
-               ENDIF
-            ENDIF
-         ENDIF
-
-         IF(DO_J)THEN
-            IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
-               IF (CYCLIC_Y_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
-               ELSEIF (CYCLIC_Y) THEN
-                  ICBC_FLAG(IJK) = 'c--'
-               ELSE
-                 ICBC_FLAG(IJK) = 'W--'
-               ENDIF
-            ENDIF
-         ENDIF
-
-         IF(DO_I)THEN
-            IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
-               IF (CYCLIC_X_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
-               ELSEIF (CYCLIC_X) THEN
-                  ICBC_FLAG(IJK) = 'c--'
-               ELSE
-                  ICBC_FLAG(IJK) = 'W--'
-               ENDIF
-            ENDIF
-         ENDIF
-! corner cells are wall cells
-         IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
-             (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
-             (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
-            IF (ICBC_FLAG(IJK) /= 'S--') ICBC_FLAG(IJK) = 'W--'
-         ENDIF
-
       ENDDO ! end do loop (i=istart3, iend3)
       ENDDO ! end do loop (j=jstart3, jend3)
       ENDDO ! end do loop (k=kstart3, kend3)
@@ -104,98 +56,6 @@
       RETURN
 
       END SUBROUTINE INIT_ICBC_FLAG
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_ICBC_FLAG                                         !
-!  Author: P. Nicoletti                               Date: 10-DEC-91  !
-!                                                                      !
-!  Purpose: Verify that data was not given for undefined BC regions.   !
-!  Note that the error message may be incomplete
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_ICBC_FLAG
-
-
-      use run, only: RUN_TYPE
-
-      use mpi_utility
-      use sendrecv
-
-      use error_manager
-      use functions
-
-      IMPLICIT NONE
-
-      LOGICAL :: ERROR = .FALSE.
-
-      INTEGER :: I, J ,K, IER
-
-      IF(RUN_TYPE(1:3) /= 'NEW') RETURN
-
-
-
-      CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
-
-! First check for any errors.
-      DO K = kStart2, kEnd2
-      DO J = jStart2, jEnd2
-      DO I = iStart2, iEnd2
-         IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') ERROR = .TRUE.
-      ENDDO
-      ENDDO
-      ENDDO
-
-! Sync up the error flag across all processes.
-      CALL GLOBAL_ALL_OR(ERROR)
-
-! If an error is detected, have each rank open a log file and write
-! it's own message. Otherwise, we need to send all the data back to
-! PE_IO and that's too much work!
-      IF(ERROR) THEN
-
-         CALL OPEN_PE_LOG(IER)
-
-         WRITE(ERR_MSG, 1100) trim(iVal(myPE))
-         CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-
-         DO K = kStart2, kEnd2
-         DO J = jStart2, jEnd2
-         DO I = iStart2, iEnd2
-            IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') THEN
-               WRITE(ERR_MSG,1101) I, J, K
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            ENDIF
-
-         ENDDO
-         ENDDO
-         ENDDO
-
-         WRITE(ERR_MSG, 1102)
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
-
-      ELSE
-! If no erros, sync up the ghost cell layers.
-         CALL SEND_RECV(ICBC_FLAG,2)
-      ENDIF
-
-! Clean up and return.
-      CALL FINL_ERR_MSG
-
-      RETURN
-
- 1100 FORMAT('Error 1100 (PE ',A,') : No initial or boundary ',        &
-         'condtions specified in','the following cells:',/             &
-         '    I       J       K')
-
- 1101 FORMAT(I5,3X,I5,3X,I5)
-
- 1102 FORMAT('Please correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_ICBC_FLAG
-
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -232,6 +92,9 @@
 
       CALL INIT_ERR_MSG("SET_IC_FLAGS")
 
+      IF (IS_ON_myPE_OWNS(1,4,3)) then
+         write(*,*) 'c0  random:  ', icbc_flag(funijk(1,4,3))
+      endif
 
       IC_LP: DO ICV=1, DIMENSION_IC
 
@@ -252,12 +115,10 @@
          ENDDO
          ENDDO
 
-
       ENDDO IC_LP
 
 ! Update the ICBC flag on ghost cells.
       CALL SEND_RECV(ICBC_FLAG, 2)
-
 
 ! Clean up and return.
       CALL FINL_ERR_MSG
@@ -308,6 +169,60 @@
 
       CALL INIT_ERR_MSG("SET_BC_FLAGS_WALL")
 
+! If at domain boundaries then set default values (wall or, if
+! specified, cyclic)
+      DO K = kStart3, kEnd3
+      DO J = jStart3, jEnd3
+      DO I = iStart3, iEnd3
+
+         IJK = FUNIJK(I,J,K)
+
+         IF (DO_K) THEN
+            IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
+               IF (CYCLIC_Z_PD) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'C'
+               ELSEIF (CYCLIC_Z) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'c'
+               ELSE
+                  ICBC_FLAG(IJK)(1:1) = 'W'
+               ENDIF
+            ENDIF
+         ENDIF
+
+         IF(DO_J)THEN
+            IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
+               IF (CYCLIC_Y_PD) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'C'
+               ELSEIF (CYCLIC_Y) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'c'
+               ELSE
+                 ICBC_FLAG(IJK)(1:1) = 'W'
+               ENDIF
+            ENDIF
+         ENDIF
+
+         IF(DO_I)THEN
+            IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
+               IF (CYCLIC_X_PD) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'C'
+               ELSEIF (CYCLIC_X) THEN
+                  ICBC_FLAG(IJK)(1:1) = 'c'
+               ELSE
+                  ICBC_FLAG(IJK)(1:1) = 'W'
+               ENDIF
+            ENDIF
+         ENDIF
+! corner cells are wall cells
+         IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
+             (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
+             (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
+            IF (ICBC_FLAG(IJK)(1:1) /= 'S') ICBC_FLAG(IJK)(1:1) = 'W'
+         ENDIF
+
+      ENDDO ! end do loop (i=istart3, iend3)
+      ENDDO ! end do loop (j=jstart3, jend3)
+      ENDDO ! end do loop (k=kstart3, kend3)
+
 ! Set the wall flags.
       DO BCV=1, DIMENSION_BC
          IF(.NOT.BC_DEFINED(BCV)) CYCLE
@@ -337,8 +252,6 @@
 
          ENDIF
       ENDDO
-
-      CALL SEND_RECV(ICBC_FLAG,2)
 
       CALL FINL_ERR_MSG
 
@@ -509,10 +422,92 @@
          ENDIF ! IF(not a wall BC)
       ENDDO ! BC Loop
 
-! Sync the ICBC flag across ghost layers
-      CALL SEND_RECV(ICBC_FLAG,2)
-
       CALL FINL_ERR_MSG
 
       RETURN
       END SUBROUTINE SET_BC_FLAGS_FLOW
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: CHECK_ICBC_FLAG                                         !
+!  Author: P. Nicoletti                               Date: 10-DEC-91  !
+!                                                                      !
+!  Purpose: Verify that data was not given for undefined BC regions.   !
+!  Note that the error message may be incomplete.                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE CHECK_ICBC_FLAG
+
+
+      use run, only: RUN_TYPE
+
+      use mpi_utility
+      use sendrecv
+
+      use error_manager
+      use functions
+
+      IMPLICIT NONE
+
+      LOGICAL :: ERROR = .FALSE.
+
+      INTEGER :: I, J ,K, IER
+
+      IF(RUN_TYPE(1:3) /= 'NEW') RETURN
+
+
+      CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
+
+! First check for any errors.
+      DO K = kStart2, kEnd2
+      DO J = jStart2, jEnd2
+      DO I = iStart2, iEnd2
+         IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') ERROR = .TRUE.
+      ENDDO
+      ENDDO
+      ENDDO
+
+! Sync up the error flag across all processes.
+      CALL GLOBAL_ALL_OR(ERROR)
+
+! If an error is detected, have each rank open a log file and write
+! it's own message. Otherwise, we need to send all the data back to
+! PE_IO and that's too much work!
+      IF(ERROR) THEN
+
+         CALL OPEN_PE_LOG(IER)
+
+         WRITE(ERR_MSG, 1100) trim(iVal(myPE))
+         CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
+
+         DO K = kStart2, kEnd2
+         DO J = jStart2, jEnd2
+         DO I = iStart2, iEnd2
+            IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') THEN
+               WRITE(ERR_MSG,1101) I, J, K
+               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+            ENDIF
+
+         ENDDO
+         ENDDO
+         ENDDO
+
+         WRITE(ERR_MSG, 1102)
+         CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
+
+      ENDIF
+
+! Clean up and return.
+      CALL FINL_ERR_MSG
+
+      RETURN
+
+ 1100 FORMAT('Error 1100 (PE ',A,') : No initial or boundary ',        &
+         'condtions specified in','the following cells:',/             &
+         '    I       J       K')
+
+ 1101 FORMAT(I5,3X,I5,3X,I5)
+
+ 1102 FORMAT('Please correct the mfix.dat file.')
+
+      END SUBROUTINE CHECK_ICBC_FLAG
