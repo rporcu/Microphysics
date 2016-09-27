@@ -3,12 +3,12 @@
 # Author:                                               Date: xx-xxxx  #
 # Modified: J. Musser                                   Date: 09-2016  #
 #                                                                      #
-# Description: Homogeneous Cooling System.                             #
+# Description: Settling                                                #
 #                                                                      #
 ########################################################################
 
   RUN_NAME = 'DEM02'
-  DESCRIPTION = 'Homogeneous Cooling System'
+  DESCRIPTION = 'Settling'
 
 #_______________________________________________________________________
 # RUN CONTROL SECTION
@@ -56,7 +56,7 @@
   XLENGTH = 0.0015   IMAX = 10
   YLENGTH = 0.0015   JMAX = 10
   ZLENGTH = 0.0015   KMAX = 10
- 
+
 
 #_______________________________________________________________________
 # MATERIAL SECTION
