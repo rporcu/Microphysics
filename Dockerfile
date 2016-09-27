@@ -7,7 +7,7 @@ MAINTAINER Mark Meredith <mark.meredith@netl.doe.gov>
 RUN apt-get update --fix-missing && apt-get install -y wget ca-certificates \
     git gfortran cmake make numdiff openmpi-bin libopenmpi-dev bzip2
 
-RUN apt-get install -y curl grep sed dpkg && \
+RUN apt-get install -y curl grep sed tcsh dpkg && \
     TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` && \
     curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
     dpkg -i tini.deb && \
