@@ -376,7 +376,13 @@ foreach( testdir ${TESTS})
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${testdir}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${testname}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${testdir})
 
-  set_tests_properties ( ${testname} PROPERTIES DEPENDS build_${testname})
+  set_tests_properties ( ${testname}
+    PROPERTIES DEPENDS build_${testname}
+    )
+
+  set_tests_properties ( ${testname}
+    PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/mfix_${testname}"
+    )
 
   target_link_libraries(mfix_${testname} model)
 endforeach( testdir ${TESTS})
