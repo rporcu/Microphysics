@@ -1,33 +1,44 @@
-#!/bin/bash -l
+#!/bin/csh
+## Change into the current working directory
+#$ -cwd
+##
+## The name for the job. It will be displayed this way on qstat
+#$ -N VTUNE_TEST
+##
+#$ -r n
+##
 
-RUN_NAME="DEM01"
+setenv RUN_NAME "DEM01"
+rm -f $RUN_NAME* >& /dev/null
+rm -f POST_* >& /dev/null
 
-MFIX=./mfix
-if [ -n "$1" ]; then
-   MFIX=$1
-fi
+if ( ! $?VTUNE_CMD ) then
+   setenv VTUNE_CMD ""
+endif
 
-rm -f POST_* &> /dev/null
+if ( ! $?MFIX ) then
+   setenv MFIX "./mfix"
+endif
 
-for LEVEL in 2; do
-  rm -f ${RUN_NAME}* &> /dev/null
+if ( ! $?LEVEL ) then
+   setenv LEVEL "1"
+endif
 
-  PROCS=$(expr ${LEVEL} \* ${LEVEL} \* ${LEVEL})
-  CELLS=$(expr 20 \* ${LEVEL})
-  LEN=$(awk "BEGIN {printf \"%.10f\n\", 0.004*${LEVEL}}")
+setenv PROCS `perl -e "print $LEVEL*$LEVEL*$LEVEL"`
+setenv CELLS `perl -e "print 20*$LEVEL"`
+setenv LEN `perl -e "print 0.004*$LEVEL"`
 
-  time -p mpirun -np ${PROCS} ${MFIX} \
-    XLENGTH=${LEN} IMAX=${CELLS} NODESI=${LEVEL} \
-    YLENGTH=${LEN} JMAX=${CELLS} NODESJ=${LEVEL} \
-    ZLENGTH=${LEN} KMAX=${CELLS} NODESK=${LEVEL} \
-    DESGRIDSEARCH_IMAX=${CELLS} \
-    DESGRIDSEARCH_JMAX=${CELLS} \
-    DESGRIDSEARCH_KMAX=${CELLS} \
-    IC_X_E\(1\)=${LEN} IC_Y_N\(1\)=${LEN} IC_Z_T\(1\)=${LEN}
-done
+if ( "$LEVEL" == "1" ) then
+   setenv MPIRUN ""
+else
+    setenv MPIRUN "mpirun -np $PROCS"
+endif
 
-#post_dats=AUTOTEST/POST*.dat
-#
-#for test_post_file in ${post_dats}; do
-#    numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
-#done
+/usr/bin/time -p $MPIRUN $VTUNE_CMD $MFIX \
+     XLENGTH=$LEN IMAX=$CELLS NODESI=$LEVEL \
+     YLENGTH=$LEN JMAX=$CELLS NODESJ=$LEVEL \
+     ZLENGTH=$LEN KMAX=$CELLS NODESK=$LEVEL \
+     DESGRIDSEARCH_IMAX=$CELLS \
+     DESGRIDSEARCH_JMAX=$CELLS \
+     DESGRIDSEARCH_KMAX=$CELLS \
+     IC_X_E\(1\)=$LEN IC_Y_N\(1\)=$LEN IC_Z_T\(1\)=$LEN

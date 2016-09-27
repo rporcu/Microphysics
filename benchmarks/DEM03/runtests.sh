@@ -1,30 +1,41 @@
-#!/bin/bash -l
+#!/bin/csh
+## Change into the current working directory
+#$ -cwd
+##
+## The name for the job. It will be displayed this way on qstat
+#$ -N VTUNE_TEST
+##
+#$ -r n
+##
 
-RUN_NAME="DEM03"
-rm -f ${RUN_NAME}* &> /dev/null
+setenv RUN_NAME "DEM03"
+rm -f $RUN_NAME* >& /dev/null
 
-MFIX=./mfix
-if [ -n "$1" ]; then
-   MFIX=$1
-fi
+if ( ! $?VTUNE_CMD ) then
+    setenv VTUNE_CMD ""
+endif
 
-LEVEL=1
-if [ -n "$2" ]; then
-   LEVEL=$2
-fi
+if ( ! $?MFIX ) then
+   setenv MFIX "./mfix"
+endif
 
-PROCS=$(expr ${LEVEL} \* ${LEVEL})
-CELLS=$(expr 4 \* ${LEVEL})
-LEN=$(awk "BEGIN {printf \"%.10f\n\", 0.0008*${LEVEL}}")
+if ( ! $?LEVEL ) then
+   setenv LEVEL "1"
+endif
 
-if [ "${LEVEL}" -eq 1 ]; then
-  time -p ${MFIX}
+setenv PROCS `perl -e "print $LEVEL*$LEVEL"`
+setenv CELLS `perl -e "print 4*$LEVEL"`
+setenv LEN `perl -e "print 0.0008*$LEVEL"`
+
+if ( "$LEVEL" == "1" ) then
+    setenv MPIRUN ""
 else
-  time -p mpirun -np ${PROCS} ${MFIX} \
-    XLENGTH=${LEN} IMAX=${CELLS} NODESI=${LEVEL} \
-    ZLENGTH=${LEN} KMAX=${CELLS} NODESK=${LEVEL} \
-    IC_X_E\(1\)=${LEN} IC_Z_T\(1\)=${LEN} \
-    BC_X_E\(1\)=${LEN} BC_Z_T\(1\)=${LEN} \
-    BC_X_E\(2\)=${LEN} BC_Z_T\(2\)=${LEN}
-fi
+    setenv MPIRUN "mpirun -np $PROCS"
+endif
 
+/usr/bin/time -p $MPIRUN $VTUNE_CMD $MFIX \
+     XLENGTH=$LEN IMAX=$CELLS NODESI=$LEVEL \
+     ZLENGTH=$LEN KMAX=$CELLS NODESK=$LEVEL \
+     IC_X_E\(1\)=$LEN IC_Z_T\(1\)=$LEN \
+     BC_X_E\(1\)=$LEN BC_Z_T\(1\)=$LEN \
+     BC_X_E\(2\)=$LEN BC_Z_T\(2\)=$LEN
