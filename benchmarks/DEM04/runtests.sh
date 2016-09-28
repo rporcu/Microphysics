@@ -7,7 +7,7 @@
 ##
 #$ -r n
 ##
-
+module load gnu openmpi/1.10.2_gnu6.1
 setenv RUN_NAME "DEM04"
 rm -f $RUN_NAME* >& /dev/null
 rm -f POST_* >& /dev/null
@@ -34,7 +34,14 @@ else
     setenv MPIRUN "mpirun -np $PROCS"
 endif
 
-time $MPIRUN $VTUNE_CMD $MFIX \
+set MFIX_CMD = "$MFIX \
      XLENGTH=$LEN IMAX=$CELLS NODESI=$LEVEL \
      ZLENGTH=$LEN KMAX=$CELLS NODESK=$LEVEL \
-     IC_X_E\(1\)=$LEN IC_Z_T\(1\)=$LEN
+     IC_X_E\(1\)=$LEN IC_Z_T\(1\)=$LEN"
+
+if ( $?WARMUP ) then
+    time $MPIRUN $MFIX_CMD TSTOP=0.5
+    time $MPIRUN $VTUNE_CMD $MFIX_CMD RUN_TYPE=\"RESTART_1\" TSTOP=0.55
+else
+    time $MPIRUN $VTUNE_CMD $MFIX_CMD
+endif
