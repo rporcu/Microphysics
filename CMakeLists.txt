@@ -4,7 +4,7 @@ project("MFIX" Fortran)
 include_directories(model/include)
 
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
-
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 option(MPI "MPI support" OFF)
 
 if ( SMP )
