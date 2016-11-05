@@ -1,6 +1,5 @@
 #!/bin/bash -le
 
-module load intel
 DIRS=~/exa_profiling/DEM0[1-4]/[1-4]/*
 
 for DIR in ${DIRS}; do
