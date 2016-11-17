@@ -919,10 +919,10 @@
       ! ************************************************
 
       integer function iminus(i,j,k)
-
+      use compar, only: istart3
       use geometry, only  : imin1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -930,7 +930,7 @@
       if (i.eq.imin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          iminus = i
       else
-         iminus = i-1
+         iminus = max(istart3, i-1)
       end if
 
       end function iminus
@@ -938,10 +938,10 @@
       ! ************************************************
 
       integer function iplus(i,j,k)
-
+      use compar, only: iend3
       use geometry, only  : imax1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -949,7 +949,7 @@
       if (i.eq.imax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          iplus = i
       else
-         iplus = i+1 
+         iplus = min(iend3, i+1)
       end if
 
       end function iplus
@@ -957,10 +957,10 @@
       ! ************************************************
 
       integer function jminus(i,j,k)
-
+      use compar, only: jstart3
       use geometry, only  : jmin1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -968,7 +968,7 @@
       if (j.eq.jmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          jminus = j
       else
-         jminus = j-1
+         jminus = max(jstart3, j-1)
       end if
 
       end function jminus
@@ -976,10 +976,10 @@
       ! ************************************************
 
       integer function jplus(i,j,k)
-
+      use compar, only: jend3
       use geometry, only  : jmax1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -987,7 +987,7 @@
       if (j.eq.jmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          jplus = j
       else
-         jplus = j+1
+         jplus = min(jend3, j+1)
       end if
 
       end function jplus
@@ -996,9 +996,10 @@
 
       integer function kminus(i,j,k)
 
+      use compar, only: kstart3
       use geometry, only  : kmin1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -1006,7 +1007,7 @@
       if (k.eq.kmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          kminus = k
       else
-         kminus = k-1
+         kminus = max(kstart3, k-1)
       end if
 
       end function kminus
@@ -1015,9 +1016,10 @@
 
       integer function kplus(i,j,k)
 
+      use compar, only: kend3
       use geometry, only  : kmax1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijk
 
       ijk = funijk(i,j,k)
@@ -1025,7 +1027,7 @@
       if (k.eq.kmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
          kplus = k
       else
-         kplus = k+1
+         kplus = min(kend3, k+1)
       end if
 
       end function kplus
@@ -1036,7 +1038,7 @@
 
       use geometry, only  : imin1
       implicit none
-      integer, intent(in) :: i,j,k 
+      integer, intent(in) :: i,j,k
       integer             :: ijkp
 
       ijkp = funijk(iplus(i,j,k),j,k)

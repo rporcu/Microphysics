@@ -137,26 +137,36 @@
 
          ! New
           IJK = FUNIJK(i,j,k)
+          !write(*,*)'Cell:', I,j,k,IJK
 
-          New_IE = NEW_EAST_OF(I,j,k) 
+          New_IE = NEW_EAST_OF(I,j,k)
           New_IJKE = FUNIJK(New_IE,j,k)
 
-          New_IM = IMINUS(I,J,K) 
-          New_IMJK = FUNIJK(NEW_IM,j,k)
+          if(IJKE /= New_IJKE) then
+             write(*,*)'ERR IJKE:', IJKE, NEW_IJKE, new_ie
+             !stop
+          endif
 
-          New_IP = IPLUS(I,J,K) 
+          New_IM = IMINUS(I,J,K)
+          New_IMJK = FUNIJK(NEW_IM,j,k)
+          if(IMJK /= New_IMJK) then
+             write(*,*)'ERR IMJK:', IMJK, NEW_IMJK, new_im
+             !stop
+          endif
+
+          New_IP = IPLUS(I,J,K)
           New_IPJK = FUNIJK(NEW_IP,j,k)
 
-          New_JM = JMINUS(I,J,K) 
+          New_JM = JMINUS(I,J,K)
           New_IJMK = FUNIJK(i,NEW_JM,k)
 
-          New_JP = JPLUS(I,J,K) 
+          New_JP = JPLUS(I,J,K)
           New_IJPK = FUNIJK(i,NEW_JP,k)
 
-          New_KM = KMINUS(I,J,K) 
+          New_KM = KMINUS(I,J,K)
           New_IJKM = FUNIJK(i,j,New_KM)
 
-          New_KP = KPLUS(I,J,K) 
+          New_KP = KPLUS(I,J,K)
           New_IJKP = FUNIJK(i,j,New_KP)
 
           New_IPJKM = FUNIJK(New_IP,j,New_KM)
@@ -164,18 +174,22 @@
           New_IPJMK = FUNIJK(New_IP,New_JM,k)
 
           err = 0
-          err = max(ijke-new_ijke,err)
-          err = max(ijkm-new_ijkm,err)
-          err = max(ipjk-new_ipjk,err)
-          err = max(imjk-new_imjk,err)
-          err = max(ijpk-new_ijpk,err)
-          err = max(ijmk-new_ijmk,err)
-          err = max(ijkp-new_ijkp,err)
-          err = max(ijkm-new_ijkm,err)
-          err = max(ipjkm-new_ipjkm,err)
-          err = max(ipjmk-new_ipjmk,err)
+          err = max(abs(ijke-new_ijke),err)
+          err = max(abs(ijkm-new_ijkm),err)
+          err = max(abs(ipjk-new_ipjk),err)
+          err = max(abs(imjk-new_imjk),err)
+          err = max(abs(ijpk-new_ijpk),err)
+          err = max(abs(ijmk-new_ijmk),err)
+          err = max(abs(ijkp-new_ijkp),err)
+          err = max(abs(ijkm-new_ijkm),err)
+          err = max(abs(ipjkm-new_ipjkm),err)
+          err = max(abs(ipjmk-new_ipjmk),err)
 
-          print *,'ERR ',i,j,k,err
+          if(err /= 0) then
+             write(*,*)'ERR ',i,j,k,err
+             !stop
+          endif
+
 
          ! End of New
 
