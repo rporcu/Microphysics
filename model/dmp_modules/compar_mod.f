@@ -51,14 +51,17 @@
 !  layer and istart3_all is for two ghost layers. Similarly
 !  iend1_all, iend2_all and iend3_all contain the ending values.
 !  Similarly for j and k, jstart..., kstart.... are  prescribed.
+
 ! -All the variables without the '_all' represent that processor
 !  values. So ijkstart3 denotes the starting value of ijk, which
 !  belongs to the processor = funijk(istart3_all(myid),
 !  jstart3_all(myid), kstart3_all(myid) for a 1-d decompostion of a
 !  3D problem. For more details see gridmap_mod.f90. Similarly the
 !  end values are denoted by ijkend3_all
+
 ! -displs has the necessary shift information to position the buffer
 !  in the scatterv and gatherv routines.
+
 ! -ijksize3 is the size of the element owned by each processor plus
 !  the ghost regions.
 ! -'_all' has information about all the processor mapping based on

@@ -54,18 +54,20 @@
       IJKT = UNDEFINED_I
       TRUE_CORNER = .FALSE.
 
-
       IF(IM1(I).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.I_OF(IJK).EQ.IMIN1
+        
+        TRUE_CORNER = I_OF(IJK).EQ.IMIN1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IMJK = IJK
         ELSE
            IMJK = BOUND_FUNIJK(IM1(I),J,K)
         ENDIF
-!
+
+!  *************************************************************
 !  IJKW
-!
+!  *************************************************************
+
         IF (WALL_AT(IMJK)) THEN
            IJKW = IJK
         ELSE
@@ -74,16 +76,17 @@
       ENDIF
 
       IF(IP1(I).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.I_OF(IJK).EQ.IMAX1
+
+        TRUE_CORNER = I_OF(IJK).EQ.IMAX1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IPJK = IJK
         ELSE
            IPJK = BOUND_FUNIJK(IP1(I),J,K)
         ENDIF
-!
+!  *************************************************************
 !  IJKE
-!
+!  *************************************************************
         IF (WALL_AT(IPJK)) THEN
            IJKE = IJK
         ELSE
@@ -91,17 +94,22 @@
         ENDIF
       ENDIF
 
+!  *************************************************************
+!  IJMK
+!  *************************************************************
       IF(JM1(J).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.J_OF(IJK).EQ.JMIN1
+
+        TRUE_CORNER = J_OF(IJK).EQ.JMIN1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJMK = IJK
         ELSE
            IJMK = BOUND_FUNIJK(I,JM1(J),K)
         ENDIF
-!
-!  IJKS
-!
+
+       !  *************************************************************
+       !  IJKS
+       !  *************************************************************
         IF (WALL_AT(IJMK)) THEN
            IJKS = IJK
         ELSE
@@ -109,17 +117,22 @@
         ENDIF
       ENDIF
 
+!  *************************************************************
+!  IJKP
+!  *************************************************************
       IF(JP1(J).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.J_OF(IJK).EQ.JMAX1
+        
+        TRUE_CORNER = J_OF(IJK).EQ.JMAX1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJPK = IJK
         ELSE
            IJPK = BOUND_FUNIJK(I,JP1(J),K)
         ENDIF
-!
-!  IJKN
-!
+
+       !  *************************************************************
+       !  IJKN
+       !  *************************************************************
         IF (WALL_AT(IJPK)) THEN
            IJKN = IJK
         ELSE
@@ -127,17 +140,23 @@
         ENDIF
       ENDIF
 
+
+!  *************************************************************
+!  IJKM
+!  *************************************************************
       IF(KM1(K).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.K_OF(IJK).EQ.KMIN1
+        
+        TRUE_CORNER = K_OF(IJK).EQ.KMIN1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJKM = IJK
         ELSE
            IJKM = BOUND_FUNIJK(I,J,KM1(K))
         ENDIF
-!
-!  IJKB
-!
+
+        !  *************************************************************
+        !  IJKB
+        !  *************************************************************
         IF (WALL_AT(IJKM)) THEN
            IJKB = IJK
         ELSE
@@ -145,17 +164,22 @@
         ENDIF
       ENDIF
 
+!  *************************************************************
+!  IJKP
+!  *************************************************************
       IF(KP1(K).NE.UNDEFINED_I) THEN
-        TRUE_CORNER = .FALSE.
-        TRUE_CORNER = TRUE_CORNER.OR.K_OF(IJK).EQ.KMAX1
+
+        TRUE_CORNER = K_OF(IJK).EQ.KMAX1
+
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJKP = IJK
         ELSE
            IJKP = BOUND_FUNIJK(I,J,KP1(K))
         ENDIF
-!
-!  IJKT
-!
+
+        !  *************************************************************
+        !  IJKT
+        !  *************************************************************
         IF (WALL_AT(IJKP)) THEN
            IJKT = IJK
         ELSE

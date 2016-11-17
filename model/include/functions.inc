@@ -915,3 +915,135 @@
         INTEGER, INTENT(IN) :: PP
         PARTICLE_STATE(PP)=EXITING_GHOST
       END SUBROUTINE SET_EXITING_GHOST
+
+      ! ************************************************
+
+      integer function iminus(i,j,k)
+
+      use geometry, only  : imin1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (i.eq.imin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         iminus = i
+      else
+         iminus = i-1
+      end if
+
+      end function iminus
+
+      ! ************************************************
+
+      integer function iplus(i,j,k)
+
+      use geometry, only  : imax1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (i.eq.imax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         iplus = i
+      else
+         iplus = i+1 
+      end if
+
+      end function iplus
+
+      ! ************************************************
+
+      integer function jminus(i,j,k)
+
+      use geometry, only  : jmin1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (j.eq.jmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         jminus = j
+      else
+         jminus = j-1
+      end if
+
+      end function jminus
+
+      ! ************************************************
+
+      integer function jplus(i,j,k)
+
+      use geometry, only  : jmax1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (j.eq.jmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         jplus = j
+      else
+         jplus = j+1
+      end if
+
+      end function jplus
+
+      ! ************************************************
+
+      integer function kminus(i,j,k)
+
+      use geometry, only  : kmin1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (k.eq.kmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         kminus = k
+      else
+         kminus = k-1
+      end if
+
+      end function kminus
+
+      ! ************************************************
+
+      integer function kplus(i,j,k)
+
+      use geometry, only  : kmax1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijk
+
+      ijk = funijk(i,j,k)
+
+      if (k.eq.kmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+         kplus = k
+      else
+         kplus = k+1
+      end if
+
+      end function kplus
+
+      ! ************************************************
+
+      integer function new_east_of(i,j,k)
+
+      use geometry, only  : imin1
+      implicit none
+      integer, intent(in) :: i,j,k 
+      integer             :: ijkp
+
+      ijkp = funijk(iplus(i,j,k),j,k)
+      if(wall_at(ijkp)) then
+         new_east_of = i
+      else
+         new_east_of = i+1
+      end if
+
+      end function new_east_of

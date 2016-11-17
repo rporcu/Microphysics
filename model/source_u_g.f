@@ -27,7 +27,7 @@
       USE constant, only: gravity_x
       USE bc, only: delp_x
 
-      USE compar, only: ijkstart3, ijkend3, imap
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
@@ -35,8 +35,10 @@
 
       USE fun_avg, only: avg_x, avg_z, avg_y
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
+      USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, new_east_of
       USE functions, only: east_of, west_of
       USE functions, only: zmax
       USE geometry, only: imax1, cyclic_x_pd
@@ -100,24 +102,27 @@
       DOUBLE PRECISION :: ltau_u_g
 !---------------------------------------------------------------------//
 
+      integer err
+      integer new_ie, new_ip, new_im, new_jp, new_jm, new_kp, new_km
+      integer new_ijke, new_imjk,new_ipjk,new_ijmk,new_ijpk,new_ijkm, new_ijkp, new_ipjkm,new_ipjmk
+
 ! Set reference phase to gas
       M = 0
 
       IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
 
+!     DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
 
-!$omp  parallel do default(shared)                                   &
-!$omp  private(I, J, K, IJK, IJKE, IJKM, IPJK, IMJK, IPJKM,          &
-!$omp          IJMK, IPJMK, IJPK, IJKP, EPGA, PGE, SDP,              &
-!$omp           ROPGA, ROGA, ROP_MA, V0, ISV, MUGA, Vbf,   &
-!$omp           U_se, Usw, Vsw, Vse, Usn, Uss, Wsb, Wst, Wse,        &
-!$omp           Usb, Ust, wGE, MUGTA,              &
-!$omp           Ghd_drag, L, MM, avgRop, HYS_drag, avgDrag,          &
-!$omp           ltau_u_g)
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         ! Original
+         ! I = I_OF(IJK)
+         ! J = J_OF(IJK)
+         ! K = K_OF(IJK)
+
+         IJK = FUNIJK(i,j,k)
+
          IJKE = EAST_OF(IJK)
          IJKM = KM_OF(IJK)
          IPJK = IP_OF(IJK)
@@ -127,6 +132,52 @@
          IPJMK = IP_OF(IJMK)
          IJPK = JP_OF(IJK)
          IJKP = KP_OF(IJK)
+
+         ! End of Original
+
+         ! New
+          IJK = FUNIJK(i,j,k)
+
+          New_IE = NEW_EAST_OF(I,j,k) 
+          New_IJKE = FUNIJK(New_IE,j,k)
+
+          New_IM = IMINUS(I,J,K) 
+          New_IMJK = FUNIJK(NEW_IM,j,k)
+
+          New_IP = IPLUS(I,J,K) 
+          New_IPJK = FUNIJK(NEW_IP,j,k)
+
+          New_JM = JMINUS(I,J,K) 
+          New_IJMK = FUNIJK(i,NEW_JM,k)
+
+          New_JP = JPLUS(I,J,K) 
+          New_IJPK = FUNIJK(i,NEW_JP,k)
+
+          New_KM = KMINUS(I,J,K) 
+          New_IJKM = FUNIJK(i,j,New_KM)
+
+          New_KP = KPLUS(I,J,K) 
+          New_IJKP = FUNIJK(i,j,New_KP)
+
+          New_IPJKM = FUNIJK(New_IP,j,New_KM)
+
+          New_IPJMK = FUNIJK(New_IP,New_JM,k)
+
+          err = 0
+          err = max(ijke-new_ijke,err)
+          err = max(ijkm-new_ijkm,err)
+          err = max(ipjk-new_ipjk,err)
+          err = max(imjk-new_imjk,err)
+          err = max(ijpk-new_ijpk,err)
+          err = max(ijmk-new_ijmk,err)
+          err = max(ijkp-new_ijkp,err)
+          err = max(ijkm-new_ijkm,err)
+          err = max(ipjkm-new_ipjkm,err)
+          err = max(ipjmk-new_ipjmk,err)
+
+          print *,'ERR ',i,j,k,err
+
+         ! End of New
 
          EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
 
@@ -221,6 +272,8 @@
                ( (V0)*U_GO(IJK) + VBF)*VOL_U(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
+      ENDDO   ! end do loop over ijk
+      ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
 !$omp end parallel do
 
