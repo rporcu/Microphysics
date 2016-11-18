@@ -45,7 +45,8 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      USE functions, only: funijk
       USE functions, only: fluid_at
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, south_of, bottom_of
@@ -71,19 +72,17 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: IJK, I, J, K
       INTEGER :: IJKE, IJKN, IJKT
       INTEGER :: IJKW, IJKS, IJKB
       INTEGER :: IMJK, IJMK, IJKM
 !---------------------------------------------------------------------//
 
 
-!$omp  parallel do default(none) &
-!$omp              private(IJK, IJKE, IJKN, IJKT, IJKW, &
-!$omp                      IJKS, IJKB, IMJK, IJMK, IJKM) &
-!$omp              shared(ijkstart3, ijkend3, u, v, w, do_k, rop, &
-!$omp                     rop_e, rop_n, rop_t)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLUID_AT(IJK)) THEN
             IJKE = EAST_OF(IJK)
@@ -147,7 +146,9 @@
             ENDIF   ! end if do_k
 
          ENDIF   ! end if fluid_at
-      ENDDO    ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE CONV_ROP0
@@ -168,7 +169,8 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      USE functions, only: funijk
       USE functions, only: fluid_at
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, south_of, bottom_of
@@ -198,7 +200,7 @@
 !
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: IJK, IJKE, IJKN, IJKT
+      INTEGER :: I,J,K,IJK, IJKE, IJKN, IJKT
       INTEGER :: IJKW, IJKS, IJKB, IMJK, IJMK, IJKM
       Integer :: incr
 
@@ -211,10 +213,10 @@
       CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr)
 
 
-!!!$omp  parallel do private(IJK, IJKE, IJKN, IJKT, IJKW, IJKS, IJKB, &
-!!!$omp                      IMJK, IJMK, IJKM) &
-!!!$omp&  schedule(static)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLUID_AT(IJK)) THEN
             IJKE = EAST_OF(IJK)
@@ -261,7 +263,9 @@
             ENDIF   ! end if do_k
 
          ENDIF   ! end if fluid_at
-      ENDDO    ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       call unlock_xsi_array
 
