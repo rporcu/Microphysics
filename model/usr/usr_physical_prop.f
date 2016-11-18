@@ -8,9 +8,10 @@
       SUBROUTINE USR_PHYSICAL_PROP_ROg
 
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
       use functions, only: WALL_AT
+      use functions, only: funijk
 
       use error_manager
 
@@ -19,7 +20,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indicies
-      INTEGER :: IJK   ! Computational cell
+      INTEGER :: I, J, K, IJK   ! Computational cell
 !......................................................................!
 
 
@@ -38,15 +39,20 @@
 
 !- END REMOVE --------------------------------------------------------<<
 
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
-      IJK_LP: DO IJK = IJKSTART3, IJKEND3
-         IF(WALL_AT(IJK)) cycle IJK_LP
+         IF(WALL_AT(IJK)) cycle
 
 ! Calculate the fluid density and bulk density
-!         RO_G(IJK) = 
-!         ROP_G(IJK) = 
+!         RO_G(IJK) =
+!         ROP_G(IJK) =
 
-      ENDDO IJK_LP
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE USR_PHYSICAL_PROP_ROg
@@ -64,9 +70,10 @@
       SUBROUTINE USR_PHYSICAL_PROP_ROs
 
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
       use functions, only: WALL_AT
+      use functions, only: funijk
 ! Number of solids phases
       use physprop, only: MMAX
 
@@ -79,7 +86,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indicies
-      INTEGER :: M, IJK
+      INTEGER :: M, I, J, K, IJK
 !......................................................................!
 
 ! The following error message is used to make sure that if a user
@@ -98,13 +105,18 @@
 !- END REMOVE --------------------------------------------------------<<
 
       M_LP: DO M=1, MMAX
-         IJK_LP: DO IJK = IJKSTART3, IJKEND3
-            IF(WALL_AT(IJK)) cycle IJK_LP
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
+            IF(WALL_AT(IJK)) cycle
 
 ! Calculate the solids density.
-!            RO_S(IJK,M) = 
+!            RO_S(IJK,M) =
 
-         ENDDO IJK_LP
+         ENDDO
+         ENDDO
+         ENDDO
       ENDDO M_LP
 
       RETURN
@@ -121,8 +133,9 @@
       SUBROUTINE USR_PHYSICAL_PROP_CPg
 
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
+      use functions, only: funijk
       use functions, only: WALL_AT
 
       use error_manager
@@ -132,7 +145,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indicies
-      INTEGER :: IJK
+      INTEGER :: I, J, K, IJK
 !......................................................................!
 
 ! The following error message is used to make sure that if a user
@@ -150,13 +163,18 @@
 
 !- END REMOVE --------------------------------------------------------<<
 
-      IJK_LP: DO IJK = IJKSTART3, IJKEND3
-         IF(WALL_AT(IJK)) cycle IJK_LP
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
+         IF(WALL_AT(IJK)) cycle
 
 ! Calculate the fluid density and bulk density
-!         C_PG(IJK) = 
+!         C_PG(IJK) =
 
-      ENDDO IJK_LP
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE USR_PHYSICAL_PROP_CPg
@@ -172,8 +190,9 @@
       SUBROUTINE USR_PHYSICAL_PROP_CPs
 
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
+      use functions, only: funijk
       use functions, only: WALL_AT
 ! Number of solids phases
       use physprop, only: MMAX
@@ -185,7 +204,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indicies
-      INTEGER :: M, IJK
+      INTEGER :: M, I, J, K, IJK
 !......................................................................!
 
 ! The following error message is used to make sure that if a user
@@ -204,13 +223,17 @@
 !- END REMOVE --------------------------------------------------------<<
 
       M_LP: DO M=1, MMAX
-         IJK_LP: DO IJK = IJKSTART3, IJKEND3
-            IF(WALL_AT(IJK)) cycle IJK_LP
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+            IF(WALL_AT(IJK)) cycle
 
 ! Calculate the solids phase specific heat.
-!            C_PS(IJK,M) = 
+!            C_PS(IJK,M) =
 
-         ENDDO IJK_LP
+         ENDDO
+         ENDDO
+         ENDDO
       ENDDO M_LP
 
       RETURN
