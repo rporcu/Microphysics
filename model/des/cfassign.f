@@ -115,7 +115,7 @@
         DO Jraw = jstart3, jend3
         DO Iraw = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
+         IJK = FUNIJK(iraw,jraw,kraw)
          des_vol_node(ijk) = zero
 
 ! start at 1 (ghost cell) and go to last fluid cell. why start at a

@@ -37,7 +37,8 @@
 ! Local variables
 !-----------------------------------------------
 ! general i, j, k indices
-      INTEGER :: I, J, K, IJK, II, JJ, KK, lI, lJ, lK
+      INTEGER :: I, J, K, IJK, &
+                 II, JJ, KK
       INTEGER :: I1, I2, J1, J2, K1, K2
       INTEGER :: IDIM, IJK2
       INTEGER :: CUR_IJK
@@ -100,20 +101,22 @@
 ! order and allocates arrays necessary for interpolation
       CALL SET_INTERPOLATION_SCHEME(2)
 
-        DO lK = kstart3, kend3
-        DO lJ = jstart3, jend3
-        DO lI = istart3, iend3
-
-         IJK = FUNIJK(i,j,k)
+!$omp parallel default(shared)                                             &
+!$omp private(IJK, I, J, K, PCELL, IW, IE, JS, JN, KB, KTP, ONEW, GST_TMP, &
+!$omp    COUNT_NODES_INSIDE, II, JJ, KK, CUR_IJK, NINDX, NP, M,       &
+!$omp    WEIGHT_FT, I1, I2, J1, J2, K1, K2, IDIM,                          &
+!$omp    IJK2, NORM_FACTOR, RESID_ROPS, RESID_VEL,COUNT_NODES_OUTSIDE, TEMP1)
+!$omp do reduction(+:MASS_SOL1) reduction(+:DES_ROPS_NODE,DES_VEL_NODE)
+      DO IJK = IJKSTART3,IJKEND3
 
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
          IF(.NOT.FLUID_AT(IJK)) CYCLE
          IF( PINC(IJK) == 0) CYCLE
 
-         PCELL(1) = lI
-         PCELL(2) = lJ
-         PCELL(3) = lk
+         PCELL(1) = I_OF(IJK)-1
+         PCELL(2) = J_OF(IJK)-1
+         PCELL(3) = merge(K_OF(IJK)-1, 1, DO_K)
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -180,9 +183,7 @@
             ENDDO
             ENDDO
             ENDDO
-         ENDDO
-         ENDDO
-         ENDDO
+         ENDDO   ! end do (nindx=1,pinc(ijk))
 !-----------------------------------------------------------------<<<
 
 
@@ -343,15 +344,14 @@
       ENDDO   ! end do (i=istart2,iend1)
       ENDDO   ! end do (j=jstart2,jend1)
       ENDDO   ! end do (k=kstart2,kend1)
+!omp end parallel do
 
 !-----------------------------------------------------------------<<<
 
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-
+!$omp parallel do default(none) private(IJK, M)                        &
+!$omp shared(IJKSTART3, IJKEND3, DO_K, MMAX, DES_ROP_s, VOL)
+      DO IJK = IJKSTART3, IJKEND3
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
          DO M = 1, MMAX
@@ -362,9 +362,8 @@
 
             ENDIF
          ENDDO   ! end loop over M=1,MMAX
-      ENDDO
-      ENDDO
-      ENDDO
+      ENDDO  ! end loop over IJK=ijkstart3,ijkend3
+!omp end parallel do
 
 
       CALL CALC_EPG_DES
@@ -375,19 +374,17 @@
 ! false for any production runs.
       IF(DES_REPORT_MASS_INTERP) THEN
 
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-
+         DO IJK = IJKSTART3, IJKEND3
             IF(.NOT.FLUID_AT(IJK)) CYCLE
+
+            I = I_OF(IJK)
+            J = J_OF(IJK)
+            K = K_OF(IJK)
 
 ! It is important to check both FLUID_AT and IS_ON_MYPE_WOBND.
             IF(IS_ON_myPE_wobnd(I,J,K)) MASS_SOL2 = MASS_SOL2 +        &
                sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
-         ENDDO
-         ENDDO
          ENDDO
 
 
