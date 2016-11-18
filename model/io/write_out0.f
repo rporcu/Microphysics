@@ -642,7 +642,7 @@
       USE sendrecv    !//d
       USE functions
       IMPLICIT NONE
-      integer ijk
+      integer ijk,i,j,k
 !
       character(LEN=3), allocatable :: array1(:)   !//d
       character(LEN=4), dimension(:), allocatable :: array2, array3
@@ -667,7 +667,11 @@
 !
 !  Superimpose internal surface flags on Initial and boundary condition flags
 !
-      DO ijk = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
         array2(ijk) = '    '
         array2(ijk)(1:3) = icbc_flag(ijk)(1:3)
         IF (IP_AT_E(IJK)) THEN
@@ -687,6 +691,8 @@
         ELSE IF (SIP_AT_T(IJK)) THEN
            array2(IJK)(4:4) = 't'
         ENDIF
+      ENDDO
+      ENDDO
       ENDDO
       call gather (array2,array3,PE_IO)
 

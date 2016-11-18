@@ -223,7 +223,11 @@
 
 !-----------------------------------------------
 
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
+
+         IJK = FUNIJK(i,j,k)
 
          IF (FLUID_AT(IJK).AND.EP_G(IJK)==UNDEFINED) THEN
 
@@ -235,10 +239,6 @@
 ! variables will be copied over. If no valid fluid cell is found, the
 ! code will continue and will likely stop during the check_data_30
 ! (zero species mass fractions will yield a zero specific heat).
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
-
             NBCELL(1) = IM_OF(IJK)
             NBCELL(2) = JM_OF(IJK)
             NBCELL(3) = KM_OF(IJK)
@@ -275,7 +275,9 @@
 
          ENDIF ! New fuid cell
 
-      ENDDO ! IJK loop
+      ENDDO
+      ENDDO
+      ENDDO
 
 1010  FORMAT(1X,'PATCHING NEW FLUID CELL UPON RESTART: MyPE,I,J,K =' ,I6,I6,I6,I6)
 1020  FORMAT(1X,'UNABLE TO PATCH NEW FLUID CELL UPON RESTART: MyPE,I,J,K =' ,I6,I6,I6,I6)
