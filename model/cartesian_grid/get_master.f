@@ -56,16 +56,15 @@
 
       NC = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
         IF(WALL_U_AT(IJK)) THEN
 
             MASTER_FOUND = .FALSE.
             NC = NC + 1
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             DIR(1) = EAST_OF(IJK)
             DIR(2) = WEST_OF(IJK)
@@ -142,10 +141,8 @@
          ENDIF
 
       END DO
-
-
-
-      RETURN
+      END DO
+      END DO
 
       END SUBROUTINE GET_U_MASTER_CELLS
 
@@ -198,16 +195,15 @@
 
       NC = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
         IF(WALL_V_AT(IJK)) THEN
 
             MASTER_FOUND = .FALSE.
             NC = NC + 1
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
 
             DIR(1) = EAST_OF(IJK)
@@ -285,10 +281,8 @@
          ENDIF
 
       END DO
-
-
-
-      RETURN
+      END DO
+      END DO
 
       END SUBROUTINE GET_V_MASTER_CELLS
 
@@ -340,17 +334,15 @@
 
       NC = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
          IF(WALL_W_AT(IJK)) THEN
 
             MASTER_FOUND = .FALSE.
             NC = NC + 1
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
-
 
             DIR(1) = EAST_OF(IJK)
             DIR(2) = WEST_OF(IJK)
@@ -428,8 +420,7 @@
             ENDIF
          ENDIF
       END DO
-
-
-      RETURN
+      END DO
+      END DO
 
       END SUBROUTINE GET_W_MASTER_CELLS

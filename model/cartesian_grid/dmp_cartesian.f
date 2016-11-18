@@ -284,11 +284,12 @@
       USE sendrecv
       USE quadric
       USE cutcell
+      USE functions, only : funijk
 
       USE mpi_utility      !//d pnicol : for gather
 
       IMPLICIT NONE
-      INTEGER :: IJK,NLAYERS
+      INTEGER :: i,j,k,IJK,NLAYERS
       INTEGER, DIMENSION(DIMENSION_3) :: I1D
       LOGICAL, DIMENSION(DIMENSION_3) :: L1D
 
@@ -298,27 +299,34 @@
          CALL MFIX_EXIT(MYPE)
       ENDIF
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
          IF(L1D(IJK)) THEN
             I1D(IJK) = 1
          ELSE
             I1D(IJK) = 0
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       call send_recv(I1D,NLAYERS)
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
+
          IF(I1D(IJK)==1) THEN
             L1D(IJK) = .TRUE.
          ELSE
             L1D(IJK) = .FALSE.
          ENDIF
       ENDDO
-
-
-      RETURN
-
+      ENDDO
+      ENDDO
 
       END SUBROUTINE SEND_RECEIVE_1D_LOGICAL
 

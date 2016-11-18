@@ -14,7 +14,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_3D_CUT_CELL_FLAGS
 
-      USE compar, ONLY: mype, pe_io, ijkstart3, ijkend3, istart1, iend1, jstart1, jend1, kstart1, kend1
+      USE compar, ONLY: mype, pe_io, istart1, iend1, jstart1, jend1, kstart1, kend1
+      USE compar, ONLY: ijkstart3, ijkend3
       USE cutcell
       USE indices, ONLY: i_of, j_of, k_of
       USE functions, ONLY: funijk, ip_of, jp_of, kp_of, bottom_of, south_of, west_of, fluid_at, is_on_mype_wobnd
@@ -52,7 +53,7 @@
       allocate(Z_OLD_POINT(DIMENSION_MAX_CUT_CELL))
       allocate(SCALAR_NODE_XYZ_TEMP(DIMENSION_3, 3))
 
-      IF(MyPE == PE_IO) THEN
+      IF (MyPE == PE_IO) THEN
          WRITE(*,10)'INTERSECTING GEOMETRY WITH SCALAR CELLS...'
       ENDIF
 10    FORMAT(1X,A)
@@ -117,26 +118,28 @@
       INTERSECT_Z = .FALSE.
       SNAP = .FALSE.
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+           ijk = funijk(i,j,k)
 
-         IF(NO_K) THEN   ! 2D case
+           IF(NO_K) THEN   ! 2D case
 
             INTERIOR_CELL_AT(IJK) = (     (I >= ISTART1 ).AND.(I <= IEND1 )  &
                                      .AND.(J >= JSTART1 ).AND.(J <= JEND1 ) )
 
-         ELSE            ! 3D case
+           ELSE            ! 3D case
 
             INTERIOR_CELL_AT(IJK) = (     (I >= ISTART1 ).AND.(I <= IEND1 )  &
                                      .AND.(J >= JSTART1 ).AND.(J <= JEND1 )  &
                                      .AND.(K >= KSTART1 ).AND.(K <= KEND1 ) )
 
-         ENDIF
+           ENDIF
 
-      END DO
+          end do
+        end do
+      end do
 
        NUMBER_OF_NODES = 0
 
@@ -145,10 +148,16 @@
 !       POTENTIAL_CUT_CELL_AT=.TRUE.
 
       IF(.NOT.(USE_STL.OR.USE_MSH)) THEN
-         DO IJK = IJKSTART3, IJKEND3
-            IF(POTENTIAL_CUT_CELL_AT(IJK))  CALL INTERSECT(IJK,'SCALAR',Xn_int(IJK),Ye_int(IJK),Zt_int(IJK))
-!            CALL INTERSECT(IJK,'SCALAR',Xn_int(IJK),Ye_int(IJK),Zt_int(IJK))
-         END DO
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+
+              ijk = funijk(i,j,k)
+                IF (POTENTIAL_CUT_CELL_AT(IJK)) &
+                  CALL INTERSECT(IJK,'SCALAR',Xn_int(IJK),Ye_int(IJK),Zt_int(IJK))
+             end do
+           end do
+         end do
 
 !======================================================================
 !  Clean-up intersection flags by snapping intersection points to close
@@ -161,11 +170,15 @@
       ENDIF
 !        NUMBER_OF_NODES = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
 
           IF(POTENTIAL_CUT_CELL_AT(IJK))  THEN
 
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
 
 !======================================================================
 !  Get coordinates of eight nodes
@@ -326,8 +339,9 @@
          ENDIF        ! Interior cell
 
       ENDIF
-      END DO          ! IJK Loop
-
+      END DO
+      END DO
+      END DO
 
       call SEND_RECEIVE_1D_LOGICAL(SMALL_CELL_AT,2)
       call SEND_RECEIVE_1D_LOGICAL(STANDARD_CELL_AT,2)
@@ -335,8 +349,12 @@
       call SEND_RECEIVE_1D_LOGICAL(CUT_CELL_AT,2)
 
 ! Consolidate blocked cells
-      DO IJK = IJKSTART3, IJKEND3
-         IF(BLOCKED_CELL_AT(IJK)) THEN
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
+           IF(BLOCKED_CELL_AT(IJK)) THEN
             STANDARD_CELL_AT(IJK) = .FALSE.
             CUT_CELL_AT(IJK)      = .FALSE.
 
@@ -351,7 +369,9 @@
             AXZ(SOUTH_OF(IJK))    = ZERO
             AYZ(WEST_OF(IJK))     = ZERO
          ENDIF
-      ENDDO
+          end do
+        end do
+      end do
 
       call SEND_RECEIVE_1D_LOGICAL(SMALL_CELL_AT,2)
       call SEND_RECEIVE_1D_LOGICAL(STANDARD_CELL_AT,2)
@@ -365,24 +385,31 @@
       call send_recv(AYZ,2)
 
 !      print*,'Before removing duplicate nodes:'
-      DO IJK = IJKSTART3, IJKEND3,-1
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
+
          IF(CUT_CELL_AT(IJK)) THEN
             print*,'==========================================================='
             print*,'IJK,  I,J=',IJK,I_OF(IJK),J_OF(IJK)
             print*,'NUMBER_OF_NODES=',NUMBER_OF_NODES(IJK)
+
             DO NODE = 1,NUMBER_OF_NODES(IJK)
-               IF(CONNECTIVITY(IJK,NODE)>IJKEND3) THEN
+               IF(CONNECTIVITY(IJK,NODE)>ijkend3) THEN
                   print*,'CNCT=',NODE,CONNECTIVITY(IJK,NODE), &
-                       X_NEW_POINT(CONNECTIVITY(IJK,NODE)-IJKEND3),Y_NEW_POINT(CONNECTIVITY(IJK,NODE)-IJKEND3)
+                       X_NEW_POINT(CONNECTIVITY(IJK,NODE)-ijkend3),Y_NEW_POINT(CONNECTIVITY(IJK,NODE)-ijkend3)
                ELSE
                   print*,'CNCT=',NODE,CONNECTIVITY(IJK,NODE)
                ENDIF
             ENDDO
+
             print*,''
          ENDIF
-      ENDDO
 
-
+          end do
+        end do
+      end do
 
       OLD_CONNECTIVITY = CONNECTIVITY
 !      X_OLD_POINT      = X_NEW_POINT
@@ -402,7 +429,10 @@
 
 !      print*,'Removing duplicate nodes...'
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
          IF(CUT_CELL_AT(IJK)) THEN          ! for each cut cell, identify neibhor cells that are also cut cells
                                              ! Look east and north in 2D, and also Top in 3D
 
@@ -427,19 +457,19 @@
 !                  print*,'comparing:',IJK,' and',IJK_NB
 
                   DO NODE = 1,NUMBER_OF_NODES(IJK)
-                     IF(OLD_CONNECTIVITY(IJK,NODE)>IJKEND3) THEN  ! node belongs to the cut-face
+                     IF(OLD_CONNECTIVITY(IJK,NODE)>ijkend3) THEN  ! node belongs to the cut-face
 
-                        X1 = X_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-IJKEND3)
-                        Y1 = Y_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-IJKEND3)
-                        Z1 = Z_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-IJKEND3)
+                        X1 = X_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-ijkend3)
+                        Y1 = Y_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-ijkend3)
+                        Z1 = Z_NEW_POINT(OLD_CONNECTIVITY(IJK,NODE)-ijkend3)
 
 
                         DO NODE_NB = 1,NUMBER_OF_NODES(IJK_NB)
-                           IF(OLD_CONNECTIVITY(IJK_NB,NODE_NB)>IJKEND3) THEN  ! node belongs to the cut-face
+                           IF(OLD_CONNECTIVITY(IJK_NB,NODE_NB)>ijkend3) THEN  ! node belongs to the cut-face
 
-                              X2 = X_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-IJKEND3)
-                              Y2 = Y_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-IJKEND3)
-                              Z2 = Z_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-IJKEND3)
+                              X2 = X_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-ijkend3)
+                              Y2 = Y_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-ijkend3)
+                              Z2 = Z_NEW_POINT(OLD_CONNECTIVITY(IJK_NB,NODE_NB)-ijkend3)
 
                               ! compare coordinates of cut-face nodes
                               D = (X2-X1)**2 + (Y2-Y1)**2 + (Z2-Z1)**2
@@ -464,24 +494,29 @@
 
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       ALLOCATE(SCALAR_NODE_XYZ(DIMENSION_3 + NUMBER_OF_NEW_POINTS,3))
       ALLOCATE(Ovol_around_node(DIMENSION_3 + NUMBER_OF_NEW_POINTS))
       ALLOCATE(SCALAR_NODE_ATWALL(DIMENSION_3 + NUMBER_OF_NEW_POINTS))
 
       !first fill with standard nodes
-      DO IJK = IJKSTART3, IJKEND3
-         SCALAR_NODE_XYZ(IJK,1:3)  = SCALAR_NODE_XYZ_TEMP(IJK,1:3)
-      ENDDO
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
+             SCALAR_NODE_XYZ(IJK,1:3)  = SCALAR_NODE_XYZ_TEMP(IJK,1:3)
+          end do
+        end do
+      end do
 
       !now fill with cut-face nodes
       DO IJK = 1,NUMBER_OF_NEW_POINTS
-         SCALAR_NODE_XYZ(IJKEND3+IJK,1) = X_NEW_POINT(IJK)
-         SCALAR_NODE_XYZ(IJKEND3+IJK,2) = Y_NEW_POINT(IJK)
-         SCALAR_NODE_XYZ(IJKEND3+IJK,3) = Z_NEW_POINT(IJK)
+         SCALAR_NODE_XYZ(ijkend3+IJK,1) = X_NEW_POINT(IJK)
+         SCALAR_NODE_XYZ(ijkend3+IJK,2) = Y_NEW_POINT(IJK)
+         SCALAR_NODE_XYZ(ijkend3+IJK,3) = Z_NEW_POINT(IJK)
       ENDDO
-
-
 
       SCALAR_NODE_ATWALL(:)  = .true.
       !Rahul:
@@ -497,10 +532,11 @@
       !so I'm setting all the points as being outside the domain.
       !if a point is ever found to be in the domain, then it will stay away
       !and further tests will not be able to revert it.
-      IJKLOOP: DO IJK = IJKSTART3, IJKEND3
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
+
          IF(.not. IS_ON_myPE_wobnd(I,J,K)) cycle
 
          I1 = I-1
@@ -564,10 +600,12 @@
             ENDDO
          ENDDO
 
-      ENDDO IJKLOOP
+      ENDDO 
+      ENDDO 
+      ENDDO 
 
 !      print*,'After removing duplicate nodes:'
-      DO IJK = IJKSTART3, IJKEND3,-1
+      DO IJK = ijkstart3, ijkend3,-1
          print*,'==========================================================='
          print*,'IJK,  I,J=',IJK,I_OF(IJK),J_OF(IJK)
          print*,'NUMBER_OF_NODES=',NUMBER_OF_NODES(IJK)
@@ -578,31 +616,29 @@
          print*,''
       ENDDO
 
-
-
       Ovol_around_node = ZERO !UNDEFINED
 
       TOT_VOL_CELLS = ZERO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
-         DO NODE = 1,NUMBER_OF_NODES(IJK)
-            NC = CONNECTIVITY(IJK,NODE)
-            Ovol_around_node(NC) = Ovol_around_node(NC) + VOL(IJK)/NUMBER_OF_NODES(IJK)
-         ENDDO
+            DO NODE = 1,NUMBER_OF_NODES(IJK)
+               NC = CONNECTIVITY(IJK,NODE)
+               Ovol_around_node(NC) = Ovol_around_node(NC) + VOL(IJK)/NUMBER_OF_NODES(IJK)
+            ENDDO
 
-!         print*,'IJK,VOL=',IJK,VOL(IJK)
-
-
-         IF(INTERIOR_CELL_AT(IJK)) TOT_VOL_CELLS = TOT_VOL_CELLS + VOL(IJK)
-
+           IF(INTERIOR_CELL_AT(IJK)) TOT_VOL_CELLS = TOT_VOL_CELLS + VOL(IJK)
 
       ENDDO
-
+      ENDDO
+      ENDDO
 
       TOT_VOL_NODE= ZERO
 
-      DO IJK = IJKSTART3, IJKEND3 + NUMBER_OF_NEW_POINTS    ! Loop over all nodes
+      DO IJK = ijkstart3, ijkend3 + NUMBER_OF_NEW_POINTS    ! Loop over all nodes
 
          IF(Ovol_around_node(IJK)>ZERO) THEN
 !             print*,'NODE,VOL=',IJK,Ovol_around_node(IJK)
@@ -648,14 +684,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_3D_CUT_U_CELL_FLAGS
 
-      USE compar, ONLY: mype, pe_io, ijkstart3, ijkend3
+      USE compar, ONLY: mype, pe_io
+      USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: ijkstart3, ijkend3
+      USE functions, only : funijk
       USE cutcell
       USE geometry, ONLY: no_k, axy_u, ayz_u, vol_u, axz_u
       USE quadric, ONLY: tol_f
       USE polygon, ONLY: n_polygon
 
       IMPLICIT NONE
-      INTEGER :: IJK
+      INTEGER :: i,j,k,ijk
       INTEGER :: TOTAL_NUMBER_OF_INTERSECTIONS
       INTEGER :: NODE,N_N1,N_N2,Q_ID
       INTEGER :: MIN_INTERSECTIONS,MAX_INTERSECTIONS
@@ -677,20 +716,27 @@
       TOL_SNAP = ZERO
 
       IF(.NOT.(USE_STL.OR.USE_MSH)) THEN
-         DO IJK = IJKSTART3, IJKEND3
-!             IF(POTENTIAL_CUT_CELL_AT(IJK))  CALL INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
-            CALL INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
-         END DO
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                CALL INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
+             end do
+           end do
+         end do
 
 !======================================================================
 !  Clean-up intersection flags in preparaton of small cells removal
 !======================================================================
-         DO IJK = IJKSTART3, IJKEND3
-            IF(INTERIOR_CELL_AT(IJK)) THEN
-!               IF(POTENTIAL_CUT_CELL_AT(IJK))  CALL CLEAN_INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
-               CALL CLEAN_INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
-            ENDIF
-         END DO
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                IF (INTERIOR_CELL_AT(IJK)) &
+                  CALL CLEAN_INTERSECT(IJK,'U_MOMENTUM',Xn_U_int(IJK),Ye_U_int(IJK),Zt_U_int(IJK))
+             end do
+           end do
+         end do
 
       ELSE
          CALL CAD_INTERSECT('U_MOMENTUM',Xn_U_int,Ye_U_int,Zt_U_int)
@@ -699,9 +745,12 @@
 
       NUMBER_OF_NEW_U_POINTS = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+           CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -841,8 +890,13 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
          CALL GET_CELL_NODE_COORDINATES(IJK,'U_MOMENTUM')
 
@@ -856,8 +910,8 @@
          DELZ_Ub(IJK) = Z_U(IJK) - Z_NODE(1)
 
       ENDDO
-
-      RETURN
+      ENDDO
+      ENDDO
 
       END SUBROUTINE SET_3D_CUT_U_CELL_FLAGS
 
@@ -877,14 +931,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_3D_CUT_V_CELL_FLAGS
 
-      USE compar, ONLY: mype, pe_io, ijkstart3, ijkend3
+      USE compar, only: mype, pe_io
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: ijkstart3, ijkend3
       USE cutcell
+      USE functions, only: funijk
       USE geometry, ONLY: no_k, axy_v, axz_v, ayz_v, vol_v
       USE polygon, ONLY: n_polygon
       USE quadric, ONLY: tol_f
 
       IMPLICIT NONE
-      INTEGER :: IJK
+      INTEGER :: i,j,k,ijk
       INTEGER :: TOTAL_NUMBER_OF_INTERSECTIONS
       INTEGER :: NODE,N_N1,N_N2,Q_ID
       INTEGER :: MIN_INTERSECTIONS,MAX_INTERSECTIONS
@@ -904,20 +961,28 @@
       SNAP = .FALSE.
 
       IF(.NOT.(USE_STL.OR.USE_MSH)) THEN
-         DO IJK = IJKSTART3, IJKEND3
-!             IF(POTENTIAL_CUT_CELL_AT(IJK))  CALL INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
-            CALL INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
-         END DO
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                CALL INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
+             end do
+           end do
+         end do
 
 !======================================================================
 !  Clean-up intersection flags in preparaton of small cells removal
 !======================================================================
-         DO IJK = IJKSTART3, IJKEND3
-            IF(INTERIOR_CELL_AT(IJK)) THEN
-!                IF(POTENTIAL_CUT_CELL_AT(IJK)) CALL CLEAN_INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
-               CALL CLEAN_INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
-            ENDIF
-         END DO
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                IF(INTERIOR_CELL_AT(IJK)) THEN
+                   CALL CLEAN_INTERSECT(IJK,'V_MOMENTUM',Xn_V_int(IJK),Ye_V_int(IJK),Zt_V_int(IJK))
+                ENDIF
+             end do
+           end do
+         end do
 
       ELSE
          CALL CAD_INTERSECT('V_MOMENTUM',Xn_V_int,Ye_V_int,Zt_V_int)
@@ -926,10 +991,13 @@
 
       NUMBER_OF_NEW_V_POINTS = 0
 
-      DO IJK = IJKSTART3, IJKEND3
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
+             CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
 
-         IF(INTERIOR_CELL_AT(IJK)) THEN
+             IF(INTERIOR_CELL_AT(IJK)) THEN
 
 !======================================================================
 !  Get coordinates of eight nodes
@@ -1067,8 +1135,13 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          CALL GET_CELL_NODE_COORDINATES(IJK,'V_MOMENTUM')
 
@@ -1081,6 +1154,8 @@
          DELZ_Vt(IJK) = Z_NODE(8) - Z_V(IJK)
          DELZ_Vb(IJK) = Z_V(IJK) - Z_NODE(1)
 
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN
@@ -1103,14 +1178,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_3D_CUT_W_CELL_FLAGS
 
-      USE compar, ONLY: mype, pe_io, ijkstart3, ijkend3
+      USE compar, ONLY: mype, pe_io
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: ijkstart3, ijkend3
       USE cutcell
+      USE functions, only: funijk
       USE geometry, ONLY: axy_w, axz_w, ayz_w, vol_w
       USE polygon, ONLY: n_polygon
       USE quadric, ONLY: tol_f
 
       IMPLICIT NONE
-      INTEGER :: IJK
+      INTEGER :: i,j,k,IJK
       INTEGER :: TOTAL_NUMBER_OF_INTERSECTIONS
       INTEGER :: NODE,Q_ID
       LOGICAL :: CLIP_FLAG
@@ -1130,19 +1208,27 @@
       SNAP = .FALSE.
 
       IF(.NOT.(USE_STL.OR.USE_MSH)) THEN
-         DO IJK = IJKSTART3, IJKEND3
-!             IF(POTENTIAL_CUT_CELL_AT(IJK)) CALL INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
-            CALL INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                CALL INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
+         END DO
+         END DO
          END DO
 
 !======================================================================
 !  Clean-up intersection flags in preparaton of small cells removal
 !======================================================================
-         DO IJK = IJKSTART3, IJKEND3
-            IF(INTERIOR_CELL_AT(IJK)) THEN
-!               IF(POTENTIAL_CUT_CELL_AT(IJK)) CALL CLEAN_INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
-               CALL CLEAN_INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
-            ENDIF
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
+                IF(INTERIOR_CELL_AT(IJK)) THEN
+                   CALL CLEAN_INTERSECT(IJK,'W_MOMENTUM',Xn_W_int(IJK),Ye_W_int(IJK),Zt_W_int(IJK))
+                ENDIF
+         END DO
+         END DO
          END DO
 
       ELSE
@@ -1152,9 +1238,12 @@
 
       NUMBER_OF_NEW_W_POINTS = 0
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -1271,8 +1360,13 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          CALL GET_CELL_NODE_COORDINATES(IJK,'W_MOMENTUM')
 
@@ -1286,8 +1380,8 @@
          DELZ_Wb(IJK) = Z_W(IJK) - Z_NODE(1)
 
       ENDDO
-
-      RETURN
+      ENDDO
+      ENDDO
 
       END SUBROUTINE SET_3D_CUT_W_CELL_FLAGS
 
@@ -1307,7 +1401,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_3D_CUT_CELL_TREATMENT_FLAGS
 
-      USE compar, only: mype, pe_io, ijkstart3, ijkend3
+      USE compar, only: mype, pe_io
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, ONLY: funijk
       USE geometry, ONLY: do_k
@@ -1335,15 +1431,14 @@
       call SEND_RECEIVE_1D_LOGICAL(CUT_V_CELL_AT,2)
       call SEND_RECEIVE_1D_LOGICAL(CUT_W_CELL_AT,2)
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             IP = I + 1
             JP = J + 1
@@ -1413,6 +1508,8 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
       IF(CG_SAFE_MODE(1)==1) CUT_TREATMENT_AT   = .FALSE.
       IF(CG_SAFE_MODE(3)==1) CUT_U_TREATMENT_AT = .FALSE.
@@ -1438,7 +1535,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE SET_GHOST_CELL_FLAGS
 
-      USE compar, ONLY: ijkstart3, ijkend3
       USE compar, ONLY: iend1, iend2, iend3, jstart1, jstart2, jstart3, kstart1, kstart2, kstart3
       USE compar, only: istart1, istart2, istart3, jend1, jend2, jend3, kend1, kend2, kend3
       USE cutcell
@@ -1760,19 +1856,27 @@
 
       ENDIF
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
-         IF(BLOCKED_U_CELL_AT(IJK)) FLAG_E(IJK)=100
-         IF(BLOCKED_V_CELL_AT(IJK)) FLAG_N(IJK)=100
-         IF(BLOCKED_W_CELL_AT(IJK)) FLAG_T(IJK)=100
+             IF(BLOCKED_U_CELL_AT(IJK)) FLAG_E(IJK)=100
+             IF(BLOCKED_V_CELL_AT(IJK)) FLAG_N(IJK)=100
+             IF(BLOCKED_W_CELL_AT(IJK)) FLAG_T(IJK)=100
 
-      ENDDO
+          end do
+        end do
+      end do
 
 !     BLOCKED CELLS WERE ASSIGNED THE FLAG 100 DURING PRE_PROCESSING
 !     THIS IS INCORRECT FOR FREEE-SLIP AND PARTIAL-SLIP
 !     THE FLAG IS OVERWRITTEN HERE TO ACCOUNT FOR NSW,FSW AND PSW BCs
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          IF(FLAG(IJK)==100) THEN
 
@@ -1835,6 +1939,8 @@
             ENDIF
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       call send_recv(FLAG,2)
       RETURN
@@ -1857,11 +1963,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   SUBROUTINE GET_POTENTIAL_CUT_CELLS
 
-      USE compar, only: ijkstart3, ijkend3, mype, pe_io
+      USE compar, only: mype, pe_io
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, only: funijk, bottom_of, south_of, west_of
       USE geometry, ONLY: dx, dy, dz, do_k, imin3, imax3, jmin3, jmax3, kmin3, kmax3, flag, axy, axz, ayz, vol, no_k
-      USE indices, only: i_of, j_of, k_of
       USE polygon, ONLY: n_polygon
       USE quadric, ONLY: tol_f
 
@@ -1891,11 +1998,10 @@
 !  Evaluate f at cell center and store where f>0
 !======================================================================
 
-      DO IJK = IJKSTART3, IJKEND3
-
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          xc = XG_E(I) - HALF*DX(I)
          yc = YG_N(J) - HALF*DY(J)
@@ -1925,14 +2031,15 @@
           ENDIF
 
        ENDDO
+       ENDDO
+       ENDDO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             I1 = MAX(I - 2,IMIN3)
             I2 = MIN(I + 2,IMAX3)
@@ -2005,6 +2112,8 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
       NUMBER_OF_POTENTIAL_CUT_CELLS = 0
 
@@ -2016,7 +2125,10 @@
          N_N2 = 8
       ENDIF
 
-      DO IJK=IJKSTART3,IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
          IF(POTENTIAL_CUT_CELL_AT(IJK)) THEN
             NUMBER_OF_POTENTIAL_CUT_CELLS = NUMBER_OF_POTENTIAL_CUT_CELLS + 1
          ELSE
@@ -2049,10 +2161,12 @@
 
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
 !      call SEND_RECEIVE_1D_LOGICAL(SNAP,2)
       IF(MyPE == PE_IO) THEN
-         WRITE(*,*)'DONE ESTIMATING POTENTIAL SCALAR CUT CELLS.',NUMBER_OF_POTENTIAL_CUT_CELLS,IJKEND3
+         WRITE(*,*)'DONE ESTIMATING POTENTIAL SCALAR CUT CELLS.',NUMBER_OF_POTENTIAL_CUT_CELLS,ijkend3
       ENDIF
 
       RETURN

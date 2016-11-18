@@ -15,11 +15,11 @@
   SUBROUTINE GET_3D_ALPHA_U_CUT_CELL
 
       USE bc
-      USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
+      USE compar, ONLY: iend1, jend1, kend1, mype, pe_io
+      USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE cutcell
-      USE functions, ONLY: FUNIJK
+      USE functions, ONLY: funijk
       USE geometry, ONLY: DO_K, NO_K, ayz, ayz_u, flag_e
-      USE indices, ONLY: I_OF, J_OF, K_OF
 
       IMPLICIT NONE
       DOUBLE PRECISION:: Xe,Ye,Ze,Xn,Yn,Zn,Xt,Yt,Zt
@@ -62,13 +62,12 @@
       A_UPG_E = AYZ_U
       A_UPG_W = AYZ_U
 
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
-      DO IJK = IJKSTART3, IJKEND3
          IF(INTERIOR_CELL_AT(IJK)) THEN
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             IM = I - 1
             JM = J - 1
@@ -78,12 +77,12 @@
             JP = J + 1
             KP = K + 1
 
-            IMJK = FUNIJK(IM,J,K)
-            IPJK = FUNIJK(IP,J,K)
-            IJMK = FUNIJK(I,JM,K)
-            IJPK = FUNIJK(I,JP,K)
-            IJKM = FUNIJK(I,J,KM)
-            IJKP = FUNIJK(I,J,KP)
+            IMJK = funijk(IM,J,K)
+            IPJK = funijk(IP,J,K)
+            IJMK = funijk(I,JM,K)
+            IJPK = funijk(I,JP,K)
+            IJKM = funijk(I,J,KM)
+            IJKP = funijk(I,J,KP)
 
             CALL GET_CELL_NODE_COORDINATES(IJK,'U_MOMENTUM')
 
@@ -392,13 +391,13 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
       IF(PG_OPTION==0) THEN
          A_UPG_E = AYZ
          A_UPG_W = AYZ
       ENDIF
-
-      RETURN
 
       END SUBROUTINE GET_3D_ALPHA_U_CUT_CELL
 
@@ -419,11 +418,11 @@
   SUBROUTINE GET_3D_ALPHA_V_CUT_CELL
 
       USE bc
-      USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
+      USE compar, ONLY: iend1, jend1, kend1, mype, pe_io
+      USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE cutcell
-      USE functions, ONLY: FUNIJK
+      USE functions, ONLY: funijk
       USE geometry, ONLY: DO_K, NO_K, axz, axz_v, flag_n
-      USE indices, ONLY: I_OF, J_OF, K_OF
 
       IMPLICIT NONE
       DOUBLE PRECISION:: Xe,Ye,Ze,Xn,Yn,Zn,Xt,Yt,Zt
@@ -466,13 +465,12 @@
       A_VPG_N = AXZ_V
       A_VPG_S = AXZ_V
 
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
-      DO IJK = IJKSTART3, IJKEND3
          IF(INTERIOR_CELL_AT(IJK)) THEN
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             IM = I - 1
             JM = J - 1
@@ -482,12 +480,12 @@
             JP = J + 1
             KP = K + 1
 
-            IMJK = FUNIJK(IM,J,K)
-            IPJK = FUNIJK(IP,J,K)
-            IJMK = FUNIJK(I,JM,K)
-            IJPK = FUNIJK(I,JP,K)
-            IJKM = FUNIJK(I,J,KM)
-            IJKP = FUNIJK(I,J,KP)
+            IMJK = funijk(IM,J,K)
+            IPJK = funijk(IP,J,K)
+            IJMK = funijk(I,JM,K)
+            IJPK = funijk(I,JP,K)
+            IJKM = funijk(I,J,KM)
+            IJKP = funijk(I,J,KP)
 
             CALL GET_CELL_NODE_COORDINATES(IJK,'V_MOMENTUM')
 
@@ -796,6 +794,8 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
       IF(PG_OPTION==0) THEN
          A_VPG_N = AXZ
@@ -823,11 +823,11 @@
   SUBROUTINE GET_3D_ALPHA_W_CUT_CELL
 
       USE bc
-      USE compar, ONLY: iend1, jend1, kend1, IJKSTART3, IJKEND3, mype, pe_io
+      USE compar, ONLY: iend1, jend1, kend1, mype, pe_io
+      USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE cutcell
-      USE functions, ONLY: FUNIJK
+      USE functions, ONLY: funijk
       USE geometry, ONLY: axy, axy_w, flag_t
-      USE indices, ONLY: I_OF, J_OF, K_OF
 
       IMPLICIT NONE
       DOUBLE PRECISION:: Xe,Ye,Ze,Xn,Yn,Zn,Xt,Yt,Zt
@@ -869,12 +869,12 @@
       A_WPG_T = AXY_W
       A_WPG_B = AXY_W
 
-      DO IJK = IJKSTART3, IJKEND3
-         IF(INTERIOR_CELL_AT(IJK)) THEN
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
+         IF(INTERIOR_CELL_AT(IJK)) THEN
 
             IM = I - 1
             JM = J - 1
@@ -884,12 +884,12 @@
             JP = J + 1
             KP = K + 1
 
-            IMJK = FUNIJK(IM,J,K)
-            IPJK = FUNIJK(IP,J,K)
-            IJMK = FUNIJK(I,JM,K)
-            IJPK = FUNIJK(I,JP,K)
-            IJKM = FUNIJK(I,J,KM)
-            IJKP = FUNIJK(I,J,KP)
+            IMJK = funijk(IM,J,K)
+            IPJK = funijk(IP,J,K)
+            IJMK = funijk(I,JM,K)
+            IJPK = funijk(I,JP,K)
+            IJKM = funijk(I,J,KM)
+            IJKP = funijk(I,J,KP)
 
             CALL GET_CELL_NODE_COORDINATES(IJK,'W_MOMENTUM')
 
@@ -1182,12 +1182,12 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
       IF(PG_OPTION==0) THEN
          A_WPG_T = AXY
          A_WPG_B = AXY
       ENDIF
-
-      RETURN
 
       END SUBROUTINE GET_3D_ALPHA_W_CUT_CELL

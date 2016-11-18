@@ -104,8 +104,12 @@
 !!!$omp&                  ISV, Sdp, V0, Vpm, Vmt, Vbf,              &
 !!!$omp&                  Vcf, EPMUGA, VTZA, WGE, PGE, ROGA,        &
 !!!$omp&                  MUGA, ROPGA, EPGA )
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
          IJKE = EAST_OF(IJK)
          IJKM = KM_OF(IJK)
          IPJK = IP_OF(IJK)
@@ -165,10 +169,6 @@
             END SELECT
 
             IF(NOC_UG) THEN
-
-               I = I_OF(IJK)
-               J = J_OF(IJK)
-               K = K_OF(IJK)
 
                IMJK = IM_OF(IJK)
                IJMK = JM_OF(IJK)
@@ -244,6 +244,8 @@
 
          ENDIF
 
+      END DO
+      END DO
       END DO
 
 
@@ -339,7 +341,10 @@
 
       M = 0
 
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          BCV = BC_U_ID(IJK)
 
@@ -443,10 +448,6 @@
                   ELSE                              ! partial slip
 
                      B_M(IJK) = ZERO
-
-                     I = I_OF(IJK)
-                     J = J_OF(IJK)
-                     K = K_OF(IJK)
 
                      IM = I - 1
                      JM = J - 1
@@ -643,17 +644,11 @@
          END SELECT
 
       ENDDO
-
-
-      RETURN
+      ENDDO
+      ENDDO
 
 !=======================================================================
 ! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
 
       END SUBROUTINE CG_SOURCE_U_G_BC
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 350 Changed do loop limits: 1,kmax2->kmin3,kmax3
-!// 360 Check if i,j,k resides on current processor

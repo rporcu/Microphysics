@@ -53,7 +53,7 @@
       INTEGER          L
 !
 !                      indices
-      INTEGER          IJK, N ,IJKW,IJKS,IJKB
+      INTEGER          i, j, k, IJK, N ,IJKW,IJKS,IJKB
 !
 !----------------------------------------------
 
@@ -83,7 +83,10 @@
 !      ENDDO
 
 
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
 
          L = BC_ID(IJK)
 
@@ -178,11 +181,7 @@
          ENDIF
 
       ENDDO
+      ENDDO
+      ENDDO
 
-      RETURN
       END SUBROUTINE CG_SET_BC0
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 020 New local variables for parallelization: FLAG_G , FLUID_AT_G
-!// 360 Check if i,j,k resides on current processor

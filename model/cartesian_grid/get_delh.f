@@ -606,7 +606,7 @@
       IMPLICIT NONE
 !      CHARACTER (LEN=*) :: TYPE_OF_CELL
       DOUBLE PRECISION:: X0,Y0,Z0,XREF,YREF,ZREF
-      INTEGER :: IJK,N
+      INTEGER :: i,j,k,IJK,N
 
       DOUBLE PRECISION :: D_TO_CUT, D_TO_PE_REF
 
@@ -624,11 +624,16 @@
 
 ! Count the number of cut cells
       N_CUT_CELLS = 0
-      DO IJK = IJKSTART3, IJKEND3
-         IF(INTERIOR_CELL_AT(IJK).AND.CUT_CELL_AT(IJK)) THEN
-            N_CUT_CELLS = N_CUT_CELLS + 1
-            LIST_OF_CUT_CELLS(N_CUT_CELLS) = IJK
-         ENDIF
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
+           IF(INTERIOR_CELL_AT(IJK).AND.CUT_CELL_AT(IJK)) THEN
+              N_CUT_CELLS = N_CUT_CELLS + 1
+              LIST_OF_CUT_CELLS(N_CUT_CELLS) = IJK
+           ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Store cut cell reference points (centroid of cut cell face)
@@ -640,7 +645,10 @@
       PE_REFP(MyPE,2) = ZERO
       PE_REFP(MyPE,3) = ZERO
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
          IF(INTERIOR_CELL_AT(IJK).AND.CUT_CELL_AT(IJK)) THEN
             N_CUT_CELLS = N_CUT_CELLS + 1
             LOCAL_REFP_S(N_CUT_CELLS,1) = REFP_S(IJK,1)
@@ -651,6 +659,8 @@
             PE_REFP(MyPE,2) = PE_REFP(MyPE,2) + REFP_S(IJK,2)
             PE_REFP(MyPE,3) = PE_REFP(MyPE,3) + REFP_S(IJK,3)
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
       IF(N_CUT_CELLS>0) THEN
@@ -743,7 +753,10 @@
 !  calculation.
 !======================================================================
 
-      DO IJK = IJKSTART3, IJKEND3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
          CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
 
@@ -844,6 +857,8 @@
 
          ENDIF
 
+      ENDDO
+      ENDDO
       ENDDO
 
       call send_recv(DWALL,2)
