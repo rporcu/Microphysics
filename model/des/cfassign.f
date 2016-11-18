@@ -111,13 +111,12 @@
 ! grid nodes start from istart2 to iend1
       vol_node_count = merge(4., 8., NO_K)
 
-      DO ijk = ijkstart3,ijkend3
+        DO Kraw = kstart3, kend3
+        DO Jraw = jstart3, jend3
+        DO Iraw = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          des_vol_node(ijk) = zero
-         iraw = i_of(ijk)
-         jraw = j_of(ijk)
-         kraw = k_of(ijk)
-
-
 
 ! start at 1 (ghost cell) and go to last fluid cell. why start at a
 ! ghost cell and not a fluid cell?
@@ -225,7 +224,9 @@
          ENDIF
 
 
-      ENDDO   ! end do ijk=ijkstart3,ijkend3
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       RETURN

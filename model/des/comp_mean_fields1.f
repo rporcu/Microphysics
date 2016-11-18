@@ -28,7 +28,7 @@
 ! Loop counters: partciles, filter cells, phases
       INTEGER NP, LC, M
 ! Fluid cell index
-      INTEGER IJK
+      INTEGER I,J,K,IJK
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
 ! One divided by the total solids volume.
@@ -47,11 +47,6 @@
       LP_BND = merge(27,9,DO_K)
 
 ! Calculate the gas phase forces acting on each particle.
-!$omp parallel default(none)                                           &
-!$omp private(NP, VOL_WT, M, LC, IJK, VOLXWEIGHT)                      &
-!$omp shared(MAX_PIP, PVOL, PIJK, LP_BND,          &
-!$omp    FILTER_WEIGHT, SOLVOLINC, DO_K, FILTER_CELL,DES_VEL_NEW)
-!$omp do
       do NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP) .and. .NOT.IS_GHOST(NP)) CYCLE
 
@@ -68,15 +63,15 @@
             SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOLxWEIGHT
          ENDDO
       ENDDO
-!$omp end do
-!$omp end parallel
 
 ! Calculate the cell average solids velocity, the bulk density,
 ! and the void fraction.
 !---------------------------------------------------------------------//
-!$omp parallel do if(ijkend3 .ge. 2000) default(shared)                &
-!$omp private(IJK,M,OoSOLVOL)
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
@@ -86,10 +81,11 @@
 ! number of particles having their center in the cell
             DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(IJK,M)/VOL(IJK)
 
-         ENDDO   ! end loop over M=1,MMAX
+         ENDDO
 
-      ENDDO     ! end loop over IJK=ijkstart3,ijkend3
-!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
 
 ! Halo exchange of solids volume fraction data.

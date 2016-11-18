@@ -38,6 +38,7 @@
 ! Local variables
 !-----------------------------------------------
 ! general i, j, k indices
+      INTEGER :: lI, lJ, lK
       INTEGER :: I, J, K, IJK, cur_ijk
       INTEGER :: II, JJ, KK
       INTEGER :: IPJK, IJPK, IJKP,&
@@ -77,28 +78,20 @@
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
 
-!$omp parallel do default(none)                                         &
-!$omp shared(ijkstart3,ijkend3,pinc,i_of,j_of,k_of,no_k,interp_scheme,  &
-!$omp        funijk_map_c,xe,yn,dz,zt,avg_factor,do_k,pic,des_pos_new,  &
-!$omp        des_vel_new, p_force,          &
-!$omp        u_g,v_g,w_g,pvol,fc,f_gp,ep_g)                     &
-!$omp private(ijk, i, j, k, pcell, iw, ie, js, jn, kb, ktp,             &
-!$omp         onew, ii, jj, kk,cur_ijk, ipjk, ijpk, ipjpk,              &
-!$omp         gst_tmp, vst_tmp, velfp, desposnew, ijpkp, ipjkp, &
-!$omp         ipjpkp,ijkp,nindx,np,weight_ft,d_force, vel_new)
-      DO ijk = ijkstart3,ijkend3
+        DO lK = kstart3, kend3
+        DO lJ = jstart3, jend3
+        DO lI = istart3, iend3
+
+         IJK = FUNIJK(li,lj,lk)
          if(.not.fluid_at(ijk) .or. pinc(ijk).eq.0) cycle
-         i = i_of(ijk)
-         j = j_of(ijk)
-         k = k_of(ijk)
 
 ! generally a particle may not exist in a ghost cell. however, if the
 ! particle is adjacent to the west, south or bottom boundary, then pcell
 ! may be assigned indices of a ghost cell which will be passed to
 ! set_interpolation_stencil
-         pcell(1) = i-1
-         pcell(2) = j-1
-         pcell(3) = merge(1, k-1, NO_K)
+         pcell(1) = li-1
+         pcell(2) = lj-1
+         pcell(3) = merge(1, lk-1, NO_K)
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -138,6 +131,8 @@
                ENDDO
             ENDDO
          ENDDO
+         ENDDO
+         ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
          DO nindx = 1,PINC(IJK)
@@ -170,8 +165,7 @@
             FC(NP,:) = FC(NP,:) + P_FORCE(:,IJK)*PVOL(NP)
          ENDDO       ! end do (nindx = 1,pinc(ijk))
 
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
-!$omp end parallel do
+      ENDDO
 
       RETURN
       END SUBROUTINE DRAG_GS_DES0
@@ -221,6 +215,7 @@
 ! local variable used for debugging
       LOGICAL :: FOCUS
 ! general i, j, k indices
+      INTEGER :: lI, lJ, lK
       INTEGER :: I, J, K, IJK, cur_ijk
       INTEGER :: II, JJ, KK
       INTEGER :: IPJK, IJPK, IJKP, IMJK, IJMK, IJKM,&
@@ -273,26 +268,20 @@
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
 
-!!!$omp parallel default(shared)                                        &
-!!!$omp private(ijk,i,j,k,pcell,iw,ie,js,jn,kb,ktp,onew,                &
-!!!$omp         ii,jj,kk,cur_ijk,ipjk,ijpk,ipjpk,                       &
-!!!$omp         gst_tmp,vst_tmp,velfp,desposnew,ijpkp,ipjkp,            &
-!!!$omp         ipjpkp,ijkp,nindx,focus,np,m,weight_ft,             &
-!!!$omp             vcell,ovol)
-!!!$omp do reduction(+:drag_am) reduction(+:drag_bm)
-      DO IJK = IJKSTART3,IJKEND3
+        DO lK = kstart3, kend3
+        DO lJ = jstart3, jend3
+        DO lI = istart3, iend3
+
+         IJK = FUNIJK(li,lj,lk)
          IF(.NOT.FLUID_AT(IJK) .OR. PINC(IJK)==0) cycle
-         i = i_of(ijk)
-         j = j_of(ijk)
-         k = k_of(ijk)
 
 ! generally a particle may not exist in a ghost cell. however, if the
 ! particle is adjacent to the west, south or bottom boundary, then pcell
 ! may be assigned indices of a ghost cell which will be passed to
 ! set_interpolation_stencil
-         pcell(1) = i-1
-         pcell(2) = j-1
-         pcell(3) = merge(1, k-1, NO_K)
+         pcell(1) = li-1
+         pcell(2) = lj-1
+         pcell(3) = merge(1, lk-1, NO_K)
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -334,6 +323,8 @@
                   ENDIF
                ENDDO
             ENDDO
+         ENDDO
+         ENDDO
          ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
@@ -378,7 +369,6 @@
                      vcell = des_vol_node(cur_ijk)
                      ovol = one/vcell
 
-!!!$omp critical
                      drag_am(cur_ijk) = drag_am(cur_ijk) + &
                         f_gp(np)*weight_ft(i,j,k)*ovol
 
@@ -386,14 +376,12 @@
                         drag_bm(cur_ijk,1:3) + &
                         f_gp(np) * vel_new(1:3) * &
                         weight_ft(i,j,k)*ovol
-!!!$omp end critical
                   ENDDO
                ENDDO
             ENDDO
          ENDDO   ! end do (nindx = 1,pinc(ijk))
 
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
-!!!$omp end parallel
+      ENDDO
 
 
 ! At the interface drag_am and drag_bm have to be added
@@ -409,16 +397,13 @@
 ! avg_factor=0.125 (in 3D) or =0.25 (in 2D)
       AVG_FACTOR = merge(0.25d0, 0.125D0, NO_K)
 
-!!$omp parallel do default(shared)                               &
-!!$omp private(ijk,i,j,k,imjk,ijmk,imjmk,ijkm,imjkm,ijmkm,       &
-!!$omp         imjmkm)                                           &
-!!$omp schedule (guided,20)
-      DO ijk = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IF(FLUID_AT(IJK)) THEN
 
-            i = i_of(ijk)
-            j = j_of(ijk)
-            k = k_of(ijk)
             if (i.lt.istart2 .or. i.gt.iend2) cycle
             if (j.lt.jstart2 .or. j.gt.jend2) cycle
             if (k.lt.kstart2 .or. k.gt.kend2) cycle
@@ -443,8 +428,9 @@
             F_GDS(IJK) = ZERO
          ENDIF   ! end if/else (fluid_at(ijk))
 
-      ENDDO   ! end do loop (ijk=ijkstart3,ijkend3)
-!!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE DRAG_GS_GAS0

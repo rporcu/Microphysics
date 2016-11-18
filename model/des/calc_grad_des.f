@@ -54,8 +54,9 @@
       USE geometry, only: IMIN1, JMIN1, KMIN1
       USE geometry, only: IMAX1, JMAX1, KMAX1
       USE indices, only: I_OF, J_OF, K_OF
-      USE compar, only: IJKSTART3, IJKEND3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
+      use functions, only: Funijk
       use functions, only: FLUID_AT
       use functions, only: IM_OF, JM_OF, KM_OF
       use functions, only: IP_OF, JP_OF, KP_OF
@@ -79,11 +80,14 @@
 !......................................................................!
 
 
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          DEL_PHI(:,IJK) = ZERO
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
-         I = I_OF(IJK)
          IMJK = IM_OF(IJK)
          IPJK = IP_OF(IJK)
 
@@ -101,7 +105,6 @@
          ENDIF
 
 
-         J = J_OF(IJK)
          IJMK = JM_OF(IJK)
          IJPK = JP_OF(IJK)
 
@@ -115,12 +118,11 @@
             DEL_PHI(2,IJK) = 2.0d0*oDY(J) *                            &
                (PHI(IJK)- AVG_Y(PHI(IJMK),PHI(IJK),J-1))
          ELSE
-            DEL_PHI(2,IJK) = ZERO 
+            DEL_PHI(2,IJK) = ZERO
          ENDIF
 
          IF(DO_K) THEN
 
-            K = K_OF(IJK)
             IJKM = KM_OF(IJK)
             IJKP = KP_OF(IJK)
 
@@ -135,6 +137,8 @@
                   (PHI(IJK) - AVG_Z(PHI(IJKM),PHI(IJK),K-1))
             ENDIF
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN
@@ -156,12 +160,12 @@
 !---------------------------------------------------------------------//
       use geometry, only: DO_K
       use geometry, only: DX, DY, DZ
-      use indices, only: I_OF, J_OF, K_OF
-      use compar, only: IJKSTART3, IJKEND3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use functions, only: FLUID_AT
+      use functions, only: FLUID_AT, FUNIJK
       use functions, only: IM_OF, JM_OF, KM_OF
       use functions, only: IP_OF, JP_OF, KP_OF
+      USE indices, only: I_OF, J_OF, K_OF
 
       use param, only: DIMENSION_3
       use param1, only: ZERO
@@ -183,11 +187,12 @@
 !......................................................................!
 
 
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
+
          DEL_PHI(:,IJK) = ZERO
 
          IF(.NOT.FLUID_AT(IJK)) CYCLE
@@ -244,6 +249,8 @@
             ENDIF
             DEL_PHI(3,IJK) = DEL_PHI(3,IJK)/max(1.0d0, dLC)
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN

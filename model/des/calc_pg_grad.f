@@ -22,7 +22,7 @@
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
 ! Loop bounds for fluid grid
-      USE compar, only: IJKSTART3, IJKEND3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flags for cyclic BC with pressure drop
       use geometry, only: CYCLIC_X_PD, CYCLIC_Y_PD, CYCLIC_Z_PD
 ! Specified pressure drop
@@ -37,6 +37,7 @@
       use particle_filter, only: FILTER_WEIGHT
       use particle_filter, only: DES_INTERP_ON
 
+      use functions, only: Funijk
       use functions, only: FLUID_AT
 
       use functions, only: IS_NONEXISTENT
@@ -51,7 +52,7 @@
       implicit none
 
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, LC
+      INTEGER :: NP, IJK, LC, I, J, K
 ! Interpolation weight
       DOUBLE PRECISION :: WEIGHT
 ! Interpolated gas phase quanties.
@@ -71,8 +72,14 @@
       cPG(2) = merge(DELP_Y/YLENGTH, ZERO, CYCLIC_Y_PD)
       cPG(3) = merge(DELP_Z/ZLENGTH, ZERO, CYCLIC_Z_PD)
 
-      DO IJK=IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          P_FORCE(:,IJK) = cPG - P_FORCE(:,IJK)
+      ENDDO
+      ENDDO
       ENDDO
 
 

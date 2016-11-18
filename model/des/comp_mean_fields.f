@@ -67,7 +67,7 @@
 ! Loop counters: partciles, filter cells, phases
       INTEGER NP, M
 ! Fluid cell index
-      INTEGER IJK
+      INTEGER :: I,J,K, IJK
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
 ! PVOL times statistical weight
@@ -93,7 +93,11 @@
 ! Calculate the cell average solids velocity, the bulk density,
 ! and the void fraction.
 !----------------------------------------------------------------//
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
@@ -105,7 +109,9 @@
 
          ENDDO   ! end loop over M=1,MMAX
 
-      ENDDO     ! end loop over IJK=ijkstart3,ijkend3
+      ENDDO
+      ENDDO
+      ENDDO
 
 ! Halo exchange of solids volume fraction data.
       CALL SEND_RECV(DES_ROP_S,2)

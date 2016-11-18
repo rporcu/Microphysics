@@ -30,10 +30,9 @@
 ! Size of IJK arrays and solids phase..
       use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
-! The I, J, and K values that comprise an IJK
-      use indices, only: I_OF, J_OF, K_OF
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
+      USE functions, ONLY: funijk
       use functions, only: FLUID_AT
 ! IJK of cell to east.
       use functions, only: EAST_OF
@@ -79,17 +78,13 @@
 
          AVG_FACTOR = merge(0.25d0, 0.5d0, DO_K)
 
-!!$omp parallel do schedule(guided,50) default(none)                    &
-!!$omp shared(IJKSTART3, IJKEND3, FUNIJK_MAP_C, I_OF, J_OF,             &
-!!$omp    K_OF, DO_K, AVG_FACTOR, DRAG_AM, DRAG_BM, A_M, B_M, VOL_U)    &
-!!$omp private(IJK, I, J, K, IJMK, IJKM, IJMKM, tmp_A, tmp_B)
-         DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
             IF(.NOT.FLUID_AT(IJK)) CYCLE
-
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -113,16 +108,17 @@
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_U(IJK)
 
          ENDDO
-!!$omp end parallel do
+         ENDDO
+         ENDDO
 
       ELSE
 
-!$omp parallel do default(none) &
-!$omp private(IJK, I, IJKE, tmp_A, tmp_B) &
-!$omp shared(IJKSTART3,IJKEND3,I_OF, F_GDS, DRAG_BM, A_M, B_M, VOL_U)
-         DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IF(FLUID_AT(IJK)) THEN
-               I = I_OF(IJK)
                IJKE = EAST_OF(IJK)
 
                tmp_A = AVG_X(F_GDS(IJK), F_GDS(IJKE), I)
@@ -132,7 +128,8 @@
                B_M(IJK) = B_M(IJK) - VOL_U(IJK) * tmp_B
             ENDIF
          ENDDO
-!$omp end parallel do
+         ENDDO
+         ENDDO
       ENDIF
 
 
@@ -172,10 +169,9 @@
 ! Size of IJK arrays and solids phase..
       use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
-! The I, J, and K values that comprise an IJK
-      use indices, only: I_OF, J_OF, K_OF
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
+      USE functions, ONLY: funijk
       use functions, only: FLUID_AT
 ! IJK of cell to north.
       use functions, only: NORTH_OF
@@ -219,16 +215,12 @@
 
          AVG_FACTOR = merge(0.25d0, 0.5d0, DO_K)
 
-!!$omp parallel do schedule (guided,50) default(none)                   &
-!!$omp shared(IJKSTART3, IJKEND3, FUNIJK_MAP_C, I_OF, J_OF,             &
-!!$omp    K_OF, DO_K, AVG_FACTOR, DRAG_AM, DRAG_BM, A_M, B_M, VOL_V)    &
-!!$omp private(IJK, I, J, K, IMJK, IJKM, IMJKM, tmp_A, tmp_B)
-         DO IJK = IJKSTART3, IJKEND3
-            IF(.NOT.FLUID_AT(IJK)) CYCLE
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
+            IF(.NOT.FLUID_AT(IJK)) CYCLE
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -254,16 +246,17 @@
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_V(IJK)
 
          ENDDO
-!!$omp end parallel do
+         ENDDO
+         ENDDO
 
       ELSE
 
-!$omp parallel do default(none) &
-!$omp private(IJK, J, IJKN, tmp_a, tmp_B) &
-!$omp shared(IJKSTART3, IJKEND3, J_OF, F_GDS, DRAG_AM, DRAG_BM, A_M, B_M, VOL_V)
-         DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IF(FLUID_AT(IJK)) THEN
-               J = J_OF(IJK)
                IJKN = NORTH_OF(IJK)
 
                tmp_A = AVG_Y(F_GDS(IJK), F_GDS(IJKN), J)
@@ -272,6 +265,8 @@
                A_M(IJK,0) = A_M(IJK,0) - VOL_V(IJK) * tmp_A
                B_M(IJK) = B_M(IJK) - VOL_V(IJK) * tmp_B
             ENDIF
+         ENDDO
+         ENDDO
          ENDDO
 !$omp end parallel do
       ENDIF
@@ -308,10 +303,9 @@
 ! Size of IJK arrays and solids phase..
       use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
-! The I, J, and K values that comprise an IJK
-      use indices, only: I_OF, J_OF, K_OF
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
+      USE functions, ONLY: funijk
       use functions, only: FLUID_AT
 ! IJK of cell to top.
       use functions, only: TOP_OF
@@ -355,16 +349,12 @@
 
          AVG_FACTOR = 0.25d0
 
-!!$omp parallel do schedule (guided,50) default(none)                   &
-!!$omp shared(IJKSTART3, IJKEND3, FUNIJK_MAP_C, I_OF, J_OF,             &
-!!$omp    K_OF, AVG_FACTOR, DRAG_AM, DRAG_BM, A_M, B_M, VOL_W)          &
-!!$omp private(IJK, I, J, K, IMJK, IJMK, IMJMK, tmp_A, tmp_B)
-         DO IJK = IJKSTART3, IJKEND3
-            IF(.NOT.FLUID_AT(IJK)) CYCLE
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
+            IF(.NOT.FLUID_AT(IJK)) CYCLE
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -384,16 +374,17 @@
             B_M(IJK) = B_M(IJK) + tmp_B*VOL_W(IJK)
 
          ENDDO
-!!$omp end parallel do
+         ENDDO
+         ENDDO
 
       ELSE
 
-!$omp parallel do default(none) &
-!$omp private(IJK, K, IJKT, tmp_A, tmp_B) &
-!$omp shared(IJKSTART3,IJKEND3,K_OF, F_GDS, DRAG_BM, A_M, B_M, VOL_W)
-         DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IF(FLUID_AT(IJK)) THEN
-               K = K_OF(IJK)
                IJKT = TOP_OF(IJK)
 
                tmp_A = AVG_Z(F_GDS(IJK), F_GDS(IJKT), K)
@@ -403,7 +394,8 @@
                B_M(IJK) = B_M(IJK) - VOL_W(IJK) * tmp_B
             ENDIF
          ENDDO
-!$omp end parallel do
+         ENDDO
+         ENDDO
 
       ENDIF
 

@@ -23,8 +23,6 @@
       use discretelement, only: XE, YN, ZT
 ! Flag for 2D simulations.
       use geometry, only: NO_K
-! The start and end indices of IJK loops
-      use compar, only: IJKStart3, IJKEnd3
 ! The Upper and Loper indices covered by the current process.
       use compar, only: ISTART3, IEND3
       use compar, only: JSTART3, JEND3
@@ -161,9 +159,11 @@
 ! in the cell previously. If different reallocate. Store the particle
 ! ids
 ! ---------------------------------------------------------------->>>
-!!$omp parallel do if(ijkend3 .ge. 2000) default(shared)           &
-!!$omp private(ijk,npic) !schedule (guided,50)
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
 ! checking all cells (including ghost cells); updating entering/exiting
 ! particle regions
@@ -177,7 +177,8 @@
             IF (NPIC.GT.0) ALLOCATE(PIC(IJK)%p(NPIC))
          ENDIF
       ENDDO
-!!$omp end parallel do
+      ENDDO
+      ENDDO
 
       allocate( PARTICLE_COUNT(DIMENSION_3) )
       PARTICLE_COUNT(:) = 1

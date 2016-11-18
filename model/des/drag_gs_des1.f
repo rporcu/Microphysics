@@ -369,11 +369,12 @@
       use functions, only: IM_OF, JM_OF, KM_OF
       use indices, only: I_OF
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
       use functions, only: FLUID_AT
+      use functions, only: funijk
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -396,10 +397,14 @@
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Indices of adjacent cells
-      INTEGER :: IJK, IMJK, IJMK, IJKM
+      INTEGER :: i,j,k, IJK, IMJK, IJMK, IJKM
 
 ! Calculate the cell center gas velocity components.
-      DO IJK=IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IF(FLUID_AT(IJK)) THEN
             IMJK = IM_OF(IJK)
             IF(CUT_U_TREATMENT_AT(IMJK)) THEN
@@ -433,6 +438,8 @@
             Vc(IJK) = ZERO
             Wc(IJK) = ZERO
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN

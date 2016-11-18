@@ -38,9 +38,11 @@
 ! Flag: Indexed cell contains fluid
       USE functions, only: FLUID_AT
 ! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       use functions, only: FLUID_AT
+      use functions, only: FUNIJK
+
 ! The I, J, and K values that comprise an IJK
       use indices, only: I_OF, J_OF, K_OF
 ! Rank ID of current process
@@ -59,7 +61,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indices
-      INTEGER :: IJK, M, LC
+      INTEGER :: I,j,k,IJK, M, LC
 ! Total solids volume fraction
       DOUBLE PRECISION SUM_EPS
 ! Integer Error Flag
@@ -71,11 +73,11 @@
 
 ! Calculate gas volume fraction from solids volume fraction:
 !---------------------------------------------------------------------//
-!$omp parallel do if(ijkend3 .ge. 2000) default(none) reduction(+:IER) &
-!$omp shared(IJKSTART3, IJKEND3, DES_CONTINUUM_COUPLED, MMAX, &
-!$omp    EP_G, RO_G, ROP_G, DES_ROP_S, RO_S0) &
-!$omp private(IJK, SUM_EPs, M)
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 ! Skip wall cells.
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 ! Initialize EP_g and the accumulator.
@@ -93,7 +95,8 @@
             IF(EP_G(IJK) <= ZERO .OR. EP_G(IJK) > ONE) IER = IER + 1
          ENDIF
       ENDDO
-!omp end parallel do
+      ENDDO
+      ENDDO
 
 
       CALL GLOBAL_ALL_SUM(IER)
@@ -112,7 +115,11 @@
          'calculated. A .vtp',/'file will be written and the code ',   &
          'will exit. Fluid cell details:')
 
-         DO IJK=IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IF(.NOT.FLUID_AT(IJK)) CYCLE
             IF(EP_G(IJK) > ZERO .AND. EP_G(IJK) <= ONE) CYCLE
 
@@ -130,6 +137,8 @@
                   trim(iVal(DES_POS_NEW(M,3)))
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDDO
+         ENDDO
+         ENDDO
          ENDDO
 
  1101 FORMAT(/3x,'Fluid Cell IJK: ',A,6x,'I/J/K: (',A,',',A,',',A,')',/&
