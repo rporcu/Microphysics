@@ -1035,6 +1035,7 @@
 
       IMPLICIT NONE
       INTEGER :: IJK
+      INTEGER :: I,J,K
 
 
 
@@ -1045,8 +1046,13 @@
       call send_recv(Ye_int,2)
       call send_recv(Zt_int,2)
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          CALL SET_SNAP_FLAG(IJK,'SCALAR',Xn_int(IJK),Ye_int(IJK),Zt_int(IJK))
+      END DO
+      END DO
       END DO
 
       call SEND_RECEIVE_1D_LOGICAL(SNAP,2)
@@ -1057,8 +1063,13 @@
       call send_recv(Ye_int,2)
       call send_recv(Zt_int,2)
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          CALL REMOVE_INTERSECT_FLAG(IJK)
+      END DO
+      END DO
       END DO
 
       call SEND_RECEIVE_1D_LOGICAL(SNAP,2)
@@ -1909,10 +1920,15 @@
 
 ! Overwrite small values to set them to zero
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(DABS(F_AT(IJK))<TOL_STL) THEN
             F_AT(IJK)=ZERO
          ENDIF
+      END DO
+      END DO
       END DO
 
 ! Propagates node values to all interior cells
@@ -1930,7 +1946,10 @@
 !  Clean-up intersection flags in preparaton of small cells removal
 !======================================================================
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
 !        IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -1940,6 +1959,8 @@
 
 !        ENDIF
 
+      END DO
+      END DO
       END DO
 
       call send_recv(F_AT,2)
@@ -1970,14 +1991,12 @@
 !
          DO N_PROP=1,N_PROPMAX
 
-            DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
-! Aaron
-               I = I_OF(IJK)
-               J = J_OF(IJK)
-               K = K_OF(IJK)
                IF(.NOT.IS_ON_myPE_plus1layer(I,J,K))cycle
-! End aaron
 
                IF(F_AT(IJK)/=UNDEFINED.AND.F_AT(IJK)/=ZERO) THEN
 
@@ -2001,8 +2020,9 @@
 
                ENDIF
 
-            ENDDO ! IJK Loop
-
+            ENDDO
+            ENDDO
+            ENDDO
 
 ! Communicate F_AT accross processors for DMP runs
             call send_recv(F_AT,2)
@@ -2010,8 +2030,15 @@
 ! Count the number of undefined values of F_AT
 ! and exit loop if all values of F_AT have been propagated
             N_UNDEFINED = 0
-            DO IJK = IJKSTART3, IJKEND3
+
+      DO K = kstart3, kend3
+      DO J = jstart3, jend3
+      DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
+
                IF(INTERIOR_CELL_AT(IJK).AND.F_AT(IJK)==UNDEFINED) N_UNDEFINED = N_UNDEFINED + 1
+            ENDDO
+            ENDDO
             ENDDO
 
             call global_all_sum( N_UNDEFINED, NTOTAL_UNDEFINED )

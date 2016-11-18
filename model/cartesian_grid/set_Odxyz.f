@@ -43,11 +43,13 @@
       ENDIF
 10    FORMAT(1X,A)
 
-      DO IJK = IJKSTART3, IJKEND3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
+
 
 !======================================================================
 !  1/dx at East face of U-Momentume cell
@@ -121,6 +123,8 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
 
       RETURN
@@ -173,11 +177,11 @@
       ENDIF
 10    FORMAT(1X,A)
 
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
 
 !======================================================================
 !  1/dx at East face of V-Momentume cell
@@ -253,6 +257,8 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
 
 
@@ -303,11 +309,11 @@
       ENDIF
 10    FORMAT(1X,A)
 
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
 
 !======================================================================
 !  1/dx at East face of V-Momentume cell
@@ -375,6 +381,8 @@
             ONEoDZ_T_W(IJK) = ZERO
          ENDIF
 
+      END DO
+      END DO
       END DO
 
 

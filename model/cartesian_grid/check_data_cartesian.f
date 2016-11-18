@@ -977,6 +977,7 @@
 ! Local variables
 !-----------------------------------------------
       INTEGER :: IJK,IJKW,IJKS,IJKB,M
+      INTEGER :: I,J,K
       INTEGER :: IJKWW,IJKSS,IJKBB
       INTEGER :: BCV,BCV_U,BCV_V,BCV_W
 !-----------------------------------------------
@@ -1011,7 +1012,11 @@
          'for M=',I4,' must be specified, including when it is zero.',/1X, &
          ' Please correct the mfix.dat file.')
 
-      DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          BCV = BC_ID(IJK)
          IF(BCV>0) THEN
 
@@ -1069,9 +1074,15 @@
             ENDIF
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
 
-      DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          BCV = BC_ID(IJK)
          IF(BCV>0) THEN
             IF(BC_TYPE(BCV)  == 'CG_MI') THEN
@@ -1275,6 +1286,8 @@
 
          ENDIF
 
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN
@@ -1967,6 +1980,7 @@
 !
 !     loop/variable indices
       INTEGER :: IJK, BCV
+      INTEGER :: I,J,K
 !
       INTEGER :: iproc
       INTEGER :: NPS,PSV
@@ -1997,7 +2011,11 @@
 
 ! Next loop through all cells, and when a cut-cell with CG_MI is found, add a point source in this cell
 
-            DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
                BCV = BC_ID(IJK)
                IF(BCV>0) THEN
                   IF(CG_MI_CONVERTED_TO_PS(BCV).AND.INTERIOR_CELL_AT(IJK).AND.VOL(IJK)>ZERO) THEN
@@ -2045,7 +2063,9 @@
                   ENDIF
                ENDIF
 
-            ENDDO  ! IJK Loop
+            ENDDO
+            ENDDO
+            ENDDO
 
          endif  ! Work done by each processor in same order as rank
 
@@ -2139,6 +2159,7 @@
 !
 !     loop/variable indices
       INTEGER :: IJK, BCV
+      INTEGER :: I,J,K
 !
       INTEGER :: NPS,PSV
 !
@@ -2170,7 +2191,11 @@
 ! Loop though each cell. When a CG_MI is found convert it to a single point source
 ! and change the BC_TYPE to Free-slip
 
-      DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          BCV = BC_ID(IJK)
          IF(BCV>0) THEN
             IF(CG_MI_CONVERTED_TO_PS(BCV).AND.INTERIOR_CELL_AT(IJK).AND.VOL(IJK)>ZERO) THEN
@@ -2258,6 +2283,8 @@
 !               PS_DEFINED(NPS) = .FALSE.
             ENDIF
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 !      DO BCV = 1, DIMENSION_BC

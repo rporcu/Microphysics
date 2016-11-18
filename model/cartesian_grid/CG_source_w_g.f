@@ -100,14 +100,11 @@
       IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
 !
 !
-!!!$omp  parallel do private( I, J, K, IJK, IJKT, ISV, Sdp, V0, Vpm, Vmt, Vbf, &
-!!!$omp&  PGT, ROGA, IMJK, IJKP, IMJKP, IJKW, IJKTE, IJKTW, IM, IPJK,  &
-!!!$omp&  CTE, CTW, SXZB, EPMUOX, VXZA, VXZB, UGT, VCOA, VCOB, IJKE,&
-!!!$omp&  MUGA, ROPGA, EPGA, LINE)
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IJKT = TOP_OF(IJK)
          EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
          IF (IP_AT_T(IJK)) THEN
@@ -242,6 +239,8 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 
       RETURN
       END SUBROUTINE CG_SOURCE_W_G
@@ -312,7 +311,7 @@
 !-----------------------------------------------
 !
 !                      Indices
-      INTEGER          IJK, IJKB
+      INTEGER i,j,k,         IJK, IJKB
 !
 !                      Solids phase
       INTEGER          M
@@ -337,7 +336,11 @@
 !
       M = 0
 
-      DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
          BCV = BC_W_ID(IJK)
 
@@ -565,6 +568,8 @@
 
 
       ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
 
@@ -573,8 +578,3 @@
 !=======================================================================
 
       END SUBROUTINE CG_SOURCE_W_G_BC
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 350 Changed do loop limits: 1,kmax2->kmin3,kmax3
-!// 360 Check if i,j,k resides on current processor

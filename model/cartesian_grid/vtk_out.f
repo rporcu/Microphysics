@@ -170,8 +170,14 @@
 
        IF(VTK_IJK(VTK_REGION)) THEN
          Allocate(IJK_ARRAY(DIMENSION_3))
-         DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IJK_ARRAY(IJK) = DBLE(IJK)
+         ENDDO
+         ENDDO
          ENDDO
          CALL WRITE_SCALAR_IN_VTU_BIN('IJK',IJK_ARRAY,PASS)
          DeAllocate(IJK_ARRAY)
@@ -1583,6 +1589,7 @@
       IMPLICIT NONE
 
       INTEGER :: IJK,I,J,K,L
+      INTEGER :: lI,lJ,lK
       INTEGER :: IJK_OFFSET
 
       INTEGER :: iproc,IERR
@@ -1665,7 +1672,11 @@
          SHIFTED_CONNECTIVITY = SHIFTED_CONNECTIVITY - IJKEND3 + IJKMAX3 + disp(myPE)
       END WHERE
 
-      DO IJK = IJKSTART3,IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
+
          DO L=1,NUMBER_OF_NODES(IJK)
             IF(CONNECTIVITY(IJK,L) <= IJKEND3) THEN
                I = I_OF(CONNECTIVITY(IJK,L))
@@ -1674,6 +1685,8 @@
                SHIFTED_CONNECTIVITY(IJK,L) = funijk_gl(I,J,K)
             ENDIF
          ENDDO
+      ENDDO
+      ENDDO
       ENDDO
 
 
@@ -1769,6 +1782,7 @@
       IMPLICIT NONE
 
       INTEGER :: IJK,I,J,K,L,NODE
+      INTEGER :: li,lj,lk
 
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: SHIFTED_CONNECTIVITY
 
@@ -1805,7 +1819,10 @@
 
 
 ! This is a shoter version of Get_cut_cell_Flags
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
 
 !======================================================================
 !  Get coordinates of eight nodes
@@ -1858,6 +1875,8 @@
          ENDIF
 
       ENDDO
+      ENDDO
+      ENDDO
 
 
 !======================================================================
@@ -1872,7 +1891,10 @@
       SHIFTED_CONNECTIVITY = CONNECTIVITY
 
 ! Replace local node index by global node index before gathering the array
-      DO IJK = IJKSTART3,IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          DO L=1,NUMBER_OF_NODES(IJK)
             IF(CONNECTIVITY(IJK,L) <= IJKEND3) THEN
                I = I_OF(CONNECTIVITY(IJK,L))
@@ -1881,6 +1903,8 @@
                SHIFTED_CONNECTIVITY(IJK,L) = funijk_gl(I,J,K)
             ENDIF
          ENDDO
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Allocate, initialize and gather arrays
@@ -2009,7 +2033,7 @@
 
       IMPLICIT NONE
 
-      INTEGER :: IJK
+      INTEGER :: IJK, li, lj, lk
 
       INTEGER :: IERR
 
@@ -2055,7 +2079,10 @@
       MIN_AXY =   LARGE_NUMBER
       MAX_AXY = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(STANDARD_CELL_AT(IJK)) THEN              ! STANDARD CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL(IJK))
@@ -2068,6 +2095,8 @@
             MAX_AXY =   DMAX1(MAX_AXY,AXY(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2100,7 +2129,10 @@
       MIN_AXY =   LARGE_NUMBER
       MAX_AXY = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(CUT_CELL_AT(IJK)) THEN                   ! CUT CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL(IJK))
@@ -2113,6 +2145,8 @@
             MAX_AXY =   DMAX1(MAX_AXY,AXY(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2150,7 +2184,11 @@
       MIN_AXY =   LARGE_NUMBER
       MAX_AXY = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(STANDARD_U_CELL_AT(IJK)) THEN              ! STANDARD CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL_U(IJK))
@@ -2163,6 +2201,8 @@
             MAX_AXY =   DMAX1(MAX_AXY,AXY_U(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2193,7 +2233,10 @@
       MIN_CUT =   LARGE_NUMBER
       MAX_CUT = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(CUT_U_CELL_AT(IJK).AND.(.NOT.WALL_U_AT(IJK))) THEN      ! CUT CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL_U(IJK))
@@ -2208,6 +2251,8 @@
             MAX_CUT =   DMAX1(MAX_CUT,AREA_U_CUT(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2245,7 +2290,10 @@
       MIN_AXY =   LARGE_NUMBER
       MAX_AXY = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(STANDARD_V_CELL_AT(IJK)) THEN              ! STANDARD CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL_V(IJK))
@@ -2258,6 +2306,8 @@
             MAX_AXY =   DMAX1(MAX_AXY,AXY_V(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2288,7 +2338,10 @@
       MIN_CUT =   LARGE_NUMBER
       MAX_CUT = - LARGE_NUMBER
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
          IF(CUT_V_CELL_AT(IJK).AND.(.NOT.WALL_V_AT(IJK))) THEN      ! CUT CELLS
 
             MIN_VOL =   DMIN1(MIN_VOL,VOL_V(IJK))
@@ -2303,6 +2356,8 @@
             MAX_CUT =   DMAX1(MAX_CUT,AREA_V_CUT(IJK))
 
          ENDIF
+      END DO
+      END DO
       END DO
 
       call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2343,7 +2398,10 @@
          MIN_AXY =   LARGE_NUMBER
          MAX_AXY = - LARGE_NUMBER
 
-         DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
             IF(STANDARD_W_CELL_AT(IJK)) THEN              ! STANDARD CELLS
 
                MIN_VOL =   DMIN1(MIN_VOL,VOL_W(IJK))
@@ -2356,6 +2414,8 @@
                MAX_AXY =   DMAX1(MAX_AXY,AXY_W(IJK))
 
             ENDIF
+         END DO
+         END DO
          END DO
 
          call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )
@@ -2386,7 +2446,10 @@
          MIN_CUT =   LARGE_NUMBER
          MAX_CUT = - LARGE_NUMBER
 
-         DO IJK = IJKSTART3, IJKEND3
+      DO lK = kstart3, kend3
+      DO lJ = jstart3, jend3
+      DO lI = istart3, iend3
+      IJK = FUNIJK(li,lj,lk)
             IF(CUT_W_CELL_AT(IJK).AND.(.NOT.WALL_W_AT(IJK))) THEN      ! CUT CELLS
 
                MIN_VOL =   DMIN1(MIN_VOL,VOL_W(IJK))
@@ -2401,6 +2464,8 @@
                MAX_CUT =   DMAX1(MAX_CUT,AREA_W_CUT(IJK))
 
             ENDIF
+         END DO
+         END DO
          END DO
 
          call global_min(MIN_VOL, GLOBAL_MIN_VOL,  PE_IO, ierr )

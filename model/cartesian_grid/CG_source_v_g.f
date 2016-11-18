@@ -99,10 +99,11 @@
       M = 0
       IF (.NOT.MOMENTUM_Y_EQ(0)) RETURN
 !
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IJKN = NORTH_OF(IJK)
          EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
          IF (IP_AT_N(IJK)) THEN
@@ -238,6 +239,8 @@
 
          ENDIF
       END DO
+      END DO
+      END DO
 !
       RETURN
       END SUBROUTINE CG_SOURCE_V_G
@@ -333,7 +336,11 @@
 !
       M = 0
 
-      DO IJK = ijkstart3, ijkend3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
          BCV = BC_V_ID(IJK)
 
@@ -439,10 +446,6 @@
                   ELSE                              ! partial slip
 
                      B_M(IJK) = ZERO
-
-                     I = I_OF(IJK)
-                     J = J_OF(IJK)
-                     K = K_OF(IJK)
 
                      IM = I - 1
                      JM = J - 1
@@ -631,6 +634,8 @@
 
          END SELECT
 
+      ENDDO
+      ENDDO
       ENDDO
 
 

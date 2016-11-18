@@ -51,13 +51,13 @@
 !-----------------------------------------------
 !
 !      print*,'top of cg_set_outflow'
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
       IF(INTERIOR_CELL_AT(IJK)) THEN
 
-
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
 
 !//SP Check if current i,j,k resides on this PE
          IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
@@ -295,6 +295,8 @@
          ENDIF
 
       ENDIF
+      END DO
+      END DO
       END DO
 
 !      print*,'bottom of cg_set_outflow'

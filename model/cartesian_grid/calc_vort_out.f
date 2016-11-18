@@ -35,11 +35,11 @@
       DOUBLE PRECISION,DIMENSION(3,3) :: OMEGA,SS,AA
       DOUBLE PRECISION,DIMENSION(4) :: POLY
 
-      DO IJK = IJKSTART3, IJKEND3
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
 
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         IJK = FUNIJK(i,j,k)
 
          IM = I - 1
          IP = I + 1
@@ -319,6 +319,8 @@
          ENDIF
 
       END DO
+      END DO
+      END DO
 
       RETURN
 
@@ -483,5 +485,3 @@
       RETURN
 
       END SUBROUTINE BAIRSTOW
-
-

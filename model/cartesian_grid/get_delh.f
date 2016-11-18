@@ -758,7 +758,7 @@
            do i = istart3, iend3
            ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,IJKEND3 - IJKSTART3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,DIMENSION_3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
             DWALL(IJK) = UNDEFINED

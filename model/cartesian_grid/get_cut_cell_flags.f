@@ -15,7 +15,6 @@
   SUBROUTINE SET_3D_CUT_CELL_FLAGS
 
       USE compar, ONLY: mype, pe_io, istart1, iend1, jstart1, jend1, kstart1, kend1
-      USE compar, ONLY: ijkstart3, ijkend3
       USE cutcell
       USE indices, ONLY: i_of, j_of, k_of
       USE functions, ONLY: funijk, ip_of, jp_of, kp_of, bottom_of, south_of, west_of, fluid_at, is_on_mype_wobnd
@@ -178,7 +177,7 @@
 
           IF(POTENTIAL_CUT_CELL_AT(IJK))  THEN
 
-         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,dimension_3 + 1,'C')
 
 !======================================================================
 !  Get coordinates of eight nodes
@@ -600,18 +599,24 @@
             ENDDO
          ENDDO
 
-      ENDDO 
-      ENDDO 
-      ENDDO 
+      ENDDO
+      ENDDO
+      ENDDO
 
 !      print*,'After removing duplicate nodes:'
-      DO IJK = ijkstart3, ijkend3,-1
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          print*,'==========================================================='
          print*,'IJK,  I,J=',IJK,I_OF(IJK),J_OF(IJK)
          print*,'NUMBER_OF_NODES=',NUMBER_OF_NODES(IJK)
          DO NODE = 1,NUMBER_OF_NODES(IJK)
             print*,'CNCT=',NODE,CONNECTIVITY(IJK,NODE), &
                  SCALAR_NODE_XYZ(CONNECTIVITY(IJK,NODE),1),SCALAR_NODE_XYZ(CONNECTIVITY(IJK,NODE),2)
+         ENDDO
+         ENDDO
          ENDDO
          print*,''
       ENDDO
@@ -686,7 +691,6 @@
 
       USE compar, ONLY: mype, pe_io
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: ijkstart3, ijkend3
       USE functions, only : funijk
       USE cutcell
       USE geometry, ONLY: no_k, axy_u, ayz_u, vol_u, axz_u
@@ -750,7 +754,7 @@
            do i = istart3, iend3
            ijk = funijk(i,j,k)
 
-           CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
+           CALL WRITE_PROGRESS_BAR(IJK,dimension_3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -933,7 +937,6 @@
 
       USE compar, only: mype, pe_io
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, only: funijk
       USE geometry, ONLY: no_k, axy_v, axz_v, ayz_v, vol_v
@@ -995,7 +998,7 @@
          do j = jstart3, jend3
            do i = istart3, iend3
              ijk = funijk(i,j,k)
-             CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
+             CALL WRITE_PROGRESS_BAR(IJK,dimension_3 + 1,'C')
 
              IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -1180,7 +1183,6 @@
 
       USE compar, ONLY: mype, pe_io
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, only: funijk
       USE geometry, ONLY: axy_w, axz_w, ayz_w, vol_w
@@ -1243,7 +1245,7 @@
            do i = istart3, iend3
              ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,dimension_3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -1403,7 +1405,6 @@
 
       USE compar, only: mype, pe_io
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, ONLY: funijk
       USE geometry, ONLY: do_k
@@ -1436,7 +1437,7 @@
            do i = istart3, iend3
              ijk = funijk(i,j,k)
 
-         CALL WRITE_PROGRESS_BAR(IJK,ijkend3 - ijkstart3 + 1,'C')
+         CALL WRITE_PROGRESS_BAR(IJK,dimension_3 + 1,'C')
 
          IF(INTERIOR_CELL_AT(IJK)) THEN
 
@@ -1965,7 +1966,6 @@
 
       USE compar, only: mype, pe_io
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: ijkstart3, ijkend3
       USE cutcell
       USE functions, only: funijk, bottom_of, south_of, west_of
       USE geometry, ONLY: dx, dy, dz, do_k, imin3, imax3, jmin3, jmax3, kmin3, kmax3, flag, axy, axz, ayz, vol, no_k
@@ -2166,7 +2166,7 @@
 
 !      call SEND_RECEIVE_1D_LOGICAL(SNAP,2)
       IF(MyPE == PE_IO) THEN
-         WRITE(*,*)'DONE ESTIMATING POTENTIAL SCALAR CUT CELLS.',NUMBER_OF_POTENTIAL_CUT_CELLS,ijkend3
+         WRITE(*,*)'DONE ESTIMATING POTENTIAL SCALAR CUT CELLS.',NUMBER_OF_POTENTIAL_CUT_CELLS
       ENDIF
 
       RETURN
