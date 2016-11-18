@@ -1005,7 +1005,7 @@
       integer function kminus(i,j,k)
 
       use compar, only: kstart3
-      use geometry, only  : kmin1
+      use geometry, only  : kmin1,kmax1,cyclic_z
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -1018,6 +1018,8 @@
          kminus = max(kstart3, k-1)
       end if
 
+      if (cyclic_z .and. (kminus < kmin1)) kminus = kmax1
+
       end function kminus
 
       ! ************************************************
@@ -1025,7 +1027,7 @@
       integer function kplus(i,j,k)
 
       use compar, only: kend3
-      use geometry, only  : kmax1
+      use geometry, only  : kmin1,kmax1,cyclic_z
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -1037,6 +1039,8 @@
       else
          kplus = min(kend3, k+1)
       end if
+
+      if (cyclic_z .and. (kplus > kmax1)) kplus = kmin1
 
       end function kplus
 
