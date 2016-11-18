@@ -22,20 +22,25 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I, IJK, IJKE
+      INTEGER :: i,j,k, IJK, IJKE
 
 ! Calculate the combined effect for all discrete solids.
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
-         DO IJK = IJKSTART3, IJKEND3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
             IF(IP_AT_E(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               I = I_OF(IJK)
                IJKE = EAST_OF(IJK)
                VXF_GDS(IJK) = VOL_U(IJK) *                             &
                   AVG_X(F_GDS(IJK),F_GDS(IJKE),I)
             ENDIF
-         ENDDO
+             end do
+           end do
+         end do
       ENDIF
 
       RETURN
@@ -65,20 +70,25 @@
 ! Local Variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: J, IJK, IJKN
+      INTEGER :: i,j,k, IJK, IJKN
 !-----------------------------------------------
 
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
-         DO IJK = IJKSTART3, IJKEND3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
             IF(IP_AT_N(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               J = J_OF(IJK)
                IJKN = NORTH_OF(IJK)
                VXF_GDS(IJK) = VOL_V(IJK) *                             &
                   AVG_Y(F_GDS(IJK),F_GDS(IJKN),J)
             ENDIF
-         ENDDO
+             end do
+           end do
+         end do
       ENDIF
 
       RETURN
@@ -108,20 +118,26 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: K, IJK, IJKT
+      INTEGER :: i, j, k, IJK, IJKT
 !-----------------------------------------------
 
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
             IF (IP_AT_T(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               K = K_OF(IJK)
                IJKT = TOP_OF(IJK)
                VXF_GDS(IJK) = VOL_W(IJK) *                             &
                   AVG_Z(F_GDS(IJK),F_GDS(IJKT),K)
             ENDIF
-         ENDDO
+             end do
+           end do
+         end do
       ENDIF
 
       RETURN

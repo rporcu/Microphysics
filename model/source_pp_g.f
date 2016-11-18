@@ -139,23 +139,29 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
          ENDIF   ! end if/else branch fluid_at(ijk)
-      ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
-      ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
-      ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
+      ENDDO
+      ENDDO
+      ENDDO
 
 ! make correction for compressible flows
       IF (RO_G0 == UNDEFINED) THEN
          fac = UR_FAC(1)  !since p_g = p_g* + ur_fac * pp_g
 
-         DO IJK = ijkstart3, ijkend3
-            IF (FLUID_AT(IJK)) THEN
+         do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
 
-               A_M(IJK,0) = A_M(IJK,0) - &
-                  fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
-                  EP_G(IJK)*VOL(IJK)*ODT
+               ijk = funijk(i,j,k)
 
-            ENDIF   !end if (fluid_at(ijk))
-         ENDDO    ! end do (ijk=ijkstart3,ijkend3)
+               if (fluid_at(IJK)) THEN
+                  A_M(IJK,0) = A_M(IJK,0) - &
+                     fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
+                     EP_G(IJK)*VOL(IJK)*ODT
+               end if
+
+             end do
+           end do
+         end do
       ENDIF   ! end if (ro_g0 == undefined); i.e., compressible flow
 
 
@@ -163,7 +169,11 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! boundaries.  Because the P' at such boundaries is zero we may set the
 ! coefficient in the neighboring fluid cell to zero without affecting
 ! the linear equation set.
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
          IF (FLUID_AT(IJK)) THEN
             IMJK = IM_OF(IJK)
             IPJK = IP_OF(IJK)
@@ -179,7 +189,9 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             if(p_flow_at(ijkm)) A_m(IJK,B) = ZERO
             if(p_flow_at(ijkp)) A_m(IJK,T) = ZERO
          ENDIF
-      ENDDO
+          end do
+        end do
+      end do
 
 ! Specify P' to zero for incompressible flows. Check set_bc0
 ! for details on selection of IJK_P_g.

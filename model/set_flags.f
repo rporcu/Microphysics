@@ -51,14 +51,10 @@
 ! Flag values greater than 100 are considered to be wall cells
 ! (see function.inc).
 
-
-
 ! make the wall cells adjacent to flow boundaries free-slip wall to
 ! avoid unphysical strain rates in fluid cells adjacent to the flow
 ! boundary
 ! ---------------------------------------------------------------->>>
-!!$omp  parallel do private( IJK) &
-!!$omp  schedule(static)
       DO i = istart4, iend4
          DO j = jstart4, jend4
             DO k = kstart4, kend4
@@ -95,9 +91,12 @@
 ! on the corresponding character value of icbc_flag.  By this point the
 ! icbc_flag has been defined in all cells
 ! ---------------------------------------------------------------->>>
-!!$omp  parallel do private( IJK) &
-!!$omp&  schedule(static)
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
+
          SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
          CASE ('.')
             FLAG(IJK) = 1
@@ -124,10 +123,8 @@
          CASE DEFAULT
 
 ! Access to only one thread at a time
-!!$omp       critical
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000) IJK, ICBC_FLAG(IJK)
             call mfix_exit(myPE)
-!!$omp       end critical
          END SELECT
 ! ----------------------------------------------------------------<<<
 
@@ -135,9 +132,9 @@
          FLAG_E(IJK) = UNDEFINED_I
          FLAG_N(IJK) = UNDEFINED_I
          FLAG_T(IJK) = UNDEFINED_I
-      ENDDO
-
-
+          end do
+        end do
+      end do
 
       IF (MYPE.EQ.PE_IO) THEN
          ALLOCATE (ARR1(IJKMAX3))
@@ -217,16 +214,17 @@
       allocate( flag_temp(flag_size) )
 
 
-      DO IJK = ijkstart3,ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
          IMJK = IM_OF(IJK)
          IJMK = JM_OF(IJK)
          IJKM = KM_OF(IJK)
          IPJK = IP_OF(IJK)
          IJPK = JP_OF(IJK)
          IJKP = KP_OF(IJK)
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
          IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
@@ -291,7 +289,9 @@
 
          ENDIF   ! end if/else (wall_at(ijk)/fluid_at(ijk))
 
-      ENDDO    ! end do loop (ijk = ijkstart3,ijkend3)
+          end do
+        end do
+      end do
 ! ----------------------------------------------------------------<<<
 
 ! Fill the ghost layers using gather and scatter

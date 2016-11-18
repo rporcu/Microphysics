@@ -33,12 +33,15 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! Indicies
+! Indices
+      integer :: i,j,k
       INTEGER :: IJK, IMJK, IJMK, IJKM
 
-!!$omp  parallel do private( IMJK, IJMK, IJKM)
+      do k = kstart3, kend3
+        do j = jstart3, jend3
+          do i = istart3, iend3
 
-      DO IJK = ijkstart3, ijkend3
+          ijk = funijk(i,j,k)
 
          IF (.NOT.WALL_AT(IJK)) THEN
             IF (IP_AT_E(IJK)) U_G(IJK) = ZERO
@@ -58,9 +61,9 @@
             IF (.NOT.(CYCLIC_AT(IJK) .AND. (K_OF(IJK)==KMAX2 .OR. &
                 K_OF(IJK)==KMAX3))) W_G(IJKM) = ZERO
          ENDIF
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
 
-
-      RETURN
+          end do
+        end do
+      end do
 
       END SUBROUTINE ZERO_NORM_VEL

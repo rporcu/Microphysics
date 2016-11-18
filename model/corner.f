@@ -27,8 +27,8 @@
 
 !
 !                      indices
-      INTEGER          IJK, IMJK, IJMK, IJKM, IPJK, IJPK, &
-                      IJKP
+      INTEGER          IJK, IMJK, IJMK, IJKM, IPJK, IJPK, IJKP
+      INTEGER          i, j, k
 !
 !                      number of faces adjacent to a fluid cell
       INTEGER          NUM
@@ -46,7 +46,12 @@
 
       NCORN = 0
 !
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+           ijk = funijk(i,j,k)
+
          IF (WALL_AT(IJK).AND..NOT.CYCLIC_AT(IJK)) THEN
 !
 !----------------------------------------------------------------
@@ -233,7 +238,10 @@
             ENDIF
 !
          ENDIF
-      END DO
+          end do
+        end do
+      end do
+
       IF (NCORN > 0) THEN
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
 !
@@ -296,7 +304,3 @@
 !
       RETURN
       END SUBROUTINE ADDCORN
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 350 Changed do loop limits: 1,ijkmax2-> ijkstart3, ijkend3

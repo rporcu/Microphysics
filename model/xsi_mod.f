@@ -20,7 +20,7 @@
 ! Modules
 !---------------------------------------------------------------------//
 
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       USE discretization, only: phi_c_of
       USE discretization, only: superbee
@@ -34,6 +34,7 @@
 
       USE functions, only: east_of, west_of, north_of, south_of
       USE functions, only: top_of, bottom_of
+      USE functions, only: funijk
 
       USE geometry, only: do_k
       USE geometry, only: odx, odx_e, ody, ody_n, odz, odz_t
@@ -89,18 +90,23 @@
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)
 
-!$omp    parallel do default(none) private(IJK) shared(ijkstart3, ijkend3, u, v, w, xsi_e, xsi_n, xsi_t, do_k)
-          DO IJK = ijkstart3, ijkend3
+       do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+             ijk = funijk(i,j,k)
              XSI_E(IJK) = XSI_func(U(IJK),ZERO)
              XSI_N(IJK) = XSI_func(V(IJK),ZERO)
              IF (DO_K) XSI_T(IJK) = XSI_func(W(IJK),ZERO)
-          ENDDO
-
+           end do
+         end do
+       end do
 
        CASE (2)                               !Superbee
 
-!!!$omp    parallel do private(IJK, IJKC,IJKD,IJKU, PHI_C,DWF)
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -142,13 +148,16 @@
                 DWF = SUPERBEE(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
-
+              end do
+            end do
+          end do
 
        CASE (3)                               !SMART
 
-!!!$omp    parallel do private(IJK, IJKC,IJKD,IJKU, PHI_C,DWF)
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -190,15 +199,17 @@
                 DWF = SMART(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
-
+              end do
+            end do
+          end do
 
        CASE (4)                               !ULTRA-QUICK
 
-!!!$omp    parallel do private(IJK, I,J,K, IJKC,IJKD,IJKU, PHI_C,DWF,CF)
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
-             I = I_OF(IJK)
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = EAST_OF(IJK)
@@ -213,7 +224,6 @@
              DWF = ULTRA_QUICK(PHI_C,CF)
              XSI_E(IJK) = XSI_func(U(IJK),DWF)
 
-             J = J_OF(IJK)
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = NORTH_OF(IJK)
@@ -229,7 +239,6 @@
              XSI_N(IJK) = XSI_func(V(IJK),DWF)
 
              IF (DO_K) THEN
-                K = K_OF(IJK)
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
                    IJKD = TOP_OF(IJK)
@@ -244,18 +253,18 @@
                 DWF = ULTRA_QUICK(PHI_C,CF)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
+              end do
+            end do
+          end do
 
 
        CASE (5)                               !QUICKEST
 
-!!!$omp    parallel do &
-!!!$omp&   private(IJK,I,J,K, IJKC,IJKD,IJKU, &
-!!!$omp&           ODXC,ODXUC, PHI_C,CF,DWF, &
-!!!$omp&           ODYC,ODYUC,  ODZC,ODZUC )
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
-             I = I_OF(IJK)
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = EAST_OF(IJK)
@@ -274,7 +283,6 @@
              DWF = QUICKEST(PHI_C,CF,ODXC,ODXUC,ODX_E(I))
              XSI_E(IJK) = XSI_func(U(IJK),DWF)
 
-             J = J_OF(IJK)
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = NORTH_OF(IJK)
@@ -294,7 +302,6 @@
              XSI_N(IJK) = XSI_func(V(IJK),DWF)
 
              IF (DO_K) THEN
-                K = K_OF(IJK)
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
                    IJKD = TOP_OF(IJK)
@@ -313,13 +320,17 @@
                 DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ_T(K))
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
+              end do
+            end do
+          end do
 
 
        CASE (6)                               !MUSCL
 
-!!!$omp    parallel do private(IJK, IJKC,IJKD,IJKU, PHI_C,DWF )
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -361,13 +372,17 @@
                 DWF = MUSCL(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
+              end do
+            end do
+          end do
 
 
        CASE (7)                               !Van Leer
 
-!!!$omp    parallel do private( IJK, IJKC,IJKD,IJKU,  PHI_C,DWF )
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -409,13 +424,17 @@
                 DWF = VANLEER(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
+              end do
+            end do
+          end do
 
 
        CASE (8)                               !Minmod
 
-!!!$omp    parallel do private(IJK, IJKC,IJKD,IJKU, PHI_C,DWF )
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -458,13 +477,16 @@
                 DWF = MINMOD(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
-
+              end do
+            end do
+          end do
 
        CASE (9)                               ! Central
 
-!!!$omp    parallel do private(IJK, IJKC,IJKD,IJKU, PHI_C,DWF)
-          DO IJK = ijkstart3, ijkend3
+          do k = kstart3, kend3
+            do j = jstart3, jend3
+              do i = istart3, iend3
+                ijk = funijk(i,j,k)
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
@@ -506,8 +528,9 @@
                 DWF = CENTRAL_SCHEME(PHI_C)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
-          ENDDO
-
+              end do
+            end do
+          end do
 
        CASE DEFAULT                           !Error
 ! should never hit this

@@ -8,9 +8,7 @@ MODULE ur_facs
 ! (0,1) under-relaxed
    DOUBLE PRECISION :: UR_FAC(DIM_EQS)
 
-
    contains
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -24,7 +22,7 @@ MODULE ur_facs
 
    use param, only: dimension_3
    use param1, only: one
-   use compar, only: ijkstart3, ijkend3
+   use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
    implicit none
 
@@ -44,7 +42,7 @@ MODULE ur_facs
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Loop index
-      INTEGER :: IJK
+      INTEGER :: i, j, k, ijk
 ! Functions of under-relaxation factor
       DOUBLE PRECISION :: f1, f2
 ! Center coefficient
@@ -56,7 +54,12 @@ MODULE ur_facs
 
       if (axis.eq.'S') then
 
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
             IF (FLUID_AT(IJK)) THEN
                AP = A_M(IJK,0)
                IF (AP /= (-ONE)) THEN
@@ -64,10 +67,16 @@ MODULE ur_facs
                   B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
-         END DO
+             end do
+           end do
+         end do
 
       else if (axis.eq.'U') then
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
             IF (FLOW_AT_E(IJK)) THEN
                AP = A_M(IJK,0)
                IF (AP /= (-ONE)) THEN
@@ -75,10 +84,16 @@ MODULE ur_facs
                   B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
-         END DO
+             end do
+           end do
+         end do
 
       else if (axis.eq.'V') then
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
             IF (FLOW_AT_N(IJK)) THEN
                AP = A_M(IJK,0)
                IF (AP /= (-ONE)) THEN
@@ -86,10 +101,18 @@ MODULE ur_facs
                   B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
-         END DO
+
+             end do
+           end do
+         end do
 
       else if (axis.eq.'W') then
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
             IF (FLOW_AT_T(IJK)) THEN
                AP = A_M(IJK,0)
                IF (AP /= (-ONE)) THEN
@@ -97,7 +120,10 @@ MODULE ur_facs
                   B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
-         END DO
+
+             end do
+           end do
+         end do
 
       endif
 

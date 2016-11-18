@@ -104,8 +104,8 @@
 
       LOGICAL FUNCTION IS_SMALL (V, TOL)
 
-      use compar, only: ijkstart3, ijkend3
-      use functions, only: fluid_at
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use functions, only: fluid_at, funijk
       use param, only: dimension_3
       IMPLICIT NONE
 
@@ -118,14 +118,22 @@
 
 ! Local variables
 !--------------------------------------------------------------------//
-      INTEGER :: IJK
+      INTEGER :: i, j, k, ijk
 
       IS_SMALL = .FALSE.
-      DO IJK = ijkstart3, ijkend3
-         IF (FLUID_AT(IJK)) THEN
-            IF (ABS(V(IJK)) > TOL) RETURN
-         ENDIF
-      END DO
+      do k = kstart3, kend3
+        do j = jstart3, jend3
+          do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
+             if (fluid_at(ijk)) then
+               if (abs(V(ijk)) > TOL) return
+             end if
+          end do
+        end do
+      end do
+
       IS_SMALL = .TRUE.
 
       RETURN

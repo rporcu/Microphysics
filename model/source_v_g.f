@@ -25,8 +25,7 @@
       USE constant, only: gravity_y
       USE bc, only: delp_y
 
-!     USE compar, only: ijkstart3, ijkend3, jmap
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, jmap
+      USE compar, only: jmap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 

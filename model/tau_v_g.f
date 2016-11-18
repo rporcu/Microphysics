@@ -72,17 +72,6 @@
 
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(4)==1)) THEN
 
-!$omp  parallel do default(none) &
-!$omp  private(I, J, K, IJK, IM, JP, KM,                               &
-!$omp          IJKE, IJKW, IJKN, IJKT, IJKB,                           &
-!$omp          IJKTN, IJKBN, IJKNW, IJKNE,                             &
-!$omp          IJPK, IMJK, IJMK, IJKM, IJPKM, IMJPK,                   &
-!$omp          EPGA, SBV, SSX, SSY, SSZ)                               &
-!$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of, im1, jp1, km1,     &
-!$omp         do_k, ltau_v_g,                            &
-!$omp         ep_g, LAMBDA_G, trd_g, MU_G, u_g, v_g, w_g,      &
-!$omp         ayz_v, axz_v, axz, axy_v,                                &
-!$omp         ody_n, ody)
          DO IJK = IJKSTART3, IJKEND3
             J = J_OF(IJK)
             IJKN = NORTH_OF(IJK)
@@ -155,7 +144,6 @@
                lTAU_V_G(IJK) = ZERO
             ENDIF   ! end if (.NOT. IP_AT_N(IJK) .AND. EPGA>DIL_EP_S)
          ENDDO   ! end do ijk
-!$omp end parallel do
 
       ELSE
 ! cartesian grid case
@@ -237,28 +225,6 @@
       INTEGER :: BCV
       INTEGER :: BCT
 !---------------------------------------------------------------------//
-
-!$omp  parallel do default(none)                                       &
-!$omp  private(I, J, K, IM, JP, KM, IJK,                               &
-!$omp          IJKE, IJKW, IJKN, IJKT, IJKB,                           &
-!$omp          IJKTN, IJKBN, IJKNW, IJKNE,                             &
-!$omp          IJPK, IMJK, IJMK, IJKM, IJPKM, IMJPK,                   &
-!$omp          EPGA, SBV, SSX, SSY, SSZ,                               &
-!$omp          BCV, BCT, NOC_VG, uw_g, vw_g, ww_g,                     &
-!$omp          del_h, nx, ny, nz, xi, yi, zi, sx, sy, sz, wi, ui,      &
-!$omp          u_node_at_sw, u_node_at_se, u_node_at_nw, u_node_at_ne, &
-!$omp          w_node_at_bs, w_node_at_bn, w_node_at_ts, w_node_at_tn, &
-!$omp          dudy_at_W, dudy_at_E, dwdy_at_B, dwdy_at_T,             &
-!$omp          cut_tau_vg, MU_G_cut, ssz_cut, ssx_cut)                &
-!$omp  shared(ijkstart3, ijkend3, i_of, j_of, k_of, do_k,              &
-!$omp         im1, jm1, jp1, km1, ltau_v_g,                 &
-!$omp         MU_G, ep_g, LAMBDA_G, trd_g, v_g, w_g, u_g,          &
-!$omp         ayz_v, axz_v, axz, axy_v, vol,                           &
-!$omp         bc_type_enum, bc_v_id, bc_hw_g, bc_uw_g, bc_vw_g, bc_ww_g, &
-!$omp         x_u, y_u, z_u, x_v, y_v, z_v, x_w, y_w, z_w,             &
-!$omp         oneody_n_v, oneody_n_w, oneody_n_u,                      &
-!$omp         cut_v_cell_at, wall_u_at, wall_w_at, area_v_cut,         &
-!$omp         blocked_u_cell_at, blocked_w_cell_at)
 
       DO IJK = IJKSTART3, IJKEND3
          J = J_OF(IJK)
@@ -522,7 +488,6 @@
             lTAU_V_G(IJK) = ZERO
          ENDIF   ! end if/else (.NOT. IP_AT_N(IJK) .AND. EPGA>DIL_EP_S)
       ENDDO   ! end do ijk
-!$omp end parallel do
 
       RETURN
       END SUBROUTINE CALC_CG_TAU_V_G

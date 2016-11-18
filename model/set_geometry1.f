@@ -51,15 +51,14 @@
 !                      Indices
 !
 
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
 
-!
-         I = I_OF(IJK)
-         IP = IP1(I)
-         J = J_OF(IJK)
-         JP = JP1(J)
-         K = K_OF(IJK)
-         KP = KP1(K)
+           ijk = funijk(i,j,k)
+           IP = IP1(I)
+           JP = JP1(J)
+           KP = KP1(K)
 
          IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells

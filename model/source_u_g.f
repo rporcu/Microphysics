@@ -114,7 +114,6 @@
 
       IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
 
-!     DO IJK = ijkstart3, ijkend3
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2

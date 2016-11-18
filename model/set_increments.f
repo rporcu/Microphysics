@@ -342,7 +342,12 @@
 
       INCREMENT_ARRAYS_ALLOCATED = .TRUE.
 
-      DO IJK = ijkstart3,ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+
+         ijk = funijk(i,j,k)
+
          WEST_ARRAY_OF(ijk)   = WEST_OF_0(IJK)
          EAST_ARRAY_OF(ijk)   = EAST_OF_0(IJK)
          SOUTH_ARRAY_OF(ijk)  = SOUTH_OF_0(IJK)
@@ -356,7 +361,10 @@
          JP_ARRAY_OF(ijk) = JP_OF_0(IJK)
          KM_ARRAY_OF(ijk) = KM_OF_0(IJK)
          KP_ARRAY_OF(ijk) = KP_OF_0(IJK)
-      ENDDO
+
+          end do
+        end do
+      end do
 
       CALL FINL_ERR_MSG
 

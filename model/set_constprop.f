@@ -23,15 +23,15 @@
 
       USE fldvar, only: ro_g0, mu_g0, mu_g
 
-      USE compar, only: ijkstart3, ijkend3
-      use functions, only: wall_at, fluid_at
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use functions, only: wall_at, fluid_at, funijk
 
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: IJK
+      integer :: i,j,k,ijk
 !-----------------------------------------------
 
 ! First, initialize certain transport coefficients, physical
@@ -44,22 +44,27 @@
       LAMBDA_G = ZERO
 
 ! Set specified constant physical properties values
-      DO IJK = ijkstart3, ijkend3
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
 
-         IF (.NOT.WALL_AT(IJK)) THEN
+           ijk = funijk(i,j,k)
+
+           IF (.NOT.WALL_AT(IJK)) THEN
 ! Fluid and inflow/outflow cells: FLAG < 100
             IF (RO_G0 /= UNDEFINED) RO_G(IJK) = RO_G0
-         ENDIF
+           ENDIF
 
-         IF (FLUID_AT(IJK)) THEN
+           IF (FLUID_AT(IJK)) THEN
 ! Strictly Fluid cells: FLAG = 1
             IF (MU_G0 /= UNDEFINED) THEN
                MU_G(IJK) = MU_G0
                LAMBDA_G(IJK) = -(2.0d0/3.0d0)*MU_G0
-            ENDIF
-         ENDIF
+              ENDIF
+           ENDIF
 
-      ENDDO
+          end do
+        end do
+      end do
 
-      RETURN
       END SUBROUTINE SET_CONSTPROP
