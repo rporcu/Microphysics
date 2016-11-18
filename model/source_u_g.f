@@ -28,6 +28,8 @@
       USE bc, only: delp_x
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
@@ -39,9 +41,10 @@
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, new_east_of
-      USE functions, only: east_of, west_of
+      USE functions, only: east_of, west_of, wall_at
       USE functions, only: zmax
-      USE geometry, only: imax1, cyclic_x_pd
+ 
+      USE geometry, only: imax1, cyclic_x_pd, imax
       USE geometry, only: vol, vol_u
       USE geometry, only: ayz
 
@@ -112,9 +115,9 @@
       IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
 
 !     DO IJK = ijkstart3, ijkend3
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
 
          ! Original
          ! I = I_OF(IJK)
@@ -124,35 +127,27 @@
          IJK = FUNIJK(i,j,k)
 
          IJKE = EAST_OF(IJK)
-         IJKM = KM_OF(IJK)
+
          IPJK = IP_OF(IJK)
          IMJK = IM_OF(IJK)
-         IPJKM = IP_OF(IJKM)
+
          IJMK = JM_OF(IJK)
-         IPJMK = IP_OF(IJMK)
          IJPK = JP_OF(IJK)
+
+         IJKM = KM_OF(IJK)
          IJKP = KP_OF(IJK)
+
+         IPJKM = IP_OF(IJKM)
+         IPJMK = IP_OF(IJMK)
 
          ! End of Original
 
          ! New
-          IJK = FUNIJK(i,j,k)
-          !write(*,*)'Cell:', I,j,k,IJK
-
           New_IE = NEW_EAST_OF(I,j,k)
           New_IJKE = FUNIJK(New_IE,j,k)
 
-          if(IJKE /= New_IJKE) then
-             write(*,*)'ERR IJKE:', IJKE, NEW_IJKE, new_ie
-             !stop
-          endif
-
           New_IM = IMINUS(I,J,K)
           New_IMJK = FUNIJK(NEW_IM,j,k)
-          if(IMJK /= New_IMJK) then
-             write(*,*)'ERR IMJK:', IMJK, NEW_IMJK, new_im
-             !stop
-          endif
 
           New_IP = IPLUS(I,J,K)
           New_IPJK = FUNIJK(NEW_IP,j,k)
@@ -169,10 +164,10 @@
           New_KP = KPLUS(I,J,K)
           New_IJKP = FUNIJK(i,j,New_KP)
 
-          New_IPJKM = FUNIJK(New_IP,j,New_KM)
+          New_IPJKM = FUNIJK(IPLUS(I,J,New_KM),J,New_KM)
+          New_IPJMK = FUNIJK(IPLUS(I,New_JM,k),New_JM,k)
 
-          New_IPJMK = FUNIJK(New_IP,New_JM,k)
-
+         if (.not. WALL_AT(ijk)) then
           err = 0
           err = max(abs(ijke-new_ijke),err)
           err = max(abs(ijkm-new_ijkm),err)
@@ -186,10 +181,11 @@
           err = max(abs(ipjmk-new_ipjmk),err)
 
           if(err /= 0) then
+             write(*,*)'ERR      AT I,j,k        ' ,i,j,FUNIJK(i,j,k)
              write(*,*)'ERR ',i,j,k,err
-             !stop
+             stop
           endif
-
+          endif
 
          ! End of New
 
@@ -286,6 +282,7 @@
                ( (V0)*U_GO(IJK) + VBF)*VOL_U(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
+
       ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk

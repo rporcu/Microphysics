@@ -12,39 +12,46 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar
+      USE compar, only:  istart3, jstart3, kstart3, iend3, jend3, kend3
       USE constant
       USE eos, only: EOSG
       USE fldvar
-      USE functions
-      USE geometry
-      USE indices
-      USE param
-      USE param1
-      USE physprop
+      USE param1   , only: UNDEFINED
+      USE functions, only: funijk, wall_at
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: IJK
+      integer :: ijk,i,j,k
 !-----------------------------------------------
       IF (RO_G0 == UNDEFINED) THEN   ! compressible case
 
-!!$omp parallel do private(IJK)
-         DO IJK = ijkstart3, ijkend3
-! calculate ro_g and rop_g in all fluid and flow boundary cells
-            IF (.NOT.WALL_AT(IJK)) THEN
+         ! Calculate ro_g and rop_g in all fluid and flow boundary cells
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
 ! set_bc0 will have already defined ro_g and rop_g in MI and PI
 ! boundary cells (redundant-remove in set_bc0?)
+             IF (.NOT.WALL_AT(IJK)) THEN
                RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),295.15d0)
                ROP_G(IJK) = EP_G(IJK)*RO_G(IJK)
             ENDIF
-         ENDDO
+
+         end do
+         end do
+         end do
 
       ELSE   ! incompressible case
 
-!!$omp   parallel do private(ijk)
-         DO IJK = ijkstart3, ijkend3
+         do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+             ijk = funijk(i,j,k)
+
             IF (.NOT.WALL_AT(IJK)) THEN
 ! assign ro_g and calculate rop_g in all fluid and flow boundary cells
 ! set_constprop will have already defined ro_g in fluid and flow
@@ -54,7 +61,9 @@
 ! (redundant-remove in set_bc0?)
                ROP_G(IJK) = EP_G(IJK)*RO_G(IJK)
             ENDIF
-         ENDDO
+         end do
+         end do
+         end do
       ENDIF
 
       RETURN

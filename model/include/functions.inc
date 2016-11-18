@@ -920,7 +920,7 @@
 
       integer function iminus(i,j,k)
       use compar, only: istart3
-      use geometry, only  : imin1
+      use geometry, only  : imin1,imax1,cyclic_x
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -933,13 +933,15 @@
          iminus = max(istart3, i-1)
       end if
 
+      if (cyclic_x .and. (iminus < imin1)) iminus = imax1
+
       end function iminus
 
       ! ************************************************
 
       integer function iplus(i,j,k)
       use compar, only: iend3
-      use geometry, only  : imax1
+      use geometry, only  : imin1,imax1,cyclic_x
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -952,13 +954,15 @@
          iplus = min(iend3, i+1)
       end if
 
+      if (cyclic_x .and. (iplus > imax1)) iplus = imin1
+
       end function iplus
 
       ! ************************************************
 
       integer function jminus(i,j,k)
       use compar, only: jstart3
-      use geometry, only  : jmin1
+      use geometry, only  : jmin1,jmax1,cyclic_y
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -971,13 +975,15 @@
          jminus = max(jstart3, j-1)
       end if
 
+      if (cyclic_y .and. (jminus < jmin1)) jminus = jmax1
+
       end function jminus
 
       ! ************************************************
 
       integer function jplus(i,j,k)
       use compar, only: jend3
-      use geometry, only  : jmax1
+      use geometry, only  : jmin1,jmax1,cyclic_y
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijk
@@ -989,6 +995,8 @@
       else
          jplus = min(jend3, j+1)
       end if
+
+      if (cyclic_y .and. (jplus > jmax1)) jplus = jmin1
 
       end function jplus
 
@@ -1036,16 +1044,52 @@
 
       integer function new_east_of(i,j,k)
 
-      use geometry, only  : imin1
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: ipjk
+
+      ipjk = funijk(iplus(i,j,k),j,k)
+
+      if(wall_at(ipjk)) then
+         new_east_of = i
+      else
+         new_east_of = iplus(i,j,k)
+      end if
+
+      end function new_east_of
+
+      ! ************************************************
+
+      integer function new_north_of(i,j,k)
+
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: ijpk
+
+      ijpk = funijk(i,jplus(i,j,k),k)
+
+      if(wall_at(ijpk)) then
+         new_north_of = j
+      else
+         new_north_of = jplus(i,j,k)
+      end if
+
+      end function new_north_of
+
+      ! ************************************************
+
+      integer function new_top_of(i,j,k)
+
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: ijkp
 
-      ijkp = funijk(iplus(i,j,k),j,k)
+      ijkp = funijk(i,j,kplus(i,j,k))
+
       if(wall_at(ijkp)) then
-         new_east_of = i
+         new_top_of = k
       else
-         new_east_of = i+1
+         new_top_of = kplus(i,j,k)
       end if
 
-      end function new_east_of
+      end function new_top_of

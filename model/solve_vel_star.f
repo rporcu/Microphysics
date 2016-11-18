@@ -56,12 +56,9 @@
 
 ! Store the velocities so that the order of solving the momentum
 ! equations does not matter
-      DO IJK = ijkstart3, ijkend3
-         U_gtmp(IJK) = U_g(IJK)
-         V_gtmp(IJK) = V_g(IJK)
-         W_gtmp(IJK) = W_g(IJK)
-      ENDDO
-
+     U_gtmp = U_g
+     V_gtmp = V_g
+     W_gtmp = W_g
 
 ! Calculate U_m_star and residuals
 ! ---------------------------------------------------------------->>>
@@ -202,12 +199,9 @@
 ! ----------------------------------------------------------------<<<
 
 ! Now update all velocity components
-      DO IJK = ijkstart3, ijkend3
-         U_g(IJK) = U_gtmp(IJK)
-         V_g(IJK) = V_gtmp(IJK)
-         W_g(IJK) = W_gtmp(IJK)
-      ENDDO
-
+      U_g = U_gtmp
+      V_g = V_gtmp
+      W_g = W_gtmp
 
       call unlock_ambm
 

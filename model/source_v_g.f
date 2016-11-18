@@ -25,7 +25,10 @@
       USE constant, only: gravity_y
       USE bc, only: delp_y
 
-      USE compar, only: ijkstart3, ijkend3, jmap
+!     USE compar, only: ijkstart3, ijkend3, jmap
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, jmap
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
@@ -35,9 +38,10 @@
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
       USE functions, only: ip_at_n, sip_at_n, is_id_at_n
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, new_north_of
       USE functions, only: north_of, south_of
-      USE functions, only: zmax
-      USE geometry, only: jmax1, cyclic_y_pd
+      USE functions, only: zmax, funijk, wall_at
+      USE geometry, only: jmax1, cyclic_y_pd, flag
       USE geometry, only: vol, vol_v
       USE geometry, only: axz
 
@@ -95,32 +99,88 @@
       DOUBLE PRECISION :: ltau_v_g
 !---------------------------------------------------------------------//
 
+      integer err
+      integer new_jn, new_ip, new_im, new_jp, new_jm, new_kp, new_km
+      integer new_ijkn, new_imjk,new_ipjk,new_ijmk,new_ijpk,new_ijkm, new_ijkp, new_imjpk,new_ijpkm
+
 ! Set reference phase to gas
       M = 0
 
       IF (.NOT.MOMENTUM_Y_EQ(0)) RETURN
 
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
 
-!$omp  parallel do default(shared)                                   &
-!$omp  private(I, J, K, IJK, IJKN, IMJK, IPJK, IJMK, IJPK, IMJPK,    &
-!$omp          IJKM, IJPKM, IJKP, EPGA, PGN, SDP, ROPGA,             &
-!$omp          ROGA, ROP_MA, V0, ISV, MUGA, Vbf, L, MM,    &
-!$omp          Vsn, Vss, U_se, Usw, Vse, Vsw, Wst, Wsb, Vst,         &
-!$omp          Vsb,ghd_drag, avgRop, avgDrag, HYS_drag,      &
-!$omp          ltau_v_g)
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
-         J = J_OF(IJK)
-         K = K_OF(IJK)
+         ! I = I_OF(IJK)
+         ! J = J_OF(IJK)
+         ! K = K_OF(IJK)
+
+         IJK = FUNIJK(i,j,k)
+
+         ! original
          IJKN = NORTH_OF(IJK)
+
          IMJK = IM_OF(IJK)
          IPJK = IP_OF(IJK)
+
          IJMK = JM_OF(IJK)
          IJPK = JP_OF(IJK)
-         IMJPK = IM_OF(IJPK)
+
          IJKM = KM_OF(IJK)
-         IJPKM = KM_OF(IJPK)
          IJKP = KP_OF(IJK)
+
+         IMJPK = IM_OF(IJPK)
+         IJPKM = KM_OF(IJPK)
+
+         ! end of original
+
+         ! New
+
+          IJK = FUNIJK(i,j,k)
+
+          New_JN = NEW_NORTH_OF(I,j,k)
+          New_IJKN = FUNIJK(i,New_JN,k)
+
+          New_IM = IMINUS(I,J,K)
+          New_IMJK = FUNIJK(NEW_IM,j,k)
+
+          New_IP = IPLUS(I,J,K)
+          New_IPJK = FUNIJK(NEW_IP,j,k)
+
+          New_JM = JMINUS(I,J,K)
+          New_IJMK = FUNIJK(i,NEW_JM,k)
+
+          New_JP = JPLUS(I,J,K)
+          New_IJPK = FUNIJK(i,NEW_JP,k)
+
+          New_KM = KMINUS(I,J,K)
+          New_IJKM = FUNIJK(i,j,New_KM)
+
+          New_KP = KPLUS(I,J,K)
+          New_IJKP = FUNIJK(i,j,New_KP)
+
+          New_IMJPK = FUNIJK(IMINUS(I,New_JP,K),New_JP,k)
+          New_IJPKM = FUNIJK(I,New_JP,KMINUS(I,New_JP,k))
+
+          if (.not. WALL_AT(ijk)) then
+          err = 0
+          err = max(abs(ijkn-new_ijkn),err)
+          err = max(abs(ijkm-new_ijkm),err)
+          err = max(abs(ipjk-new_ipjk),err)
+          err = max(abs(imjk-new_imjk),err)
+          err = max(abs(ijpk-new_ijpk),err)
+          err = max(abs(ijmk-new_ijmk),err)
+          err = max(abs(ijkp-new_ijkp),err)
+          err = max(abs(ijkm-new_ijkm),err)
+          err = max(abs(imjpk-new_imjpk),err)
+          err = max(abs(ijpkm-new_ijpkm),err)
+
+          if(err /= 0) then
+             write(*,*)'ERR      AT i,j        ' ,i,j,FUNIJK(i,j,k)
+             stop
+          endif
+          endif
 
          EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
 
@@ -214,7 +274,8 @@
 
          ENDIF
       ENDDO
-!$omp end parallel do
+      ENDDO
+      ENDDO
 
 ! modifications for cartesian grid implementation
       IF(CARTESIAN_GRID) CALL CG_SOURCE_V_G(A_M, B_M)

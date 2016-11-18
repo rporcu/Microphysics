@@ -71,12 +71,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
-!$omp parallel default(none) &
-!$omp          private(IJK, IMJK, IJMK, IJKM, M, bma,bme,bmw,bmn,bms,bmt,bmb,line)  &
-!$omp          shared(ijkstart3,ijkend3,cartesian_grid,rop_g,rop_go,vol,odt,u_g,v_g,w_g,b_m, &
-!$omp                 b_mmax,d_e,d_n,d_t,a_m,a_upg_e,a_vpg_n,a_wpg_t,ro_g0)
-!$omp do
-      DO IJK = ijkstart3, ijkend3
+        do k = kstart3, kend3
+           do j = jstart3, jend3
+             do i = istart3, iend3
+
+         ijk = funijk(i,j,k)
+
          IF (FLUID_AT(IJK)) THEN
             IMJK = IM_OF(IJK)
             IJMK = JM_OF(IJK)
@@ -117,11 +117,9 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                   A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
-!!$omp             critical
                   WRITE (LINE, '(A,I6,A,I1,A,G12.5)') 'Error: At IJK = ', IJK, &
                      ' M = ', 0, ' A = 0 and b = ', B_M(IJK)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
-!!$omp             end critical
                ENDIF
             ENDIF
 
@@ -140,16 +138,11 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             B_M(IJK) = ZERO
          ENDIF   ! end if/else branch fluid_at(ijk)
       ENDDO    ! end do loop (ijk=ijkstart3,ijkend3)
-!$omp end parallel
-
 
 ! make correction for compressible flows
       IF (RO_G0 == UNDEFINED) THEN
          fac = UR_FAC(1)  !since p_g = p_g* + ur_fac * pp_g
 
-!!$omp    parallel do                                                     &
-!!$omp&   private(IJK,I,J,K,                                       &
-!!$omp&            IMJK,IJMK,IJKM,IJKE,IJKW,IJKN,IJKS,IJKT,IJKB)
          DO IJK = ijkstart3, ijkend3
             IF (FLUID_AT(IJK)) THEN
 
@@ -157,44 +150,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                   fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
                   EP_G(IJK)*VOL(IJK)*ODT
 
-! Although the following is a better approximation for high speed flows because
-! it considers density changes in the neighboring cells, the code runs faster
-! without it for low speed flows.  The gas phase mass balance cannot be
-! maintained to machine precision with the following approximation. If the
-! following lines are uncommented, the calc_xsi call above should also be
-! uncommented
-!               IMJK = IM_OF(IJK)
-!               IJMK = JM_OF(IJK)
-!               IJKM = KM_OF(IJK)
-!               IJKE = EAST_OF(IJK)
-!               IJKW = WEST_OF(IJK)
-!               IJKN = NORTH_OF(IJK)
-!               IJKS = SOUTH_OF(IJK)
-!               IJKT = TOP_OF(IJK)
-!               IJKB = BOTTOM_OF(IJK)
-!               A_M(IJK,0) = A_M(IJK,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*EP_G(&
-!                  IJK)*((ONE - XSI_E(IJK))*U_G(IJK)*AYZ(IJK)-XSI_E(IMJK)*U_G(&
-!                  IMJK)*AYZ(IMJK)+(ONE-XSI_N(IJK))*V_G(IJK)*AXZ(IJK)-XSI_N(IJMK&
-!                  )*V_G(IJMK)*AXZ(IJMK))
-
-!               A_M(IJK,E) = A_M(IJK,E) - EP_G(IJKE)*fac*DROODP_G(RO_G(IJKE),P_G&
-!                  (IJKE))*XSI_E(IJK)*U_G(IJK)*AYZ(IJK)
-!               A_M(IJK,W) = A_M(IJK,W) + EP_G(IJKW)*fac*DROODP_G(RO_G(IJKW),P_G&
-!                  (IJKW))*(ONE - XSI_E(IMJK))*U_G(IMJK)*AYZ(IMJK)
-!               A_M(IJK,N) = A_M(IJK,N) - EP_G(IJKN)*fac*DROODP_G(RO_G(IJKN),P_G&
-!                  (IJKN))*XSI_N(IJK)*V_G(IJK)*AXZ(IJK)
-!               A_M(IJK,S) = A_M(IJK,S) + EP_G(IJKS)*fac*DROODP_G(RO_G(IJKS),P_G&
-!                  (IJKS))*(ONE - XSI_N(IJMK))*V_G(IJMK)*AXZ(IJMK)
-!               IF (DO_K) THEN
-!                  A_M(IJK,0) = A_M(IJK,0) - fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
-!                     EP_G(IJK)*((ONE - XSI_T(IJK))*W_G(IJK)*AXY(IJK)-XSI_T(IJKM&
-!                     )*W_G(IJKM)*AXY(IJKM))
-!                  A_M(IJK,T) = A_M(IJK,T) - EP_G(IJKT)*fac*DROODP_G(RO_G(IJKT),&
-!                     P_G(IJKT))*XSI_T(IJK)*W_G(IJK)*AXY(IJK)
-!                  A_M(IJK,B) = A_M(IJK,B) + EP_G(IJKB)*fac*DROODP_G(RO_G(IJKB),&
-!                     P_G(IJKB))*(ONE - XSI_T(IJKM))*W_G(IJKM)*AXY(IJKM)
-!               ENDIF
-!
             ENDIF   !end if (fluid_at(ijk))
          ENDDO    ! end do (ijk=ijkstart3,ijkend3)
       ENDIF   ! end if (ro_g0 == undefined); i.e., compressible flow
@@ -204,8 +159,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! boundaries.  Because the P' at such boundaries is zero we may set the
 ! coefficient in the neighboring fluid cell to zero without affecting
 ! the linear equation set.
-!!$omp    parallel do                                                     &
-!!$omp&   private(IJK,IMJK, IPJK, IJMK, IJPK, IJKM, IJKP)
       DO IJK = ijkstart3, ijkend3
          IF (FLUID_AT(IJK)) THEN
             IMJK = IM_OF(IJK)
