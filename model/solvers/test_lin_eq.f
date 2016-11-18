@@ -57,7 +57,7 @@
       DOUBLE PRECISION LEQTOL
       CHARACTER(LEN=4) ::   LEQPC
       REAL  :: Harvest
-
+      integer :: i, j, k
 !  Initialize the random number generator
 !
       CALL RANDOM_SEED
@@ -65,7 +65,10 @@
 !  Fill the A and x arrays with random numbers, but ensuring that
 !  the matrix is diagonally dominant
 !
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          CALL RANDOM_NUMBER(HARVEST)
          X_ACT(IJK) = DBLE(HARVEST) + 1.E-5
          X_SOL(IJK) = 0.0
@@ -94,11 +97,15 @@
             Am(IJK,3) = DBLE(HARVEST)
          ENDIF
       END DO
+      END DO
+      END DO
 
 
 !
-!!!$omp  parallel do private( IJK, IpJK, ImJK, IJpK, IJmK, IJKp, IJKm)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
             ImJK = IM_OF(IJK)
             IJmK = JM_OF(IJK)
@@ -116,6 +123,8 @@
                IF(K_OF(IJK) < KMAX2) Bm(IJK) = Bm(IJK) + Am(IJK,T)*X_ACT(IJKp)
             ENDIF
       END DO
+      END DO
+      END DO
 
 !
 !  Solve the linear equation
@@ -128,7 +137,10 @@
       XSUM = 0.0
       ERRMAX = 0.0
       IJKERR = 0
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF (X_ACT(IJK) /= 0.0) THEN
             ERR = ABS(X_SOL(IJK)-X_ACT(IJK))/X_ACT(IJK)
          ELSE IF (X_SOL(IJK) == 0.0) THEN
@@ -143,6 +155,8 @@
          ERRSUM = ERRSUM + ABS(X_SOL(IJK)-X_ACT(IJK))
          XSUM = XSUM + ABS(X_ACT(IJK))
 !        print *, ijk, i_of(ijk), j_of(ijk), nint(err * 100.)
+      END DO
+      END DO
       END DO
       IF (XSUM /= 0.0) THEN
          ERR = ERRSUM/XSUM
@@ -176,7 +190,3 @@
 !
       RETURN
       END SUBROUTINE TEST_LIN_EQ
-
-
-
-

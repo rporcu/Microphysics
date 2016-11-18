@@ -45,13 +45,13 @@
 !                      Preconditioner
       CHARACTER(LEN=4)   ::  PC
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION, DIMENSION(-3:3,ijkstart3:ijkend3) :: A_m
+      DOUBLE PRECISION, DIMENSION(-3:3,DIMENSION_3) :: A_m
 !                      Vector b_m
-      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3) :: B_m
+      DOUBLE PRECISION, DIMENSION(DIMENSION_3) :: B_m
 !                      Variable name
       CHARACTER(LEN=*) ::    Vname
 !                      Variable
-      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3) :: Var
+      DOUBLE PRECISION, DIMENSION(DIMENSION_3) :: Var
 !                    sweep direction
       CHARACTER(LEN=*) :: CMETHOD
 !
@@ -127,13 +127,13 @@
 !                      convergence tolerance
       DOUBLE PRECISION ::  TOL
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION, DIMENSION(-3:3,ijkstart3:ijkend3) :: A_m
+      DOUBLE PRECISION, DIMENSION(-3:3,DIMENSION_3) :: A_m
 !                      Vector b_m
-      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3) :: B_m
+      DOUBLE PRECISION, DIMENSION(DIMENSION_3) :: B_m
 !                      Variable name
       CHARACTER(LEN=*) ::    Vname
 !                      Variable
-      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3) :: Var
+      DOUBLE PRECISION, DIMENSION(DIMENSION_3) :: Var
 !                    sweep direction
       CHARACTER(LEN=*) :: CMETHOD
 !
@@ -143,7 +143,7 @@
       INTEGER, PARAMETER :: idebugl = 1
       DOUBLE PRECISION :: ratiotol = 0.2
 
-      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3) ::                       &
+      DOUBLE PRECISION, DIMENSION(DIMENSION_3) ::                       &
                                 R,Rtilde, P,Phat, Svec, Shat, Tvec,V
       DOUBLE PRECISION, DIMENSION(0:ITMAX+1) :: alpha,beta,omega,rho
       DOUBLE PRECISION :: TxS, TxT, oam,RtildexV,                   &
@@ -172,24 +172,6 @@
 !     ---------------------------------------------
 !     zero out R,Rtilde, P,Phat, Svec, Shat, Tvec,V
 !     ---------------------------------------------
-      if (use_doloop) then
-
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 201)
-!!$omp  parallel do private(ijk2)
-         do ijk2=ijkstart3,ijkend3
-            R(ijk2) = zero
-            Rtilde(ijk2) = zero
-            P(ijk2) = zero
-            Phat(ijk2) = zero
-            Svec(ijk2) = zero
-            Shat(ijk2) = zero
-            Tvec(ijk2) = zero
-            V(ijk2) = zero
-         enddo
-
-      else
-
          R(:) = zero
          Rtilde(:) = zero
          P(:) = zero
@@ -198,8 +180,6 @@
          Shat(:) = zero
          Tvec(:) = zero
          V(:) = zero
-
-      endif
 
 
       TOLMIN = EPSILON( one )
@@ -238,29 +218,11 @@
       call MATVECt( Vname, Var, A_M, R )
 
 
-      if (use_doloop) then
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 264)
-!!!$omp   parallel do private(ijk2)
-         do ijk2=ijkstart3,ijkend3
-            R(ijk2) = B_m(ijk2) - R(ijk2)
-         enddo
-      else
-         R(:) = B_m(:) - R(:)
-      endif
+      R(:) = B_m(:) - R(:)
 
       if(is_serial) then
          Rnorm0 = zero
-         if (use_doloop) then
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 276)
-!!!$omp          parallel do private(ijk2) reduction(+:Rnorm0)
-            do ijk2=ijkstart3,ijkend3
-               Rnorm0 = Rnorm0 + R(ijk2)*R(ijk2)
-            enddo
-         else
-            Rnorm0 = dot_product(R,R)
-         endif
+         Rnorm0 = dot_product(R,R)
          Rnorm0 = sqrt( Rnorm0 )
       else
          Rnorm0 = sqrt( dot_product_par( R, R ) )
@@ -268,15 +230,7 @@
 
       call random_number(Rtilde(:))
 
-      if (use_doloop) then
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-!!!$omp   parallel do private(ijk2)
-         do ijk2=ijkstart3,ijkend3
-            Rtilde(ijk2) = R(ijk2) + (2.0d0*Rtilde(ijk2)-1.0d0)*1.0d-6*Rnorm0
-         enddo
-      else
-         Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
-      endif
+      Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
 
       if (idebugl >= 1) then
          if(myPE.eq.0) print*,'leq_bicgs, initial: ', Vname,' resid ', Rnorm0
@@ -288,17 +242,7 @@
       do i=1,itmax
 
          if(is_serial) then
-            if (use_doloop) then
-               RtildexR = zero
-!AIKE PFUPGRADE 091409
-!!!$omp        parallel do private(ijk2) reduction(+:RtildexR)
-               do ijk2=ijkstart3,ijkend3
-                  RtildexR = RtildexR + Rtilde(ijk2) * R(ijk2)
-               enddo
-               rho(i-1) = RtildexR
-            else
-               rho(i-1) = dot_product( Rtilde, R )
-            endif
+            rho(i-1) = dot_product( Rtilde, R )
          else
             rho(i-1) = dot_product_par( Rtilde, R )
          endif ! is_serial
@@ -323,26 +267,10 @@
          endif ! rho(i-1).eq.0
 
          if (i .eq. 1) then
-            if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp        parallel do private(ijk2)
-               do ijk2=ijkstart3,ijkend3
-                  P(ijk2) = R(ijk2)
-               enddo
-            else
-               P(:) = R(:)
-            endif
+            P(:) = R(:)
          else
             beta(i-1) = ( rho(i-1)/rho(i-2) )*( alpha(i-1) / omega(i-1) )
-            if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp        parallel do private(ijk2)
-               do ijk2=ijkstart3,ijkend3
-                  P(ijk2) = R(ijk2) + beta(i-1)*( P(ijk2) - omega(i-1)*V(ijk2) )
-               enddo
-            else
-               P(:) = R(:) + beta(i-1)*( P(:) - omega(i-1)*V(:) )
-            endif
+            P(:) = R(:) + beta(i-1)*( P(:) - omega(i-1)*V(:) )
          endif ! i.eq.1
 
 !
@@ -355,16 +283,7 @@
          call MATVECt( Vname, Phat, A_m, V )
 
          if(is_serial) then
-            if (use_doloop) then
-               RtildexV = zero
-!AIKE PFUPGRADE 091409
-!!!$omp         parallel do private(ijk2) reduction(+:RtildexV)
-               do ijk2=ijkstart3,ijkend3
-                  RtildexV = RtildexV + Rtilde(ijk2) * V(ijk2)
-               enddo
-            else
-               RtildexV = dot_product( Rtilde, V )
-            endif
+            RtildexV = dot_product( Rtilde, V )
          else
             RtildexV = dot_product_par( Rtilde, V )
          endif ! is_serial
@@ -372,16 +291,7 @@
 !     print*,'leq_bicgs, initial: ', Vname,' RtildexV ', RtildexV
 
          alpha(i) = rho(i-1) / RtildexV
-
-         if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp     parallel do private(ijk2)
-            do ijk2=ijkstart3,ijkend3
-               Svec(ijk2) = R(ijk2) - alpha(i) * V(ijk2)
-            enddo
-         else
-            Svec(:) = R(:) - alpha(i) * V(:)
-         endif ! use_doloop
+         Svec(:) = R(:) - alpha(i) * V(:)
 
          if(.not.minimize_dotproducts) then
 !
@@ -389,16 +299,7 @@
 !     set X(:) = X(:) + alpha(i)*Phat(:) and stop
 !
             if(is_serial) then
-               if (use_doloop) then
-                  Snorm = zero
-!AIKE PFUPGRADE 091409
-!!!$omp       parallel do private(ijk2) reduction(+:Snorm)
-                  do ijk2=ijkstart3,ijkend3
-                     Snorm = Snorm + Svec(ijk2) * Svec(ijk2)
-                  enddo
-               else
-                  Snorm = dot_product( Svec, Svec )
-               endif
+               Snorm = dot_product( Svec, Svec )
                Snorm = sqrt( Snorm )
             else
                Snorm = sqrt( dot_product_par( Svec, Svec ) )
@@ -407,15 +308,7 @@
 
 
             if (Snorm <= TOLMIN) then
-               if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp          parallel do private(ijk2)
-                  do ijk2=ijkstart3,ijkend3
-                     Var(ijk2) = Var(ijk2) + alpha(i)*Phat(ijk2)
-                  enddo
-               else
-                  Var(:) = Var(:) + alpha(i)*Phat(:)
-               endif            ! use_doloop
+               Var(:) = Var(:) + alpha(i)*Phat(:)
 
                if (idebugl >= 1) then
 !
@@ -426,27 +319,10 @@
 !     Rnorm = sqrt( dot_product_par( Var, Var ) )
 !     print*,'leq_bicgs, initial: ', Vname,' Vnorm ', Rnorm
 
-                  if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp          parallel do private(ijk2)
-                     do ijk2=ijkstart3,ijkend3
-                        R(ijk2) = B_m(ijk2) - R(ijk2)
-                     enddo
-                  else
-                     R(:) = B_m(:) - R(:)
-                  endif
+                  R(:) = B_m(:) - R(:)
 
                   if(is_serial) then
-                     if (use_doloop) then
-                        Rnorm = zero
-!AIKE PFUPGRADE 091409
-!!!$omp            parallel do private(ijk2) reduction(+:Rnorm)
-                        do ijk2=ijkstart3,ijkend3
-                           Rnorm = Rnorm + R(ijk2)*R(ijk2)
-                        enddo
-                     else
-                        Rnorm =  dot_product( R, R )
-                     endif
+                     Rnorm =  dot_product( R, R )
                      Rnorm = sqrt( Rnorm )
                   else
                      Rnorm = sqrt( dot_product_par( R, R ) )
@@ -468,19 +344,8 @@
          call MATVECt( Vname, Shat, A_m, Tvec )
 
          if(is_serial) then
-            if (use_doloop) then
-               TxS = zero
-               TxT = zero
-!AIKE PFUPGRADE 091409
-!!!$omp  parallel do private(ijk2) reduction(+:TxS,TxT)
-               do ijk2=ijkstart3,ijkend3
-                  TxS = TxS + Tvec(ijk2)  * Svec(ijk2)
-                  TxT = TxT + Tvec(ijk2)  * Tvec(ijk2)
-               enddo
-            else
-               TxS = dot_product( Tvec, Svec )
-               TxT = dot_product( Tvec, Tvec )
-            endif
+            TxS = dot_product( Tvec, Svec )
+            TxT = dot_product( Tvec, Tvec )
          else
             if(.not.minimize_dotproducts) then
                TxS = dot_product_par( Tvec, Svec )
@@ -495,32 +360,13 @@
          omega(i) = TxS / TxT
 
 
-         if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp    parallel do private(ijk2)
-            do ijk2=ijkstart3,ijkend3
-               Var(ijk2) = Var(ijk2) +                           &
-               alpha(i)*Phat(ijk2) + omega(i)*Shat(ijk2)
-               R(ijk2) = Svec(ijk2) - omega(i)*Tvec(ijk2)
-            enddo
-         else
-            Var(:) = Var(:) +                           &
-            alpha(i)*Phat(:) + omega(i)*Shat(:)
-            R(:) = Svec(:) - omega(i)*Tvec(:)
-         endif
+         Var(:) = Var(:) +                           &
+         alpha(i)*Phat(:) + omega(i)*Shat(:)
+         R(:) = Svec(:) - omega(i)*Tvec(:)
 
          if(.not.minimize_dotproducts.or.(mod(iter,5).eq.0)) then
             if(is_serial) then
-               if (use_doloop) then
-                  Rnorm = zero
-!AIKE PFUPGRADE 091409
-!!!$omp       parallel do private(ijk2) reduction(+:Rnorm)
-                  do ijk2=ijkstart3,ijkend3
-                     Rnorm = Rnorm + R(ijk2) * R(ijk2)
-                  enddo
-               else
-                  Rnorm =  dot_product(R, R )
-               endif
+               Rnorm =  dot_product(R, R )
                Rnorm = sqrt( Rnorm )
             else
                Rnorm = sqrt( dot_product_par(R, R) )
@@ -556,27 +402,10 @@
 
       if (idebugl >= 1) then
          call MATVECt( Vname, Var, A_m, R )
-         if (use_doloop) then
-!AIKE PFUPGRADE 091409
-!!!$omp  parallel do private(ijk2)
-            do ijk2=ijkstart3,ijkend3
-               R(ijk2) = R(ijk2) - B_m(ijk2)
-            enddo
-         else
-            R(:) = R(:) - B_m(:)
-         endif
+         R(:) = R(:) - B_m(:)
 
          if(is_serial) then
-            if (use_doloop) then
-               Rnorm = zero
-!AIKE PFUPGRADE 091409
-!!!$omp         parallel do private(ijk2) reduction(+:Rnorm)
-               do ijk2=ijkstart3,ijkend3
-                  Rnorm = Rnorm + R(ijk2) * R(ijk2)
-               enddo
-            else
-               Rnorm = dot_product( R,R)
-            endif
+            Rnorm = dot_product( R,R)
             Rnorm = sqrt( Rnorm )
          else
             Rnorm = sqrt( dot_product_par( R,R) )
@@ -649,17 +478,17 @@
 !
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3,ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3,DIMENSION_3)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -754,17 +583,17 @@
       INTEGER          I,K
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3,ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3,DIMENSION_3)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 !
 
 !-----------------------------------------------
@@ -866,16 +695,16 @@
 !
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !                      Vector AVar
-      DOUBLE PRECISION AVar(ijkstart3:ijkend3)
+      DOUBLE PRECISION AVar(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 !                      Variable
 !
 !-----------------------------------------------
@@ -994,16 +823,16 @@
 !-----------------------------------------------
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 
 
 !-----------------------------------------------
@@ -1216,16 +1045,16 @@
       INTEGER          J,K
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -1317,17 +1146,17 @@
       INTEGER          I,J
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !                      Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !                      Variable name
       CHARACTER(LEN=*)    Vname
 
 !
 !                      Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -1401,31 +1230,23 @@
 !-----------------------------------------------
 !
 !     Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !     Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !     Variable name
       CHARACTER(LEN=*)    Vname
 !
 !     Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
       integer :: ijk
 
       CHARACTER(LEN=4) :: CMETHOD
 
 !     do nothing or no preconditioning
 
-      if (use_doloop) then
-
-!!!$omp  parallel do private(ijk)
-         do ijk=ijkstart3,ijkend3
-            var(ijk) = b_m(ijk)
-         enddo
-      else
-         var(:) = b_m(:)
-      endif
+      var(:) = b_m(:)
       call send_recv(var,nlayers_bicgs)
 
       return
@@ -1456,31 +1277,22 @@
 !-----------------------------------------------
 !
 !     Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(-3:3, ijkstart3:ijkend3)
+      DOUBLE PRECISION A_m(-3:3, DIMENSION_3)
 !
 !     Vector b_m
-      DOUBLE PRECISION B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION B_m(DIMENSION_3)
 !
 !     Variable name
       CHARACTER(LEN=*)    Vname
 !
 !     Variable
-      DOUBLE PRECISION Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION Var(DIMENSION_3)
 
       CHARACTER(LEN=4) :: CMETHOD
 
       integer :: i,j,k, ijk2
 
-      if (use_doloop) then
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 1516)
-!!!$omp    parallel do private(ijk2)
-         do ijk2=ijkstart3,ijkend3
-            var(ijk2) = zero
-         enddo
-      else
-         var(:) = ZERO
-      endif
+      var(:) = ZERO
 
 !     diagonal scaling
 
@@ -1502,4 +1314,3 @@
 
       return
       end subroutine leq_msolve1t
-

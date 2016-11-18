@@ -27,6 +27,7 @@
       USE residual
       USE toleranc
       USE leqsol
+      use functions, only: funijk
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -86,7 +87,7 @@
 ! transpose of septadiaganol matrix A_M
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:) :: A_MT
 ! indices
-      INTEGER :: II, IJK
+      INTEGER :: I,J,K,II, IJK
 ! for constructing local character strings
       CHARACTER(LEN=80) :: LINE0, LINE1
 !-----------------------------------------------
@@ -123,12 +124,16 @@
       CASE (2)
 ! BICGSTAB: BIConjugate Gradients STabilized method
          IF(do_transpose) THEN  ! mfix.dat keyword default=false
-            allocate( A_mt(-3:3, ijkstart3:ijkend3 ))
-!!$omp parallel do private(ijk,ii)
-            DO ijk=ijkstart3,ijkend3
+            allocate( A_mt(-3:3, DIMENSION_3 ))
+            DO K = kstart3, kend3
+            DO J = jstart3, jend3
+            DO I = istart3, iend3
+            IJK = FUNIJK(i,j,k)
                do ii=-3,3
                   A_mt(ii,ijk) = A_m(ijk,ii)
                enddo
+            ENDDO
+            ENDDO
             ENDDO
             call leq_bicgst(VNAME, VNO, VAR, A_Mt(:,:), B_M(:), &
                             SWEEP, TOL, PC, ITMAX, IER)

@@ -13,14 +13,6 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-! Handan Liu wrote below:               !Jan 22 2013
-! The modification is as below:
-!       Adding a loop of 2D RSRS sweep and parallelizing for OpenMP.
-!       Splitting the existing 3D RSRS loop into two loops for OpenMP
-!               due to data dependency
-!       Adding openmp directives in all loops in leq_bicgs0.
-!       Setting 'use_doloop = ture' to activate using do-loop.
-!
       SUBROUTINE LEQ_BICGS(VNAME, VNO, VAR, A_M, B_m, cmethod, &
                            TOL, PC, ITMAX, IER)
 
@@ -43,14 +35,14 @@
 ! variable number (not really used here; see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-!      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3), INTENT(INOUT) :: Var
+!      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3,-3:3), INTENT(INOUT) :: A_m
+!      DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
       DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
 
 ! Vector b_m
-!      DOUBLE PRECISION, DIMENSION(ijkstart3:ijkend3), INTENT(INOUT) :: B_m
+!      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -129,13 +121,13 @@
 ! variable number (not really used here-see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-!      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(INOUT) :: A_m(ijkstart3:ijkend3,-3:3)
+!      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3,-3:3)
       DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(INOUT) :: B_m(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -198,25 +190,9 @@
       omega(:)  = zero
       rho(:)    = zero
 
-          use_doloop = .TRUE.   ! set true by Handan Liu for OpenMP do-loop
-
 ! Adding all by Handan Liu
 ! zero out R, Rtilde, P, Phat, Svec, Shat, Tvec, V
 ! --------------------------------
-      if (use_doloop) then   ! mfix.dat keyword default=false
-!$omp  parallel do default(shared) private(ijk)
-         do ijk=ijkstart3,ijkend3
-            R(ijk) = zero
-            Rtilde(ijk) = zero
-            P(ijk) = zero
-            Phat(ijk) = zero
-            Svec(ijk) = zero
-            Shat(ijk) = zero
-            Tvec(ijk) = zero
-            V(ijk) = zero
-         enddo
-
-      else
          R(:) = zero
          Rtilde(:) = zero
          P(:) = zero
@@ -225,7 +201,6 @@
          Shat(:) = zero
          Tvec(:) = zero
          V(:) = zero
-      endif
 
       TOLMIN = EPSILON( one )
 
@@ -255,27 +230,13 @@
 ! ---------------------------------------------------------------->>>
       call MATVEC(Vname, Var, A_M, R)   ! returns R=A*Var
 
-      if (use_doloop) then   ! mfix.dat keyword default=false
-!$omp parallel do default(shared) private(ijk)
-         do ijk=ijkstart3,ijkend3
-            R(ijk) = B_m(ijk) - R(ijk)
-         enddo
-      else
-         R(:) = B_m(:) - R(:)
-      endif
+      R(:) = B_m(:) - R(:)
 
       call send_recv(R,nlayers_bicgs)
 
       if(is_serial) then
          Rnorm0 = zero
-         if (use_doloop) then   ! mfix.dat keyword default=false
-!$omp parallel do default(shared) private(ijk) reduction(+:Rnorm0)
-            do ijk=ijkstart3,ijkend3
-               Rnorm0 = Rnorm0 + R(ijk)*R(ijk)
-            enddo
-         else
-            Rnorm0 = dot_product(R,R)
-         endif
+         Rnorm0 = dot_product(R,R)
          Rnorm0 = sqrt( Rnorm0 )
       else
          Rnorm0 = sqrt( dot_product_par( R, R ) )
@@ -287,16 +248,7 @@
 ! of small differences between runs.  the random number is shifted below
 ! between -1 and 1 and then scaled by factor 1.0D-6*Rnorm0
       call random_number(Rtilde(:))
-
-
-      if (use_doloop) then   ! mfix.dat keyword default=false
-!$omp parallel do default(shared) private(ijk)
-         do ijk=ijkstart3,ijkend3
-            Rtilde(ijk) = R(ijk) + (2.0d0*Rtilde(ijk)-1.0d0)*1.0d-6*Rnorm0
-         enddo
-      else
-         Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
-      endif
+      Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
 
       if (idebugl >= 1) then
          if(myPE.eq.0) print*,'leq_bicgs, initial: ', Vname,' resid ', Rnorm0
@@ -310,16 +262,7 @@
       do i=1,itmax
 
          if(is_serial) then
-            if (use_doloop) then   ! mfix.dat keyword default=false
-               RtildexR = zero
-!$omp parallel do default(shared) private(ijk) reduction(+:RtildexR)
-               do ijk=ijkstart3,ijkend3
-                  RtildexR = RtildexR + Rtilde(ijk) * R(ijk)
-               enddo
-               rho(i-1) = RtildexR
-            else
-               rho(i-1) = dot_product( Rtilde, R )
-            endif
+            rho(i-1) = dot_product( Rtilde, R )
          else
             rho(i-1) = dot_product_par( Rtilde, R )
          endif ! is_serial
@@ -350,25 +293,10 @@
          endif ! rho(i-1).eq.0
 
          if (i .eq. 1) then
-            if (use_doloop) then
-!!$omp        parallel do private(ijk)
-!$omp parallel do default(shared) private(ijk)
-               do ijk=ijkstart3,ijkend3
-                  P(ijk) = R(ijk)
-               enddo
-            else
-               P(:) = R(:)
-            endif
+            P(:) = R(:)
          else
             beta(i-1) = ( rho(i-1)/rho(i-2) )*( alpha(i-1) / omega(i-1) )
-            if (use_doloop) then
-!$omp parallel do default(shared) private(ijk)
-               do ijk=ijkstart3,ijkend3
-                  P(ijk) = R(ijk) + beta(i-1)*( P(ijk) - omega(i-1)*V(ijk) )
-               enddo
-            else
                P(:) = R(:) + beta(i-1)*( P(:) - omega(i-1)*V(:) )
-            endif
          endif ! i.eq.1
 
 
@@ -379,15 +307,7 @@
          call MATVEC(Vname, Phat, A_m, V)   ! returns V=A*Phat
 
          if(is_serial) then
-            if (use_doloop) then
-               RtildexV = zero
-!$omp  parallel do default(shared) private(ijk) reduction(+:RtildexV)
-               do ijk=ijkstart3,ijkend3
-                  RtildexV = RtildexV + Rtilde(ijk) * V(ijk)
-               enddo
-            else
-               RtildexV = dot_product( Rtilde, V )
-            endif
+            RtildexV = dot_product( Rtilde, V )
          else
             RtildexV = dot_product_par( Rtilde, V )
          endif ! is_serial
@@ -400,16 +320,7 @@
 
 ! compute Svec
 ! --------------------------------
-         if (use_doloop) then
-!!$omp     parallel do private(ijk)
-!$omp parallel do default(shared) private(ijk)
-            do ijk=ijkstart3,ijkend3
-               Svec(ijk) = R(ijk) - alpha(i) * V(ijk)
-            enddo
-!!$omp end parallel do
-         else
-            Svec(:) = R(:) - alpha(i) * V(:)
-         endif ! use_doloop
+         Svec(:) = R(:) - alpha(i) * V(:)
 
 
 ! Check norm of Svec(:); if small enough:
@@ -417,15 +328,7 @@
 ! --------------------------------
          if(.not.minimize_dotproducts) then
             if(is_serial) then
-               if (use_doloop) then
-                  Snorm = zero
-!$omp parallel do default(shared) private(ijk) reduction(+:Snorm)
-                  do ijk=ijkstart3,ijkend3
-                     Snorm = Snorm + Svec(ijk) * Svec(ijk)
-                  enddo
-               else
-                  Snorm = dot_product( Svec, Svec )
-               endif
+               Snorm = dot_product( Svec, Svec )
                Snorm = sqrt( Snorm )
             else
                Snorm = sqrt( dot_product_par( Svec, Svec ) )
@@ -434,14 +337,7 @@
 
 
             if (Snorm <= TOLMIN) then
-               if (use_doloop) then
-!$omp parallel do default(shared) private(ijk)
-                  do ijk=ijkstart3,ijkend3
-                     Var(ijk) = Var(ijk) + alpha(i)*Phat(ijk)
-                  enddo
-               else
-                  Var(:) = Var(:) + alpha(i)*Phat(:)
-               endif            ! use_doloop
+               Var(:) = Var(:) + alpha(i)*Phat(:)
 
 ! Recompute residual norm
 ! --------------------------------
@@ -450,25 +346,10 @@
 !                  Rnorm = sqrt( dot_product_par( Var, Var ) )
 !                  print*,'leq_bicgs, initial: ', Vname,' Vnorm ', Rnorm
 
-                  if (use_doloop) then
-!$omp parallel do default(shared) private(ijk)
-                     do ijk=ijkstart3,ijkend3
-                        R(ijk) = B_m(ijk) - R(ijk)
-                     enddo
-                  else
-                     R(:) = B_m(:) - R(:)
-                  endif
+                  R(:) = B_m(:) - R(:)
 
                   if(is_serial) then
-                     if (use_doloop) then
-                        Rnorm = zero
-!$omp parallel do default(shared) private(ijk) reduction(+:Rnorm)
-                        do ijk=ijkstart3,ijkend3
-                           Rnorm = Rnorm + R(ijk)*R(ijk)
-                        enddo
-                     else
-                        Rnorm =  dot_product( R, R )
-                     endif
+                     Rnorm =  dot_product( R, R )
                      Rnorm = sqrt( Rnorm )
                   else
                      Rnorm = sqrt( dot_product_par( R, R ) )
@@ -489,18 +370,8 @@
          call MATVEC( Vname, Shat, A_m, Tvec )   ! returns Tvec=A*Shat
 
          if(is_serial) then
-            if (use_doloop) then
-               TxS = zero
-               TxT = zero
-!$omp  parallel do default(shared) private(ijk) reduction(+:TxS,TxT)
-               do ijk=ijkstart3,ijkend3
-                  TxS = TxS + Tvec(ijk)  * Svec(ijk)
-                  TxT = TxT + Tvec(ijk)  * Tvec(ijk)
-               enddo
-            else
-               TxS = dot_product( Tvec, Svec )
-               TxT = dot_product( Tvec, Tvec )
-            endif
+            TxS = dot_product( Tvec, Svec )
+            TxT = dot_product( Tvec, Tvec )
          else
             if(.not.minimize_dotproducts) then
                TxS = dot_product_par( Tvec, Svec )
@@ -520,32 +391,15 @@
 
 ! compute new guess for Var
 ! --------------------------------
-         if (use_doloop) then
-!$omp parallel do default(shared) private(ijk)
-            do ijk=ijkstart3,ijkend3
-               Var(ijk) = Var(ijk) +  &
-                  alpha(i)*Phat(ijk) + omega(i)*Shat(ijk)
-                  R(ijk) = Svec(ijk) - omega(i)*Tvec(ijk)
-            enddo
-         else
             Var(:) = Var(:) +  &
                alpha(i)*Phat(:) + omega(i)*Shat(:)
                R(:) = Svec(:) - omega(i)*Tvec(:)
-         endif
 
 
 ! --------------------------------
          if(.not.minimize_dotproducts.or.(mod(iter,icheck_bicgs).eq.0)) then
             if(is_serial) then
-               if (use_doloop) then
-                  Rnorm = zero
-!$omp parallel do default(shared) private(ijk) reduction(+:Rnorm)
-                  do ijk=ijkstart3,ijkend3
-                     Rnorm = Rnorm + R(ijk) * R(ijk)
-                  enddo
-               else
-                  Rnorm =  dot_product(R, R )
-               endif
+               Rnorm =  dot_product(R, R )
                Rnorm = sqrt( Rnorm )
             else
                Rnorm = sqrt( dot_product_par(R, R) )
@@ -582,25 +436,10 @@
 
       if (idebugl >= 1) then
          call MATVEC(Vname, Var, A_m, R)   ! returns R=A*Var
-         if (use_doloop) then
-!$omp  parallel do default(shared) private(ijk)
-            do ijk=ijkstart3,ijkend3
-               R(ijk) = R(ijk) - B_m(ijk)
-            enddo
-         else
-            R(:) = R(:) - B_m(:)
-         endif
+         R(:) = R(:) - B_m(:)
 
          if(is_serial) then
-            if (use_doloop) then
-               Rnorm = zero
-!$omp parallel do default(shared) private(ijk) reduction(+:Rnorm)
-               do ijk=ijkstart3,ijkend3
-                  Rnorm = Rnorm + R(ijk) * R(ijk)
-               enddo
-            else
-               Rnorm = dot_product( R,R)
-            endif
+            Rnorm = dot_product( R,R)
             Rnorm = sqrt( Rnorm )
          else
             Rnorm = sqrt( dot_product_par( R,R) )

@@ -60,14 +60,16 @@
 ! Variable
       DOUBLE PRECISION :: Var_tmp(DIMENSION_3)
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: I,J,K, IJK
       INTEGER :: ITER
 
       DOUBLE PRECISION oAm
 !-----------------------------------------------
 
-!!$omp parallel do private(IJK,OAM)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
 
          OAM = ONE/A_M(IJK,0)
@@ -80,12 +82,17 @@
          A_M(IJK,3) = A_M(IJK,3)*OAM
          B_M(IJK) = B_M(IJK)*OAM
       ENDDO
+      ENDDO
+      ENDDO
 
       DO ITER = 1, ITMAX
          IF (DO_K) THEN
 
 !!$omp parallel do private(IJK)
-            DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
               IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
               VAR_tmp(IJK) = VAR(IJK) + OMEGA*(B_M(IJK)-&
                  A_M(IJK,-1)*VAR(IM_OF(IJK))-A_M(IJK,1)*VAR(IP_OF(IJK))-&
@@ -93,15 +100,22 @@
                  A_M(IJK,-3)*VAR(KM_OF(IJK))-A_M(IJK,3)*VAR(KP_OF(IJK))-&
                  VAR(IJK))
             ENDDO
+            ENDDO
+            ENDDO
          ELSE
 
 !!$omp parallel do private(IJK)
-           DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
              IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
              VAR_tmp(IJK) = VAR(IJK) + OMEGA*(B_M(IJK)-&
                   A_M(IJK,-2)*VAR(JM_OF(IJK))-A_M(IJK,2)*VAR(JP_OF(IJK))-&
                   A_M(IJK,-1)*VAR(IM_OF(IJK))-A_M(IJK,1)*VAR(IP_OF(IJK))-&
                   VAR(IJK))
+           ENDDO
+           ENDDO
            ENDDO
          ENDIF
 
@@ -109,8 +123,13 @@
       ENDDO
 
 !!$omp parallel do private(IJK)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
         VAR(IJK) = VAR_tmp(IJK)
+      ENDDO
+      ENDDO
       ENDDO
 
       ITER_TOT(VNO) = ITER

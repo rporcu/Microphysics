@@ -110,7 +110,8 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, IJKSTART3, IJKEND3, nlayers_bicgs, c0, c1, c2
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs, c0, c1, c2
     USE cutcell, ONLY: re_indexing
     USE geometry, ONLY: do_k, use_corecell_loop, CORE_ISTART, CORE_IEND, CORE_JSTART, CORE_JEND, CORE_KSTART, CORE_KEND
     USE indices
@@ -123,13 +124,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-!      DOUBLE PRECISION, INTENT(IN) :: Var(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
     DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Vector AVar
-!      DOUBLE PRECISION, INTENT(OUT) :: AVar(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(OUT) :: AVar(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: AVar(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
@@ -143,7 +144,10 @@ CONTAINS
 
     IF(RE_INDEXING) THEN
 
-       DO IJK = IJKSTART3, IJKEND3  ! Loop only over active cells
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
           im1jk = im_of(ijk)
           ip1jk = ip_of(ijk)
@@ -166,6 +170,8 @@ CONTAINS
 
           endif
 
+       enddo
+       enddo
        enddo
 
     ELSE
@@ -190,9 +196,6 @@ CONTAINS
 
           class = cell_class(funijk(core_istart,core_jstart,core_kstart))
 
-!$omp    parallel do default(none) shared(c0,c1,c2,avar,a_m,var,do_k,increment_for_mp,istart,jstart,kstart,iend,jend,kend, &
-!$omp    cell_class,core_istart,core_jstart,core_kstart,core_iend,core_jend,core_kend,use_corecell_loop,class) &
-!$omp&   private(ijk,i,j,k) collapse (3)
              do k = core_kstart,core_kend
                 do i = core_istart,core_iend
                    do j = core_jstart,core_jend
@@ -219,9 +222,6 @@ CONTAINS
           j_start(2) = 0 ! no iterations
           j_end(2) = -1  ! no iterations
 
-!$omp    parallel do default(none) shared(c0,c1,c2,avar,a_m,var,do_k,increment_for_mp,istart,jstart,kstart,iend,jend,kend, &
-!$omp     cell_class,core_istart,core_jstart,core_kstart,core_iend,core_jend,core_kend,use_corecell_loop) &
-!$omp&   private(ijk,i,j,k,class,interval) firstprivate(j_start,j_end) collapse (2)
           do k = kstart,kend
              do i = istart,iend
 
@@ -309,13 +309,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
     DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
     DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -635,27 +635,31 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
     DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
     DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(OUT) :: Var(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    integer :: ijk
+    integer :: ijk,i,j,k
 !-----------------------------------------------
 
 ! do nothing or no preconditioning
     if (use_doloop) then   ! mfix.dat keyword default=false
-!!$omp  parallel do private(ijk)
-       do ijk=ijkstart3,ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
           var(ijk) = b_m(ijk)
+       enddo
+       enddo
        enddo
     else
        var(:) = b_m(:)
@@ -702,13 +706,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
     DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
     DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(OUT) :: Var(ijkstart3:ijkend3)
+!      DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
@@ -718,18 +722,6 @@ CONTAINS
     integer :: i,j,k, ijk
 !-----------------------------------------------
 
-    if (use_doloop) then   ! mfix.dat keyword default=false
-!!$omp    parallel do private(ijk)
-       do ijk=ijkstart3,ijkend3
-          var(ijk) = zero
-       enddo
-    else
-       var(:) = ZERO
-    endif
-
-! diagonal scaling
-    IF(.NOT.RE_INDEXING) THEN
-!$omp   parallel do private(i,j,k,ijk)  collapse (3)
        do k=kstart2,kend2
           do i=istart2,iend2
              do j=jstart2,jend2
@@ -738,12 +730,6 @@ CONTAINS
              enddo
           enddo
        enddo
-    ELSE
-!$omp   parallel do private(ijk)  collapse (1)
-       DO IJK=IJKSTART3,IJKEND3
-          var(ijk) = b_m(ijk)/A_m(ijk,0)
-       ENDDO
-    ENDIF
 
     call send_recv(var,nlayers_bicgs)
 
@@ -789,11 +775,11 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -873,11 +859,11 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -959,11 +945,11 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -1041,11 +1027,11 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(ijkstart3:ijkend3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(ijkstart3:ijkend3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -1108,7 +1094,7 @@ CONTAINS
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-!      double precision, intent(in), dimension(ijkstart3:ijkend3) :: r1,r2
+!      double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
     double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
 !-----------------------------------------------
 ! Local parameters
@@ -1128,8 +1114,13 @@ CONTAINS
        IF(RE_INDEXING) THEN
 !         IF(.FALSE.) THEN
 ! Somehow, looping in this order leads to smaller time step than k,i,j nested loop below ....
-          DO IJK = IJKSTART3,IJKEND3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
              IF(INTERIOR_CELL_AT(IJK)) prod = prod + r1(ijk)*r2(ijk)
+          ENDDO
+          ENDDO
           ENDDO
 
           call global_all_sum(prod, dot_product_par)
@@ -1211,7 +1202,7 @@ CONTAINS
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-    double precision, intent(in), dimension(ijkstart3:ijkend3) :: r1,r2,r3,r4
+    double precision, intent(in), dimension(DIMENSION_3) :: r1,r2,r3,r4
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -1245,7 +1236,7 @@ CONTAINS
        call global_all_sum(prod, dot_product_par2)
 
     else
-       allocate (r_temp(ijkstart3:ijkend3,4))
+       allocate (r_temp(DIMENSION_3,4))
        r_temp(:,1) = r1
        r_temp(:,2) = r2
        r_temp(:,3) = r3
