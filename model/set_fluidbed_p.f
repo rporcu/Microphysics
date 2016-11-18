@@ -131,8 +131,13 @@
 ! pressure at the outlet
          IF (RO_G0 /= UNDEFINED) THEN
 ! If incompressible flow set P_g to zero
-            DO IJK = IJKSTART3, IJKEND3
+            DO K = kstart3, kend3
+            DO J = jstart3, jend3
+            DO I = istart3, iend3
+               IJK = FUNIJK(i,j,k)
                IF (FLUID_AT(IJK)) P_G(IJK) = ZERO
+            ENDDO
+            ENDDO
             ENDDO
             GOTO 100
 

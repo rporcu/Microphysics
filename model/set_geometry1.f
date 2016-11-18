@@ -91,7 +91,3 @@
       RETURN
 
       END SUBROUTINE SET_GEOMETRY1
-
-!// Comments on the modifications for DMP version implementation
-!// 350 1025 change do loop limits: 1,ijkmax2-> ijkstart3, ijkend3
-!// 360 Check if i,j,k resides on current processor

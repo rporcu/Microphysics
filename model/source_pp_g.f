@@ -27,7 +27,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Modules
 !-----------------------------------------------
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G, DIMENSION_3
-      USE compar, ONLY: IJKSTART3, IJKEND3
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE cutcell, ONLY: CARTESIAN_GRID, A_UPG_E, A_VPG_N, A_WPG_T
       USE eos, ONLY: DROODP_G

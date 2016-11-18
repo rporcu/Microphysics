@@ -27,12 +27,12 @@ CONTAINS
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-         USE compar, ONLY: IJKSTART3, IJKEND3
          USE fldvar, ONLY: EP_G
+         USE functions, ONLY: IS_ON_myPE_wobnd, FUNIJK
          USE functions, ONLY: IS_ON_myPE_wobnd, FLUID_AT
-         USE indices, ONLY: I_OF, J_OF, K_OF
          USE mpi_utility, ONLY: GLOBAL_ALL_SUM
          USE param1, ONLY: ZERO
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
 
@@ -46,7 +46,7 @@ CONTAINS
       DOUBLE PRECISION :: sum_g
 
 !                      Indices
-      INTEGER          IJK
+      INTEGER :: I,J,K, IJK
 
 !                      Total volume of computational cells
       DOUBLE PRECISION SUM_VOL
@@ -56,12 +56,18 @@ CONTAINS
       SUM_G = ZERO
       SUM_VOL = ZERO
 
-      DO IJK = IJKSTART3, IJKEND3
-      IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK), J_OF(IJK), K_OF(IJK))) CYCLE
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
+      IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (FLUID_AT(IJK)) THEN
             SUM_VOL = SUM_VOL + VOL(IJK)
             SUM_G = SUM_G + vel_G(IJK)*EP_G(IJK)*VOL(IJK)
          ENDIF
+      END DO
+      END DO
       END DO
 
       CALL GLOBAL_ALL_SUM(SUM_VOL)
@@ -74,9 +80,9 @@ CONTAINS
 
       DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE)
 
-      USE compar, ONLY: IJKSTART3, IJKEND3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, ONLY: is_on_mype_wobnd, fluid_at
-      USE indices, ONLY: I_OF, J_OF, K_OF
+      USE functions, ONLY: funijk
       USE mpi_utility, ONLY: global_all_sum
       USE param1
 
@@ -88,7 +94,7 @@ CONTAINS
 ! gas mass flux
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) ::  Flux_g
 
-      INTEGER :: IJK
+      INTEGER :: I,J,K, IJK
 
 ! Integral of U_g*ROP_g*Area
       DOUBLE PRECISION :: SUM_G
@@ -101,12 +107,18 @@ CONTAINS
       SUM_G = ZERO
       SUM_AREA = ZERO
 
-      DO IJK = IJKSTART3, IJKEND3
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK), J_OF(IJK), K_OF(IJK))) CYCLE
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
+         IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (FLUID_AT(IJK)) THEN
             SUM_G = SUM_G + Flux_g(IJK)
             SUM_AREA = SUM_AREA + A_FACE(IJK)
          ENDIF
+      END DO
+      END DO
       END DO
 
       CALL GLOBAL_ALL_SUM(SUM_AREA)

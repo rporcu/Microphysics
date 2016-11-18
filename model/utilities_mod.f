@@ -167,7 +167,7 @@ CONTAINS
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: IJK,I,J,K
       LOGICAL :: ALL_IS_ERROR
 !-----------------------------------------------
 
@@ -176,19 +176,25 @@ CONTAINS
       CHECK_VEL_BOUND = .FALSE.
       ALL_IS_ERROR    = .FALSE.
 
-LOOP_FLUID : DO IJK = IJKSTART3, IJKEND3
+LOOP_FLUID: DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
          IF (FLUID_AT(IJK)) THEN
             IF(ABS(U_G(IJK)) > MAX_INLET_VEL .OR. &
                ABS(V_G(IJK)) > MAX_INLET_VEL .OR. &
                ABS(W_G(IJK)) > MAX_INLET_VEL) THEN
                CHECK_VEL_BOUND = .TRUE.
-               WRITE(*,1000) MAX_INLET_VEL, I_OF(IJK), J_OF(IJK), K_OF(IJK), &
+               WRITE(*,1000) MAX_INLET_VEL, I, J, K, &
                              EP_g(IJK), U_G(IJK), V_G(IJK), W_G(IJK)
                EXIT LOOP_FLUID
             ENDIF
          ENDIF
 
+      ENDDO
+      ENDDO
       ENDDO LOOP_FLUID
 
       CALL GLOBAL_ALL_OR(CHECK_VEL_BOUND, ALL_IS_ERROR)

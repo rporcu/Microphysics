@@ -72,13 +72,14 @@
 
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(4)==1)) THEN
 
-         DO IJK = IJKSTART3, IJKEND3
-            J = J_OF(IJK)
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
             IJKN = NORTH_OF(IJK)
             EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
             IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
-               I = I_OF(IJK)
-               K = K_OF(IJK)
                JP = JP1(J)
                IM = IM1(I)
                KM = KM1(K)
@@ -143,7 +144,9 @@
             ELSE
                lTAU_V_G(IJK) = ZERO
             ENDIF   ! end if (.NOT. IP_AT_N(IJK) .AND. EPGA>DIL_EP_S)
-         ENDDO   ! end do ijk
+         ENDDO
+         ENDDO
+         ENDDO
 
       ELSE
 ! cartesian grid case
@@ -226,13 +229,14 @@
       INTEGER :: BCT
 !---------------------------------------------------------------------//
 
-      DO IJK = IJKSTART3, IJKEND3
-         J = J_OF(IJK)
+        DO K = kstart3, kend3
+        DO J = jstart3, jend3
+        DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
          IJKN = NORTH_OF(IJK)
          EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
          IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
-            I = I_OF(IJK)
-            K = K_OF(IJK)
             JP = JP1(J)
             IM = IM1(I)
             KM = KM1(K)
@@ -487,7 +491,9 @@
          ELSE
             lTAU_V_G(IJK) = ZERO
          ENDIF   ! end if/else (.NOT. IP_AT_N(IJK) .AND. EPGA>DIL_EP_S)
-      ENDDO   ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE CALC_CG_TAU_V_G

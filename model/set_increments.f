@@ -325,19 +325,19 @@
       endif
 
       IF(.NOT.INCREMENT_ARRAYS_ALLOCATED) THEN
-         allocate(WEST_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(EAST_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(SOUTH_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(NORTH_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(BOTTOM_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(TOP_ARRAY_OF(ijkstart3:ijkend3))
+         allocate(WEST_ARRAY_OF(DIMENSION_3))
+         allocate(EAST_ARRAY_OF(DIMENSION_3))
+         allocate(SOUTH_ARRAY_OF(DIMENSION_3))
+         allocate(NORTH_ARRAY_OF(DIMENSION_3))
+         allocate(BOTTOM_ARRAY_OF(DIMENSION_3))
+         allocate(TOP_ARRAY_OF(DIMENSION_3))
 
-         allocate(IM_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(IP_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(JM_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(JP_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(KM_ARRAY_OF(ijkstart3:ijkend3))
-         allocate(KP_ARRAY_OF(ijkstart3:ijkend3))
+         allocate(IM_ARRAY_OF(DIMENSION_3))
+         allocate(IP_ARRAY_OF(DIMENSION_3))
+         allocate(JM_ARRAY_OF(DIMENSION_3))
+         allocate(JP_ARRAY_OF(DIMENSION_3))
+         allocate(KM_ARRAY_OF(DIMENSION_3))
+         allocate(KP_ARRAY_OF(DIMENSION_3))
       ENDIF
 
       INCREMENT_ARRAYS_ALLOCATED = .TRUE.
