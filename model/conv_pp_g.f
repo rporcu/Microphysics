@@ -69,17 +69,9 @@
 
 
 ! Calculate convection fluxes through each of the faces
-
-      !DO IJK = ijkstart3, ijkend3
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
-
-         ! Original
-         ! I = I_OF(IJK)
-         ! J = J_OF(IJK)
-         ! K = K_OF(IJK)
-
          IJK = FUNIJK(i,j,k)
          IF (FLUID_AT(IJK)) THEN
             IPJK = IP_OF(IJK)

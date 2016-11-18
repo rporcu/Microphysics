@@ -36,14 +36,16 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK, IJKE, IJKN, IJKT
+      INTEGER :: I,J,K,IJK, IJKE, IJKN, IJKT
 !-----------------------------------------------
 
 ! Underrelax pressure correction.  Velocity corrections should not be
 ! underrelaxed, so that the continuity eq. is satisfied.
 
-!!$omp    parallel do private(IJK,IJKE,IJKN,IJKT)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLUIDORP_FLOW_AT(IJK)) THEN
 
@@ -71,7 +73,8 @@
             ENDIF
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE CORRECT_0
-

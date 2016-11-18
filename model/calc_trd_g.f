@@ -18,10 +18,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE CALC_TRD_G
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
 !
 !     Include param.inc file to specify parameter values
 !
@@ -35,16 +32,10 @@
       USE indices
       USE compar
       USE sendrecv
-!=======================================================================
-! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
-!=======================================================================
       USE bc
       USE cutcell
       USE quadric
       USE functions
-!=======================================================================
-! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
-!=======================================================================
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
@@ -74,11 +65,11 @@
 !=======================================================================
 !-----------------------------------------------
 !
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF (.NOT.WALL_AT(IJK)) THEN
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
             IM = IM1(I)
             IMJK = IM_OF(IJK)
             IJMK = JM_OF(IJK)
@@ -266,18 +257,14 @@
 ! Original term:
 !            TRD_G(IJK) = (X_E(I)*U_G(IJK)-X_E(IM)*U_G(IMJK))*OX(I)*ODX(I) + (&
 !               V_G(IJK)-V_G(IJMK))*ODY(J) + (W_G(IJK)-W_G(IJKM))*(OX(I)*ODZ(K))
-!=======================================================================
-! JFD: END MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
-!=======================================================================
          ENDIF
+      END DO
+      END DO
       END DO
 
       RETURN
       END SUBROUTINE CALC_TRD_G
 
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 350 Changed do loop limits: 1,ijkmax2-> ijkstart3, ijkend3
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -599,7 +586,3 @@
 
       RETURN
       END SUBROUTINE CG_CALC_VEL_G_GRAD
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 350 Changed do loop limits: 1,ijkmax2-> ijkstart3, ijkend3

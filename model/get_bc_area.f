@@ -19,10 +19,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE GET_BC_AREA
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
 !
 !-----------------------------------------------
 !   M o d u l e s
@@ -176,7 +173,10 @@
 ! For cut-cell boundaries, add the area of each cut face
 
 
-               DO IJK = IJKSTART3, IJKEND3
+               DO K = kstart3, kend3
+                 DO J = jstart3, jend3
+                   DO I = istart3, iend3
+                  IJK = FUNIJK(i,j,k)
                   IF(CUT_CELL_AT(IJK)) THEN
                      BCID = BC_ID(IJK)
                      IF(BCID > 0 ) THEN
@@ -185,6 +185,8 @@
                         IF(BCID==BCV) BC_VOL(BCV)  = BC_VOL(BCV)  + VOL(IJK)
                      ENDIF
                   ENDIF
+               END DO
+               END DO
                END DO
 
 

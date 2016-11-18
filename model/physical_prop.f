@@ -116,6 +116,7 @@
 
 ! Global variables:
 !-----------------------------------------------------------------------
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Gas phase density (compressible).
       use fldvar, only: RO_g
 ! Gas phase pressure.
@@ -138,7 +139,7 @@
 ! Local Variables:
 !-----------------------------------------------------------------------
 ! Loop indicies
-      INTEGER :: IJK   ! Computational cell
+      INTEGER :: I,J,K,IJK   ! Computational cell
 ! Flag to write log header
       LOGICAL :: wHeader
 !......................................................................!
@@ -146,17 +147,23 @@
 ! Initialize:
       wHeader = .TRUE.
 
-      IJK_LP: DO IJK = IJKSTART3, IJKEND3
-         IF(WALL_AT(IJK)) cycle IJK_LP
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
+         IF(.NOT.WALL_AT(IJK)) THEN
 
-         RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),293.15d0)
-         ROP_G(IJK) = RO_G(IJK)*EP_G(IJK)
+            RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),293.15d0)
+            ROP_G(IJK) = RO_G(IJK)*EP_G(IJK)
 
-         IF(RO_G(IJK) < ZERO) THEN
-            Err_l(myPE) = 100
-            IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(IJK, wHeader)
+            IF(RO_G(IJK) < ZERO) THEN
+               Err_l(myPE) = 100
+               IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(IJK, wHeader)
+            ENDIF
          ENDIF
-      ENDDO IJK_LP
+      ENDDO
+      ENDDO
+      ENDDO
 
 
       RETURN
