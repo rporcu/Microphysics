@@ -84,8 +84,12 @@
          AXZ_V(IJK) = AXZ(IJK)
          AXZ_W(IJK) = DX(I)*(X(I)*HALF*(DZ(K)+DZ(KP)))
 
-      END DO
+          end do
+        end do
+      end do
+
       RETURN
+
       END SUBROUTINE SET_GEOMETRY1
 
 !// Comments on the modifications for DMP version implementation
