@@ -51,7 +51,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE cutcell, only: cut_u_treatment_at
       USE cutcell, only: theta_ue, theta_ue_bar
@@ -62,6 +62,7 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg_x_e, avg_x
+      USE functions, only: funijk
       USE functions, only: ip_of
       USE geometry, only: do_k
       USE indices, only: i_of, ip1
@@ -78,14 +79,15 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: IJK, I, IP, IPJK
+      INTEGER :: IJK, I,j,k, IP, IPJK
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
-!!!$omp parallel do private(IJK,I,IP,IPJK)
-      DO IJK = ijkstart3, ijkend3
-         I = I_OF(IJK)
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IP = IP1(I)
          IPJK = IP_OF(IJK)
 
@@ -119,7 +121,9 @@
             V(IJK) = AVG_X(V_G(IJK),V_G(IPJK),I)
             IF (DO_K) WW(IJK) = AVG_X(W_G(IJK),W_G(IPJK),I)
          ENDIF
-      ENDDO   ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE GET_UCELL_GVTERMS
@@ -394,9 +398,11 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
+      USE functions, only: funijk
       USE functions, only: flow_at_e
+      USE functions, only: funijk
       USE functions, only: ip_of, jp_of, kp_of
       USE functions, only: im_of, jm_of, km_of
 
@@ -415,7 +421,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: IJK, I, J, K
       INTEGER :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
 ! Face mass flux
       DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
@@ -425,13 +431,10 @@
 
 !---------------------------------------------------------------------//
 
-!$omp     parallel do default(none)                                &
-!$omp     private(IJK, IPJK, IJPK, IJKP, IMJK, IJMK, IJKM,         &
-!$omp             D_fe, d_fw, d_fn, d_fs, d_ft, d_fb,              &
-!$omp             flux_e, flux_w, flux_n, flux_s, flux_t, flux_b)  &
-!$omp     shared(ijkstart3, ijkend3, do_k, a_u_g)
-
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLOW_AT_E(IJK)) THEN
 
@@ -505,8 +508,9 @@
             ENDIF   ! end if (do_k)
 
          ENDIF   ! end if (flow_at_e)
-      ENDDO   !end do (ijk)
-!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE STORE_A_U_G0
@@ -532,9 +536,10 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: u_g
 
+      USE functions, only: funijk
       USE functions, only: flow_at_e
       USE functions, only: ip_of, jp_of, kp_of
       USE functions, only: im_of, jm_of, km_of
@@ -562,7 +567,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, IPJK, IMJK, IJPK, IJMK, IJKP, IJKM
+      INTEGER :: I,J,K,IJK, IPJK, IMJK, IJPK, IJMK, IJKP, IJKM
 ! indicator for shear
       INTEGER :: incr
 ! Diffusion parameter
@@ -593,12 +598,10 @@
       CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, &
                      XSI_T, incr)
 
-
-!!!$omp      parallel do                                                 &
-!!!$omp&     private(IJK, IPJK, IJPK, IJKP, IMJK, IJMK, IJKM,            &
-!!!$omp&             d_fe, d_fw, d_fn, d_fs, d_ft, d_fb,                 &
-!!!$omp&             flux_e, flux_w, flux_n, flux_s, flux_t, flux_b)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLOW_AT_E(IJK)) THEN
 
@@ -643,7 +646,9 @@
             ENDIF   ! end if (do_k)
 
          ENDIF   ! end if flow_at_e
-      ENDDO   ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       deallocate( U, V, WW )
 

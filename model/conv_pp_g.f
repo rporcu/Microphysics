@@ -35,6 +35,9 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
       USE param
       USE param1
       USE fldvar
@@ -59,7 +62,7 @@
 ! Indices
       INTEGER :: IJK, IPJK, IJPK, IJKP
       INTEGER :: IMJK, IJMK, IJKM
-      INTEGER :: M
+      INTEGER :: M, I, J, K
 ! local value of A_m
       DOUBLE PRECISION :: am
 !-----------------------------------------------
@@ -67,9 +70,17 @@
 
 ! Calculate convection fluxes through each of the faces
 
-!$omp  parallel do default(none) private( IJK, IPJK, IJPK, IJKP, M, AM, IMJK, IJMK, IJKM) &
-!$omp              shared(ijkstart3, ijkend3, rop_ge, rop_gn, rop_gt, axz, axy, ayz, do_k, a_m)
-      DO IJK = ijkstart3, ijkend3
+      !DO IJK = ijkstart3, ijkend3
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
+
+         ! Original
+         ! I = I_OF(IJK)
+         ! J = J_OF(IJK)
+         ! K = K_OF(IJK)
+
+         IJK = FUNIJK(i,j,k)
          IF (FLUID_AT(IJK)) THEN
             IPJK = IP_OF(IJK)
             IJPK = JP_OF(IJK)
@@ -115,7 +126,9 @@
                ENDIF
             ENDIF
          ENDIF   ! end if (fluid_at(ijk))
-      ENDDO   ! end do ijk=ijkstart3,ijkend3
+      ENDDO
+      ENDDO
+      ENDDO
 
 
       RETURN

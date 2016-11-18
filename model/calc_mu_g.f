@@ -18,6 +18,7 @@
       USE toleranc
       USE compar
       USE functions
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -28,9 +29,13 @@
 ! Local variables
 !-----------------------------------------------
 ! Cell indices
-      INTEGER :: IJK
+      INTEGER :: I,J,K, IJK
 
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+           DO I = istart3, iend3
+
+         IJK = FUNIJK(i,j,k)
 
 ! Gas viscosity   (in Poise or Pa.s)
 ! Calculating gas viscosity using Sutherland's formula with
@@ -49,8 +54,9 @@
             LAMBDA_G(IJK) = ZERO
          ENDIF   ! end if (fluid_at(ijk))
 
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE CALC_MU_G
-

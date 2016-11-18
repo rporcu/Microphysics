@@ -53,7 +53,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE cutcell, only: cut_v_treatment_at
       USE cutcell, only: theta_vn, theta_vn_bar
@@ -63,6 +63,7 @@
 
       USE fldvar, only: u_g, v_g, w_g
 
+      USE functions, only: funijk
       USE fun_avg, only: avg_y_n, avg_y
       USE functions, only: jp_of
       USE geometry, only: do_k
@@ -80,14 +81,15 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: IJK, J, IJPK
+      INTEGER :: IJK, I, J, K, IJPK
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
-!!!$omp parallel do private(IJK,J,IJPK)
-      DO IJK = ijkstart3, ijkend3
-         J = J_OF(IJK)
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IJPK = JP_OF(IJK)
 
          IF(CUT_V_TREATMENT_AT(IJK)) THEN
@@ -120,7 +122,9 @@
             V(IJK) = AVG_Y_N(V_G(IJK),V_G(IJPK),0)
             IF (DO_K) WW(IJK) = AVG_Y(W_G(IJK),W_G(IJPK),J)
          ENDIF
-      ENDDO   ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE GET_VCELL_GVTERMS
@@ -392,8 +396,9 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
+      USE functions, only: funijk
       USE functions, only: flow_at_n
       USE functions, only: ip_of, jp_of, kp_of
       USE functions, only: im_of, jm_of, km_of
@@ -414,7 +419,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: IJK, I, J, K
       INTEGER :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
 ! Face mass flux
       DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
@@ -424,13 +429,10 @@
 
 !---------------------------------------------------------------------//
 
-!$omp     parallel do default(none)                              &
-!$omp     private(IJK, IMJK, IJMK, IPJK, IJPK, IJKM, IJKP,       &
-!$omp             D_fe, d_fw, d_fn, d_fs, d_ft, d_fb,            &
-!$omp             flux_e, flux_w, flux_n, flux_s, flux_t,        &
-!$omp             flux_b)                                        &
-!$omp     shared(ijkstart3, ijkend3, do_k, a_v_g)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLOW_AT_N(IJK)) THEN
 
@@ -504,8 +506,9 @@
             ENDIF   ! end if (do_k)
 
          ENDIF   ! end if flow_at_n
-      END DO   ! end do ijk
-!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE STORE_A_V_G0
@@ -532,9 +535,10 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: v_g
 
+      USE functions, only: funijk
       USE functions, only: flow_at_n
       USE functions, only: ip_of, jp_of, kp_of
       USE functions, only: im_of, jm_of, km_of
@@ -562,6 +566,7 @@
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: IJK, IPJK, IMJK, IJPK, IJMK, IJKP, IJKM
+      INTEGER :: I, J, K
 ! indicator for shear
       INTEGER :: incr
 ! Diffusion parameter
@@ -591,11 +596,10 @@
          XSI_T, incr)
 
 
-!!!$omp      parallel do                                             &
-!!!$omp&     private(IJK, IMJK, IJMK, IPJK, IJPK, IJKM, IJKP,        &
-!!!$omp&             d_fe, d_fw, d_fn, d_fs, d_ft, d_fb,             &
-!!!$omp&             flux_e, flux_w, flux_n, flux_s, flux_t, flux_b)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
 
          IF (FLOW_AT_N(IJK)) THEN
 
@@ -640,7 +644,9 @@
             ENDIF   ! end if (do_k)
 
          ENDIF   ! end if (flow_at_n)
-      ENDDO   ! end do (ijk)
+      ENDDO
+      ENDDO
+      ENDDO
 
       deallocate( U, V, WW )
       call unlock_xsi_array

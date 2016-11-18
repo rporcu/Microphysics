@@ -37,8 +37,8 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: ijkstart3, ijkend3
-      USE functions, only: fluid_at
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE functions, only: fluid_at, funijk
       USE functions, only: im_of, jm_of, km_of
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
@@ -63,14 +63,14 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, IMJK, IJMK, IJKM
+      INTEGER :: IJK, IMJK, IJMK, IJKM, I, J, K
 !---------------------------------------------------------------------//
 
-!$omp  parallel do default(none) private( IJK, IMJK, IJMK, IJKM) &
-!$omp              shared(ijkstart3, ijkend3, flux_e, flux_n, flux_t,&
-!$omp                     rop_e, rop_n, rop_t, axz, axy, ayz, u, v, w, do_k)
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
 
-      DO IJK = ijkstart3, ijkend3
+         IJK = FUNIJK(i,j,k)
          IF (FLUID_AT(IJK)) THEN
 
             IMJK = IM_OF(IJK)
@@ -100,7 +100,9 @@
                ENDIF
             ENDIF   ! end if do_k
          ENDIF   ! end if fluid_at
-      ENDDO   ! end do ijk
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE CALC_MFLUX0

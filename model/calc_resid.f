@@ -52,6 +52,7 @@
 !-----------------------------------------------
 ! Indices
       INTEGER :: IJK, IJKW, IJKS, IJKB, IJKE, IJKN, IJKT
+      INTEGER :: I, J, K
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -69,15 +70,19 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-!!$omp parallel do private( IJK )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
           RESID_IJK(IJK) = ZERO
       ENDDO
+      ENDDO
+      ENDDO
 
-!!$omp  parallel do private( IJK, IJKW, IJKS, IJKB, IJKE, IJKN, IJKT,  &
-!!$omp&  NUM1, DEN1) &
-!!$omp&  REDUCTION(+:NUM,DEN,NCELLS)
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
          IF (FLUID_AT(IJK)) THEN
             IJKW = WEST_OF(IJK)
@@ -109,6 +114,8 @@
             DEN = DEN + DEN1
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       IF(.not.debug_resid) RETURN
 
@@ -120,12 +127,17 @@
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
             IJK_RESID = IJK
             MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Determining the max residual
@@ -238,6 +250,7 @@
 !-----------------------------------------------
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -255,17 +268,19 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-!!$omp parallel do private( IJK )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          RESID_IJK(IJK) = ZERO
       ENDDO
+      ENDDO
+      ENDDO
 
-!!$omp    parallel do &
-!!$omp&   private(   IJK, IMJK, IJMK, IPJK, IJPK, IJKM, IJKP, &
-!!$omp&   NUM1, DEN1) &
-!!$omp&   REDUCTION(+:NUM, DEN,NCELLS)
-
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
 
          IF (FLUID_AT(IJK) .AND. ABS(VAR(IJK)) > TOL) THEN
@@ -297,6 +312,8 @@
             DEN = DEN + DEN1
          ENDIF
       ENDDO
+      ENDDO
+      ENDDO
 
       IF(.not.debug_resid) RETURN
 
@@ -308,12 +325,17 @@
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
       IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
                IJK_RESID = IJK
                MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Determining the max residual
@@ -417,7 +439,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK
+      INTEGER :: IJK, I, J, K
 ! Number of fluid cells
       INTEGER :: NCELLS
 ! Numerators and denominators
@@ -436,7 +458,10 @@
       DEN1 = ONE
       IJK_RESID = 1
 
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
          IF (FLUID_AT(IJK)) THEN
 
@@ -452,6 +477,8 @@
             NUM = NUM + NUM1
             DEN = DEN + DEN1
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 
@@ -590,6 +617,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -611,12 +639,10 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-!$omp  parallel default(none) &
-!$omp  private( IMJK, IPJK, IJMK, IJPK, IJKM, IJKP, &
-!$omp           VEL,  NUM1, DEN1,EPSA) &
-!$omp  shared (ijkstart3, ijkend3, resid_ijk, i_of, j_of, k_of,m,a_m,b_m,w_m,do_k,u_m,v_m,num,den,ncells)
-!$omp do reduction(+:num, DEN, NCELLS )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
@@ -657,7 +683,8 @@
             ENDIF
          ENDIF
       ENDDO
-!$omp end parallel
+      ENDDO
+      ENDDO
 
       IF(.not.debug_resid) RETURN
 
@@ -669,12 +696,17 @@
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
          IF (RESID_IJK( IJK ) > MAX_RESID) THEN
             IJK_RESID = IJK
             MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Determining the max residual
@@ -788,6 +820,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -808,12 +841,10 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-!$omp  parallel default(none) &
-!$omp  private( IMJK, IPJK, IJMK, IJPK, IJKM, IJKP, &
-!$omp           VEL,  NUM1, DEN1,EPSA) &
-!$omp  shared (ijkstart3, ijkend3, resid_ijk, i_of, j_of, k_of,m,a_m,b_m,w_m,do_k,u_m,v_m,num,den,ncells)
-!$omp do reduction(+:num, DEN, NCELLS )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
@@ -855,7 +886,8 @@
             ENDIF
          ENDIF
       ENDDO
-!$omp end parallel
+      ENDDO
+      ENDDO
 
       if(.not.debug_resid) return
 
@@ -867,12 +899,17 @@
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
       IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
           IF (RESID_IJK( IJK ) > MAX_RESID) THEN
               IJK_RESID = IJK
               MAX_RESID = RESID_IJK( IJK_RESID )
           ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Determining the max residual
@@ -989,6 +1026,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -1009,12 +1047,10 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-!$omp  parallel default(none) &
-!$omp  private( IMJK, IPJK, IJMK, IJPK, IJKM, IJKP, &
-!$omp           VEL,  NUM1, DEN1,EPSA) &
-!$omp  shared (ijkstart3, ijkend3, resid_ijk, i_of, j_of, k_of,m,a_m,b_m,w_m,do_k,u_m,v_m,num,den,ncells)
-!$omp do reduction(+:num, DEN, NCELLS )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
@@ -1056,7 +1092,8 @@
             ENDIF
          ENDIF
       ENDDO
-!$omp end parallel
+      ENDDO
+      ENDDO
 
       if(.not.debug_resid) return
 
@@ -1068,13 +1105,18 @@
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart3, kend3
+        DO J = jstart3, jend3
+          DO I = istart3, iend3
+         IJK = FUNIJK(i,j,k)
       IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
 
           IF (RESID_IJK( IJK ) > MAX_RESID) THEN
               IJK_RESID = IJK
               MAX_RESID = RESID_IJK( IJK_RESID )
           ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
 ! Determining the max residual

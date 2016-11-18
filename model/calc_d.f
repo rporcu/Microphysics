@@ -79,10 +79,12 @@ MODULE CALC_D_MOD
       use discretelement, only: VXF_GDS
 ! Pressure scale factor
       use scales, only: P_SCALE
-! Fluid grid loop bounds.
-      use compar, only: IJKStart3, IJKEnd3
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
       use functions, only: IP_AT_N, MFLOW_AT_N, NORTH_OF
+      use functions, only: funijk
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -103,7 +105,7 @@ MODULE CALC_D_MOD
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Usual Indices
-      INTEGER :: IJK
+      INTEGER :: I,J,K,IJK
 ! Temp variable for double precision values.
       DOUBLE PRECISION :: TMPdp
 !......................................................................!
@@ -126,7 +128,11 @@ MODULE CALC_D_MOD
          EPGA => EPGA_Z
       endif
 
-      DO IJK = IJKSTART3, IJKEND3
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
+
+         IJK = FUNIJK(i,j,k)
 
          TMPdp = -A_M(IJK,0)
          IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
@@ -137,6 +143,8 @@ MODULE CALC_D_MOD
             D(IJK) = ZERO
          ENDIF
 
+      ENDDO
+      ENDDO
       ENDDO
 
       RETURN

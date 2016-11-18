@@ -52,20 +52,22 @@
 
       SUBROUTINE ADJUST_A_G(axis, A_M, B_M)
 
-         USE compar, only: ijkstart3, ijkend3
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
          USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
          USE indices, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param, only: dimension_3
          USE param1, only: ONE, ZERO, small_number
-
+      use functions, only: funijk
       IMPLICIT NONE
 
 !                      Indices
       INTEGER          IP, IJK
 !
 !                      Phase index
-      INTEGER          M
+      INTEGER          M, I, J, K
 !
       CHARACTER, INTENT(IN) :: axis
 !                      Septadiagonal matrix A_m
@@ -112,7 +114,12 @@
          denom_pos => denom_w_pos
       endif
 
-      DO IJK = ijkstart3, ijkend3
+      DO K = kstart2, kend2
+        DO J = jstart2, jend2
+          DO I = istart2, iend2
+
+         IJK = FUNIJK(i,j,k)
+
          IF (ABS(A_M(IJK,0)) < SMALL_NUMBER) THEN
             A_M(IJK,E) = ZERO
             A_M(IJK,W) = ZERO
@@ -142,6 +149,8 @@
                B_M(IJK) = ZERO
             ENDIF
          ENDIF
+      END DO
+      END DO
       END DO
 
       RETURN
