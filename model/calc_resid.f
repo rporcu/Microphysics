@@ -53,6 +53,7 @@
 ! Indices
       INTEGER :: IJK, IJKW, IJKS, IJKB, IJKE, IJKN, IJKT
       INTEGER :: I, J, K
+      INTEGER :: i_resid, j_resid, k_resid
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -83,7 +84,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (FLUID_AT(IJK)) THEN
             IJKW = WEST_OF(IJK)
             IJKS = SOUTH_OF(IJK)
@@ -131,9 +132,12 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
             IJK_RESID = IJK
+            i_RESID = i
+            j_RESID = j
+            k_RESID = k
             MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
       ENDDO
@@ -144,7 +148,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -250,7 +254,7 @@
 !-----------------------------------------------
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
-      INTEGER :: I, J, K
+      INTEGER :: i, j, k, i_resid, j_resid, k_resid
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -281,13 +285,31 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
          IF (FLUID_AT(IJK) .AND. ABS(VAR(IJK)) > TOL) THEN
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
+
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            if (imjk .ne. im_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            if (ipjk .ne. ip_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            if (ijmk .ne. jm_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            if (ijpk .ne. jp_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -296,8 +318,16 @@
                A_M(IJK,W)*VAR(IMJK)+A_M(IJK,N)*VAR(IJPK)+A_M(IJK,S)*VAR(&
                IJMK))
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
-               IJKP = KP_OF(IJK)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
+               if (ijkm .ne. km_of(ijk)) then
+                  print *,'ERR IN CALC_RESID ',i,j,k
+                  stop
+               end if
+               IJKP = FUNIJK(i,j,kplus(i,j,k))
+               if (ijkp .ne. kp_of(ijk)) then
+                  print *,'ERR IN CALC_RESID ',i,j,k
+                  stop
+               end if
                NUM1 = NUM1 - (A_M(IJK,T)*VAR(IJKP)+A_M(IJK,B)*VAR(IJKM))
             ENDIF
 
@@ -329,9 +359,12 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-      IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+      IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
                IJK_RESID = IJK
+               i_resid = i
+               j_resid = j
+               k_resid = k
                MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
       ENDDO
@@ -342,7 +375,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -439,7 +472,8 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK, I, J, K
+      INTEGER :: IJK
+      INTEGER :: i, j, k, i_resid, j_resid, k_resid
 ! Number of fluid cells
       INTEGER :: NCELLS
 ! Numerators and denominators
@@ -462,7 +496,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (FLUID_AT(IJK)) THEN
 
 ! evaluating the residual at cell ijk:
@@ -470,6 +504,9 @@
             IF (NUM1 > MAX_RESID) THEN
                MAX_RESID = NUM1
                IJK_RESID = IJK
+               i_resid = i
+               j_resid = j
+               k_resid = k
             ENDIF
 
 ! adding to terms that are accumulated
@@ -508,7 +545,7 @@
          do nproc=0,NumPEs-1
             if(nproc.eq.myPE) then
                MAX_RESID_L(nproc) = MAX_RESID
-               IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+               IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
             else
                MAX_RESID_L(nproc) = 0.0
                IJK_RESID_L(nproc) = 0
@@ -617,7 +654,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
-      INTEGER :: I, J, K
+      INTEGER :: i, j, k, i_resid, j_resid, k_resid
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -645,16 +682,33 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
         IF(WALL_AT(IJK)) cycle
 
          IF (.NOT.IP_AT_E(IJK)) THEN
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
+
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            if (imjk .ne. im_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            if (ipjk .ne. ip_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            if (ijmk .ne. jm_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            if (ijpk .ne. jp_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -700,9 +754,12 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK( IJK ) > MAX_RESID) THEN
             IJK_RESID = IJK
+            i_resid = i
+            j_resid = j
+            k_resid = k
             MAX_RESID = RESID_IJK( IJK_RESID )
          ENDIF
       ENDDO
@@ -713,7 +770,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -820,7 +877,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
-      INTEGER :: I, J, K
+      INTEGER :: i, j, k, i_resid, j_resid, k_resid
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -847,17 +904,34 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
         IF(WALL_AT(IJK)) cycle
 
 
          IF (.NOT.IP_AT_N(IJK)) THEN
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
+
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            if (imjk .ne. im_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            if (ipjk .ne. ip_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            if (ijmk .ne. jm_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            if (ijpk .ne. jp_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -897,26 +971,28 @@
       call global_all_sum(DEN)
       call global_all_sum(NCELLS)
 
-      IJK_RESID = 1
-      MAX_RESID = RESID_IJK( IJK_RESID )
+      MAX_RESID = RESID_IJK( 1 )
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-      IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
-          IF (RESID_IJK( IJK ) > MAX_RESID) THEN
-              IJK_RESID = IJK
-              MAX_RESID = RESID_IJK( IJK_RESID )
-          ENDIF
-      ENDDO
-      ENDDO
+            IJK = FUNIJK(i,j,k)
+            IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
+              IF (RESID_IJK( IJK ) > MAX_RESID) THEN
+                IJK_RESID = IJK
+                i_resid = i
+                j_resid = j
+                k_resid = k
+                MAX_RESID = RESID_IJK( IJK_RESID )
+             ENDIF
+          ENDDO
+        ENDDO
       ENDDO
 
 ! Determining the max residual
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -1026,7 +1102,7 @@
       DOUBLE PRECISION :: VEL
 ! Indices
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
-      INTEGER :: I, J, K
+      INTEGER :: i, j, k, i_resid, j_resid, k_resid
 ! Numerators and denominators
       DOUBLE PRECISION :: NUM1, DEN1
 ! Number of fluid cells
@@ -1053,17 +1129,33 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
         IF(WALL_AT(IJK)) cycle
 
 
          IF (.NOT.IP_AT_T(IJK)) THEN
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            if (imjk .ne. im_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            if (ipjk .ne. ip_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            if (ijmk .ne. jm_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            if (ijpk .ne. jp_of(ijk)) then
+               print *,'ERR IN CALC_RESID ',i,j,k
+               stop
+            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -1103,27 +1195,25 @@
       call global_all_sum(DEN)
       call global_all_sum(NCELLS)
 
-      IJK_RESID = 1
-      MAX_RESID = RESID_IJK( IJK_RESID )
+      MAX_RESID = RESID_IJK( 1 )
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-      IF(.NOT.IS_ON_myPE_wobnd(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
-
-          IF (RESID_IJK( IJK ) > MAX_RESID) THEN
+            IJK = FUNIJK(i,j,k)
+            IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
+            IF (RESID_IJK( IJK ) > MAX_RESID) THEN
               IJK_RESID = IJK
               MAX_RESID = RESID_IJK( IJK_RESID )
-          ENDIF
-      ENDDO
-      ENDDO
+            ENDIF
+          ENDDO
+        ENDDO
       ENDDO
 
 ! Determining the max residual
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(I_OF(IJK_RESID), J_OF(IJK_RESID), K_OF(IJK_RESID))
+            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0

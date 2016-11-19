@@ -122,7 +122,6 @@ set(SOURCES
   model/conv_rop.f
   model/corner.f
   model/correct_0.f
-  model/dbg_mod.f
   model/deprecated.f
   model/des/calc_collision_wall_mod.f
   model/des/calc_drag_des.f

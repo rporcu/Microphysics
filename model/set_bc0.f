@@ -641,7 +641,6 @@
          return
       endif
 
-
 ! The owner if the IJK_Pg gets the global I/J/K values and sends
 ! them to all ranks.
       if(myPE == IJK_Pg_Owner) then

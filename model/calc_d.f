@@ -8,52 +8,56 @@ MODULE CALC_D_MOD
    use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
    CONTAINS
 
-      double precision function epga_x(ijk)
-         use functions, only: EAST_OF
-         use indices, only: I_OF
+      double precision function epga_x(i,j,k)
+         use functions, only: FUNIJK, ieast
          implicit none
-         integer, intent(in) :: ijk
-         integer :: I, IJKE
+         integer, intent(in) :: i,j,k
+         integer :: IJK,IJKE
          DOUBLE PRECISION :: AREA_FACE
+
+         IJK = FUNIJK(i,j,k) 
+
          IF (IP_AT_E(IJK) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
-            I = I_OF(IJK)
-            IJKE = EAST_OF(IJK)
+            ! IJKE = EAST_OF(IJK)
+            IJKE = FUNIJK(ieast(i,j,k),j,k)
             AREA_FACE = merge(ONE, AYZ(IJK), CARTESIAN_GRID)
             EPGA_X = AREA_FACE*AVG_X(EP_G(IJK),EP_G(IJKE),I)
          ENDIF
       end function epga_x
 
-      double precision function epga_y(ijk)
-         use functions, only: NORTH_OF
-         use indices, only: J_OF
+      double precision function epga_y(i,j,k)
+         use functions, only: FUNIJK, jnorth
          implicit none
-         integer, intent(in) :: ijk
-         integer :: J, IJKN
+         integer, intent(in) :: i,j,k
+         integer :: IJK, IJKN
          DOUBLE PRECISION :: AREA_FACE
+
+         IJK = FUNIJK(i,j,k) 
+
          IF (IP_AT_N(IJK) .OR. MFLOW_AT_N(IJK)) THEN
             EPGA_Y = ZERO
          ELSE
-            J = J_OF(IJK)
-            IJKN = NORTH_OF(IJK)
+            ! IJKN = NORTH_OF(IJK)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
             AREA_FACE = merge(ONE, AXZ(IJK), CARTESIAN_GRID)
             EPGA_Y = AREA_FACE*AVG_Y(EP_G(IJK),EP_G(IJKN),J)
          ENDIF
       end function epga_y
 
-      double precision function epga_z(ijk)
-         use functions, only: TOP_OF
-         use indices, only: K_OF
+      double precision function epga_z(i,j,k)
+         use functions, only: FUNIJK, ktop
          implicit none
-         integer, intent(in) :: ijk
-         integer :: K, IJKT
+         integer, intent(in) :: i,j,k
+         integer :: IJK, IJKT
          DOUBLE PRECISION :: AREA_FACE
+
+         IJK = FUNIJK(i,j,k) 
          IF (IP_AT_T(IJK) .OR. MFLOW_AT_T(IJK)) THEN
             EPGA_Z = ZERO
          ELSE
-            K = K_OF(IJK)
-            IJKT = TOP_OF(IJK)
+            IJKT = FUNIJK(i,j,ktop(i,j,k))
             AREA_FACE = merge(ONE, AXY(IJK), CARTESIAN_GRID)
             EPGA_Z = AREA_FACE*AVG_Z(EP_G(IJK),EP_G(IJKT),K)
          ENDIF
@@ -111,9 +115,9 @@ MODULE CALC_D_MOD
 !......................................................................!
 
       abstract interface
-         function epga_t (ijk)
+         function epga_t (i,j,k)
             DOUBLE PRECISION :: epga_t
-            integer, intent (in) :: ijk
+            integer, intent (in) :: i,j,k
          end function epga_t
       end interface
 
@@ -138,7 +142,7 @@ MODULE CALC_D_MOD
          IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN
-            D(IJK) = P_SCALE*EPGA(IJK)/TMPdp
+            D(IJK) = P_SCALE*EPGA(i,j,k)/TMPdp
          ELSE
             D(IJK) = ZERO
          ENDIF

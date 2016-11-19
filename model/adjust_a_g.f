@@ -10,7 +10,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    USE geometry, only: ayz_u, axz_v, axy_w
    USE fldvar, only: rop_g
-   USE functions, only: i_of, im_of, jm_of, km_of, east_of, north_of, top_of
+   USE functions, only: im_of, jm_of, km_of, east_of, north_of, top_of
 
    contains
 
@@ -129,13 +129,13 @@
             A_M(IJK,B) = ZERO
             A_M(IJK,0) = -ONE
             IF (B_M(IJK) < ZERO) THEN
-               IP = IP1(I_OF(IJK))
+               IP = IP1(I)
 
                denominator = denom_neg(ijk)
                xxxm = ONE
                xxxp = ZERO
             ELSE IF (B_M(IJK) > ZERO) THEN
-               IP = I_OF(IJK)
+               IP = I
                denominator = denom_pos(ijk)
                xxxm = ZERO
                xxxp = ONE
