@@ -37,14 +37,13 @@
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
       USE functions, only: ip_at_n, sip_at_n, is_id_at_n
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, new_north_of
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: north_of, south_of
       USE functions, only: zmax, funijk, wall_at
       USE geometry, only: jmax1, cyclic_y_pd, flag
       USE geometry, only: vol, vol_v
       USE geometry, only: axz
 
-      USE indices, only: i_of, j_of, k_of
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3
@@ -111,10 +110,6 @@
         DO J = jstart2, jend2
           DO I = istart2, iend2
 
-         ! I = I_OF(IJK)
-         ! J = J_OF(IJK)
-         ! K = K_OF(IJK)
-
          IJK = FUNIJK(i,j,k)
 
          ! original
@@ -138,7 +133,7 @@
 
           IJK = FUNIJK(i,j,k)
 
-          New_JN = NEW_NORTH_OF(I,j,k)
+          New_JN = jnorth(I,j,k)
           New_IJKN = FUNIJK(i,New_JN,k)
 
           New_IM = IMINUS(I,J,K)
@@ -230,7 +225,7 @@
 ! Pressure term
             PGN = P_G(IJKN)
             IF (CYCLIC_Y_PD) THEN
-               IF (JMAP(J_OF(IJK)).EQ.JMAX1)PGN = P_G(IJKN) - DELP_Y
+               IF (JMAP(J).EQ.JMAX1)PGN = P_G(IJKN) - DELP_Y
             ENDIF
             IF(.NOT.CUT_V_TREATMENT_AT(IJK)) THEN
                SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ(IJK)

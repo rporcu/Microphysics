@@ -1046,7 +1046,7 @@
 
       ! ************************************************
 
-      integer function new_east_of(i,j,k)
+      integer function ieast(i,j,k)
 
       implicit none
       integer, intent(in) :: i,j,k
@@ -1055,16 +1055,16 @@
       ipjk = funijk(iplus(i,j,k),j,k)
 
       if(wall_at(ipjk)) then
-         new_east_of = i
+         ieast = i
       else
-         new_east_of = iplus(i,j,k)
+         ieast = iplus(i,j,k)
       end if
 
-      end function new_east_of
+      end function ieast
 
       ! ************************************************
 
-      integer function new_north_of(i,j,k)
+      integer function jnorth(i,j,k)
 
       implicit none
       integer, intent(in) :: i,j,k
@@ -1073,16 +1073,16 @@
       ijpk = funijk(i,jplus(i,j,k),k)
 
       if(wall_at(ijpk)) then
-         new_north_of = j
+         jnorth = j
       else
-         new_north_of = jplus(i,j,k)
+         jnorth = jplus(i,j,k)
       end if
 
-      end function new_north_of
+      end function jnorth
 
       ! ************************************************
 
-      integer function new_top_of(i,j,k)
+      integer function ktop(i,j,k)
 
       implicit none
       integer, intent(in) :: i,j,k
@@ -1091,9 +1091,9 @@
       ijkp = funijk(i,j,kplus(i,j,k))
 
       if(wall_at(ijkp)) then
-         new_top_of = k
+         ktop = k
       else
-         new_top_of = kplus(i,j,k)
+         ktop = kplus(i,j,k)
       end if
 
-      end function new_top_of
+      end function ktop

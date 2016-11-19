@@ -40,7 +40,7 @@
       USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, new_east_of
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, ieast
       USE functions, only: east_of, west_of, wall_at
       USE functions, only: zmax
  
@@ -48,8 +48,6 @@
       USE geometry, only: vol, vol_u
       USE geometry, only: ayz
 
-
-      USE indices, only: i_of, j_of, k_of
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3
@@ -118,13 +116,9 @@
         DO J = jstart2, jend2
           DO I = istart2, iend2
 
-         ! Original
-         ! I = I_OF(IJK)
-         ! J = J_OF(IJK)
-         ! K = K_OF(IJK)
-
          IJK = FUNIJK(i,j,k)
 
+         ! Original
          IJKE = EAST_OF(IJK)
 
          IPJK = IP_OF(IJK)
@@ -142,7 +136,7 @@
          ! End of Original
 
          ! New
-          New_IE = NEW_EAST_OF(I,j,k)
+          New_IE = ieast(I,j,k)
           New_IJKE = FUNIJK(New_IE,j,k)
 
           New_IM = IMINUS(I,J,K)
@@ -168,16 +162,16 @@
 
          if (.not. WALL_AT(ijk)) then
           err = 0
-          err = max(abs(ijke-new_ijke),err)
+!         err = max(abs(ijke-new_ijke),err)
           err = max(abs(ijkm-new_ijkm),err)
-          err = max(abs(ipjk-new_ipjk),err)
-          err = max(abs(imjk-new_imjk),err)
-          err = max(abs(ijpk-new_ijpk),err)
-          err = max(abs(ijmk-new_ijmk),err)
-          err = max(abs(ijkp-new_ijkp),err)
-          err = max(abs(ijkm-new_ijkm),err)
-          err = max(abs(ipjkm-new_ipjkm),err)
-          err = max(abs(ipjmk-new_ipjmk),err)
+!         err = max(abs(ipjk-new_ipjk),err)
+!         err = max(abs(imjk-new_imjk),err)
+!         err = max(abs(ijpk-new_ijpk),err)
+!         err = max(abs(ijmk-new_ijmk),err)
+!         err = max(abs(ijkp-new_ijkp),err)
+!         err = max(abs(ijkm-new_ijkm),err)
+!         err = max(abs(ipjkm-new_ipjkm),err)
+!         err = max(abs(ipjmk-new_ipjmk),err)
 
           if(err /= 0) then
              write(*,*)'ERR      AT I,j,k        ' ,i,j,FUNIJK(i,j,k)
@@ -239,7 +233,7 @@
 ! Pressure term
             PGE = P_G(IJKE)
             IF (CYCLIC_X_PD) THEN
-               IF (IMAP(I_OF(IJK)).EQ.IMAX1) PGE = P_G(IJKE) - DELP_X
+               IF (IMAP(I).EQ.IMAX1) PGE = P_G(IJKE) - DELP_X
             ENDIF
             IF(.NOT.CUT_U_TREATMENT_AT(IJK)) THEN
                 SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ(IJK)

@@ -41,13 +41,12 @@
       USE functions, only: ip_at_t, sip_at_t, is_id_at_t
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: east_of, west_of, top_of, bottom_of
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,new_top_of
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax, funijk, wall_at
       USE geometry, only: kmax1, cyclic_z_pd
       USE geometry, only: vol, vol_w
       USE geometry, only: axy
 
-      USE indices, only: i_of, j_of, k_of
       use matrix, only: e, w, s, n, t, b
 
       USE param, only: dimension_3
@@ -118,9 +117,6 @@
           DO I = istart2, iend2
 
          ! Original
-         ! I = I_OF(IJK)
-         ! J = J_OF(IJK)
-         ! K = K_OF(IJK)
 
           IJK = FUNIJK(i,j,k)
 
@@ -139,7 +135,7 @@
          IJMKP = KP_OF(IJMK)
 
          ! New
-          New_KT = NEW_TOP_OF(I,j,k)
+          New_KT = ktop(I,j,k)
           New_IJKT = FUNIJK(i,j,New_KT)
 
           New_IM = IMINUS(I,J,K)
@@ -235,7 +231,7 @@
 ! Pressure term
             PGT = P_G(IJKT)
             IF (CYCLIC_Z_PD) THEN
-               IF (KMAP(K_OF(IJK)).EQ.KMAX1) PGT = P_G(IJKT) - DELP_Z
+               IF (KMAP(K).EQ.KMAX1) PGT = P_G(IJKT) - DELP_Z
             ENDIF
             IF(.NOT.CUT_W_TREATMENT_AT(IJK)) THEN
                 SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY(IJK)
