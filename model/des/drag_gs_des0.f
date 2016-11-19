@@ -44,6 +44,7 @@
                  IPJPK, IPJKP, IJPKP, IPJPKP
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
+      INTEGER :: lli, llj, llk
       INTEGER :: IW, IE, JS, JN, KB, KTP
 ! i,j,k indices of the fluid cell the particle resides in minus 1
 ! (e.g., shifted 1 in west, south, bottom direction)
@@ -77,16 +78,10 @@
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
 
-!$omp parallel do default(none)                                         &
-!$omp shared(ijkstart3,ijkend3,pinc,i_of,j_of,k_of,no_k,interp_scheme,  &
-!$omp        funijk_map_c,xe,yn,dz,zt,avg_factor,do_k,pic,des_pos_new,  &
-!$omp        des_vel_new, p_force,          &
-!$omp        u_g,v_g,w_g,pvol,fc,f_gp,ep_g)                     &
-!$omp private(ijk, i, j, k, pcell, iw, ie, js, jn, kb, ktp,             &
-!$omp         onew, ii, jj, kk,cur_ijk, ipjk, ijpk, ipjpk,              &
-!$omp         gst_tmp, vst_tmp, velfp, desposnew, ijpkp, ipjkp, &
-!$omp         ipjpkp,ijkp,nindx,np,weight_ft,d_force, vel_new)
-      DO ijk = ijkstart3,ijkend3
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
          if(.not.fluid_at(ijk) .or. pinc(ijk).eq.0) cycle
          i = i_of(ijk)
          j = j_of(ijk)
@@ -170,8 +165,9 @@
             FC(NP,:) = FC(NP,:) + P_FORCE(:,IJK)*PVOL(NP)
          ENDDO       ! end do (nindx = 1,pinc(ijk))
 
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
-!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE DRAG_GS_DES0
@@ -236,7 +232,7 @@
 ! unless it is re/set later through the call to set_interpolation_stencil
       INTEGER :: ONEW
 ! index of solid phase that particle NP belongs to
-      INTEGER :: M
+      INTEGER :: M, lli, llj, llk
 ! particle number index, used for looping
       INTEGER :: NP, nindx
 ! one over the volume of fluid cell
@@ -273,14 +269,10 @@
 ! order and allocates arrays necessary for interpolation
       call set_interpolation_scheme(2)
 
-!!!$omp parallel default(shared)                                        &
-!!!$omp private(ijk,i,j,k,pcell,iw,ie,js,jn,kb,ktp,onew,                &
-!!!$omp         ii,jj,kk,cur_ijk,ipjk,ijpk,ipjpk,                       &
-!!!$omp         gst_tmp,vst_tmp,velfp,desposnew,ijpkp,ipjkp,            &
-!!!$omp         ipjpkp,ijkp,nindx,focus,np,m,weight_ft,             &
-!!!$omp             vcell,ovol)
-!!!$omp do reduction(+:drag_am) reduction(+:drag_bm)
-      DO IJK = IJKSTART3,IJKEND3
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
          IF(.NOT.FLUID_AT(IJK) .OR. PINC(IJK)==0) cycle
          i = i_of(ijk)
          j = j_of(ijk)
@@ -392,8 +384,9 @@
             ENDDO
          ENDDO   ! end do (nindx = 1,pinc(ijk))
 
-      ENDDO   ! end do (ijk=ijkstart3,ijkend3)
-!!!$omp end parallel
+      ENDDO
+      ENDDO
+      ENDDO
 
 
 ! At the interface drag_am and drag_bm have to be added
@@ -409,11 +402,11 @@
 ! avg_factor=0.125 (in 3D) or =0.25 (in 2D)
       AVG_FACTOR = merge(0.25d0, 0.125D0, NO_K)
 
-!!$omp parallel do default(shared)                               &
-!!$omp private(ijk,i,j,k,imjk,ijmk,imjmk,ijkm,imjkm,ijmkm,       &
-!!$omp         imjmkm)                                           &
-!!$omp schedule (guided,20)
-      DO ijk = ijkstart3, ijkend3
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
+
          IF(FLUID_AT(IJK)) THEN
 
             i = i_of(ijk)
@@ -443,8 +436,9 @@
             F_GDS(IJK) = ZERO
          ENDIF   ! end if/else (fluid_at(ijk))
 
-      ENDDO   ! end do loop (ijk=ijkstart3,ijkend3)
-!!$omp end parallel do
+      ENDDO
+      ENDDO
+      ENDDO
 
       RETURN
       END SUBROUTINE DRAG_GS_GAS0

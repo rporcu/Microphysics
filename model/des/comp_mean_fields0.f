@@ -56,7 +56,7 @@
 ! avg_factor=0.250 (in 3D) or =0.50 (in 2D)
       DOUBLE PRECISION :: AVG_FACTOR
 ! index of solid phase that particle NP belongs to
-      INTEGER :: M
+      INTEGER :: llI, llJ, llK, M
 ! particle number index, used for looping
       INTEGER :: NP, NINDX
 
@@ -101,13 +101,10 @@
 ! order and allocates arrays necessary for interpolation
       CALL SET_INTERPOLATION_SCHEME(2)
 
-!$omp parallel default(shared)                                             &
-!$omp private(IJK, I, J, K, PCELL, IW, IE, JS, JN, KB, KTP, ONEW, GST_TMP, &
-!$omp    COUNT_NODES_INSIDE, II, JJ, KK, CUR_IJK, NINDX, NP, M,       &
-!$omp    WEIGHT_FT, I1, I2, J1, J2, K1, K2, IDIM,                          &
-!$omp    IJK2, NORM_FACTOR, RESID_ROPS, RESID_VEL,COUNT_NODES_OUTSIDE, TEMP1)
-!$omp do reduction(+:MASS_SOL1) reduction(+:DES_ROPS_NODE,DES_VEL_NODE)
-      DO IJK = IJKSTART3,IJKEND3
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
 
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
@@ -271,6 +268,8 @@
             ENDIF
          ENDIF   ! end if (cartesian_grid)
       ENDDO
+      ENDDO
+      ENDDO
 !$omp end parallel
 
 
@@ -349,9 +348,10 @@
 !-----------------------------------------------------------------<<<
 
 
-!$omp parallel do default(none) private(IJK, M)                        &
-!$omp shared(IJKSTART3, IJKEND3, DO_K, MMAX, DES_ROP_s, VOL)
-      DO IJK = IJKSTART3, IJKEND3
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
          IF(.NOT.FLUID_AT(IJK)) CYCLE
 
          DO M = 1, MMAX
@@ -362,7 +362,9 @@
 
             ENDIF
          ENDDO   ! end loop over M=1,MMAX
-      ENDDO  ! end loop over IJK=ijkstart3,ijkend3
+      ENDDO
+      ENDDO
+      ENDDO
 !omp end parallel do
 
 
@@ -374,8 +376,11 @@
 ! false for any production runs.
       IF(DES_REPORT_MASS_INTERP) THEN
 
+      DO llK = kstart3, kend3
+      DO llJ = jstart3, jend3
+      DO llI = istart3, iend3
+      IJK = FUNIJK(lli,llj,llk)
 
-         DO IJK = IJKSTART3, IJKEND3
             IF(.NOT.FLUID_AT(IJK)) CYCLE
 
             I = I_OF(IJK)
@@ -385,6 +390,8 @@
 ! It is important to check both FLUID_AT and IS_ON_MYPE_WOBND.
             IF(IS_ON_myPE_wobnd(I,J,K)) MASS_SOL2 = MASS_SOL2 +        &
                sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
+         ENDDO
+         ENDDO
          ENDDO
 
 
