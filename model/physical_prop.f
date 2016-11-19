@@ -158,7 +158,7 @@
 
             IF(RO_G(IJK) < ZERO) THEN
                Err_l(myPE) = 100
-               IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(IJK, wHeader)
+               IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(i, j, k, wHeader)
             ENDIF
          ENDIF
       ENDDO
@@ -173,7 +173,7 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: NegROg_LOG                                              C
+!  Subroutine: ROgErr_LOG
 !  Purpose: Record information about the location and conditions that  C
 !           resulted in a negative gas phase density.                  C
 !                                                                      C
@@ -181,7 +181,7 @@
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE ROgErr_LOG(IJK, tHeader)
+      SUBROUTINE ROgErr_LOG(i, j, k, tHeader)
 
 ! Simulation time
       use run, only: TIME
@@ -190,8 +190,9 @@
 ! Gas phase pressure.
       use fldvar, only: P_g
       use cutcell
+      use functions, only: funijk
 
-      INTEGER, intent(in) :: IJK
+      INTEGER, intent(in) :: i, j, k
       LOGICAL, intent(inout) :: tHeader
 
       LOGICAL :: lExists
@@ -224,14 +225,14 @@
          tHeader = .FALSE.
       endif
 
-      write(lUnit,1001) IJK, I_OF(IJK), J_OF(IJK), K_OF(IJK)
-      write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(IJK)
-      write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(IJK)
+      write(lUnit,1001) FUNIJK(i,j,k), i, j, k
+      write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(FUNIJK(i,j,k))
+      write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(FUNIJK(i,j,k))
       if(CARTESIAN_GRID) then
-         write(lUnit,"(6x,A,1X,L1)",ADVANCE='NO') 'Cut Cell:', CUT_CELL_AT(IJK)
-         write(lUnit,"(6x,A,1X,L1)") 'Small Cell:', SMALL_CELL_AT(IJK)
+         write(lUnit,"(6x,A,1X,L1)",ADVANCE='NO') 'Cut Cell:', CUT_CELL_AT(FUNIJK(i,j,k))
+         write(lUnit,"(6x,A,1X,L1)") 'Small Cell:', SMALL_CELL_AT(FUNIJK(i,j,k))
          write(lUnit,"(6x,'Coordinates (E/N/T): ',1X,3(2x, g17.8))") &
-            xg_e(I_OF(IJK)), yg_n(J_of(ijk)), zg_t(k_of(ijk))
+            xg_e(I), yg_n(j), zg_t(k)
       endif
 
       close(lUnit)
