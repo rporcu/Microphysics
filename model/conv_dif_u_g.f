@@ -65,7 +65,7 @@
       USE functions, only: funijk
       USE functions, only: ip_of
       USE geometry, only: do_k
-      USE indices, only: i_of, ip1
+      USE indices, only:  ip1
 
       USE param, only: dimension_3
       IMPLICIT NONE
@@ -87,7 +87,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
          IP = IP1(I)
          IPJK = IP_OF(IJK)
 
@@ -138,7 +138,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GCFLUX_TERMS(FLUX_E, FLUX_W, FLUX_N, &
-         FLUX_S, FLUX_T, FLUX_B, IJK)
+         FLUX_S, FLUX_T, FLUX_B, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -147,7 +147,7 @@
       USE cutcell, only: theta_u_ne, theta_u_nw
       USE cutcell, only: theta_u_te, theta_u_tw
       USE cutcell, only: alpha_ue_c, alpha_un_c, alpha_ut_c
-      USE functions, only: ip_of, im_of, jm_of, km_of
+      USE functions, only: funijk, ip_of, im_of, jm_of, km_of
       USE geometry, only: do_k
       USE fldvar, only: flux_ge, flux_gn, flux_gt
 
@@ -157,15 +157,17 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! fluxes through faces of given ijk u-momentum cell
+
       DOUBLE PRECISION, INTENT(OUT) :: flux_e, flux_w
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
       DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
-! ijk index
-      INTEGER, INTENT(IN) :: ijk
+
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
+      INTEGER :: ijk
       INTEGER :: imjk, ijmk, ijkm
       INTEGER :: ipjk, ipjmk, ipjkm
 
@@ -174,6 +176,7 @@
 !---------------------------------------------------------------------//
 
 ! indices
+      IJK  = funijk(I,J,K)
       IPJK = IP_OF(IJK)
       IMJK = IM_OF(IJK)
       IJMK = JM_OF(IJK)
@@ -248,14 +251,14 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GDIFF_TERMS(D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, IJK)
+         D_FT, D_FB, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE cutcell, only: cut_u_treatment_at
       USE cutcell, only: oneodx_e_u, oneody_n_u, oneodz_t_u
 
-      USE functions, only: wall_at
+      USE functions, only: funijk, wall_at
       USE functions, only: east_of, north_of, top_of
       USE functions, only: south_of, bottom_of
       USE functions, only: im_of, jm_of, km_of
@@ -265,7 +268,6 @@
       USE geometry, only: ox_e
       USE geometry, only: ayz_u, axz_u, axy_u
 
-      USE indices, only: i_of, j_of, k_of
       USE indices, only: ip1, jm1, km1
 
       use matrix, only: e, w, s, n, t, b
@@ -283,26 +285,26 @@
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
 ! ijk index
-      INTEGER, INTENT(IN) :: ijk
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
+      INTEGER :: ijk
       INTEGER :: imjk, ijmk, ijkm
-      INTEGER :: i, j, k, ip, jm, km
+      INTEGER :: ip, jm, km
       INTEGER :: ijkc, ijke, ijkn, ijkne, ijks, ijkse
       INTEGER :: ijkt, ijkte, ijkb, ijkbe
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
+      IJK = funijk(i,j,k)
+
       IMJK = IM_OF(IJK)
       IJMK = JM_OF(IJK)
       IJKM = KM_OF(IJK)
 
-      I = I_OF(IJK)
-      J = J_OF(IJK)
-      K = K_OF(IJK)
       IP = IP1(I)
       JM = JM1(J)
       KM = KM1(K)
@@ -402,7 +404,6 @@
 
       USE functions, only: funijk
       USE functions, only: flow_at_e
-      USE functions, only: funijk
       USE functions, only: ip_of, jp_of, kp_of
       USE functions, only: im_of, jm_of, km_of
 
@@ -434,15 +435,15 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_E(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_UCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
             CALL GET_UCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IPJK = IP_OF(IJK)
             IJPK = JP_OF(IJK)
@@ -601,15 +602,15 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_E(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_UCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
             CALL GET_UCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IPJK = IP_OF(IJK)
             IMJK = IM_OF(IJK)

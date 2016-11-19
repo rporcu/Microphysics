@@ -54,12 +54,12 @@
             U_G(IJK) = ZERO
             V_G(IJK) = ZERO
             W_G(IJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (I_OF(IJK)==IMAX2 .OR. &
-                I_OF(IJK)==IMAX3))) U_G(IMJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (J_OF(IJK)==JMAX2 .OR. &
-                J_OF(IJK)==JMAX3))) V_G(IJMK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (K_OF(IJK)==KMAX2 .OR. &
-                K_OF(IJK)==KMAX3))) W_G(IJKM) = ZERO
+            IF (.NOT.(CYCLIC_AT(IJK) .AND. (I==IMAX2 .OR. &
+                I==IMAX3))) U_G(IMJK) = ZERO
+            IF (.NOT.(CYCLIC_AT(IJK) .AND. (J==JMAX2 .OR. &
+                J==JMAX3))) V_G(IJMK) = ZERO
+            IF (.NOT.(CYCLIC_AT(IJK) .AND. (K==KMAX2 .OR. &
+                K==KMAX3))) W_G(IJKM) = ZERO
          ENDIF
 
           end do

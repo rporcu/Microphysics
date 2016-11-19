@@ -87,7 +87,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
          IJKP = KP_OF(IJK)
 
          IF(CUT_W_TREATMENT_AT(IJK)) THEN
@@ -135,7 +135,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GCFLUX_TERMS(FLUX_E, FLUX_W, FLUX_N, &
-         FLUX_S, FLUX_T, FLUX_B, IJK)
+         FLUX_S, FLUX_T, FLUX_B, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -145,7 +145,7 @@
       USE cutcell, only: theta_w_bn, theta_w_tn
       USE cutcell, only: alpha_we_c, alpha_wn_c, alpha_wt_c
 
-      USE functions, only: kp_of, im_of, jm_of, km_of
+      USE functions, only: funijk, kp_of, im_of, jm_of, km_of
 
       USE fldvar, only: flux_ge, flux_gn, flux_gt
 
@@ -159,17 +159,19 @@
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
       DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
 ! ijk index
-      INTEGER, INTENT(IN) :: ijk
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: imjk, ijmk, ijkm
+      INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: ijkp, imjkp, ijmkp
 
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
+
+      IJK = funijk(i,j,k)
 
       IJKP = KP_OF(IJK)
       IMJK = IM_OF(IJK)
@@ -241,14 +243,14 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GDIFF_TERMS(D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, IJK)
+         D_FT, D_FB, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE cutcell, only: cut_w_treatment_at
       USE cutcell, only: oneodx_e_w, oneody_n_w, oneodz_t_w
 
-      USE functions, only: wall_at
+      USE functions, only: funijk, wall_at
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, south_of
       USE functions, only: im_of, jm_of, km_of
@@ -270,27 +272,26 @@
       DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
-! ijk idnex
-      INTEGER, INTENT(IN) :: ijk
+
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: imjk, ijmk, ijkm
-      INTEGER :: i, j, k, kp, im, jm
+      INTEGER :: ijk, imjk, ijmk, ijkm
+      INTEGER :: kp, im, jm
       INTEGER :: ijkc, ijkt, ijke, ijkte, ijkw, ijkwt
       INTEGER :: ijkn, ijktn, ijks, ijkst
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
+      IJK = funijk(i,j,k)
+
       IMJK = IM_OF(IJK)
       IJMK = JM_OF(IJK)
       IJKM = KM_OF(IJK)
 
-      I = I_OF(IJK)
-      J = J_OF(IJK)
-      K = K_OF(IJK)
       KP = KP1(K)
       IM = IM1(I)
       JM = JM1(J)
@@ -411,16 +412,16 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_T(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
 
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IPJK = IP_OF(IJK)
             IJPK = JP_OF(IJK)
@@ -574,15 +575,15 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_T(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IPJK = IP_OF(IJK)
             IJPK = JP_OF(IJK)

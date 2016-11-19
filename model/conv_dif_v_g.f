@@ -67,7 +67,6 @@
       USE fun_avg, only: avg_y_n, avg_y
       USE functions, only: jp_of
       USE geometry, only: do_k
-      USE indices, only: j_of
 
       USE param, only: dimension_3
       IMPLICIT NONE
@@ -89,7 +88,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
          IJPK = JP_OF(IJK)
 
          IF(CUT_V_TREATMENT_AT(IJK)) THEN
@@ -140,7 +139,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GCFLUX_TERMS(FLUX_E, FLUX_W, FLUX_N, &
-         FLUX_S, FLUX_T, FLUX_B, IJK)
+         FLUX_S, FLUX_T, FLUX_B, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -150,7 +149,7 @@
       USE cutcell, only: theta_v_nt, theta_v_st
       USE cutcell, only: alpha_ve_c, alpha_vn_c, alpha_vt_c
 
-      USE functions, only: jp_of, im_of, jm_of, km_of
+      USE functions, only: funijk, jp_of, im_of, jm_of, km_of
 
       USE geometry, only: do_k
 
@@ -166,17 +165,19 @@
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
       DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
 ! indices
-      INTEGER, INTENT(IN) :: ijk
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: imjk, ijmk, ijkm
+      INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: ijpk, imjpk, ijpkm
 
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 ! indices
+      IJK  = funijk(i,j,k)
+
       IJPK = JP_OF(IJK)
       IMJK = IM_OF(IJK)
       IJMK = JM_OF(IJK)
@@ -251,14 +252,14 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, IJK)
+         D_FT, D_FB, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE cutcell, only: cut_v_treatment_at
       USE cutcell, only: oneodx_e_v, oneody_n_v, oneodz_t_v
 
-      USE functions, only: wall_at
+      USE functions, only: funijk, wall_at
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, bottom_of
       USE functions, only: im_of, jm_of, km_of
@@ -268,7 +269,6 @@
       USE geometry, only: ox
       USE geometry, only: ayz_v, axz_v, axy_v
 
-      USE indices, only: i_of, j_of, k_of
       USE indices, only: jp1, im1, km1
 
       use matrix, only: e, w, n, s, t, b
@@ -283,26 +283,25 @@
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
 ! ijk index
-      INTEGER, INTENT(IN) :: ijk
+      INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: imjk, ijmk, ijkm
-      INTEGER :: i, j, k, jp, im, km
+      INTEGER :: ijk, imjk, ijmk, ijkm
+      INTEGER :: jp, im, km
       INTEGER :: ijkc, ijkn, ijke, ijkne, ijkw, ijknw
       INTEGER :: ijkt, ijktn, ijkb, ijkbn
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
+      IJK = funijk(i,j,k)
+
       IMJK = IM_OF(IJK)
       IJMK = JM_OF(IJK)
       IJKM = KM_OF(IJK)
 
-      I = I_OF(IJK)
-      J = J_OF(IJK)
-      K = K_OF(IJK)
       IM = IM1(I)
       JP = JP1(J)
       KM = KM1(K)
@@ -432,15 +431,15 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_N(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_VCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
             CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IPJK = IP_OF(IJK)
             IJPK = JP_OF(IJK)
@@ -599,15 +598,15 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
+         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_N(IJK)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_VCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, ijk)
+               flux_s, flux_t, flux_b, i, j, k)
             CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, ijk)
+               d_ft, d_fb, i, j, k)
 
             IMJK = IM_OF(IJK)
             IJMK = JM_OF(IJK)
