@@ -98,8 +98,6 @@
 !---------------------------------------------------------------------//
 
       integer err
-      integer new_jn, new_ip, new_im, new_jp, new_jm, new_kp, new_km
-      integer new_ijkn, new_imjk,new_ipjk,new_ijmk,new_ijpk,new_ijkm, new_ijkp, new_imjpk,new_ijpkm
 
 ! Set reference phase to gas
       M = 0
@@ -113,62 +111,39 @@
          IJK = FUNIJK(i,j,k)
 
          ! original
-         IJKN = NORTH_OF(IJK)
+         ! IJKN = NORTH_OF(IJK)
+         ! IMJK = IM_OF(IJK)
+         ! IPJK = IP_OF(IJK)
+         ! IJMK = JM_OF(IJK)
+         ! IJPK = JP_OF(IJK)
+         ! IJKM = KM_OF(IJK)
+         ! IJKP = KP_OF(IJK)
+         ! IMJPK = IM_OF(IJPK)
+         ! IJPKM = KM_OF(IJPK)
 
-         IMJK = IM_OF(IJK)
-         IPJK = IP_OF(IJK)
+          IJKN = FUNIJK(i,jnorth(i,j,k),k)
+          IMJK = FUNIJK(iminus(i,j,k),j,k)
+          IPJK = FUNIJK(iplus(i,j,k),j,k)
+          IJMK = FUNIJK(i,jminus(i,j,k),k)
+          IJPK = FUNIJK(i,jplus(i,j,k),k)
+          IJKM = FUNIJK(i,j,kminus(i,j,k))
+          IJKP = FUNIJK(i,j,kplus(i,j,k))
 
-         IJMK = JM_OF(IJK)
-         IJPK = JP_OF(IJK)
-
-         IJKM = KM_OF(IJK)
-         IJKP = KP_OF(IJK)
-
-         IMJPK = IM_OF(IJPK)
-         IJPKM = KM_OF(IJPK)
-
-         ! end of original
-
-         ! New
-
-          IJK = FUNIJK(i,j,k)
-
-          New_JN = jnorth(I,j,k)
-          New_IJKN = FUNIJK(i,New_JN,k)
-
-          New_IM = IMINUS(I,J,K)
-          New_IMJK = FUNIJK(NEW_IM,j,k)
-
-          New_IP = IPLUS(I,J,K)
-          New_IPJK = FUNIJK(NEW_IP,j,k)
-
-          New_JM = JMINUS(I,J,K)
-          New_IJMK = FUNIJK(i,NEW_JM,k)
-
-          New_JP = JPLUS(I,J,K)
-          New_IJPK = FUNIJK(i,NEW_JP,k)
-
-          New_KM = KMINUS(I,J,K)
-          New_IJKM = FUNIJK(i,j,New_KM)
-
-          New_KP = KPLUS(I,J,K)
-          New_IJKP = FUNIJK(i,j,New_KP)
-
-          New_IMJPK = FUNIJK(IMINUS(I,New_JP,K),New_JP,k)
-          New_IJPKM = FUNIJK(I,New_JP,KMINUS(I,New_JP,k))
+          IMJPK = FUNIJK(IMINUS(I,jplus(i,j,k),K),jplus(i,j,k),k)
+          IJPKM = FUNIJK(I,jplus(i,j,k),KMINUS(I,jplus(i,j,k),k))
 
           if (.not. WALL_AT(ijk)) then
           err = 0
-          err = max(abs(ijkn-new_ijkn),err)
-          err = max(abs(ijkm-new_ijkm),err)
-          err = max(abs(ipjk-new_ipjk),err)
-          err = max(abs(imjk-new_imjk),err)
-          err = max(abs(ijpk-new_ijpk),err)
-          err = max(abs(ijmk-new_ijmk),err)
-          err = max(abs(ijkp-new_ijkp),err)
-          err = max(abs(ijkm-new_ijkm),err)
-          err = max(abs(imjpk-new_imjpk),err)
-          err = max(abs(ijpkm-new_ijpkm),err)
+          err = max(abs(ijkn-north_of(ijk)),err)
+          err = max(abs(ijkm-  km_of(ijk)),err)
+          err = max(abs(ipjk-  ip_of(ijk)),err)
+          err = max(abs(imjk-  im_of(ijk)),err)
+          err = max(abs(ijpk-  jp_of(ijk)),err)
+          err = max(abs(ijmk-  jm_of(ijk)),err)
+          err = max(abs(ijkp-  kp_of(ijk)),err)
+          err = max(abs(ijkm-  km_of(ijk)),err)
+          err = max(abs(imjpk-im_of(jp_of(ijk))),err)
+          err = max(abs(ijpkm-km_of(jp_of(ijk))),err)
 
           if(err /= 0) then
              write(*,*)'ERR      AT i,j        ' ,i,j,FUNIJK(i,j,k)
