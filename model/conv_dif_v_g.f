@@ -63,7 +63,7 @@
 
       USE fldvar, only: u_g, v_g, w_g
 
-      USE functions, only: funijk
+      USE functions, only: funijk, iplus, iminus, jplus, jminus
       USE fun_avg, only: avg_y_n, avg_y
       USE functions, only: jp_of
       USE geometry, only: do_k
@@ -89,7 +89,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = funijk(i,j,k)
-         IJPK = JP_OF(IJK)
+         IJPK = FUNIJK(i,jplus(i,j,k),k)
 
          IF(CUT_V_TREATMENT_AT(IJK)) THEN
 
@@ -150,6 +150,7 @@
       USE cutcell, only: alpha_ve_c, alpha_vn_c, alpha_vt_c
 
       USE functions, only: funijk, jp_of, im_of, jm_of, km_of
+      USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       USE geometry, only: do_k
 
@@ -171,6 +172,7 @@
 !---------------------------------------------------------------------//
       INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: ijpk, imjpk, ijpkm
+      INTEGER :: itmp,ktmp
 
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
@@ -178,12 +180,17 @@
 ! indices
       IJK  = funijk(i,j,k)
 
-      IJPK = JP_OF(IJK)
-      IMJK = IM_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJKM = KM_OF(IJK)
-      IJPKM = JP_OF(IJKM)
-      IMJPK = JP_OF(IMJK)
+      IJPK = FUNIJK(i,jplus(i,j,k),k)
+      IJMK = FUNIJK(i,jminus(i,j,k),k)
+
+      itmp  = iminus(i,j,k)
+      IMJK  = FUNIJK(itmp,j,k)
+      IMJPK = FUNIJK(itmp,jplus(itmp,j,k),k)
+
+      ktmp  = kminus(i,j,k)
+      IJKM  = FUNIJK(i,j,ktmp)
+      IJPKM = FUNIJK(i,jplus(i,j,ktmp),ktmp)
+
 
       IF(CUT_V_TREATMENT_AT(IJK)) THEN
 ! East face (i+1/2, j+1/2, k)
@@ -259,10 +266,12 @@
       USE cutcell, only: cut_v_treatment_at
       USE cutcell, only: oneodx_e_v, oneody_n_v, oneodz_t_v
 
-      USE functions, only: funijk, wall_at
+      USE functions, only: funijk, wall_cell
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, bottom_of
       USE functions, only: im_of, jm_of, km_of
+      USE functions, only: iminus, jminus, kminus
+      USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
 
       USE geometry, only: odx_e, ody, odz_t
       USE geometry, only: do_k
@@ -292,30 +301,36 @@
       INTEGER :: jp, im, km
       INTEGER :: ijkc, ijkn, ijke, ijkne, ijkw, ijknw
       INTEGER :: ijkt, ijktn, ijkb, ijkbn
+      INTEGER :: itmp, jtmp, ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
       IJK = funijk(i,j,k)
 
-      IMJK = IM_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJKM = KM_OF(IJK)
+      IMJK = funijk(iminus(i,j,k),j,k)
+      IJMK = funijk(i,jminus(i,j,k),k)
+      IJKM = funijk(i,j,kminus(i,j,k))
 
       IM = IM1(I)
       JP = JP1(J)
       KM = KM1(K)
 
-      IJKN = NORTH_OF(IJK)
-      IF (WALL_AT(IJK)) THEN
+      jtmp  = jnorth(i,j,k)
+      IJKN  = funijk(i,jtmp,k)
+      IJKNE = funijk(ieast(i,jtmp,k),jtmp,k)
+
+      IF (wall_cell(i,j,k)) THEN
          IJKC = IJKN
       ELSE
          IJKC = IJK
       ENDIF
-      IJKE = EAST_OF(IJK)
-      IJKNE = EAST_OF(IJKN)
-      IJKW = WEST_OF(IJK)
-      IJKNW = NORTH_OF(IJKW)
+
+      IJKE = funijk(ieast(i,j,k),j,k)
+
+      itmp  = iwest(i,j,k)
+      IJKW  = funijk(itmp,j,k)
+      IJKNW = funijk(itmp,jnorth(itmp,j,k),k)
 
       IF(CUT_V_TREATMENT_AT(IJK)) THEN
          C_AE = ONEoDX_E_V(IJK)
@@ -350,10 +365,14 @@
       D_FT = ZERO
       D_FB = ZERO
       IF (DO_K) THEN
-         IJKT = TOP_OF(IJK)
-         IJKTN = NORTH_OF(IJKT)
-         IJKB = BOTTOM_OF(IJK)
-         IJKBN = NORTH_OF(IJKB)
+
+         ktmp  = ktop(i,j,k)
+         IJKT  = funijk(i,j,ktmp)
+         IJKTN = funijk(i,jnorth(i,j,ktmp),ktmp)
+
+         ktmp  = kbot(i,j,k)
+         IJKB  = funijk(i,j,ktmp)
+         IJKBN = funijk(i,jnorth(i,j,ktmp),ktmp)
 
 ! Top face (i, j+1/2, k+1/2)
          D_Ft = AVG_Y_H(AVG_Z_H(MU_G(IJKC),MU_G(IJKT),K),&

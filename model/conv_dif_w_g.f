@@ -250,7 +250,7 @@
       USE cutcell, only: cut_w_treatment_at
       USE cutcell, only: oneodx_e_w, oneody_n_w, oneodz_t_w
 
-      USE functions, only: funijk, wall_at
+      USE functions, only: funijk, wall_cell
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, south_of
       USE functions, only: im_of, jm_of, km_of
@@ -297,7 +297,7 @@
       JM = JM1(J)
 
       IJKT = TOP_OF(IJK)
-      IF (WALL_AT(IJK)) THEN
+      IF (wall_cell(i,j,k)) THEN
          IJKC = IJKT
       ELSE
          IJKC = IJK

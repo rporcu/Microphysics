@@ -62,7 +62,7 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg_x_e, avg_x
-      USE functions, only: funijk, wall_at
+      USE functions, only: funijk
       USE functions, only: ip_of, iplus
       USE geometry, only: do_k
       USE indices, only:  ip1
@@ -91,16 +91,6 @@
             IJK = funijk(i,j,k)
             IP = IP1(I)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-
-            if (.not. WALL_AT(ijk)) then
-               if (ipjk .ne. ip_of(ijk)) then
-                  print *,'0:IPJK ERR IN CONV_DIF_U ',i,j,k
-                  print *,'IJK  ',ijk
-                  print *,'IPJK ',ipjk
-                  print *,'IPOF ',ip_of(ijk)
-                  stop
-               end if
-            end if
 
          IF(CUT_U_TREATMENT_AT(IJK)) THEN
 
@@ -158,7 +148,7 @@
       USE cutcell, only: theta_u_ne, theta_u_nw
       USE cutcell, only: theta_u_te, theta_u_tw
       USE cutcell, only: alpha_ue_c, alpha_un_c, alpha_ut_c
-      USE functions, only: funijk, ip_of, im_of, jm_of, km_of, wall_at
+      USE functions, only: funijk, ip_of, im_of, jm_of, km_of
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE geometry, only: do_k
       USE fldvar, only: flux_ge, flux_gn, flux_gt
@@ -191,40 +181,11 @@
       IJK  = funijk(I,J,K)
 
       IMJK = FUNIJK(iminus(i,j,k),j,k)
-      if (.not. WALL_AT(ijk) .and. imjk .ne. im_of(ijk)) then
-         print *,'IMJK ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
-      
       IPJK = FUNIJK(iplus(i,j,k),j,k)
-      if (.not. WALL_AT(ijk) .and. ipjk .ne. ip_of(ijk)) then
-         print *,'1:IPJK ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
-
       IJMK = FUNIJK(i,jminus(i,j,k),k)
-      if (.not. WALL_AT(ijk) .and. ijmk .ne. jm_of(ijk)) then
-         print *,'IJMK ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
-
       IJKM = FUNIJK(i,j,kminus(i,j,k))
-      if (.not. WALL_AT(ijk) .and. ijkm .ne. km_of(ijk)) then
-         print *,'IJKM ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
-
       IPJMK = FUNIJK(iplus(i,jminus(i,j,k),k),jminus(i,j,k),k)
-      if (.not. WALL_AT(ijk) .and. ipjmk .ne. ip_of(jm_of(ijk))) then
-         print *,'IPJMK ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
-
       IPJKM = FUNIJK(iplus(i,j,kminus(i,j,k)),j,kminus(i,j,k))
-      if (.not. WALL_AT(ijk) .and. ipjkm .ne. ip_of(km_of(ijk))) then
-         print *,'IPJKM ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
 
 ! First calculate the fluxes at the faces
       IF(CUT_U_TREATMENT_AT(IJK)) THEN
@@ -300,9 +261,11 @@
       USE cutcell, only: cut_u_treatment_at
       USE cutcell, only: oneodx_e_u, oneody_n_u, oneodz_t_u
 
-      USE functions, only: funijk, wall_at
+      USE functions, only: funijk, wall_cell
+      USE functions, only: ieast, jnorth, ktop
       USE functions, only: east_of, north_of, top_of
       USE functions, only: south_of, bottom_of
+      USE functions, only: ieast, jnorth, jsouth, ktop, kbot
       USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, jminus, kminus
 
@@ -338,6 +301,7 @@
       INTEGER :: ip, jm, km
       INTEGER :: ijkc, ijke, ijkn, ijkne, ijks, ijkse
       INTEGER :: ijkt, ijkte, ijkb, ijkbe
+      INTEGER :: jtmp,ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
@@ -345,35 +309,28 @@
       IJK = funijk(i,j,k)
 
       IMJK = FUNIJK(iminus(i,j,k),j,k)
-      if (.not. WALL_AT(ijk) .and.  imjk .ne. im_of(ijk)) then
-         print *,'ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
       IJMK = FUNIJK(i,jminus(i,j,k),k)
-      if (.not. WALL_AT(ijk) .and.  ijmk .ne. jm_of(ijk)) then
-         print *,'ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
       IJKM = FUNIJK(i,j,kminus(i,j,k))
-      if (.not. WALL_AT(ijk) .and.  ijkm .ne. km_of(ijk)) then
-         print *,'ERR IN CONV_DIF_U ',i,j,k
-         stop
-      end if
 
       IP = IP1(I)
       JM = JM1(J)
       KM = KM1(K)
 
-      IJKE = EAST_OF(IJK)
-      IF (WALL_AT(IJK)) THEN
+      IJKE = FUNIJK(ieast(i,j,k),j,k)
+
+      IF (wall_cell(i,j,k))  THEN
          IJKC = IJKE
       ELSE
          IJKC = IJK
       ENDIF
-      IJKN = NORTH_OF(IJK)
-      IJKNE = EAST_OF(IJKN)
-      IJKS = SOUTH_OF(IJK)
-      IJKSE = EAST_OF(IJKS)
+
+      jtmp = jnorth(i,j,k)
+      IJKN = FUNIJK(i,jtmp,k)
+      IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
+
+      jtmp = jsouth(i,j,k)
+      IJKS = FUNIJK(i,jtmp,k)
+      IJKSE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
 
       IF(CUT_U_TREATMENT_AT(IJK)) THEN
          C_AE = ONEoDX_E_U(IJK)
@@ -409,10 +366,14 @@
       D_FT = ZERO
       D_FB = ZERO
       IF (DO_K) THEN
-         IJKT = TOP_OF(IJK)
-         IJKTE = EAST_OF(IJKT)
-         IJKB = BOTTOM_OF(IJK)
-         IJKBE = EAST_OF(IJKB)
+
+         ktmp = ktop(i,j,k)
+         IJKT  = FUNIJK(i,j,ktmp)
+         IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
+
+         ktmp  = kbot(i,j,k)
+         IJKB  = FUNIJK(i,j,ktmp)
+         IJKBE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
 
 ! Top face (i+1/2, j, k+1/2)
          D_FT = AVG_X_H(AVG_Z_H(MU_G(IJKC),MU_G(IJKT),K),&
@@ -460,7 +421,7 @@
       USE functions, only: funijk
       USE functions, only: flow_at_e
       USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of, wall_at
+      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       USE geometry, only: do_k
@@ -502,28 +463,9 @@
                d_ft, d_fb, i, j, k)
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (.not. WALL_AT(ijk) .and.  imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (.not. WALL_AT(ijk) .and. ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (.not. WALL_AT(ijk) .and. ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (.not. WALL_AT(ijk) .and.  ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
 
 ! East face (i+1, j, k)
             IF (Flux_e >= ZERO) THEN
@@ -564,15 +506,7 @@
             IF (DO_K) THEN
 
                IJKM = FUNIJK(i,j,kminus(i,j,k))
-               if (.not. WALL_AT(ijk) .and. ijkm .ne. km_of(ijk)) then
-                  print *,'ERR IN CONV_DIF_U ',i,j,k
-                  stop
-               end if
                IJKP = FUNIJK(i,j,kplus(i,j,k))
-               if (.not. WALL_AT(ijk) .and. ijkp .ne. kp_of(ijk)) then
-                  print *,'ERR IN CONV_DIF_U ',i,j,k
-                  stop
-               end if
 
 ! Top face (i+1/2, j, k+1/2)
                IF (Flux_t >= ZERO) THEN
@@ -627,7 +561,7 @@
       USE functions, only: funijk
       USE functions, only: flow_at_e
       USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of, wall_at
+      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       USE geometry, only: do_k
@@ -698,28 +632,9 @@
                d_ft, d_fb, i, j, k)
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (.not. WALL_AT(ijk) .and. imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (.not. WALL_AT(ijk) .and. ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (.not. WALL_AT(ijk) .and. ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
-
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (.not. WALL_AT(ijk) .and. ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CONV_DIF_U ',i,j,k
-               stop
-            end if
 
 ! East face (i+1, j, k)
             A_U_G(IJK,E) = D_Fe - XSI_E(IJK) * Flux_e
@@ -742,15 +657,7 @@
             IF (DO_K) THEN
 
                IJKM = FUNIJK(i,j,kminus(i,j,k))
-               if (.not. WALL_AT(ijk) .and. ijkm .ne. km_of(ijk)) then
-                  print *,'ERR IN CONV_DIF_U ',i,j,k
-                  stop
-               end if
                IJKP = FUNIJK(i,j,kplus(i,j,k))
-               if (.not. WALL_AT(ijk) .and. ijkp .ne. kp_of(ijk)) then
-                  print *,'ERR IN CONV_DIF_U ',i,j,k
-                  stop
-               end if
 
                A_U_G(IJK,T) = D_Ft - XSI_T(IJK) * Flux_t
                A_U_G(IJKP,B) = D_Ft + (ONE - XSI_T(IJK)) * Flux_t
