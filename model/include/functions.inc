@@ -417,9 +417,7 @@
          use geometry, only: flag
          implicit none
          integer, intent(in) :: i,j,k
-         integer             :: ijk
-         ijk = funijk(i,j,k)
-         fluid_cell = (flag(ijk).eq.1)
+         fluid_cell = (flag(funijk(i,j,k)).eq.1)
       end function fluid_cell
 
 ! logical function to identify a specified pressure inflow cell
@@ -482,6 +480,13 @@
       WALL_AT     = FLAG(IJK) .GE. 100
       END FUNCTION WALL_AT
 
+      logical function wall_cell(i,j,k)
+         use geometry, only: flag
+         implicit none
+         integer, intent(in) :: i,j,k
+         wall_cell = (flag(funijk(i,j,k)).ge.100)
+      end function wall_cell
+
 ! Logical function to identify a No-slip wall cell
       LOGICAL FUNCTION NS_WALL_AT(IJK)
       USE geometry
@@ -490,6 +495,14 @@
       NS_WALL_AT  = FLAG(IJK) .EQ. 100
       END FUNCTION NS_WALL_AT
 
+      ! Logical function to identify a no-slip wall cell
+      logical function ns_wall_cell(i,j,k)
+         use geometry, only: flag
+         implicit none
+         integer, intent(in) :: i,j,k
+         ns_wall_cell = (flag(funijk(i,j,k)).eq.100)
+      end function ns_wall_cell
+
 ! Logical function to identify a Free-slip wall cell
       LOGICAL FUNCTION FS_WALL_AT(IJK)
       USE geometry
@@ -497,6 +510,13 @@
       INTEGER IJK
       FS_WALL_AT  = FLAG(IJK) .EQ. 101
       END FUNCTION FS_WALL_AT
+
+      logical function fs_wall_cell(i,j,k)
+         use geometry, only: flag
+         implicit none
+         integer, intent(in) :: i,j,k
+         fs_wall_cell = (flag(funijk(i,j,k)).eq.101)
+      end function fs_wall_cell
 
 ! Logical function to identify a Partial-slip wall cell
       LOGICAL FUNCTION PS_WALL_AT(IJK)
