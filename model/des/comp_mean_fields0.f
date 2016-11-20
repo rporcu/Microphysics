@@ -28,7 +28,7 @@
       use particle_filter, only: DES_REPORT_MASS_INTERP
 
 
-      use functions, only: FLUID_AT
+      use functions, only: fluid_cell
       use functions, only: FUNIJK
       use functions, only: IS_ON_myPE_wobnd
 
@@ -108,7 +108,7 @@
 
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IF(.NOT.fluid_cell(lli,llj,llk)) CYCLE
          IF( PINC(IJK) == 0) CYCLE
 
          PCELL(1) = I_OF(IJK)-1
@@ -315,7 +315,7 @@
       DO I = ISTART2, IEND1
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IJK = funijk(I,J,K)
-         if (VOL_SURR(IJK).eq.ZERO) CYCLE ! no FLUID_AT any of the stencil points have
+         if (VOL_SURR(IJK).eq.ZERO) CYCLE ! no fluid_cell any of the stencil points have
 
 ! looping over stencil points (NODE VALUES)
          DO M = 1, MMAX
@@ -329,7 +329,7 @@
                IF (DEAD_CELL_AT(II,JJ,KK)) CYCLE  ! skip dead cells
 
                IJK2 = funijk_map_c(II, JJ, KK)
-               IF(FLUID_AT(IJK2).and.(IS_ON_myPE_wobnd(II, JJ, KK))) THEN
+               IF(fluid_cell(II,JJ,KK).and.(IS_ON_myPE_wobnd(II, JJ, KK))) THEN
 ! Since the data in the ghost cells is spurious anyway and overwritten during
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
@@ -352,7 +352,7 @@
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IF(.NOT.fluid_cell(lli,llj,llk)) CYCLE
 
          DO M = 1, MMAX
             IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
@@ -381,13 +381,13 @@
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
 
-            IF(.NOT.FLUID_AT(IJK)) CYCLE
+            IF(.NOT.fluid_cell(lli,llj,llk)) CYCLE
 
             I = I_OF(IJK)
             J = J_OF(IJK)
             K = K_OF(IJK)
 
-! It is important to check both FLUID_AT and IS_ON_MYPE_WOBND.
+! It is important to check both fluid_cell and IS_ON_MYPE_WOBND.
             IF(IS_ON_myPE_wobnd(I,J,K)) MASS_SOL2 = MASS_SOL2 +        &
                sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
          ENDDO

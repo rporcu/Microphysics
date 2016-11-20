@@ -37,12 +37,14 @@
       use particle_filter, only: FILTER_WEIGHT
       use particle_filter, only: DES_INTERP_ON
 
-      use functions, only: Funijk
-      use functions, only: FLUID_AT
+      use functions, only: funijk
+      use functions, only: fluid_cell
 
       use functions, only: IS_NONEXISTENT
       use functions, only: IS_ENTERING, IS_ENTERING_GHOST
       use functions, only: IS_EXITING, IS_EXITING_GHOST
+
+      USE indices, only: I_OF, J_OF, K_OF
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -66,7 +68,6 @@
 ! Calculate the gas phase pressure gradient. (dP/dx)
       CALL CALC_GRAD_DES(P_G, P_FORCE)
 
-
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
       cPG(2) = merge(DELP_Y/YLENGTH, ZERO, CYCLIC_Y_PD)
@@ -78,10 +79,10 @@
 
          IJK = FUNIJK(i,j,k)
          P_FORCE(:,IJK) = cPG - P_FORCE(:,IJK)
-      ENDDO
-      ENDDO
-      ENDDO
 
+      ENDDO
+      ENDDO
+      ENDDO
 
       IF(DES_EXPLICITLY_COUPLED) THEN
 
@@ -100,7 +101,10 @@
                IS_ENTERING(NP) .or. IS_ENTERING_GHOST(NP) .or.      &
                IS_EXITING(NP)  .or. IS_EXITING_GHOST(NP)) CYCLE
 
-            IF(.NOT.FLUID_AT(PIJK(NP,4))) CYCLE
+            i = i_of(PIJK(NP,4))
+            j = j_of(PIJK(NP,4))
+            k = k_of(PIJK(NP,4))
+            if (.NOT.fluid_cell(i,j,k)) CYCLE
 
             IF(DES_INTERP_ON) THEN
                lPF = ZERO

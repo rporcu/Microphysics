@@ -99,7 +99,7 @@
             WEIGHT = WEIGHT_I(IC)*WEIGHT_J(JC)*WEIGHT_K(KC)
             IF(IS_ON_MYPE_PLUS2LAYERS(I+IC,J+JC,K+KC)) THEN
                IJKt = FUNIJK(I+IC,J+JC,K+KC)
-               IF(FLUID_AT(IJKt) .OR. CYCLIC_AT(IJKt)) THEN
+               IF(fluid_cell(i+ic,j+jc,k+kc) .OR. CYCLIC_AT(IJKt)) THEN
                   FILTER_CELL(IDX,L) = IJKt
                   FILTER_WEIGHT(IDX,L) = WEIGHT
                ELSE

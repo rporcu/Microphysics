@@ -82,7 +82,7 @@
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         if(.not.fluid_at(ijk) .or. pinc(ijk).eq.0) cycle
+         if(.not.fluid_cell(lli,llj,llk) .or. pinc(ijk).eq.0) cycle
          i = i_of(ijk)
          j = j_of(ijk)
          k = k_of(ijk)
@@ -273,7 +273,7 @@
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         IF(.NOT.FLUID_AT(IJK) .OR. PINC(IJK)==0) cycle
+         IF(.NOT.fluid_cell(lli,llj,llk) .OR. PINC(IJK)==0) cycle
          i = i_of(ijk)
          j = j_of(ijk)
          k = k_of(ijk)
@@ -407,7 +407,7 @@
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
 
-         IF(FLUID_AT(IJK)) THEN
+         IF (fluid_cell(lli,llj,llk)) THEN
 
             i = i_of(ijk)
             j = j_of(ijk)
@@ -432,9 +432,9 @@
                   (drag_am(ijkm) + drag_am(ijmkm) +&
                   drag_am(imjmkm)+drag_am(imjkm) )
             ENDIF   ! end if
-         ELSE   ! else branch of if (fluid_at(ijk))
+         ELSE   ! else branch of if (fluid_cell(lli,llj,llk))
             F_GDS(IJK) = ZERO
-         ENDIF   ! end if/else (fluid_at(ijk))
+         ENDIF   ! end if/else (fluid_cell(lli,llj,llk))
 
       ENDDO
       ENDDO

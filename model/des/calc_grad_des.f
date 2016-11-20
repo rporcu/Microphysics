@@ -57,7 +57,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: Funijk
-      use functions, only: FLUID_AT
+      use functions, only: fluid_cell
       use functions, only: IM_OF, JM_OF, KM_OF
       use functions, only: IP_OF, JP_OF, KP_OF
       use fun_avg, only: AVG_X, AVG_Y, AVG_Z
@@ -86,7 +86,7 @@
 
          IJK = FUNIJK(i,j,k)
          DEL_PHI(:,IJK) = ZERO
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IF(.NOT.fluid_cell(i,j,k)) CYCLE
 
          IMJK = IM_OF(IJK)
          IPJK = IP_OF(IJK)
@@ -162,9 +162,8 @@
       use geometry, only: DX, DY, DZ
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use functions, only: FLUID_AT, FUNIJK
-      use functions, only: IM_OF, JM_OF, KM_OF
-      use functions, only: IP_OF, JP_OF, KP_OF
+      use functions, only: fluid_cell, FUNIJK
+      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE indices, only: I_OF, J_OF, K_OF
 
       use param, only: DIMENSION_3
@@ -195,36 +194,37 @@
 
          DEL_PHI(:,IJK) = ZERO
 
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IF(.NOT.fluid_cell(i,j,k)) CYCLE
 
          dLC = 0.0d0
-         IJKE = IP_OF(IJK)
-         IJKW = IM_OF(IJK)
+         IJKE = FUNIJK(iplus(i,j,k),j,k)
+         IJKW = FUNIJK(iminus(i,j,k),j,k)
 
-         IF(FLUID_AT(IJKE)) THEN
+         IF (fluid_cell(iplus(i,j,k),j,k)) then
             DEL_PHI(1,IJK) = DEL_PHI(1,IJK) +                          &
                2.0d0*(PHI(IJKE) - PHI(IJK))/(DX(I) + DX(I_OF(IJKE)))
             dLC = dLC + 1.0d0
          ENDIF
-         IF(FLUID_AT(IJKW)) THEN
+
+         IF (fluid_cell(iminus(i,j,k),j,k)) then
             DEL_PHI(1,IJK) = DEL_PHI(1,IJK) +                          &
                2.0d0*(PHI(IJK) - PHI(IJKW))/(DX(I) + DX(I_OF(IJKW)))
             dLC = dLC + 1.0d0
          ENDIF
+
          DEL_PHI(1,IJK) = DEL_PHI(1,IJK)/max(1.0d0,dLC)
 
-
          dLC = 0.0d0
-         IJKN = JP_OF(IJK)
-         IJKS = JM_OF(IJK)
+         IJKN = FUNIJK(i,jplus(i,j,k),k)
+         IJKS = FUNIJK(i,jminus(i,j,k),k)
 
-         IF(FLUID_AT(IJKN)) THEN
+         IF (fluid_cell(i,jplus(i,j,k),k)) then
             DEL_PHI(2,IJK) = DEL_PHI(2,IJK) +                          &
                2.0d0*(PHI(IJKN) - PHI(IJK))/(DY(J) + DY(J_OF(IJKN)))
             dLC = dLC + 1.0d0
          ENDIF
 
-         IF(FLUID_AT(IJKS)) THEN
+         IF (fluid_cell(i,jminus(i,j,k),k)) then
             DEL_PHI(2,IJK) = DEL_PHI(2,IJK) +                          &
                2.d0*(PHI(IJK) - PHI(IJKS))/(DY(J) + DY(J_OF(IJKS)))
             dLC = dLC + 1.0d0
@@ -234,15 +234,15 @@
          IF(DO_K) THEN
 
             dLC = 0.0d0
-            IJKT = KP_OF(IJK)
-            IJKB = KM_OF(IJK)
+            IJKT = FUNIJK(i,j,kplus(i,j,k))
+            IJKB = FUNIJK(i,j,kminus(i,j,k))
 
-            IF(FLUID_AT(IJKT)) THEN
+            IF (fluid_cell(i,j,kplus(i,j,k))) then
                DEL_PHI(3,IJK) = DEL_PHI(3,IJK) +                       &
                   2.0d0*(PHI(IJKT) - PHI(IJK))/(DZ(K) + DZ(K_OF(IJKT)))
                dLC = dLC + 1.0d0
             ENDIF
-            IF(FLUID_AT(IJKB)) THEN
+            IF (fluid_cell(i,j,kminus(i,j,k))) then
                DEL_PHI(3,IJK) = DEL_PHI(3,IJK) +                       &
                   2.0d0*(PHI(IJK) - PHI(IJKB))/(DZ(K) + DZ(K_OF(IJKB)))
                dLC = dLC + 1.0d0

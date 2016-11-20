@@ -112,7 +112,7 @@
 ! to access random number generator subroutines
       use randomno
       use mpi_utility
-      use functions, only: SET_NORMAL, FLUID_AT, FUNIJK
+      use functions, only: SET_NORMAL, fluid_cell, FUNIJK
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -305,8 +305,8 @@
          IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
 ! Skip cells that are not part of the local fuild domain.
-         IJK = FUNIJK(I,J,K)
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IJK = FUNIJK(i,j,k)
+         IF(.NOT.fluid_cell(i,j,k)) CYCLE
 
          IF(CARTESIAN_GRID) THEN
             CALL CHECK_IF_PARTICLE_OVERLAPS_STL(POS, I, J, K, SKIP)
@@ -428,7 +428,7 @@
          IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
          IJK = FUNIJK(I,J,K)
-         IF(FLUID_AT(IJK)) IC_VOL = IC_VOL + VOL(IJK)
+         IF(fluid_cell(i,j,k)) IC_VOL = IC_VOL + VOL(IJK)
 
       ENDDO
       ENDDO

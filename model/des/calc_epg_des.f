@@ -35,12 +35,10 @@
       use geometry, only: VOL
 ! Flag: Status of indexed cell
       use cutcell, only: CUT_CELL_AT
-! Flag: Indexed cell contains fluid
-      USE functions, only: FLUID_AT
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
-      use functions, only: FLUID_AT
+      use functions, only: fluid_cell
       use functions, only: FUNIJK
 
 ! The I, J, and K values that comprise an IJK
@@ -79,7 +77,7 @@
 
          IJK = FUNIJK(i,j,k)
 ! Skip wall cells.
-         IF(.NOT.FLUID_AT(IJK)) CYCLE
+         IF(.NOT.fluid_cell(i,j,k)) CYCLE
 ! Initialize EP_g and the accumulator.
          EP_G(IJK) = ONE
          SUM_EPS = ZERO
@@ -120,7 +118,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.FLUID_AT(IJK)) CYCLE
+            IF(.NOT.fluid_cell(i,j,k)) CYCLE
             IF(EP_G(IJK) > ZERO .AND. EP_G(IJK) <= ONE) CYCLE
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I_OF(IJK))),&

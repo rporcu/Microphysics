@@ -47,9 +47,9 @@
 ! Flag for 3D simulations.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
-      use functions, only: FLUID_AT
-
+      use functions, only: fluid_cell
       use functions, only: is_normal
+      use functions, only: i_of, j_of, k_of
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -76,6 +76,7 @@
       DOUBLE PRECISION, ALLOCATABLE :: UGC(:)
       DOUBLE PRECISION, ALLOCATABLE :: VGC(:)
       DOUBLE PRECISION, ALLOCATABLE :: WGC(:)
+      integer :: i,j,k
 !......................................................................!
 
       allocate( UGC(DIMENSION_3) )
@@ -90,15 +91,13 @@
 
 ! Calculate the gas phase forces acting on each particle.
 
-!$omp parallel default(none) private(np,lepg,velfp,ijk,weight,lpf,d_force)    &
-!$omp          shared(max_pip,des_interp_on,lp_bnd,filter_cell,filter_weight, &
-!$omp          ep_g,pijk,des_vel_new,f_gp,ugc,vgc,wgc,p_force,          &
-!$omp          des_explicitly_coupled,drag_fc,fc,pvol)
-!$omp do
       DO NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP)) CYCLE
 ! Avoid drag calculations in cells without fluid (cut-cell)
-         IF(.NOT.FLUID_AT(PIJK(NP,4))) CYCLE
+         i = i_of(pijk(np,4))
+         j = j_of(pijk(np,4))
+         k = k_of(pijk(np,4))
+         if (.NOT.fluid_cell(i,j,k)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO
@@ -151,7 +150,6 @@
          ENDIF
 
       ENDDO
-!$omp end parallel
 
       deallocate( UGC, VGC, WGC )
 
@@ -373,7 +371,7 @@
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
-      use functions, only: FLUID_AT
+      use functions, only: fluid_cell
       use functions, only: funijk
 
 ! Global Parameters:
@@ -405,7 +403,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-         IF(FLUID_AT(IJK)) THEN
+         IF(fluid_cell(i,j,k)) THEN
             IMJK = IM_OF(IJK)
             IF(CUT_U_TREATMENT_AT(IMJK)) THEN
                Uc(IJK) = (THETA_UE_BAR(IMJK)*lUG(IMJK) +              &
