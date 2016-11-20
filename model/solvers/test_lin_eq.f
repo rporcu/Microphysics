@@ -107,20 +107,20 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-            ImJK = IM_OF(IJK)
-            IJmK = JM_OF(IJK)
-            IpJK = IP_OF(IJK)
-            IJpK = JP_OF(IJK)
+            IMJK = funijk(iminus(i,j,k),j,k)
+            IJMK = funijk(i,jminus(i,j,k),k)
+            IPJK = funijk(iplus(i,j,k),j,k)
+            IJPK = funijk(i,jplus(i,j,k),k)
             Bm(IJK) = Am(IJK,0)*X_ACT(IJK)
-            IF(I_OF(IJK) > 1) Bm(IJK) = Bm(IJK) + Am(IJK,W)*X_ACT(ImJK)
-            IF(I_OF(IJK) < IMAX2) Bm(IJK) = Bm(IJK) +Am(IJK,E)*X_ACT(IpJK)
-            IF(J_OF(IJK) > 1) Bm(IJK) = Bm(IJK) + Am(IJK,S)*X_ACT(IJmK)
-            IF(J_OF(IJK) < JMAX2) Bm(IJK) = Bm(IJK) + Am(IJK,N)*X_ACT(IJpK)
+            IF(I > 1) Bm(IJK) = Bm(IJK) + Am(IJK,W)*X_ACT(ImJK)
+            IF(I < IMAX2) Bm(IJK) = Bm(IJK) +Am(IJK,E)*X_ACT(IpJK)
+            IF(J > 1) Bm(IJK) = Bm(IJK) + Am(IJK,S)*X_ACT(IJmK)
+            IF(J < JMAX2) Bm(IJK) = Bm(IJK) + Am(IJK,N)*X_ACT(IJpK)
             IF (DO_K) THEN
-               IJKm = KM_OF(IJK)
-               IJKp = KP_OF(IJK)
-               IF(K_OF(IJK) > 1) Bm(IJK) = Bm(IJK) + Am(IJK,B)*X_ACT(IJKm)
-               IF(K_OF(IJK) < KMAX2) Bm(IJK) = Bm(IJK) + Am(IJK,T)*X_ACT(IJKp)
+               IJKM = funijk(i,j,kminus(i,j,k))
+               IJKP = funijk(i,j,kplus(i,j,k))
+               IF(K > 1) Bm(IJK) = Bm(IJK) + Am(IJK,B)*X_ACT(IJKm)
+               IF(K < KMAX2) Bm(IJK) = Bm(IJK) + Am(IJK,T)*X_ACT(IJKp)
             ENDIF
       END DO
       END DO

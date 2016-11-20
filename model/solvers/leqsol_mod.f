@@ -310,7 +310,6 @@ CONTAINS
 !!$      omp_start=omp_get_wtime()
 
     IF (SETGUESS) THEN
-!$omp   parallel do private(i,j,k,ijk)
        do k = kstart3,kend3
           do i = istart3,iend3
              do j = jstart3,jend3
@@ -339,7 +338,6 @@ CONTAINS
        IF (NO_K) THEN   ! two dimensional
 ! 2D run no need to enable openmp parallel
           IF ( DO_ISWEEP ) THEN
-!!$omp   parallel do private(I)
              DO I=istart,iend,1
                 CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
              ENDDO
@@ -347,11 +345,9 @@ CONTAINS
 ! ----------------------------------------------------------------<<<
 ! Handan Liu added 2D RSRS sweep and parallelized this loop on Jan 22 2013:
           IF (DO_REDBLACK) THEN
-!$omp parallel do private(I)
              DO I=istart,iend,2
                 CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
              ENDDO
-!$omp parallel do private(I)
              DO I=istart+1,iend,2
                 CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
              ENDDO
@@ -372,7 +368,6 @@ CONTAINS
              jsize = j2-j1+1
              ksize = k2-k1+1
              DO icase = 1, 2
-!!$omp   parallel do private(K,J,JK)
                 DO JK=icase, ksize*jsize, 2
                    if (mod(jk,jsize).ne.0) then
                       k = int( jk/jsize ) + k1
@@ -396,7 +391,6 @@ CONTAINS
              isize = i2-i1+1
              jsize = j2-j1+1
              DO icase = 1, 2
-!!$omp   parallel do private(J,I,IJ)
                 DO IJ=icase, jsize*isize, 2
                    if (mod(ij,isize).ne.0) then
                       j = int( ij/isize ) + j1
@@ -421,7 +415,6 @@ CONTAINS
              ksize = k2-k1+1
 
              DO icase = 1, 2
-!!$omp   parallel do private(K,I,IK)
                 DO IK=icase, ksize*isize, 2
                    if (mod(ik,isize).ne.0) then
                       k = int( ik/isize ) + k1
@@ -447,7 +440,6 @@ CONTAINS
 !isize = i2-i1+1
 !ksize = k2-k1+1
 !               DO icase = 1, 2
-!!$omp   parallel do private(K,I,IK)
 !                  DO IK=icase, ksize*isize, 2
 !                     if (mod(ik,isize).ne.0) then
 !                        k = int( ik/isize ) + k1
@@ -461,7 +453,6 @@ CONTAINS
 !               ENDDO
 !             ELSE
 ! Handan Liu split above loop for OpenMP at May 22 2013, modified at July 17
-!$omp parallel do default(shared) private(I,K) schedule(auto)
              DO k=kstart,kend
                 IF(mod(k,2).ne.0)THEN
                    DO I=istart+1,iend,2
@@ -473,8 +464,6 @@ CONTAINS
                    ENDDO
                 ENDIF
              ENDDO
-!$omp end parallel do
-!$omp parallel do default(shared) private(I,K) schedule(auto)
              DO k=kstart,kend
                 IF(mod(k,2).ne.0)THEN
                    DO I=istart,iend,2
@@ -486,7 +475,6 @@ CONTAINS
                    ENDDO
                 ENDIF
              ENDDO
-!$omp end parallel do
 
           ENDIF       ! end if(do_redblack)
 ! ----------------------------------------------------------------<<<
@@ -503,7 +491,6 @@ CONTAINS
              isize = i2-i1+1
              ksize = k2-k1+1
              IF (DO_ISWEEP) THEN
-!!$omp   parallel do private(K,I,IK)
                 DO IK=1, ksize*isize
                    if (mod(ik,isize).ne.0) then
                       k = int( ik/isize ) + k1
@@ -515,7 +502,6 @@ CONTAINS
                 ENDDO
              ENDIF
              IF (DO_KSWEEP) THEN
-!!$omp   parallel do private(K,I,IK)
                 DO IK=1, ksize*isize
                    if (mod(ik,ksize).ne.0) then
                       i = int( ik/ksize ) + i1
@@ -532,7 +518,6 @@ CONTAINS
 !  The SMP directives below need review                        !Tingwen Jan 2012
 ! ---------------------------------------------------------------->>>
              IF (DO_ISWEEP) THEN
-!!$omp   parallel do private(K,I)
                 DO K=kstart,kend
                    DO I=istart,iend
                       CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
@@ -540,7 +525,6 @@ CONTAINS
                 ENDDO
              ENDIF
              IF (DO_KSWEEP) THEN
-!!$omp   parallel do private(K,I)
                 DO I=istart,iend
                    DO K=kstart,kend
                       CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
@@ -756,8 +740,8 @@ CONTAINS
 
       DO J=NSTART, NEND
          IJK = FUNIJK(I,J,K)
-         IM1JK = IM_OF(IJK)
-         IP1JK = IP_OF(IJK)
+         IM1JK = funijk(iminus(i,j,k),j,k)
+         IP1JK = funijk(iplus(i,j,k),j,k)
          DD(J) = A_M(IJK,  0)
          CC(J) = A_M(IJK, -2)
          EE(J) = A_M(IJK,  2)
@@ -837,7 +821,6 @@ CONTAINS
       NEND = JEND
       NSTART = JSTART
 
-!!$omp parallel do private(j,ijk,im1jk,ip1jk,ijkm1,ijkp1)
       DO J=NSTART, NEND
 !         IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
          IJK = (J + C0 + I*C1 + K*C2)
@@ -927,10 +910,10 @@ CONTAINS
          DD(I) = A_M(IJK,  0)
          CC(I) = A_M(IJK, -1)
          EE(I) = A_M(IJK,  1)
-         BB(I) = B_M(IJK)    -  A_M(IJK,-2) * Var( JM_OF(IJK) ) &
-                             -  A_M(IJK, 2) * Var( JP_OF(IJK) ) &
-                             -  A_M(IJK,-3) * Var( KM_OF(IJK) ) &
-                             -  A_M(IJK, 3) * Var( KP_OF(IJK) )
+         BB(I) = B_M(IJK)    -  A_M(IJK,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
+                             -  A_M(IJK, 2) * Var( funijk(i,jplus(i,j,k) ,k) ) &
+                             -  A_M(IJK,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
+                             -  A_M(IJK, 3) * Var( funijk(i,j ,kplus(i,j,k))  )
       ENDDO
 
       CC(NSTART) = ZERO
@@ -1009,10 +992,10 @@ CONTAINS
          DD(K) = A_M(IJK,  0)
          CC(K) = A_M(IJK, -3)
          EE(K) = A_M(IJK,  3)
-         BB(K) = B_M(IJK)    -  A_M(IJK,-2) * Var( JM_OF(IJK) ) &
-                             -  A_M(IJK, 2) * Var( JP_OF(IJK) ) &
-                             -  A_M(IJK,-1) * Var( IM_OF(IJK) ) &
-                             -  A_M(IJK, 1) * Var( IP_OF(IJK) )
+         BB(K) = B_M(IJK)    -  A_M(IJK,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
+                             -  A_M(IJK, 2) * Var( funijk(i,jplus(i,j,k),k) ) &
+                             -  A_M(IJK,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
+                             -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) ) 
       ENDDO
 
       CC(NSTART) = ZERO
@@ -1097,7 +1080,6 @@ CONTAINS
        if(myPE.eq.root) then
           prod = 0.0d0
 
-!$omp parallel do private(i,j,k,ijk) reduction(+:prod)  collapse (3)
           do k = kmin1, kmax1
              do i = imin1, imax1
                 do j = jmin1, jmax1
@@ -1158,7 +1140,6 @@ CONTAINS
 
        prod(:) = 0.0d0
 
-!$omp parallel do private(i,j,k,ijk) reduction(+:prod)  collapse (3)
        do k = kstart1, kend1
           do i = istart1, iend1
              do j = jstart1, jend1
@@ -1190,7 +1171,6 @@ CONTAINS
 
        if(myPE.eq.root) then
           prod = 0.0d0
-!$omp parallel do private(i,j,k,ijk) reduction(+:prod)  collapse (3)
           do k = kmin1, kmax1
              do i = imin1, imax1
                 do j = jmin1, jmax1

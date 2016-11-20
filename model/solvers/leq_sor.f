@@ -70,7 +70,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+         IF(.NOT.IS_ON_myPE_owns(i,j,k)) CYCLE
 
          OAM = ONE/A_M(IJK,0)
          A_M(IJK,0) = ONE
@@ -88,31 +88,29 @@
       DO ITER = 1, ITMAX
          IF (DO_K) THEN
 
-!!$omp parallel do private(IJK)
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-              IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+              IJK = FUNIJK(i,j,k)
+              IF (.NOT.IS_ON_myPE_owns(i,j,k)) CYCLE
               VAR_tmp(IJK) = VAR(IJK) + OMEGA*(B_M(IJK)-&
-                 A_M(IJK,-1)*VAR(IM_OF(IJK))-A_M(IJK,1)*VAR(IP_OF(IJK))-&
-                 A_M(IJK,-2)*VAR(JM_OF(IJK))-A_M(IJK,2)*VAR(JP_OF(IJK))-&
-                 A_M(IJK,-3)*VAR(KM_OF(IJK))-A_M(IJK,3)*VAR(KP_OF(IJK))-&
+                 A_M(IJK,-1)*VAR(funijk(iminus(i,j,k),j,k))-A_M(IJK,1)*VAR(funijk(iplus(i,j,k),j,k))-&
+                 A_M(IJK,-2)*VAR(funijk(i,jminus(i,j,k),k))-A_M(IJK,2)*VAR(funijk(i,jplus(i,j,k),k))-&
+                 A_M(IJK,-3)*VAR(funijk(i,j,kminus(i,j,k)))-A_M(IJK,3)*VAR(funijk(i,j,kplus(i,j,k)))-&
                  VAR(IJK))
             ENDDO
             ENDDO
             ENDDO
          ELSE
 
-!!$omp parallel do private(IJK)
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-             IF(.NOT.IS_ON_myPE_owns(I_OF(IJK),J_OF(IJK), K_OF(IJK))) CYCLE
+             IJK = FUNIJK(i,j,k)
+             IF (.NOT.IS_ON_myPE_owns(i,j,k)) CYCLE
              VAR_tmp(IJK) = VAR(IJK) + OMEGA*(B_M(IJK)-&
-                  A_M(IJK,-2)*VAR(JM_OF(IJK))-A_M(IJK,2)*VAR(JP_OF(IJK))-&
-                  A_M(IJK,-1)*VAR(IM_OF(IJK))-A_M(IJK,1)*VAR(IP_OF(IJK))-&
+                  A_M(IJK,-2)*VAR(funijk(i,jminus(i,j,k),k)) - A_M(IJK,2)*VAR(funijk(i,jplus(i,j,k),k))-&
+                  A_M(IJK,-1)*VAR(funijk(iminus(i,j,k),j,k)) - A_M(IJK,1)*VAR(funijk(iplus(i,j,k),j,k))-&
                   VAR(IJK))
            ENDDO
            ENDDO
@@ -122,7 +120,6 @@
       call send_recv(var,2)
       ENDDO
 
-!!$omp parallel do private(IJK)
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3

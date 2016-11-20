@@ -139,7 +139,7 @@
          IP = imap_c(iraw+1)
          JP = jmap_c(jraw+1)
 
-! using a function like ip_of(ijk) should work the same as getting funijk
+! using a function like iplus(i,j,k) should work the same as getting funijk
 ! of the shifted i, j, k indices.  however, small differences will
 ! occur on the 'edges/corners'. so retaining the latter method at this
 ! time. see j. galvin for discussion

@@ -59,7 +59,6 @@
 ! Particle volume times the weight for this cell.
             VOLxWEIGHT = VOL_WT*FILTER_WEIGHT(LC,NP)
 ! Accumulate total solids volume (by phase)
-            !$omp atomic
             SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOLxWEIGHT
          ENDDO
       ENDDO

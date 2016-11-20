@@ -361,14 +361,13 @@
                      kk = kb + k-1
 ! The interpolation is done using node. so one should use consistent
 ! numbering system. in the current version imap_c is used instead of
-! ip_of or im_of
+! iplus or iminus
                      cur_ijk = funijk_map_c(ii, jj, kk)
 
 ! Replacing the volume of cell to volume at the node
                      vcell = des_vol_node(cur_ijk)
                      ovol = one/vcell
 
-!!!$omp critical
                      drag_am(cur_ijk) = drag_am(cur_ijk) + &
                         f_gp(np)*weight_ft(i,j,k)*ovol
 
@@ -376,7 +375,6 @@
                         drag_bm(cur_ijk,1:3) + &
                         f_gp(np) * vel_new(1:3) * &
                         weight_ft(i,j,k)*ovol
-!!!$omp end critical
                   ENDDO
                ENDDO
             ENDDO

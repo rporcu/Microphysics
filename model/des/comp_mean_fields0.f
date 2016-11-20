@@ -180,7 +180,6 @@
       ENDDO
       ENDDO
       ENDDO
-!$omp end parallel
 
 
 ! At the interface des_rops_node has to be added since particles
@@ -213,13 +212,6 @@
 ! vol_sur is the sum of all the scalar cell volumes that have this node
 ! as the common node.
 !---------------------------------------------------------------------//
-!$omp parallel do default(none) collapse (3)                           &
-!$omp shared(KSTART2, KEND1, JSTART2, JEND1, ISTART2, IEND1, DO_K, VOL,&
-!$omp   DEAD_CELL_AT, FUNIJK_MAP_C, VOL_SURR, MMAX, DES_ROPS_NODE, &
-!$omp   DES_VEL_NODE)                                                  &
-!$omp private(I, J, K, IJK, M, II, JJ, KK, IJK2, DES_ROP_DENSITY,      &
-!$omp   DES_VEL_DENSITY)                                               &
-!$omp reduction(+:DES_ROP_S)
       DO K = KSTART2, KEND1
       DO J = JSTART2, JEND1
       DO I = ISTART2, IEND1
@@ -253,7 +245,6 @@
       ENDDO   ! end do (i=istart2,iend1)
       ENDDO   ! end do (j=jstart2,jend1)
       ENDDO   ! end do (k=kstart2,kend1)
-!omp end parallel do
 
 !-----------------------------------------------------------------<<<
 
@@ -275,7 +266,6 @@
       ENDDO
       ENDDO
       ENDDO
-!omp end parallel do
 
 
       CALL CALC_EPG_DES

@@ -257,10 +257,6 @@
 
 ! Calculate the gas phase forces acting on each particle.
 
-!$omp parallel default(none) private(np,lepg,velfp,ijk,weight,ldrag_bm,lforce) &
-!$omp          shared(max_pip,des_interp_on,lp_bnd,filter_cell,filter_weight,  &
-!$omp          ep_g,pijk,des_vel_new,f_gp,vol,drag_bm,f_gds,ugc,vgc,wgc)
-!$omp do
       DO NP=1,MAX_PIP
          IF(IS_NONEXISTENT(NP)) CYCLE
 
@@ -307,32 +303,23 @@
                IJK = FILTER_CELL(LC,NP)
                WEIGHT = FILTER_WEIGHT(LC,NP)/VOL(IJK)
 
-               !$omp atomic
                DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
-               !$omp atomic
                DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
-               !$omp atomic
                DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
-               !$omp atomic
                F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
             ENDDO
          ELSE
             IJK = PIJK(NP,4)
             WEIGHT = ONE/VOL(IJK)
 
-            !$omp atomic
             DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
-            !$omp atomic
             DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
-            !$omp atomic
             DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
 
-            !$omp atomic
             F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
          ENDIF
 
       ENDDO
-!$omp end parallel
 
 ! Update the drag force and sources in ghost layers.
       CALL SEND_RECV(F_GDS, 2)
@@ -360,7 +347,6 @@
 ! Functions to average momentum to scalar cell center.
       use fun_avg, only: AVG_X_E, AVG_Y_N, AVG_Z_T
 ! Functions to lookup adjacent cells by index.
-      use functions, only: IM_OF, JM_OF, KM_OF
       use indices, only: I_OF
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -368,7 +354,7 @@
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
       use functions, only: fluid_cell
-      use functions, only: funijk
+      use functions, only: funijk, iminus, jminus, kminus
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -400,14 +386,14 @@
 
          IJK = FUNIJK(i,j,k)
          IF(fluid_cell(i,j,k)) THEN
-            IMJK = IM_OF(IJK)
+            IMJK = funijk(iminus(i,j,k),j,k)
             Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
 
-            IJMK = JM_OF(IJK)
+            IJMK = funijk(i,jminus(i,j,k),k)
             Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
 
             IF(DO_K) THEN
-               IJKM = KM_OF(IJK)
+               IJKM = funijk(i,j,kminus(i,j,k))
                Wc(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
             ELSE
                Wc(IJK) = ZERO

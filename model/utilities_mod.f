@@ -63,8 +63,7 @@ CONTAINS
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
-      use functions, only: funijk, is_on_mype_owns
-      use functions, only: im_of, jm_of, km_of
+      use functions, only: funijk, is_on_mype_owns, iminus, jminus, kminus
       use mpi_utility, only: global_all_max
       use param, only: dimension_bc
       use param1, only: zero, small_number
@@ -99,9 +98,9 @@ CONTAINS
             CASE ('E'); maxVEL = max(maxVEL,abs(U_G(IJK)))
             CASE ('N'); maxVEL = max(maxVEL,abs(V_G(IJK)))
             CASE ('T'); maxVEL = max(maxVEL,abs(W_G(IJK)))
-            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(IM_OF(IJK))))
-            CASE ('S'); maxVEL = max(maxVEL,ABS(V_G(JM_OF(IJK))))
-            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(KM_OF(IJK))))
+            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(funijk(iminus(i,j,k),j,k))))
+            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(funijk(i,jminus(i,j,k),k))))
+            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(funijk(i,j,kminus(i,j,k)))))
             END SELECT
 
          ENDDO
@@ -171,7 +170,6 @@ CONTAINS
       LOGICAL :: ALL_IS_ERROR
 !-----------------------------------------------
 
-!!$omp   parallel do private(IJK)
 ! initializing
       CHECK_VEL_BOUND = .FALSE.
       ALL_IS_ERROR    = .FALSE.

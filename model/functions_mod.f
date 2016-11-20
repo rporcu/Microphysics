@@ -23,6 +23,7 @@ MODULE functions
 ! LOGICAL :: IS_ON_myPE_wobnd
 
 
+! ieast, iwest, jsouth, jnorth, kbot, ktop:
 ! Functions for calculating indicated directional shift in given IJK
 ! index. This will return the ijk index of the computational cell
 ! corresponding to the indicated shift when that computational cell
@@ -31,27 +32,14 @@ MODULE functions
 ! IPJK when IPJK is a fluid or flow at cell. However, if IPJK is a
 ! wall cell east_of will return IJK.
 !---------------------------------------------------------------------//
-! INTEGER :: EAST_OF, EAST_OF_0
-! INTEGER :: WEST_OF, WEST_OF_0
-! INTEGER :: SOUTH_OF, SOUTH_OF_0
-! INTEGER :: NORTH_OF, NORTH_OF_0
-! INTEGER :: BOTTOM_OF, BOTTOM_OF_0
-! INTEGER :: TOP_OF, TOP_OF_0
 
-
+! iminus, iplus, jminus, jplus, kminus, kplus:
 ! Functions for calculating indicated directional shift in given IJK
 ! index. This will generally return the ijk index of the computational
 ! cell corresponding to the indicated shift regardless of the wall
 ! status of that computational cell. It may not return corner cells
 ! unless the ijk cell itself is a corner cell.
 !---------------------------------------------------------------------//
-! INTEGER :: IP_OF, IP_OF_0
-! INTEGER :: IM_OF, IM_OF_0
-! INTEGER :: JP_OF, JP_OF_0
-! INTEGER :: JM_OF, JM_OF_0
-! INTEGER :: KP_OF, KP_OF_0
-! INTEGER :: KM_OF, KM_OF_0
-
 
 ! Logical functions to identify indicated condition:
 !---------------------------------------------------------------------//

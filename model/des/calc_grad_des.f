@@ -51,8 +51,7 @@
 
       use functions, only: Funijk
       use functions, only: fluid_cell
-      use functions, only: IM_OF, JM_OF, KM_OF
-      use functions, only: IP_OF, JP_OF, KP_OF
+      use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use fun_avg, only: AVG_X, AVG_Y, AVG_Z
 
       USE param, only: DIMENSION_3
@@ -81,8 +80,8 @@
          DEL_PHI(:,IJK) = ZERO
          IF(.NOT.fluid_cell(i,j,k)) CYCLE
 
-         IMJK = IM_OF(IJK)
-         IPJK = IP_OF(IJK)
+         IMJK = funijk(iminus(i,j,k),j,k)
+         IPJK = funijk(iplus(i,j,k),j,k)
 
          IF((I>IMIN1).AND.(I<IMAX1)) THEN
             DEL_PHI(1,IJK) = oDX(I)*(AVG_X(PHI(IJK),PHI(IPJK),I) -     &
@@ -98,8 +97,8 @@
          ENDIF
 
 
-         IJMK = JM_OF(IJK)
-         IJPK = JP_OF(IJK)
+         IJMK = funijk(i,jminus(i,j,k),k)
+         IJPK = funijk(i,jplus(i,j,k),k)
 
          IF((J>JMIN1) .AND. (J<JMAX1)) THEN
             DEL_PHI(2,IJK) = oDY(J)*(AVG_Y(PHI(IJK),PHI(IJPK),J) -     &
@@ -116,8 +115,8 @@
 
          IF(DO_K) THEN
 
-            IJKM = KM_OF(IJK)
-            IJKP = KP_OF(IJK)
+            IJKM = funijk(i,j,kminus(i,j,k))
+            IJKP = funijk(i,j,kplus(i,j,k))
 
             IF((K>KMIN1) .AND. (K<KMAX1)) THEN
                DEL_PHI(3,IJK) = oDZ(K)*(AVG_Z(PHI(IJK),PHI(IJKP),K) -  &

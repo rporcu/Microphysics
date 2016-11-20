@@ -43,15 +43,6 @@
             ROT_ACC_OLD(L,:) = TOW(L,:)
          ENDDO
       ENDIF
-
-!$omp parallel do if(max_pip .ge. 10000) default(none)                    &
-!$omp shared(MAX_PIP,INTG_EULER,INTG_ADAMS_BASHFORTH,fc,tow,              &
-!$omp       omega_new,pmass,grav,des_vel_new,des_pos_new,                 &
-!$omp       dtsolid,omoi,des_acc_old,rot_acc_old,                         &
-!$omp       ppos,neighbor_search_rad_ratio,des_radius,DO_OLD, iGlobal_ID) &
-!$omp private(l,dd,neighbor_search_dist,rot_angle,omega_mag,omega_unit, lVELo, lPOSo)   &
-!$omp reduction(.or.:do_nsearch) schedule (auto)
-
       DO L = 1, MAX_PIP
 ! only process particles that exist
          IF(IS_NONEXISTENT(L)) CYCLE
@@ -110,7 +101,6 @@
          TOW(L,:) = ZERO
 
       ENDDO
-!$omp end parallel do
 
       FIRST_PASS = .FALSE.
 

@@ -192,7 +192,6 @@
       ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
-!$omp end parallel do
 
 ! modifications for bc
       CALL SOURCE_U_G_BC (A_M, B_M)

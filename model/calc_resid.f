@@ -302,15 +302,7 @@
                IJMK))
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
-               if (ijkm .ne. km_of(ijk)) then
-                  print *,'ERR IN CALC_RESID ',i,j,k
-                  stop
-               end if
                IJKP = FUNIJK(i,j,kplus(i,j,k))
-               if (ijkp .ne. kp_of(ijk)) then
-                  print *,'ERR IN CALC_RESID ',i,j,k
-                  stop
-               end if
                NUM1 = NUM1 - (A_M(IJK,T)*VAR(IJKP)+A_M(IJK,B)*VAR(IJKM))
             ENDIF
 
@@ -673,25 +665,9 @@
          IF (.NOT.IP_AT_E(IJK)) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -700,8 +676,8 @@
                A_M(IJK,E)*U_M(IPJK)+A_M(IJK,W)*U_M(IMJK)+&
                A_M(IJK,N)*U_M(IJPK)+A_M(IJK,S)*U_M(IJMK))
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
-               IJKP = KP_OF(IJK)
+               IJKM = funijk(i,j,kminus(i,j,k))
+               IJKP = funijk(i,j,kplus(i,j,k))
                NUM1 = NUM1 - (A_M(IJK,T)*U_M(IJKP)+A_M(IJK,B)*U_M(IJKM))
             ENDIF
 
@@ -896,25 +872,9 @@
          IF (.NOT.IP_AT_N(IJK)) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -923,8 +883,8 @@
                A_M(IJK,E)*V_M(IPJK)+A_M(IJK,W)*V_M(IMJK)+&
                A_M(IJK,N)*V_M(IJPK)+A_M(IJK,S)*V_M(IJMK))
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
-               IJKP = KP_OF(IJK)
+               IJKM = funijk(i,j,kminus(i,j,k))
+               IJKP = funijk(i,j,kplus(i,j,k))
                NUM1 = NUM1 - (A_M(IJK,T)*V_M(IJKP)+A_M(IJK,B)*V_M(IJKM))
             ENDIF
 
@@ -1120,25 +1080,9 @@
 
          IF (.NOT.IP_AT_T(IJK)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -1147,8 +1091,8 @@
                A_M(IJK,E)*W_M(IPJK)+A_M(IJK,W)*W_M(IMJK)+&
                A_M(IJK,N)*W_M(IJPK)+A_M(IJK,S)*W_M(IJMK))
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
-               IJKP = KP_OF(IJK)
+               IJKM = funijk(i,j,kminus(i,j,k))
+               IJKP = funijk(i,j,kplus(i,j,k))
                NUM1 = NUM1 - (A_M(IJK,T)*W_M(IJKP)+A_M(IJK,B)*W_M(IJKM))
             ENDIF
 

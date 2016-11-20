@@ -77,9 +77,9 @@
          IJK = FUNIJK(I,J,K)
          IF (.NOT.WALL_AT(IJK)) THEN
 
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! check gas phase fields
             IF(EP_G(IJK) == UNDEFINED) &

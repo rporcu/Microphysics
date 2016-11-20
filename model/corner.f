@@ -44,6 +44,8 @@
 !                      Number of corner cells
       INTEGER          NCORN
 
+      integer          itmp, jtmp, ktmp
+
       NCORN = 0
 !
       do k = kstart3, kend3
@@ -204,32 +206,44 @@
                   AXY(IJK) = ZERO
                   AXY(IJKM) = ZERO
 !
-                  AXZ_U(IM_OF(IJMK)) = ZERO
+                  jtmp = jminus(i,j,k) 
+                  AXZ_U(funijk(iminus(i,jtmp,k),jtmp,k)) = ZERO
+
                   AXZ_U(IJMK) = ZERO
                   AXZ_U(IMJK) = ZERO
                   AXZ_U(IJK) = ZERO
 !
-                  AXY_U(IM_OF(IJKM)) = ZERO
+                  ktmp = kminus(i,j,k) 
+                  AXY_U(funijk(iminus(i,j,ktmp),j,ktmp)) = ZERO
+
                   AXY_U(IJKM) = ZERO
                   AXY_U(IMJK) = ZERO
                   AXY_U(IJK) = ZERO
 !
-                  AYZ_V(JM_OF(IMJK)) = ZERO
+                  itmp = iminus(i,j,k) 
+                  AYZ_V(funijk(itmp,jminus(itmp,j,k),k)) = ZERO
+
                   AYZ_V(IMJK) = ZERO
                   AYZ_V(IJMK) = ZERO
                   AYZ_V(IJK) = ZERO
 !
-                  AXY_V(JM_OF(IJKM)) = ZERO
+                  ktmp = kminus(i,j,k) 
+                  AXY_V(funijk(i,jminus(i,j,ktmp),ktmp)) = ZERO
+
                   AXY_V(IJKM) = ZERO
                   AXY_V(IJMK) = ZERO
                   AXY_V(IJK) = ZERO
 !
-                  AYZ_W(KM_OF(IMJK)) = ZERO
+                  itmp = iminus(i,j,k) 
+                  AYZ_W(funijk(itmp,j,kminus(itmp,j,k))) = ZERO
+
                   AYZ_W(IMJK) = ZERO
                   AYZ_W(IJKM) = ZERO
                   AYZ_W(IJK) = ZERO
 !
-                  AXZ_W(KM_OF(IJMK)) = ZERO
+                  jtmp = jminus(i,j,k) 
+                  AXZ_W(funijk(i,jtmp,kminus(i,jtmp,k))) = ZERO
+
                   AXZ_W(IJMK) = ZERO
                   AXZ_W(IJKM) = ZERO
                   AXZ_W(IJK) = ZERO

@@ -192,7 +192,6 @@
 ! Scale matrix to have unit diagonal
 ! ---------------------------------------------------------------->>>
       if (do_unit_scaling) then
-!!$omp parallel do private(ijk,i,j,k,oam,aijmax)
          do k = kstart2,kend2
             do i = istart2,iend2
                do j = jstart2,jend2

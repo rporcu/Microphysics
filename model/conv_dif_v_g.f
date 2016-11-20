@@ -59,7 +59,6 @@
 
       USE functions, only: funijk, iplus, iminus, jplus, jminus
       USE fun_avg, only: avg_y_n, avg_y
-      USE functions, only: jp_of
       USE geometry, only: do_k
 
       USE param, only: dimension_3
@@ -110,7 +109,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, jp_of, im_of, jm_of, km_of
+      USE functions, only: funijk
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       USE geometry, only: do_k
@@ -319,10 +318,8 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: funijk
+      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_n
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
 
       USE geometry, only: do_k
 
@@ -363,10 +360,10 @@
             CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
 
 ! East face (i+1/2, j+1/2, k)
             IF (Flux_e >= ZERO) THEN
@@ -405,8 +402,8 @@
 
 
             IF (DO_K) THEN
-               IJKP = KP_OF(IJK)
-               IJKM = KM_OF(IJK)
+               IJKP = FUNIJK(i,j,kplus(i,j,k))
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! Top face (i, j+1/2, k+1/2)
                IF (Flux_t >= ZERO) THEN
@@ -459,10 +456,8 @@
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: v_g
 
-      USE functions, only: funijk
+      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_n
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
 
       USE geometry, only: do_k
 
@@ -530,10 +525,11 @@
             CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
 
 ! East face (i+1/2, j+1/2, k)
             A_V_G(IJK,E) = D_Fe - XSI_E(IJK)*Flux_e
@@ -553,8 +549,8 @@
             ENDIF
 
             IF (DO_K) THEN
-               IJKP = KP_OF(IJK)
-               IJKM = KM_OF(IJK)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
+               IJKP = FUNIJK(i,j,kplus(i,j,k))
 ! Top face (i, j+1/2, k+1/2)
                A_V_G(IJK,T) = D_Ft - XSI_T(IJK)*Flux_t
                A_V_G(IJKP,B) = D_Ft + (ONE - XSI_T(IJK))*Flux_t

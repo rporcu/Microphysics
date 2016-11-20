@@ -767,9 +767,7 @@
          first_pass = .false.
       end if
 
-! redfine the array of dg_pic
-!!$omp parallel do default(shared)                               &
-!!$omp private(lijk,lcurpic) schedule (guided,50)
+! redefine the array of dg_pic
       do lijk = dg_ijkstart2,dg_ijkend2
          lcurpic = lpic(lijk)
          if(lcurpic > size(dg_pic(lijk)%p)) then
@@ -779,7 +777,6 @@
          dg_pic(lijk)%isize = lcurpic
          max_isize = max(max_isize,dg_pic(lijk)%isize)
       end do
-!!$omp end parallel do
 
 ! assign the particle info in pic array
       lindx(:) = 1
@@ -798,25 +795,18 @@
       enddo
 #else
 
-!$omp parallel default(none) private(lcurpar,lijk,lijk_count) shared(max_pip,pip,lparcount,dg_pijk,dg_pic,lindx)
-!$omp do
       do lcurpar = 1, max_pip
          if(lparcount.gt.pip) cycle
          if(is_nonexistent(lcurpar)) cycle
          lijk = dg_pijk(lcurpar)
 
-         !$omp atomic capture
          lijk_count = lindx(lijk)
          lindx(lijk) = lindx(lijk) +  1
-         !$omp end atomic
 
          dg_pic(lijk)%p(lijk_count) = lcurpar
 
-         !$omp atomic
          lparcount = lparcount + 1
       enddo
-!$omp end do
-!$omp end parallel
 
 #endif
 
@@ -873,19 +863,7 @@
 ! present in the system
       lkoffset = dimn-2
 
-!$omp parallel default(none) private(lcurpar,lijk,lic,ljc,lkc,cc,curr_tt,diff, &
-!$omp    il_off,iu_off,jl_off,ju_off,kl_off,ku_off,lcurpar_pos,lcur_off,lSIZE2,tmp_neigh,   &
-!$omp    ltotpic, lneigh,lsearch_rad,ldistvec,ldistsquared, pair_num_smp, pair_max_smp, pairs_smp, int_tmp) &
-!$omp    shared(max_pip,neighbors,neighbor_index,neigh_max,dg_pijk,NO_K,des_pos_new,dg_pic, factor_RLM,dd,  &
-!$omp           des_radius, dg_xstart,dg_ystart,dg_zstart,dg_dxinv,dg_dyinv,dg_dzinv,dg_ijkstart2,dg_ijkend2, max_isize)
-
       allocate(tmp_neigh(max_isize))
-
-!$      PAIR_NUM_SMP = 0
-!$      PAIR_MAX_SMP = 1024
-!$      Allocate(  PAIRS_SMP(2,PAIR_MAX_SMP) )
-
-!$omp do
 
       do lcurpar =1,max_pip
 
@@ -1002,36 +980,8 @@
          end do
          end do
       end do
-!$omp end do
-
-!$  curr_tt = omp_get_thread_num()+1  ! add one because thread numbering starts at zero
-
-!$omp single
-!$  NEIGHBOR_INDEX(1) = 1
-!$  dd = 1
-!$omp end single
-
-!$omp do ordered schedule(static,1)
-!$    do tt = 1, omp_get_num_threads()
-!$omp ordered
-!$        do MM = 1, PAIR_NUM_SMP
-!$            lcurpar = PAIRS_SMP(1,MM)
-!$            do while (dd .lt. lcurpar)
-!$                dd = dd + 1
-!$                NEIGHBOR_INDEX(dd) = NEIGHBOR_INDEX(dd-1)
-!$            enddo
-!$            cc = add_pair(lcurpar, PAIRS_SMP(2,MM))
-!$        enddo
-!$omp end ordered
-
-!$     end do
-!$omp  end do
-
-!$    deallocate( PAIRS_SMP )
 
       deallocate(tmp_neigh)
-
-!$omp end parallel
 
     contains
 

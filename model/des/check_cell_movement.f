@@ -38,8 +38,6 @@
 ! Set an error flag if any errors are found. Preform a global collection
 ! to sync error flags. If needed, reort errors.
 !.......................................................................
-!!$omp parallel default(shared) private(L, I, J, K, IJK)
-!!$omp do reduction(+:IER) schedule (guided,50)
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
          IF(.NOT.IS_NORMAL(L)) CYCLE
@@ -53,7 +51,6 @@
          IF(J > JEND1 .OR. J < JSTART1) IER = 1
          IF(DO_K .AND. (K > KEND1 .OR. K < KSTART1)) IER = 1
       ENDDO
-!!$omp end parallel
 
       CALL GLOBAL_ALL_SUM(IER)
       IF(IER == 0) RETURN

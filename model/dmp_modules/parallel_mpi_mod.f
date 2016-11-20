@@ -68,29 +68,7 @@ module parallel_mpi
 
       fbname=char(i10000)//char(i1000)//char(i100)//char(i10)//char(i1)
 
-! Specify the number of processors to be used
-!$    call get_environment_variable("OMP_NUM_THREADS", &
-!$       omp_num_threads,length,status, .true.)
-!$    if (status.eq.0 .and. length.ne.0) then
-!$      read(omp_num_threads,*) threads_specified
-!$    else
-!$      WRITE(*,'(A)') 'Enter the number of threads to be used for SMP: '
-!$      READ(*,*) threads_specified
-!$    endif
-
-!$    call omp_set_num_threads(threads_specified)
-
-! Report the number of SMP threads used
-!$omp parallel
-!$    num_threads = omp_get_num_threads()
-!$    if(omp_get_thread_num() == 0 .and. DMP_LOG) then
-!$       write(*,2000) num_threads
-!$       write(unit_log,2000) num_threads
-!$    endif
-!$omp end parallel
-
  2000 format(/1x,'Number of SMP threads: ',I0,2/)
-
 
 ! Get the date and time. They give the unique run_id in binary output
 ! files

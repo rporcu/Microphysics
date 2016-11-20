@@ -231,63 +231,63 @@
                   SIGN0 = ONE
                ENDIF
 
-               IF (WALL_AT(IJK)) THEN
-                  IMJK = IM_OF(IJK)
-                  IJMK = JM_OF(IJK)
-                  IJKM = KM_OF(IJK)
-                  IPJK = IP_OF(IJK)
-                  IJPK = JP_OF(IJK)
-                  IJKP = KP_OF(IJK)
+               IF (wall_cell(i,j,k)) THEN
+                  IMJK = funijk(iminus(i,j,k),j,k)
+                  IJMK = funijk(i,jminus(i,j,k),k)
+                  IJKM = funijk(i,j,kminus(i,j,k))
+                  IPJK = funijk(iplus(i,j,k),j,k)
+                  IJPK = funijk(i,jplus(i,j,k),k)
+                  IJKP = funijk(i,j,kplus(i,j,k))
 
 ! Fluid cell at West
-                  IF (.NOT.WALL_AT(IMJK)) THEN
+                  IF (.NOT.wall_cell(iminus(i,j,k),j,k)) THEN
                      LFLUID = IMJK
 ! Wall cell at North
-                     IF (WALL_AT(IJPK)) THEN
+                     IF (wall_cell(i,jplus(i,j,k),k)) THEN
                         V_G(IJK) = SIGN0*V_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (WALL_AT(IJKP)) THEN
+                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at East
-                  IF (.NOT.WALL_AT(IPJK)) THEN
+                  IF (.NOT.wall_cell(iplus(i,j,k),j,k)) THEN
                      LFLUID = IPJK
 ! Wall cell at North
-                     IF (WALL_AT(IJPK)) THEN
+                     IF (wall_cell(i,jplus(i,j,k),k)) THEN
                         V_G(IJK) = SIGN0*V_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (WALL_AT(IJKP)) THEN
+                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 
 ! Fluid cell at South
-                  IF (.NOT.WALL_AT(IJMK)) THEN
+                  IF (.NOT.wall_cell(i,jminus(i,j,k),k)) THEN
                      LFLUID = IJMK
 ! Wall cell at East
-                     IF (WALL_AT(IPJK)) THEN
+                     IF (wall_cell(iplus(i,j,k),j,k)) THEN
                         U_G(IJK) = SIGN0*U_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (WALL_AT(IJKP)) THEN
+                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at North
-                  IF (.NOT.WALL_AT(IJPK)) THEN
+                  IF (.NOT.wall_cell(i,jplus(i,j,k),k)) THEN
                      LFLUID = IJPK
 ! Wall cell at East
-                     IF (WALL_AT(IPJK)) THEN
+                     IF (wall_cell(iplus(i,j,k),j,k)) THEN
                         U_G(IJK) = SIGN0*U_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (WALL_AT(IJKP)) THEN
+                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
@@ -295,33 +295,33 @@
 
                   IF (DO_K) THEN
 ! Fluid cell at Bottom
-                     IF (.NOT.WALL_AT(IJKM)) THEN
+                     IF (.NOT.wall_cell(i,j,kminus(i,j,k))) THEN
                         LFLUID = IJKM
 ! Wall cell at East
-                        IF (WALL_AT(IPJK)) THEN
+                        IF (wall_cell(iplus(i,j,k),j,k)) THEN
                            U_G(IJK) = SIGN0*U_G(LFLUID)
                         ENDIF
 ! Wall cell at North
-                        IF (WALL_AT(IJPK)) THEN
+                        IF (wall_cell(i,jplus(i,j,k),k)) THEN
                            V_G(IJK) = SIGN0*V_G(LFLUID)
                         ENDIF
                      ENDIF
 
 ! Fluid cell at Top
-                     IF (.NOT.WALL_AT(IJKP)) THEN
+                     IF (.NOT.wall_cell(i,j,kplus(i,j,k))) THEN
                         LFLUID = IJKP
 ! Wall cell at East
-                        IF (WALL_AT(IPJK)) THEN
+                        IF (wall_cell(iplus(i,j,k),j,k)) THEN
                            U_G(IJK) = SIGN0*U_G(LFLUID)
                         ENDIF
 ! Wall cell at North
-                        IF (WALL_AT(IJPK)) THEN
+                        IF (wall_cell(i,jplus(i,j,k),k)) THEN
                            V_G(IJK) = SIGN0*V_G(LFLUID)
                         ENDIF
                      ENDIF
                   ENDIF   ! end if (do_k)
 
-               ENDIF   ! end if (wall_at(ijk))
+               ENDIF   ! end if (wall_cell(i,j,k))
             ENDDO   ! end do loop (i = i1, i2)
          ENDDO   ! end do loop (j = j1, j2)
       ENDDO   ! end do loop (k = k1, k2)

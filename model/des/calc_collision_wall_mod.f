@@ -72,18 +72,6 @@
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
          (DES_PERIODIC_WALLS_Z .OR. NO_K)) RETURN
 
-!$omp parallel default(none) private(LL,ijk,MAG_OVERLAP_T,             &
-!$omp    cell_id,radsq,particle_max,particle_min,tangent,              &
-!$omp    axis,nf,closest_pt,dist,r_lm,distapart,force_coh,distsq,      &
-!$omp    line_t,max_distsq,max_nf,normal,distmod,overlap_n,VREL_T,     &
-!$omp    v_rel_trans_norm,phaseLL,sqrt_overlap,kn_des_w,kt_des_w,      &
-!$omp    etan_des_w,etat_des_w,fnorm,overlap_t,ftan,ftmd,fnmd,pos_tmp) &
-!$omp shared(max_pip, pijk,dg_pijk,i_of,j_of,k_of,des_pos_new,         &
-!$omp    des_radius,facets_at_dg,vertex,  &
-!$omp    hert_kwn,hert_kwt,kn_w,kt_w,des_coll_model_enum,mew_w,tow,    &
-!$omp    des_etan_wall,des_etat_wall,dtsolid,fc,norm_face,             &
-!$omp    wall_collision_facet_id,wall_collision_PFT)
-!$omp do
       DO LL = 1, MAX_PIP
 
 ! skipping non-existent particles or ghost particles
@@ -268,8 +256,6 @@
          ENDDO
 
       ENDDO
-!$omp end do
-!$omp end parallel
 
       RETURN
 

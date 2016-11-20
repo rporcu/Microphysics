@@ -238,12 +238,12 @@
 ! variables will be copied over. If no valid fluid cell is found, the
 ! code will continue and will likely stop during the check_data_30
 ! (zero species mass fractions will yield a zero specific heat).
-            NBCELL(1) = IM_OF(IJK)
-            NBCELL(2) = JM_OF(IJK)
-            NBCELL(3) = KM_OF(IJK)
-            NBCELL(4) = IP_OF(IJK)
-            NBCELL(5) = JP_OF(IJK)
-            NBCELL(6) = KP_OF(IJK)
+            NBCELL(1) = funijk(iminus(i,j,k),j,k)
+            NBCELL(2) = funijk(i,jminus(i,j,k),k)
+            NBCELL(3) = funijk(i,j,kminus(i,j,k))
+            NBCELL(4) = funijk(iplus(i,j,k),j,k)
+            NBCELL(5) = funijk(i,jplus(i,j,k),k)
+            NBCELL(6) = funijk(i,j,kplus(i,j,k))
 
             NB_FOUND = .FALSE.
 

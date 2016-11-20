@@ -55,9 +55,7 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg_z_t, avg_z
-      USE functions, only: funijk
-      USE functions, only: kp_of
-      USE indices, only: k_of
+      USE functions, only: funijk, kplus
 
       USE param, only: dimension_3
       IMPLICIT NONE
@@ -81,7 +79,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = funijk(i,j,k)
-         IJKP = KP_OF(IJK)
+         IJKP = funijk(i,j,kplus(i,j,k))
 
          U(IJK) = AVG_Z(U_G(IJK),U_G(IJKP),K)
          V(IJK) = AVG_Z(V_G(IJK),V_G(IJKP),K)
@@ -107,9 +105,8 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, kp_of, im_of, jm_of, km_of
-
-      USE fldvar, only: flux_ge, flux_gn, flux_gt
+      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
+      USE fldvar   , only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
       IMPLICIT NONE
@@ -128,6 +125,7 @@
 ! indices
       INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: ijkp, imjkp, ijmkp
+      INTEGER :: itmp, jtmp, ktmp
 
 ! for cartesian grid
       DOUBLE PRECISION :: AW, HW, VELW
@@ -135,12 +133,16 @@
 
       IJK = funijk(i,j,k)
 
-      IJKP = KP_OF(IJK)
-      IMJK = IM_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJKM = KM_OF(IJK)
-      IMJKP = KP_OF(IMJK)
-      IJMKP = KP_OF(IJMK)
+      IJKP = funijk(i,j,kplus(i,j,k))
+      IJKM = funijk(i,j,kminus(i,j,k))
+
+      itmp  = iminus(i,j,k)
+      IMJK  = funijk(itmp,j,k)
+      IMJKP = funijk(itmp,j,kplus(itmp,j,k))
+
+      jtmp  = jminus(i,j,k)
+      IJMK  = funijk(i,jtmp,k)
+      IJMKP = funijk(i,jtmp,kplus(i,jtmp,k))
 
       Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IJKP))
       Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IMJKP))
@@ -297,10 +299,8 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: funijk
+      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_t
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
 
       USE param, only: dimension_3
       USE param1, only: zero
@@ -339,12 +339,12 @@
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
-            IJKP = KP_OF(IJK)
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+            IPJK = funijk(iplus(i,j,k),j,k)
+            IJPK = funijk(i,jplus(i,j,k),k)
+            IJKP = funijk(i,j,kplus(i,j,k))
+            IMJK = funijk(iminus(i,j,k),j,k)
+            IJMK = funijk(i,jminus(i,j,k),k)
+            IJKM = funijk(i,j,kminus(i,j,k))
 
 ! East face (i+1/2, j, k+1/2)
             IF (Flux_e >= ZERO) THEN
@@ -431,10 +431,8 @@
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: w_g
 
-      USE functions, only: funijk
+      USE functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: flow_at_t
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
 
       USE param, only: dimension_3
       USE param1, only: one
@@ -501,12 +499,12 @@
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
-            IJKP = KP_OF(IJK)
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+            IPJK = funijk(iplus(i,j,k),j,k)
+            IJPK = funijk(i,jplus(i,j,k),k)
+            IJKP = funijk(i,j,kplus(i,j,k))
+            IMJK = funijk(iminus(i,j,k),j,k)
+            IJMK = funijk(i,jminus(i,j,k),k)
+            IJKM = funijk(i,j,kminus(i,j,k))
 
 ! East face (i+1/2, j, k+1/2)
             A_W_G(IJK,E) = D_Fe - XSI_E(IJK)*Flux_e

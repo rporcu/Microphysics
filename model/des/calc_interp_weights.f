@@ -52,11 +52,6 @@
       DOUBLE PRECISION :: WEIGHT_J(-1:1)
       DOUBLE PRECISION :: WEIGHT_K(-1:1)
 
-!$omp parallel default(none) private(L, WEIGHT_I, WEIGHT_J, WEIGHT_K,  &
-!$omp    KM, KP, IDX, IJK, I, J, K, WEIGHT, IJKT)                      &
-!$omp shared(MAX_PIP, PIJK, DES_POS_NEW, XE, YN, ZT, DO_K,        &
-!$omp    FILTER_CELL, FILTER_WEIGHT)
-!$omp do
       DO L = 1, MAX_PIP
 
          IF(IS_NONEXISTENT(L).or.IS_ENTERING(L).or.IS_EXITING(L).or.IS_ENTERING_GHOST(L).or.IS_EXITING_GHOST(L)) CYCLE
@@ -115,8 +110,6 @@
          ENDDO
 
       ENDDO
-!$omp end do
-!$omp end parallel
 
       CONTAINS
 

@@ -188,9 +188,6 @@
 !
 !     Scale matrix to have unit diagonal
 !
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 233)
-!!$omp parallel do private(ijk2,i,j,k,oam,aijmax) collapse (3)
          do k = kstart2,kend2
             do i = istart2,iend2
                do j = jstart2,jend2
@@ -437,7 +434,7 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: LEQ_ISWEEPt(I, Vname, Var, A_m, B_m )                  C
-!  Purpose: Perform line sweep at coordiante I                         C
+!  Purpose: Perform line sweep at coordinate I                         C
 !                                                                      C
 !                                                                      C
 !  Author: Ed D'Azevedo                               Date: 21-JAN-99  C
@@ -452,7 +449,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE LEQ_ISWEEPt(I,Vname, VAR, A_M, B_M)
+      SUBROUTINE LEQ_ISWEEPt(I, Vname, VAR, A_M, B_M)
 
 !-----------------------------------------------
 !   M o d u l e s
@@ -510,9 +507,10 @@
 
       DO J=NSTART, NEND
 !     IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
-         IJK = FUNIJK(I,J,K)
-         IM1JK = IM_OF(IJK)
-         IP1JK = IP_OF(IJK)
+
+         IJK   = funijk(I,J,K)
+         IM1JK = funijk(iminus(i,j,k),j,k)
+         IP1JK = funijk(iplus(i,j,k),j,k)
 
          DD(J) = A_M(0, IJK)
          CC(J) = A_M(-2, IJK)
@@ -612,15 +610,14 @@
       NEND = JEND
       NSTART = JSTART
 
-!!!$omp parallel do private(j,ijk,im1jk,ip1jk,ijkm1,ijkp1)
       DO J=NSTART, NEND
 
 !     IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
          IJK = FUNIJK(I,J,K)
-         IM1JK = IM_OF(IJK)
-         IP1JK = IP_OF(IJK)
-         IJKM1 = KM_OF(IJK)
-         IJKP1 = KP_OF(IJK)
+         IM1JK = funijk(iminus(i,j,k),j,k)
+         IP1JK = funijk(iplus(i,j,k),j,k)
+         IJKM1 = funijk(i,j,kminus(i,j,k))
+         IJKP1 = funijk(i,j,kplus(i,j,k))
 
          DD(J) = A_M(0, IJK)
          CC(J) = A_M(-2, IJK)
@@ -720,35 +717,27 @@
       integer :: im1jk,ip1jk, ijm1k,ijp1k, ijkm1,ijkp1
 
       if (do_k) then
-
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 938)
-!!$omp    parallel  do &
-!!$omp&   private(     &
-!!$omp&           ijk2,i,j,k, &
-!!$omp&           im1jk,ip1jk,ijm1k,ijp1k,ijkm1,ijkp1) collapse (3)
          do k = kstart,kend
             do i = istart,iend
                do j = jstart,jend
 
                   IJK2 = funijk(i,j,k)
 
-                  im1jk = im_of(ijk2)
-                  ip1jk = ip_of(ijk2)
-                  ijm1k = jm_of(ijk2)
-                  ijp1k = jp_of(ijk2)
+                  im1jk = funijk(iminus(i,j,k),j,k)
+                  ip1jk = funijk(iplus(i,j,k),j,k)
+                  ijm1k = funijk(i,jminus(i,j,k),k)
+                  ijp1k = funijk(i,jplus(i,j,k),k)
 !
-                  ijkm1 = km_of(ijk2)
-                  ijkp1 = kp_of(ijk2)
-
+                  ijkm1 = funijk(i,j,kminus(i,j,k))
+                  ijkp1 = funijk(i,j,kplus(i,j,k))
 
                   AVar(ijk2) =      A_m(-3, ijk2) * Var(ijkm1)   &
                   + A_m(-2, ijk2) * Var(ijm1k)   &
                   + A_m(-1, ijk2) * Var(im1jk)   &
-                  + A_m(0, ijk2) * Var(ijk2)     &
-                  + A_m(1, ijk2) * Var(ip1jk)   &
-                  + A_m(2, ijk2) * Var(ijp1k)   &
-                  + A_m(3, ijk2) * Var(ijkp1)
+                  + A_m( 0, ijk2) * Var(ijk2)     &
+                  + A_m( 1, ijk2) * Var(ip1jk)   &
+                  + A_m( 2, ijk2) * Var(ijp1k)   &
+                  + A_m( 3, ijk2) * Var(ijkp1)
 
                enddo
             enddo
@@ -756,25 +745,21 @@
 
       else
          k = 1
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 971)
-!!$omp parallel do private(i,j,ijk2,im1jk,ip1jk,ijm1k,ijp1k) collapse (2)
          do i = istart,iend
             do j = jstart,jend
 
-
                IJK2 = funijk(i,j,k)
 
+               im1jk = funijk(iminus(i,j,k),j,k)
+               ip1jk = funijk(iplus(i,j,k),j,k)
+               ijm1k = funijk(i,jminus(i,j,k),k)
+               ijp1k = funijk(i,jplus(i,j,k),k)
 
-               im1jk = im_of(ijk2)
-               ip1jk = ip_of(ijk2)
-               ijm1k = jm_of(ijk2)
-               ijp1k = jp_of(ijk2)
                AVar(ijk2) =      A_m(-2, ijk2) * Var(ijm1k)   &
                + A_m(-1, ijk2) * Var(im1jk)   &
-               + A_m(0, ijk2) * Var(ijk2)     &
-               + A_m(1, ijk2) * Var(ip1jk)   &
-               + A_m(2, ijk2) * Var(ijp1k)
+               + A_m( 0, ijk2) * Var(ijk2)     &
+               + A_m( 1, ijk2) * Var(ip1jk)   &
+               + A_m( 2, ijk2) * Var(ijp1k)
 
             enddo
          enddo
@@ -858,16 +843,8 @@
 
       LOGICAL, PARAMETER :: SETGUESS = .TRUE.
 
-!!$      double precision omp_start, omp_end
-!!$      double precision omp_get_wtime
-!       by Tingwen
-!!$      omp_start=omp_get_wtime()
-
       IF (SETGUESS) THEN
 
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 1077)
-!!$omp   parallel do private(i,j,k,ijk2) collapse (3)
          do k = kstart3,kend3
             do i = istart3,iend3
                do j = jstart3,jend3
@@ -898,9 +875,7 @@
          DO_REDBLACK = (CH .EQ. 'R') .OR. (CH .EQ. 'r')
 
          IF (NO_K) THEN
-! 2D run no need to enable openmp parallel
             IF ( DO_ISWEEP ) THEN
-!!!$omp   parallel do private(I)
                DO I=istart,iend,1
                   CALL LEQ_ISWEEPt( I, Vname, Var, A_m, B_m )
                ENDDO
@@ -918,7 +893,6 @@
                ksize = k2-k1+1
 
                DO icase = 1, 2
-!!$omp   parallel do private(K,I,IK)
                   DO IK=icase, ksize*isize, 2
                      if (mod(ik,isize).ne.0) then
                         k = int( ik/isize ) + k1
@@ -932,8 +906,7 @@
                ENDDO
 
             ENDIF
-!  Not sure the purpose of us_ikloop
-!  The SMP directives below need review                        !Tingwen Jan 2012
+
             IF(USE_IKLOOP) THEN
 
                i1 = istart
@@ -944,7 +917,6 @@
                ksize = k2-k1+1
 
                IF (DO_ISWEEP) THEN
-!!!$omp   parallel do private(K,I,IK)
                   DO IK=1, ksize*isize
                      if (mod(ik,isize).ne.0) then
                         k = int( ik/isize ) + k1
@@ -957,7 +929,6 @@
                ENDIF
 
                IF (DO_KSWEEP) THEN
-!!!$omp   parallel do private(K,I,IK)
                   DO IK=1, ksize*isize
                      if (mod(ik,ksize).ne.0) then
                         i = int( ik/ksize ) + i1
@@ -971,10 +942,8 @@
                ENDIF
 
             ELSE
-!  Not sure the purpose of us_ikloop
-!  The SMP directives below need review                        !Tingwen Jan 2012
+
                IF (DO_ISWEEP) THEN
-!!!$omp   parallel do private(K,I)
                   DO K=kstart,kend
                      DO I=istart,iend
                         CALL LEQ_IKSWEEPt( I,K, Vname, Var, A_m, B_m )
@@ -983,7 +952,6 @@
                ENDIF
 
                IF (DO_KSWEEP) THEN
-!!!$omp   parallel do private(K,I)
                   DO I=istart,iend
                      DO K=kstart,kend
                         CALL LEQ_IKSWEEPt( I,K, Vname, Var, A_m, B_m )
@@ -998,8 +966,6 @@
          ENDIF
 
       ENDDO
-!!$      omp_end=omp_get_wtime()
-!!$      write(*,*)'leq_msolvet:',omp_end - omp_start
       RETURN
       END SUBROUTINE LEQ_MSOLVEt
 
@@ -1077,10 +1043,10 @@
          DD(I) = A_M(0, IJK)
          CC(I) = A_M(-1, IJK)
          EE(I) = A_M(1, IJK)
-         BB(I) = B_M(IJK)    -  A_M(-2,IJK) * Var( JM_OF(IJK) )         &
-         -  A_M(2, IJK) * Var( JP_OF(IJK) )         &
-         -  A_M(-3, IJK) * Var( KM_OF(IJK) )         &
-         -  A_M(3, IJK) * Var( KP_OF(IJK) )
+         BB(I) = B_M(IJK)    -  A_M(-2,IJK) * Var( funijk(i,jminus(i,j,k),k) )         &
+         -  A_M( 2, IJK) * Var( funijk(i,jplus(i,j,k),k) )         &
+         -  A_M(-3, IJK) * Var( funijk(i,j,kminus(i,j,k)))         &
+         -  A_M( 3, IJK) * Var( funijk(i,j,kplus(i,j,k)) )
 
       ENDDO
 
@@ -1178,10 +1144,11 @@
          DD(K) = A_M(0,IJK)
          CC(K) = A_M(-3,IJK)
          EE(K) = A_M(3,IJK)
-         BB(K) = B_M(IJK)    -  A_M(-2,IJK) * Var( JM_OF(IJK) )         &
-         -  A_M(2,IJK) * Var( JP_OF(IJK) )         &
-         -  A_M(-1,IJK) * Var( IM_OF(IJK) )         &
-         -  A_M(1,IJK) * Var( IP_OF(IJK) )
+         BB(K) = B_M(IJK)    &
+         -  A_M(-2,IJK) * Var( funijk(i,jminus(i,j,k),k) ) &
+         -  A_M( 2,IJK) * Var( funijk(i,jplus(i,j,k),k)  ) & 
+         -  A_M(-1,IJK) * Var( funijk(iminus(i,j,k),j,k) ) &
+         -  A_M( 1,IJK) * Var( funijk(iplus(i,j,k),j,k)  )   
 
       ENDDO
 
@@ -1296,9 +1263,6 @@
 
 !     diagonal scaling
 
-!AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
-! PGF90-S-0155-ijk may not appear in a PRIVATE clause (leq_bicgst.f: 1526)
-!!$omp   parallel do private(i,j,k,ijk2) collapse (3)
       do k=kstart2,kend2
          do i=istart2,iend2
             do j=jstart2,jend2

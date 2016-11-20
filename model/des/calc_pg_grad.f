@@ -91,10 +91,6 @@
 
 ! Calculate the gas phase forces acting on each particle.
 
-!$omp  parallel do default(none) &
-!$omp  private(NP,lPF,lc,ijk,weight) &
-!$omp  shared(MAX_PIP,DES_INTERP_ON,LP_BND,p_force,drag_fc, &
-!$omp     filter_cell,filter_weight,pijk,pvol)
          DO NP=1,MAX_PIP
 
             IF(IS_NONEXISTENT(NP) .or.                              &

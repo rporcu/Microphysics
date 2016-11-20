@@ -56,8 +56,7 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg_x_e, avg_x
-      USE functions, only: funijk
-      USE functions, only: ip_of, iplus
+      USE functions, only: funijk, iplus
       USE geometry, only: do_k
       USE indices, only:  ip1
 
@@ -110,7 +109,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, ip_of, im_of, jm_of, km_of
+      USE functions, only: funijk
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE geometry, only: do_k
       USE fldvar, only: flux_ge, flux_gn, flux_gt
@@ -323,8 +322,6 @@
 
       USE functions, only: funijk
       USE functions, only: flow_at_e
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       USE geometry, only: do_k
@@ -463,8 +460,6 @@
 
       USE functions, only: funijk
       USE functions, only: flow_at_e
-      USE functions, only: ip_of, jp_of, kp_of
-      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       USE geometry, only: do_k

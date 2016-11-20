@@ -36,7 +36,6 @@
       USE fun_avg, only: avg_x, avg_z, avg_y
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
       USE functions, only: ip_at_n, sip_at_n, is_id_at_n
-      USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax, funijk, wall_cell

@@ -323,47 +323,7 @@
 
       endif
 
-      IF(.NOT.INCREMENT_ARRAYS_ALLOCATED) THEN
-         allocate(WEST_ARRAY_OF(DIMENSION_3))
-         allocate(EAST_ARRAY_OF(DIMENSION_3))
-         allocate(SOUTH_ARRAY_OF(DIMENSION_3))
-         allocate(NORTH_ARRAY_OF(DIMENSION_3))
-         allocate(BOTTOM_ARRAY_OF(DIMENSION_3))
-         allocate(TOP_ARRAY_OF(DIMENSION_3))
-
-         allocate(IM_ARRAY_OF(DIMENSION_3))
-         allocate(IP_ARRAY_OF(DIMENSION_3))
-         allocate(JM_ARRAY_OF(DIMENSION_3))
-         allocate(JP_ARRAY_OF(DIMENSION_3))
-         allocate(KM_ARRAY_OF(DIMENSION_3))
-         allocate(KP_ARRAY_OF(DIMENSION_3))
-      ENDIF
-
       INCREMENT_ARRAYS_ALLOCATED = .TRUE.
-
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
-
-         ijk = funijk(i,j,k)
-
-         WEST_ARRAY_OF(ijk)   = WEST_OF_0(IJK)
-         EAST_ARRAY_OF(ijk)   = EAST_OF_0(IJK)
-         SOUTH_ARRAY_OF(ijk)  = SOUTH_OF_0(IJK)
-         NORTH_ARRAY_OF(ijk)  = NORTH_OF_0(IJK)
-         BOTTOM_ARRAY_OF(ijk) = BOTTOM_OF_0(IJK)
-         TOP_ARRAY_OF(ijk)    = TOP_OF_0(IJK)
-
-         IM_ARRAY_OF(ijk) = IM_OF_0(IJK)
-         IP_ARRAY_OF(ijk) = IP_OF_0(IJK)
-         JM_ARRAY_OF(ijk) = JM_OF_0(IJK)
-         JP_ARRAY_OF(ijk) = JP_OF_0(IJK)
-         KM_ARRAY_OF(ijk) = KM_OF_0(IJK)
-         KP_ARRAY_OF(ijk) = KP_OF_0(IJK)
-
-          end do
-        end do
-      end do
 
       CALL FINL_ERR_MSG
 

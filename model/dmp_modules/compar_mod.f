@@ -114,15 +114,6 @@
 
 !        integer, allocatable, dimension(:,:,:) :: funijk
 
-!       Integer Array of neighbor cells
-
-        integer, allocatable, dimension(:)     :: WEST_ARRAY_OF,EAST_ARRAY_OF
-        integer, allocatable, dimension(:)     :: SOUTH_ARRAY_OF,NORTH_ARRAY_OF
-        integer, allocatable, dimension(:)     :: BOTTOM_ARRAY_OF,TOP_ARRAY_OF
-        integer, allocatable, dimension(:)     :: IM_ARRAY_OF,IP_ARRAY_OF
-        integer, allocatable, dimension(:)     :: JM_ARRAY_OF,JP_ARRAY_OF
-        integer, allocatable, dimension(:)     :: KM_ARRAY_OF,KP_ARRAY_OF
-
 !       Flag to identify dead (unused cells)
 
         LOGICAL, allocatable, dimension(:,:,:) :: DEAD_CELL_AT

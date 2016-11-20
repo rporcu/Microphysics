@@ -64,9 +64,6 @@
 
 ! Use an incremental approach to determine the new particle location.
 !-----------------------------------------------------------------------
-!!$omp parallel default(shared) private(L, I, J, K, IJK)
-!!$omp do reduction(+:PINC) schedule (guided,50)
-
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
          IF(IS_NONEXISTENT(L)) CYCLE
@@ -150,7 +147,6 @@
             .NOT.IS_EXITING_GHOST(L)) PINC(IJK) = PINC(IJK) + 1
 
       ENDDO
-!!$omp end parallel
 
       CALL CHECK_CELL_MOVEMENT
 

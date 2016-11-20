@@ -33,22 +33,15 @@ LOGICAL :: found
       PPOS(:,:) = DES_POS_NEW(:,:)
       neighbor_index_old(:) = neighbor_index(:)
 
-!$omp parallel do default(none) private(cc) &
-!$omp shared(neighbors, neighbors_old, pft_neighbor, pft_neighbor_old)
       do cc=1, size(neighbors)
          neighbors_old(cc) = neighbors(cc)
          pft_neighbor_old(:,cc) = pft_neighbor(:,cc)
       enddo
-!$omp end parallel do
 
       NEIGHBOR_INDEX(:) = 0
 
       CALL DESGRID_NEIGH_BUILD
 
-!$omp parallel do default(none)                                         &
-!$omp private(cc,ll,found,cc_start,cc_end,cc_start_old,cc_end_old)      &
-!$omp shared(max_pip,neighbors,neighbor_index,neighbor_index_old,       &
-!$omp    neighbors_old, pft_neighbor,pft_neighbor_old,neigh_max)
       do ll = 1, max_pip
 
          CC_START = 1
@@ -72,7 +65,6 @@ LOGICAL :: found
             if (.not.found) pft_neighbor(:,cc) = 0.0
          enddo
       enddo
-!$omp end parallel do
 
 ! resetting do_nsearch to false here since neighbor search will have
 ! just been invoked

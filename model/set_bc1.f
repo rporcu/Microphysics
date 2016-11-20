@@ -72,9 +72,8 @@
 
       use param1, only: undefined
 
-      use functions, only: im_of, jm_of, km_of
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk
+      use functions, only: funijk, iminus, jminus, kminus
       use compar, only: dead_cell_at
 
       IMPLICIT NONE
@@ -116,17 +115,17 @@
 ! It should not really matter for MI...
             SELECT CASE (TRIM(BC_PLANE(BCV)))
             CASE ('W')
-               IJK2 = IM_OF(IJK)
+               IJK2 = funijk(iminus(i,j,k),j,k)
                U_G(IJK2) = BC_JET_G(BCV)
             CASE ('E')
                U_G(IJK) = BC_JET_G(BCV)
             CASE ('S')
-               IJK2 = JM_OF(IJK)
+               IJK2 =  funijk(i,jminus(i,j,k),k)
                V_G(IJK2) = BC_JET_G(BCV)
             CASE ('N')
                V_G(IJK) = BC_JET_G(BCV)
             CASE ('B')
-               IJK2 = KM_OF(IJK)
+               IJK2 =  funijk(i,j,kminus(i,j,k))
                W_G(IJK2) = BC_JET_G(BCV)
             CASE ('T')
                W_G(IJK) = BC_JET_G(BCV)
@@ -214,8 +213,7 @@
       use bc, only: bc_vout_g
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
-      use functions, only: funijk
-      use functions, only: im_of, jm_of, km_of
+      use functions, only: funijk, iminus, jminus, kminus
       use functions, only: is_on_mype_plus2layers
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero, small_number
@@ -302,17 +300,17 @@
             IJK = FUNIJK(I,J,K)
             SELECT CASE (TRIM(BC_PLANE(BCV)))
             CASE ('W')
-               IJK2 = IM_OF(IJK)
+               IJK2 = funijk(iminus(i,j,k),j,k)
                U_G(IJK2) = BC_U_G(BCV)
             CASE ('E')
                U_G(IJK) = BC_U_G(BCV)
             CASE ('S')
-               IJK2 = JM_OF(IJK)
+               IJK2 = funijk(i,jminus(i,j,k),k)
                V_G(IJK2) = BC_V_G(BCV)
             CASE ('N')
                V_G(IJK) = BC_V_G(BCV)
             CASE ('B')
-               IJK2 = KM_OF(IJK)
+               IJK2 = funijk(i,j,kminus(i,j,k))
                W_G(IJK2) = BC_W_G(BCV)
             CASE ('T')
                W_G(IJK) = BC_W_G(BCV)

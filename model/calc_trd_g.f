@@ -66,9 +66,9 @@
          IJK = FUNIJK(i,j,k)
          IF (.NOT.WALL_AT(IJK)) THEN
             IM = IM1(I)
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
 
             TRD_G(IJK) = (X_E(I)*U_G(IJK)-X_E(IM)*U_G(IMJK))*OX(I)*ODX(I) + (&
               V_G(IJK)-V_G(IJMK))*ODY(J) + (W_G(IJK)-W_G(IJKM))*(OX(I)*ODZ(K))

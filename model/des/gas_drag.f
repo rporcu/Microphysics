@@ -268,7 +268,6 @@
          ENDDO
          ENDDO
          ENDDO
-!$omp end parallel do
       ENDIF
 
       END SUBROUTINE GAS_DRAG_V

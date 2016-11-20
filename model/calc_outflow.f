@@ -22,10 +22,9 @@
       use geometry, only: x_e, x
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
-      use functions, only: im_of, ip_of, jm_of, jp_of, km_of, kp_of
       use functions, only: fluid_cell
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk
+      use functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
       use compar, only: dead_cell_at
       IMPLICIT NONE
 
@@ -52,37 +51,37 @@
                IJK = FUNIJK(I,J,K)
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
-                  IJK2 = IM_OF(IJK)
+                  IJK2 = FUNIJK(iminus(i,j,k),j,k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*X_E(I-1)*DZ(K)*&
                      U_G(IJK2)*ROP_G(IJK2)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*X_E(I-1)*DZ(K)*&
                      U_G(IJK2)*EP_G(IJK2)
                CASE ('E')
-                  IJK2 = IP_OF(IJK)
+                  IJK2 = FUNIJK(iplus(i,j,k),j,k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*X_E(I)*DZ(K)*&
                      U_G(IJK)*ROP_G(IJK2)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*X_E(I)*DZ(K)*&
                      U_G(IJK)*EP_G(IJK2)
                CASE ('S')
-                  IJK2 = JM_OF(IJK)
+                  IJK2 = FUNIJK(i,jminus(i,j,k),k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*X(I)*DZ(K)*&
                      V_G(IJK2)*ROP_G(IJK2)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*X(I)*DZ(K)*&
                      V_G(IJK2)*EP_G(IJK2)
                CASE ('N')
-                  IJK2 = JP_OF(IJK)
+                  IJK2 = FUNIJK(i,jplus(i,j,k),k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*X(I)*DZ(K)*&
                      V_G(IJK)*ROP_G(IJK2)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*X(I)*DZ(K)*&
                      V_G(IJK)*EP_G(IJK2)
                CASE ('B')
-                  IJK2 = KM_OF(IJK)
+                  IJK2 = FUNIJK(i,j,kminus(i,j,k))
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DY(J)*&
                      W_G(IJK2)*ROP_G(IJK2)
                   BC_VOUT_G(L)=BC_VOUT_G(L)+DX(I)*DY(J)*&
                      W_G(IJK2)*EP_G(IJK2)
                CASE ('T')
-                  IJK2 = KP_OF(IJK)
+                  IJK2 = FUNIJK(i,j,kplus(i,j,k))
                   BC_MOUT_G(L)=BC_MOUT_G(L)+DX(I)*DY(J)*&
                      W_G(IJK)*ROP_G(IJK2)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DY(J)*&

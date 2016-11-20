@@ -222,7 +222,6 @@
 
       CALL MATVEC(VNAME, VAR, A_M, R)   ! returns R=A*VAR
 
-!!$omp   parallel do private(ii,jj,kk,ijk)
       DO KK=KSTART3,KEND3
         DO JJ=JSTART3,JEND3
           DO II=ISTART3,IEND3
@@ -257,7 +256,6 @@
          CALL MATVEC( VNAME, VAR, A_M, R )   ! Returns R=A*VAR
 !        TEMP(:) = B_M(:) - R(:)
 
-!!$omp    parallel do private(ii,jj,kk,ijk)
          DO KK=KSTART3,KEND3
            DO JJ=JSTART3,JEND3
              DO II=ISTART3,IEND3
@@ -275,7 +273,6 @@
          INV_NORM_R = ONE / NORM_R
 
 !         V(:,1) = R(:) * INV_NORM_R
-!!$omp    parallel do private(ii,jj,kk,ijk)
          DO KK=KSTART3,KEND3
            DO JJ=JSTART3,JEND3
              DO II=ISTART3,IEND3
@@ -302,7 +299,6 @@
                H(K,I) = DTEMP
 !               WW(:) = WW(:) - H(K,I)*V(:,K)
 
-!!$omp          parallel do private(ii,jj,kk,ijk)
                DO KK=KSTART3,KEND3
                  DO JJ=JSTART3,JEND3
                    DO II=ISTART3,IEND3
@@ -319,7 +315,6 @@
 !            V(:,I+1) = WW(:) / H(I+1,I)
             INV_H_IP1_I = ONE / H(I+1,I)
 
-!!$omp       parallel do private(ii,jj,kk,ijk)
             DO KK=KSTART3,KEND3
               DO JJ=JSTART3,JEND3
                 DO II=ISTART3,IEND3
@@ -412,7 +407,6 @@
 
 
 !               VAR(:)=VAR(:)+MATMUL(V(:,1:I),Y(1:I))
-!!$omp          parallel do private(ii,jj,kk,ijk)
                DO KK=KSTART3,KEND3
                  DO JJ=JSTART3,JEND3
                    DO II=ISTART3,IEND3
@@ -492,7 +486,6 @@
          ENDIF   ! end if(jdebug>=1)
 
 !         VAR(:) = VAR(:) + MATMUL( V(:,1:M), Y(1:M) )
-!!$omp    parallel do private(ii,jj,kk,ijk)
          DO KK=KSTART3,KEND3
            DO JJ=JSTART3,JEND3
              DO II=ISTART3,IEND3
@@ -506,7 +499,6 @@
          CALL MATVEC(VNAME, VAR, A_M, R)   ! returns R=A*VAR
 
 !         TEMP(:) = B_M(:) - R(:)
-!!$omp    parallel do private(ii,jj,kk,ijk)
          DO KK=KSTART3,KEND3
            DO JJ=JSTART3,JEND3
              DO II=ISTART3,IEND3
@@ -549,7 +541,6 @@
          CALL MATVEC(VNAME, VAR, A_M, R)   ! Returns R=A*VAR
 
 !         R(:) = R(:) - B_M(:)
-!!$omp    parallel do private(ii,jj,kk,ijk)
          DO KK=KSTART3,KEND3
            DO JJ=JSTART3,JEND3
              DO II=ISTART3,IEND3
@@ -700,15 +691,15 @@
          if (is_in) cycle
 
          ijk = funijk(i,j,k)
-         ijktable( -2 ) = jm_of(ijk)
-         ijktable( -1 ) = im_of(ijk)
+         ijktable( -2 ) = funijk(i,jminus(i,j,k),k)
+         ijktable( -1 ) = funijk(iminus(i,j,k),j,k)
          ijktable(  0 ) = ijk
-         ijktable(  1 ) = ip_of(ijk)
-         ijktable(  2 ) = jp_of(ijk)
+         ijktable(  1 ) = funijk(iplus(i,j,k),j,k)
+         ijktable(  2 ) = funijk(i,jplus(i,j,k),k)
 
          if (.not. no_k) then
-            ijktable( -3 ) = km_of(ijk)
-            ijktable(  3 ) = kp_of(ijk)
+            ijktable( -3 ) = funijk(i,j,kminus(i,j,k))
+            ijktable(  3 ) = funijk(i,j,kplus(i,j,k))
          endif
 
          elstart = -3

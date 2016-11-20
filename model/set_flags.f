@@ -219,18 +219,19 @@
            do i = istart3, iend3
 
            ijk = funijk(i,j,k)
-         IMJK = IM_OF(IJK)
-         IJMK = JM_OF(IJK)
-         IJKM = KM_OF(IJK)
-         IPJK = IP_OF(IJK)
-         IJPK = JP_OF(IJK)
-         IJKP = KP_OF(IJK)
-         IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
+           IMJK = funijk(iminus(i,j,k),j,k)
+           IJMK = funijk(i,jminus(i,j,k),k)
+           IJKM = funijk(i,j,kminus(i,j,k))
+           IPJK = funijk(iplus(i,j,k),j,k)
+           IJPK = funijk(i,jplus(i,j,k),k)
+           IJKP = funijk(i,j,kplus(i,j,k))
+
+           IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
+           IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
-         IF (WALL_AT(IJK)) THEN
+         IF (wall_cell(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 ! the default is equivalent to an impermeable surface and these cells
 ! will be treated as such in the momentum routines
