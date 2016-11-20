@@ -112,7 +112,6 @@ CONTAINS
 !-----------------------------------------------
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
     USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs, c0, c1, c2
-    USE cutcell, ONLY: re_indexing
     USE geometry, ONLY: do_k, use_corecell_loop, CORE_ISTART, CORE_IEND, CORE_JSTART, CORE_JEND, CORE_KSTART, CORE_KEND
     USE indices
     USE param, ONLY: DIMENSION_3
@@ -141,40 +140,6 @@ CONTAINS
     integer :: class, interval
     integer :: j_start(2), j_end(2)
 !-----------------------------------------------
-
-    IF(RE_INDEXING) THEN
-
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-
-          im1jk = im_of(ijk)
-          ip1jk = ip_of(ijk)
-          ijm1k = jm_of(ijk)
-          ijp1k = jp_of(ijk)
-
-          AVar(ijk) =      A_m(ijk,-2) * Var(ijm1k)   &
-               + A_m(ijk,-1) * Var(im1jk)   &
-               + A_m(ijk, 0) * Var(ijk)     &
-               + A_m(ijk, 1) * Var(ip1jk)   &
-               + A_m(ijk, 2) * Var(ijp1k)
-
-          if (do_k) then
-             ijkm1 = km_of(ijk)
-             ijkp1 = kp_of(ijk)
-
-
-             AVar(ijk) =   AVar(ijk) + A_m(ijk,-3) * Var(ijkm1)   &
-                  + A_m(ijk, 3) * Var(ijkp1)
-
-          endif
-
-       enddo
-       enddo
-       enddo
-
-    ELSE
 
           core_istart = istart+2
           core_iend = iend-2
@@ -259,8 +224,6 @@ CONTAINS
                 enddo
              enddo
           enddo
-
-       ENDIF ! RE_INDEXING
 
        call send_recv(Avar,nlayers_bicgs)
     RETURN
@@ -697,7 +660,6 @@ CONTAINS
     USE indices
     USE sendrecv
 !      USE cutcell, only: RE_INDEXING,INTERIOR_CELL_AT
-    USE cutcell
     USE functions
     IMPLICIT NONE
 !-----------------------------------------------
@@ -1088,7 +1050,6 @@ CONTAINS
     use geometry
     use compar
     use indices
-    use cutcell
     use functions
     implicit none
 !-----------------------------------------------
@@ -1111,26 +1072,6 @@ CONTAINS
     if(do_global_sum) then
        prod = 0.0d0
 
-       IF(RE_INDEXING) THEN
-!         IF(.FALSE.) THEN
-! Somehow, looping in this order leads to smaller time step than k,i,j nested loop below ....
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-             IF(INTERIOR_CELL_AT(IJK)) prod = prod + r1(ijk)*r2(ijk)
-          ENDDO
-          ENDDO
-          ENDDO
-
-          call global_all_sum(prod, dot_product_par)
-
-
-       ELSE
-
-
-
-!$omp parallel do private(i,j,k,ijk) reduction(+:prod)  collapse (3)
           do k = kstart1, kend1
              do i = istart1, iend1
                 do j = jstart1, jend1
@@ -1141,8 +1082,6 @@ CONTAINS
           enddo
 
           call global_all_sum(prod, dot_product_par)
-
-       ENDIF
 
     else
        if(myPE.eq.root) then

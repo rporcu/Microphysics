@@ -51,40 +51,6 @@ set(SOURCES
   model/calc_outflow.f
   model/calc_resid.f
   model/calc_trd_g.f
-  model/cartesian_grid/CG_set_bc0.f
-  model/cartesian_grid/CG_set_outflow.f
-  model/cartesian_grid/CG_source_u_g.f
-  model/cartesian_grid/CG_source_v_g.f
-  model/cartesian_grid/CG_source_w_g.f
-  model/cartesian_grid/allocate_cut_cell_arrays.f
-  model/cartesian_grid/allocate_dummy_cut_cell_arrays.f
-  model/cartesian_grid/calc_vort_out.f
-  model/cartesian_grid/cartesian_grid_init_namelist.f
-  model/cartesian_grid/check_data_cartesian.f
-  model/cartesian_grid/cut_cell_preprocessing.f
-  model/cartesian_grid/cutcell_mod.f
-  model/cartesian_grid/dashboard_mod.f
-  model/cartesian_grid/deallocate_cut_cell_arrays.f
-  model/cartesian_grid/define_quadrics.f
-  model/cartesian_grid/dmp_cartesian.f
-  model/cartesian_grid/eval_usr_fct.f
-  model/cartesian_grid/get_alpha.f
-  model/cartesian_grid/get_connectivity.f
-  model/cartesian_grid/get_cut_cell_flags.f
-  model/cartesian_grid/get_cut_cell_volume_area.f
-  model/cartesian_grid/get_delh.f
-  model/cartesian_grid/get_master.f
-  model/cartesian_grid/get_poly_data.f
-  model/cartesian_grid/get_stl_data.f
-  model/cartesian_grid/polygon_mod.f
-  model/cartesian_grid/progress_bar_mod.f
-  model/cartesian_grid/quadric_mod.f
-  model/cartesian_grid/set_Odxyz.f
-  model/cartesian_grid/stl_mod.f
-  model/cartesian_grid/update_dashboard.f
-  model/cartesian_grid/vtk_mod.f
-  model/cartesian_grid/vtk_out.f
-  model/cartesian_grid/write_progress_bar.f
   model/check_ab_m.f
   model/check_bqend.f
   model/check_convergence.f
@@ -181,6 +147,7 @@ set(SOURCES
   model/des/set_phase_index.f
   model/des/stl_dbg_des_mod.f
   model/des/stl_functions_des_mod.f
+  model/des/stl_mod.f
   model/des/stl_preproc_des_mod.f
   model/des/vtp_mod.f
   model/des/write_des_data.f

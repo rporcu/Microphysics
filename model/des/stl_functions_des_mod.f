@@ -432,7 +432,6 @@
 
       USE compar
       USE constant
-      USE cutcell
       USE desgrid
       USE discretelement, ONLY: dimn, xe, yn, zt, max_radius
       USE functions

@@ -189,7 +189,6 @@
       use fldvar, only: RO_g
 ! Gas phase pressure.
       use fldvar, only: P_g
-      use cutcell
       use functions, only: funijk
 
       INTEGER, intent(in) :: i, j, k
@@ -228,12 +227,6 @@
       write(lUnit,1001) FUNIJK(i,j,k), i, j, k
       write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(FUNIJK(i,j,k))
       write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(FUNIJK(i,j,k))
-      if(CARTESIAN_GRID) then
-         write(lUnit,"(6x,A,1X,L1)",ADVANCE='NO') 'Cut Cell:', CUT_CELL_AT(FUNIJK(i,j,k))
-         write(lUnit,"(6x,A,1X,L1)") 'Small Cell:', SMALL_CELL_AT(FUNIJK(i,j,k))
-         write(lUnit,"(6x,'Coordinates (E/N/T): ',1X,3(2x, g17.8))") &
-            xg_e(I), yg_n(j), zg_t(k)
-      endif
 
       close(lUnit)
 

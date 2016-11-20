@@ -16,8 +16,6 @@
 !-----------------------------------------------
       USE bc
       USE compar
-      USE cutcell
-      USE dashboard
       USE discretelement
       USE drag
       USE fldvar
@@ -33,7 +31,6 @@
       USE toleranc
 ! use function MAX_VEL_INLET to compute max. velocity at inlet
       USE utilities, ONLY: MAX_VEL_INLET
-      USE vtk
       USE vtp
       use output, only: RES_DT
       use adjust_dt
@@ -173,11 +170,6 @@
 
             WRITE(ERR_MSG,1100)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-
-            IF(WRITE_DASHBOARD) THEN
-               RUN_STATUS = 'DT < DT_MIN.  Recovery not possible!'
-               CALL UPDATE_DASHBOARD(NIT,0.0d0,'    ')
-            ENDIF
             CALL MFIX_EXIT(MyPE)
          ENDIF
       ENDIF

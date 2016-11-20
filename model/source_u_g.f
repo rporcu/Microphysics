@@ -43,7 +43,7 @@
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: east_of, west_of, wall_at
       USE functions, only: zmax
- 
+
       USE geometry, only: imax1, cyclic_x_pd, imax
       USE geometry, only: vol, vol_u
       USE geometry, only: ayz
@@ -57,9 +57,6 @@
       USE scales, only: p_scale
       USE fldvar, only: tau_u_g
       USE toleranc, only: dil_ep_s
-      USE cutcell, only: cartesian_grid, cut_u_treatment_at
-      USE cutcell, only: blocked_u_cell_at
-      USE cutcell, only: a_upg_e, a_upg_w
       IMPLICIT NONE
 
 ! Dummy Arguments
@@ -159,17 +156,6 @@
                B_M(IJK) = -U_G(IJK)
             ENDIF
 
-! Cartesian grid implementation
-         ELSEIF (BLOCKED_U_CELL_AT(IJK)) THEN
-            A_M(IJK,E) = ZERO
-            A_M(IJK,W) = ZERO
-            A_M(IJK,N) = ZERO
-            A_M(IJK,S) = ZERO
-            A_M(IJK,T) = ZERO
-            A_M(IJK,B) = ZERO
-            A_M(IJK,0) = -ONE
-            B_M(IJK) = ZERO
-
 ! Normal case
          ELSE
 
@@ -179,31 +165,16 @@
             IF (CYCLIC_X_PD) THEN
                IF (IMAP(I).EQ.IMAX1) PGE = P_G(IJKE) - DELP_X
             ENDIF
-            IF(.NOT.CUT_U_TREATMENT_AT(IJK)) THEN
-                SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ(IJK)
-            ELSE
-                SDP = -P_SCALE*EPGA*(PGE * A_UPG_E(IJK) - P_G(IJK) * A_UPG_W(IJK) )
-            ENDIF
+            SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ(IJK)
 
-            IF(.NOT.CUT_U_TREATMENT_AT(IJK)) THEN
 ! Volumetric forces
-               ROPGA = HALF * (VOL(IJK)*ROP_G(IJK) + &
-                               VOL(IPJK)*ROP_G(IJKE))/VOL_U(IJK)
-               ROGA  = HALF * (VOL(IJK)*RO_G(IJK) + &
-                               VOL(IPJK)*RO_G(IJKE))/VOL_U(IJK)
+            ROPGA = HALF * (VOL(IJK)*ROP_G(IJK) + &
+                            VOL(IPJK)*ROP_G(IJKE))/VOL_U(IJK)
+            ROGA  = HALF * (VOL(IJK)*RO_G(IJK) + &
+                            VOL(IPJK)*RO_G(IJKE))/VOL_U(IJK)
 ! Previous time step
-               V0 = HALF * (VOL(IJK)*ROP_GO(IJK) + &
-                            VOL(IPJK)*ROP_GO(IJKE))*ODT/VOL_U(IJK)
-            ELSE
-! Volumetric forces
-               ROPGA = (VOL(IJK)*ROP_G(IJK) + &
-                        VOL(IPJK)*ROP_G(IJKE))/(VOL(IJK) + VOL(IPJK))
-               ROGA  = (VOL(IJK)*RO_G(IJK)  + &
-                        VOL(IPJK)*RO_G(IJKE) )/(VOL(IJK) + VOL(IPJK))
-! Previous time step
-               V0 = (VOL(IJK)*ROP_GO(IJK) + VOL(IPJK)*ROP_GO(IJKE))*&
-                  ODT/(VOL(IJK) + VOL(IPJK))
-            ENDIF
+            V0 = HALF * (VOL(IJK)*ROP_GO(IJK) + &
+                         VOL(IPJK)*ROP_GO(IJKE))*ODT/VOL_U(IJK)
 
 ! Body force
             VBF = ROGA*GRAVITY_X
@@ -225,12 +196,8 @@
       ENDDO   ! end do loop over ijk
 !$omp end parallel do
 
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_U_G(A_M, B_M)
 ! modifications for bc
       CALL SOURCE_U_G_BC (A_M, B_M)
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_U_G_BC(A_M, B_M)
 
       RETURN
       END SUBROUTINE SOURCE_U_G

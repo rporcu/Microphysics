@@ -196,7 +196,6 @@
       USE compar
       USE mpi_utility
       USE sendrecv
-      USE cutcell
       use functions
 
       IMPLICIT NONE

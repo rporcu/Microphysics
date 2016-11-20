@@ -31,7 +31,6 @@
       USE drag
       USE interpolation
       use desmpi
-      USE cutcell
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -206,7 +205,6 @@
       USE drag
       USE interpolation
       use desmpi
-      USE cutcell
       USE functions
       use mpi_node_des, only: des_addnodevalues
 

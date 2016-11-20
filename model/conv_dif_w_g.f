@@ -52,12 +52,6 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE cutcell, only: cut_w_treatment_at
-      USE cutcell, only: theta_wt, theta_wt_bar
-      USE cutcell, only: theta_w_be, theta_w_te
-      USE cutcell, only: theta_w_bn, theta_w_tn
-      USE cutcell, only: alpha_we_c, alpha_wn_c, alpha_wt_c
-
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg_z_t, avg_z
@@ -83,41 +77,15 @@
 !---------------------------------------------------------------------//
 
 
-!!!$omp parallel do private(IJK,K,IJKT,IJKP)
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = funijk(i,j,k)
          IJKP = KP_OF(IJK)
 
-         IF(CUT_W_TREATMENT_AT(IJK)) THEN
-
-! East face (i+1/2, j, k+1/2)
-            U(IJK) = (Theta_W_be(IJK) * U_G(IJK) + &
-                      Theta_W_te(IJK) * U_G(IJKP))
-            CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM', &
-               ALPHA_We_c(IJK), AW, HW, VELW)
-            U(IJK) = U(IJK) * AW
-
-! North face (i, j+1/2, k+1/2)
-            V(IJK) = (Theta_W_bn(IJK) * V_G(IJK) + &
-                      Theta_W_tn(IJK) * V_G(IJKP))
-            CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM', &
-               ALPHA_Wn_c(IJK), AW, HW, VELW)
-            V(IJK) = V(IJK) * AW
-
-! Top face (i, j, k+1)
-            WW(IJK) = (Theta_Wt_bar(IJK) * W_G(IJK) + &
-                       Theta_Wt(IJK) * W_G(IJKP))
-            CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM', &
-               alpha_Wt_c(IJK), AW, HW, VELW)
-            WW(IJK) = WW(IJK) * AW
-
-         ELSE
-            U(IJK) = AVG_Z(U_G(IJK),U_G(IJKP),K)
-            V(IJK) = AVG_Z(V_G(IJK),V_G(IJKP),K)
-            WW(IJK) = AVG_Z_T(W_G(IJK),W_G(IJKP),0)
-         ENDIF   ! end if/else cut_w_treatment_at
+         U(IJK) = AVG_Z(U_G(IJK),U_G(IJKP),K)
+         V(IJK) = AVG_Z(V_G(IJK),V_G(IJKP),K)
+         WW(IJK) = AVG_Z_T(W_G(IJK),W_G(IJKP),0)
       ENDDO
       ENDDO
       ENDDO
@@ -139,12 +107,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE cutcell, only: cut_w_treatment_at
-      USE cutcell, only: theta_wt, theta_wt_bar
-      USE cutcell, only: theta_w_be, theta_w_te
-      USE cutcell, only: theta_w_bn, theta_w_tn
-      USE cutcell, only: alpha_we_c, alpha_wn_c, alpha_wt_c
-
       USE functions, only: funijk, kp_of, im_of, jm_of, km_of
 
       USE fldvar, only: flux_ge, flux_gn, flux_gt
@@ -180,55 +142,12 @@
       IMJKP = KP_OF(IMJK)
       IJMKP = KP_OF(IJMK)
 
-      IF(CUT_W_TREATMENT_AT(IJK)) THEN
-! East face (i+1/2, j, k+1/2)
-         Flux_e = (Theta_W_be(IJK) * Flux_gE(IJK) + &
-                 Theta_W_te(IJK) * Flux_gE(IJKP))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            ALPHA_We_c(IJK), AW, HW, VELW)
-         Flux_e = Flux_e * AW
-! West face (i-1/2, j, k+1/2)
-         Flux_w = (Theta_W_be(IMJK) * Flux_gE(IMJK) + &
-                   Theta_W_te(IMJK) * Flux_gE(IMJKP))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            ALPHA_We_c(IMJK), AW, HW, VELW)
-         Flux_w = Flux_w * AW
-
-
-! North face (i, j+1/2, k+1/2)
-         Flux_n = (Theta_W_bn(IJK) * Flux_gN(IJK) + &
-                 Theta_W_tn(IJK) * Flux_gN(IJKP))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            ALPHA_Wn_c(IJK), AW, HW, VELW)
-         Flux_n = Flux_n * AW
-! South face (i, j-1/2, k+1/2)
-         Flux_s = (Theta_W_bn(IJMK) * Flux_gN(IJMK) + &
-                   Theta_W_tn(IJMK) * Flux_gN(IJMKP))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            ALPHA_Wn_c(IJMK), AW, HW, VELW)
-         Flux_s = Flux_s * AW
-
-
-! Top face (i, j, k+1)
-         Flux_t = (Theta_Wt_bar(IJK) * Flux_gT(IJK) + &
-                   Theta_Wt(IJK) * Flux_gT(IJKP))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            alpha_Wt_c(IJK),AW,HW,VELW)
-         Flux_t = Flux_t * AW
-! Bottom face (i, j, k)
-         Flux_b = (Theta_Wt_bar(IJKM) * Flux_gT(IJKM) + &
-                   Theta_Wt(IJKM) * Flux_gT(IJK))
-         CALL GET_INTERPOLATION_TERMS_G(IJK,'W_MOMENTUM',&
-            alpha_Wt_c(IJKM), AW, HW, VELW)
-         Flux_b = Flux_b * AW
-      ELSE
-         Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IJKP))
-         Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IMJKP))
-         Flux_n = HALF * (Flux_gN(IJK) + Flux_gN(IJKP))
-         Flux_s = HALF * (Flux_gN(IJMK) + Flux_gN(IJMKP))
-         Flux_t = HALF * (Flux_gT(IJK) + Flux_gT(IJKP))
-         Flux_b = HALF * (Flux_gT(IJKM) + Flux_gT(IJK))
-      ENDIF   ! end if/else cut_w_treatment_at
+      Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IJKP))
+      Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IMJKP))
+      Flux_n = HALF * (Flux_gN(IJK) + Flux_gN(IJKP))
+      Flux_s = HALF * (Flux_gN(IJMK) + Flux_gN(IJMKP))
+      Flux_t = HALF * (Flux_gT(IJK) + Flux_gT(IJKP))
+      Flux_b = HALF * (Flux_gT(IJKM) + Flux_gT(IJK))
 
       RETURN
       END SUBROUTINE GET_WCELL_GCFLUX_TERMS
@@ -247,9 +166,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE cutcell, only: cut_w_treatment_at
-      USE cutcell, only: oneodx_e_w, oneody_n_w, oneodz_t_w
-
       USE functions, only: funijk, wall_cell
       USE functions, only: east_of, north_of, top_of
       USE functions, only: west_of, south_of
@@ -311,21 +227,12 @@
       IJKS = SOUTH_OF(IJK)
       IJKST = TOP_OF(IJKS)
 
-      IF(CUT_W_TREATMENT_AT(IJK)) THEN
-         C_AE = ONEoDX_E_W(IJK)
-         C_AW = ONEoDX_E_W(IMJK)
-         C_AN = ONEoDY_N_W(IJK)
-         C_AS = ONEoDY_N_W(IJMK)
-         C_AT = ONEoDZ_T_W(IJK)
-         C_AB = ONEoDZ_T_W(IJKM)
-      ELSE
-         C_AE = ODX_E(I)
-         C_AW = ODX_E(IM)
-         C_AN = ODY_N(J)
-         C_AS = ODY_N(JM)
-         C_AT = ODZ(KP)
-         C_AB = ODZ(K)
-      ENDIF
+      C_AE = ODX_E(I)
+      C_AW = ODX_E(IM)
+      C_AN = ODY_N(J)
+      C_AS = ODY_N(JM)
+      C_AT = ODZ(KP)
+      C_AB = ODZ(K)
 
 ! East face (i+1/2, j, k+1/2)
       D_Fe = AVG_Z_H(AVG_X_H(MU_G(IJKC),MU_G(IJKE),I),&

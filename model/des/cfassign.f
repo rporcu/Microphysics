@@ -83,7 +83,6 @@
       USE compar
       USE sendrecv
       USE discretelement
-      USE cutcell
       USE functions
       implicit none
 !-----------------------------------------------

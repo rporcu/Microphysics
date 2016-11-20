@@ -359,10 +359,6 @@
 !---------------------------------------------------------------------//
 ! Functions to average momentum to scalar cell center.
       use fun_avg, only: AVG_X_E, AVG_Y_N, AVG_Z_T
-! Flags and correction factors for cut momentum cells.
-      use cutcell, only: CUT_U_TREATMENT_AT, THETA_UE, THETA_UE_BAR
-      use cutcell, only: CUT_V_TREATMENT_AT, THETA_VN, THETA_VN_BAR
-      use cutcell, only: CUT_W_TREATMENT_AT, THETA_WT, THETA_WT_BAR
 ! Functions to lookup adjacent cells by index.
       use functions, only: IM_OF, JM_OF, KM_OF
       use indices, only: I_OF
@@ -405,29 +401,14 @@
          IJK = FUNIJK(i,j,k)
          IF(fluid_cell(i,j,k)) THEN
             IMJK = IM_OF(IJK)
-            IF(CUT_U_TREATMENT_AT(IMJK)) THEN
-               Uc(IJK) = (THETA_UE_BAR(IMJK)*lUG(IMJK) +              &
-                  THETA_UE(IMJK)*lUg(IJK))
-            ELSE
-               Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
-            ENDIF
+            Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
 
             IJMK = JM_OF(IJK)
-            IF(CUT_V_TREATMENT_AT(IJMK)) THEN
-               Vc(IJK) = (THETA_VN_BAR(IJMK)*lVG(IJMK) +              &
-                  THETA_VN(IJMK)*lVg(IJK))
-            ELSE
-               Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
-            ENDIF
+            Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
 
             IF(DO_K) THEN
                IJKM = KM_OF(IJK)
-               IF(CUT_W_TREATMENT_AT(IJKM)) THEN
-                  Wc(IJK) = (THETA_WT_BAR(IJKM)*lWg(IJKM) +           &
-                     THETA_WT(IJKM)* lWg(IJK))
-               ELSE
-                  Wc(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
-               ENDIF
+               Wc(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
             ELSE
                Wc(IJK) = ZERO
             ENDIF

@@ -53,9 +53,6 @@
       USE scales, only: p_scale
       USE fldvar, only: tau_v_g
       USE toleranc, only: dil_ep_s
-      USE cutcell, only: cartesian_grid, cut_v_treatment_at
-      USE cutcell, only: blocked_v_cell_at
-      USE cutcell, only: a_vpg_n, a_vpg_s
       IMPLICIT NONE
 
 ! Dummy Arguments
@@ -152,17 +149,6 @@
                B_M(IJK) = -V_G(IJK)
             ENDIF
 
-! Cartesian grid implementation
-         ELSEIF (BLOCKED_V_CELL_AT(IJK)) THEN
-            A_M(IJK,E) = ZERO
-            A_M(IJK,W) = ZERO
-            A_M(IJK,N) = ZERO
-            A_M(IJK,S) = ZERO
-            A_M(IJK,T) = ZERO
-            A_M(IJK,B) = ZERO
-            A_M(IJK,0) = -ONE
-            B_M(IJK) = ZERO
-
 ! Normal case
          ELSE
 
@@ -172,29 +158,13 @@
             IF (CYCLIC_Y_PD) THEN
                IF (JMAP(J).EQ.JMAX1)PGN = P_G(IJKN) - DELP_Y
             ENDIF
-            IF(.NOT.CUT_V_TREATMENT_AT(IJK)) THEN
-               SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ(IJK)
-            ELSE
-               SDP = -P_SCALE*EPGA*(PGN * A_VPG_N(IJK) - &
-                                    P_G(IJK) * A_VPG_S(IJK) )
-            ENDIF
+            SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ(IJK)
 
-            IF(.NOT.CUT_V_TREATMENT_AT(IJK)) THEN
 ! Volumetric forces
-               ROPGA = AVG_Y(ROP_G(IJK),ROP_G(IJKN),J)
-               ROGA = AVG_Y(RO_G(IJK),RO_G(IJKN),J)
+            ROPGA = AVG_Y(ROP_G(IJK),ROP_G(IJKN),J)
+            ROGA = AVG_Y(RO_G(IJK),RO_G(IJKN),J)
 ! Previous time step
-               V0 = AVG_Y(ROP_GO(IJK),ROP_GO(IJKN),J)*ODT
-            ELSE
-! Volumetric forces
-               ROPGA = (VOL(IJK)*ROP_G(IJK) + &
-                  VOL(IJKN)*ROP_G(IJKN))/(VOL(IJK) + VOL(IJKN))
-               ROGA  = (VOL(IJK)*RO_G(IJK)  + &
-                  VOL(IJKN)*RO_G(IJKN) )/(VOL(IJK) + VOL(IJKN))
-! Previous time step
-               V0 = (VOL(IJK)*ROP_GO(IJK) + VOL(IJKN)*ROP_GO(IJKN))*&
-                  ODT/(VOL(IJK) + VOL(IJKN))
-            ENDIF
+            V0 = AVG_Y(ROP_GO(IJK),ROP_GO(IJKN),J)*ODT
 
 ! Body force
             VBF = ROGA*GRAVITY_Y
@@ -216,12 +186,8 @@
       ENDDO
       ENDDO
 
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_V_G(A_M, B_M)
 ! modifications for bc
       CALL SOURCE_V_G_BC(A_M, B_M)
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_V_G_BC(A_M, B_M)
 
       RETURN
       END SUBROUTINE SOURCE_V_G

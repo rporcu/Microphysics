@@ -89,7 +89,6 @@
       USE mpi_utility
       USE sendrecv
 
-      USE cutcell
       USE in_binary_512
 
       IMPLICIT NONE

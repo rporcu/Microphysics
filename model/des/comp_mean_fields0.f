@@ -20,7 +20,6 @@
       USE drag
       USE interpolation
       use desmpi
-      USE cutcell
       USE mpi_utility
 
 
@@ -135,11 +134,6 @@
             GST_TMP(I,J,K,2) = YN(JJ)
             GST_TMP(I,J,K,3) = merge(DZ(1), ZT(KK), NO_K)
 
-            IF(CARTESIAN_GRID) THEN
-               IF(SCALAR_NODE_ATWALL(CUR_IJK))                   &
-                  COUNT_NODES_OUTSIDE = COUNT_NODES_OUTSIDE + 1
-            ENDIF
-
          ENDDO
          ENDDO
          ENDDO
@@ -183,90 +177,6 @@
          ENDDO   ! end do (nindx=1,pinc(ijk))
 !-----------------------------------------------------------------<<<
 
-
-! Only for cutcell cases may count_nodes_inside become less than its
-! original set value. In such an event, the contribution of scalar nodes
-! that do not reside in the domain is added to a residual array. This
-! array is then redistribited equally to the nodes that are in the fluid
-! domain. These steps are done to conserve mass.
-!----------------------------------------------------------------->>>
-         IF (CARTESIAN_GRID) THEN
-
-! only for cartesian_grid will count_nodes_outside be modified from zero
-            COUNT_NODES_INSIDE = &
-               COUNT_NODES_INSIDE_MAX - COUNT_NODES_OUTSIDE
-
-            IF(COUNT_NODES_INSIDE.LT.COUNT_NODES_INSIDE_MAX) THEN
-
-! initializing
-               RESID_ROPS(1:MMAX) = ZERO
-               RESID_VEL(:, 1:MMAX) = ZERO
-
-! Convention used to number node numbers
-! i=1, j=2           i=2, j=2
-!   _____________________
-!   |                   |
-!   |  I = 2, J = 2     |
-!   |___________________|
-! i=1, j=1           i=2, j=1
-! setting indices based on convention
-               I = I_OF(IJK)
-               J = J_OF(IJK)
-               K = K_OF(IJK)
-               I1 = I-1
-               I2 = I
-               J1 = J-1
-               J2 = J
-               K1 = merge(K, K-1, NO_K)
-               K2 = K
-! first calculate the residual des_rops_node and des_vel_node that was
-! computed on nodes that do not belong to the domain
-
-               DO KK = K1, K2
-               DO JJ = J1, J2
-               DO II = I1, I2
-
-                  IJK2 = funijk(II, JJ, KK)
-
-                  IF(SCALAR_NODE_ATWALL(IJK2)) THEN
-                     RESID_ROPS(1:MMAX) = RESID_ROPS(1:MMAX) + &
-                        DES_ROPS_NODE(IJK2,1:MMAX)
-
-                     DES_ROPS_NODE(IJK2,1:MMAX) = ZERO
-                     DO IDIM = 1, merge(2,3,NO_K)
-                        RESID_VEL(IDIM, 1:MMAX) =                  &
-                            RESID_VEL(IDIM, 1:MMAX) +              &
-                           DES_VEL_NODE(IJK2,IDIM, 1:MMAX)
-                        DES_VEL_NODE(IJK2,IDIM, 1:MMAX) = ZERO
-                     ENDDO
-                  ENDIF
-               ENDDO
-               ENDDO
-               ENDDO
-
-! now add this residual equally to the remaining nodes
-               NORM_FACTOR = ONE/REAL(COUNT_NODES_INSIDE)
-               DO KK = K1, K2
-               DO JJ = J1, J2
-               DO II = I1, I2
-                  IJK2 = funijk(II, JJ, KK)
-
-                  IF(.NOT.SCALAR_NODE_ATWALL(IJK2)) THEN
-                     DES_ROPS_NODE(IJK2,1:MMAX) =                  &
-                        DES_ROPS_NODE(IJK2,1:MMAX) +               &
-                        RESID_ROPS(1:MMAX)*NORM_FACTOR
-                     DO IDIM = 1, merge(2,3,NO_K)
-                        DES_VEL_NODE(IJK2,IDIM, 1:MMAX) =          &
-                           DES_VEL_NODE(IJK2,IDIM, 1:MMAX) +       &
-                           RESID_VEL(IDIM, 1:MMAX)*NORM_FACTOR
-                     ENDDO
-                  ENDIF
-
-               ENDDO
-               ENDDO
-               ENDDO
-            ENDIF
-         ENDIF   ! end if (cartesian_grid)
       ENDDO
       ENDDO
       ENDDO

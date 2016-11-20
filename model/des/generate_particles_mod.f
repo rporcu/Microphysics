@@ -120,7 +120,6 @@
 ! direction wise spans of the domain and grid spacing in each direction
       use geometry, only: xlength, ylength, zlength
 
-      use cutcell, only : CARTESIAN_GRID
       use stl_functions_des, only: CHECK_IF_PARTICLE_OVERLAPS_STL
       use run, only: solids_model
       use des_allocate, only: PARTICLE_GROW
@@ -308,10 +307,10 @@
          IJK = FUNIJK(i,j,k)
          IF(.NOT.fluid_cell(i,j,k)) CYCLE
 
-         IF(CARTESIAN_GRID) THEN
-            CALL CHECK_IF_PARTICLE_OVERLAPS_STL(POS, I, J, K, SKIP)
-            IF(SKIP) CYCLE
-         ENDIF
+         !IF(CARTESIAN_GRID) THEN
+         !   CALL CHECK_IF_PARTICLE_OVERLAPS_STL(POS, I, J, K, SKIP)
+         !   IF(SKIP) CYCLE
+         !ENDIF
 
          PIP = PIP + 1
          CALL PARTICLE_GROW(PIP)

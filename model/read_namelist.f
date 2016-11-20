@@ -11,8 +11,6 @@
       USE bc
       USE compar
       USE constant
-      USE cutcell
-      USE dashboard
       USE des_bc
       USE discretelement
       USE error_manager
@@ -27,9 +25,7 @@
       USE param1
       USE particle_filter
       USE physprop
-      USE polygon
       USE ps
-      USE quadric
       USE residual
       USE run
       USE scales
@@ -38,7 +34,6 @@
       USE usr
       USE utilities, ONLY: blank_line, line_too_big, seek_comment
       USE utilities, ONLY: make_upper_case, replace_tab
-      USE vtk
       Use stl
 
       IMPLICIT NONE
@@ -196,7 +191,6 @@
       INCLUDE 'usr_hooks.inc'
       INCLUDE 'dmp_batch_control.inc'
       INCLUDE 'desnamelist.inc'
-      INCLUDE 'cartesian_grid_namelist.inc'
       INCLUDE 'usrnlst.inc'
 
       ERROR = .FALSE.
@@ -373,12 +367,6 @@
          READ(STRING, NML=USR_INPUT_DATA, IOSTAT=IOS)
          IF(IOS == 0)  RETURN
 
-
-! Cartesian grid cut-cell input parameters.
-         STRING=''; STRING = '&CARTESIAN_GRID_INPUT_DATA '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=CARTESIAN_GRID_INPUT_DATA, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
 
       ENDIF
 

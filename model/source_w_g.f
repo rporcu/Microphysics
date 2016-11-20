@@ -55,9 +55,6 @@
       USE scales, only: p_scale
       USE fldvar, only: tau_w_g
       USE toleranc, only: dil_ep_s
-      USE cutcell, only: cartesian_grid, cut_w_treatment_at
-      USE cutcell, only: blocked_w_cell_at
-      USE cutcell, only: a_wpg_t, a_wpg_b
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -160,17 +157,6 @@
                B_M(IJK) = -W_G(IJK)
             ENDIF
 
-! Cartesian grid implementation
-         ELSEIF (BLOCKED_W_CELL_AT(IJK)) THEN
-            A_M(IJK,E) = ZERO
-            A_M(IJK,W) = ZERO
-            A_M(IJK,N) = ZERO
-            A_M(IJK,S) = ZERO
-            A_M(IJK,T) = ZERO
-            A_M(IJK,B) = ZERO
-            A_M(IJK,0) = -ONE
-            B_M(IJK) = ZERO
-
 ! Normal case
          ELSE
 
@@ -181,31 +167,14 @@
             IF (CYCLIC_Z_PD) THEN
                IF (KMAP(K).EQ.KMAX1) PGT = P_G(IJKT) - DELP_Z
             ENDIF
-            IF(.NOT.CUT_W_TREATMENT_AT(IJK)) THEN
-                SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY(IJK)
-            ELSE
-                SDP = -P_SCALE*EPGA*(PGT * A_WPG_T(IJK) - P_G(IJK) * A_WPG_B(IJK) )
-            ENDIF
+            SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY(IJK)
 
-            IF(.NOT.CUT_W_TREATMENT_AT(IJK)) THEN
 ! Volumetric forces
-               ROPGA = AVG_Z(ROP_G(IJK),ROP_G(IJKT),K)
-               ROGA = AVG_Z(RO_G(IJK),RO_G(IJKT),K)
+            ROPGA = AVG_Z(ROP_G(IJK),ROP_G(IJKT),K)
+            ROGA = AVG_Z(RO_G(IJK),RO_G(IJKT),K)
 
 ! Previous time step
-               V0 = AVG_Z(ROP_GO(IJK),ROP_GO(IJKT),K)*ODT
-
-            ELSE
-! Volumetric forces
-               ROPGA = (VOL(IJK)*ROP_G(IJK) + VOL(IJKT)*ROP_G(IJKT))/&
-                  (VOL(IJK) + VOL(IJKT))
-               ROGA  = (VOL(IJK)*RO_G(IJK) + VOL(IJKT)*RO_G(IJKT))/&
-                  (VOL(IJK) + VOL(IJKT))
-! Previous time step
-               V0 = (VOL(IJK)*ROP_GO(IJK) + VOL(IJKT)*ROP_GO(IJKT))*&
-                  ODT/(VOL(IJK) + VOL(IJKT))
-            ENDIF
-
+            V0 = AVG_Z(ROP_GO(IJK),ROP_GO(IJKT),K)*ODT
 
 ! Body force
             VBF = ROPGA*GRAVITY_Z
@@ -227,12 +196,8 @@
       ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
 
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_W_G(A_M, B_M)
 ! modifications for bc
       CALL SOURCE_W_G_BC (A_M, B_M)
-! modifications for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SOURCE_W_G_BC(A_M, B_M)
 
       RETURN
       END SUBROUTINE SOURCE_W_G

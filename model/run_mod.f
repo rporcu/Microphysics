@@ -89,22 +89,6 @@
       INTEGER,PARAMETER :: HYS=10
       INTEGER,PARAMETER :: USER_DRAG=11
 
-! filtered/subgrid corrections to the drag coefficient & granular
-! stress terms including granular viscosity and solids pressure
-! current options are 'igci' and 'milioli'
-      CHARACTER(64) :: SUBGRID_TYPE
-
-      INTEGER :: SUBGRID_TYPE_ENUM
-      INTEGER,PARAMETER :: UNDEFINED_SUBGRID_TYPE=0
-      INTEGER,PARAMETER :: IGCI=1
-      INTEGER,PARAMETER :: MILIOLI=2
-
-! If .TRUE. incorporate the wall effects upon the calculation of the
-! subgrid solids viscosity, solids pressure, and gas-solids drag
-      LOGICAL :: SUBGRID_Wall
-! the ratio of the FilterSize to the GridSize
-      DOUBLE PRECISION :: filter_size_ratio
-
 ! Single particle drag correlation
       CHARACTER(64) :: CD_FUNCTION
 

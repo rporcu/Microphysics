@@ -28,7 +28,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G, DIMENSION_3
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE cutcell, ONLY: CARTESIAN_GRID, A_UPG_E, A_VPG_N, A_WPG_T
       USE eos, ONLY: DROODP_G
       USE fldvar, ONLY: U_G, V_G, W_G,ROP_G, ROP_GO, RO_G, P_G, EP_G
       USE geometry, ONLY: VOL
@@ -99,16 +98,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             A_M(IJK,S) = A_M(IJK,S)*D_N(IJMK)
             A_M(IJK,T) = A_M(IJK,T)*D_T(IJK)
             A_M(IJK,B) = A_M(IJK,B)*D_T(IJKM)
-
-            IF(CARTESIAN_GRID) THEN
-               A_M(IJK,E) = A_M(IJK,E) * A_UPG_E(IJK)
-               A_M(IJK,W) = A_M(IJK,W) * A_UPG_E(IMJK)
-               A_M(IJK,N) = A_M(IJK,N) * A_VPG_N(IJK)
-               A_M(IJK,S) = A_M(IJK,S) * A_VPG_N(IJMK)
-               A_M(IJK,T) = A_M(IJK,T) * A_WPG_T(IJK)
-               A_M(IJK,B) = A_M(IJK,B) * A_WPG_T(IJKM)
-            ENDIF
-
 
             A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+A_M(IJK,N)+A_M(IJK,S) + &
                A_M(IJK,T)+A_M(IJK,B))

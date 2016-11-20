@@ -246,37 +246,6 @@
 !</keyword>
 
 
-!<keyword category="Run Control" required="false" tfm="true">
-!  <description>
-!    Subgrid models.
-!  </description>
-!
-!  <valid value="Igci" note="
-!   Igci, Y., Pannala, S., Benyahia, S., and Sundaresan S. (2012).
-!   Industrial & Engineering Chemistry Research, 2012, 51(4):2094-2103"/>
-!
-!  <valid value="Milioli" note="
-!   Milioli, C.C., Milioli, F. E., Holloway, W., Agrawal, K. and
-!   Sundaresan, S. (2013). AIChE Journal, 59:3265-3275."/>
-!
-      SUBGRID_TYPE = UNDEFINED_C
-!</keyword>
-
-!<keyword category="Run Control" required="false" tfm="true">
-!  <description>
-!    Ratio of filter size to computational cell size.
-!  </description>
-      FILTER_SIZE_RATIO = 2.0D0
-!</keyword>
-
-!<keyword category="Run Control" required="false" tfm="true">
-!  <description>Flag for subgrid wall correction.</description>
-!  <valid value=".FALSE." note="Do not include wall correction."/>
-!  <valid value=".TRUE." note="Include subgrid wall correction."/>
-      SUBGRID_Wall = .FALSE.
-!</keyword>
-
-
 !#####################################################################!
 !                           Physical Parameters                       !
 !#####################################################################!
@@ -1959,14 +1928,9 @@
       V_S0(:DIM_M) = UNDEFINED
       W_S0(:DIM_M) = UNDEFINED
 
-
-
       CALL DES_INIT_NAMELIST
 
-
       CALL USR_INIT_NAMELIST
-
-      CALL CARTESIAN_GRID_INIT_NAMELIST
 
       RETURN
       END SUBROUTINE INIT_NAMELIST

@@ -149,10 +149,6 @@
 ! Flag: Use DES E-L model
       USE discretelement, only: DES_CONTINUUM_COUPLED
       USE discretelement, only: MAX_RADIUS
-! Flag: Use Cartesian grid cut-cell implementation
-      USE cutcell, only: CARTESIAN_GRID
-! Flag: Use STL representation in CG
-      USE cutcell, only: USE_STL
 
       use error_manager
 
@@ -194,17 +190,6 @@
  1300 FORMAT('Error 1300: The maximum particle diameter exceeds the ', &
          'simulation',/'depth (ZLENGTH). Please correct the mfix.dat ',&
          'file.')
-
-
-      IF(CARTESIAN_GRID .AND. .NOT.USE_STL) THEN
-         WRITE(ERR_MSG,1400)
-         CALL FLUSH_ERR_MSG(ABORT =.TRUE.)
-      ENDIF
-
- 1400 FORMAT('Error 1400: Cartesian grid and discrete models (DEM or ',&
-         'PIC) only',/'support STL wall representations. Quadrics ',   &
-         'and polygons are not',/'supported.')
-
 
       CALL FINL_ERR_MSG
 

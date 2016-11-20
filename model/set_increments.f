@@ -14,7 +14,6 @@
       SUBROUTINE SET_INCREMENTS
 
       USE compar
-      USE cutcell, ONLY: CARTESIAN_GRID
       USE fldvar
       USE functions
       USE funits
@@ -225,7 +224,7 @@
       ENDDO
       ENDDO
 
-      USE_CORECELL_LOOP = .not.CARTESIAN_GRID
+      USE_CORECELL_LOOP = .true.
 
       if (USE_CORECELL_LOOP) then
          Allocate( already_visited(DIMENSION_3))
