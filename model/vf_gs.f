@@ -34,7 +34,7 @@
             IF(IP_AT_E(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               IJKE = EAST_OF(IJK)
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
                VXF_GDS(IJK) = VOL_U(IJK) *                             &
                   AVG_X(F_GDS(IJK),F_GDS(IJKE),I)
             ENDIF
@@ -82,7 +82,7 @@
             IF(IP_AT_N(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               IJKN = NORTH_OF(IJK)
+               IJKN = FUNIJK(i,jnorth(i,j,k),k)
                VXF_GDS(IJK) = VOL_V(IJK) *                             &
                   AVG_Y(F_GDS(IJK),F_GDS(IJKN),J)
             ENDIF
@@ -131,7 +131,7 @@
             IF (IP_AT_T(IJK)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
-               IJKT = TOP_OF(IJK)
+               IJKT = FUNIJK(i,j,ktop(i,j,k))
                VXF_GDS(IJK) = VOL_W(IJK) *                             &
                   AVG_Z(F_GDS(IJK),F_GDS(IJKT),K)
             ENDIF

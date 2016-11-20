@@ -75,7 +75,8 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, IJKC, IJKD, IJKU, I, J, K
+      INTEGER :: IJK, IJKC, IJKD, IJKU
+      INTEGER :: i, j, k, itmp, jtmp, ktmp
 !
       DOUBLE PRECISION :: PHI_C
 ! down wind factor
@@ -115,7 +116,8 @@
              ELSE
                 IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = SUPERBEE(PHI_C)
@@ -128,7 +130,8 @@
              ELSE
                 IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = SUPERBEE(PHI_C)
@@ -142,7 +145,8 @@
                 ELSE
                    IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 DWF = SUPERBEE(PHI_C)
@@ -166,7 +170,8 @@
              ELSE
                 IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = SMART(PHI_C)
@@ -175,11 +180,12 @@
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = SOUTH_OF(IJKC)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
                 IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = SMART(PHI_C)
@@ -189,11 +195,12 @@
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
                    IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
                    IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 DWF = SMART(PHI_C)
@@ -212,12 +219,13 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              CF = ABS(U(IJK))*DT*ODX_E(I)
@@ -226,12 +234,13 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              CF = ABS(V(IJK))*DT*ODY_N(J)
@@ -244,9 +253,10 @@
                    IJKD = TOP_OF(IJK)
                    IJKU = BOTTOM_OF(IJKC)
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 CF = ABS(W(IJK))*DT*OX(I)*ODZ_T(K)
@@ -267,14 +277,15 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
                 ODXC = ODX(I)
                 ODXUC = ODX_E(IM1(I))
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
                 ODXC = ODX(IP1(I))
                 ODXUC = ODX_E(IP1(I))
              ENDIF
@@ -286,13 +297,15 @@
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
                 ODYC = ODY(J)
                 ODYUC = ODY_N(JM1(J))
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
                 ODYC = ODY(JP1(J))
                 ODYUC = ODY_N(JP1(J))
              ENDIF
@@ -304,14 +317,15 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                    ODZC = ODZ(K)
                    ODZUC = ODZ_T(KM1(K))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                    ODZC = ODZ(KP1(K))
                    ODZUC = ODZ_T(KP1(K))
                 ENDIF
@@ -334,12 +348,13 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = MUSCL(PHI_C)
@@ -347,12 +362,13 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = MUSCL(PHI_C)
@@ -362,11 +378,13 @@
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
                    IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 DWF = MUSCL(PHI_C)
@@ -386,12 +404,13 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = VANLEER(PHI_C)
@@ -399,12 +418,13 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = VANLEER(PHI_C)
@@ -413,12 +433,13 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 DWF = VANLEER(PHI_C)
@@ -438,12 +459,13 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = MINMOD(PHI_C)
@@ -451,12 +473,13 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = MINMOD(PHI_C)
@@ -465,12 +488,13 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
 
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
@@ -490,12 +514,13 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
-                IJKU = EAST_OF(IJKC)
+                itmp = ieast(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = CENTRAL_SCHEME(PHI_C)
@@ -503,12 +528,13 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
-                IJKU = NORTH_OF(IJKC)
+                jtmp = jnorth(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
              DWF = CENTRAL_SCHEME(PHI_C)
@@ -517,12 +543,13 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
-                   IJKU = TOP_OF(IJKC)
+                   ktmp = ktop(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
                 DWF = CENTRAL_SCHEME(PHI_C)

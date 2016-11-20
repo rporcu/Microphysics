@@ -251,9 +251,8 @@
       USE cutcell, only: oneodx_e_w, oneody_n_w, oneodz_t_w
 
       USE functions, only: funijk, wall_cell
-      USE functions, only: east_of, north_of, top_of
-      USE functions, only: west_of, south_of
-      USE functions, only: im_of, jm_of, km_of
+      USE functions, only: ieast, iwest, jnorth, jsouth, ktop
+      USE functions, only: iminus, jminus, kminus
 
       USE geometry, only: odx_e, ody_n, odz
       USE geometry, only: ox
@@ -282,34 +281,44 @@
       INTEGER :: kp, im, jm
       INTEGER :: ijkc, ijkt, ijke, ijkte, ijkw, ijkwt
       INTEGER :: ijkn, ijktn, ijks, ijkst
+      INTEGER :: itmp, jtmp, ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
       IJK = funijk(i,j,k)
 
-      IMJK = IM_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJKM = KM_OF(IJK)
+      IMJK = FUNIJK(iminus(i,j,k),j,k)
+      IJMK = FUNIJK(i,jminus(i,j,k),j)
+      IJKM = FUNIJK(i,j,kminus(i,j,k))
 
       KP = KP1(K)
       IM = IM1(I)
       JM = JM1(J)
 
-      IJKT = TOP_OF(IJK)
+      ktmp = ktop(i,j,k)
+      IJKT = FUNIJK(i,j,ktmp)
+
+      IJKE  = FUNIJK(ieast(i,j,k),j,k)
+
+      itmp = iwest(i,j,k)
+      IJKW  = FUNIJK(itmp,j,k)
+      IJKWT = FUNIJK(itmp,j,ktop(itmp,j,k))
+
+      IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
+      IJKTN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
+
+      IJKN = FUNIJK(i,jnorth(i,j,k),k)
+
+      jtmp  = jsouth(i,j,k)
+      IJKS  = FUNIJK(i,jtmp,k)
+      IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
+
       IF (wall_cell(i,j,k)) THEN
          IJKC = IJKT
       ELSE
          IJKC = IJK
       ENDIF
-      IJKE = EAST_OF(IJK)
-      IJKTE = EAST_OF(IJKT)
-      IJKN = NORTH_OF(IJK)
-      IJKTN = NORTH_OF(IJKT)
-      IJKW = WEST_OF(IJK)
-      IJKWT = TOP_OF(IJKW)
-      IJKS = SOUTH_OF(IJK)
-      IJKST = TOP_OF(IJKS)
 
       IF(CUT_W_TREATMENT_AT(IJK)) THEN
          C_AE = ONEoDX_E_W(IJK)
