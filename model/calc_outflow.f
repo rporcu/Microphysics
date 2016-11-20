@@ -23,7 +23,7 @@
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
       use functions, only: im_of, ip_of, jm_of, jp_of, km_of, kp_of
-      use functions, only: fluid_at
+      use functions, only: fluid_cell
       use functions, only: is_on_mype_plus2layers
       use functions, only: funijk
       use compar, only: dead_cell_at

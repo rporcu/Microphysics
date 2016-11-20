@@ -47,10 +47,10 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: funijk
-      USE functions, only: fluid_at
-      USE functions, only: east_of, north_of, top_of
-      USE functions, only: west_of, south_of, bottom_of
-      USE functions, only: im_of, jm_of, km_of
+      USE functions, only: fluid_cell
+      USE functions, only: ieast, jnorth, ktop
+      USE functions, only: iwest, jsouth, kbot
+      USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
       USE param, only: dimension_3
       USE param1, only: zero
@@ -84,13 +84,13 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         IF (FLUID_AT(IJK)) THEN
-            IJKE = EAST_OF(IJK)
-            IJKN = NORTH_OF(IJK)
-            IJKT = TOP_OF(IJK)
+         IF (fluid_cell(i,j,k)) THEN
+            IJKE = FUNIJK(ieast(i,j,k),j,k)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
+            IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
             IF (U(IJK) >= ZERO) THEN
@@ -99,8 +99,8 @@
                ROP_E(IJK) = ROP(IJKE)
             ENDIF
 ! West face (i-1/2, j, k)
-            IF (.NOT.FLUID_AT(IMJK)) THEN
-               IJKW = WEST_OF(IJK)
+            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
                IF (U(IMJK) >= ZERO) THEN
                   ROP_E(IMJK) = ROP(IJKW)
                ELSE
@@ -116,8 +116,8 @@
                ROP_N(IJK) = ROP(IJKN)
             ENDIF
 ! South face (i, j-1/2, k)
-            IF (.NOT.FLUID_AT(IJMK)) THEN
-               IJKS = SOUTH_OF(IJK)
+            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
+               IJKS = FUNIJK(i,jsouth(i,j,k),k)
                IF (V(IJMK) >= ZERO) THEN
                  ROP_N(IJMK) = ROP(IJKS)
                ELSE
@@ -127,7 +127,7 @@
 
 
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
 ! Top face (i, j, k+1/2)
                IF (W(IJK) >= ZERO) THEN
                   ROP_T(IJK) = ROP(IJK)
@@ -135,8 +135,8 @@
                   ROP_T(IJK) = ROP(IJKT)
                ENDIF
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.FLUID_AT(IJKM)) THEN
-                  IJKB = BOTTOM_OF(IJK)
+               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
+                  IJKB = FUNIJK(i,j,kbot(i,j,k))
                   IF (W(IJKM) >= ZERO) THEN
                      ROP_T(IJKM) = ROP(IJKB)
                   ELSE
@@ -145,7 +145,7 @@
                ENDIF
             ENDIF   ! end if do_k
 
-         ENDIF   ! end if fluid_at
+         ENDIF   ! end if fluid_cell
       ENDDO
       ENDDO
       ENDDO
@@ -171,10 +171,10 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: funijk
-      USE functions, only: fluid_at
-      USE functions, only: east_of, north_of, top_of
-      USE functions, only: west_of, south_of, bottom_of
-      USE functions, only: im_of, jm_of, km_of
+      USE functions, only: fluid_cell
+      USE functions, only: ieast, jnorth, ktop
+      USE functions, only: iwest, jsouth, kbot
+      USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
       USE param, only: dimension_3
       USE param1, only: one
@@ -218,20 +218,20 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         IF (FLUID_AT(IJK)) THEN
-            IJKE = EAST_OF(IJK)
-            IJKN = NORTH_OF(IJK)
-            IJKT = TOP_OF(IJK)
+         IF (fluid_cell(i,j,k)) THEN
+            IJKE = FUNIJK(ieast(i,j,k),j,k)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
+            IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
             ROP_E(IJK) = ((ONE-XSI_E(IJK))*ROP(IJK)+&
                          XSI_E(IJK)*ROP(IJKE))
 ! West face (i-1/2, j, k)
-            IF (.NOT.FLUID_AT(IMJK)) THEN
-               IJKW = WEST_OF(IJK)
+            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
                ROP_E(IMJK) = ((ONE - XSI_E(IMJK))*ROP(IJKW)+&
                              XSI_E(IMJK)*ROP(IJK))
             ENDIF
@@ -241,28 +241,28 @@
             ROP_N(IJK) = ((ONE-XSI_N(IJK))*ROP(IJK)+&
                          XSI_N(IJK)*ROP(IJKN))
 ! South face (i, j-1/2, k)
-            IF (.NOT.FLUID_AT(IJMK)) THEN
-               IJKS = SOUTH_OF(IJK)
+            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
+               IJKS = FUNIJK(i,jsouth(i,j,k),k)
                ROP_N(IJMK) = ((ONE - XSI_N(IJMK))*ROP(IJKS)+&
                              XSI_N(IJMK)*ROP(IJK))
             ENDIF
 
 
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! Top face (i, j, k+1/2)
                ROP_T(IJK) = ((ONE - XSI_T(IJK))*ROP(IJK)+&
                             XSI_T(IJK)*ROP(IJKT))
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.FLUID_AT(IJKM)) THEN
-                  IJKB = BOTTOM_OF(IJK)
+               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
+                  IJKB = FUNIJK(i,j,kbot(i,j,k))
                   ROP_T(IJKM) = ((ONE - XSI_T(IJKM))*ROP(IJKB)+&
                                 XSI_T(IJKM)*ROP(IJK))
                ENDIF
             ENDIF   ! end if do_k
 
-         ENDIF   ! end if fluid_at
+         ENDIF   ! end if fluid_cell
       ENDDO
       ENDDO
       ENDDO

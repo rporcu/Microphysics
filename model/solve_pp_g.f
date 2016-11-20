@@ -174,7 +174,7 @@
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
             ijk = funijk(i,j,k)
-            if(fluid_at(ijk)) then
+            if(fluid_cell(i,j,k)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
 
                B_M(IJK) = B_M(IJK) - pSource

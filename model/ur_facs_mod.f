@@ -60,7 +60,7 @@ MODULE ur_facs
 
              ijk = funijk(i,j,k)
 
-            IF (FLUID_AT(IJK)) THEN
+            IF (fluid_cell(i,j,k)) THEN
                AP = A_M(IJK,0)
                IF (AP /= (-ONE)) THEN
                   A_M(IJK,0) = AP*F1

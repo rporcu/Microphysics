@@ -17,7 +17,7 @@
       USE eos, only: EOSG
       USE fldvar
       USE param1   , only: UNDEFINED
-      USE functions, only: funijk, wall_at
+      USE functions, only: funijk, wall_cell
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -35,7 +35,7 @@
 
 ! set_bc0 will have already defined ro_g and rop_g in MI and PI
 ! boundary cells (redundant-remove in set_bc0?)
-             IF (.NOT.WALL_AT(IJK)) THEN
+             IF (.NOT.wall_cell(i,j,k)) THEN
                RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),295.15d0)
                ROP_G(IJK) = EP_G(IJK)*RO_G(IJK)
             ENDIF
@@ -52,7 +52,7 @@
 
              ijk = funijk(i,j,k)
 
-            IF (.NOT.WALL_AT(IJK)) THEN
+            IF (.NOT.wall_cell(i,j,k)) THEN
 ! assign ro_g and calculate rop_g in all fluid and flow boundary cells
 ! set_constprop will have already defined ro_g in fluid and flow
 ! boundary cells (redundant- remove here?)

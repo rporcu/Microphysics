@@ -77,7 +77,7 @@
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                ijk = funijk(i,j,k)
 
-               if(fluid_at(ijk)) &
+               if(fluid_cell(i,j,k)) &
                   lData_dp(myPE) = lData_dp(myPE) + VOL(IJK)
             endif
 
@@ -231,7 +231,7 @@
          if(IS_ON_myPE_owns(I, J, K)) then
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
             ijk = funijk(i,j,k)
-            if(fluid_at(ijk)) then
+            if(fluid_cell(i,j,k)) then
                lFlags_i(lc1,1) = myPE
                lFlags_i(lc1,2) = FLAG(IJK)
             endif

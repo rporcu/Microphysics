@@ -182,7 +182,7 @@ LOOP_FLUID: DO K = kstart3, kend3
 
          IJK = FUNIJK(i,j,k)
 
-         IF (FLUID_AT(IJK)) THEN
+         IF (fluid_cell(i,j,k)) THEN
             IF(ABS(U_G(IJK)) > MAX_INLET_VEL .OR. &
                ABS(V_G(IJK)) > MAX_INLET_VEL .OR. &
                ABS(W_G(IJK)) > MAX_INLET_VEL) THEN

@@ -55,51 +55,51 @@
          IF (WALL_AT(IJK).AND..NOT.CYCLIC_AT(IJK)) THEN
 !
 !----------------------------------------------------------------
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJPK = JP_OF(IJK)
-            IJKP = KP_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k) 
+            IPJK = FUNIJK(iplus(i,j,k),j,k) 
+            IJMK = FUNIJK(i,jminus(i,j,k),k) 
+            IJPK = FUNIJK(i,jplus(i,j,k),k) 
+            IJKM = FUNIJK(i,j,kminus(i,j,k)) 
+            IJKP = FUNIJK(i,j,kplus(i,j,k)) 
 !----------------------------------------------------------------
             NUM = 0
 !
-            IF (FLUID_AT(IMJK)) THEN
+            IF (fluid_cell(iminus(i,j,k),j,k)) then
                NUM = NUM + 1
                DIR(W) = .TRUE.
             ELSE
                DIR(W) = .FALSE.
             ENDIF
 !
-            IF (FLUID_AT(IPJK)) THEN
+            IF (fluid_cell(iplus(i,j,k),j,k)) then
                NUM = NUM + 1
                DIR(E) = .TRUE.
             ELSE
                DIR(E) = .FALSE.
             ENDIF
 !
-            IF (FLUID_AT(IJMK)) THEN
+            IF (fluid_cell(i,jminus(i,j,k),k)) then
                NUM = NUM + 1
                DIR(S) = .TRUE.
             ELSE
                DIR(S) = .FALSE.
             ENDIF
 !
-            IF (FLUID_AT(IJPK)) THEN
+            IF (fluid_cell(i,jplus(i,j,k),k)) then
                NUM = NUM + 1
                DIR(N) = .TRUE.
             ELSE
                DIR(N) = .FALSE.
             ENDIF
 !
-            IF (FLUID_AT(IJKM)) THEN
+            IF (fluid_cell(i,j,kminus(i,j,k))) then
                NUM = NUM + 1
                DIR(B) = .TRUE.
             ELSE
                DIR(B) = .FALSE.
             ENDIF
 !
-            IF (FLUID_AT(IJKP)) THEN
+            IF (fluid_cell(i,j,kplus(i,j,k))) then
                NUM = NUM + 1
                DIR(T) = .TRUE.
             ELSE

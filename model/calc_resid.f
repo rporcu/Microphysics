@@ -85,11 +85,11 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-         IF (FLUID_AT(IJK)) THEN
-            IJKW = WEST_OF(IJK)
-            IJKS = SOUTH_OF(IJK)
-            IJKE = EAST_OF(IJK)
-            IJKN = NORTH_OF(IJK)
+         IF (fluid_cell(i,j,k)) THEN
+            IJKW = FUNIJK(iwest(i,j,k),j,k)
+            IJKE = FUNIJK(ieast(i,j,k),j,k)
+            IJKS = FUNIJK(i,jsouth(i,j,k),k)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -287,29 +287,12 @@
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
-         IF (FLUID_AT(IJK) .AND. ABS(VAR(IJK)) > TOL) THEN
+         IF (fluid_cell(i,j,k) .AND. ABS(VAR(IJK)) > TOL) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            if (imjk .ne. im_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IPJK = FUNIJK(iplus(i,j,k),j,k)
-            if (ipjk .ne. ip_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            if (ijmk .ne. jm_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
             IJPK = FUNIJK(i,jplus(i,j,k),k)
-            if (ijpk .ne. jp_of(ijk)) then
-               print *,'ERR IN CALC_RESID ',i,j,k
-               stop
-            end if
-
 
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
@@ -497,7 +480,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-         IF (FLUID_AT(IJK)) THEN
+         IF (fluid_cell(i,j,k)) THEN
 
 ! evaluating the residual at cell ijk:
             NUM1 = ABS(B_M(IJK))
@@ -685,7 +668,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(WALL_AT(IJK)) cycle
+        IF(wall_cell(i,j,k)) cycle
 
          IF (.NOT.IP_AT_E(IJK)) THEN
 
@@ -907,7 +890,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(WALL_AT(IJK)) cycle
+        IF(wall_cell(i,j,k)) cycle
 
 
          IF (.NOT.IP_AT_N(IJK)) THEN
@@ -1132,7 +1115,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(WALL_AT(IJK)) cycle
+        IF(wall_cell(i,j,k)) cycle
 
 
          IF (.NOT.IP_AT_T(IJK)) THEN

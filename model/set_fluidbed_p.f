@@ -176,7 +176,7 @@
                      BED_WEIGHT = BED_WEIGHT - DY(J)*GRAVITY_Y*EP_G(IJK)*RO_G0&
                         *DAREA
                   ENDIF
-               ENDIF  ! end if (fluid_at(ijk))
+               ENDIF  ! end if (fluid_cell(i,j,k))
             ENDDO    ! end do loop (i=imin1,imax1)
          ENDDO    ! end do loop (k=kmin1,kmax1)
 

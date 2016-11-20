@@ -42,7 +42,7 @@
 ! Sutherland's constant (C) given by Vogel's equation C = 1.47*Tb.
 ! For air  C = 110 (Tb=74.82)
 !         mu = 1.71*10-4 poise at T = 273K
-         IF (FLUID_AT(IJK)) THEN
+         IF (fluid_cell(i,j,k)) THEN
 
             IF (MU_G0 == UNDEFINED) MU_G(IJK) = to_SI*1.7D-4 * &
                (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
@@ -52,7 +52,7 @@
          ELSE
             MU_G(IJK)  = ZERO
             LAMBDA_G(IJK) = ZERO
-         ENDIF   ! end if (fluid_at(ijk))
+         ENDIF   ! end if (fluid_cell(i,j,k))
 
       ENDDO
       ENDDO

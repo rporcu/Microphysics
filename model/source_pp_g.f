@@ -124,7 +124,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                ENDIF
             ENDIF
 
-         ELSE   ! if/else branch .not.fluid_at(ijk)
+         ELSE   ! if/else branch .not.fluid_cell(i,j,k)
 ! set the value (correction) in all wall and flow boundary cells to zero
 ! note the matrix coefficients and source vector should already be zero
 ! from the initialization of A and B but the following ensures the zero
@@ -137,7 +137,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             A_M(IJK,B) = ZERO
             A_M(IJK,0) = -ONE
             B_M(IJK) = ZERO
-         ENDIF   ! end if/else branch fluid_at(ijk)
+         ENDIF   ! end if/else branch fluid_cell(i,j,k)
       ENDDO
       ENDDO
       ENDDO
@@ -152,7 +152,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
                ijk = funijk(i,j,k)
 
-               if (fluid_at(IJK)) THEN
+               if (fluid_cell(i,j,k)) THEN
                   A_M(IJK,0) = A_M(IJK,0) - &
                      fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
                      EP_G(IJK)*VOL(IJK)*ODT

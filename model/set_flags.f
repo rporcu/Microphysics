@@ -287,7 +287,7 @@
             IF ( .NOT.WALL_AT(IJKP) .AND. FLAG_T(IJK)==UNDEFINED_I) &
                FLAG_T(IJK) = 2000 + FLAG(IJKP)
 
-         ENDIF   ! end if/else (wall_at(ijk)/fluid_at(ijk))
+         ENDIF
 
           end do
         end do

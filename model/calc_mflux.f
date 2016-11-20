@@ -38,8 +38,8 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE functions, only: fluid_at, funijk
-      USE functions, only: im_of, jm_of, km_of
+      USE functions, only: funijk, fluid_cell
+      USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
       USE param, only: dimension_3
@@ -71,35 +71,35 @@
           DO I = istart2, iend2
 
          IJK = FUNIJK(i,j,k)
-         IF (FLUID_AT(IJK)) THEN
+         IF (fluid_cell(i,j,k)) THEN
 
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
             Flux_E(IJK) = ROP_E(IJK)*AYZ(IJK)*U(IJK)
 ! West face (i-1/2, j, k)
-            IF (.NOT.FLUID_AT(IMJK)) THEN
+            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) then
                Flux_E(IMJK) = ROP_E(IMJK)*AYZ(IMJK)*U(IMJK)
             ENDIF
 
 ! North face (i, j+1/2, k)
             Flux_N(IJK) = ROP_N(IJK)*AXZ(IJK)*V(IJK)
 ! South face (i, j-1/2, k)
-            IF (.NOT.FLUID_AT(IJMK)) THEN
+            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) then
               Flux_N(IJMK) = ROP_N(IJMK)*AXZ(IJMK)*V(IJMK)
             ENDIF
 
             IF (DO_K) THEN
-               IJKM = KM_OF(IJK)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
 ! Top face (i, j, k+1/2)
                Flux_T(IJK) = ROP_T(IJK)*AXY(IJK)*W(IJK)
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.FLUID_AT(IJKM)) THEN
+               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) then
                  Flux_T(IJKM) = ROP_T(IJKM)*AXY(IJKM)*W(IJKM)
                ENDIF
             ENDIF   ! end if do_k
-         ENDIF   ! end if fluid_at
+         ENDIF   ! end if fluid_cell
       ENDDO
       ENDDO
       ENDDO

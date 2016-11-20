@@ -43,10 +43,9 @@
       use fldvar, only: rop_g
       use fldvar, only: u_g, v_g, w_g
 
-      use functions, only: im_of, ip_of, jm_of, jp_of, km_of, kp_of
-      use functions, only: fluid_at
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk
+      use functions, only: funijk,fluid_cell
+      use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
       use compar, only: dead_cell_at
 
       use param, only: dimension_m
@@ -82,8 +81,8 @@
 
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(IM_OF(IJK))) THEN
-                  FIJK = IM_OF(IJK)
+               IF (FLUID_CELL(iminus(i,j,k),j,k)) THEN
+                  FIJK = FUNIJK(iminus(i,j,k),j,k)
                   RVEL_G = U_G(FIJK)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
@@ -110,13 +109,13 @@
                   W_G(IJK) = W_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! end if (fluid_at(im_of(ijk)))
+               ENDIF
 
 
 ! Fluid cell at East
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(IP_OF(IJK))) THEN
-                  FIJK = IP_OF(IJK)
+               IF (FLUID_CELL(iplus(i,j,k),j,k)) THEN
+                  FIJK = FUNIJK(iplus(i,j,k),j,k)
 ! define normal component such that it is positive when exiting the
 ! domain
                   RVEL_G = -U_G(IJK)
@@ -140,13 +139,13 @@
                   W_G(IJK) = W_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! end if (fluid_at(ip_of(ijk)))
+               ENDIF
 
 
 ! Fluid cell at South
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(JM_OF(IJK))) THEN
-                  FIJK = JM_OF(IJK)
+               IF (FLUID_CELL(i,jminus(i,j,k),k)) THEN
+                  FIJK = FUNIJK(i,jminus(i,j,k),k)
                   RVEL_G = V_G(FIJK)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
@@ -161,13 +160,13 @@
                   W_G(IJK) = W_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! end if (fluid_at(jm_of(ijk)))
+               ENDIF
 
 
 ! Fluid cell at North
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(JP_OF(IJK))) THEN
-                  FIJK = JP_OF(IJK)
+               IF (FLUID_CELL(i,jplus(i,j,k),k)) THEN
+                  FIJK = FUNIJK(i,jplus(i,j,k),k)
                   RVEL_G = -V_G(IJK)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
@@ -184,13 +183,13 @@
                   W_G(IJK) = W_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! if (fluid_at(jp_of(ijk)))
+               ENDIF
 
 
 ! Fluid cell at Bottom
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(KM_OF(IJK))) THEN
-                  FIJK = KM_OF(IJK)
+               IF (FLUID_CELL(i,j,kminus(i,j,k))) THEN
+                  FIJK = FUNIJK(i,j,kminus(i,j,k))
                   RVEL_G = W_G(FIJK)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
@@ -205,13 +204,13 @@
                   V_G(IJK) = V_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! if (fluid_at(km_of(ijk)))
+               ENDIF   
 
 
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
-               IF (FLUID_AT(KP_OF(IJK))) THEN
-                  FIJK = KP_OF(IJK)
+               IF (FLUID_CELL(i,j,kplus(i,j,k))) THEN
+                  FIJK = FUNIJK(i,j,kplus(i,j,k))
                   RVEL_G = -W_G(IJK)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
@@ -228,7 +227,7 @@
                   V_G(IJK) = V_G(FIJK)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   ! if (fluid_at(kp_of(ijk)))
+               ENDIF   
 
             ENDDO   ! end do (i=i1,i2)
          ENDDO   ! end do (j=j1,j2)

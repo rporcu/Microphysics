@@ -591,7 +591,7 @@
 ! Calculate the triple loop index.
             IJK = funijk(I,J,K)
 ! If there is fluid at this location, store the IJK and exit loops.
-            if(fluid_at(IJK)) then
+            if(fluid_cell(i,j,k)) then
                gIJK(myPE) = IJK
                exit lp2
             endif
