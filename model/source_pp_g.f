@@ -80,7 +80,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
          IF (fluid_cell(i,j,k)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),j)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
             bma = (ROP_G(IJK)-ROP_GO(IJK))*VOL(IJK)*ODT

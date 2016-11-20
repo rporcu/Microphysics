@@ -942,7 +942,7 @@
          iminus = max(istart3, i-1)
       end if
 
-      if (cyclic_x .and. (iminus < imin1)) iminus = imax1
+      if (cyclic_x .and. (iminus < imin1) .and. .not.wall_at(ijk)) iminus = imax1
 
       end function iminus
 
@@ -963,7 +963,7 @@
          iplus = min(iend3, i+1)
       end if
 
-      if (cyclic_x .and. (iplus > imax1)) iplus = imin1
+      if (cyclic_x .and. (iplus > imax1) .and. .not.wall_at(ijk)) iplus = imin1
 
       end function iplus
 
@@ -984,7 +984,7 @@
          jminus = max(jstart3, j-1)
       end if
 
-      if (cyclic_y .and. (jminus < jmin1)) jminus = jmax1
+      if (cyclic_y .and. (jminus < jmin1) .and. .not.wall_at(ijk)) jminus = jmax1
 
       end function jminus
 
@@ -1005,7 +1005,7 @@
          jplus = min(jend3, j+1)
       end if
 
-      if (cyclic_y .and. (jplus > jmax1)) jplus = jmin1
+      if (cyclic_y .and. (jplus > jmax1) .and. .not.wall_at(ijk)) jplus = jmin1
 
       end function jplus
 
@@ -1027,7 +1027,7 @@
          kminus = max(kstart3, k-1)
       end if
 
-      if (cyclic_z .and. (kminus < kmin1)) kminus = kmax1
+      if (cyclic_z .and. (kminus < kmin1) .and. .not.wall_at(ijk)) kminus = kmax1
 
       end function kminus
 
@@ -1049,7 +1049,7 @@
          kplus = min(kend3, k+1)
       end if
 
-      if (cyclic_z .and. (kplus > kmax1)) kplus = kmin1
+      if (cyclic_z .and. (kplus > kmax1) .and. .not.wall_at(ijk)) kplus = kmin1
 
       end function kplus
 
