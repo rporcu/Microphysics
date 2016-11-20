@@ -34,6 +34,7 @@
 
       USE functions, only: east_of, west_of, north_of, south_of
       USE functions, only: top_of, bottom_of
+      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: funijk
 
       USE geometry, only: do_k
@@ -109,10 +110,10 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
                 IJKU = EAST_OF(IJKC)
              ENDIF
@@ -122,10 +123,10 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
-                IJKU = SOUTH_OF(IJKC)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
+                IJKU = FUNIJK(i,jsouth(i,j,k),k)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
                 IJKU = NORTH_OF(IJKC)
              ENDIF
@@ -136,10 +137,10 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
                    IJKU = TOP_OF(IJKC)
                 ENDIF
@@ -160,10 +161,10 @@
 
              IF (U(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = EAST_OF(IJK)
-                IJKU = WEST_OF(IJKC)
+                IJKD = FUNIJK(ieast(i,j,k),j,k)
+                IJKU = FUNIJK(iwest(i,j,k),j,k)
              ELSE
-                IJKC = EAST_OF(IJK)
+                IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
                 IJKU = EAST_OF(IJKC)
              ENDIF
@@ -173,10 +174,10 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
+                IJKD = FUNIJK(i,jnorth(i,j,k),k)
                 IJKU = SOUTH_OF(IJKC)
              ELSE
-                IJKC = NORTH_OF(IJK)
+                IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
                 IJKU = NORTH_OF(IJKC)
              ENDIF
@@ -187,10 +188,10 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
                    IJKU = BOTTOM_OF(IJKC)
                 ELSE
-                   IJKC = TOP_OF(IJK)
+                   IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
                    IJKU = TOP_OF(IJKC)
                 ENDIF

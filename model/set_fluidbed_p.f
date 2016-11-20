@@ -74,7 +74,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (FLUID_AT(IJK)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_cell(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -91,7 +91,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (FLUID_AT(IJK)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_cell(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -108,7 +108,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (FLUID_AT(IJK)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_cell(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -135,7 +135,7 @@
             DO J = jstart3, jend3
             DO I = istart3, iend3
                IJK = FUNIJK(i,j,k)
-               IF (FLUID_AT(IJK)) P_G(IJK) = ZERO
+               IF (fluid_cell(i,j,k)) P_G(IJK) = ZERO
             ENDDO
             ENDDO
             ENDDO
@@ -166,7 +166,7 @@
                IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
-               IF (FLUID_AT(IJK)) THEN
+               IF (fluid_cell(i,j,k)) THEN
                   DAREA = DX(I)*DZ(K)
                   AREA = AREA + DAREA
                   IF (RO_G0 == UNDEFINED) THEN
@@ -191,7 +191,7 @@
                IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
-               IF(FLUID_AT(IJK).AND.P_G(IJK)==UNDEFINED)P_G(IJK)=SCALE_PRESSURE(PJ)
+               IF(fluid_cell(i,j,k).AND.P_G(IJK)==UNDEFINED)P_G(IJK)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)
       ENDDO   ! end do (j=jmax2,jimn1, -1)

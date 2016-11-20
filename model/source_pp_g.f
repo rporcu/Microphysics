@@ -78,10 +78,10 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
          ijk = funijk(i,j,k)
 
-         IF (FLUID_AT(IJK)) THEN
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+         IF (fluid_cell(i,j,k)) THEN
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),j)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
 
             bma = (ROP_G(IJK)-ROP_GO(IJK))*VOL(IJK)*ODT
             bme = A_M(IJK,E)*U_G(IJK)
@@ -173,13 +173,14 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
            do i = istart3, iend3
 
            ijk = funijk(i,j,k)
-         IF (FLUID_AT(IJK)) THEN
-            IMJK = IM_OF(IJK)
-            IPJK = IP_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJPK = JP_OF(IJK)
-            IJKM = KM_OF(IJK)
-            IJKP = KP_OF(IJK)
+         IF (fluid_cell(i,j,k)) THEN
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
+            IJKP = FUNIJK(i,j,kplus(i,j,k))
+
 ! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
             if(p_flow_at(imjk)) A_m(IJK,W) = ZERO
             if(p_flow_at(ipjk)) A_m(IJK,E) = ZERO

@@ -48,9 +48,11 @@
             IF (IP_AT_N(IJK)) V_G(IJK) = ZERO
             IF (IP_AT_T(IJK)) W_G(IJK) = ZERO
          ELSE
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
+
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
+
             U_G(IJK) = ZERO
             V_G(IJK) = ZERO
             W_G(IJK) = ZERO

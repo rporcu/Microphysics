@@ -413,6 +413,15 @@
       FLUID_AT    = FLAG(IJK) .EQ. 1
       END FUNCTION FLUID_AT
 
+      logical function fluid_cell(i,j,k)
+         use geometry, only: flag
+         implicit none
+         integer, intent(in) :: i,j,k
+         integer             :: ijk
+         ijk = funijk(i,j,k)
+         fluid_cell = (flag(ijk).eq.1)
+      end function fluid_cell
+
 ! logical function to identify a specified pressure inflow cell
       LOGICAL FUNCTION P_FLOW_AT(IJK)
       USE geometry

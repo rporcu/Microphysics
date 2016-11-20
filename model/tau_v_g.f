@@ -77,11 +77,12 @@
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(4)==1)) THEN
 
         DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+         DO J = jstart3, jend3
+          DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-            IJKN = NORTH_OF(IJK)
+            IJK  = FUNIJK(i,j,k)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
+
             EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
             IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
 
@@ -228,6 +229,7 @@
       INTEGER :: IJKTN, IJKBN, IJKNE, IJKNW
       INTEGER :: IJPK, IJMK, IMJK, IJKM
       INTEGER :: IMJPK, IJPKM
+      integer :: itmp, jtmp, ktmp 
 ! Average volume fraction
       DOUBLE PRECISION EPGA
 ! Source terms (Surface)
@@ -247,33 +249,49 @@
 !---------------------------------------------------------------------//
 
         DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+         DO J = jstart3, jend3
+          DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-         IJKN = NORTH_OF(IJK)
-         EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
-         IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
-            JP = JP1(J)
-            IM = IM1(I)
-            KM = KM1(K)
+            IJK  = FUNIJK(i,j,k)
+            IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-            IJPK = JP_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IMJK = IM_OF(IJK)
-            IJKM = KM_OF(IJK)
-            IMJPK = IM_OF(IJPK)
-            IJPKM = JP_OF(IJKM)
+            EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
 
-            IJKE = EAST_OF(IJK)
-            IJKNE = EAST_OF(IJKN)
-            IJKW = WEST_OF(IJK)
-            IJKNW = NORTH_OF(IJKW)
-            IJKT = TOP_OF(IJK)
-            IJKTN = NORTH_OF(IJKT)
-            IJKB = BOTTOM_OF(IJK)
-            IJKBN = NORTH_OF(IJKB)
+            IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
 
+               JP = JP1(J)
+               IM = IM1(I)
+               KM = KM1(K)
+
+               IMJK = FUNIJK(iminus(i,j,k),j,k)
+
+               IJMK = FUNIJK(i,jminus(i,j,k),k)
+               IJPK = FUNIJK(i,jplus(i,j,k),k)
+
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
+
+               ktmp = kminus(i,j,k)
+               IJPKM = FUNIJK(i,jplus(i,j,ktmp),ktmp)
+
+               jtmp = jplus(i,j,k)
+               IJPKM = FUNIJK(iminus(i,jtmp,k),jtmp,k)
+
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
+               IJKT = FUNIJK(i,j,ktop(i,j,k))
+               IJKB = FUNIJK(i,j,kbot(i,j,k))
+
+               jtmp = jnorth(i,j,k)
+               IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
+
+               itmp = iwest(i,j,k)
+               IJKNW = FUNIJK(itmp,jnorth(itmp,j,k),k)
+
+               ktmp = ktop(i,j,k)
+               IJKTN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
+
+               ktmp = kbot(i,j,k)
+               IJKBN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
 
 ! bulk viscosity term
             SBV =  (LAMBDA_G(IJKN)*TRD_G(IJKN)) * AXZ_V(IJK) - &

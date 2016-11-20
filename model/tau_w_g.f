@@ -85,13 +85,16 @@
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(5)==1)) THEN
 
         DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+         DO J = jstart3, jend3
+          DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-            IJKT = TOP_OF(IJK)
+            IJK  = FUNIJK(i,j,k)
+            IJKT = FUNIJK(i,j,ktop(i,j,k))
+
             EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
+
             IF ( .NOT.IP_AT_T(IJK) .AND. EPGA>DIL_EP_S) THEN
+
                IM = IM1(I)
                JM = JM1(J)
                KP = KP1(K)
@@ -101,37 +104,26 @@
                IMJK = FUNIJK(iminus(i,j,k),j,k)
                IJMK = FUNIJK(i,jminus(i,j,k),k)
  
-               ! IMJKP = KP_OF(IMJK)
                itmp = iminus(i,j,k)
                IMJKP = FUNIJK(itmp,j,kplus(itmp,j,k))
  
-               ! IJMKP = JM_OF(IJKP)
                ktmp = kplus(i,j,k)
                IJMKP = FUNIJK(i,jminus(i,j,ktmp),ktmp)
- 
-               ! IJKN = NORTH_OF(IJK)
-               ! IJKS = SOUTH_OF(IJK)
-               ! IJKE = EAST_OF(IJK)
-               ! IJKW = WEST_OF(IJK)
  
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
                IJKS = FUNIJK(i,jsouth(i,j,k),k)
                IJKE = FUNIJK(ieast(i,j,k),j,k)
                IJKW = FUNIJK(iwest(i,j,k),j,k)
 
-               ! IJKNT = TOP_OF(IJKN)
                jtmp = jnorth(i,j,k)
                IJKNT = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
-               ! IJKST = TOP_OF(IJKS)
                jtmp = jsouth(i,j,k)
                IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
-               ! IJKTE = EAST_OF(IJKT)
                ktmp = ktop(i,j,k)
                IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
 
-               ! IJKTW = WEST_OF(IJKT)
                ktmp = ktop(i,j,k)
                IJKTW = FUNIJK(iwest(i,j,ktmp),j,ktmp)
 
@@ -248,6 +240,7 @@
       INTEGER :: IJKNT, IJKST, IJKTE, IJKTW
       INTEGER :: IJKP, IMJK, IJMK, IJKM
       INTEGER :: IMJKP, IJMKP
+      integer :: itmp, jtmp, ktmp
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Source terms (Surface)
@@ -266,32 +259,48 @@
 !---------------------------------------------------------------------//
 
         DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+         DO J = jstart3, jend3
+          DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-         IJKT = TOP_OF(IJK)
-         EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
-         IF ( .NOT.IP_AT_T(IJK) .AND. EPGA>DIL_EP_S) THEN
-            IM = IM1(I)
-            JM = JM1(J)
-            KP = KP1(K)
+            IJK  = FUNIJK(i,j,k)
+            IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-            IJKP = KP_OF(IJK)
-            IMJK = IM_OF(IJK)
-            IJMK = JM_OF(IJK)
-            IJKM = KM_OF(IJK)
-            IMJKP = KP_OF(IMJK)
-            IJMKP = JM_OF(IJKP)
+            EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
+            IF ( .NOT.IP_AT_T(IJK) .AND. EPGA>DIL_EP_S) THEN
 
-            IJKN = NORTH_OF(IJK)
-            IJKS = SOUTH_OF(IJK)
-            IJKE = EAST_OF(IJK)
-            IJKW = WEST_OF(IJK)
-            IJKNT = TOP_OF(IJKN)
-            IJKST = TOP_OF(IJKS)
-            IJKTE = EAST_OF(IJKT)
-            IJKTW = WEST_OF(IJKT)
+               IM = IM1(I)
+               JM = JM1(J)
+               KP = KP1(K)
+
+               IMJK = FUNIJK(iminus(i,j,k),j,k)
+
+               IJMK = FUNIJK(i,jminus(i,j,k),k)
+
+               IJKP = FUNIJK(i,j,kplus(i,j,k))
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
+ 
+               itmp = iminus(i,j,k)
+               IMJKP = FUNIJK(itmp,j,kplus(itmp,j,k))
+ 
+               ktmp = kplus(i,j,k)
+               IJMKP = FUNIJK(i,jminus(i,j,ktmp),ktmp)
+ 
+               IJKN = FUNIJK(i,jnorth(i,j,k),k)
+               IJKS = FUNIJK(i,jsouth(i,j,k),k)
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
+
+               jtmp = jnorth(i,j,k)
+               IJKNT = FUNIJK(i,jtmp,ktop(i,jtmp,k))
+
+               jtmp = jsouth(i,j,k)
+               IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
+
+               ktmp = ktop(i,j,k)
+               IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
+
+               ktmp = ktop(i,j,k)
+               IJKTW = FUNIJK(iwest(i,j,ktmp),j,ktmp)
 
 ! bulk viscosity term
             SBV =  (LAMBDA_G(IJKT)*TRD_G(IJKT)) * AXY_W(IJK) &

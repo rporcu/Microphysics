@@ -40,7 +40,7 @@
       USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, ieast
+      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: east_of, west_of, wall_at
       USE functions, only: zmax
  
@@ -114,20 +114,7 @@
         DO J = jstart2, jend2
           DO I = istart2, iend2
 
-         IJK = FUNIJK(i,j,k)
-
-         ! Original
-	 ! IJKE = EAST_Of(IJK)
-         ! IPJK = IP_OF(IJK)
-         ! IMJK = IM_OF(IJK)
-         ! IJMK = JM_OF(IJK)
-         ! IJPK = JP_OF(IJK)
-         ! IJKM = KM_OF(IJK)
-         ! IJKP = KP_OF(IJK)
-         ! IPJKM = IP_OF(IJKM)
-         ! IPJMK = IP_OF(IJMK)
-
-         ! New
+          IJK = FUNIJK(i,j,k)
           IJKE = FUNIJK(ieast(i,j,k),j,k)
           IMJK = FUNIJK(iminus(i,j,k),j,k)
           IPJK = FUNIJK(iplus(i,j,k),j,k)
@@ -139,29 +126,7 @@
           IPJKM = FUNIJK(IPLUS(I,J,kminus(i,j,k)),J,kminus(i,j,k))
           IPJMK = FUNIJK(IPLUS(I,jminus(i,j,k),k),jminus(i,j,k),k)
 
-         if (.not. WALL_AT(ijk)) then
-          err = 0
-          err = max(abs(ijke-east_of(ijk)),err)
-          err = max(abs(ijkm-  km_of(ijk)),err)
-          err = max(abs(ipjk-  ip_of(ijk)),err)
-          err = max(abs(imjk-  im_of(ijk)),err)
-          err = max(abs(ijpk-  jp_of(ijk)),err)
-          err = max(abs(ijmk-  jm_of(ijk)),err)
-          err = max(abs(ijkp-  kp_of(ijk)),err)
-          err = max(abs(ijkm-  km_of(ijk)),err)
-          err = max(abs(ipjkm- ip_of(km_of(ijk))),err)
-          err = max(abs(ipjmk- ip_of(jm_of(ijk))),err)
-
-          if(err /= 0) then
-             write(*,*)'ERR      AT I,j,k        ' ,i,j,FUNIJK(i,j,k)
-             write(*,*)'ERR ',i,j,k,err
-             stop
-          endif
-          endif
-
-         ! End of New
-
-         EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
+           EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
 
 ! Impermeable internal surface
          IF (IP_AT_E(IJK)) THEN
@@ -186,9 +151,9 @@
             B_M(IJK) = ZERO
 ! set velocity equal to that of west or east cell if solids are present
 ! in those cells else set velocity equal to known value
-            IF (EP_G(WEST_OF(IJK)) > DIL_EP_S) THEN
+            IF (EP_G(FUNIJK(iwest(i,j,k),j,k)) > DIL_EP_S) THEN
                A_M(IJK,W) = ONE
-            ELSE IF (EP_G(EAST_OF(IJK)) > DIL_EP_S) THEN
+            ELSE IF (EP_G(FUNIJK(ieast(i,j,k),j,k)) > DIL_EP_S) THEN
                A_M(IJK,E) = ONE
             ELSE
                B_M(IJK) = -U_G(IJK)
@@ -496,13 +461,13 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        IF (FLUID_AT(NORTH_OF(IJK))) THEN
+                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
                            A_M(IJK,N) = -ONE
-                        ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
+                        else iF (fluid_cell(i,jsouth(i,j,k),k)) THEN
                            A_M(IJK,S) = -ONE
-                        ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
+                        else iF (fluid_cell(i,j,ktop(i,j,k))) THEN
                            A_M(IJK,T) = -ONE
-                        ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
+                        else iF (fluid_cell(i,j,kbot(i,j,k))) THEN
                            A_M(IJK,B) = -ONE
                         ENDIF
                      ENDDO
@@ -531,13 +496,13 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        IF (FLUID_AT(NORTH_OF(IJK))) THEN
+                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
                            A_M(IJK,N) = ONE
-                        ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
+                        else if (fluid_cell(i,jsouth(i,j,k),k)) THEN
                            A_M(IJK,S) = ONE
-                        ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
+                        else if (fluid_cell(i,j,ktop(i,j,k))) THEN
                            A_M(IJK,T) = ONE
-                        ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
+                        else if (fluid_cell(i,j,kbot(i,j,k))) THEN
                            A_M(IJK,B) = ONE
                         ENDIF
                      ENDDO
@@ -568,7 +533,7 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        IF (FLUID_AT(NORTH_OF(IJK))) THEN
+                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,N) = -HALF
                               A_M(IJK,0) = -HALF
@@ -578,7 +543,7 @@
                               A_M(IJK,N) = -(HALF*BC_HW_G(L)-ODY_N(J))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        ELSEIF (FLUID_AT(SOUTH_OF(IJK))) THEN
+                        else if (fluid_cell(i,jsouth(i,j,k),k)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,S) = -HALF
                               A_M(IJK,0) = -HALF
@@ -588,7 +553,7 @@
                               A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY_N(JM))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        ELSEIF (FLUID_AT(TOP_OF(IJK))) THEN
+                        else if (fluid_cell(i,j,ktop(i,j,k))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,T) = -HALF
                               A_M(IJK,0) = -HALF
@@ -598,7 +563,7 @@
                               A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ_T(K)*OX_E(I))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        ELSEIF (FLUID_AT(BOTTOM_OF(IJK))) THEN
+                        else if (fluid_cell(i,j,kbot(i,j,k))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,B) = -HALF
                               A_M(IJK,0) = -HALF
@@ -675,7 +640,7 @@
                            A_M(IJK,0) = -ONE
                            B_M(IJK) = ZERO
                            IM = IM1(I)
-                           IMJK = IM_OF(IJK)
+                           IMJK = FUNIJK(iminus(i,j,k),j,k)
                            A_M(IMJK,E) = ZERO
                            A_M(IMJK,W) = X_E(IM)/X_E(IM1(IM))
                            A_M(IMJK,N) = ZERO
@@ -701,7 +666,7 @@
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            IJK = FUNIJK(I,J,K)
                            IP = IP1(I)
-                           IPJK = IP_OF(IJK)
+                           IPJK = FUNIJK(iplus(i,j,k),j,k)
                            A_M(IPJK,E) = X_E(IP)/X_E(I)
                            A_M(IPJK,W) = ZERO
                            A_M(IPJK,N) = ZERO
@@ -747,7 +712,7 @@
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
 ! known in that cell
-                           IJKW = WEST_OF(IJK)
+                           IJKW = FUNIJK(iwest(i,j,k),j,k)
                            A_M(IJKW,E) = ZERO
                            A_M(IJKW,W) = ZERO
                            A_M(IJKW,N) = ZERO

@@ -271,7 +271,7 @@
             ENDIF   ! end if cyclic_at(ijk)
 
 ! ----------------------------------------------------------------<<<
-         ELSEIF (FLUID_AT(IJK)) THEN
+         ELSEIF (fluid_cell(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 
             IF ( .NOT.WALL_AT(IMJK) .AND. FLAG_E(IMJK)==UNDEFINED_I) &
