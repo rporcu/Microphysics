@@ -10,44 +10,44 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    USE geometry, only: ayz_u, axz_v, axy_w
    USE fldvar, only: rop_g
-   USE functions, only: im_of, jm_of, km_of, east_of, north_of, top_of
+   USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop, funijk
 
    contains
 
-      double precision function denom_u_neg(ijk)
+      double precision function denom_u_neg(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_u_neg = ROP_G(EAST_OF(IJK))*AYZ_U(IJK)
+         integer, intent(in) :: i,j,k
+         denom_u_neg = ROP_G(FUNIJK(ieast(i,j,k),j,k))*AYZ_U(FUNIJK(i,j,k))
       end function denom_u_neg
 
-      double precision function denom_u_pos(ijk)
+      double precision function denom_u_pos(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_u_pos = ROP_G(ijk)*AYZ_U(IM_OF(IJK))
+         integer, intent(in) :: i,j,k
+         denom_u_pos = ROP_G(FUNIJK(i,j,k))*AYZ_U(FUNIJK(iminus(i,j,k),j,k))
       end function denom_u_pos
 
-      double precision function denom_v_neg(ijk)
+      double precision function denom_v_neg(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_v_neg = ROP_G(NORTH_OF(IJK))*AXZ_V(IJK)
+         integer, intent(in) :: i,j,k
+         denom_v_neg = ROP_G(FUNIJK(i,jnorth(i,j,k),k))*AXZ_V(FUNIJK(i,j,k))
       end function denom_v_neg
 
-      double precision function denom_v_pos(ijk)
+      double precision function denom_v_pos(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_v_pos = ROP_G(ijk)*AXZ_V(JM_OF(IJK))
+         integer, intent(in) :: i,j,k
+         denom_v_pos = ROP_G(FUNIJK(i,j,k))*AXZ_V(FUNIJK(i,jminus(i,j,k),k))
       end function denom_v_pos
 
-      double precision function denom_w_neg(ijk)
+      double precision function denom_w_neg(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_w_neg = ROP_G(TOP_OF(IJK))*AXY_W(IJK)
+         integer, intent(in) :: i,j,k
+         denom_w_neg = ROP_G(FUNIJK(i,j,ktop(i,j,k)))*AXY_W(FUNIJK(i,j,k))
       end function denom_w_neg
 
-      double precision function denom_w_pos(ijk)
+      double precision function denom_w_pos(i,j,k)
          implicit none
-         integer, intent(in) :: ijk
-         denom_w_pos = ROP_G(ijk)*AXY_W(KM_OF(IJK))
+         integer, intent(in) :: i,j,k
+         denom_w_pos = ROP_G(FUNIJK(i,j,k))*AXY_W(FUNIJK(i,j,kminus(i,j,k)))
       end function denom_w_pos
 
       SUBROUTINE ADJUST_A_G(axis, A_M, B_M)
@@ -79,9 +79,9 @@
       DOUBLE PRECISION :: denominator, xxxm, xxxp
 
       abstract interface
-         function denom (ijk)
+         function denom (i,j,k)
             DOUBLE PRECISION :: denom
-            integer, intent (in) :: ijk
+            integer, intent (in) :: i,j,k
          end function denom
       end interface
 
@@ -131,12 +131,12 @@
             IF (B_M(IJK) < ZERO) THEN
                IP = IP1(I)
 
-               denominator = denom_neg(ijk)
+               denominator = denom_neg(i,j,k)
                xxxm = ONE
                xxxp = ZERO
             ELSE IF (B_M(IJK) > ZERO) THEN
                IP = I
-               denominator = denom_pos(ijk)
+               denominator = denom_pos(i,j,k)
                xxxm = ZERO
                xxxp = ONE
             ELSE

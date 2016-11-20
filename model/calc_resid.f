@@ -99,8 +99,8 @@
                IJKS))
 
             IF (DO_K) THEN
-               IJKB = BOTTOM_OF(IJK)
-               IJKT = TOP_OF(IJK)
+               IJKB = FUNIJK(i,j,kbot(i,j,k))
+               IJKT = FUNIJK(i,j,ktop(i,j,k))
                NUM1 = NUM1 - (A_M(IJK,T)*VAR(IJKT)+A_M(IJK,B)*VAR(IJKB))
             ENDIF
 

@@ -178,10 +178,7 @@
 !---------------------------------------------------------------------//
       USE functions, only: funijk, wall_cell
       USE functions, only: ieast, jnorth, ktop
-      USE functions, only: east_of, north_of, top_of
-      USE functions, only: south_of, bottom_of
       USE functions, only: ieast, jnorth, jsouth, ktop, kbot
-      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, jminus, kminus
 
       USE geometry, only: odx, ody_n, odz_t

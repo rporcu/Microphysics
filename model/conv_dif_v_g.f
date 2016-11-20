@@ -182,9 +182,6 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE functions, only: funijk, wall_cell
-      USE functions, only: east_of, north_of, top_of
-      USE functions, only: west_of, bottom_of
-      USE functions, only: im_of, jm_of, km_of
       USE functions, only: iminus, jminus, kminus
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
 

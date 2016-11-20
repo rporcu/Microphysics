@@ -440,12 +440,12 @@
 ! logical function to identify either a specified pressure inflow
 ! or outflow cell or a fluid cell (simplified check)
 ! FLUID_AT or P_FLOW_AT (simplified check)
-      LOGICAL FUNCTION FLUIDorP_FLOW_AT(IJK)
+      logical function FLUIDorP_FLOW_AT(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      FLUIDorP_FLOW_AT = FLAG(IJK) .LE. 11
-      END FUNCTION FLUIDorP_FLOW_AT
+      implicit none
+      integer, intent(in) :: i,j,k
+      FLUIDorP_FLOW_AT = (flag(FUNIJK(i,j,k)) .LE. 11)
+      end function FLUIDorP_FLOW_AT
 
 ! logical function to identify a specified mass outflow cell
       LOGICAL FUNCTION MASS_OUTFLOW_AT(IJK)

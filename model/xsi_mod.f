@@ -32,8 +32,6 @@
       USE discretization, only: minmod
       USE discretization, only: central_scheme
 
-      USE functions, only: east_of, west_of, north_of, south_of
-      USE functions, only: top_of, bottom_of
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: funijk
 
@@ -250,8 +248,8 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
-                   IJKU = BOTTOM_OF(IJKC)
+                   IJKD = FUNIJK(i,j,ktop(i,j,k))
+                   IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE
                    IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
@@ -296,7 +294,6 @@
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
-                IJKD = NORTH_OF(IJK)
                 IJKD = FUNIJK(i,jnorth(i,j,k),k)
                 IJKU = FUNIJK(i,jsouth(i,j,k),k)
                 ODYC = ODY(J)
@@ -377,7 +374,6 @@
              IF (DO_K) THEN
                 IF (W(IJK) >= ZERO) THEN
                    IJKC = IJK
-                   IJKD = TOP_OF(IJK)
                    IJKD = FUNIJK(i,j,ktop(i,j,k))
                    IJKU = FUNIJK(i,j,kbot(i,j,k))
                 ELSE

@@ -39,9 +39,7 @@
       USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
       USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
-      USE functions, only: ip_of, jp_of, kp_of, im_of, jm_of, km_of
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
-      USE functions, only: east_of, west_of, wall_at
       USE functions, only: zmax
 
       USE geometry, only: imax1, cyclic_x_pd, imax

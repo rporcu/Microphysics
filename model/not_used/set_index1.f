@@ -22,7 +22,8 @@
       USE constant
       USE indices
       USE compar
-      USE functions
+      USE functions, only: funijk, ieast, iwest, jnorth, jsouth, ktop, kbot
+      USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
@@ -47,18 +48,18 @@
       KM = KM1(K)
 
 !     Determine the true indices of neighboring cells
-      IJKW = WEST_OF(IJK)
-      IJKE = EAST_OF(IJK)
-      IJKS = SOUTH_OF(IJK)
-      IJKN = NORTH_OF(IJK)
-      IJKB = BOTTOM_OF(IJK)
-      IJKT = TOP_OF(IJK)
-      IMJK = IM_OF(IJK)
-      IPJK = IP_OF(IJK)
-      IJMK = JM_OF(IJK)
-      IJPK = JP_OF(IJK)
-      IJKM = KM_OF(IJK)
-      IJKP = KP_OF(IJK)
-!
-      RETURN
+      IJKW = FUNIJK(iwest(i,j,k),j,k)
+      IJKE = FUNIJK(ieast(i,j,k),j,k)
+      IJKS = FUNIJK(i,jsouth(i,j,k),k)
+      IJKN = FUNIJK(i,jnorth(i,j,k),k)
+      IJKB = FUNIJK(i,j,kbot(i,j,k))
+      IJKT = FUNIJK(i,j,ktop(i,j,k))
+
+      IMJK = FUNIJK(iminus(i,j,k),j,k)
+      IPJK = FUNIJK(iplus(i,j,k),j,k)
+      IJMK = FUNIJK(i,jminus(i,j,k),k)
+      IJPK = FUNIJK(i,jplus(i,j,k),k)
+      IJKM = FUNIJK(i,j,kminus(i,j,k))
+      IJKP = FUNIJK(i,j,kplus(i,j,k))
+ 
       END SUBROUTINE SET_INDEX1

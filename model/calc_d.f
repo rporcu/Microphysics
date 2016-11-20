@@ -19,7 +19,6 @@ MODULE CALC_D_MOD
          IF (IP_AT_E(IJK) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
-            ! IJKE = EAST_OF(IJK)
             IJKE = FUNIJK(ieast(i,j,k),j,k)
             AREA_FACE = AYZ(IJK)
             EPGA_X = AREA_FACE*AVG_X(EP_G(IJK),EP_G(IJKE),I)
@@ -38,7 +37,6 @@ MODULE CALC_D_MOD
          IF (IP_AT_N(IJK) .OR. MFLOW_AT_N(IJK)) THEN
             EPGA_Y = ZERO
          ELSE
-            ! IJKN = NORTH_OF(IJK)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
             AREA_FACE = AXZ(IJK)
             EPGA_Y = AREA_FACE*AVG_Y(EP_G(IJK),EP_G(IJKN),J)
@@ -83,7 +81,7 @@ MODULE CALC_D_MOD
 ! Pressure scale factor
       use scales, only: P_SCALE
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
-      use functions, only: IP_AT_N, MFLOW_AT_N, NORTH_OF
+      use functions, only: IP_AT_N, MFLOW_AT_N
       use functions, only: funijk
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2

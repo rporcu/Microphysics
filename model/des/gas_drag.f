@@ -35,7 +35,7 @@
       USE functions, ONLY: funijk
       use functions, only: fluid_cell
 ! IJK of cell to east.
-      use functions, only: EAST_OF
+      use functions, only: ieast
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's east face.
@@ -117,9 +117,9 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
+            IJK = FUNIJK(i,j,k)
             IF(fluid_cell(i,j,k)) THEN
-               IJKE = EAST_OF(IJK)
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
 
                tmp_A = AVG_X(F_GDS(IJK), F_GDS(IJKE), I)
                tmp_B = AVG_X(DRAG_BM(IJK,1), DRAG_BM(IJKE,1), I)
@@ -174,7 +174,7 @@
       USE functions, ONLY: funijk
       use functions, only: fluid_cell
 ! IJK of cell to north.
-      use functions, only: NORTH_OF
+      use functions, only: jnorth
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
@@ -257,7 +257,7 @@
 
          IJK = FUNIJK(i,j,k)
             IF(fluid_cell(i,j,k)) THEN
-               IJKN = NORTH_OF(IJK)
+               IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
                tmp_A = AVG_Y(F_GDS(IJK), F_GDS(IJKN), J)
                tmp_B = AVG_Y(DRAG_BM(IJK,2), DRAG_BM(IJKN,2), J)
@@ -308,7 +308,7 @@
       USE functions, ONLY: funijk
       use functions, only: fluid_cell
 ! IJK of cell to top.
-      use functions, only: TOP_OF
+      use functions, only: ktop
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
@@ -385,7 +385,7 @@
 
          IJK = FUNIJK(i,j,k)
             IF(fluid_cell(i,j,k)) THEN
-               IJKT = TOP_OF(IJK)
+               IJKT = FUNIJK(i,j,ktop(i,j,k))
 
                tmp_A = AVG_Z(F_GDS(IJK), F_GDS(IJKT), K)
                tmp_B = AVG_Z(DRAG_BM(IJK,3), DRAG_BM(IJKT,3), K)

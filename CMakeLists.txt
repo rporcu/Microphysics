@@ -236,7 +236,6 @@ set(SOURCES
   model/set_ic.f
   model/set_icbc_flags.f
   model/set_increments.f
-  model/set_index1.f
   model/set_index1a.f
   model/set_max2.f
   model/set_outflow.f
