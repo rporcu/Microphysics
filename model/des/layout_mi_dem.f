@@ -80,7 +80,6 @@
 
       use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
-      use cutcell, only: USE_STL
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -270,69 +269,6 @@
       ENDDO
       ENDDO
 
-
-! For complex boundaries defined by STLs, exclude any mass inflow cells
-! that intersect the boundary and all cells opposite the normal. The MI
-! cell sizes are increased by 10% to provide a small buffer.
-      IF(USE_STL) THEN
-
-         HALFSIZE(2) = 1.10d0*MAX_DIA
-         HALFSIZE(1) = HALF*(WINDOW * 1.10d0)
-         HALFSIZE(3) = HALF*(WINDOW * 1.10d0)
-
-         minEXT(1) = HMAX+1; maxEXT(1) = 0
-         minEXT(2) = WMAX+1; maxEXT(2) = 0
-         DO H=1,HMAX
-         DO W=1,WMAX
-
-            CENTER(2) = BC_Y_s(BCV)
-            CENTER(1) = MESH_P(W) + HALF*WINDOW
-            CENTER(3) = MESH_Q(H) + HALF*WINDOW
-
-            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
-
-               IF(BC_Y_s(BCV) > maxval(VERTEX(:,2,LC))) CYCLE FACET_LP
-               IF(BC_Y_s(BCV) < minval(VERTEX(:,2,LC))) CYCLE FACET_LP
-
-               IF(BC_X_w(BCV) > maxval(VERTEX(:,1,LC))) CYCLE FACET_LP
-               IF(BC_X_e(BCV) < minval(VERTEX(:,1,LC))) CYCLE FACET_LP
-
-               IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
-               IF(BC_Z_t(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
-
-               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
-                  VERTEX(:,:,LC), OVERLAP)
-
-               IF(OVERLAP) THEN
-                  IF(NORM_FACE(1,LC) >= 0) THEN
-                     FULL_MAP(1:W,H) = 0
-                  ELSE
-                     FULL_MAP(W:WMAX,H) = 0
-                  ENDIF
-                  IF(NORM_FACE(3,LC) >= 0) THEN
-                     FULL_MAP(W,1:H) = 0
-                  ELSE
-                     FULL_MAP(W,H:HMAX) = 0
-                  ENDIF
-                  minEXT(1) = min(minEXT(1),H)
-                  minEXT(2) = min(minEXT(2),W)
-
-                  maxEXT(1) = max(maxEXT(1),H)
-                  maxEXT(2) = max(maxEXT(2),W)
-               ENDIF
-            ENDDO FACET_LP
-         ENDDO
-         ENDDO
-         CALL GLOBAL_ALL_MIN(minEXT)
-         CALL GLOBAL_ALL_MAX(maxEXT)
-
-         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
-         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
-
-         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
-         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
-      ENDIF
-
 ! Add up the total number of available positions in the seeding map.
       DO H=1,HMAX
       DO W=1,WMAX
@@ -492,7 +428,6 @@
 
       use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
-      use cutcell, only: USE_STL
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -682,73 +617,6 @@
       ENDDO
 
 
-! For complex boundaries defined by STLs, exclude any mass inflow cells
-! that intersect the boundary and all cells opposite the normal. The MI
-! cell sizes are increased by 10% to provide a small buffer.
-      IF(USE_STL) THEN
-
-         HALFSIZE(1) = 1.10d0*MAX_DIA
-         HALFSIZE(2) = HALF*(WINDOW * 1.10d0)
-         HALFSIZE(3) = HALF*(WINDOW * 1.10d0)
-
-         minEXT(1) = HMAX+1; maxEXT(1) = 0
-         minEXT(2) = WMAX+1; maxEXT(2) = 0
-
-         DO H=1,HMAX
-         DO W=1,WMAX
-
-            CENTER(1) = BC_X_w(BCV)
-            CENTER(2) = MESH_P(W) + HALF*WINDOW
-            CENTER(3) = MESH_Q(H) + HALF*WINDOW
-
-            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
-
-               IF(BC_X_w(BCV) > maxval(VERTEX(:,1,LC))) CYCLE FACET_LP
-               IF(BC_X_w(BCV) < minval(VERTEX(:,1,LC))) CYCLE FACET_LP
-
-               IF(BC_Y_s(BCV) > maxval(VERTEX(:,2,LC))) CYCLE FACET_LP
-               IF(BC_Y_n(BCV) < minval(VERTEX(:,2,LC))) CYCLE FACET_LP
-
-               IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
-               IF(BC_Z_t(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
-
-               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
-                  VERTEX(:,:,LC), OVERLAP)
-
-               IF(OVERLAP) THEN
-                  IF(NORM_FACE(2,LC) >= 0) THEN
-                     FULL_MAP(1:W,H) = 0
-                  ELSE
-                     FULL_MAP(W:WMAX,H) = 0
-                  ENDIF
-                  IF(NORM_FACE(3,LC) >= 0) THEN
-                     FULL_MAP(W,1:H) = 0
-                  ELSE
-                     FULL_MAP(W,H:HMAX) = 0
-                  ENDIF
-
-                  minEXT(1) = min(minEXT(1),H)
-                  minEXT(2) = min(minEXT(2),W)
-
-                  maxEXT(1) = max(maxEXT(1),H)
-                  maxEXT(2) = max(maxEXT(2),W)
-
-               ENDIF
-            ENDDO FACET_LP
-         ENDDO
-         ENDDO
-
-         CALL GLOBAL_ALL_MIN(minEXT)
-         CALL GLOBAL_ALL_MAX(maxEXT)
-
-         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
-         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
-
-         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
-         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
-
-      ENDIF
-
 ! Add up the total number of available positions in the seeding map.
       DO H=1,HMAX
       DO W=1,WMAX
@@ -909,7 +777,6 @@
 
       use stl, only: STL_START, DEFAULT_STL
       use stl, only: VERTEX, NORM_FACE
-      use cutcell, only: USE_STL
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
@@ -1079,73 +946,6 @@
          FULL_MAP(W,H) = myPE+1
       ENDDO
       ENDDO
-
-! For complex boundaries defined by STLs, exclude any mass inflow cells
-! that intersect the boundary and all cells opposite the normal. The MI
-! cell sizes are increased by 10% to provide a small buffer.
-      IF(USE_STL) THEN
-
-         HALFSIZE(3) = 1.10d0*MAX_DIA
-         HALFSIZE(1) = HALF*(WINDOW * 1.10d0)
-         HALFSIZE(2) = HALF*(WINDOW * 1.10d0)
-
-         minEXT(1) = HMAX+1; maxEXT(1) = 0
-         minEXT(2) = WMAX+1; maxEXT(2) = 0
-
-         DO H=1,HMAX
-         DO W=1,WMAX
-
-            CENTER(3) = BC_Z_b(BCV)
-            CENTER(1) = MESH_P(W) + HALF*WINDOW
-            CENTER(2) = MESH_Q(H) + HALF*WINDOW
-
-            FACET_LP: DO LC=1, STL_START(DEFAULT_STL)-1
-
-               IF(BC_Z_b(BCV) > maxval(VERTEX(:,3,LC))) CYCLE FACET_LP
-               IF(BC_Z_b(BCV) < minval(VERTEX(:,3,LC))) CYCLE FACET_LP
-
-               IF(BC_X_w(BCV) > maxval(VERTEX(:,1,LC))) CYCLE FACET_LP
-               IF(BC_X_e(BCV) < minval(VERTEX(:,1,LC))) CYCLE FACET_LP
-
-               IF(BC_Y_s(BCV) > maxval(VERTEX(:,2,LC))) CYCLE FACET_LP
-               IF(BC_Y_n(BCV) < minval(VERTEX(:,2,LC))) CYCLE FACET_LP
-
-               CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, &
-                  VERTEX(:,:,LC), OVERLAP)
-
-               IF(OVERLAP) THEN
-                  IF(NORM_FACE(1,LC) >= 0) THEN
-                     FULL_MAP(1:W,H) = 0
-                  ELSE
-                     FULL_MAP(W:WMAX,H) = 0
-                  ENDIF
-                  IF(NORM_FACE(2,LC) >= 0) THEN
-                     FULL_MAP(W,1:H) = 0
-                  ELSE
-                     FULL_MAP(W,H:HMAX) = 0
-                  ENDIF
-
-                  minEXT(1) = min(minEXT(1),H)
-                  minEXT(2) = min(minEXT(2),W)
-
-                  maxEXT(1) = max(maxEXT(1),H)
-                  maxEXT(2) = max(maxEXT(2),W)
-
-               ENDIF
-            ENDDO FACET_LP
-         ENDDO
-         ENDDO
-
-         CALL GLOBAL_ALL_MIN(minEXT)
-         CALL GLOBAL_ALL_MAX(maxEXT)
-
-         if(minEXT(1) < HMAX+1) FULL_MAP(:,:minEXT(1)) = 0
-         if(maxEXT(1) > 0) FULL_MAP(:,maxEXT(1):) = 0
-
-         if(minEXT(2) /= WMAX+1) FULL_MAP(:minEXT(2),:) = 0
-         if(maxEXT(2) > 0) FULL_MAP(maxEXT(2):,:) = 0
-
-      ENDIF
 
 ! Add up the total number of available positions in the seeding map.
       DO H=1,HMAX

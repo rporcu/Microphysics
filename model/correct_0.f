@@ -22,8 +22,6 @@
       USE indices
       USE physprop
       USE compar
-      USE cutcell
-      USE quadric
       USE functions
 
       use fldvar
@@ -53,23 +51,11 @@
 
             IJKE = EAST_OF(IJK)
             IJKN = NORTH_OF(IJK)
-            IF(.NOT.CARTESIAN_GRID) THEN
-               U_G(IJK) = U_G(IJK) - D_E(IJK)*(PP_G(IJKE)-PP_G(IJK))
-               V_G(IJK) = V_G(IJK) - D_N(IJK)*(PP_G(IJKN)-PP_G(IJK))
-               IF (DO_K) THEN
-                  IJKT = TOP_OF(IJK)
-                  W_G(IJK) = W_G(IJK) - D_T(IJK)*(PP_G(IJKT)-PP_G(IJK))
-               ENDIF
-            ELSE
-               U_G(IJK) = U_G(IJK) - D_E(IJK)*&
-                  (PP_G(IJKE)*A_UPG_E(IJK) - PP_G(IJK)*A_UPG_W(IJK))
-               V_G(IJK) = V_G(IJK) - D_N(IJK)*&
-                  (PP_G(IJKN)*A_VPG_N(IJK) - PP_G(IJK)*A_VPG_S(IJK))
-               IF (DO_K) THEN
-                  IJKT = TOP_OF(IJK)
-                  W_G(IJK) = W_G(IJK) - D_T(IJK)*&
-                     (PP_G(IJKT)*A_WPG_T(IJK) - PP_G(IJK)*A_WPG_B(IJK))
-               ENDIF
+            U_G(IJK) = U_G(IJK) - D_E(IJK)*(PP_G(IJKE)-PP_G(IJK))
+            V_G(IJK) = V_G(IJK) - D_N(IJK)*(PP_G(IJKN)-PP_G(IJK))
+            IF (DO_K) THEN
+               IJKT = TOP_OF(IJK)
+               W_G(IJK) = W_G(IJK) - D_T(IJK)*(PP_G(IJKT)-PP_G(IJK))
             ENDIF
          ENDIF
       ENDDO

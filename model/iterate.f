@@ -10,8 +10,6 @@
       SUBROUTINE ITERATE(IER, NIT)
 
       USE compar
-      USE cutcell
-      USE dashboard
       USE discretelement
       USE fldvar
       USE funits
@@ -28,7 +26,6 @@
       USE time_cpu
       USE toleranc
       USE vavg_mod, ONLY: vavg_g
-      USE vtk
 
       use error_manager
 
@@ -103,9 +100,6 @@
       CALL CALC_MFLUX ()
       CALL SET_BC1
 
-! JFD: modification for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SET_OUTFLOW
-
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
 
@@ -162,9 +156,6 @@
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX ()
       CALL SET_BC1
-
-! JFD: modification for cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SET_OUTFLOW
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration

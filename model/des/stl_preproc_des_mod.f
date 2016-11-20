@@ -24,8 +24,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_STL_PREPROCESSING
 
-! Flag to for STL defined geometry
-      use cutcell, only: use_stl
 ! Number of facets from STL files, (plus DES generated)
       use stl, only: N_FACETS, N_FACETS_DES
 ! Start/End position of different STLs
@@ -51,7 +49,7 @@
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
 ! Process the STL files
-      N_FACETS_DES = merge(N_FACETS, 0, USE_STL)
+      N_FACETS_DES = 0
 ! Store the Start/End of the base STLs from geometry files
       STL_START(BASE_STL)=1;   STL_END(BASE_STL)=N_FACETS_DES
 
@@ -272,7 +270,7 @@
       DOUBLE PRECISION :: smallest_extent, min_temp, max_temp
 
 
-      FC = FACETS_AT_DG(IJK)%COUNT 
+      FC = FACETS_AT_DG(IJK)%COUNT
       IF(FC > 0) THEN
 !      IF(FACETS_AT_DG(IJK)%COUNT > 0) THEN
 

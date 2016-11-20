@@ -315,7 +315,6 @@
       USE compar
       USE sendrecv
       USE discretelement
-      USE cutcell
 
       use error_manager
 

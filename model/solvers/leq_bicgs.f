@@ -109,7 +109,6 @@
       USE sendrecv
       USE indices
       USE leqsol
-      USE cutcell
       USE functions
 
       IMPLICIT NONE

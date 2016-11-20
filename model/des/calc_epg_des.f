@@ -33,8 +33,6 @@
       use fldvar, only: EP_G, RO_G, ROP_G
 ! Volume of scalar grid cell.
       use geometry, only: VOL
-! Flag: Status of indexed cell
-      use cutcell, only: CUT_CELL_AT
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
@@ -123,7 +121,7 @@
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I_OF(IJK))),&
                trim(iVal(J_OF(IJK))), trim(iVal(K_OF(IJK))),EP_G(IJK), &
-               CUT_CELL_AT(IJK), trim(iVal(PINC(IJK))), VOL(IJK)
+               trim(iVal(PINC(IJK))), VOL(IJK)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
             WRITE(ERR_MSG,1102)
@@ -140,7 +138,7 @@
          ENDDO
 
  1101 FORMAT(/3x,'Fluid Cell IJK: ',A,6x,'I/J/K: (',A,',',A,',',A,')',/&
-         T6,'EP_G = ',g11.4,T30,'CUT_CELL_AT = ',L1,/T6,'PINC: ',A,T30,&
+         T6,'EP_G = ',g11.4,T30,/T6,'PINC: ',A,T30,&
          'VOL = ',g11.4)
 
  1102 FORMAT(/T6,'Global ID',T30,'Position')

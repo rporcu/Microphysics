@@ -13,8 +13,6 @@
 ! Modules
 !-----------------------------------------------
       USE compar
-      USE cutcell
-      USE dashboard
       USE des_allocate
       USE discretelement
       USE error_manager
@@ -64,9 +62,6 @@
 ! Set constants
       CALL SET_CONSTANTS
 
-! Adjust partition for better load balance (done when RE_INDEXING is .TRUE.)
-      CALL ADJUST_IJK_SIZE
-
 ! Partition the domain and set indices
       CALL GRIDMAP_INIT
 
@@ -111,14 +106,6 @@
 ! Set arrays for computing indices
       CALL SET_INCREMENTS
 
-! Cartesian grid implementation
-      CALL CHECK_DATA_CARTESIAN
-      IF(CARTESIAN_GRID) THEN
-         CALL CUT_CELL_PREPROCESSING
-      ELSE
-         CALL ALLOCATE_DUMMY_CUT_CELL_ARRAYS
-      ENDIF
-
       IF(DISCRETE_ELEMENT) THEN
          CALL DESGRID_INIT
          CALL DESMPI_INIT
@@ -134,22 +121,6 @@
 ! Initialize arrays.
       CALL INIT_FVARS
       IF(DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
-
-
-!======================================================================
-! Data initialization for Dashboard
-!======================================================================
-      INIT_TIME = TIME
-      SMMIN =  LARGE_NUMBER
-      SMMAX = -LARGE_NUMBER
-
-      DTMIN =  LARGE_NUMBER
-      DTMAX = -LARGE_NUMBER
-
-      NIT_MIN = MAX_NIT
-      NIT_MAX = 0
-
-      N_DASHBOARD = 0
 
 
       RETURN

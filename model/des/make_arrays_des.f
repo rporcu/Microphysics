@@ -10,7 +10,6 @@
       USE calc_collision_wall
       USE compar
       USE constant, only: pi
-      USE cutcell
       USE GENERATE_PARTICLES, only: GENERATE_PARTICLE_CONFIG
       USE desgrid
       USE discretelement

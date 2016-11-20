@@ -16,15 +16,12 @@
       use output, only: OUT_TIME, OUT_DT
       use output, only: USR_TIME, USR_DT
       use output, only: VTP_TIME, VTP_DT
-      use vtk, only:    VTK_TIME, VTK_DT
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
       use param, only: DIMENSION_USR
-      use vtk, only: DIMENSION_VTK
       use run, only: TIME, DT, TSTOP
       use time_cpu, only: CPU_IO
       use compar, only: myPE, PE_IO
       use discretelement, only: DISCRETE_ELEMENT
-      use vtk, only: WRITE_VTK_FILES
       use param1, only: UNDEFINED
       use machine, only: wall_time
 
@@ -107,17 +104,6 @@
       ENDIF
 
       CALL FLUSH_NOTIFY_USER
-
-! Write vtk file, if needed
-! Only regular (not debug) files are written (second argument is zero)
-      IF(WRITE_VTK_FILES) THEN
-         DO LC = 1, DIMENSION_VTK
-            IF(CHECK_TIME(VTK_TIME(LC))) THEN
-               VTK_TIME(LC) = NEXT_TIME(VTK_DT(LC))
-               CALL WRITE_VTU_FILE(LC,0)
-            ENDIF
-         ENDDO
-      ENDIF
 
 
 ! Add the amount of time needed for all IO operations to total.
@@ -335,11 +321,6 @@
       use time_cpu, only: CPU_IO
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
-      use vtk, only:    VTK_TIME, VTK_DT
-      use vtk, only: DIMENSION_VTK
-      use vtk, only: DIMENSION_VTK
-      use vtk, only: VTK_TIME, VTK_DT
-      use vtk, only: WRITE_VTK_FILES
       use discretelement, only: PRINT_DES_DATA
       use param1, only:  UNDEFINED_I
 
@@ -392,21 +373,6 @@
          ELSE
             VTP_TIME = VTP_DT*(INT((TIME + 0.1d0*DT)/VTP_DT)+1)
          ENDIF
-      ENDIF
-
-! Initialize VTK_TIME
-      IF(WRITE_VTK_FILES) THEN
-         DO LC = 1, DIMENSION_VTK
-            VTK_TIME(LC) = UNDEFINED
-            IF (VTK_DT(LC) /= UNDEFINED) THEN
-               IF (RUN_TYPE == 'NEW'.OR.RUN_TYPE=='RESTART_2') THEN
-                  VTK_TIME(LC) = TIME
-               ELSE
-                  VTK_TIME(LC) = VTK_DT(LC) *                          &
-                     (INT((TIME + 0.1d0*DT)/VTK_DT(LC))+1)
-               ENDIF
-            ENDIF
-         ENDDO
       ENDIF
 
 ! Create a subdir for RES backup files.

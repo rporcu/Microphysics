@@ -13,9 +13,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI)
 
-! Flag for cut-cells
-      use cutcell, only: CARTESIAN_GRID
-
       use param, only: DIMENSION_3
 
       IMPLICIT NONE
@@ -26,11 +23,7 @@
       DOUBLE PRECISION, INTENT(OUT) :: DEL_PHI(3,DIMENSION_3)
 !......................................................................!
 
-      IF(CARTESIAN_GRID) THEN
-         CALL CALC_GRAD_DES_CG(PHI, DEL_PHI)
-      ELSE
-         CALL CALC_GRAD_DES_STD(PHI, DEL_PHI)
-      ENDIF
+      CALL CALC_GRAD_DES_STD(PHI, DEL_PHI)
 
       RETURN
       END SUBROUTINE CALC_GRAD_DES

@@ -1,5 +1,4 @@
 MODULE CALC_D_MOD
-   use cutcell, only: CARTESIAN_GRID
    use fldvar, only: EP_G
    use fun_avg, only: AVG_X, AVG_Y, AVG_Z
    use geometry, only: AYZ, AXZ, AXY
@@ -15,14 +14,14 @@ MODULE CALC_D_MOD
          integer :: IJK,IJKE
          DOUBLE PRECISION :: AREA_FACE
 
-         IJK = FUNIJK(i,j,k) 
+         IJK = FUNIJK(i,j,k)
 
          IF (IP_AT_E(IJK) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
             ! IJKE = EAST_OF(IJK)
             IJKE = FUNIJK(ieast(i,j,k),j,k)
-            AREA_FACE = merge(ONE, AYZ(IJK), CARTESIAN_GRID)
+            AREA_FACE = AYZ(IJK)
             EPGA_X = AREA_FACE*AVG_X(EP_G(IJK),EP_G(IJKE),I)
          ENDIF
       end function epga_x
@@ -34,14 +33,14 @@ MODULE CALC_D_MOD
          integer :: IJK, IJKN
          DOUBLE PRECISION :: AREA_FACE
 
-         IJK = FUNIJK(i,j,k) 
+         IJK = FUNIJK(i,j,k)
 
          IF (IP_AT_N(IJK) .OR. MFLOW_AT_N(IJK)) THEN
             EPGA_Y = ZERO
          ELSE
             ! IJKN = NORTH_OF(IJK)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
-            AREA_FACE = merge(ONE, AXZ(IJK), CARTESIAN_GRID)
+            AREA_FACE = AXZ(IJK)
             EPGA_Y = AREA_FACE*AVG_Y(EP_G(IJK),EP_G(IJKN),J)
          ENDIF
       end function epga_y
@@ -53,12 +52,12 @@ MODULE CALC_D_MOD
          integer :: IJK, IJKT
          DOUBLE PRECISION :: AREA_FACE
 
-         IJK = FUNIJK(i,j,k) 
+         IJK = FUNIJK(i,j,k)
          IF (IP_AT_T(IJK) .OR. MFLOW_AT_T(IJK)) THEN
             EPGA_Z = ZERO
          ELSE
             IJKT = FUNIJK(i,j,ktop(i,j,k))
-            AREA_FACE = merge(ONE, AXY(IJK), CARTESIAN_GRID)
+            AREA_FACE = AXY(IJK)
             EPGA_Z = AREA_FACE*AVG_Z(EP_G(IJK),EP_G(IJKT),K)
          ENDIF
 

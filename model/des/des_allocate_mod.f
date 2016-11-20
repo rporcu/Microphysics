@@ -34,7 +34,6 @@ CONTAINS
       Use physprop
       Use des_bc
       use funits
-      USE cutcell
       USE functions
 
       use particle_filter, only: DES_INTERP_SCHEME_ENUM

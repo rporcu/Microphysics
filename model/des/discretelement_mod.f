@@ -16,7 +16,6 @@
       IMPLICIT NONE
 !-----------------------------------------------
 
-
 ! Total number of particles in simulation: read from input or generated
       INTEGER :: PARTICLES
 

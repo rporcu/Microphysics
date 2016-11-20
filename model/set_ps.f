@@ -183,7 +183,6 @@
       use bc
       use compar
       use constant
-      use cutcell
       use fldvar
       use geometry
       use ic

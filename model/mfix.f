@@ -65,8 +65,6 @@
 ! Modules
 !-----------------------------------------------
       USE compar
-      USE cutcell
-      USE dashboard
       USE discretelement
       USE fldvar
       USE functions
@@ -76,11 +74,8 @@
       USE output
       USE param
       USE param1
-      USE quadric
       USE run
       USE time_cpu
-
-      USE vtk, only : WRITE_VTK_FILES
 
       use error_manager
 
@@ -117,7 +112,7 @@
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
-      IF(.NOT.CARTESIAN_GRID)  CALL WRITE_FLAGS
+      CALL WRITE_FLAGS
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
@@ -152,7 +147,7 @@
 ! This will be done after the cell re-indexing is done later in this file.
 ! This allows restarting independently of the re-indexing setting between
 ! the previous and current run.
-         IF(.NOT.RE_INDEXING)  CALL WRITE_RES1
+         CALL WRITE_RES1
 
       CASE DEFAULT
          IF(DMP_LOG)WRITE (UNIT_LOG, *) &
@@ -172,26 +167,15 @@
          DT = DT_TMP
       ENDIF
 
-! Set arrays for computing indices. A secondary call is made
-! after cut cell-preprocessing to update array indices.
-      IF(CARTESIAN_GRID) CALL SET_INCREMENTS
-
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
       CALL SET_FLAGS1
 
-!  Update flags for Cartesian_GRID.
-      IF(CARTESIAN_GRID) CALL CHECK_BC_FLAGS
-
 ! Calculate cell volumes and face areas
-      IF(.NOT.CARTESIAN_GRID) CALL SET_GEOMETRY1
+      CALL SET_GEOMETRY1
 
 ! Find corner cells and set their face areas to zero
-      IF(.NOT.CARTESIAN_GRID)  THEN
-         CALL GET_CORNER_CELLS()
-      ELSE
-         IF (SET_CORNER_CELLS)  CALL GET_CORNER_CELLS ()
-      ENDIF
+      CALL GET_CORNER_CELLS()
 
 ! Set constant physical properties
       CALL SET_CONSTPROP
@@ -206,9 +190,6 @@
       CALL ZERO_NORM_VEL
       CALL SET_BC0
 
-! JFD: cartesian grid implementation
-      IF(CARTESIAN_GRID) CALL CG_SET_BC0
-
 ! Set the pressure field for a fluidized bed
       IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P
 
@@ -219,10 +200,7 @@
       CALL SET_BC1
 
 ! Check the field variable data and report errors.
-      IF(.NOT.CARTESIAN_GRID)  CALL CHECK_DATA_20
-
-! Setup VTK data for regular (no cut cells) grid
-      IF(.NOT.CARTESIAN_GRID.AND.WRITE_VTK_FILES) CALL SETUP_VTK_NO_CUTCELL
+      CALL CHECK_DATA_20
 
       IF(DISCRETE_ELEMENT) CALL MAKE_ARRAYS_DES
 
@@ -253,18 +231,6 @@
       CPUTIME_USED = 0.0d0
       WALLTIME_USED = WALL_TIME() - WALL0
       CALL WRITE_OUT3 (CPUTIME_USED, WALLTIME_USED, CPU_IO)
-
-! JFD: cartesian grid implementation
-      IF(WRITE_DASHBOARD) THEN
-         IF(DT>=DT_MIN) THEN
-            RUN_STATUS = 'Complete.'
-         ELSE
-            RUN_STATUS = 'DT < DT_MIN.  Recovery not possible!'
-         ENDIF
-         CALL GET_TUNIT(CPUTIME_USED,TUNIT)
-         CALL UPDATE_DASHBOARD(0,CPUTIME_USED,TUNIT)
-      ENDIF
-      IF(CARTESIAN_GRID)  CALL CLOSE_CUT_CELL_FILES
 
 ! Finalize and terminate MPI
       call parallel_fin
