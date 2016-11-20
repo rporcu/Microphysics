@@ -643,15 +643,22 @@
 
       TOT_VOL_NODE= ZERO
 
-      DO IJK = ijkstart3, ijkend3 + NUMBER_OF_NEW_POINTS    ! Loop over all nodes
+! HACK HACK HACK -- not sure how this 1D loop should be 
+! writtne as a triple. No focus on cut-cell so it might
+! not be an issue.
+      !DO IJK = ijkstart3, ijkend3 + NUMBER_OF_NEW_POINTS    ! Loop over all nodes
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+           do i = istart3, iend3
+           ijk = funijk(i,j,k)
 
          IF(Ovol_around_node(IJK)>ZERO) THEN
 !             print*,'NODE,VOL=',IJK,Ovol_around_node(IJK)
              TOT_VOL_NODE = TOT_VOL_NODE + Ovol_around_node(IJK)
              Ovol_around_node(IJK) = ONE / Ovol_around_node(IJK)    ! Store One/volume
          ENDIF
-
-
+      ENDDO
+      ENDDO
       ENDDO
 
       IF(TOT_VOL_CELLS>ZERO) THEN

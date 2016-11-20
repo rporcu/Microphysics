@@ -62,11 +62,4 @@
       INTEGER, DIMENSION(:), ALLOCATABLE :: Jm1_3, Jp1_3
       INTEGER, DIMENSION(:), ALLOCATABLE :: Km1_3, Kp1_3
 
-! Save original IJK value of Background grid (new to old mapping)
-      INTEGER, DIMENSION(:), ALLOCATABLE :: BACKGROUND_IJK_OF
-! Save new IJK value of Background grid (old to new mapping)
-      INTEGER, DIMENSION(:), ALLOCATABLE :: IJK_OF_BACKGROUND
-! Save original IJKEND3 value of Background grid
-      INTEGER :: BACKGROUND_IJKEND3
-
       END MODULE indices
