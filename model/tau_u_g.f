@@ -67,6 +67,7 @@
       INTEGER :: IJKNE, IJKSE, IJKTE, IJKBE
       INTEGER :: IPJK, IMJK, IJMK, IJKM
       INTEGER :: IPJMK, IPJKM
+      INTEGER :: itmp, jtmp, ktmp
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average viscosity
@@ -78,6 +79,10 @@
 ! Source terms (Volumetric)
       DOUBLE PRECISION :: Vtzb
 !---------------------------------------------------------------------//
+!     NOTE -- triply nested functions seem to break things -- hence the
+!             use of the *tmp variables below
+!---------------------------------------------------------------------//
+
 
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(3)==1)) THEN
 
@@ -93,21 +98,34 @@
                JM = JM1(J)
                KM = KM1(K)
 
-               IPJK = IP_OF(IJK)
-               IMJK = IM_OF(IJK)
-               IJMK = JM_OF(IJK)
-               IJKM = KM_OF(IJK)
-               IPJMK = JM_OF(IPJK)
-               IPJKM = IP_OF(IJKM)
+               IPJK = FUNIJK(iplus(i,j,k),j,k)
+               IMJK = FUNIJK(iminus(i,j,k),j,k)
+               IJMK = FUNIJK(i,jminus(i,j,k),k)
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
 
-               IJKN = NORTH_OF(IJK)
-               IJKNE = EAST_OF(IJKN)
-               IJKS = SOUTH_OF(IJK)
-               IJKSE = EAST_OF(IJKS)
-               IJKT = TOP_OF(IJK)
-               IJKTE = EAST_OF(IJKT)
-               IJKB = BOTTOM_OF(IJK)
-               IJKBE = EAST_OF(IJKB)
+               itmp = iplus(i,j,k)
+               IPJMK = FUNIJK(itmp,jminus(itmp,j,k),k)
+
+               ktmp = kminus(i,j,k)
+               IPJKM = FUNIJK(iplus(i,j,ktmp),j,ktmp)
+
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
+
+               jtmp = jnorth(i,j,k)
+               IJKN  = FUNIJK(i,jtmp,k)
+               IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
+
+               jtmp = jsouth(i,j,k)
+               IJKS  = FUNIJK(i,jtmp,k)
+               IJKSE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
+
+               ktmp = ktop(i,j,k)
+               IJKT  = FUNIJK(i,j,ktmp)
+               IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
+
+               ktmp = kbot(i,j,k)
+               IJKB  = FUNIJK(i,j,ktmp)
+               IJKBE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
 
 
 ! Surface forces at i+1/2, j, k
@@ -243,8 +261,9 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-         IJKE = EAST_OF(IJK)
+         IJK  = FUNIJK(i,j,k)
+         IJKE = FUNIJK(ieast(i,j,k),j,k)
+
          EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
          IF ( .NOT.IP_AT_E(IJK) .AND. EPGA>DIL_EP_S) THEN
             IP = IP1(I)

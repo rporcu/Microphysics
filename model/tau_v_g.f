@@ -64,10 +64,14 @@
       INTEGER :: IJKTN, IJKBN, IJKNE, IJKNW
       INTEGER :: IJPK, IJMK, IMJK, IJKM
       INTEGER :: IMJPK, IJPKM
+      INTEGER :: itmp, jtmp, ktmp
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
+!---------------------------------------------------------------------//
+!     NOTE -- triply nested functions seem to break things -- hence the
+!             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(4)==1)) THEN
@@ -80,25 +84,38 @@
             IJKN = NORTH_OF(IJK)
             EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
             IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
+
                JP = JP1(J)
                IM = IM1(I)
                KM = KM1(K)
 
-               IJPK = JP_OF(IJK)
-               IJMK = JM_OF(IJK)
-               IMJK = IM_OF(IJK)
-               IJKM = KM_OF(IJK)
-               IJPKM = JP_OF(IJKM)
-               IMJPK = IM_OF(IJPK)
+               IJMK = FUNIJK(i,jminus(i,j,k),k)
+               IMJK = FUNIJK(iminus(i,j,k),j,k)
 
-               IJKE = EAST_OF(IJK)
-               IJKNE = EAST_OF(IJKN)
-               IJKW = WEST_OF(IJK)
-               IJKNW = NORTH_OF(IJKW)
-               IJKT = TOP_OF(IJK)
-               IJKTN = NORTH_OF(IJKT)
-               IJKB = BOTTOM_OF(IJK)
-               IJKBN = NORTH_OF(IJKB)
+               ktmp = kminus(i,j,k)
+               IJKM  = FUNIJK(i,j,ktmp)
+               IJPKM = FUNIJK(i,jplus(i,j,ktmp),ktmp)
+
+               jtmp = jplus(i,j,k)
+               IJPK  = FUNIJK(i,jtmp,k)
+               IMJPK = FUNIJK(iminus(i,jtmp,k),jtmp,k)
+
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
+               IJKT = FUNIJK(i,j,ktop(i,j,k))
+               IJKB = FUNIJK(i,j,kbot(i,j,k))
+
+               jtmp = jnorth(i,j,k)
+               IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
+
+               itmp = iwest(i,j,k)
+               IJKNW = FUNIJK(itmp,jnorth(itmp,j,k),k)
+
+               ktmp = ktop(i,j,k)
+               IJKTN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
+
+               ktmp = kbot(i,j,k)
+               IJKBN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
 
 ! Surface forces at i, j+1/2, k
 ! bulk viscosity term

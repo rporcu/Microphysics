@@ -67,6 +67,7 @@
       INTEGER :: IJKNT, IJKST, IJKTE, IJKTW
       INTEGER :: IJKP, IMJK, IJMK, IJKM
       INTEGER :: IMJKP, IJMKP
+      integer :: itmp, jtmp, ktmp
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average gradients
@@ -75,6 +76,10 @@
       DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
 ! Source terms (Volumetric)
       DOUBLE PRECISION :: Vxz
+
+!---------------------------------------------------------------------//
+!     NOTE -- triply nested functions seem to break things -- hence the
+!             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
       IF((.NOT.CARTESIAN_GRID).OR.(CG_SAFE_MODE(5)==1)) THEN
@@ -91,22 +96,44 @@
                JM = JM1(J)
                KP = KP1(K)
 
-               IJKP = KP_OF(IJK)
-               IMJK = IM_OF(IJK)
-               IJMK = JM_OF(IJK)
-               IJKM = KM_OF(IJK)
-               IMJKP = KP_OF(IMJK)
-               IJMKP = JM_OF(IJKP)
+               IJKP = FUNIJK(i,j,kplus(i,j,k))
+               IJKM = FUNIJK(i,j,kminus(i,j,k))
+               IMJK = FUNIJK(iminus(i,j,k),j,k)
+               IJMK = FUNIJK(i,jminus(i,j,k),k)
+ 
+               ! IMJKP = KP_OF(IMJK)
+               itmp = iminus(i,j,k)
+               IMJKP = FUNIJK(itmp,j,kplus(itmp,j,k))
+ 
+               ! IJMKP = JM_OF(IJKP)
+               ktmp = kplus(i,j,k)
+               IJMKP = FUNIJK(i,jminus(i,j,ktmp),ktmp)
+ 
+               ! IJKN = NORTH_OF(IJK)
+               ! IJKS = SOUTH_OF(IJK)
+               ! IJKE = EAST_OF(IJK)
+               ! IJKW = WEST_OF(IJK)
+ 
+               IJKN = FUNIJK(i,jnorth(i,j,k),k)
+               IJKS = FUNIJK(i,jsouth(i,j,k),k)
+               IJKE = FUNIJK(ieast(i,j,k),j,k)
+               IJKW = FUNIJK(iwest(i,j,k),j,k)
 
-               IJKN = NORTH_OF(IJK)
-               IJKS = SOUTH_OF(IJK)
-               IJKE = EAST_OF(IJK)
-               IJKW = WEST_OF(IJK)
-               IJKNT = TOP_OF(IJKN)
-               IJKST = TOP_OF(IJKS)
-               IJKTE = EAST_OF(IJKT)
-               IJKTW = WEST_OF(IJKT)
+               ! IJKNT = TOP_OF(IJKN)
+               jtmp = jnorth(i,j,k)
+               IJKNT = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
+               ! IJKST = TOP_OF(IJKS)
+               jtmp = jsouth(i,j,k)
+               IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
+
+               ! IJKTE = EAST_OF(IJKT)
+               ktmp = ktop(i,j,k)
+               IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
+
+               ! IJKTW = WEST_OF(IJKT)
+               ktmp = ktop(i,j,k)
+               IJKTW = FUNIJK(iwest(i,j,ktmp),j,ktmp)
 
 ! Surface forces
 ! Bulk viscosity term

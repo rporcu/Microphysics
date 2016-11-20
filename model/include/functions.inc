@@ -1054,13 +1054,31 @@
 
       ipjk = funijk(iplus(i,j,k),j,k)
 
-      if(wall_at(ipjk)) then
+      if (wall_at(ipjk)) then
          ieast = i
       else
          ieast = iplus(i,j,k)
       end if
 
       end function ieast
+
+      ! ************************************************
+
+      integer function iwest(i,j,k)
+
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: imjk
+
+      imjk = funijk(iminus(i,j,k),j,k)
+
+      if (wall_at(imjk)) then
+         iwest = i
+      else
+         iwest = iminus(i,j,k)
+      end if
+
+      end function iwest
 
       ! ************************************************
 
@@ -1072,7 +1090,7 @@
 
       ijpk = funijk(i,jplus(i,j,k),k)
 
-      if(wall_at(ijpk)) then
+      if (wall_at(ijpk)) then
          jnorth = j
       else
          jnorth = jplus(i,j,k)
@@ -1082,18 +1100,56 @@
 
       ! ************************************************
 
+      integer function jsouth(i,j,k)
+
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: ijmk
+
+      ijmk = funijk(i,jminus(i,j,k),k)
+
+      if (wall_at(ijmk)) then
+         jsouth = j
+      else
+         jsouth = jminus(i,j,k)
+      end if
+
+      end function jsouth
+
+      ! ************************************************
+
       integer function ktop(i,j,k)
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijkp
+      integer             :: kp,ijkp
 
-      ijkp = funijk(i,j,kplus(i,j,k))
+      kp = kplus(i,j,k)
+      ijkp = funijk(i,j,kp)
 
-      if(wall_at(ijkp)) then
+      if (wall_at(ijkp)) then
          ktop = k
       else
-         ktop = kplus(i,j,k)
+         ktop = kp
       end if
 
       end function ktop
+
+      ! ************************************************
+
+      integer function kbot(i,j,k)
+
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: km,ijkm
+
+      km = kminus(i,j,k)
+      ijkm = funijk(i,j,km)
+
+      if (wall_at(ijkm)) then
+         kbot = k
+      else
+         kbot = km
+      end if
+
+      end function kbot

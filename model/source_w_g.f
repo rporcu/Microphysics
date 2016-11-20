@@ -701,8 +701,7 @@
                         DO I = I1, I2
                            IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                           IJK = FUNIJK(I,J,K)
-                           IJKP = KP_OF(IJK)
+                           IJKP = FUNIJK(i,j,kplus(i,j,k))
                            A_M(IJKP,E) = ZERO
                            A_M(IJKP,W) = ZERO
                            A_M(IJKP,N) = ZERO
