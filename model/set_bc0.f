@@ -538,7 +538,7 @@
       INTEGER :: I, J, K, IJK
       LOGICAL :: recheck
       INTEGER :: IJK_Pg_Owner, proc
-      INTEGER :: gIJK(0:numPEs-1)
+      INTEGER :: gIJK(0:numPEs-1,3)
       INTEGER :: I_J_K_Pg(3)
       INTEGER :: lpCnt
 
@@ -588,11 +588,11 @@
 
 ! Only the rank that owns this I/J/K proceeds.
             if(.NOT.IS_ON_myPE_owns(I,J,K)) cycle
-! Calculate the triple loop index.
-            IJK = funijk(I,J,K)
 ! If there is fluid at this location, store the IJK and exit loops.
             if(fluid_cell(i,j,k)) then
-               gIJK(myPE) = IJK
+               gIJK(myPE,1) = I
+               gIJK(myPE,2) = J
+               gIJK(myPE,3) = K
                exit lp2
             endif
          enddo lp1
@@ -603,8 +603,10 @@
 ! It just needs to be consistent.
          CALL global_all_sum(gIJK)
          proc_lp: do proc=0, numPEs-1
-            if(gIJK(proc) /= 0) then
-               IJK_P_g = gIJK(proc)
+            if(gIJK(proc,1) /= 0) then
+               IJK_P_g(1) = gIJK(proc,1)
+               IJK_P_g(2) = gIJK(proc,2)
+               IJK_P_g(3) = gIJK(proc,3)
                IJK_Pg_Owner = proc
                recheck = .FALSE.
                exit proc_lp
@@ -633,7 +635,7 @@
 
 ! Verify that one fluid cell was detected. Otherwise flag the possible
 ! errors and return.
-      if(IJK_P_G == UNDEFINED_I) then
+      if(IJK_P_G(1) == UNDEFINED_I) then
          iErr = 2001
          return
       elseif(IJK_Pg_Owner == UNDEFINED_I) then
@@ -641,47 +643,23 @@
          return
       endif
 
-! The owner if the IJK_Pg gets the global I/J/K values and sends
-! them to all ranks.
-      if(myPE == IJK_Pg_Owner) then
-         I_J_K_Pg(1) = I_OF(IJK_P_G)
-         I_J_K_Pg(2) = J_OF(IJK_P_G)
-         I_J_K_Pg(3) = K_OF(IJK_P_G)
-      endif
-      CALL BCAST(I_J_K_Pg, IJK_Pg_Owner)
-
-      I = I_J_K_Pg(1)
-      J = I_J_K_Pg(2)
-      K = I_J_K_Pg(3)
-
 ! If debugging, have PE_IO report some information before the
 ! data is overwritten.
       if(ldFlag) then
          write(*,"(/3x,'IJK_P_g successfully identified!')")
          cInt=''; write(cInt,*) IJK_Pg_Owner
          write(*,"( 5x,'Owner Rank: ',A)")trim(adjustl(cInt))
-         cInt=''; write(cInt,*) IJK_P_G
-         write(*,"(5x, 'IJK: ',A)", advance='no') trim(adjustl(cInt))
          write(*,"(' :: ')", advance='no')
-         cInt=''; write(cInt,*) I
+         cInt=''; write(cInt,*) IJK_P_G(1)
          write(*,"('(',A)",advance='no') trim(adjustl(cInt))
-         cInt=''; write(cInt,*) J
+         cInt=''; write(cInt,*) IJK_P_G(2)
          write(*,"(',',A)",advance='no') trim(adjustl(cInt))
-         cInt=''; write(cInt,*) K
+         cInt=''; write(cInt,*) IJK_P_g(3)
          write(*,"(',',A,')',2/)") trim(adjustl(cInt))
       endif
 
-! Ranks that 'see' IJK_P_g store their local IJK value. Everyone else
-! resets IJK_P_g to UNDEFINED_I. This removes the need for getting
-! I/J/K values later on in source_PPg.
-!      IJK_P_g = merge(funijk(I,J,K), UNDEFINED_I,                      &
-!         IS_ON_myPE_plus2layers(I,J,K))
-
-      IF(IS_ON_myPE_plus2layers(I,J,K)) THEN
-         IJK_P_g = funijk(I,J,K)
-      ELSE
-         IJK_P_g = UNDEFINED_I
-      ENDIF
+      IF(.NOT.IS_ON_myPE_plus2layers&
+         &(IJK_P_g(1),IJK_P_g(2),IJK_P_g(3))) IJK_P_g = UNDEFINED_I
 
       IERR = 0
       RETURN

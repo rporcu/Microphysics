@@ -184,10 +184,11 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
 ! Specify P' to zero for incompressible flows. Check set_bc0
 ! for details on selection of IJK_P_g.
-      IF (IJK_P_G /= UNDEFINED_I) THEN
-         B_M(IJK_P_G) = ZERO
-         A_M(IJK_P_G,:) = ZERO
-         A_M(IJK_P_G,0) = -ONE
+      IF (IJK_P_G(1) /= UNDEFINED_I) THEN
+         ijk = funijk(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3))
+         B_M(IJK) = ZERO
+         A_M(IJK,:) = ZERO
+         A_M(IJK,0) = -ONE
       ENDIF
 
       call unlock_xsi_array

@@ -266,7 +266,7 @@
       DOUBLE PRECISION W_s0 (DIM_M)
 !
 !                      IJK location where P_g is fixed for cyclic b.c's
-      INTEGER          IJK_P_g
+      INTEGER          IJK_P_g(3)
 !
 !                      Coefficient in partial slip condition -- gas
       DOUBLE PRECISION BC_hw_g (DIMENSION_BC)
