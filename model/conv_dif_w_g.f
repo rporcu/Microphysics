@@ -203,10 +203,12 @@
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
+
+
       IJK = funijk(i,j,k)
 
       IMJK = FUNIJK(iminus(i,j,k),j,k)
-      IJMK = FUNIJK(i,jminus(i,j,k),j)
+      IJMK = FUNIJK(i,jminus(i,j,k),k)
       IJKM = FUNIJK(i,j,kminus(i,j,k))
 
       KP = KP1(K)

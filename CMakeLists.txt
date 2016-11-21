@@ -234,7 +234,6 @@ set(SOURCES
   model/set_geometry1.f
   model/set_ic.f
   model/set_icbc_flags.f
-  model/set_index1a.f
   model/set_max2.f
   model/set_outflow.f
   model/set_param.f
