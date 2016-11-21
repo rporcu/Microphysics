@@ -934,6 +934,7 @@ contains
           ijk = recvijk1(ii)
           if(localfunc) then
              call ijk_of(ijk,i,j,k)
+          endif
 
           write(line(ip),9001) ii,ijk
 9001      format('recvijk1( ', i6,') = ', i6)
