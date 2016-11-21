@@ -466,10 +466,8 @@
         jmap_c(jj) = jj
       enddo
 
-      write(*,*) 'building imap_c'
       do ii=imin4,imax4
          imap_c(ii) = ii
-         write(*,*) 'ii',ii,imap_c(ii)
       enddo
 
       if (CYC_ZL.and.nodesk.eq.1) then
@@ -491,31 +489,12 @@
       endif
 
       if (CYC_XL.and.nodesi.eq.1) then
-
          imap_c( imax2 ) = imin1
-         write(*,*) 'force imax2 =>', imin1
-
          imap_c( imin2 ) = imax1
-         write(*,*) 'force imin2 =>', imax1
-
-         if (imax3.gt.imax2) then
-            imap_c(imax3) = imap_c(imax2)+1
-            write(*,*) 'force imax3 =>', imap_c(imax2)+1
-         endif
-
-         if (imin3.lt.imin2) then
-            imap_c(imin3) = imap_c(imin2)-1
-            write(*,*) 'force imin3 =>', imap_c(imin2)-1
-         endif
-         if (imax4.gt.imax3) then
-            imap_c(imax4) = imap_c(imax3)+1
-            write(*,*) 'force imax4 =>', imap_c(imax3)+1
-         endif
-
-         if (imin4.lt.imin3) then
-            imap_c(imin4) = imap_c(imin3)-1
-            write(*,*) 'force imin4 =>', imap_c(imin3)-1
-         endif
+         if (imax3.gt.imax2) imap_c(imax3) = imap_c(imax2)+1
+         if (imin3.lt.imin2) imap_c(imin3) = imap_c(imin2)-1
+         if (imax4.gt.imax3) imap_c(imax4) = imap_c(imax3)+1
+         if (imin4.lt.imin3) imap_c(imin4) = imap_c(imin3)-1
       endif
 ! End setup mapping to take care of cyclic boundary conditions
 ! ----------------------------------------------------------------<<<
