@@ -90,7 +90,7 @@
 
             EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
 
-            IF ( .NOT.IP_AT_T(IJK) .AND. EPGA>DIL_EP_S) THEN
+            IF ( .NOT.ip_at_t(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 
                IM = IM1(I)
                JM = JM1(J)
@@ -171,7 +171,7 @@
 
             ELSE
                lTAU_W_G(IJK) = ZERO
-            ENDIF   ! end if (.NOT. IP_AT_T(IJK) .AND. EPGA>DIL_EP_S)
+            ENDIF   ! end if (.NOT. ip_at_t(i,j,k) .AND. EPGA>DIL_EP_S)
          ENDDO
          ENDDO
          ENDDO

@@ -662,7 +662,7 @@
 ! Skip walls where some values are undefined.
         IF(wall_cell(i,j,k)) cycle
 
-         IF (.NOT.IP_AT_E(IJK)) THEN
+         IF (.NOT.ip_at_e(i,j,k)) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
@@ -869,7 +869,7 @@
         IF(wall_cell(i,j,k)) cycle
 
 
-         IF (.NOT.IP_AT_N(IJK)) THEN
+         IF (.NOT.ip_at_n(i,j,k)) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
@@ -1077,8 +1077,7 @@
 ! Skip walls where some values are undefined.
         IF(wall_cell(i,j,k)) cycle
 
-
-         IF (.NOT.IP_AT_T(IJK)) THEN
+         IF (.NOT.ip_at_t(i,j,k)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)

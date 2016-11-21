@@ -70,7 +70,7 @@ MODULE functions
 
 ! Logical functions to identify different impermeable/semipermeable
 ! surface boundaries (specific type of internal surface)
-! LOGICAL :: IP_AT_E, IP_AT_N, IP_AT_T
+! LOGICAL :: ip_at_e, ip_at_n, ip_at_t
 ! LOGICAL :: SIP_AT_E, SIP_AT_N, SIP_AT_T
 ! LOGICAL :: SP_AT_E, SP_AT_N, SP_AT_T
 

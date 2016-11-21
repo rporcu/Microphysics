@@ -44,9 +44,9 @@
           ijk = funijk(i,j,k)
 
          IF (.NOT.WALL_AT(IJK)) THEN
-            IF (IP_AT_E(IJK)) U_G(IJK) = ZERO
-            IF (IP_AT_N(IJK)) V_G(IJK) = ZERO
-            IF (IP_AT_T(IJK)) W_G(IJK) = ZERO
+            IF (ip_at_e(i,j,k)) U_G(IJK) = ZERO
+            IF (ip_at_n(i,j,k)) V_G(IJK) = ZERO
+            IF (ip_at_t(i,j,k)) W_G(IJK) = ZERO
          ELSE
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)

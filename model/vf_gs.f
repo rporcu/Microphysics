@@ -31,7 +31,7 @@
              do i = istart3, iend3
 
              ijk = funijk(i,j,k)
-            IF(IP_AT_E(IJK)) THEN
+            IF(ip_at_e(i,j,k)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKE = FUNIJK(ieast(i,j,k),j,k)
@@ -79,7 +79,7 @@
              do i = istart3, iend3
 
              ijk = funijk(i,j,k)
-            IF(IP_AT_N(IJK)) THEN
+            IF(ip_at_n(i,j,k)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
@@ -128,7 +128,7 @@
 
              ijk = funijk(i,j,k)
 
-            IF (IP_AT_T(IJK)) THEN
+            IF (ip_at_t(i,j,k)) THEN
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKT = FUNIJK(i,j,ktop(i,j,k))

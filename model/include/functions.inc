@@ -548,32 +548,29 @@
 ! Functions to identify a impermeable and/or semi-permeable surface at
 ! indicated boundary (specific type of internal surface)
 !---------------------------------------------------------------------//
-! Logical function to identify IP (impermeable surface) at East
-! of the cell
-      LOGICAL FUNCTION IP_AT_E(IJK)
-      USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IP_AT_E     = FLAG_E(IJK) .LT. 1000
-      END FUNCTION IP_AT_E
+! Logical function to identify IP (impermeable surface) East of the cell
+      logical function ip_at_e(i,j,k)
+      use geometry
+      implicit none
+      integer, intent(in) :: i,j,k
+      ip_at_e = flag_e(funijk(i,j,k)) .LT. 1000
+      end function ip_at_e
 
-! Logical function to identify IP (impermeable surface) at North
-! of the cell
-      LOGICAL FUNCTION IP_AT_N(IJK)
-      USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IP_AT_N     = FLAG_N(IJK) .LT. 1000
-      END FUNCTION IP_AT_N
+! Logical function to identify IP (impermeable surface) North of the cell
+      logical function ip_at_n(i,j,k)
+      use geometry
+      implicit none
+      integer, intent(in) :: i,j,k
+      ip_at_n = flag_n(funijk(i,j,k)) .LT. 1000
+      end function ip_at_n
 
-! Logical function to identify IP (impermeable surface) at Top
-! of the cell
-      LOGICAL FUNCTION IP_AT_T(IJK)
-      USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IP_AT_T     = FLAG_T(IJK) .LT. 1000
-      END FUNCTION IP_AT_T
+! Logical function to identify IP (impermeable surface) Top of the cell
+      logical function ip_at_t(i,j,k)
+      use geometry
+      implicit none
+      integer, intent(in) :: i,j,k
+      ip_at_t = flag_t(funijk(i,j,k)) .LT. 1000
+      end function ip_at_t
 
 ! Logical function to identify SP or IP (semi or impermeable surface)
 ! at east of the cell

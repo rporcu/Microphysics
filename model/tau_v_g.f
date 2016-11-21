@@ -81,7 +81,7 @@
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
             EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
-            IF ( .NOT.IP_AT_N(IJK) .AND. EPGA>DIL_EP_S) THEN
+            IF ( .NOT.ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 
                JP = JP1(J)
                IM = IM1(I)
@@ -158,7 +158,7 @@
 
             ELSE
                lTAU_V_G(IJK) = ZERO
-            ENDIF   ! end if (.NOT. IP_AT_N(IJK) .AND. EPGA>DIL_EP_S)
+            ENDIF   ! end if (.NOT. ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S)
          ENDDO
          ENDDO
          ENDDO

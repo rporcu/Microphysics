@@ -189,7 +189,7 @@
       USE geometry, only: ox
       USE geometry, only: ayz_v, axz_v, axy_v
 
-      USE indices, only: jp1, im1, km1
+      USE indices, only: IM1, JP1, KM1
 
       use matrix, only: e, w, n, s, t, b
       USE param1, only: zero

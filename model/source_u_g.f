@@ -124,7 +124,7 @@
            EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
 
 ! Impermeable internal surface
-         IF (IP_AT_E(IJK)) THEN
+         IF (ip_at_e(i,j,k)) THEN
             A_M(IJK,E) = ZERO
             A_M(IJK,W) = ZERO
             A_M(IJK,N) = ZERO

@@ -3,7 +3,7 @@ MODULE CALC_D_MOD
    use fun_avg, only: AVG_X, AVG_Y, AVG_Z
    use geometry, only: AYZ, AXZ, AXY
    use param1, only: ZERO, SMALL_NUMBER, ONE
-   use functions, only: IP_AT_E, IP_AT_N, IP_AT_T
+   use functions, only: ip_at_e, ip_at_n, ip_at_t
    use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
    CONTAINS
 
@@ -16,7 +16,7 @@ MODULE CALC_D_MOD
 
          IJK = FUNIJK(i,j,k)
 
-         IF (IP_AT_E(IJK) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
+         IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
             IJKE = FUNIJK(ieast(i,j,k),j,k)
@@ -34,7 +34,7 @@ MODULE CALC_D_MOD
 
          IJK = FUNIJK(i,j,k)
 
-         IF (IP_AT_N(IJK) .OR. MFLOW_AT_N(IJK)) THEN
+         IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(IJK)) THEN
             EPGA_Y = ZERO
          ELSE
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
@@ -51,7 +51,7 @@ MODULE CALC_D_MOD
          DOUBLE PRECISION :: AREA_FACE
 
          IJK = FUNIJK(i,j,k)
-         IF (IP_AT_T(IJK) .OR. MFLOW_AT_T(IJK)) THEN
+         IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(IJK)) THEN
             EPGA_Z = ZERO
          ELSE
             IJKT = FUNIJK(i,j,ktop(i,j,k))
@@ -81,7 +81,6 @@ MODULE CALC_D_MOD
 ! Pressure scale factor
       use scales, only: P_SCALE
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
-      use functions, only: IP_AT_N, MFLOW_AT_N
       use functions, only: funijk
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
