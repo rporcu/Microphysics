@@ -293,11 +293,6 @@
          write(44,*) "--------------------------------------------"
          write(44,*) "to proc start end",itoproc(lcount),lstart,lend
          write(44,*) "--------------------------------------------"
-         do lcount2 = lstart,lend
-          ijk = isendnodes(lcount2)
-          write(44,*)ijk,i_of(ijk),j_of(ijk),k_of(ijk)
-         end do
-         write(44,*) "--------------------------------------------"
       end do
       close (44)
       end subroutine des_dbgnodesr

@@ -49,7 +49,6 @@
 ! Function to deterine if a cell contains fluid.
       use functions, only: fluid_cell
       use functions, only: is_normal
-      use functions, only: i_of, j_of, k_of
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -94,9 +93,9 @@
       DO NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP)) CYCLE
 ! Avoid drag calculations in cells without fluid (cut-cell)
-         i = i_of(pijk(np,4))
-         j = j_of(pijk(np,4))
-         k = k_of(pijk(np,4))
+         i = pijk(np,1)
+         j = pijk(np,2)
+         k = pijk(np,3)
          if (.NOT.fluid_cell(i,j,k)) CYCLE
 
          lEPG = ZERO
@@ -346,8 +345,6 @@
 !---------------------------------------------------------------------//
 ! Functions to average momentum to scalar cell center.
       use fun_avg, only: AVG_X_E, AVG_Y_N, AVG_Z_T
-! Functions to lookup adjacent cells by index.
-      use indices, only: I_OF
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag for 3D simulatoins.
@@ -387,7 +384,7 @@
          IJK = FUNIJK(i,j,k)
          IF(fluid_cell(i,j,k)) THEN
             IMJK = funijk(iminus(i,j,k),j,k)
-            Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I_OF(IJK))
+            Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I)
 
             IJMK = funijk(i,jminus(i,j,k),k)
             Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)

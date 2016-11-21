@@ -39,8 +39,6 @@
       use functions, only: fluid_cell
       use functions, only: FUNIJK
 
-! The I, J, and K values that comprise an IJK
-      use indices, only: I_OF, J_OF, K_OF
 ! Rank ID of current process
       use compar, only: myPE
 ! Global communication function to sum to all ranks.
@@ -119,8 +117,8 @@
             IF(.NOT.fluid_cell(i,j,k)) CYCLE
             IF(EP_G(IJK) > ZERO .AND. EP_G(IJK) <= ONE) CYCLE
 
-            WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I_OF(IJK))),&
-               trim(iVal(J_OF(IJK))), trim(iVal(K_OF(IJK))),EP_G(IJK), &
+            WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&
+               trim(iVal(J)), trim(iVal(K)),EP_G(IJK), &
                trim(iVal(PINC(IJK))), VOL(IJK)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 

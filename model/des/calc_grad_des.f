@@ -46,7 +46,6 @@
       use geometry, only: oDX, oDY, oDZ
       USE geometry, only: IMIN1, JMIN1, KMIN1
       USE geometry, only: IMAX1, JMAX1, KMAX1
-      USE indices, only: I_OF, J_OF, K_OF
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: Funijk
@@ -156,7 +155,6 @@
 
       use functions, only: fluid_cell, FUNIJK
       use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE indices, only: I_OF, J_OF, K_OF
 
       use param, only: DIMENSION_3
       use param1, only: ZERO
@@ -194,13 +192,13 @@
 
          IF (fluid_cell(iplus(i,j,k),j,k)) then
             DEL_PHI(1,IJK) = DEL_PHI(1,IJK) +                          &
-               2.0d0*(PHI(IJKE) - PHI(IJK))/(DX(I) + DX(I_OF(IJKE)))
+               2.0d0*(PHI(IJKE) - PHI(IJK))/(DX(I) + DX(iplus(i,j,k)))
             dLC = dLC + 1.0d0
          ENDIF
 
          IF (fluid_cell(iminus(i,j,k),j,k)) then
             DEL_PHI(1,IJK) = DEL_PHI(1,IJK) +                          &
-               2.0d0*(PHI(IJK) - PHI(IJKW))/(DX(I) + DX(I_OF(IJKW)))
+               2.0d0*(PHI(IJK) - PHI(IJKW))/(DX(I) + DX(iminus(i,j,k)))
             dLC = dLC + 1.0d0
          ENDIF
 
@@ -212,13 +210,13 @@
 
          IF (fluid_cell(i,jplus(i,j,k),k)) then
             DEL_PHI(2,IJK) = DEL_PHI(2,IJK) +                          &
-               2.0d0*(PHI(IJKN) - PHI(IJK))/(DY(J) + DY(J_OF(IJKN)))
+               2.0d0*(PHI(IJKN) - PHI(IJK))/(DY(J) + DY(jplus(i,j,k)))
             dLC = dLC + 1.0d0
          ENDIF
 
          IF (fluid_cell(i,jminus(i,j,k),k)) then
             DEL_PHI(2,IJK) = DEL_PHI(2,IJK) +                          &
-               2.d0*(PHI(IJK) - PHI(IJKS))/(DY(J) + DY(J_OF(IJKS)))
+               2.d0*(PHI(IJK) - PHI(IJKS))/(DY(J) + DY(jminus(i,j,k)))
             dLC = dLC + 1.0d0
          ENDIF
          DEL_PHI(2,IJK) = DEL_PHI(2,IJK)/max(1.0d0, dLC)
@@ -231,12 +229,12 @@
 
             IF (fluid_cell(i,j,kplus(i,j,k))) then
                DEL_PHI(3,IJK) = DEL_PHI(3,IJK) +                       &
-                  2.0d0*(PHI(IJKT) - PHI(IJK))/(DZ(K) + DZ(K_OF(IJKT)))
+                  2.0d0*(PHI(IJKT) - PHI(IJK))/(DZ(K) + DZ(kplus(i,j,k)))
                dLC = dLC + 1.0d0
             ENDIF
             IF (fluid_cell(i,j,kminus(i,j,k))) then
                DEL_PHI(3,IJK) = DEL_PHI(3,IJK) +                       &
-                  2.0d0*(PHI(IJK) - PHI(IJKB))/(DZ(K) + DZ(K_OF(IJKB)))
+                  2.0d0*(PHI(IJK) - PHI(IJKB))/(DZ(K) + DZ(kminus(i,j,k)))
                dLC = dLC + 1.0d0
             ENDIF
             DEL_PHI(3,IJK) = DEL_PHI(3,IJK)/max(1.0d0, dLC)

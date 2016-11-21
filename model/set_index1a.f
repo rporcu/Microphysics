@@ -29,7 +29,8 @@
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-      INTEGER I, J, K, IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP, IJKW, IJKE, &
+      INTEGER, INTENT(IN) :: I, J, K, IJK
+      INTEGER, INTENT(OUT) :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP, IJKW, IJKE, &
          IJKS, IJKN, IJKB, IJKT
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -55,8 +56,8 @@
       TRUE_CORNER = .FALSE.
 
       IF(IM1(I).NE.UNDEFINED_I) THEN
-        
-        TRUE_CORNER = I_OF(IJK).EQ.IMIN1
+
+        TRUE_CORNER = (I == IMIN1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IMJK = IJK
@@ -77,7 +78,7 @@
 
       IF(IP1(I).NE.UNDEFINED_I) THEN
 
-        TRUE_CORNER = I_OF(IJK).EQ.IMAX1
+        TRUE_CORNER = (I == IMAX1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IPJK = IJK
@@ -99,7 +100,7 @@
 !  *************************************************************
       IF(JM1(J).NE.UNDEFINED_I) THEN
 
-        TRUE_CORNER = J_OF(IJK).EQ.JMIN1
+         TRUE_CORNER = (J == JMIN1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJMK = IJK
@@ -121,8 +122,8 @@
 !  IJKP
 !  *************************************************************
       IF(JP1(J).NE.UNDEFINED_I) THEN
-        
-        TRUE_CORNER = J_OF(IJK).EQ.JMAX1
+
+        TRUE_CORNER = (J == JMAX1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJPK = IJK
@@ -145,8 +146,8 @@
 !  IJKM
 !  *************************************************************
       IF(KM1(K).NE.UNDEFINED_I) THEN
-        
-        TRUE_CORNER = K_OF(IJK).EQ.KMIN1
+
+        TRUE_CORNER = (K == KMIN1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJKM = IJK
@@ -169,7 +170,7 @@
 !  *************************************************************
       IF(KP1(K).NE.UNDEFINED_I) THEN
 
-        TRUE_CORNER = K_OF(IJK).EQ.KMAX1
+        TRUE_CORNER = (K == KMAX1)
 
         IF((WALL_AT(IJK).OR.FLOW_AT(IJK)).AND.TRUE_CORNER) THEN
            IJKP = IJK

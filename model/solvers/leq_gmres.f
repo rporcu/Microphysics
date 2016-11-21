@@ -711,9 +711,13 @@
 
          do el=elstart,elend
             ijk2 = ijktable( el )
-            kk = k_of(ijk2)
-            jj = j_of(ijk2)
-            ii = i_of(ijk2)
+
+
+! HACK to remove reference to i_of, j_of, k_of. This routine isn't
+! invoked from any normal routines.
+!            kk = k_of(ijk2)
+!            jj = j_of(ijk2)
+!            ii = i_of(ijk2)
             is_bc_k = (kk < kstart2) .or. (kk > kend2)
             is_bc_j = (jj < jstart2) .or. (jj > jend2)
             is_bc_i = (ii < istart2) .or. (ii > iend2)

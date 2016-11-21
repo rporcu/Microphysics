@@ -82,9 +82,9 @@
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
          if(.not.fluid_cell(lli,llj,llk) .or. pinc(ijk).eq.0) cycle
-         i = i_of(ijk)
-         j = j_of(ijk)
-         k = k_of(ijk)
+         i = lli
+         j = llj
+         k = llk
 
 ! generally a particle may not exist in a ghost cell. however, if the
 ! particle is adjacent to the west, south or bottom boundary, then pcell
@@ -272,9 +272,9 @@
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
          IF(.NOT.fluid_cell(lli,llj,llk) .OR. PINC(IJK)==0) cycle
-         i = i_of(ijk)
-         j = j_of(ijk)
-         k = k_of(ijk)
+         i = lli
+         j = llj
+         k = llk
 
 ! generally a particle may not exist in a ghost cell. however, if the
 ! particle is adjacent to the west, south or bottom boundary, then pcell
@@ -405,9 +405,9 @@
 
          IF (fluid_cell(lli,llj,llk)) THEN
 
-            i = i_of(ijk)
-            j = j_of(ijk)
-            k = k_of(ijk)
+            i = lli
+            j = llj
+            k = llk
             if (i.lt.istart2 .or. i.gt.iend2) cycle
             if (j.lt.jstart2 .or. j.gt.jend2) cycle
             if (k.lt.kstart2 .or. k.gt.kend2) cycle

@@ -110,9 +110,9 @@
          IF(.NOT.fluid_cell(lli,llj,llk)) CYCLE
          IF( PINC(IJK) == 0) CYCLE
 
-         PCELL(1) = I_OF(IJK)-1
-         PCELL(2) = J_OF(IJK)-1
-         PCELL(3) = merge(K_OF(IJK)-1, 1, DO_K)
+         PCELL(1) = lli-1
+         PCELL(2) = llj-1
+         PCELL(3) = merge(llk-1, 1, DO_K)
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -277,18 +277,14 @@
       IF(DES_REPORT_MASS_INTERP) THEN
 
       DO llK = kstart3, kend3
-      DO llJ = jstart3, jend3
-      DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
+        DO llJ = jstart3, jend3
+         DO llI = istart3, iend3
+            IJK = FUNIJK(lli,llj,llk)
 
             IF(.NOT.fluid_cell(lli,llj,llk)) CYCLE
 
-            I = I_OF(IJK)
-            J = J_OF(IJK)
-            K = K_OF(IJK)
-
 ! It is important to check both fluid_cell and IS_ON_MYPE_WOBND.
-            IF(IS_ON_myPE_wobnd(I,J,K)) MASS_SOL2 = MASS_SOL2 +        &
+            IF(IS_ON_myPE_wobnd(llI,llJ,llK)) MASS_SOL2 = MASS_SOL2 +  &
                sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
          ENDDO
          ENDDO

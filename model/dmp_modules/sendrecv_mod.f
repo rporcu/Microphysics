@@ -935,15 +935,9 @@ contains
           ijk = recvijk1(ii)
           if(localfunc) then
              call ijk_of(ijk,i,j,k)
-          else
-             i = i_of(ijk)
-             j = j_of(ijk)
-             k = k_of(ijk)
-          endif
 
-          write(line(ip),9001) ii,ijk, i,j,k
-9001      format('recvijk1( ', i6,') = ', &
-               i6, '( ', i6,',',i6,',',i6,') ')
+          write(line(ip),9001) ii,ijk
+9001      format('recvijk1( ', i6,') = ', i6)
 
           ip = ip + 1
        enddo
@@ -960,15 +954,10 @@ contains
           ijk = recvijk2(ii)
           if(localfunc) then
              call ijk_of(ijk,i,j,k)
-          else
-             i = i_of(ijk)
-             j = j_of(ijk)
-             k = k_of(ijk)
           endif
 
           write(line(ip),9101) ii,ijk, i,j,k
-9101      format('recvijk2( ', i6,') = ', &
-               i6, '( ', i6,',',i6,',',i6,') ')
+9101      format('recvijk2( ', i6,') = ',  i6)
 
           ip = ip + 1
        enddo
@@ -990,15 +979,10 @@ contains
           ijk = sendijk1(ii)
           if(localfunc) then
              call ijk_of(ijk,i,j,k)
-          else
-             i = i_of(ijk)
-             j = j_of(ijk)
-             k = k_of(ijk)
           endif
 
           write(line(ip),9002) ii,ijk,   i,j,k
-9002      format('sendijk1( ', i6,') = ', &
-               i6, '( ', i6,',',i6,',',i6,') ')
+9002      format('sendijk1( ', i6,') = ',i6)
 
           ip = ip + 1
        enddo
@@ -1014,15 +998,10 @@ contains
           ijk = sendijk2(ii)
           if(localfunc) then
              call ijk_of(ijk,i,j,k)
-          else
-             i = i_of(ijk)
-             j = j_of(ijk)
-             k = k_of(ijk)
           endif
 
           write(line(ip),9102) ii,ijk,   i,j,k
-9102      format('sendijk2( ', i6,') = ', &
-               i6, '( ', i6,',',i6,',',i6,') ')
+9102      format('sendijk2( ', i6,') = ',i6)
 
           ip = ip + 1
        enddo

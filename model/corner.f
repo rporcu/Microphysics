@@ -57,12 +57,12 @@
          IF (WALL_AT(IJK).AND..NOT.CYCLIC_AT(IJK)) THEN
 !
 !----------------------------------------------------------------
-            IMJK = FUNIJK(iminus(i,j,k),j,k) 
-            IPJK = FUNIJK(iplus(i,j,k),j,k) 
-            IJMK = FUNIJK(i,jminus(i,j,k),k) 
-            IJPK = FUNIJK(i,jplus(i,j,k),k) 
-            IJKM = FUNIJK(i,j,kminus(i,j,k)) 
-            IJKP = FUNIJK(i,j,kplus(i,j,k)) 
+            IMJK = FUNIJK(iminus(i,j,k),j,k)
+            IPJK = FUNIJK(iplus(i,j,k),j,k)
+            IJMK = FUNIJK(i,jminus(i,j,k),k)
+            IJPK = FUNIJK(i,jplus(i,j,k),k)
+            IJKM = FUNIJK(i,j,kminus(i,j,k))
+            IJKP = FUNIJK(i,j,kplus(i,j,k))
 !----------------------------------------------------------------
             NUM = 0
 !
@@ -206,42 +206,42 @@
                   AXY(IJK) = ZERO
                   AXY(IJKM) = ZERO
 !
-                  jtmp = jminus(i,j,k) 
+                  jtmp = jminus(i,j,k)
                   AXZ_U(funijk(iminus(i,jtmp,k),jtmp,k)) = ZERO
 
                   AXZ_U(IJMK) = ZERO
                   AXZ_U(IMJK) = ZERO
                   AXZ_U(IJK) = ZERO
 !
-                  ktmp = kminus(i,j,k) 
+                  ktmp = kminus(i,j,k)
                   AXY_U(funijk(iminus(i,j,ktmp),j,ktmp)) = ZERO
 
                   AXY_U(IJKM) = ZERO
                   AXY_U(IMJK) = ZERO
                   AXY_U(IJK) = ZERO
 !
-                  itmp = iminus(i,j,k) 
+                  itmp = iminus(i,j,k)
                   AYZ_V(funijk(itmp,jminus(itmp,j,k),k)) = ZERO
 
                   AYZ_V(IMJK) = ZERO
                   AYZ_V(IJMK) = ZERO
                   AYZ_V(IJK) = ZERO
 !
-                  ktmp = kminus(i,j,k) 
+                  ktmp = kminus(i,j,k)
                   AXY_V(funijk(i,jminus(i,j,ktmp),ktmp)) = ZERO
 
                   AXY_V(IJKM) = ZERO
                   AXY_V(IJMK) = ZERO
                   AXY_V(IJK) = ZERO
 !
-                  itmp = iminus(i,j,k) 
+                  itmp = iminus(i,j,k)
                   AYZ_W(funijk(itmp,j,kminus(itmp,j,k))) = ZERO
 
                   AYZ_W(IMJK) = ZERO
                   AYZ_W(IJKM) = ZERO
                   AYZ_W(IJK) = ZERO
 !
-                  jtmp = jminus(i,j,k) 
+                  jtmp = jminus(i,j,k)
                   AXZ_W(funijk(i,jtmp,kminus(i,jtmp,k))) = ZERO
 
                   AXZ_W(IJMK) = ZERO
@@ -261,7 +261,7 @@
 !
          DO L = 1, NCORN
             IJK = IJK_CORN(L)
-            IF(DMP_LOG)WRITE (UNIT_LOG, 1100) IJK, I_OF(IJK), J_OF(IJK), K_OF(IJK)
+            IF(DMP_LOG)WRITE (UNIT_LOG, 1100) IJK
          END DO
          IF(DMP_LOG)WRITE (UNIT_LOG, 1300)
       ENDIF
@@ -272,8 +272,8 @@
          ' Warning: The following wall-cells are adjacent to two or',/,&
          ' more fluid-cells.  Mass, momentum, and energy transfer ',/,&
          ' to these wall-cells have been set to zero.',/,&
-         '     IJK     I     J     K')
- 1100 FORMAT(3X,I6,2X,I4,2X,I4,2X,I4)
+         '     IJK')
+ 1100 FORMAT(3X,I6)
 !
  1300 FORMAT(/1X,70('*')/)
       END SUBROUTINE GET_CORNER_CELLS

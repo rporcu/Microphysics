@@ -44,8 +44,6 @@
       use functions, only: IS_ENTERING, IS_ENTERING_GHOST
       use functions, only: IS_EXITING, IS_EXITING_GHOST
 
-      USE indices, only: I_OF, J_OF, K_OF
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Double precision values.
@@ -97,9 +95,9 @@
                IS_ENTERING(NP) .or. IS_ENTERING_GHOST(NP) .or.      &
                IS_EXITING(NP)  .or. IS_EXITING_GHOST(NP)) CYCLE
 
-            i = i_of(PIJK(NP,4))
-            j = j_of(PIJK(NP,4))
-            k = k_of(PIJK(NP,4))
+            i = PIJK(NP,1)
+            j = PIJK(NP,2)
+            k = PIJK(NP,3)
             if (.NOT.fluid_cell(i,j,k)) CYCLE
 
             IF(DES_INTERP_ON) THEN
