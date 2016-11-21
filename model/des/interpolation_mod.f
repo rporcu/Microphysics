@@ -578,9 +578,6 @@ MODULE interpolation
        ob2rtmp = ob2r
        ob2ltmp = ob2l
        ordertemp = order
-!!$       IF(order.NE.3.AND.(pc(1).EQ.1.OR.pc(1).EQ.im&
-!!$            &-1.OR.pc(2).EQ.1.OR.pc(2).EQ.jm&
-!!$            &-1.OR.pc(3).EQ.1.OR.pc(3).EQ.km-1)) order = 3
        !To make the order at boundary cells for csi equal to 3.
        !print*,'ob2l = ',ob2l,ob2r
        ib = MAX(1 ,pc(1) - (ob2l - 1)) !non-periodic
@@ -891,9 +888,6 @@ MODULE interpolation
              !zval(i) = shape4(zeta(3),i,dz)
              !Print*, ppos(1:3)
              !Print*,'int',i,xval(i),yval(i),zval(i)
-!!$          xval(i) = shape4new(ppos(1),coor(1:order,1,1,1),i)
-!!$          yval(i) = shape4new(ppos(2),coor(1,1:order,1,2),i)
-!!$          zval(i) = shape4new(ppos(3),coor(1,1,1:order,3),i)
           ENDDO
        CASE (5)
           DO i = 1,order
@@ -944,13 +938,6 @@ MODULE interpolation
 
              zetacsi(1,i) = ((-ppos(1) + coor(i,1,1))/dx(1))
              zetacsi(2,i) =((-ppos(2) + coor(1,i,2))/dy(1))
-             !zetacsi(3,i) = ((-ppos(3) + coor(1,1,i,3))/dz(1))
-!!$             zetacsi(1,i) = (ppos(1) - coor(1,1,1,1))/(coor(order,1,1&
-!!$                  &,1)-coor(1,1,1,1))
-!!$             zetacsi(2,i) = (ppos(2) - coor(1,1,1,2))/(coor(1,order,1&
-!!$                  &,2)-coor(1,1,1,2))
-!!$             zetacsi(3,i) = (ppos(3) - coor(1,1,1,3))/(coor(1,1,order&
-!!$                  &,3)-coor(1,1,1,3))
           END DO
           DO i = 1,order
              if((xval(1)-coor(1,1,1)).lt.dx(1)) then
@@ -975,11 +962,6 @@ MODULE interpolation
     !-------
     ! Calculate weights for the different nodes
     !-------
-    ! DO 10 k = 1,order
-!!$    DO 10 j = 1,order
-!!$    DO 10 i = 1,order
-!!$
-!!$    10 CONTINUE
     !If(order.eq.3) Print*,'in interpo...sum wt=,',sum(weights),order
 
     !-------
@@ -1147,9 +1129,6 @@ MODULE interpolation
              zval(i) = shape4(zeta(3),i,dz)
              !Print*, ppos(1:3)
              !Print*,'int',i,xval(i),yval(i),zval(i)
-!!$          xval(i) = shape4new(ppos(1),coor(1:order,1,1,1),i)
-!!$          yval(i) = shape4new(ppos(2),coor(1,1:order,1,2),i)
-!!$          zval(i) = shape4new(ppos(3),coor(1,1,1:order,3),i)
           ENDDO
        CASE (5)
           DO i = 1,order
@@ -1201,12 +1180,6 @@ MODULE interpolation
              zetacsi(1,i) = ((-ppos(1) + coor(i,1,1,1))/dx(1))
              zetacsi(2,i) =((-ppos(2) + coor(1,i,1,2))/dy(1))
              zetacsi(3,i) = ((-ppos(3) + coor(1,1,i,3))/dz(1))
-!!$             zetacsi(1,i) = (ppos(1) - coor(1,1,1,1))/(coor(order,1,1&
-!!$                  &,1)-coor(1,1,1,1))
-!!$             zetacsi(2,i) = (ppos(2) - coor(1,1,1,2))/(coor(1,order,1&
-!!$                  &,2)-coor(1,1,1,2))
-!!$             zetacsi(3,i) = (ppos(3) - coor(1,1,1,3))/(coor(1,1,order&
-!!$                  &,3)-coor(1,1,1,3))
           END DO
           DO i = 1,order
              if((xval(1)-coor(1,1,1,1)).lt.dx(1)) then
@@ -2088,17 +2061,6 @@ MODULE interpolation
     INTEGER:: i
 !-----------------------------------------------
 
-!!$    IF (zeta.GE.-two.AND.zeta.LE.-one) THEN
-!!$       shape3deriv_csi = (half)*(two+zeta)**2.0
-!!$    ELSEIF(zeta.GT.-one.AND.zeta.LE.zero) THEN
-!!$       shape3deriv_csi = (one/six)*(-9.0*zeta**2.0-12.0*zeta)
-!!$    ELSEIF(zeta.GT.zero.AND.zeta.LE.one) THEN
-!!$       shape3deriv_csi = (one/six)*(9.0*zeta**2.0-12.0*zeta)
-!!$    ELSEIF(zeta.GT.one.AND.zeta.LE.two) THEN
-!!$       shape3deriv_csi = (-half)*(two-zeta)**2.0
-!!$    ELSE
-!!$       shape3deriv_csi = zero
-!!$    ENDIF
     SELECT CASE (i)
     CASE (1)
        shape3deriv_csi = -two*(1-zeta)
@@ -2273,27 +2235,6 @@ MODULE interpolation
        !print*,'shape4rg .... zeta=',zeta,dim
     ENDIF
 
-!!$    IF (zeta.GE.-two.AND.zeta.LE.-one) THEN
-!!$       shape3csileft = (half)*(two+zeta)**2.0
-!!$    ELSEIF(zeta.GT.-one.AND.zeta.LE.zero) THEN
-!!$       shape3csileft = (half)*(-two*zeta**2.-two*zeta+one)
-!!$    ELSEIF(zeta.GT.zero.AND.zeta.LE.one) THEN
-!!$       shape3csileft = (half)*(one-zeta)**2.0
-!!$    ELSEIF(zeta.GT.one.AND.zeta.LE.two) THEN
-!!$       shape3csileft = (half)*(two-zeta)**2.0
-!!$    ELSE
-!!$       shape3csileft = zero
-!!$       !print*,'shape4rg .... zeta=',zeta,dim
-!!$    ENDIF
-!!$    SELECT CASE (i)
-!!$    CASE (1)
-!!$       shape3csileft = (1-zeta)**2.
-!!$       !shape4 = -(one/6.)*(zeta)*(zeta-one)*(zeta-two)
-!!$    CASE (2)
-!!$        shape3csileft = two*zeta*(1-zeta)
-!!$     CASE (3)
-!!$        shape3csileft = zeta**2.
-!!$     END SELECT
   END FUNCTION shape3csileft
 
 

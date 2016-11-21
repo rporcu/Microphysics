@@ -112,7 +112,7 @@ CONTAINS
 !-----------------------------------------------
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
     USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs, c0, c1, c2
-    USE geometry, ONLY: do_k, use_corecell_loop, CORE_ISTART, CORE_IEND, CORE_JSTART, CORE_JEND, CORE_KSTART, CORE_KEND
+    USE geometry, ONLY: do_k
     USE indices
     USE param, ONLY: DIMENSION_3
     USE sendrecv, ONLY: send_recv
@@ -141,89 +141,37 @@ CONTAINS
     integer :: j_start(2), j_end(2)
 !-----------------------------------------------
 
-          core_istart = istart+2
-          core_iend = iend-2
+      if (do_k) then
+         do k = kstart,kend
+            do i = istart,iend
+               do j = jstart,jend
+                  ijk = funijk(i,j,k)
+                  AVar(ijk) =  A_m(ijk,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
+                             + A_m(ijk,-2) * Var(funijk(i,jminus(i,j,k),k))   &
+                             + A_m(ijk,-1) * Var(funijk(iminus(i,j,k),j,k))   &
+                             + A_m(ijk, 0) * Var(funijk(i,j,k)            )   &
+                             + A_m(ijk, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
+                             + A_m(ijk, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
+                             + A_m(ijk, 3) * Var(funijk(i,j,kplus(i,j,k)) )
+               enddo
+            enddo
+         enddo
 
-          core_jstart = jstart+2
-          core_jend = jend-2
+      else
+         k = 1
+         do i = istart,iend
+            do j = jstart,jend
+               ijk = funijk(i,j,k)
+               AVar(ijk) =  A_m(ijk,-2) * Var(funijk(i,jminus(i,j,k),k))   &
+                          + A_m(ijk,-1) * Var(funijk(iminus(i,j,k),j,k))   &
+                          + A_m(ijk, 0) * Var(funijk(i,j,k)            )   &
+                          + A_m(ijk, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
+                          + A_m(ijk, 2) * Var(funijk(i,jplus(i,j,k),k) )
+            enddo
+         enddo
 
-          if (do_k) then
-             core_kstart = kstart+2
-             core_kend = kend-2
-          else
-             core_kstart = 1
-             core_kend = 1
-             kstart = 1
-             kend = 1
-          endif
+      endif
 
-          if (USE_CORECELL_LOOP) then
-
-          class = cell_class(funijk(core_istart,core_jstart,core_kstart))
-
-             do k = core_kstart,core_kend
-                do i = core_istart,core_iend
-                   do j = core_jstart,core_jend
-                      ijk = (j + c0 + i*c1 + k*c2)
-
-                      AVar(ijk) = &
-                           + A_m(ijk,-2) * Var(ijk+INCREMENT_FOR_MP(3,class))   &
-                           + A_m(ijk,-1) * Var(ijk+INCREMENT_FOR_MP(1,class))   &
-                           + A_m(ijk, 0) * Var(ijk)     &
-                           + A_m(ijk, 1) * Var(ijk+INCREMENT_FOR_MP(2,class))   &
-                           + A_m(ijk, 2) * Var(ijk+INCREMENT_FOR_MP(4,class))
-
-                      if (do_k) then
-                         AVar(ijk) =  AVar(ijk) + A_m(ijk,-3) * Var(ijk+INCREMENT_FOR_MP(5,class))
-                         AVar(ijk) =  AVar(ijk) + A_m(ijk, 3) * Var(ijk+INCREMENT_FOR_MP(6,class))
-                      endif
-                   enddo
-                enddo
-             enddo
-          endif
-
-          j_start(1) = jstart
-          j_end(1) = jend
-          j_start(2) = 0 ! no iterations
-          j_end(2) = -1  ! no iterations
-
-          do k = kstart,kend
-             do i = istart,iend
-
-                if  (USE_CORECELL_LOOP) then
-                   if (core_istart<= i .and. i <= core_iend .and. core_kstart <= k .and. k<=core_kend) then
-                      j_start(1) = jstart
-                      j_end(1) = core_jstart-1
-                      j_start(2) = core_jend+1
-                      j_end(2) = jend
-                   else
-                      j_start(1) = jstart
-                      j_end(1) = jend
-                      j_start(2) = 0 ! no iterations
-                      j_end(2) = -1  ! no iterations
-                   endif
-                endif
-
-                do interval=1,2
-                   do j = j_start(interval),j_end(interval)
-                      ijk = (j + c0 + i*c1 + k*c2)
-                      class = cell_class(ijk)
-
-                      AVar(ijk) = &
-                           + A_m(ijk,-2) * Var(ijk+INCREMENT_FOR_MP(3,class))   &
-                           + A_m(ijk,-1) * Var(ijk+INCREMENT_FOR_MP(1,class))   &
-                           + A_m(ijk, 0) * Var(ijk)     &
-                           + A_m(ijk, 1) * Var(ijk+INCREMENT_FOR_MP(2,class))   &
-                           + A_m(ijk, 2) * Var(ijk+INCREMENT_FOR_MP(4,class))
-
-                      if (do_k) then
-                         AVar(ijk) =  AVar(ijk) + A_m(ijk,-3) * Var(ijk+INCREMENT_FOR_MP(5,class))
-                         AVar(ijk) =  AVar(ijk) + A_m(ijk, 3) * Var(ijk+INCREMENT_FOR_MP(6,class))
-                      endif
-                   enddo
-                enddo
-             enddo
-          enddo
 
        call send_recv(Avar,nlayers_bicgs)
     RETURN
@@ -304,10 +252,6 @@ CONTAINS
     LOGICAL :: DO_SENDRECV, DO_REDBLACK, DO_ALL
 
 !-----------------------------------------------
-!!$      double precision omp_start, omp_end
-!!$      double precision omp_get_wtime
-!       by Tingwen
-!!$      omp_start=omp_get_wtime()
 
     IF (SETGUESS) THEN
        do k = kstart3,kend3
@@ -542,8 +486,6 @@ CONTAINS
 
 
     ENDDO   ! end do iter=1,niter
-!!$      omp_end=omp_get_wtime()
-!!$      write(*,*)'leq_msolve:',omp_end - omp_start
 
     RETURN
   END SUBROUTINE LEQ_MSOLVE
@@ -824,14 +766,13 @@ CONTAINS
       DO J=NSTART, NEND
 !         IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
          IJK = (J + C0 + I*C1 + K*C2)
-         CLASS = CELL_CLASS(IJK)
          DD(J) = A_M(IJK,  0)
          CC(J) = A_M(IJK, -2)
          EE(J) = A_M(IJK,  2)
-         BB(J) = B_M(IJK) -  A_M(IJK,-1) * Var( IJK+INCREMENT_FOR_MP(1,class) ) &
-                          -  A_M(IJK, 1) * Var( IJK+INCREMENT_FOR_MP(2,class) ) &
-                          -  A_M(IJK,-3) * Var( IJK+INCREMENT_FOR_MP(5,class) ) &
-                          -  A_M(IJK, 3) * Var( IJK+INCREMENT_FOR_MP(6,class) )
+         BB(J) = B_M(IJK) -  A_M(IJK,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
+                          -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) ) &
+                          -  A_M(IJK,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
+                          -  A_M(IJK, 3) * Var( funijk(i,j,kplus(i,j,k)) )
       ENDDO
 
       CC(NSTART) = ZERO
@@ -995,7 +936,7 @@ CONTAINS
          BB(K) = B_M(IJK)    -  A_M(IJK,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
                              -  A_M(IJK, 2) * Var( funijk(i,jplus(i,j,k),k) ) &
                              -  A_M(IJK,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
-                             -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) ) 
+                             -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) )
       ENDDO
 
       CC(NSTART) = ZERO

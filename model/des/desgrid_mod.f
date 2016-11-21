@@ -851,11 +851,6 @@
       double precision :: lcur_off
       integer il_off,iu_off,jl_off,ju_off,kl_off,ku_off
       integer, dimension(:), allocatable :: tmp_neigh
-!$    INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_tmp
-!$    INTEGER :: PAIR_NUM_SMP,PAIR_MAX_SMP, tt, curr_tt, diff, mm, lSIZE2, dd
-!$    INTEGER, DIMENSION(:,:), ALLOCATABLE :: PAIRS_SMP
-!$    INTEGER omp_get_num_threads
-!$    INTEGER omp_get_thread_num
 
 !-----------------------------------------------
 
@@ -953,27 +948,7 @@
             do lpicloc = 1,ltotpic
                lneigh = tmp_neigh(lpicloc)
                if (lneigh .ne. 0) then
-!$  if (.true.) then
-!!!!! SMP version
-
-!$      pair_num_smp = pair_num_smp + 1
-! Reallocate to double the size of the arrays if needed.
-!$      IF(PAIR_NUM_SMP > PAIR_MAX_SMP) THEN
-!$         PAIR_MAX_SMP = 2*PAIR_MAX_SMP
-!$         lSIZE2 = size(pairs_smp,2)
-
-!$         allocate(int_tmp(2,PAIR_MAX_SMP))
-!$         int_tmp(:,1:lSIZE2) = pairs_smp(:,1:lSIZE2)
-!$         call move_alloc(int_tmp,pairs_smp)
-!$      ENDIF
-
-!$      pairs_smp(1,pair_num_smp) = lcurpar
-!$      pairs_smp(2,pair_num_smp) = lneigh
-
-!$  else
-!!!!! Serial version
                   cc = add_pair(lcurpar, lneigh)
-!$  endif
                endif
             end do
          end do

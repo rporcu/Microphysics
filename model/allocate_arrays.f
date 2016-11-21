@@ -294,11 +294,6 @@
       CALL INIT_ERR_MSG("ALLOCATE_ARRAYS_INCREMENTS")
 
 ! Allocate increment arrays and report an allocation errors.
-      Allocate( I_OF (DIMENSION_3), STAT=IER)
-      Allocate( J_OF (DIMENSION_3), STAT=IER)
-      Allocate( K_OF (DIMENSION_3), STAT=IER)
-      IF(IER /= 0) goto 500
-
       Allocate( Im1 (0:DIMENSION_I), STAT=IER)
       Allocate( Ip1 (0:DIMENSION_I), STAT=IER)
       IF(IER /= 0) goto 500
@@ -310,33 +305,6 @@
       Allocate( Km1 (0:DIMENSION_K), STAT=IER)
       Allocate( Kp1 (0:DIMENSION_K), STAT=IER)
       IF(IER /= 0) goto 500
-
-      Allocate( STORE_LM (DIMENSION_M, DIMENSION_M), STAT=IER)
-      Allocate( CELL_CLASS (DIMENSION_3), STAT=IER)
-      IF(IER /= 0) goto 500
-
-
-! Allocate increment arrays and report an allocation errors.
-      Allocate( I3_OF (DIMENSION_4), STAT=IER)
-      Allocate( J3_OF (DIMENSION_4), STAT=IER)
-      Allocate( K3_OF (DIMENSION_4), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( Im1_3 (-1:DIMENSION_I+1), STAT=IER)
-      Allocate( Ip1_3 (-1:DIMENSION_I+1), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( Jm1_3 (-1:DIMENSION_J+1), STAT=IER)
-      Allocate( Jp1_3 (-1:DIMENSION_J+1), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( Km1_3 (-1:DIMENSION_K+1), STAT=IER)
-      Allocate( Kp1_3 (-1:DIMENSION_K+1), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( CELL_CLASS3 (DIMENSION_4), STAT=IER)
-      IF(IER /= 0) goto 500
-
 
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.

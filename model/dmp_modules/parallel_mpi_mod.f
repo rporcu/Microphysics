@@ -26,13 +26,6 @@ module parallel_mpi
 
       integer :: ierr
 
-!$    integer :: num_threads, threads_specified, omp_id
-!$    integer :: omp_get_num_threads
-!$    integer :: omp_get_thread_num
-!$    character(len=512) :: omp_num_threads
-!$    integer :: length
-!$    integer :: status
-
 ! Variables for generating file basename with processor id
       integer :: i1, i10, i100, i1000, i10000
 

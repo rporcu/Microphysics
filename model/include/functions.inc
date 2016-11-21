@@ -181,105 +181,6 @@
       END FUNCTION IS_ON_myPE_plus2layers
 
 !---------------------------------------------------------------------//
-! Function for calculating IMJK:  IM_OF, IM_OF_0
-! Returns composite ijk index for i-1, j, k
-      INTEGER FUNCTION IM_OF  (IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      IM_OF = IJK + INCREMENT_FOR_MP(1,CELL_CLASS(IJK))
-      END FUNCTION IM_OF
-
-! Function for calculating IPJK:  IP_OF, IP_OF_0
-! Returns composite ijk index for i+1, j, k
-      INTEGER FUNCTION IP_OF  (IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      IP_OF = IJK + INCREMENT_FOR_MP(2,CELL_CLASS(IJK))
-      END FUNCTION IP_OF
-
-! Function for calculating IJMK:  JM_OF, JM_OF_0
-! Returns composite ijk index for i, j-1, k
-      INTEGER FUNCTION JM_OF (IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      JM_OF = IJK + INCREMENT_FOR_MP(3,CELL_CLASS(IJK))
-      END FUNCTION JM_OF
-
-! Function for calculating IJPK:  JP_OF, JP_OF_0
-! Returns composite ijk index for i, j+1, k
-      INTEGER FUNCTION JP_OF (IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      JP_OF = IJK + INCREMENT_FOR_MP(4,CELL_CLASS(IJK))
-      END FUNCTION JP_OF
-
-! Function for calculating IJKM:  KM_OF, KM_OF_0
-! Returns composite ijk index for i, j, k-1
-      INTEGER FUNCTION KM_OF(IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      KM_OF = IJK + INCREMENT_FOR_MP(5,CELL_CLASS(IJK))
-      END FUNCTION KM_OF
-
-! Function for calculating IJKP:  KP_OF, KP_OF_0
-! Returns composite ijk index for i, j, k+1
-      INTEGER FUNCTION KP_OF   (IJK)
-      USE indices, only: increment_for_mp, cell_class
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      KP_OF = IJK + INCREMENT_FOR_MP(6,CELL_CLASS(IJK))
-      END FUNCTION KP_OF
-
-      INTEGER FUNCTION IM_OF_0  (IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      IM_OF_0 = IJK + INCREMENT_FOR_im(CELL_CLASS(IJK))
-      END FUNCTION IM_OF_0
-
-      INTEGER FUNCTION IP_OF_0  (IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      IP_OF_0 = IJK + INCREMENT_FOR_ip(CELL_CLASS(IJK))
-      END FUNCTION IP_OF_0
-
-      INTEGER FUNCTION JM_OF_0 (IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      JM_OF_0 = IJK + INCREMENT_FOR_jm(CELL_CLASS(IJK))
-      END FUNCTION JM_OF_0
-
-      INTEGER FUNCTION JP_OF_0 (IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      JP_OF_0 = IJK + INCREMENT_FOR_jp(CELL_CLASS(IJK))
-      END FUNCTION JP_OF_0
-
-      INTEGER FUNCTION KM_OF_0(IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      KM_OF_0 = IJK + INCREMENT_FOR_km(CELL_CLASS(IJK))
-      END FUNCTION KM_OF_0
-
-      INTEGER FUNCTION KP_OF_0   (IJK)
-      USE indices
-      IMPLICIT NONE
-      INTEGER IJK
-      KP_OF_0 = IJK + INCREMENT_FOR_kp(CELL_CLASS(IJK))
-      END FUNCTION KP_OF_0
-
-
-! logical function to identify various fluid/flow cells
-!---------------------------------------------------------------------//
 ! logical function to identify a fluid cell
       LOGICAL FUNCTION FLUID_AT(IJK)
       USE geometry, only: flag
@@ -707,14 +608,6 @@
 
 ! Misc
 !---------------------------------------------------------------------//
-! Function for generating the index for the entries to the upper
-! triangle (excluding the diagonal) of an (L,M) matrix.
-      INTEGER FUNCTION FUNLM (L1, L2)
-      USE indices, only: store_lm
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: L1, L2
-      FUNLM = STORE_LM (L1, L2)
-      END FUNCTION FUNLM
 
 ! Function that returns the maximum of zero or input
       DOUBLE PRECISION FUNCTION ZMAX(XXX)
