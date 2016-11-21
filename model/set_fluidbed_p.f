@@ -22,7 +22,6 @@
       USE funits
       USE geometry
       USE ic
-      USE indices
       USE mpi_utility
       USE param
       USE param1

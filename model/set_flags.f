@@ -17,7 +17,6 @@
       USE fldvar
       USE geometry
       USE bc
-      USE indices
       USE physprop
       USE funits
       USE compar
@@ -186,7 +185,6 @@
       USE fldvar
       USE geometry
       USE bc
-      USE indices
       USE physprop
       USE funits
       USE compar

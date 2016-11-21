@@ -23,7 +23,6 @@
       USE param1, ONLY: ZERO, ONE, UNDEFINED
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run
@@ -218,7 +217,6 @@
       USE param1
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run
@@ -423,7 +421,6 @@
       USE param1
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run
@@ -589,7 +586,6 @@
       USE param1
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run
@@ -796,7 +792,6 @@
       USE param1
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run
@@ -1005,7 +1000,6 @@
       USE param1
       use matrix, only: e, w, s, n, t, b
       USE geometry
-      USE indices
       USE compar
       USE mpi_utility
       USE run

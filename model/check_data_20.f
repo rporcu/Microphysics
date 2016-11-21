@@ -35,7 +35,6 @@
       USE geometry
       USE constant
       USE physprop
-      USE indices
       USE funits
       USE compar
       USE sendrecv

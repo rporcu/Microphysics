@@ -14,7 +14,6 @@
       USE functions
       USE funits
       USE geometry
-      USE indices
       use matrix, only: e, w, s, n, t, b
       USE param
       USE param1

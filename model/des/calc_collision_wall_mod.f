@@ -34,7 +34,6 @@
       USE geometry
       USE compar
       USE constant
-      USE indices
       USE stl
       USE stl_functions_des
       USE functions

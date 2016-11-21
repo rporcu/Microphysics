@@ -32,7 +32,6 @@
       USE geometry
       USE fldvar
       USE physprop
-      USE indices
       USE funits
       USE compar
       USE mpi_utility

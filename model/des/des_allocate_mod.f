@@ -28,7 +28,6 @@ CONTAINS
       USE param1
       USE constant
       USE discretelement
-      Use indices
       Use geometry
       Use compar
       Use physprop

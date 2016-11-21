@@ -15,7 +15,6 @@
       USE drag
       USE fldvar
       USE geometry
-      USE indices
       USE leqsol
       USE matrix
       USE output

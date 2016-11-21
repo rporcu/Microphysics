@@ -1099,7 +1099,6 @@
 
       use compar
       use geometry
-      use indices
 
 ! Module procedures
 !---------------------------------------------------------------------//

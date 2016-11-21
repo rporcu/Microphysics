@@ -233,7 +233,6 @@
       USE run
       USE toleranc
       USE geometry
-      USE indices
       USE bc
       USE output
       USE compar
@@ -242,6 +241,7 @@
       USE functions, only: kminus, kplus
       USE functions, only: funijk, fluid_cell, wall_cell, ns_wall_cell, fs_wall_cell
       USE functions, only: is_on_mype_plus2layers
+      USE functions, only: im1, jm1
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -729,7 +729,6 @@
       use compar
       use constant
       use geometry
-      use indices
       use param1, only: small_number, zero
       use fldvar
       use ps

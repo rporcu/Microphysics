@@ -176,7 +176,7 @@
       USE geometry, only: ox
       USE geometry, only: ayz_w, axz_w, axy_w
 
-      USE indices, only: IM1, JM1, KP1
+      USE functions, only: im1, jm1, kp1
 
       use matrix, only: e, w, n, s, t, b
       use fldvar

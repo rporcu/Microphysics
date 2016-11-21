@@ -139,7 +139,6 @@
       USE discretelement
       USE funits
       USE geometry
-      USE indices
       USE param1
       USE physprop
       USE functions

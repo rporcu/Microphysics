@@ -56,7 +56,7 @@
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
          USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
-         USE indices, only: ip1
+         USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param, only: dimension_3
          USE param1, only: ONE, ZERO, small_number

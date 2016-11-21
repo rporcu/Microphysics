@@ -35,7 +35,6 @@
       USE ps
       USE fldvar
       USE constant
-      USE indices
       USE toleranc
       USE scales
       USE ur_facs

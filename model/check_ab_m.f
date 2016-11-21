@@ -29,7 +29,6 @@
       USE param
       USE param1
       USE geometry
-      USE indices
       USE compar
       USE functions
       IMPLICIT NONE
@@ -86,7 +85,6 @@
       USE param
       USE param1
       USE geometry
-      USE indices
       USE compar
       USE functions
       IMPLICIT NONE

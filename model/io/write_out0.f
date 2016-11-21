@@ -19,7 +19,6 @@
       USE funits
       USE geometry
       USE ic
-      USE indices
       USE leqsol
       USE machine
       USE mpi_utility
@@ -636,7 +635,6 @@
       USE param1
       USE funits
       USE geometry
-      USE indices
       USE compar         !//d
       USE mpi_utility    !//d
       USE sendrecv    !//d

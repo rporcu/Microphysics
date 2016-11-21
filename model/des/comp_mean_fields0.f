@@ -12,7 +12,6 @@
       USE fldvar
       USE run
       USE geometry
-      USE indices
       USE bc
       USE compar
       USE sendrecv

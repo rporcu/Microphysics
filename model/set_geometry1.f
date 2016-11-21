@@ -28,7 +28,6 @@
       USE param1
       USE run
       USE geometry
-      USE indices
       USE compar
       USE functions
 

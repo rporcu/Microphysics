@@ -14,7 +14,6 @@
       USE param
       USE param1
       USE discretelement
-      USE indices
       USE geometry
       USE compar
       USE physprop

@@ -16,7 +16,6 @@
 
       USE compar
       USE mpi_utility
-      USE indices
       USE functions
       use machine
 

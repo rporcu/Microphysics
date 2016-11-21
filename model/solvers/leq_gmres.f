@@ -21,7 +21,6 @@
 ! Modules
 !-----------------------------------------------
       USE GEOMETRY
-      USE INDICES
       USE PARAM
       USE PARAM1
       USE compar
@@ -98,7 +97,6 @@
 ! Modules
 !-----------------------------------------------
       USE GEOMETRY
-      USE INDICES
       USE PARAM
       USE PARAM1
       USE debug
@@ -638,7 +636,6 @@
       USE PARAM
       USE PARAM1
       USE GEOMETRY
-      USE INDICES
       USE debug
       USE compar
       USE mpi_utility

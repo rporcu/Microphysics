@@ -186,7 +186,6 @@
       use fldvar
       use geometry
       use ic
-      use indices
       use param
       use param1
       use physprop

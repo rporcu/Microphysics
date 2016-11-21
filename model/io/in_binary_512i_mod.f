@@ -103,7 +103,6 @@ CONTAINS
       subroutine convert_from_io_i(arr_io,arr_internal,n)
 
       use geometry
-      use indices
       use compar
       use functions
 
@@ -141,7 +140,6 @@ CONTAINS
       subroutine convert_to_io_i(arr_internal,arr_io,n)
 
       use geometry
-      use indices
       use compar
       use functions
 
@@ -166,7 +164,6 @@ CONTAINS
       subroutine convert_to_io_c(arr_internal,arr_io,n)
 
       use geometry
-      use indices
       use compar
       use functions
 

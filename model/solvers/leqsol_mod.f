@@ -110,10 +110,8 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
     USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs, c0, c1, c2
     USE geometry, ONLY: do_k
-    USE indices
     USE param, ONLY: DIMENSION_3
     USE sendrecv, ONLY: send_recv
     IMPLICIT NONE
@@ -210,7 +208,6 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
-    USE indices
     USE sendrecv
     USE functions
     IMPLICIT NONE
@@ -515,7 +512,6 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
-    USE indices
     USE sendrecv
     IMPLICIT NONE
 !-----------------------------------------------
@@ -583,9 +579,7 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
-    USE indices
     USE sendrecv
-!      USE cutcell, only: RE_INDEXING,INTERIOR_CELL_AT
     USE functions
     IMPLICIT NONE
 !-----------------------------------------------
@@ -649,7 +643,6 @@ CONTAINS
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE funits
       USE sendrecv
       USE mpi_utility
@@ -734,7 +727,6 @@ CONTAINS
       USE geometry
       USE compar
       USE funits
-      USE indices
       USE sendrecv
       USE mpi_utility
       USE functions
@@ -764,7 +756,6 @@ CONTAINS
       NSTART = JSTART
 
       DO J=NSTART, NEND
-!         IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
          IJK = (J + C0 + I*C1 + K*C2)
          DD(J) = A_M(IJK,  0)
          CC(J) = A_M(IJK, -2)
@@ -820,7 +811,6 @@ CONTAINS
       USE geometry
       USE funits
       USE compar
-      USE indices
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -902,7 +892,6 @@ CONTAINS
       USE geometry
       USE funits
       USE compar
-      USE indices
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -973,7 +962,6 @@ CONTAINS
     use mpi_utility
     use geometry
     use compar
-    use indices
     use functions
     implicit none
 !-----------------------------------------------
@@ -1058,7 +1046,6 @@ CONTAINS
     use mpi_utility
     use geometry
     use compar
-    use indices
     use functions
     implicit none
 !-----------------------------------------------

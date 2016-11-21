@@ -218,7 +218,7 @@
       use param1, only: zero
       use scales, only: scale_pressure
 
-      use indices, only: im1, jm1, km1
+      use functions, only: im1, jm1, km1
       use functions, only: is_on_mype_plus2layers
       use boundfunijk, only: bound_funijk
       use compar, only: dead_cell_at
@@ -516,7 +516,6 @@
 !--------------------------------------------------------------------//
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
-      use indices
       use param1, only: undefined_i
       use mpi_utility
       use functions

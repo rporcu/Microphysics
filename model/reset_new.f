@@ -29,7 +29,6 @@
       USE param1
       USE fldvar
       USE geometry
-      USE indices
       USE physprop
       USE run
 

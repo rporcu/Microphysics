@@ -6,7 +6,6 @@
     use compar
     use geometry
     use parallel_mpi
-    use indices
 
     implicit none
 

@@ -21,7 +21,6 @@
       USE fldvar
       USE funits
       USE geometry
-      USE indices
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
       USE param
       USE param1

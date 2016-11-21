@@ -15,7 +15,6 @@
       USE fun_avg
       USE functions
       USE geometry
-      USE indices
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -58,7 +57,6 @@
       SUBROUTINE VF_GS_Y
 
       USE geometry
-      USE indices
       USE compar
       USE drag
       USE discretelement
@@ -106,7 +104,6 @@
       SUBROUTINE VF_GS_Z
 
       USE geometry
-      USE indices
       USE compar
       USE drag
       USE discretelement
@@ -142,4 +139,3 @@
 
       RETURN
       END SUBROUTINE VF_GS_Z
-

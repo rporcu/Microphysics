@@ -13,7 +13,6 @@
       USE geometry
       USE compar
       USE fldvar
-      USE indices
       USE functions
       IMPLICIT NONE
 !

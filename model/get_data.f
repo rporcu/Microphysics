@@ -103,8 +103,6 @@
 
 ! Set the flags for identifying computational cells
       CALL SET_FLAGS
-! Set arrays for computing indices
-      CALL SET_INCREMENTS
 
       IF(DISCRETE_ELEMENT) THEN
          CALL DESGRID_INIT

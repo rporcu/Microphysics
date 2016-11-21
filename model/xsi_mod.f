@@ -39,7 +39,7 @@
       USE geometry, only: odx, odx_e, ody, ody_n, odz, odz_t
       USE geometry, only: ox
 
-      USE indices, only: im1, ip1, jm1, jp1, km1, kp1
+      USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
       USE param, only: dimension_3
 

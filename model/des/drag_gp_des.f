@@ -29,7 +29,6 @@
       USE fldvar
       USE functions
       USE geometry
-      USE indices
       USE param
       USE param1
       USE physprop

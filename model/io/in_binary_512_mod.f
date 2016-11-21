@@ -104,7 +104,6 @@ CONTAINS
       subroutine convert_from_io_dp(arr_io,arr_internal,n)
 
       use geometry
-      use indices
       USE compar
       USE functions
 
@@ -129,7 +128,6 @@ CONTAINS
       subroutine convert_to_io_dp(arr_internal,arr_io,n)
 
       use geometry
-      use indices
       USE compar
       USE functions
 

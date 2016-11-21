@@ -47,7 +47,6 @@
       USE run
       USE toleranc, only: dil_ep_s
       USE geometry
-      USE indices
       USE compar
       USE sendrecv
       USE functions

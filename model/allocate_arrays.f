@@ -19,7 +19,6 @@
       Use drag
       Use fldvar
       Use geometry
-      Use indices
       Use physprop
       Use residual
       Use run
@@ -245,83 +244,3 @@
 
       RETURN
       END SUBROUTINE ALLOCATE_ARRAYS_GEOMETRY
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Module name: ALLOCATE_ARRAYS_INCREMENTS                             !
-!  Author: M. Syamlal, W. Rogers                      Date: 10-DEC-91  !
-!                                                                      !
-!  Purpose: The purpose of this module is to create increments to be   !
-!           stored in the array STORE_INCREMENT which will be added    !
-!           to cell index ijk to find the effective indices of its     !
-!           neighbors. These increments are found using the 'class'    !
-!           of cell ijk. The class is determined based on the          !
-!           neighboring cell type, i.e. wall or fluid.                 !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE ALLOCATE_ARRAYS_INCREMENTS
-
-      USE param
-      USE param1
-      USE indices
-      USE geometry
-      USE compar
-      USE physprop
-      USE fldvar
-      USE funits
-
-! Module procedures
-!---------------------------------------------------------------------//
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use error_manager
-
-
-      IMPLICIT NONE
-
-
-! Local Variables:
-!---------------------------------------------------------------------//
-! Error flag.
-      INTEGER :: IER
-! Flag indicating that the arrays were previously allocated.
-      LOGICAL, SAVE :: ALREADY_ALLOCATED = .FALSE.
-!......................................................................!
-
-      IF(ALREADY_ALLOCATED) RETURN
-
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("ALLOCATE_ARRAYS_INCREMENTS")
-
-! Allocate increment arrays and report an allocation errors.
-      Allocate( Im1 (0:DIMENSION_I), STAT=IER)
-      Allocate( Ip1 (0:DIMENSION_I), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( Jm1 (0:DIMENSION_J), STAT=IER)
-      Allocate( Jp1 (0:DIMENSION_J), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      Allocate( Km1 (0:DIMENSION_K), STAT=IER)
-      Allocate( Kp1 (0:DIMENSION_K), STAT=IER)
-      IF(IER /= 0) goto 500
-
-! Collect the error flags from all ranks. If all allocaitons were
-! successfull, do nothing. Otherwise, flag the error and abort.
-! Note that the allocation status is checked in groups. This can
-! be increase if tracking the source of an allocation failure.
-  500 CALL GLOBAL_ALL_SUM(IER)
-
-      IF(IER /= 0) THEN
-         WRITE(ERR_MSG,1100)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 1100 FORMAT('Error 1100: Failure during array allocation.')
-
-      ALREADY_ALLOCATED = .TRUE.
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE ALLOCATE_ARRAYS_INCREMENTS

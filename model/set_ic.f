@@ -19,7 +19,6 @@
       USE physprop
       USE ic
       USE fldvar
-      USE indices
       USE scales
       USE compar
       USE run

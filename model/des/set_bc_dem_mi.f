@@ -20,7 +20,6 @@
       USE error_manager
       USE funits
       USE geometry
-      USE indices
       USE param
       USE param1
       USE physprop

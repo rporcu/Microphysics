@@ -13,7 +13,6 @@
       USE physprop
       USE geometry
       USE fldvar
-      USE indices
       USE constant
       USE toleranc
       USE compar

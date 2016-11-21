@@ -45,7 +45,6 @@
       use matrix, only: e, w, s, n, t, b
       USE physprop
       USE geometry
-      USE indices
       USE compar
       USE functions
       IMPLICIT NONE

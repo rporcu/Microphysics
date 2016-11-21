@@ -23,7 +23,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE leqsol
       USE funits
       IMPLICIT NONE
@@ -107,7 +106,6 @@
       USE compar
       USE mpi_utility
       USE sendrecv
-      USE indices
       USE leqsol
       USE functions
 

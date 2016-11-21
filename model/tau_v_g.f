@@ -44,7 +44,6 @@
       USE run
       USE toleranc
       USE geometry
-      USE indices
       USE sendrecv
       USE compar
       USE functions

@@ -18,7 +18,6 @@
       USE funits
       USE geometry
       USE ic
-      USE indices
       USE leqsol
       USE output
       USE param

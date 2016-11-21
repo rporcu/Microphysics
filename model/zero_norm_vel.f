@@ -24,7 +24,6 @@
       USE geometry
       USE physprop
       USE fldvar
-      USE indices
       USE compar
       USE discretelement
       USE functions

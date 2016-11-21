@@ -270,7 +270,6 @@
       use constant, only: PI
 
       use desgrid
-      use indices
       use functions
 
       IMPLICIT NONE

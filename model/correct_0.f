@@ -19,7 +19,6 @@
       USE param
       USE param1
       USE geometry
-      USE indices
       USE physprop
       USE compar
       USE functions, only: funijk, ieast, jnorth, ktop

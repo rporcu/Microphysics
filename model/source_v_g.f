@@ -223,7 +223,6 @@
       USE run
       USE toleranc
       USE geometry
-      USE indices
       USE bc
       USE output
       USE compar
@@ -233,6 +232,7 @@
       USE functions, only: ieast,iwest,jnorth,jsouth,kbot,ktop
       USE functions, only: jminus,jplus
       USE functions, only: fs_wall_cell, ns_wall_cell
+      USE functions, only: im1, jm1, km1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy Arguments
@@ -710,7 +710,6 @@
       use compar
       use constant
       use geometry
-      use indices
       use param1, only: small_number
       use fldvar
       use ps

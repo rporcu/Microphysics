@@ -22,7 +22,6 @@
 ! Modules
 !-----------------------------------------------
       USE geometry
-      USE indices
       USE mpi_utility
       USE param
       USE param1

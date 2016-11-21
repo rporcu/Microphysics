@@ -731,6 +731,7 @@
 
       end function iminus
 
+
       ! ************************************************
 
       integer function iplus(i,j,k)
@@ -947,3 +948,121 @@
       end if
 
       end function kbot
+
+! ************************************************
+
+      integer function im1(i)
+
+      use compar, only: nodesi, istart3
+      use geometry, only  : imin1, imin2, imax1, cyclic_x
+      implicit none
+      integer, intent(in) :: i
+
+      if(i==imin2) then
+         im1 = imin2
+      elseif(cyclic_x .and. nodesi == 1 .and. i==imin1 ) then
+         im1 = imax1
+      else
+         im1 = max(istart3, i-1)
+      endif
+
+      end function im1
+
+! ************************************************
+
+      integer function ip1(i)
+
+      use compar, only: nodesi, iend3
+      use geometry, only  : imin1, imax2, imax1, cyclic_x
+      implicit none
+      integer, intent(in) :: i
+
+      if(i==imax2) then
+         ip1 = imax2
+      elseif(cyclic_x .and. nodesi == 1 .and. i==imax1 ) then
+         ip1 = imin1
+      else
+         ip1 = min(iend3, i+1)
+      endif
+
+      end function ip1
+
+! ************************************************
+
+      integer function jm1(j)
+
+      use compar, only: nodesj, jstart3
+      use geometry, only  : jmin1, jmin2, jmax1, cyclic_y
+      implicit none
+      integer, intent(in) :: j
+
+      if(j==jmin2) then
+         jm1 = jmin2
+      elseif(cyclic_y .and. nodesj == 1 .and. j==jmin1 ) then
+         jm1 = jmax1
+      else
+         jm1 = max(jstart3, j-1)
+      endif
+
+      end function jm1
+
+! ************************************************
+
+      integer function jp1(j)
+
+      use compar, only: nodesj, jend3
+      use geometry, only  : jmin1, jmax2, jmax1, cyclic_y
+      implicit none
+      integer, intent(in) :: j
+
+      if(j==jmax2) then
+         jp1 = jmax2
+      elseif(cyclic_y .and. nodesj == 1 .and. j==jmax1 ) then
+         jp1 = jmin1
+      else
+         jp1 = min(jend3, j+1)
+      endif
+
+      end function jp1
+
+! ************************************************
+
+      integer function km1(k)
+
+      use compar, only: nodesk, kstart3
+      use geometry, only: no_k, kmin1, kmin2, kmax1, cyclic_z
+      implicit none
+      integer, intent(in) :: k
+
+      if(no_k) then
+         km1 = kmax1
+      elseif(k==kmin2) then
+         km1 = kmin2
+      elseif(cyclic_z .and. nodesk == 1 .and. k==kmin1 ) then
+         km1 = kmax1
+      else
+         km1 = max(kstart3, k-1)
+      endif
+
+      end function km1
+
+! ************************************************
+
+      integer function kp1(k)
+
+      use compar, only: nodesk, kend3
+      use geometry, only: no_k, kmin1, kmax2, kmax1, cyclic_z
+      implicit none
+      integer, intent(in) :: k
+
+      if(no_k)then
+         kp1 = kmin1
+      elseif(k==kmax2) then
+         kp1 = kmax2
+      elseif(cyclic_z .and. nodesk == 1 .and. k==kmax1 ) then
+         kp1 = kmin1
+      else
+         kp1 = min(kend3, k+1)
+      endif
+
+      end function kp1

@@ -14,7 +14,6 @@
       USE fldvar
       USE funits
       USE geometry
-      USE indices
       USE leqsol
       USE mpi_utility
       USE output

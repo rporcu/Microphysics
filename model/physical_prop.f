@@ -31,7 +31,6 @@
       use compar
       use funits
       use geometry
-      use indices
       use mpi_utility
       use param1
       use fldvar

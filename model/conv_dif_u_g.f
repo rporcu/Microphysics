@@ -58,7 +58,7 @@
       USE fun_avg, only: avg_x_e, avg_x
       USE functions, only: funijk, iplus
       USE geometry, only: do_k
-      USE indices, only:  ip1
+      USE functions, only:  ip1
 
       USE param, only: dimension_3
       IMPLICIT NONE
@@ -185,7 +185,7 @@
       USE geometry, only: ox_e
       USE geometry, only: ayz_u, axz_u, axy_u
 
-      USE indices, only: ip1, jm1, km1
+      USE functions, only: ip1, jm1, km1
 
       use matrix, only: e, w, s, n, t, b
       USE param1, only: zero

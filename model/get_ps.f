@@ -12,7 +12,6 @@
       USE param1
       USE geometry
       USE ps
-      USE indices
       USE funits
       USE compar
 

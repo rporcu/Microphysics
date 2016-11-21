@@ -269,7 +269,6 @@
       USE run
       USE bc
       USE scales
-      USE indices
       USE funits
       USE compar
       USE discretelement
@@ -389,7 +388,6 @@
       USE run
       USE bc
       USE scales
-      USE indices
       USE funits
       USE compar
       USE discretelement

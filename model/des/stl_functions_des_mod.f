@@ -436,7 +436,6 @@
       USE discretelement, ONLY: dimn, xe, yn, zt, max_radius
       USE functions
       USE geometry
-      USE indices
       USE param1
       USE run
       USE stl

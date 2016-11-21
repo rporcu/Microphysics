@@ -377,7 +377,6 @@ MODULE interpolation
       USE compar
       USE discretelement
       USE geometry
-      USE indices
       USE param
       USE param1
       USE functions

@@ -26,7 +26,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE leqsol
       USE funits
       IMPLICIT NONE
@@ -109,7 +108,6 @@
       USE compar
       USE mpi_utility
       USE sendrecv
-      USE indices
       USE leqsol
       USE functions
       IMPLICIT NONE
@@ -458,7 +456,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE funits
       USE sendrecv
       USE mpi_utility
@@ -566,7 +563,6 @@
       USE geometry
       USE compar
       USE funits
-      USE indices
       USE sendrecv
       USE mpi_utility
       USE functions
@@ -678,7 +674,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE sendrecv
       USE mpi_utility
       USE functions
@@ -796,7 +791,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE sendrecv
       USE functions
       IMPLICIT NONE
@@ -998,7 +992,6 @@
       USE geometry
       USE funits
       USE compar
-      USE indices
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -1099,7 +1092,6 @@
       USE geometry
       USE funits
       USE compar
-      USE indices
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -1146,9 +1138,9 @@
          EE(K) = A_M(3,IJK)
          BB(K) = B_M(IJK)    &
          -  A_M(-2,IJK) * Var( funijk(i,jminus(i,j,k),k) ) &
-         -  A_M( 2,IJK) * Var( funijk(i,jplus(i,j,k),k)  ) & 
+         -  A_M( 2,IJK) * Var( funijk(i,jplus(i,j,k),k)  ) &
          -  A_M(-1,IJK) * Var( funijk(iminus(i,j,k),j,k) ) &
-         -  A_M( 1,IJK) * Var( funijk(iplus(i,j,k),j,k)  )   
+         -  A_M( 1,IJK) * Var( funijk(iplus(i,j,k),j,k)  )
 
       ENDDO
 
@@ -1184,7 +1176,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE sendrecv
       USE leqsol
 
@@ -1230,7 +1221,6 @@
       USE param1
       USE geometry
       USE compar
-      USE indices
       USE sendrecv
       USE functions
       use leqsol

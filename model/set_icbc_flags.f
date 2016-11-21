@@ -283,7 +283,6 @@
       USE fldvar
       USE physprop
       USE bc
-      USE indices
       USE funits
       USE compar
       USE sendrecv
@@ -364,7 +363,6 @@
       USE fldvar
       USE physprop
       USE bc
-      USE indices
       USE funits
       USE compar
       USE sendrecv

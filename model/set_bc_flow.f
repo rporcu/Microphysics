@@ -310,7 +310,6 @@
       USE physprop
       USE run
       USE bc
-      USE indices
       USE funits
       USE compar
       USE sendrecv

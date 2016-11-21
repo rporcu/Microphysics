@@ -10,7 +10,6 @@ module mpi_utility
   use compar
   use parallel_mpi
   use debug
-  use indices
   implicit none
 
   !       Object-oriented approach to direct to the correct procedure

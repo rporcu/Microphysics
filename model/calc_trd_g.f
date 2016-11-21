@@ -29,7 +29,6 @@
       USE param1
       USE geometry
       USE fldvar
-      USE indices
       USE compar
       USE sendrecv
       USE bc
@@ -119,7 +118,6 @@
       USE param1
       USE geometry
       USE fldvar
-      USE indices
       USE compar
       USE sendrecv
       USE bc

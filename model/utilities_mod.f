@@ -153,7 +153,6 @@ CONTAINS
       USE bc
       USE geometry
       USE physprop
-      USE indices
       USE run
       USE toleranc
       USE compar

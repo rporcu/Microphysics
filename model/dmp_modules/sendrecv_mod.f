@@ -16,7 +16,6 @@ module sendrecv
   use debug
   use geometry
   use compar
-  use indices
   use functions
   implicit none
   !-----------------------------------------------
