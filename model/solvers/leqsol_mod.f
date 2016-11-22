@@ -134,8 +134,6 @@ CONTAINS
 !-----------------------------------------------
 ! Variable
     INTEGER :: I, J, K, IJK
-    integer :: class, interval
-    integer :: j_start(2), j_end(2)
 !-----------------------------------------------
 
       if (do_k) then

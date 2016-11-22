@@ -54,10 +54,7 @@
 ! maximum number of iterations (generally leq_it)
       INTEGER, INTENT(IN) :: ITMAX
 ! linear equation solver method (generally leq_method)
-!     1 = sor
 !     2 = bicgstab (default)
-!     3 = gmres
-!     5 = cg
       INTEGER, INTENT(IN) :: METHOD
 ! sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -75,8 +72,6 @@
 ! Adjust LEQ tolerance flag
       LOGICAL, PARAMETER :: adjust_leq_tol = .FALSE.
       LOGICAL, PARAMETER :: leq_tol_scheme1 = .FALSE.
-! currently only used for gmres routine
-      INTEGER, PARAMETER :: MAX_IT = 1
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -91,7 +86,6 @@
 ! for constructing local character strings
       CHARACTER(LEN=80) :: LINE0, LINE1
 !-----------------------------------------------
-
 
 ! Adjusting the tolerances
 ! ---------------------------------------------------------------->>>
@@ -116,10 +110,6 @@
 ! Solve the linear system of equations
 ! ---------------------------------------------------------------->>>
       SELECT CASE (METHOD)
-      CASE (1)
-! SOR: Successive Sver Relaxation method from Templates
-        CALL LEQ_SOR (VNAME, VNO, VAR, A_M(:,:), B_M(:), &
-                      ITMAX, IER)
 
       CASE (2)
 ! BICGSTAB: BIConjugate Gradients STabilized method
@@ -142,35 +132,6 @@
             call leq_bicgs(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
                            SWEEP, TOL, PC, ITMAX, IER)
          ENDIF
-
-
-      CASE (3)
-! GMRES: A Generalized Minimal RESidual Algorithm
-         call leq_gmres(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
-                        SWEEP, TOL, ITMAX, MAX_IT, IER)
-
-      CASE (4)
-! Mix:
-         IER = 0
-         call leq_bicgs(VNAME,VNO, VAR, A_M(:,:), B_M(:), SWEEP,&
-                       TOL, PC, ITMAX, IER)
-         IF (IER .eq. -2) THEN
-            IER = 0
-            print*,'calling leq_gmres', Vname
-            call leq_gmres(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
-                           SWEEP, TOL, ITMAX, MAX_IT, IER)
-         ENDIF
-
-
-      CASE (5)
-! CG: Conjugate Gradients
-         call leq_cg(VNAME, VNO, VAR, A_M(:,:), B_M(:), SWEEP,&
-                     TOL, PC, ITMAX, IER)
-
-!     CASE (6) - Disabled
-! LSOR: Line Successive Over Relaxation method
-!       CALL LEQ_LSOR(VNAME, VAR, A_M(:,:), B_M(:), ITMAX, IER)
-
 
       CASE DEFAULT
          LINE0(1:14) = 'SOLVE_LIN_EQ: '

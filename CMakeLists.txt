@@ -248,9 +248,6 @@ set(SOURCES
   model/solvers/dgtsl.f
   model/solvers/leq_bicgs.f
   model/solvers/leq_bicgst.f
-  model/solvers/leq_cg.f
-  model/solvers/leq_gmres.f
-  model/solvers/leq_sor.f
   model/solvers/leqsol_mod.f
   model/solvers/solve_lin_eq.f
   model/solvers/test_lin_eq.f
