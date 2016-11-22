@@ -28,10 +28,10 @@
       j = jstart3
       i = istart3
 
-      VOL = DX(I)*DY(J)*(X(I)*DZ(K))
-      AYZ = DY(J)*(X_E(I)*DZ(K))
+      VOL = DX(I)*DY(J)*DZ(K)
+      AYZ = DY(J)*DZ(K)
       AXY = DX(I)*DY(J)
-      AXZ = DX(I)*(X(I)*DZ(K))
+      AXZ = DX(I)*DZ(K)
 
       RETURN
 

@@ -138,7 +138,7 @@
 ! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
                SSX = AVG_Z_H(AVG_X_H(MU_G(IJK),MU_G(IJKE),I),&
                              AVG_X_H(MU_G(IJKT),MU_G(IJKTE),I),K)*&
-                        (U_G(IJKP)-U_G(IJK))*OX_E(I)*ODZ_T(K)*AYZ - &
+                        (U_G(IJKP)-U_G(IJK))*ODZ_T(K)*AYZ - &
                      AVG_Z_H(AVG_X_H(MU_G(IJKW),MU_G(IJK),IM),&
                              AVG_X_H(MU_G(IJKTW),MU_G(IJKT),IM),K)*&
                         (U_G(IMJKP)-U_G(IMJK))*ODZ_T(K)*DY(J)*&
@@ -150,16 +150,16 @@
 ! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
                SSY = AVG_Z_H(AVG_Y_H(MU_G(IJK),MU_G(IJKN),J),&
                              AVG_Y_H(MU_G(IJKT),MU_G(IJKNT),J),K)*&
-                        (V_G(IJKP)-V_G(IJK))*OX(I)*ODZ_T(K)*AXZ -&
+                        (V_G(IJKP)-V_G(IJK))*ODZ_T(K)*AXZ -&
                      AVG_Z_H(AVG_Y_H(MU_G(IJKS),MU_G(IJK),JM),&
                              AVG_Y_H(MU_G(IJKST),MU_G(IJKT),JM),K)*&
-                        (V_G(IJMKP)-V_G(IJMK))*OX(I)*ODZ_T(K)*AXZ
+                        (V_G(IJMKP)-V_G(IJMK))*ODZ_T(K)*AXZ
 
 ! part of 1/x d/dz (tau_zz) xdxdydz =>
 !         1/x d/dz (mu/x dw/dz) xdxdydz =>
 ! delta (mu/x dw/dz)Axy |T-B : at (i, j, k+1 - k-1)
-               SSZ = MU_G(IJKT)*(W_G(IJKP)-W_G(IJK))*OX(I)*ODZ(KP)*AXY - &
-                     MU_G(IJK)*(W_G(IJK)-W_G(IJKM))*OX(I)*ODZ(K)*AXY
+               SSZ = MU_G(IJKT)*(W_G(IJKP)-W_G(IJK))*ODZ(KP)*AXY - &
+                     MU_G(IJK)*(W_G(IJK)-W_G(IJKM))*ODZ(K)*AXY
 
 ! Add the terms
                lTAU_W_G(IJK) =  SBV + SSX + SSY + SSZ

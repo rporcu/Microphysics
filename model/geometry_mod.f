@@ -123,24 +123,6 @@
 ! 1 / dz_k+1/2
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDZ_T
 
-! Radial location at cell center (x_i).
-! X = 1 in Cartesian coordinates.
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: X
-! Azimuthal location at cell center (z_k).
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Z
-! Radial location at East face (x_i+1/2).
-! X_E = 1 in Cartesian coordinates.
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  X_E
-!  Azimuthal location at top face (z_k+1/2).
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Z_T
-
-! Reciprocal of radial location at cell center (1/x_i).
-! oX = 1 in Cartesian coordinates.
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  oX
-! Reciprocal of radial location at East face (1/x_i+1/2).
-! oX_E = 1 in Cartesian coordinates.
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::  oX_E
-
 
 !  one or more periodic boundary condition is used
       LOGICAL :: CYCLIC

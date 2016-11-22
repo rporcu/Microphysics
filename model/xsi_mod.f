@@ -37,7 +37,6 @@
 
       USE geometry, only: do_k
       USE geometry, only: odx, odx_e, ody, ody_n, odz, odz_t
-      USE geometry, only: ox
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
@@ -257,7 +256,7 @@
                    IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*OX(I)*ODZ_T(K)
+                CF = ABS(W(IJK))*DT*ODZ_T(K)
                 DWF = ULTRA_QUICK(PHI_C,CF)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
@@ -327,7 +326,7 @@
                    ODZUC = ODZ_T(KP1(K))
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*OX(I)*ODZ_T(K)
+                CF = ABS(W(IJK))*DT*ODZ_T(K)
                 DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ_T(K))
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF

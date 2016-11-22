@@ -14,8 +14,6 @@
       use geometry, only: DX, oDX, oDX_E
       use geometry, only: DY, oDZ, oDZ_T
       use geometry, only: DZ, oDY, oDY_N
-      use geometry, only: X, X_E, oX, oX_E
-      use geometry, only: Z, Z_T
 ! Domain indices.
       use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3
       use geometry, only: DO_J, JMIN1, JMAX1, JMAX2, JMAX3, JMIN3
@@ -102,10 +100,6 @@
          ENDIF
       ENDIF
 
-      X(IMIN3:IMAX3) = ONE
-      X_E(IMIN3:IMAX3) = ONE
-      OX(IMIN3:IMAX3) = ONE
-      OX_E(IMIN3:IMAX3) = ONE
       ODX(IMIN3:IMAX3) = ONE/DX(IMIN3:IMAX3)
 
 
@@ -115,17 +109,6 @@
 
 ! Initialize the Z-Axis variables.
       DO K = 1, KMAX3
-         IF (K == 1) THEN
-            Z(K) = ZERO - HALF*DZ(K)
-            Z_T(K) = ZERO
-            IF(NODESK.NE.1) THEN
-               Z(K-1) =Z_T(K) - HALF*DZ(K-1)
-               Z_T(K-1) = Z_T(K) - DZ(K-1)
-            ENDIF
-              ELSE
-            Z(K) = Z_T(K-1) + HALF*DZ(K)
-            Z_T(K) = Z_T(K-1) + DZ(K)
-         ENDIF
          ODZ(K) = ONE/DZ(K)
 
          IF(NODESK.NE.1 .AND. K==1) ODZ(K-1) = ONE/DZ(K-1)

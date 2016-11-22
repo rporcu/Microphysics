@@ -57,7 +57,7 @@
                   J = BC_J_S(BCV)
                   IF (BC_J_N(BCV) - BC_J_S(BCV) + 1 > 0) THEN
                      BC_AREA(BCV) = BC_AREA(BCV) + SUM(DY(BC_J_S(BCV):BC_J_N(BCV))*&
-                        X_E(I-1)*DZ(K))
+                        DZ(K))
                      J = BC_J_N(BCV) + 1
                   ENDIF
                END DO
@@ -67,7 +67,7 @@
                   J = BC_J_S(BCV)
                   IF (BC_J_N(BCV) - BC_J_S(BCV) + 1 > 0) THEN
                      BC_AREA(BCV) = BC_AREA(BCV) + SUM(DY(BC_J_S(BCV):BC_J_N(BCV))*&
-                        X_E(I)*DZ(K))
+                        DZ(K))
                      J = BC_J_N(BCV) + 1
                   ENDIF
                END DO
@@ -76,8 +76,7 @@
                DO K = BC_K_B(BCV), BC_K_T(BCV)
                   I = BC_I_W(BCV)
                   IF (BC_I_E(BCV) - BC_I_W(BCV) + 1 > 0) THEN
-                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DX(BC_I_W(BCV):BC_I_E(BCV))*&
-                        X(BC_I_W(BCV):BC_I_E(BCV))*DZ(K))
+                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DX(BC_I_W(BCV):BC_I_E(BCV)))
                      I = BC_I_E(BCV) + 1
                   ENDIF
                END DO

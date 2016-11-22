@@ -19,7 +19,6 @@
       use bc, only: bc_out_n
       use bc, only: bc_mout_g, bc_vout_g
       use geometry, only: dx, dy, dz
-      use geometry, only: x_e, x
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
       use functions, only: fluid_cell
@@ -52,27 +51,27 @@
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
                   IJK2 = FUNIJK(iminus(i,j,k),j,k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*X_E(I-1)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*DZ(K)*&
                      U_G(IJK2)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*X_E(I-1)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*DZ(K)*&
                      U_G(IJK2)*EP_G(IJK2)
                CASE ('E')
                   IJK2 = FUNIJK(iplus(i,j,k),j,k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*X_E(I)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*DZ(K)*&
                      U_G(IJK)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*X_E(I)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*DZ(K)*&
                      U_G(IJK)*EP_G(IJK2)
                CASE ('S')
                   IJK2 = FUNIJK(i,jminus(i,j,k),k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*X(I)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DZ(K)*&
                      V_G(IJK2)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*X(I)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DZ(K)*&
                      V_G(IJK2)*EP_G(IJK2)
                CASE ('N')
                   IJK2 = FUNIJK(i,jplus(i,j,k),k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*X(I)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DZ(K)*&
                      V_G(IJK)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*X(I)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DZ(K)*&
                      V_G(IJK)*EP_G(IJK2)
                CASE ('B')
                   IJK2 = FUNIJK(i,j,kminus(i,j,k))

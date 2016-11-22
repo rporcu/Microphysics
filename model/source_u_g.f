@@ -524,8 +524,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,0)=-(HALF*BC_HW_G(L)+ODZ_T(K)*OX_E(I))
-                              A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ_T(K)*OX_E(I))
+                              A_M(IJK,0)=-(HALF*BC_HW_G(L)+ODZ_T(K))
+                              A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ_T(K))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (fluid_cell(i,j,kbot(i,j,k))) THEN
@@ -534,10 +534,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM)*OX_E(I&
-                                 ))
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM)*OX_E(I&
-                                 ))
+                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM))
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ENDIF
@@ -607,7 +605,7 @@
                            IM = IM1(I)
                            IMJK = FUNIJK(iminus(i,j,k),j,k)
                            A_M(IMJK,E) = ZERO
-                           A_M(IMJK,W) = X_E(IM)/X_E(IM1(IM))
+                           A_M(IMJK,W) = ONE
                            A_M(IMJK,N) = ZERO
                            A_M(IMJK,S) = ZERO
                            A_M(IMJK,T) = ZERO
@@ -632,7 +630,7 @@
                            IJK = FUNIJK(I,J,K)
                            IP = IP1(I)
                            IPJK = FUNIJK(iplus(i,j,k),j,k)
-                           A_M(IPJK,E) = X_E(IP)/X_E(I)
+                           A_M(IPJK,E) = ONE
                            A_M(IPJK,W) = ZERO
                            A_M(IPJK,N) = ZERO
                            A_M(IPJK,S) = ZERO

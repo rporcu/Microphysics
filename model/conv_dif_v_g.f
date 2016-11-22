@@ -186,7 +186,6 @@
 
       USE geometry, only: odx_e, ody, odz_t
       USE geometry, only: do_k
-      USE geometry, only: ox
       USE geometry, only: ayz, axz, axy
 
       USE functions, only: im1, jp1, km1
@@ -279,11 +278,11 @@
 ! Top face (i, j+1/2, k+1/2)
          D_Ft = AVG_Y_H(AVG_Z_H(MU_G(IJKC),MU_G(IJKT),K),&
                         AVG_Z_H(MU_G(IJKN),MU_G(IJKTN),K),J)*&
-                OX(I)*C_AT*AXY
+                C_AT*AXY
 ! Bottom face (i, j+1/2, k-1/2)
          D_Fb = AVG_Y_H(AVG_Z_H(MU_G(IJKB),MU_G(IJKC),KM),&
                         AVG_Z_H(MU_G(IJKBN),MU_G(IJKN),KM),J)*&
-                OX(I)*C_AB*AXY
+                C_AB*AXY
       ENDIF   ! end if (do_k)
 
 

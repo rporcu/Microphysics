@@ -173,7 +173,6 @@
       USE functions, only: iminus, jminus, kminus
 
       USE geometry, only: odx_e, ody_n, odz
-      USE geometry, only: ox
       USE geometry, only: ayz, axz, axy
 
       USE functions, only: im1, jm1, kp1
@@ -265,9 +264,9 @@
                 C_AS*AXZ
 
 ! Top face (i, j, k+1)
-      D_Ft = MU_G(IJKT)*OX(I)*C_AT*AXY
+      D_Ft = MU_G(IJKT)*C_AT*AXY
 ! Bottom face (i, j, k)
-      D_Fb = MU_G(IJK)*OX(I)*C_AB*AXY
+      D_Fb = MU_G(IJK)*C_AB*AXY
 
       RETURN
 

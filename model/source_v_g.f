@@ -517,8 +517,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_VW_G(L)
                            ELSE
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(K)*OX(I))
-                              A_M(IJK,T) = -(HALF*BC_HW_G(L)-ODZ_T(K)*OX(I))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(K))
+                              A_M(IJK,T) = -(HALF*BC_HW_G(L)-ODZ_T(K))
                               B_M(IJK) = -BC_HW_G(L)*BC_VW_G(L)
                            ENDIF
                         ELSEIF (fluid_cell(i,j,kbot(i,j,k))) then
@@ -527,8 +527,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_VW_G(L)
                            ELSE
-                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM)*OX(I))
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM)*OX(I))
+                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM))
                               B_M(IJK) = -BC_HW_G(L)*BC_VW_G(L)
                            ENDIF
                         ENDIF
