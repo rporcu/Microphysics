@@ -182,8 +182,6 @@
 
 
          IF (MOMENTUM_Z_EQ(0)) THEN
-!            call test_lin_eq(ijkmax2, ijmax2, imax2, a_m(1, -3, 0), &
-!               1, DO_K, ier)
             CALL ADJUST_LEQ (RESID(RESID_W), LEQ_IT(5), &
                LEQ_METHOD(5), LEQI, LEQM)
             CALL SOLVE_LIN_EQ ('W_g', 5, W_Gtmp, A_M, B_M, 0, LEQI,&

@@ -250,7 +250,6 @@ set(SOURCES
   model/solvers/leq_bicgst.f
   model/solvers/leqsol_mod.f
   model/solvers/solve_lin_eq.f
-  model/solvers/test_lin_eq.f
   model/solvers/xerbla.f
   model/source_pp_g.f
   model/source_u_g.f
