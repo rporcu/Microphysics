@@ -184,42 +184,15 @@
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FZ_T_bar
 
 ! East face area - scalar cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AYZ
+      DOUBLE PRECISION :: AYZ
 ! North face area - scalar cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXZ
+      DOUBLE PRECISION :: AXZ
 ! Top face area - scalar cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXY
+      DOUBLE PRECISION :: AXY
 ! Cell volume - scalar cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL
+      DOUBLE PRECISION :: VOL
 
 ! Total volume of cell's DES stencil neighbors
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL_SURR
-
-! East face area - U cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AYZ_U
-! North face area - U cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXZ_U
-! Top face area - U cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXY_U
-! Cell volume - U cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL_U
-
-! East face area - V cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AYZ_V
-! North face area - V cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXZ_V
-! Top face area - V cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXY_V
-! Cell volume - V cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL_V
-
-! East face area - W cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AYZ_W
-! North face area - W cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXZ_W
-! Top face area - W cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: AXY_W
-! Cell volume - W cell
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL_W
 
       END MODULE geometry

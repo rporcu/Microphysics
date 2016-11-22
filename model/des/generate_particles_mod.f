@@ -427,7 +427,7 @@
          IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
          IJK = FUNIJK(I,J,K)
-         IF(fluid_cell(i,j,k)) IC_VOL = IC_VOL + VOL(IJK)
+         IF(fluid_cell(i,j,k)) IC_VOL = IC_VOL + VOL
 
       ENDDO
       ENDDO

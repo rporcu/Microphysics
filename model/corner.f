@@ -195,59 +195,6 @@
 !
                ENDIF
 !
-               IF (.NOT.NOTCORNER) THEN
-                  IJK_CORN(NCORN) = IJK
-!
-                  AXZ(IJK) = ZERO
-                  AXZ(IJMK) = ZERO
-                  AYZ(IJK) = ZERO
-                  AYZ(IMJK) = ZERO
-                  AXY(IJK) = ZERO
-                  AXY(IJKM) = ZERO
-!
-                  jtmp = jminus(i,j,k)
-                  AXZ_U(funijk(iminus(i,jtmp,k),jtmp,k)) = ZERO
-
-                  AXZ_U(IJMK) = ZERO
-                  AXZ_U(IMJK) = ZERO
-                  AXZ_U(IJK) = ZERO
-!
-                  ktmp = kminus(i,j,k)
-                  AXY_U(funijk(iminus(i,j,ktmp),j,ktmp)) = ZERO
-
-                  AXY_U(IJKM) = ZERO
-                  AXY_U(IMJK) = ZERO
-                  AXY_U(IJK) = ZERO
-!
-                  itmp = iminus(i,j,k)
-                  AYZ_V(funijk(itmp,jminus(itmp,j,k),k)) = ZERO
-
-                  AYZ_V(IMJK) = ZERO
-                  AYZ_V(IJMK) = ZERO
-                  AYZ_V(IJK) = ZERO
-!
-                  ktmp = kminus(i,j,k)
-                  AXY_V(funijk(i,jminus(i,j,ktmp),ktmp)) = ZERO
-
-                  AXY_V(IJKM) = ZERO
-                  AXY_V(IJMK) = ZERO
-                  AXY_V(IJK) = ZERO
-!
-                  itmp = iminus(i,j,k)
-                  AYZ_W(funijk(itmp,j,kminus(itmp,j,k))) = ZERO
-
-                  AYZ_W(IMJK) = ZERO
-                  AYZ_W(IJKM) = ZERO
-                  AYZ_W(IJK) = ZERO
-!
-                  jtmp = jminus(i,j,k)
-                  AXZ_W(funijk(i,jtmp,kminus(i,jtmp,k))) = ZERO
-
-                  AXZ_W(IJMK) = ZERO
-                  AXZ_W(IJKM) = ZERO
-                  AXZ_W(IJK) = ZERO
-               ENDIF
-!
             ENDIF
 !
          ENDIF

@@ -8,7 +8,7 @@
 !  U_g momentum eq. becoming zero.                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   USE geometry, only: ayz_u, axz_v, axy_w
+   USE geometry, only: ayz, axz, axy
    USE fldvar, only: rop_g
    USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop, funijk
 
@@ -17,37 +17,37 @@
       double precision function denom_u_neg(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_u_neg = ROP_G(FUNIJK(ieast(i,j,k),j,k))*AYZ_U(FUNIJK(i,j,k))
+         denom_u_neg = ROP_G(FUNIJK(ieast(i,j,k),j,k))*AYZ
       end function denom_u_neg
 
       double precision function denom_u_pos(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_u_pos = ROP_G(FUNIJK(i,j,k))*AYZ_U(FUNIJK(iminus(i,j,k),j,k))
+         denom_u_pos = ROP_G(FUNIJK(i,j,k))*AYZ
       end function denom_u_pos
 
       double precision function denom_v_neg(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_v_neg = ROP_G(FUNIJK(i,jnorth(i,j,k),k))*AXZ_V(FUNIJK(i,j,k))
+         denom_v_neg = ROP_G(FUNIJK(i,jnorth(i,j,k),k))*AXZ
       end function denom_v_neg
 
       double precision function denom_v_pos(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_v_pos = ROP_G(FUNIJK(i,j,k))*AXZ_V(FUNIJK(i,jminus(i,j,k),k))
+         denom_v_pos = ROP_G(FUNIJK(i,j,k))*AXZ
       end function denom_v_pos
 
       double precision function denom_w_neg(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_w_neg = ROP_G(FUNIJK(i,j,ktop(i,j,k)))*AXY_W(FUNIJK(i,j,k))
+         denom_w_neg = ROP_G(FUNIJK(i,j,ktop(i,j,k)))*AXY
       end function denom_w_neg
 
       double precision function denom_w_pos(i,j,k)
          implicit none
          integer, intent(in) :: i,j,k
-         denom_w_pos = ROP_G(FUNIJK(i,j,k))*AXY_W(FUNIJK(i,j,kminus(i,j,k)))
+         denom_w_pos = ROP_G(FUNIJK(i,j,k))*AXY
       end function denom_w_pos
 
       SUBROUTINE ADJUST_A_G(axis, A_M, B_M)

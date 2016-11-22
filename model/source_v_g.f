@@ -40,7 +40,7 @@
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax, funijk, wall_cell
       USE geometry, only: jmax1, cyclic_y_pd, flag
-      USE geometry, only: vol, vol_v
+      USE geometry, only: vol
       USE geometry, only: axz
 
       use matrix, only: e, w, s, n, t, b
@@ -157,7 +157,7 @@
             IF (CYCLIC_Y_PD) THEN
                IF (JMAP(J).EQ.JMAX1)PGN = P_G(IJKN) - DELP_Y
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ(IJK)
+            SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ
 
 ! Volumetric forces
             ROPGA = AVG_Y(ROP_G(IJK),ROP_G(IJKN),J)
@@ -176,9 +176,9 @@
 ! Collect the terms
             A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+&
                A_M(IJK,N)+A_M(IJK,S)+A_M(IJK,T)+A_M(IJK,B)+&
-               V0*VOL_V(IJK))
+               V0*VOL)
             B_M(IJK) = B_M(IJK) - (SDP + lTAU_V_G +  &
-               ((V0)*V_GO(I,J,K) + VBF)*VOL_V(IJK) )
+               ((V0)*V_GO(I,J,K) + VBF)*VOL )
 
          ENDIF
       ENDDO
@@ -762,7 +762,7 @@
             ijk = funijk(i,j,k)
             if(.NOT.fluid_cell(i,j,k)) cycle
 
-            pSource =  PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
+            pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
             B_M(IJK) = B_M(IJK) - pSource * &
                PS_V_g(PSV) * PS_VEL_MAG_g(PSV)

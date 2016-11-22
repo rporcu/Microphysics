@@ -78,18 +78,18 @@
             IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! East face (i+1/2, j, k)
-            AM = ROP_GE(IJK)*AYZ(IJK)
+            AM = ROP_GE(IJK)*AYZ
             A_M(IJK,E) = AM
             A_M(IPJK,W) = AM
 
 ! North face (i, j+1/2, k)
-            AM = ROP_GN(IJK)*AXZ(IJK)
+            AM = ROP_GN(IJK)*AXZ
             A_M(IJK,N) = AM
             A_M(IJPK,S) = AM
 
 ! Top face (i, j, k+1/2)
             IF (DO_K) THEN
-               AM = ROP_GT(IJK)*AXY(IJK)
+               AM = ROP_GT(IJK)*AXY
                A_M(IJK,T) = AM
                A_M(IJKP,B) = AM
             ENDIF
@@ -97,14 +97,14 @@
 ! West face (i-1/2, j, k)
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
-               AM = ROP_GE(IMJK)*AYZ(IMJK)
+               AM = ROP_GE(IMJK)*AYZ
                A_M(IJK,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
-               AM = ROP_GN(IJMK)*AXZ(IJMK)
+               AM = ROP_GN(IJMK)*AXZ
                A_M(IJK,S) = AM
             ENDIF
 
@@ -112,7 +112,7 @@
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
                IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
-                  AM = ROP_GT(IJKM)*AXY(IJKM)
+                  AM = ROP_GT(IJKM)*AXY
                   A_M(IJK,B) = AM
                ENDIF
             ENDIF

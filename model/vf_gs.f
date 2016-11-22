@@ -34,7 +34,7 @@
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKE = FUNIJK(ieast(i,j,k),j,k)
-               VXF_GDS(IJK) = VOL_U(IJK) *                             &
+               VXF_GDS(IJK) = VOL *                             &
                   AVG_X(F_GDS(IJK),F_GDS(IJKE),I)
             ENDIF
              end do
@@ -81,7 +81,7 @@
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
-               VXF_GDS(IJK) = VOL_V(IJK) *                             &
+               VXF_GDS(IJK) = VOL *                             &
                   AVG_Y(F_GDS(IJK),F_GDS(IJKN),J)
             ENDIF
              end do
@@ -129,7 +129,7 @@
                VXF_GDS(IJK) = ZERO
             ELSE
                IJKT = FUNIJK(i,j,ktop(i,j,k))
-               VXF_GDS(IJK) = VOL_W(IJK) *                             &
+               VXF_GDS(IJK) = VOL *                             &
                   AVG_Z(F_GDS(IJK),F_GDS(IJKT),K)
             ENDIF
              end do

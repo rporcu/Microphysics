@@ -20,7 +20,7 @@ MODULE CALC_D_MOD
             EPGA_X = ZERO
          ELSE
             IJKE = FUNIJK(ieast(i,j,k),j,k)
-            AREA_FACE = AYZ(IJK)
+            AREA_FACE = AYZ
             EPGA_X = AREA_FACE*AVG_X(EP_G(IJK),EP_G(IJKE),I)
          ENDIF
       end function epga_x
@@ -38,7 +38,7 @@ MODULE CALC_D_MOD
             EPGA_Y = ZERO
          ELSE
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
-            AREA_FACE = AXZ(IJK)
+            AREA_FACE = AXZ
             EPGA_Y = AREA_FACE*AVG_Y(EP_G(IJK),EP_G(IJKN),J)
          ENDIF
       end function epga_y
@@ -55,7 +55,7 @@ MODULE CALC_D_MOD
             EPGA_Z = ZERO
          ELSE
             IJKT = FUNIJK(i,j,ktop(i,j,k))
-            AREA_FACE = AXY(IJK)
+            AREA_FACE = AXY
             EPGA_Z = AREA_FACE*AVG_Z(EP_G(IJK),EP_G(IJKT),K)
          ENDIF
 

@@ -78,7 +78,7 @@
                ijk = funijk(i,j,k)
 
                if(fluid_cell(i,j,k)) &
-                  lData_dp(myPE) = lData_dp(myPE) + VOL(IJK)
+                  lData_dp(myPE) = lData_dp(myPE) + VOL
             endif
 
          enddo

@@ -174,7 +174,7 @@
 
             ijk = funijk(i,j,k)
             if(fluid_cell(i,j,k)) then
-               pSource = PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
+               pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
                B_M(IJK) = B_M(IJK) - pSource
                B_MMAX(IJK) = max(abs(B_MMAX(IJK)), abs(B_M(IJK)))

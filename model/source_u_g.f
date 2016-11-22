@@ -43,7 +43,7 @@
       USE functions, only: zmax
 
       USE geometry, only: imax1, cyclic_x_pd, imax
-      USE geometry, only: vol, vol_u
+      USE geometry, only: vol
       USE geometry, only: ayz
 
       use matrix, only: e, w, s, n, t, b
@@ -163,16 +163,13 @@
             IF (CYCLIC_X_PD) THEN
                IF (IMAP(I).EQ.IMAX1) PGE = P_G(IJKE) - DELP_X
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ(IJK)
+            SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ
 
 ! Volumetric forces
-            ROPGA = HALF * (VOL(IJK)*ROP_G(IJK) + &
-                            VOL(IPJK)*ROP_G(IJKE))/VOL_U(IJK)
-            ROGA  = HALF * (VOL(IJK)*RO_G(IJK) + &
-                            VOL(IPJK)*RO_G(IJKE))/VOL_U(IJK)
+            ROPGA = HALF * (ROP_G(IJK) + ROP_G(IJKE))
+            ROGA  = HALF * (RO_G(IJK) + RO_G(IJKE))
 ! Previous time step
-            V0 = HALF * (VOL(IJK)*ROP_GO(I,J,K) + &
-               VOL(IPJK)*ROP_GO(ieast(i,j,k),j,k))*ODT/VOL_U(IJK)
+            V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT
 
 ! Body force
             VBF = ROGA*GRAVITY_X
@@ -182,10 +179,10 @@
 ! Collect the terms
             A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+&
                A_M(IJK,N)+A_M(IJK,S)+A_M(IJK,T)+A_M(IJK,B)+&
-               V0*VOL_U(IJK))
+               V0*VOL)
 
             B_M(IJK) = B_M(IJK) -(SDP + lTAU_U_G + &
-               ( (V0)*U_GO(I,J,K) + VBF)*VOL_U(IJK) )
+               ( (V0)*U_GO(I,J,K) + VBF)*VOL )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
 
@@ -772,7 +769,7 @@
             ijk = funijk(i,j,k)
             if(.NOT. fluid_cell(i,j,k)) cycle
 
-            pSource =  PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
+            pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
             B_M(IJK) = B_M(IJK) - pSource *                        &
                PS_U_g(PSV) * PS_VEL_MAG_g(PSV)

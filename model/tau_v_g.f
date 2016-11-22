@@ -120,7 +120,7 @@
 !         d/dy (lambda.trcD) xdxdydz =>
 ! delta (lambda.trcD)Ap|N-S  : at (i, j+1 - j-1, k)
                SBV = (LAMBDA_G(IJKN)*TRD_G(IJKN)-&
-                      LAMBDA_G(IJK)*TRD_G(IJK))*AXZ(IJK)
+                      LAMBDA_G(IJK)*TRD_G(IJK))*AXZ
 
 ! shear stress terms at i, j+1/2, k
 
@@ -129,28 +129,26 @@
 ! delta (x.mu.du/dy)Ayz |E-W : at (i+1/2 - i-1/2, j+1/2, k)
                SSX = AVG_Y_H(AVG_X_H(MU_G(IJK),MU_G(IJKE),I),&
                              AVG_X_H(MU_G(IJKN),MU_G(IJKNE),I),J)*&
-                     (U_G(IJPK)-U_G(IJK))*ODY_N(J)*AYZ_V(IJK) - &
+                     (U_G(IJPK)-U_G(IJK))*ODY_N(J)*AYZ - &
                      AVG_Y_H(AVG_X_H(MU_G(IJKW),MU_G(IJK),IM),&
                              AVG_X_H(MU_G(IJKNW),MU_G(IJKN),IM),J)*&
-                     (U_G(IMJPK)-U_G(IMJK))*ODY_N(J)*AYZ_V(IMJK)
+                     (U_G(IMJPK)-U_G(IMJK))*ODY_N(J)*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dy) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at (i, j+1 - j-1, k)
-               SSY = MU_G(IJKN)*(V_G(IJPK)-V_G(IJK))*ODY(JP)*&
-                        AXZ_V(IJK) - &
-                     MU_G(IJK)*(V_G(IJK)-V_G(IJMK))*ODY(J)*&
-                        AXZ_V(IJMK)
+               SSY = MU_G(IJKN)*(V_G(IJPK)-V_G(IJK))*ODY(JP)*AXZ - &
+                     MU_G(IJK)*(V_G(IJK)-V_G(IJMK))*ODY(J)*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dy) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at (i, j+1/2, k+1/2 - k-1/2)
                SSZ = AVG_Y_H(AVG_Z_H(MU_G(IJK),MU_G(IJKT),K),&
                              AVG_Z_H(MU_G(IJKN),MU_G(IJKTN),K),J)*&
-                     (W_G(IJPK)-W_G(IJK))*ODY_N(J)*AXY_V(IJK) - &
+                     (W_G(IJPK)-W_G(IJK))*ODY_N(J)*AXY - &
                      AVG_Y_H(AVG_Z_H(MU_G(IJKB),MU_G(IJK),KM),&
                              AVG_Z_H(MU_G(IJKBN),MU_G(IJKN),KM),J)*&
-                     (W_G(IJPKM)-W_G(IJKM))*ODY_N(J)*AXY_V(IJKM)
+                     (W_G(IJPKM)-W_G(IJKM))*ODY_N(J)*AXY
 
 ! Add the terms
                lTAU_V_G(IJK) = SBV + SSX + SSY + SSZ

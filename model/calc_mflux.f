@@ -77,26 +77,26 @@
             IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
-            Flux_E(IJK) = ROP_E(IJK)*AYZ(IJK)*U(IJK)
+            Flux_E(IJK) = ROP_E(IJK)*AYZ*U(IJK)
 ! West face (i-1/2, j, k)
             IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) then
-               Flux_E(IMJK) = ROP_E(IMJK)*AYZ(IMJK)*U(IMJK)
+               Flux_E(IMJK) = ROP_E(IMJK)*AYZ*U(IMJK)
             ENDIF
 
 ! North face (i, j+1/2, k)
-            Flux_N(IJK) = ROP_N(IJK)*AXZ(IJK)*V(IJK)
+            Flux_N(IJK) = ROP_N(IJK)*AXZ*V(IJK)
 ! South face (i, j-1/2, k)
             IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) then
-              Flux_N(IJMK) = ROP_N(IJMK)*AXZ(IJMK)*V(IJMK)
+              Flux_N(IJMK) = ROP_N(IJMK)*AXZ*V(IJMK)
             ENDIF
 
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
 ! Top face (i, j, k+1/2)
-               Flux_T(IJK) = ROP_T(IJK)*AXY(IJK)*W(IJK)
+               Flux_T(IJK) = ROP_T(IJK)*AXY*W(IJK)
 ! Bottom face (i, j, k-1/2)
                IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) then
-                 Flux_T(IJKM) = ROP_T(IJKM)*AXY(IJKM)*W(IJKM)
+                 Flux_T(IJKM) = ROP_T(IJKM)*AXY*W(IJKM)
                ENDIF
             ENDIF   ! end if do_k
          ENDIF   ! end if fluid_cell

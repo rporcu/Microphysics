@@ -133,26 +133,24 @@
 !              d/dx (lambda.trcD) xdxdydz
 ! delta (lambda.trcD)Ap |E-W : at (i+1 - i-1), j, k
                SBV = (LAMBDA_G(IJKE)*TRD_G(IJKE)-&
-                      LAMBDA_G(IJK)*TRD_G(IJK))*AYZ(IJK)
+                      LAMBDA_G(IJK)*TRD_G(IJK))*AYZ
 
 ! shear stress terms at i+1/2, j, k
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
-               SSX = MU_G(IJKE)*(U_G(IPJK)-U_G(IJK))*ODX(IP)*&
-                        AYZ_U(IJK) - &
-                     MU_G(IJK)*(U_G(IJK)-U_G(IMJK))*ODX(I)*&
-                        AYZ_U(IMJK)
+               SSX = MU_G(IJKE)*(U_G(IPJK)-U_G(IJK))*ODX(IP)*AYZ - &
+                     MU_G(IJK)*(U_G(IJK)-U_G(IMJK))*ODX(I)*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
                SSY = AVG_X_H(AVG_Y_H(MU_G(IJK),MU_G(IJKN),J),&
                              AVG_Y_H(MU_G(IJKE),MU_G(IJKNE),J),I)*&
-                        (V_G(IPJK)-V_G(IJK))*ODX_E(I)*AXZ_U(IJK) - &
+                        (V_G(IPJK)-V_G(IJK))*ODX_E(I)*AXZ - &
                      AVG_X_H(AVG_Y_H(MU_G(IJKS),MU_G(IJK),JM),&
                              AVG_Y_H(MU_G(IJKSE),MU_G(IJKE),JM),I)*&
-                        (V_G(IPJMK)-V_G(IJMK))*ODX_E(I)*AXZ_U(IJMK)
+                        (V_G(IPJMK)-V_G(IJMK))*ODX_E(I)*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
@@ -161,10 +159,8 @@
                                 AVG_Z_H(MU_G(IJKE),MU_G(IJKTE),K),I)
                MU_GBE = AVG_X_H(AVG_Z_H(MU_G(IJKB),MU_G(IJK),KM),&
                                 AVG_Z_H(MU_G(IJKBE),MU_G(IJKE),KM),I)
-               SSZ = MU_GE*(W_G(IPJK)-W_G(IJK))*ODX_E(I)*&
-                        AXY_U(IJK) - &
-                     MU_GBE*(W_G(IPJKM)-W_G(IJKM))*ODX_E(I)*&
-                        AXY_U(IJKM)
+               SSZ = MU_GE*(W_G(IPJK)-W_G(IJK))*ODX_E(I)*AXY - &
+                     MU_GBE*(W_G(IPJKM)-W_G(IJKM))*ODX_E(I)*AXY
 
 
 ! Add the terms

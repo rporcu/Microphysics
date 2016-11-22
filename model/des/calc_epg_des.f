@@ -119,7 +119,7 @@
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&
                trim(iVal(J)), trim(iVal(K)),EP_G(IJK), &
-               trim(iVal(PINC(IJK))), VOL(IJK)
+               trim(iVal(PINC(IJK))), VOL
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
             WRITE(ERR_MSG,1102)

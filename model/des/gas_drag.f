@@ -21,7 +21,7 @@
 ! Coefficient at cell corners added to gas momentum B vector.
       use discretelement, only: DRAG_BM
 ! Volume of X-momentum cell
-      use geometry, only: VOL_U
+      use geometry, only: VOL
 ! Flag to calculate Z direction
       use geometry, only: DO_K
 
@@ -104,8 +104,8 @@
                   (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
             ENDIF
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_U(IJK)
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL_U(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -124,8 +124,8 @@
                tmp_A = AVG_X(F_GDS(IJK), F_GDS(IJKE), I)
                tmp_B = AVG_X(DRAG_BM(IJK,1), DRAG_BM(IJKE,1), I)
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL_U(IJK) * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL_U(IJK) * tmp_B
+               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
+               B_M(IJK) = B_M(IJK) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO
@@ -160,7 +160,7 @@
 ! Coefficient at cell corners added to gas momentum B vector.
       use discretelement, only: DRAG_BM
 ! Volume of Y-momentum cell
-      use geometry, only: VOL_V
+      use geometry, only: VOL
 ! Flag to calculate Z direction
       use geometry, only: DO_K
 
@@ -242,8 +242,8 @@
                   (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
             ENDIF
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_V(IJK)
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL_V(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -262,8 +262,8 @@
                tmp_A = AVG_Y(F_GDS(IJK), F_GDS(IJKN), J)
                tmp_B = AVG_Y(DRAG_BM(IJK,2), DRAG_BM(IJKN,2), J)
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL_V(IJK) * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL_V(IJK) * tmp_B
+               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
+               B_M(IJK) = B_M(IJK) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO
@@ -295,7 +295,7 @@
 ! Coefficient at cell corners added to gas momentum B vector.
       use discretelement, only: DRAG_BM
 ! Volume of Z-momentum cell
-      use geometry, only: VOL_W
+      use geometry, only: VOL
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -369,8 +369,8 @@
             tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
                DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL_W(IJK)
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL_W(IJK)
+            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
+            B_M(IJK) = B_M(IJK) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -389,8 +389,8 @@
                tmp_A = AVG_Z(F_GDS(IJK), F_GDS(IJKT), K)
                tmp_B = AVG_Z(DRAG_BM(IJK,3), DRAG_BM(IJKT,3), K)
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL_W(IJK) * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL_W(IJK) * tmp_B
+               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
+               B_M(IJK) = B_M(IJK) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO

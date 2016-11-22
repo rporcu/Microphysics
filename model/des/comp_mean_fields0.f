@@ -235,7 +235,7 @@
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
 ! between Lagrangian and continuum representations
-                  DES_ROP_S(IJK2, M) = DES_ROP_S(IJK2, M) + DES_ROP_DENSITY*VOL(IJK2)
+                  DES_ROP_S(IJK2, M) = DES_ROP_S(IJK2, M) + DES_ROP_DENSITY*VOL
                ENDIF
             ENDDO  ! end do (ii=i1,i2)
             ENDDO  ! end do (jj=j1,j2)
@@ -258,7 +258,7 @@
             IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
 
 ! Divide by scalar cell volume to obtain the bulk density
-               DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL(IJK)
+               DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL
 
             ENDIF
          ENDDO   ! end loop over M=1,MMAX
@@ -284,7 +284,7 @@
 
 ! It is important to check both fluid_cell and IS_ON_MYPE_WOBND.
             IF(IS_ON_myPE_wobnd(llI,llJ,llK)) MASS_SOL2 = MASS_SOL2 +  &
-               sum(DES_ROP_S(IJK,1:MMAX))*VOL(IJK)
+               sum(DES_ROP_S(IJK,1:MMAX))*VOL
          ENDDO
          ENDDO
          ENDDO

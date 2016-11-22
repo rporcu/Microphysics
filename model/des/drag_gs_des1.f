@@ -300,7 +300,7 @@
          IF(DES_INTERP_ON) THEN
             DO LC=1,LP_BND
                IJK = FILTER_CELL(LC,NP)
-               WEIGHT = FILTER_WEIGHT(LC,NP)/VOL(IJK)
+               WEIGHT = FILTER_WEIGHT(LC,NP)/VOL
 
                DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
                DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
@@ -309,7 +309,7 @@
             ENDDO
          ELSE
             IJK = PIJK(NP,4)
-            WEIGHT = ONE/VOL(IJK)
+            WEIGHT = ONE/VOL
 
             DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
             DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT

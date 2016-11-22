@@ -43,7 +43,7 @@
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax, funijk, wall_cell
       USE geometry, only: kmax1, cyclic_z_pd
-      USE geometry, only: vol, vol_w
+      USE geometry, only: vol
       USE geometry, only: axy
 
       use matrix, only: e, w, s, n, t, b
@@ -167,7 +167,7 @@
             IF (CYCLIC_Z_PD) THEN
                IF (KMAP(K).EQ.KMAX1) PGT = P_G(IJKT) - DELP_Z
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY(IJK)
+            SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY
 
 ! Volumetric forces
             ROPGA = AVG_Z(ROP_G(IJK),ROP_G(IJKT),K)
@@ -186,10 +186,10 @@
 
             A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+&
                A_M(IJK,N)+A_M(IJK,S)+A_M(IJK,T)+A_M(IJK,B)+&
-               V0*VOL_W(IJK))
+               V0*VOL)
 
             B_M(IJK) = B_M(IJK) - ( SDP + lTAU_W_G  + &
-               ( (V0)*W_GO(I,J,K) + VBF)*VOL_W(IJK) )
+               ( (V0)*W_GO(I,J,K) + VBF)*VOL)
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
       ENDDO   ! end do loop over ijk
@@ -780,7 +780,7 @@
             ijk = funijk(i,j,k)
             if(.NOT.fluid_cell(i,j,k)) cycle
 
-            pSource =  PS_MASSFLOW_G(PSV) * (VOL(IJK)/PS_VOLUME(PSV))
+            pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
             B_M(IJK) = B_M(IJK) - pSource * &
                PS_W_g(PSV) * PS_VEL_MAG_g(PSV)

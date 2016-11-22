@@ -116,10 +116,7 @@
       use geometry, only: FLAG, FLAG3
       use geometry, only: FLAG_E, FLAG_N, FLAG_T
 ! Domain volumes and areas.
-      use geometry, only: VOL, VOL_SURR, AYZ, AXZ, AXY! Scalar grid
-      use geometry, only: VOL_U, AYZ_U, AXZ_U, AXY_U  ! X-Momentum
-      use geometry, only: VOL_V, AYZ_V, AXZ_V, AXY_V  ! Y-Momentum
-      use geometry, only: VOL_W, AYZ_W, AXZ_W, AXY_W  ! Z-Momentum
+      use geometry, only: VOL_SURR
 ! Axis decomposition
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3, DIMENSION_4
@@ -198,36 +195,8 @@
       Allocate( ICBC_FLAG (DIMENSION_3L), STAT=IER )
       IF(IER /= 0) goto 500
 
-! Volume and face-areas of scalar grid.
-      Allocate( VOL (DIMENSION_3),  STAT=IER )
-      Allocate( AYZ (DIMENSION_3P), STAT=IER )
-      Allocate( AXZ (DIMENSION_3P), STAT=IER )
-      Allocate( AXY (DIMENSION_3P), STAT=IER )
-      IF(IER /= 0) goto 500
-
-      ! total volume of each cell's surrounding stencil cells
+! total volume of each cell's surrounding stencil cells
       Allocate( VOL_SURR (DIMENSION_3), STAT=IER )
-
-! Volume and face-areas of X-Momentumn grid.
-      Allocate( VOL_U (DIMENSION_3),  STAT=IER )
-      Allocate( AYZ_U (DIMENSION_3P), STAT=IER )
-      Allocate( AXZ_U (DIMENSION_3P), STAT=IER )
-      Allocate( AXY_U (DIMENSION_3P), STAT=IER )
-      IF(IER /= 0) goto 500
-
-! Volume and face-areas of Y-Momentum grid.
-      Allocate( VOL_V (DIMENSION_3),  STAT=IER )
-      Allocate( AYZ_V (DIMENSION_3P), STAT=IER )
-      Allocate( AXZ_V (DIMENSION_3P), STAT=IER )
-      Allocate( AXY_V (DIMENSION_3P), STAT=IER )
-      IF(IER /= 0) goto 500
-
-! Volume and face-areas of Z-Momentum grid.
-      Allocate( VOL_W (DIMENSION_3),  STAT=IER )
-      Allocate( AYZ_W (DIMENSION_3P), STAT=IER )
-      Allocate( AXZ_W (DIMENSION_3P), STAT=IER )
-      Allocate( AXY_W (DIMENSION_3P), STAT=IER )
-      IF(IER /= 0) goto 500
 
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.

@@ -37,7 +37,7 @@ CONTAINS
       IMPLICIT NONE
 
 ! Cell volume
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: VOL
+      DOUBLE PRECISION, INTENT(IN) :: VOL
 
 ! component of gas velocity
       DOUBLE PRECISION, INTENT(IN) ::  VEL_G(:)
@@ -63,8 +63,8 @@ CONTAINS
          IJK = FUNIJK(i,j,k)
       IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_cell(i,j,k)) THEN
-            SUM_VOL = SUM_VOL + VOL(IJK)
-            SUM_G = SUM_G + vel_G(IJK)*EP_G(IJK)*VOL(IJK)
+            SUM_VOL = SUM_VOL + VOL
+            SUM_G = SUM_G + vel_G(IJK)*EP_G(IJK)*VOL
          ENDIF
       END DO
       END DO
@@ -89,7 +89,7 @@ CONTAINS
       IMPLICIT NONE
 
 ! face area - scalar cell
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: A_FACE
+      DOUBLE PRECISION, INTENT(IN) :: A_FACE
 
 ! gas mass flux
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) ::  Flux_g
@@ -115,7 +115,7 @@ CONTAINS
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_cell(i,j,k)) THEN
             SUM_G = SUM_G + Flux_g(IJK)
-            SUM_AREA = SUM_AREA + A_FACE(IJK)
+            SUM_AREA = SUM_AREA + A_FACE
          ENDIF
       END DO
       END DO

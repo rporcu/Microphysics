@@ -77,7 +77,7 @@
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell
-            DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(IJK,M)/VOL(IJK)
+            DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(IJK,M)/VOL
 
          ENDDO
 

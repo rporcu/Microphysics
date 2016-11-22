@@ -183,7 +183,7 @@
       USE geometry, only: odx, ody_n, odz_t
       USE geometry, only: do_k
       USE geometry, only: ox_e
-      USE geometry, only: ayz_u, axz_u, axy_u
+      USE geometry, only: ayz, axz, axy
 
       USE functions, only: ip1, jm1, km1
 
@@ -251,19 +251,19 @@
       C_AB = ODZ_T(KM)
 
 ! East face (i+1, j, k)
-      D_FE = MU_G(IJKE)*C_AE*AYZ_U(IJK)
+      D_FE = MU_G(IJKE)*C_AE*AYZ
 ! West face (i, j, k)
-      D_FW = MU_G(IJKC)*C_AW*AYZ_U(IMJK)
+      D_FW = MU_G(IJKC)*C_AW*AYZ
 
 
 ! North face (i+1/2, j+1/2, k)
       D_FN = AVG_X_H(AVG_Y_H(MU_G(IJKC),MU_G(IJKN),J),&
                      AVG_Y_H(MU_G(IJKE),MU_G(IJKNE),J),I)*&
-             C_AN*AXZ_U(IJK)
+             C_AN*AXZ
 ! South face (i+1/2, j-1/2, k)
       D_FS = AVG_X_H(AVG_Y_H(MU_G(IJKS),MU_G(IJKC),JM),&
                      AVG_Y_H(MU_G(IJKSE),MU_G(IJKE),JM),I)*&
-             C_AS*AXZ_U(IJMK)
+             C_AS*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
@@ -280,11 +280,11 @@
 ! Top face (i+1/2, j, k+1/2)
          D_FT = AVG_X_H(AVG_Z_H(MU_G(IJKC),MU_G(IJKT),K),&
                         AVG_Z_H(MU_G(IJKE),MU_G(IJKTE),K),I)*&
-                OX_E(I)*C_AT*AXY_U(IJK)
+                OX_E(I)*C_AT*AXY
 ! Bottom face (i+1/2, j, k-1/2)
          D_FB = AVG_X_H(AVG_Z_H(MU_G(IJKB),MU_G(IJKC),KM),&
                         AVG_Z_H(MU_G(IJKBE),MU_G(IJKE),KM),I)*&
-                OX_E(I)*C_AB*AXY_U(IJKM)
+                OX_E(I)*C_AB*AXY
       ENDIF
 
 

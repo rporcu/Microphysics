@@ -214,15 +214,15 @@
 
             IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
                IF (DO_I) THEN
-                 Vavg = VAVG_G(U_G, VOL_U)
+                 Vavg = VAVG_G(U_G, VOL)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
                ENDIF
                IF (DO_J) THEN
-                 Vavg = VAVG_G(V_G, VOL_V)
+                 Vavg = VAVG_G(V_G, VOL)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
                ENDIF
                IF (DO_K) THEN
-                 Vavg = VAVG_G(W_G, VOL_W)
+                 Vavg = VAVG_G(W_G, VOL)
                  IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
                ENDIF
             ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z

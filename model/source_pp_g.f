@@ -82,7 +82,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
-            bma = (ROP_G(IJK)-ROP_GO(I,J,K))*VOL(IJK)*ODT
+            bma = (ROP_G(IJK)-ROP_GO(I,J,K))*VOL*ODT
             bme = A_M(IJK,E)*U_G(IJK)
             bmw = A_M(IJK,W)*U_G(IMJK)
             bmn = A_M(IJK,N)*V_G(IJK)
@@ -144,7 +144,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                if (fluid_cell(i,j,k)) THEN
                   A_M(IJK,0) = A_M(IJK,0) - &
                      fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
-                     EP_G(IJK)*VOL(IJK)*ODT
+                     EP_G(IJK)*VOL*ODT
                end if
 
              end do
