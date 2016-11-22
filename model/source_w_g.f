@@ -174,7 +174,7 @@
             ROGA = AVG_Z(RO_G(IJK),RO_G(IJKT),K)
 
 ! Previous time step
-            V0 = AVG_Z(ROP_GO(IJK),ROP_GO(IJKT),K)*ODT
+            V0 = AVG_Z(ROP_GO(I,J,K),ROP_GO(i,j,ktop(i,j,k)),K)*ODT
 
 ! Body force
             VBF = ROPGA*GRAVITY_Z
@@ -189,7 +189,7 @@
                V0*VOL_W(IJK))
 
             B_M(IJK) = B_M(IJK) - ( SDP + lTAU_W_G  + &
-               ( (V0)*W_GO(IJK) + VBF)*VOL_W(IJK) )
+               ( (V0)*W_GO(I,J,K) + VBF)*VOL_W(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
       ENDDO   ! end do loop over ijk

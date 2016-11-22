@@ -163,7 +163,7 @@
             ROPGA = AVG_Y(ROP_G(IJK),ROP_G(IJKN),J)
             ROGA = AVG_Y(RO_G(IJK),RO_G(IJKN),J)
 ! Previous time step
-            V0 = AVG_Y(ROP_GO(IJK),ROP_GO(IJKN),J)*ODT
+            V0 = AVG_Y(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k),J)*ODT
 
 ! Body force
             VBF = ROGA*GRAVITY_Y
@@ -178,7 +178,7 @@
                A_M(IJK,N)+A_M(IJK,S)+A_M(IJK,T)+A_M(IJK,B)+&
                V0*VOL_V(IJK))
             B_M(IJK) = B_M(IJK) - (SDP + lTAU_V_G +  &
-               ((V0)*V_GO(IJK) + VBF)*VOL_V(IJK) )
+               ((V0)*V_GO(I,J,K) + VBF)*VOL_V(IJK) )
 
          ENDIF
       ENDDO

@@ -96,7 +96,7 @@ MODULE CALC_D_MOD
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Pressure correction
-      DOUBLE PRECISION, INTENT(OUT) :: d(:)
+      DOUBLE PRECISION, INTENT(OUT) :: d(:,:,:)
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
 ! Septadiagonal matrix A_m
@@ -138,9 +138,9 @@ MODULE CALC_D_MOD
          IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN
-            D(IJK) = P_SCALE*EPGA(i,j,k)/TMPdp
+            D(I,J,K) = P_SCALE*EPGA(i,j,k)/TMPdp
          ELSE
-            D(IJK) = ZERO
+            D(I,J,K) = ZERO
          ENDIF
 
       ENDDO

@@ -52,11 +52,12 @@
               IJKE = FUNIJK(ieast(i,j,k),j,k)
               IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-              U_G(IJK) = U_G(IJK) - D_E(IJK)*(PP_G(IJKE)-PP_G(IJK))
-              V_G(IJK) = V_G(IJK) - D_N(IJK)*(PP_G(IJKN)-PP_G(IJK))
+              U_G(IJK) = U_G(IJK) - D_E(I,J,K)*(PP_G(IJKE)-PP_G(IJK))
+              V_G(IJK) = V_G(IJK) - D_N(I,J,K)*(PP_G(IJKN)-PP_G(IJK))
 
               IF (DO_K) THEN
-               IJKT = FUNIJK(i,j,ktop(i,j,k))
+                 IJKT = FUNIJK(i,j,ktop(i,j,k))
+                 W_G(IJK) = W_G(IJK) - D_T(I,J,K)*(PP_G(IJKT) - PP_G(IJK))
               ENDIF
 
             ENDIF

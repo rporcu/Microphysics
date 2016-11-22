@@ -36,25 +36,27 @@
 
 !fldvar
       Allocate( EP_g (DIMENSION_3) )
-      Allocate( EP_go (DIMENSION_3p) )
       Allocate( P_g (DIMENSION_3) )
-      Allocate( P_go (DIMENSION_3p) )
       Allocate( RO_g (DIMENSION_3) )
-      Allocate( RO_go (DIMENSION_3p) )
       Allocate( ROP_g (DIMENSION_3) )
-      Allocate( ROP_go (DIMENSION_3p) )
 
       Allocate( U_g (DIMENSION_3) )
-      Allocate( U_go (DIMENSION_3p) )
       Allocate( V_g (DIMENSION_3) )
-      Allocate( V_go (DIMENSION_3p) )
       Allocate( W_g (DIMENSION_3) )
-      Allocate( W_go (DIMENSION_3p) )
 
+      Allocate( EP_go  (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( P_go   (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( RO_go  (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( ROP_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
 
-      Allocate( d_e(DIMENSION_3p) )
-      Allocate( d_n(DIMENSION_3p) )
-      Allocate( d_t(DIMENSION_3p) )
+      Allocate( U_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( V_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( W_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
+
+      Allocate( d_e(istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( d_n(istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( d_t(istart3:iend3,jstart3:jend3,kstart3:kend3))
+
       Allocate( Pp_g(DIMENSION_3p) )
 
 !physprop

@@ -3,58 +3,49 @@
 !  Module name: UPDATE_OLD                                             C
 !  Purpose: Update the stored previous-time-step values of certain     C
 !           field variables                                            C
-!    *****Remember to modify reset_new also
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 21-JAN-92  C
-!  Reviewer:M. Syamlal, S. Venkatesan, P. Nicoletti,  Date: 29-JAN-92  C
-!           W. Rogers                                                  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: Store old solids velocity values                           C
-!  Author: M. Syamlal                                 Date: 17-JUN-92  C
-!  Reviewer: S. Venkatesan                            Date: 11-DEC-92  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: ROP_g, EP_g, ROP_s, IJKMAX2, MMAX, U_s, V_s,  C
-!                        W_s                                           C
-!                                                                      C
-!  Variables modified: ROP_go, ROP_so, IJK, M, U_so, V_so, W_so C
-!                                                                      C
-!  Local variables: NONE                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE UPDATE_OLD
-!
+
+
+! Modules
 !-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE geometry
-      USE physprop
-      USE run
+      USE fldvar, only: ep_g, ep_go
+      USE fldvar, only: P_g, P_go
+      USE fldvar, only: RO_g, RO_go
+      USE fldvar, only: ROP_g, ROP_go
+
+      USE fldvar, only: U_g, U_go
+      USE fldvar, only: V_g, V_go
+      USE fldvar, only: W_g, W_go
+
+      use functions, only: funijk
+
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
 
       IMPLICIT NONE
-!-----------------------------------------------
-!   G l o b a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
 
-      EP_GO(:) = EP_G(:)
-      P_GO(:) = P_G(:)
-      RO_GO(:) = RO_G(:)
-      ROP_GO(:) = ROP_G(:)
-      U_GO(:) = U_G(:)
-      V_GO(:) = V_G(:)
-      W_GO(:) = W_G(:)
+! Local Variables
+!-----------------------------------------------
+      integer :: i, j, k, ijk
+
+      do k=kstart3, kend3
+         do j=jstart3,jend3
+            do i=istart3, iend3
+               ijk = funijk(i,j,k)
+               Ep_go(i,j,k) = Ep_g(ijk)
+               P_go(i,j,k) = P_g(ijk)
+               Ro_go(i,j,k) = Ro_g(ijk)
+               Rop_go(i,j,k) = Rop_g(ijk)
+               U_go(i,j,k) = U_g(ijk)
+               V_go(i,j,k) = V_g(ijk)
+               W_go(i,j,k) = W_g(ijk)
+            enddo
+         enddo
+      enddo
+
 
       RETURN
       END SUBROUTINE UPDATE_OLD

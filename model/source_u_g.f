@@ -171,8 +171,8 @@
             ROGA  = HALF * (VOL(IJK)*RO_G(IJK) + &
                             VOL(IPJK)*RO_G(IJKE))/VOL_U(IJK)
 ! Previous time step
-            V0 = HALF * (VOL(IJK)*ROP_GO(IJK) + &
-                         VOL(IPJK)*ROP_GO(IJKE))*ODT/VOL_U(IJK)
+            V0 = HALF * (VOL(IJK)*ROP_GO(I,J,K) + &
+               VOL(IPJK)*ROP_GO(ieast(i,j,k),j,k))*ODT/VOL_U(IJK)
 
 ! Body force
             VBF = ROGA*GRAVITY_X
@@ -185,7 +185,7 @@
                V0*VOL_U(IJK))
 
             B_M(IJK) = B_M(IJK) -(SDP + lTAU_U_G + &
-               ( (V0)*U_GO(IJK) + VBF)*VOL_U(IJK) )
+               ( (V0)*U_GO(I,J,K) + VBF)*VOL_U(IJK) )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
 

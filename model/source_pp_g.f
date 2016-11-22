@@ -82,7 +82,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
-            bma = (ROP_G(IJK)-ROP_GO(IJK))*VOL(IJK)*ODT
+            bma = (ROP_G(IJK)-ROP_GO(I,J,K))*VOL(IJK)*ODT
             bme = A_M(IJK,E)*U_G(IJK)
             bmw = A_M(IJK,W)*U_G(IMJK)
             bmn = A_M(IJK,N)*V_G(IJK)
@@ -92,12 +92,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             B_M(IJK) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
             B_MMAX(IJK) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
 
-            A_M(IJK,E) = A_M(IJK,E)*D_E(IJK)
-            A_M(IJK,W) = A_M(IJK,W)*D_E(IMJK)
-            A_M(IJK,N) = A_M(IJK,N)*D_N(IJK)
-            A_M(IJK,S) = A_M(IJK,S)*D_N(IJMK)
-            A_M(IJK,T) = A_M(IJK,T)*D_T(IJK)
-            A_M(IJK,B) = A_M(IJK,B)*D_T(IJKM)
+            A_M(IJK,E) = A_M(IJK,E)*D_E(i,j,k)
+            A_M(IJK,W) = A_M(IJK,W)*D_E(iminus(i,j,k),j,k)
+            A_M(IJK,N) = A_M(IJK,N)*D_N(i,j,k)
+            A_M(IJK,S) = A_M(IJK,S)*D_N(i,jminus(i,j,k),k)
+            A_M(IJK,T) = A_M(IJK,T)*D_T(i,j,k)
+            A_M(IJK,B) = A_M(IJK,B)*D_T(i,j,kminus(i,j,k))
 
             A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+A_M(IJK,N)+A_M(IJK,S) + &
                A_M(IJK,T)+A_M(IJK,B))
