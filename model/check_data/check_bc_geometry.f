@@ -62,7 +62,7 @@
            'CG_PO           '/)
 !......................................................................!
 
- 
+
       CALL INIT_ERR_MSG("CHECK_BC_GEOMETRY")
 
       L50: DO BCV = 1, DIMENSION_BC
@@ -210,7 +210,7 @@
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: NO_I, XLENGTH, DX, IMAX, IMAX2, XMIN
+      use geometry, only: NO_I, XLENGTH, DX, IMAX, IMAX2
       use geometry, only: NO_J, YLENGTH, DY, JMAX, JMAX2
       use geometry, only: NO_K, ZLENGTH, DZ, KMAX, KMAX2
 ! Function to compare two values
@@ -251,15 +251,15 @@
             I_W = 1
             I_E = 1
          ELSE
-            CALL CALC_CELL (XMIN, BC_X_W(BCV), DX, IMAX, I_W)
+            CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
             I_W = I_W + 1
-            CALL CALC_CELL (XMIN, BC_X_E(BCV), DX, IMAX, I_E)
+            CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
 ! BC along zy plane, checking if far west or far east of domain
             IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
-               IF(COMPARE(BC_X_W(BCV),XMIN)) THEN
+               IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
                   I_W = 1
                   I_E = 1
-               ELSEIF(COMPARE(BC_X_W(BCV),XMIN+XLENGTH)) THEN
+               ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
                   I_W = IMAX2
                   I_E = IMAX2
                ENDIF
@@ -284,9 +284,9 @@
             J_S = 1
             J_N = 1
          ELSE
-            CALL CALC_CELL (ZERO, BC_Y_S(BCV), DY, JMAX, J_S)
+            CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
             J_S = J_S + 1
-            CALL CALC_CELL (ZERO, BC_Y_N(BCV), DY, JMAX, J_N)
+            CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
 ! BC along xz plane, checking if far south or far north of domain
             IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
                IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
@@ -315,9 +315,9 @@
             K_B = 1
             K_T = 1
          ELSE
-            CALL CALC_CELL (ZERO, BC_Z_B(BCV), DZ, KMAX, K_B)
+            CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
             K_B = K_B + 1
-            CALL CALC_CELL (ZERO, BC_Z_T(BCV), DZ, KMAX, K_T)
+            CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
 ! BC along xy plane, checking if far bottom or far top of domain
             IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
                IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
@@ -391,7 +391,7 @@
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: NO_I, DX, IMAX, IMAX2, XMIN
+      use geometry, only: NO_I, DX, IMAX, IMAX2
       use geometry, only: NO_J, DY, JMAX, JMAX2
       use geometry, only: NO_K, DZ, KMAX, KMAX2
 
@@ -433,8 +433,8 @@
       Z_CONSTANT = .TRUE.
 
       IF (BC_X_W(BCV)/=UNDEFINED .AND. BC_X_E(BCV)/=UNDEFINED) THEN
-         CALL CALC_CELL (XMIN, BC_X_W(BCV), DX, IMAX, I_W)
-         CALL CALC_CELL (XMIN, BC_X_E(BCV), DX, IMAX, I_E)
+         CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
+         CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
          IF (BC_X_W(BCV) /= BC_X_E(BCV)) THEN
             X_CONSTANT = .FALSE.
             I_W = I_W + 1
@@ -447,9 +447,9 @@
          BC_I_E(BCV) = I_E
       ELSE
          IF(BC_I_W(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (XMIN,DX,BC_I_W(BCV),BC_X_W(BCV))
+            CALL CALC_LOC (DX,BC_I_W(BCV),BC_X_W(BCV))
          IF(BC_I_E(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (XMIN,DX,BC_I_E(BCV),BC_X_E(BCV))
+            CALL CALC_LOC (DX,BC_I_E(BCV),BC_X_E(BCV))
          IF(BC_X_W(BCV) /= BC_X_E(BCV)) X_CONSTANT = .FALSE.
       ENDIF
 
@@ -460,8 +460,8 @@
       ENDIF
 
       IF (BC_Y_S(BCV)/=UNDEFINED .AND. BC_Y_N(BCV)/=UNDEFINED) THEN
-         CALL CALC_CELL (ZERO, BC_Y_S(BCV), DY, JMAX, J_S)
-         CALL CALC_CELL (ZERO, BC_Y_N(BCV), DY, JMAX, J_N)
+         CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
+         CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
          IF(BC_Y_S(BCV) /= BC_Y_N(BCV)) THEN
             Y_CONSTANT = .FALSE.
             J_S = J_S + 1
@@ -474,9 +474,9 @@
          BC_J_N(BCV) = J_N
       ELSE
          IF(BC_J_S(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (ZERO,DY,BC_J_S(BCV),BC_Y_S(BCV))
+            CALL CALC_LOC (DY,BC_J_S(BCV),BC_Y_S(BCV))
          IF(BC_J_N(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (ZERO,DY,BC_J_N(BCV),BC_Y_N(BCV))
+            CALL CALC_LOC (DY,BC_J_N(BCV),BC_Y_N(BCV))
          IF (BC_Y_S(BCV) /= BC_Y_N(BCV)) Y_CONSTANT = .FALSE.
       ENDIF
 
@@ -487,8 +487,8 @@
       ENDIF
 
       IF(BC_Z_B(BCV)/=UNDEFINED .AND. BC_Z_T(BCV)/=UNDEFINED) THEN
-         CALL CALC_CELL (ZERO, BC_Z_B(BCV), DZ, KMAX, K_B)
-         CALL CALC_CELL (ZERO, BC_Z_T(BCV), DZ, KMAX, K_T)
+         CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
+         CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
          IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) THEN
             Z_CONSTANT = .FALSE.
             K_B = K_B + 1
@@ -501,9 +501,9 @@
          BC_K_T(BCV) = K_T
       ELSE
          IF(BC_K_B(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (ZERO,DZ,BC_K_B(BCV),BC_Z_B(BCV))
+            CALL CALC_LOC (DZ,BC_K_B(BCV),BC_Z_B(BCV))
          IF(BC_K_T(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (ZERO,DZ,BC_K_T(BCV),BC_Z_T(BCV))
+            CALL CALC_LOC (DZ,BC_K_T(BCV),BC_Z_T(BCV))
          IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) Z_CONSTANT = .FALSE.
       ENDIF
 

@@ -14,7 +14,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Domain partitions in various directions.
-      use geometry, only: IMAX, NO_I, XMIN
+      use geometry, only: IMAX, NO_I
       use geometry, only: JMAX, NO_J
       use geometry, only: KMAX, NO_K, DZ, ZLENGTH
 
@@ -65,14 +65,6 @@
          'The same functionality',/'is achieved with one cell (',A1,   &
          'MAX=1) and making the ',A,' walls',/'free-slip. Please ',    &
          'correct the mfix.dat file.')
-
-      IF (XMIN < ZERO) THEN
-         WRITE(ERR_MSG, 1101) 'XMIN'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 1101 FORMAT('Error 1101: Illegal geometry: ',A,' cannot be less ',    &
-         'than zero.',/'Please correct the mfix.dat file.')
 
 
       SELECT CASE(trim(COORDINATES))

@@ -70,8 +70,6 @@
       DOUBLE PRECISION :: DY (0:DIM_J)
 ! Cell sizes in the z or theta direction
       DOUBLE PRECISION :: DZ (0:DIM_K)
-! Starting value of X.  This quantity is useful for
-      DOUBLE PRECISION :: XMIN
 
 ! IMAX2 * JMAX2
       INTEGER :: IJMAX2

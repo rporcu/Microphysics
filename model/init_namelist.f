@@ -537,11 +537,6 @@
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
-!  <description> do not use  </description>
-      XMIN = ZERO
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the x (r) direction.</description>
       XLENGTH = UNDEFINED
 !</keyword>

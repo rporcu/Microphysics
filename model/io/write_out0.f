@@ -153,8 +153,7 @@
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
          LEGEND(3) = 'X_E'
-         CALL WRITE_TABLE (LEGEND, DX, XMIN, 1, IMAX2)
-         IF (XMIN /= ZERO) WRITE (UNIT_OUT, 1211) XMIN
+         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, IMAX2)
          WRITE (UNIT_OUT, 1212) IMAX
          WRITE (UNIT_OUT, 1213) XLENGTH
          WRITE (UNIT_OUT, 1220)
@@ -279,12 +278,12 @@
       DO L = 1, DIMENSION_IC
          IF (IC_DEFINED(L)) THEN
             WRITE (UNIT_OUT, 1510) L
-            LOC(1) = LOCATION(IC_I_W(L),XMIN,DX) - HALF*DX(IC_I_W(L))
-            LOC(2) = LOCATION(IC_I_E(L),XMIN,DX) + HALF*DX(IC_I_E(L))
-            LOC(3) = LOCATION(IC_J_S(L),ZERO,DY) - HALF*DY(IC_J_S(L))
-            LOC(4) = LOCATION(IC_J_N(L),ZERO,DY) + HALF*DY(IC_J_N(L))
-            LOC(5) = LOCATION(IC_K_B(L),ZERO,DZ) - HALF*DZ(IC_K_B(L))
-            LOC(6) = LOCATION(IC_K_T(L),ZERO,DZ) + HALF*DZ(IC_K_T(L))
+            LOC(1) = LOCATION(IC_I_W(L),DX) - HALF*DX(IC_I_W(L))
+            LOC(2) = LOCATION(IC_I_E(L),DX) + HALF*DX(IC_I_E(L))
+            LOC(3) = LOCATION(IC_J_S(L),DY) - HALF*DY(IC_J_S(L))
+            LOC(4) = LOCATION(IC_J_N(L),DY) + HALF*DY(IC_J_N(L))
+            LOC(5) = LOCATION(IC_K_B(L),DZ) - HALF*DZ(IC_K_B(L))
+            LOC(6) = LOCATION(IC_K_T(L),DZ) + HALF*DZ(IC_K_T(L))
             WRITE (UNIT_OUT, 1520) IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), IC_Y_S&
                (L), LOC(3), IC_Y_N(L), LOC(4), IC_Z_B(L), LOC(5), IC_Z_T(L), &
                LOC(6)
@@ -329,12 +328,12 @@
                WRITE (UNIT_OUT, 1619)
             END SELECT
             IF (BC_TYPE(L)(1:2)/='CG') THEN
-               LOC(1) = LOCATION(BC_I_W(L),XMIN,DX) - HALF*DX(BC_I_W(L))
-               LOC(2) = LOCATION(BC_I_E(L),XMIN,DX) + HALF*DX(BC_I_E(L))
-               LOC(3) = LOCATION(BC_J_S(L),ZERO,DY) - HALF*DY(BC_J_S(L))
-               LOC(4) = LOCATION(BC_J_N(L),ZERO,DY) + HALF*DY(BC_J_N(L))
-               LOC(5) = LOCATION(BC_K_B(L),ZERO,DZ) - HALF*DZ(BC_K_B(L))
-               LOC(6) = LOCATION(BC_K_T(L),ZERO,DZ) + HALF*DZ(BC_K_T(L))
+               LOC(1) = LOCATION(BC_I_W(L),DX) - HALF*DX(BC_I_W(L))
+               LOC(2) = LOCATION(BC_I_E(L),DX) + HALF*DX(BC_I_E(L))
+               LOC(3) = LOCATION(BC_J_S(L),DY) - HALF*DY(BC_J_S(L))
+               LOC(4) = LOCATION(BC_J_N(L),DY) + HALF*DY(BC_J_N(L))
+               LOC(5) = LOCATION(BC_K_B(L),DZ) - HALF*DZ(BC_K_B(L))
+               LOC(6) = LOCATION(BC_K_T(L),DZ) + HALF*DZ(BC_K_T(L))
                WRITE (UNIT_OUT, 1620) BC_X_W(L), LOC(1), BC_X_E(L), LOC(2), BC_Y_S&
                (L), LOC(3), BC_Y_N(L), LOC(4), BC_Z_B(L), LOC(5), BC_Z_T(L), &
                LOC(6)
@@ -566,7 +565,7 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: LOCATION(L2, XMIN, DX)                                 C
+!  Module name: LOCATION(L2, DX)                                       C
 !  Purpose: Find the cell center location in X, Y, or Z direction for  C
 !           the given index L2.                                        C
 !                                                                      C
@@ -581,10 +580,7 @@
 !  Local variables: L                                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      DOUBLE PRECISION FUNCTION LOCATION (L2, XMIN, DX)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
+      DOUBLE PRECISION FUNCTION LOCATION (L2, DX)
 !
 !-----------------------------------------------
 !   M o d u l e s
@@ -599,9 +595,6 @@
 !                      Index for which the location is required
       INTEGER          L2
 !
-!                      Starting location of the coordinate
-      DOUBLE PRECISION XMIN
-!
 !                      Cell sizes (DX, DY, or DZ)
 !//EFD Nov/11 avoid using dx(*)
 !//      DOUBLE PRECISION DX(*)
@@ -613,13 +606,10 @@
       INTEGER          L
 !-----------------------------------------------
 !
-      LOCATION = XMIN - HALF*DX(1)
+      LOCATION =  HALF*DX(1)
       L = 2
       IF (L2 - 1 > 0) THEN
 
-!//EFD      since indexing of dx starts from 0
-!//         using DX(1:(L2-1)) instead of DX(:,L2)
-!//         LOCATION = LOCATION + SUM(HALF*(DX(:L2-1)+DX(2:L2)))
 
          LOCATION = LOCATION + SUM(HALF*(DX(1:(L2-1))+DX(2:L2)))
          L = L2 + 1

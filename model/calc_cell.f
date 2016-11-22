@@ -10,7 +10,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_CELL(RMIN, REACTOR_LOC, D_DIR, N_DIR, CELL_LOC)
+      SUBROUTINE CALC_CELL(REACTOR_LOC, D_DIR, N_DIR, CELL_LOC)
 
 !-----------------------------------------------
 ! Modules
@@ -20,10 +20,6 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! the starting value of the x, y or z axis for which the i, j or k cell
-! index is to be found -- XMIN need not be zero, however, YMIN and ZMIN
-! are assumed to be zero.
-      DOUBLE PRECISION, INTENT(IN) :: RMIN
 ! the x, y or z location along the axis for which the cell index (i, j
 ! or k) is to be found
       DOUBLE PRECISION, INTENT(IN) :: REACTOR_LOC
@@ -44,7 +40,7 @@
 !-----------------------------------------------
 
       CELL_LOC = -1
-      CELL_START = RMIN
+      CELL_START = 0.0d0
       DO LC = 2, N_DIR + 1
          CELL_END = CELL_START + D_DIR(LC)
          IF (REACTOR_LOC <= CELL_START + HALF*D_DIR(LC)) THEN
@@ -72,7 +68,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_LOC(RMIN, D_DIR, CELL_LOC, REACTOR_LOC)
+      SUBROUTINE CALC_LOC(D_DIR, CELL_LOC, REACTOR_LOC)
 
 !-----------------------------------------------
 ! Modules
@@ -81,10 +77,6 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! the starting value of the x, y or z axis for which the x, y or z
-! position is to be found -- XMIN need not be zero, however, YMIN and
-! ZMIN are assumed to be zero.
-      DOUBLE PRECISION, INTENT(IN) :: RMIN
 ! the i, j, or k cell index that corresponds to the x, y or z
 ! reactor_location to be found
       INTEGER, INTENT(IN) :: CELL_LOC
@@ -100,7 +92,7 @@
       INTEGER :: LC
 !-----------------------------------------------
 
-      REACTOR_LOC = RMIN
+      REACTOR_LOC = 0.0d0
       LC = 2
       IF (CELL_LOC - 1 > 0) THEN
          REACTOR_LOC = REACTOR_LOC + SUM(D_DIR(2:CELL_LOC))
@@ -123,14 +115,12 @@
 !  from within any critical routines/loops.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_CELL_INTERSECT(RMIN, LOC, D_DIR, N_DIR, CELL)
+      SUBROUTINE CALC_CELL_INTERSECT(LOC, D_DIR, N_DIR, CELL)
 
       IMPLICIT NONE
 
 ! Passed Arguments:
 !---------------------------------------------------------------------//
-! Starting value of the axis (ZERO except for maybe XMIN)
-      DOUBLE PRECISION, INTENT(in) :: RMIN
 ! Point to check for intersection.
       DOUBLE PRECISION, INTENT(in) :: LOC
 ! Number of cells in this direction (IMAX,JMAX,KMAX)
@@ -150,7 +140,7 @@
 
      CELL = -1
 
-      CELL_START = RMIN
+      CELL_START = 0.0d0
       DO LC=2, N_DIR+1
          CELL_END = CELL_START + D_DIR(LC)
          IF(CELL_START <= LOC .AND. LOC <= CELL_END) THEN
