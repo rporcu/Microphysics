@@ -12,9 +12,9 @@ stages:
   - benchmarks
 
 variables:
-  CTEST_OUTPUT_ON_FAILURE: 1
-  INTEL_LICENSE_FILE: /nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic
-  LD_LIBRARY_PATH: /nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/Intel/ParallelStudio/2016.2.062/lib/intel64
+  CTEST_OUTPUT_ON_FAILURE: "1"
+  INTEL_LICENSE_FILE: "/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic"
+  LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/Intel/ParallelStudio/2016.2.062/lib/intel64"
 
 build:
   stage: build
