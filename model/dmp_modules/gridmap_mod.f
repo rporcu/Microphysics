@@ -544,10 +544,10 @@
       ENDIF
 
 ! Setup coefficients of FUINIJK
-        c0 = 1 - jstart3_all(myPE)
-        c1 = (jend3_all(myPE)-jstart3_all(myPE)+1)
-        c2 = (jend3_all(myPE)-jstart3_all(myPE)+1)* (iend3_all(myPE)-istart3_all(myPE)+1)
-        c0 =  c0  - c1*istart3_all(myPE) - c2*kstart3_all(myPE)
+        c0 = 1 - istart3_all(myPE)
+        c1 = (iend3_all(myPE)-istart3_all(myPE)+1)
+        c2 = (iend3_all(myPE)-istart3_all(myPE)+1)* (jend3_all(myPE)-jstart3_all(myPE)+1)
+        c0 =  c0  - c1*jstart3_all(myPE) - c2*kstart3_all(myPE)
 
 !   Initialize Array mapping (I,J,K) to IJK
         INCREMENT_ARRAYS_ALLOCATED = .FALSE.
@@ -571,7 +571,7 @@
         DO ii = istart3,iend3
            DO jj = jstart3,jend3
               DO kk = kstart3,kend3
-                 IJK_ARRAY_OF(ii,jj,kk)=FUNIJK_0(ii,jj,kk)
+                 IJK_ARRAY_OF(ii,jj,kk)=FUNIJK(ii,jj,kk)
               ENDDO
            ENDDO
         ENDDO

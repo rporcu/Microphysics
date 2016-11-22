@@ -7,7 +7,7 @@ MODULE functions
 
 ! Functions for generating IJK indices for indicated basis:
 !---------------------------------------------------------------------//
-! INTEGER :: FUNIJK, FUNIJK_0
+! INTEGER :: FUNIJK
 ! INTEGER :: FUNIJK_PROC
 ! INTEGER :: FUNIJK_GL
 ! INTEGER :: FUNIJK_IO

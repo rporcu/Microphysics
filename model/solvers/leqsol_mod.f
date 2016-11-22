@@ -110,7 +110,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs, c0, c1, c2
+    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs
     USE geometry, ONLY: do_k
     USE param, ONLY: DIMENSION_3
     USE sendrecv, ONLY: send_recv
@@ -254,7 +254,7 @@ CONTAINS
        do k = kstart3,kend3
           do i = istart3,iend3
              do j = jstart3,jend3
-                IJK = (J + C0 + I*C1 + K*C2)
+                IJK = funijk(i,j,k)
                 VAR(IJK) = B_M(IJK)
              enddo
           enddo
@@ -756,7 +756,7 @@ CONTAINS
       NSTART = JSTART
 
       DO J=NSTART, NEND
-         IJK = (J + C0 + I*C1 + K*C2)
+         IJK = funijk(i,j,k)
          DD(J) = A_M(IJK,  0)
          CC(J) = A_M(IJK, -2)
          EE(J) = A_M(IJK,  2)
@@ -779,7 +779,7 @@ CONTAINS
       ENDIF
 
       DO J=NSTART, NEND
-         Var(J + C0 + I*C1 + K*C2) = BB(J)
+         Var(funijk(i,j,k)) = BB(J)
       ENDDO
 
       RETURN

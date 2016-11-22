@@ -24,43 +24,27 @@
 !---------------------------------------------------------------------//
 ! Functions for generating the LOCAL 3-D array index IJK from the
 ! 1-D indices I, J, and K.
-!//FUNIJK is moved to compar for debugging purposes - Sreekanth-10/26/99
-!     FUNIJK (LI, LJ, LK) = c0 + LI + (LJ-jstart3_all(myPE))*c1 + (LK-kstart3_all(myPE))* c2
-!      funijk(li,lj,lk) = lj + c0 + li*c1 + lk*c2
       INTEGER FUNCTION funijk(li,lj,lk)
-      USE compar
+      USE compar, only: c0, c1, c2
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: LI, LJ, LK
-      funijk = IJK_ARRAY_OF(li,lj,lk)
+      funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
-
-      INTEGER FUNCTION funijk_0(li,lj,lk)
-      USE compar
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: LI, LJ, LK
-      funijk_0 = lj + c0 + li*c1 + lk*c2
-      END FUNCTION funijk_0
 
 ! Function for generating the LOCAL 3-D array index IJK from the
 ! the 1-D indices I, J, K and IPROC.
-!     FUNIJK_PROC(LI, LJ, LK, LIPROC) = 1 + (LI - istart3_all(LIPROC))+ &
-!     (LJ-jstart3_all(LIPROC))*(iend3_all(LIPROC)-istart3_all(LIPROC)+1) &
-!     + (LK-kstart3_all(LIPROC))*(jend3_all(LIPROC)-jstart3_all(LIPROC)+1)* &
-!     (iend3_all(LIPROC)-istart3_all(LIPROC)+1)
-      INTEGER FUNCTION FUNIJK_PROC(LI, LJ, LK, LIPROC)
+      INTEGER FUNCTION FUNIJK_PROC(LI, LJ, LK, lproc)
       USE compar
       IMPLICIT NONE
-      INTEGER, INTENT(IN) :: LI, LJ, LK, LIPROC
-      FUNIJK_PROC = 1 + (LJ - jstart3_all(LIPROC))+ &
-         (LI-Istart3_all(LIPROC))*(jend3_all(LIPROC)-jstart3_all(LIPROC)+1) &
-         + (LK-kstart3_all(LIPROC))*(jend3_all(LIPROC)-jstart3_all(LIPROC)+1)* &
-         (iend3_all(LIPROC)-istart3_all(LIPROC)+1)
+      INTEGER, INTENT(IN) :: LI, LJ, LK, lproc
+      FUNIJK_PROC = 1 + (li - istart3_all(lproc))+ &
+         (lj-jstart3_all(lproc))*(iend3_all(lproc)-istart3_all(lproc)+1) &
+         + (LK-kstart3_all(lproc))*(iend3_all(lproc)-istart3_all(lproc)+1)* &
+         (jend3_all(lproc)-jstart3_all(lproc)+1)
       END FUNCTION FUNIJK_PROC
 
 ! Function for generating the GLOBAL 3-D array index IJK from the
 ! 1-D indices I, J, and K.
-!     FUNIJK_GL (LI, LJ, LK) = 1 + (LI - imin3) + (LJ-jmin3)*(imax3-imin3+1) &
-!     + (LK-kmin3)*(jmax3-jmin3+1)*(imax3-imin3+1)
       INTEGER FUNCTION FUNIJK_GL (LI, LJ, LK)
       USE geometry
       IMPLICIT NONE
