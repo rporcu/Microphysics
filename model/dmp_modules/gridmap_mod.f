@@ -178,8 +178,6 @@
       integer :: iproc, ii, jj, kk
 ! Local flags for cyclic boundarys
       LOGICAL :: CYC_XL, CYC_YL, CYC_ZL
-! Communicator (MPI_COMM_WORLD)
-      INTEGER :: COMM
 ! Amount of load imbalance
       INTEGER :: IMBALANCE
 ! Theoritical speedup (based on load imbalance)

@@ -25,7 +25,7 @@
       SUBROUTINE DES_STL_PREPROCESSING
 
 ! Number of facets from STL files, (plus DES generated)
-      use stl, only: N_FACETS, N_FACETS_DES
+      use stl, only: N_FACETS_DES
 ! Start/End position of different STLs
       use stl, only: STL_START, STL_END
 ! All STLS

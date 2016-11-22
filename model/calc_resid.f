@@ -636,9 +636,6 @@
       INTEGER :: IJK_RESID_GL(0:numPEs-1), IJK_RESID_L(0:numPEs-1)
       INTEGER :: nproc
 
-! Solids volume fraction at face
-      DOUBLE PRECISION :: EPSA
-
 !-----------------------------------------------
 
 ! initializing
@@ -841,8 +838,6 @@
       DOUBLE PRECISION :: MAX_RESID_GL(0:numPEs-1), MAX_RESID_L(0:numPEs-1)
       INTEGER :: IJK_RESID_GL(0:numPEs-1), IJK_RESID_L(0:numPEs-1)
       INTEGER :: nproc
-! Solids volume fraction at face
-      DOUBLE PRECISION :: EPSA
 
 !-----------------------------------------------
 
@@ -1049,8 +1044,6 @@
       DOUBLE PRECISION :: MAX_RESID_GL(0:numPEs-1), MAX_RESID_L(0:numPEs-1)
       INTEGER :: IJK_RESID_GL(0:numPEs-1), IJK_RESID_L(0:numPEs-1)
       INTEGER :: nproc
-! Solids volume fraction at face
-      DOUBLE PRECISION :: EPSA
 
 !-----------------------------------------------
 

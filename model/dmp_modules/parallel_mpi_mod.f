@@ -24,8 +24,6 @@ module parallel_mpi
 
       implicit none
 
-      integer :: ierr
-
 ! Variables for generating file basename with processor id
       integer :: i1, i10, i100, i1000, i10000
 

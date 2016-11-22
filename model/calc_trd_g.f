@@ -47,17 +47,6 @@
 !=======================================================================
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
-      DOUBLE PRECISION :: DEL_H,Nx,Ny,Nz
-      DOUBLE PRECISION :: dudx,dvdy,dwdz
-      DOUBLE PRECISION :: Xi,Yi,Zi,Ui,Vi,Wi,Sx,Sy,Sz
-      DOUBLE PRECISION :: UW_g,VW_g,WW_g
-
-      LOGICAL :: U_NODE_AT_E, U_NODE_AT_W
-      LOGICAL :: V_NODE_AT_N, V_NODE_AT_S
-      LOGICAL :: W_NODE_AT_T, W_NODE_AT_B
-      INTEGER :: BCV
-      INTEGER :: BCT
-
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3
@@ -131,25 +120,14 @@
 !-----------------------------------------------
 !
 !                      Indices
-      INTEGER          I, J, K, IJK, IMJK, IJMK, IJKM
+      INTEGER          IJK
 !
-      DOUBLE PRECISION :: DEL_H,Nx,Ny,Nz
-      DOUBLE PRECISION :: dudx,dudy,dudz
-      DOUBLE PRECISION :: dvdx,dvdy,dvdz
-      DOUBLE PRECISION :: dwdx,dwdy,dwdz
-      DOUBLE PRECISION :: Xi,Yi,Zi,Ui,Vi,Wi,Sx,Sy,Sz
-      DOUBLE PRECISION :: UW_g,VW_g,WW_g
       DOUBLE PRECISION, DIMENSION (3,3) :: DELV
 
 !              |  du/dx    du/dy   du/dz  |
 !      DELV =  |  dv/dx    dv/dy   dv/dz  |  =  dUi/dxj
 !              |  dw/dx    dw/dy   dw/dz  |
 
-      LOGICAL :: U_NODE_AT_E, U_NODE_AT_W
-      LOGICAL :: V_NODE_AT_N, V_NODE_AT_S
-      LOGICAL :: W_NODE_AT_T, W_NODE_AT_B
-      INTEGER :: BCV
-      INTEGER :: BCT
 !-----------------------------------------------
 !
 !

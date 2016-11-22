@@ -53,7 +53,7 @@
 ! max of residuals
       DOUBLE PRECISION :: maxres
 ! index
-      INTEGER :: L, M, maxL, maxM, maxN
+      INTEGER :: L, maxL, maxM, maxN
 !-----------------------------------------------
 
 ! sum the residuals from correction equation (pressure and/or

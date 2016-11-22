@@ -157,8 +157,6 @@
       DOUBLE PRECISION :: IC_START(3), IC_END(3)
 ! Volume and lengths of the IC Region
       DOUBLE PRECISION :: DOM_VOL, DOML(3)
-! Flag to skip the particle
-      LOGICAL :: SKIP
 ! Diameter adjusted for space padding
       DOUBLE PRECISION :: ADJ_DIA
 ! Number of particles calculated from volume fracton

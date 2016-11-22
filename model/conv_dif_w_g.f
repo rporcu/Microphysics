@@ -123,7 +123,7 @@
 ! indices
       INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: ijkp, imjkp, ijmkp
-      INTEGER :: itmp, jtmp, ktmp
+      INTEGER :: itmp, jtmp
 
 !---------------------------------------------------------------------//
 

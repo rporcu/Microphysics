@@ -61,7 +61,7 @@
 ! Indices
       INTEGER :: IJK, IPJK, IJPK, IJKP
       INTEGER :: IMJK, IJMK, IJKM
-      INTEGER :: M, I, J, K
+      INTEGER ::  I, J, K
 ! local value of A_m
       DOUBLE PRECISION :: am
 !-----------------------------------------------

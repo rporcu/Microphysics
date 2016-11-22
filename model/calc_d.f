@@ -82,7 +82,7 @@ MODULE CALC_D_MOD
       use scales, only: P_SCALE
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
       use functions, only: funijk
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: istart3, iend3, jstart3, jend3, kend3, imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 

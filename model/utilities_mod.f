@@ -67,7 +67,6 @@ CONTAINS
       use mpi_utility, only: global_all_max
       use param, only: dimension_bc
       use param1, only: zero, small_number
-      use physprop, only: mmax
       use run, only: units
       use toleranc, only: max_allowed_vel, max_inlet_vel, max_inlet_vel_fac
 
@@ -75,7 +74,7 @@ CONTAINS
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: L, I, J, K, IJK, M
+      INTEGER :: L, I, J, K, IJK
       DOUBLE PRECISION :: maxVEL
 !---------------------------------------------------------------------//
 

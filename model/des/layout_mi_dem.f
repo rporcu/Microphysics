@@ -79,7 +79,6 @@
       use des_bc, only: DEM_MI
 
       use stl, only: DEFAULT_STL
-      use stl, only: VERTEX
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -422,7 +421,6 @@
       use des_bc, only: DEM_MI
 
       use stl, only: DEFAULT_STL
-      use stl, only: VERTEX
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -766,7 +764,6 @@
       use des_bc, only: DEM_MI
 
       use stl, only: DEFAULT_STL
-      use stl, only: VERTEX
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ

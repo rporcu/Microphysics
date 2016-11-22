@@ -114,7 +114,7 @@
 ! Axis decomposition
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3, DIMENSION_4
-      USE param, only: DIMENSION_3L, DIMENSION_3P
+      USE param, only: DIMENSION_3L
 
 ! Module procedures
 !---------------------------------------------------------------------//
