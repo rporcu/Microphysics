@@ -24,7 +24,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
       IMPLICIT NONE
 !-----------------------------------------------
@@ -121,9 +120,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-      call global_all_sum(NUM)
-      call global_all_sum(DEN)
-      call global_all_sum(NCELLS)
+      ! call global_all_sum(NUM)
+      ! call global_all_sum(DEN)
+      ! call global_all_sum(NCELLS)
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
@@ -155,11 +154,11 @@
       enddo
 
 ! Determining the maximum among all the procesors
-      call global_all_max(MAX_RESID)
+      ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-      call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-      call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+      ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+      ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Calling to determine the global IJK location w.r.t. serial version
       IJK_RESID = IJKMAX2
@@ -218,7 +217,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
 
       USE fldvar
@@ -322,9 +320,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-      call global_all_sum(NUM)
-      call global_all_sum(DEN)
-      call global_all_sum(NCELLS)
+      ! call global_all_sum(NUM)
+      ! call global_all_sum(DEN)
+      ! call global_all_sum(NCELLS)
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
@@ -356,11 +354,11 @@
       enddo
 
 ! Determining the maximum among all the procesors
-      call global_all_max(MAX_RESID)
+      ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-      call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-      call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+      ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+      ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Determining the global IJK location w.r.t. serial version
       IJK_RESID = IJKMAX2
@@ -422,7 +420,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
       IMPLICIT NONE
 !-----------------------------------------------
@@ -493,8 +490,8 @@
 
       IF(.not.debug_resid) THEN
 ! Collecting all the information among all the procesors
-         call global_all_sum(NUM)
-         call global_all_sum(DEN)
+         ! call global_all_sum(NUM)
+         ! call global_all_sum(DEN)
 
 ! Normalizing the residual
          IF (DEN*NORM > ZERO) THEN
@@ -509,9 +506,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-         call global_all_sum(NUM)
-         call global_all_sum(DEN)
-         call global_all_sum(NCELLS)
+         ! call global_all_sum(NUM)
+         ! call global_all_sum(DEN)
+         ! call global_all_sum(NCELLS)
 
 ! Determining the max residual
          do nproc=0,NumPEs-1
@@ -525,11 +522,11 @@
          enddo
 
 ! Determining the maximum among all the procesors
-         call global_all_max(MAX_RESID)
+         ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-         call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-         call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+         ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+         ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Determining the global IJK location w.r.t. serial version
          IJK_RESID = IJKMAX2
@@ -587,7 +584,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
       USE fldvar
       USE physprop
@@ -696,9 +692,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-      call global_all_sum(NUM)
-      call global_all_sum(DEN)
-      call global_all_sum(NCELLS)
+      ! call global_all_sum(NUM)
+      ! call global_all_sum(DEN)
+      ! call global_all_sum(NCELLS)
 
       IJK_RESID = 1
       MAX_RESID = RESID_IJK( IJK_RESID )
@@ -730,11 +726,11 @@
       enddo
 
 ! Determining the maximum among all the procesors
-      call global_all_max(MAX_RESID)
+      ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-      call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-      call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+      ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+      ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Determining the global IJK location w.r.t. serial version
       IJK_RESID = IJKMAX2
@@ -790,7 +786,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
       USE fldvar
       USE physprop
@@ -900,9 +895,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-      call global_all_sum(NUM)
-      call global_all_sum(DEN)
-      call global_all_sum(NCELLS)
+      ! call global_all_sum(NUM)
+      ! call global_all_sum(DEN)
+      ! call global_all_sum(NCELLS)
 
       MAX_RESID = RESID_IJK( 1 )
       DO K = kstart3, kend3
@@ -933,11 +928,11 @@
       enddo
 
 ! Determine the maximum among all the procesors
-      call global_all_max(MAX_RESID)
+      ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-      call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-      call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+      ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+      ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Determining the global IJK location w.r.t. serial version
       IJK_RESID = IJKMAX2
@@ -996,7 +991,6 @@
       use matrix, only: e, w, s, n, t, b
       USE geometry
       USE compar
-      USE mpi_utility
       USE run
       USE fldvar
       USE physprop
@@ -1104,9 +1098,9 @@
 
 ! Collecting all the information among all the procesors -
 ! determining the global sum
-      call global_all_sum(NUM)
-      call global_all_sum(DEN)
-      call global_all_sum(NCELLS)
+      ! call global_all_sum(NUM)
+      ! call global_all_sum(DEN)
+      ! call global_all_sum(NCELLS)
 
       MAX_RESID = RESID_IJK( 1 )
       DO K = kstart3, kend3
@@ -1134,11 +1128,11 @@
       enddo
 
 ! Determining the maximum among all the procesors
-      call global_all_max(MAX_RESID)
+      ! call global_all_max(MAX_RESID)
 
 ! Collecting all the information among all the procesors
-      call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
-      call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
+      ! call global_all_sum(MAX_RESID_L, MAX_RESID_GL)
+      ! call global_all_sum(IJK_RESID_L, IJK_RESID_GL)
 
 ! Determining the global IJK location w.r.t. serial version
       IJK_RESID = IJKMAX2

@@ -21,14 +21,12 @@
       USE in_binary_512i
       USE leqsol
       USE machine
-      USE mpi_utility      ! for gather
       USE output
       USE param
       USE param1
       USE physprop
       USE run
       USE scales
-      USE sendrecv         ! for filling the boundary information
       USE toleranc
       USE ur_facs
       USE fldvar
@@ -181,9 +179,9 @@
 
 !      call MPI_Barrier(MPI_COMM_WORLD,mpierr)  !//PAR_I/O enforce barrier here
 !      call send_recv (flag,2)
-      call gather (flag,arr1,root)
+      ! call gather (flag,arr1,root)
 ! To take care of filling the processor ghost layers with the correct values
-      call scatter (flag,arr1,root)
+      ! call scatter (flag,arr1,root)
 !      call MPI_Barrier(MPI_COMM_WORLD,mpierr)  !//PAR_I/O enforce barrier here
       if (myPE .ne. PE_IO) goto 1200
       call convert_to_io_i(arr1,arr2,ijkmax2)

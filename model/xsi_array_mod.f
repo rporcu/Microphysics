@@ -25,12 +25,11 @@
 
 
       SUBROUTINE lock_xsi_array
-      use compar, only: mype
       IMPLICIT NONE
       IF(xsi_array_locked) THEN
          Write(*,*)'Error:  Multiple use of xsi_array ',&
                '(xsi_array_mod.f)'
-         CALL MFIX_EXIT(myPE)
+         CALL MFIX_EXIT()
       Else
          xsi_array_locked = .true.
       Endif

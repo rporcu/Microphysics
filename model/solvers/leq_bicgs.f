@@ -104,8 +104,6 @@
       USE param1
       USE geometry
       USE compar
-      USE mpi_utility
-      USE sendrecv
       USE leqsol
       USE functions
 
@@ -228,7 +226,7 @@
 
       R(:) = B_m(:) - R(:)
 
-      call send_recv(R,nlayers_bicgs)
+      ! call send_recv(R,nlayers_bicgs)
 
       if(is_serial) then
          Rnorm0 = zero
@@ -276,7 +274,7 @@
 ! --------------------------------
                ier = 0
             endif
-            call send_recv(var,2)
+            ! call send_recv(var,2)
             deallocate(R)
             deallocate(Rtilde)
             deallocate(P)
@@ -459,7 +457,7 @@
          endif
       endif
 
-      call send_recv(var,2)
+      ! call send_recv(var,2)
 
       deallocate(R)
       deallocate(Rtilde)

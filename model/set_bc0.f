@@ -19,8 +19,6 @@
       use param, only: dimension_bc
       use param1, only: undefined_i
 
-      use mpi_utility
-      use sendrecv
       IMPLICIT NONE
 
 ! Local variables
@@ -61,7 +59,7 @@
       ENDDO
 
 ! Make T_g nonzero in k=0,1 ghost layers when k-decomposition employed
-      call send_recv(P_G,2)
+      ! call send_recv(P_G,2)
 
       RETURN
       END SUBROUTINE SET_BC0
@@ -341,8 +339,6 @@
 
       use geometry, only: do_K
 
-      use funits, only: DMP_LOG
-
       use bc, only: BC_DEFINED
       use bc, only: BC_TYPE
 
@@ -350,8 +346,7 @@
       use param, only: DIMENSION_BC
       use param1, only: UNDEFINED
       use param1, only: UNDEFINED_I
-
-      use mpi_utility
+      use funits
 
       implicit none
 !--------------------------------------------------------------------//
@@ -478,7 +473,7 @@
       ENDIF
 
 
-      CALL MFIX_EXIT(myPE)
+      CALL MFIX_EXIT()
 
 
  1000 FORMAT(//1X,70('*')/' From: SET_IJK_Pg',/,                       &
@@ -517,7 +512,6 @@
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use mpi_utility
       use functions
       implicit none
 
@@ -599,7 +593,7 @@
 ! Sync gIJK across all processes. Select the lowest ranked process that
 ! has gIJK defined. This choice is arbitray and doesn't really matter.
 ! It just needs to be consistent.
-         CALL global_all_sum(gIJK)
+         ! CALL global_all_sum(gIJK)
          proc_lp: do proc=0, numPEs-1
             if(gIJK(proc,1) /= 0) then
                IJK_P_g(1) = gIJK(proc,1)

@@ -6,8 +6,6 @@
 !------------------------------------------------------------------------
       module desmpi_wrapper
 
-      use parallel_mpi
-      use mpi_utility
       use compar
 
       interface des_mpi_irecv

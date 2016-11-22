@@ -44,7 +44,6 @@
       USE run
       USE toleranc
       USE geometry
-      USE sendrecv
       USE compar
       USE functions
       IMPLICIT NONE
@@ -160,7 +159,7 @@
          ENDDO
          ENDDO
 
-      call send_recv(ltau_v_g,2)
+      ! call send_recv(ltau_v_g,2)
       RETURN
 
     CONTAINS

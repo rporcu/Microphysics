@@ -68,7 +68,6 @@
       use discretelement
       use functions
       use physprop
-      use mpi_utility
 
       IMPLICIT NONE
 
@@ -176,7 +175,7 @@
       enddo
 
       particles = pip
-      call global_all_sum(particles)
+      ! call global_all_sum(particles)
 
 ! This is a test of the setup
       meanVel = 0.0d0

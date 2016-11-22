@@ -1,17 +1,10 @@
-      SUBROUTINE MFIX_EXIT(myID)
-
-! File unit for .OUT file
-      USE funits, only : UNIT_OUT
-! File unit for .LOG files
-      USE funits, only : UNIT_LOG
+      SUBROUTINE MFIX_EXIT()
 
       use compar
-      use mpi_utility
+      use funits
 
       implicit none
 
-! Rank ID
-      INTEGER, INTENT(IN) :: myID
 ! Logical showing that a file unit is open.
       LOGICAL :: isOpen
 ! The value passed via the dummy argument or the process ID.
@@ -20,7 +13,7 @@
       CHARACTER(len=64) :: myID_c
 
 ! Set the ID of the caller.
-      myID_c=''; WRITE(myID_c,*) myID
+      ! myID_c=''; WRITE(myID_c,*) myID
 
 ! Write out that this routine was called.
       IF(myPE == PE_IO) WRITE(*,1000)
@@ -30,7 +23,7 @@
       ENDIF
 
 ! Terminate MPI.
-      CALL exitMPI(myID_l)
+      ! CALL exitMPI(myID_l)
 
 ! Close any open files.
       CALL CLOSE_FILE(UNIT_OUT)
@@ -87,7 +80,3 @@
 
       RETURN
       END SUBROUTINE CLOSE_FILE
-
-
-
-

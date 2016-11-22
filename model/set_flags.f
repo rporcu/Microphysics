@@ -20,9 +20,7 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
       USE boundfunijk
-      use mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -141,8 +139,8 @@
          ALLOCATE (ARR1(1))
       ENDIF
 
-      CALL GATHER(FLAG,ARR1,ROOT)
-      CALL SCATTER(FLAG,ARR1,ROOT)
+      ! CALL GATHER(FLAG,ARR1,ROOT)
+      ! CALL SCATTER(FLAG,ARR1,ROOT)
 
       DEALLOCATE (ARR1)
 
@@ -188,8 +186,6 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -294,18 +290,18 @@
 ! ----------------------------------------------------------------<<<
 
 ! Fill the ghost layers using gather and scatter
-      call gather( flag_e, flag_temp )
-      call scatter( flag_e, flag_temp )
-      call gather( flag_n, flag_temp )
-      call scatter( flag_n, flag_temp )
-      call gather( flag_t, flag_temp )
-      call scatter( flag_t, flag_temp )
+      ! call gather( flag_e, flag_temp )
+      ! call scatter( flag_e, flag_temp )
+      ! call gather( flag_n, flag_temp )
+      ! call scatter( flag_n, flag_temp )
+      ! call gather( flag_t, flag_temp )
+      ! call scatter( flag_t, flag_temp )
 
 ! deallocate storage of temporary flag arrays
       deallocate( flag_temp )
-      call send_recv(flag_t,1)
-      call send_recv(flag_n,1)
-      call send_recv(flag_e,1)
+      ! call send_recv(flag_t,1)
+      ! call send_recv(flag_n,1)
+      ! call send_recv(flag_e,1)
 
       RETURN
       END SUBROUTINE SET_FLAGS1

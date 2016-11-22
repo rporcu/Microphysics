@@ -34,7 +34,6 @@
 
 ! Module procedures
 !---------------------------------------------------------------------//
-      use mpi_utility, only: GLOBAL_ALL_SUM
       use error_manager
       use toleranc
 

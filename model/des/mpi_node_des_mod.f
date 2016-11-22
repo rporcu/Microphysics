@@ -20,13 +20,10 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use parallel_mpi
-      use mpi_utility
       use discretelement
       use desgrid
       use compar
       use physprop
-      use sendrecv
       use des_bc
       use desmpi_wrapper
       use sendrecvnode

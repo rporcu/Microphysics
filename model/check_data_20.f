@@ -37,11 +37,9 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
       USE discretelement
       USE functions
 
-      use mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -57,13 +55,13 @@
 
       CALL INIT_ERR_MSG("CHECK_DATA_20")
 
-      call send_recv(p_g,2)
-      call send_recv(ep_g,2)
-      call send_recv(w_g,2)
-      call send_recv(u_g,2)
-      call send_recv(v_g,2)
-      call send_recv( ROP_G, 2 )
-      call send_recv( RO_G, 2 )
+      ! call send_recv(p_g,2)
+      ! call send_recv(ep_g,2)
+      ! call send_recv(w_g,2)
+      ! call send_recv(u_g,2)
+      ! call send_recv(v_g,2)
+      ! call send_recv( ROP_G, 2 )
+      ! call send_recv( RO_G, 2 )
 
       ABORT = .FALSE.
 
@@ -121,7 +119,7 @@
       ENDDO  ! end do K = kstart2, kend2
 
 
-      CALL GLOBAL_ALL_OR(ABORT)
+      ! CALL GLOBAL_ALL_OR(ABORT)
       IF(ABORT) THEN
          WRITE(ERR_MSG, 2000)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
@@ -150,7 +148,7 @@
       ENDDO   ! K = kstart2, kend2
 
 
-      CALL GLOBAL_ALL_OR(ABORT)
+      ! CALL GLOBAL_ALL_OR(ABORT)
       IF(ABORT) THEN
          WRITE(ERR_MSG, 2000)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)

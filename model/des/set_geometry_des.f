@@ -26,7 +26,6 @@
 
 ! Module proceedures.
 !---------------------------------------------------------------------//
-      use mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -48,7 +47,7 @@
 
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
 
 ! Initialize arrays.
       XE(:) = ZERO

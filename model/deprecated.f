@@ -52,7 +52,7 @@
       IF(myPE == 0) &
          WRITE(*,1000) trim(iVAL(LINE_NO)), RELEASE, trim(INPUT)
 
-      CALL MFIX_EXIT(myPE)
+      CALL MFIX_EXIT()
 
  1000 FORMAT(//1X,70('*')/' From DEPRECATED',/' Error 1000:',          &
          ' A keyword pair on line ',A,' of the mfix.dat file was',/    &
@@ -78,7 +78,7 @@
 
       IF(myPE == 0) WRITE(*,2000) trim(iVAL(LINE_NO)), trim(INPUT)
 
-      CALL MFIX_EXIT(myPE)
+      CALL MFIX_EXIT()
 
  2000 FORMAT(//1X,70('*')/' From: UNKNOWN_KEYWORD',/' Error 2000: ',   &
          'Unable to process line ',A,' of the mfix.dat file.',2/3x,    &

@@ -15,13 +15,11 @@
       USE fldvar
       USE funits
       USE geometry
-      USE mpi_utility
       USE output
       USE param
       USE param1
       USE physprop
       USE run
-      USE sendrecv
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -52,13 +50,13 @@
       end if
 
 ! Local Send Receive - need to be moved to source later!!
-      call send_recv(EP_g,2)
-      call send_recv(P_g,2)
-      call send_recv(RO_g,2)
-      call send_recv(ROP_g,2)
-      call send_recv(U_g,2)
-      call send_recv(V_g,2)
-      call send_recv(W_g,2)
+      ! call send_recv(EP_g,2)
+      ! call send_recv(P_g,2)
+      ! call send_recv(RO_g,2)
+      ! call send_recv(ROP_g,2)
+      ! call send_recv(U_g,2)
+      ! call send_recv(V_g,2)
+      ! call send_recv(W_g,2)
 
       call gatherWriteRes (EP_g,array2, array1, NEXT_REC)
       call gatherWriteRes (P_g,array2, array1, NEXT_REC)
@@ -83,13 +81,11 @@
 
       subroutine gatherWriteRes(VAR, array2, array1, NEXT_REC)
 
-      USE geometry
-      USE funits
       USE compar
-      USE mpi_utility
-      USE sendrecv
-
+      USE funits
+      USE geometry
       USE in_binary_512
+      USE param
 
       IMPLICIT NONE
 
@@ -101,7 +97,7 @@
 
 !     call MPI_Barrier(MPI_COMM_WORLD,mpierr)  !//PAR_I/O enforce barrier here
 
-      CALL gather (VAR,array2,root)
+      ! CALL gather (VAR,array2,root)
 
       if (myPE.eq.PE_IO) then
          call convert_to_io_dp(array2,array1,ijkmax2)

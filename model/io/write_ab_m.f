@@ -11,13 +11,13 @@
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE param
-      USE param1
 
       USE compar
-      USE mpi_utility
       USE functions
-      use machine
+      USE funits
+      USE machine
+      USE param
+      USE param1
 
       IMPLICIT NONE
 !-----------------------------------------------

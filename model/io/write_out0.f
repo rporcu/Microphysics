@@ -21,7 +21,6 @@
       USE ic
       USE leqsol
       USE machine
-      USE mpi_utility
       USE output
       USE param
       USE param1
@@ -29,7 +28,6 @@
       USE physprop
       USE run
       USE scales
-      USE sendrecv
       USE toleranc
       USE ur_facs
 
@@ -626,8 +624,6 @@
       USE funits
       USE geometry
       USE compar         !//d
-      USE mpi_utility    !//d
-      USE sendrecv    !//d
       USE functions
       IMPLICIT NONE
       integer ijk,i,j,k
@@ -649,8 +645,8 @@
 
 !//SP Filling the processor ghost layer with the correct values
 
-      call gather (icbc_flag,array1,PE_IO)
-      call scatter (icbc_flag,array1,PE_IO)
+      ! call gather (icbc_flag,array1,PE_IO)
+      ! call scatter (icbc_flag,array1,PE_IO)
 
 !
 !  Superimpose internal surface flags on Initial and boundary condition flags
@@ -682,7 +678,7 @@
       ENDDO
       ENDDO
       ENDDO
-      call gather (array2,array3,PE_IO)
+      ! call gather (array2,array3,PE_IO)
 
       if(myPE.eq.PE_IO) then
         WRITE (UNIT_OUT, 2000)

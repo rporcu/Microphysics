@@ -18,14 +18,13 @@
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
+
+      USE compar
+      USE functions
+      USE geometry
       USE param
       USE param1
-
-      USE geometry
-      USE compar
-      USE mpi_utility
-      USE functions
-
+      use funits
       use machine
 
       IMPLICIT NONE

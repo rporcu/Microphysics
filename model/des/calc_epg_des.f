@@ -39,11 +39,6 @@
       use functions, only: fluid_cell
       use functions, only: FUNIJK
 
-! Rank ID of current process
-      use compar, only: myPE
-! Global communication function to sum to all ranks.
-      use mpi_utility, only: GLOBAL_ALL_SUM
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
       USE param1, only: ZERO, ONE
@@ -93,7 +88,7 @@
       ENDDO
 
 
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
       IF(IER == 0) RETURN
 
 
@@ -149,6 +144,6 @@
          'will be written',/'to aid debugging.')
 
       CALL WRITE_DES_DATA
-      CALL MFIX_EXIT(myPE)
+      CALL MFIX_EXIT()
 
       END SUBROUTINE CALC_EPG_DES

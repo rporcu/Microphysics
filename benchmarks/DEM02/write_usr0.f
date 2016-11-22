@@ -28,7 +28,6 @@
       use discretelement
       use functions
       use physprop
-      use mpi_utility
 
       IMPLICIT NONE
 
@@ -131,7 +130,7 @@
       des_vel_new(:pip,:) = des_vel_new(:pip,:)*gTemp
 
       particles = pip
-      call global_all_sum(particles)
+      ! call global_all_sum(particles)
 
 
 ! This write statement keeps the gfortran v6.1.0 version of the code from

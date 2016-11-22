@@ -37,7 +37,6 @@
       use param1, only: zero
       use run, only: RUN_TYPE
 
-      use mpi_utility
       use functions
 
       implicit none
@@ -121,9 +120,6 @@
 
       use run, only: RUN_TYPE
 
-      use mpi_utility
-      use sendrecv
-
       use error_manager
       use functions
 
@@ -149,7 +145,7 @@
       ENDDO
 
 ! Sync up the error flag across all processes.
-      CALL GLOBAL_ALL_OR(ERROR)
+      ! CALL GLOBAL_ALL_OR(ERROR)
 
 ! If an error is detected, have each rank open a log file and write
 ! it's own message. Otherwise, we need to send all the data back to
@@ -178,7 +174,7 @@
 
       ELSE
 ! If no erros, sync up the ghost cell layers.
-         CALL SEND_RECV(ICBC_FLAG,1)
+         ! CALL SEND_RECV(ICBC_FLAG,1)
       ENDIF
 
 ! Clean up and return.
@@ -217,8 +213,6 @@
 
       use param, only: dimension_ic
 
-      use sendrecv
-      use mpi_utility
       use error_manager
       use functions
 
@@ -256,7 +250,7 @@
       ENDDO IC_LP
 
 ! Update the ICBC flag on ghost cells.
-      CALL SEND_RECV(ICBC_FLAG, 1)
+      ! CALL SEND_RECV(ICBC_FLAG, 1)
 
 
 ! Clean up and return.
@@ -285,7 +279,6 @@
       USE bc
       USE funits
       USE compar
-      USE sendrecv
       USE functions
 
       use error_manager
@@ -337,7 +330,7 @@
          ENDIF
       ENDDO
 
-      CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(ICBC_FLAG,1)
 
       CALL FINL_ERR_MSG
 
@@ -365,10 +358,7 @@
       USE bc
       USE funits
       USE compar
-      USE sendrecv
 
-      use mpi_utility
-      use sendrecv
       use functions
 
       use error_manager
@@ -466,7 +456,7 @@
             ENDDO
 
 ! Sync the error flag over all ranks.
-            CALL GLOBAL_ALL_OR(ERROR)
+            ! CALL GLOBAL_ALL_OR(ERROR)
 
 ! Report errors and exit.
             IF(ERROR)THEN
@@ -508,7 +498,7 @@
       ENDDO ! BC Loop
 
 ! Sync the ICBC flag across ghost layers
-      CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(ICBC_FLAG,1)
 
       CALL FINL_ERR_MSG
 

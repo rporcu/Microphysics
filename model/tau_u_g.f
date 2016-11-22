@@ -48,7 +48,6 @@
       USE toleranc, only: dil_ep_s
       USE geometry
       USE compar
-      USE sendrecv
       USE functions
       IMPLICIT NONE
 
@@ -169,7 +168,7 @@
          ENDDO
          ENDDO
 
-      call send_recv(ltau_u_g,2)
+      ! call send_recv(ltau_u_g,2)
 
       RETURN
 

@@ -45,7 +45,7 @@
       IF(ambm_locked) THEN
          IF (DMP_LOG) WRITE(*,*) &
             'Error:  Multiple use of ambm (ambm_mod.f)'
-         CALL MFIX_EXIT(myPE)
+         CALL MFIX_EXIT()
       ELSE
          ambm_locked = .true.
       ENDIF

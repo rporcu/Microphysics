@@ -255,7 +255,7 @@
       IF (NCORN > MAX_NCORN) THEN
          WRITE (LINE, '(A)') 'Error: Increase MAX_NCORN in param1.inc.'
          CALL WRITE_ERROR ('AddCorn', LINE, 1)
-         CALL MFIX_EXIT(myPE)
+         CALL MFIX_EXIT()
       ENDIF
 !
       NOTCORNER = .FALSE.

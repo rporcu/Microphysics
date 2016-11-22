@@ -37,7 +37,6 @@
       use discretelement, only: iGlobal_ID
       use discretelement, only: MAX_PIP
 
-      use mpi_utility, only: GLOBAL_SUM
       use functions, only: IS_NORMAL
 
       double precision, intent(in) :: pDATA(:)
@@ -54,7 +53,7 @@
       enddo
 
 ! Collect data on root proc
-      call global_sum(lTMP, pTMP)
+      ! call global_sum(lTMP, pTMP)
       return
 
       END SUBROUTINE COLLECT_DEM05_DATA
