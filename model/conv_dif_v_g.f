@@ -58,7 +58,7 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE functions, only: funijk, iplus, iminus, jplus, jminus
-      USE fun_avg, only: avg_y_n, avg_y
+      USE fun_avg, only: avg
       USE geometry, only: do_k
 
       USE param, only: dimension_3
@@ -82,9 +82,9 @@
          IJK = funijk(i,j,k)
          IJPK = FUNIJK(i,jplus(i,j,k),k)
 
-         U(IJK) = AVG_Y(U_G(IJK),U_G(IJPK),J)
-         V(IJK) = AVG_Y_N(V_G(IJK),V_G(IJPK),0)
-         IF (DO_K) WW(IJK) = AVG_Y(W_G(IJK),W_G(IJPK),J)
+         U(IJK) = AVG(U_G(IJK),U_G(IJPK))
+         V(IJK) = AVG(V_G(IJK),V_G(IJPK))
+         IF (DO_K) WW(IJK) = AVG(W_G(IJK),W_G(IJPK))
       ENDDO
       ENDDO
       ENDDO
@@ -246,13 +246,11 @@
       C_AB = ODZ_T(KM)
 
 ! East face (i+1/2, j+1/2, k)
-      D_Fe = AVG_Y_H(AVG_X_H(MU_G(IJKC),MU_G(IJKE),I),&
-                     AVG_X_H(MU_G(IJKN),MU_G(IJKNE),I),J)*&
-             C_AE*AYZ
+      D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&
+                   AVG_H(MU_G(IJKN),MU_G(IJKNE)))*C_AE*AYZ
 ! West face (i-1/2, j+1/2, k)
-      D_Fw = AVG_Y_H(AVG_X_H(MU_G(IJKW),MU_G(IJKC),IM),&
-                     AVG_X_H(MU_G(IJKNW),MU_G(IJKN),IM),J)*&
-             C_AW*AYZ
+      D_Fw = AVG_H(AVG_H(MU_G(IJKW),MU_G(IJKC)),&
+                   AVG_H(MU_G(IJKNW),MU_G(IJKN)))*C_AW*AYZ
 
 ! North face (i, j+1, k)
       D_Fn = MU_G(IJKN)*C_AN*AXZ
@@ -272,13 +270,11 @@
          IJKBN = funijk(i,jnorth(i,j,ktmp),ktmp)
 
 ! Top face (i, j+1/2, k+1/2)
-         D_Ft = AVG_Y_H(AVG_Z_H(MU_G(IJKC),MU_G(IJKT),K),&
-                        AVG_Z_H(MU_G(IJKN),MU_G(IJKTN),K),J)*&
-                C_AT*AXY
+         D_Ft = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKT)),&
+                      AVG_H(MU_G(IJKN),MU_G(IJKTN)))*C_AT*AXY
 ! Bottom face (i, j+1/2, k-1/2)
-         D_Fb = AVG_Y_H(AVG_Z_H(MU_G(IJKB),MU_G(IJKC),KM),&
-                        AVG_Z_H(MU_G(IJKBN),MU_G(IJKN),KM),J)*&
-                C_AB*AXY
+         D_Fb = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJKC)),&
+                      AVG_H(MU_G(IJKBN),MU_G(IJKN)))*C_AB*AXY
       ENDIF   ! end if (do_k)
 
 

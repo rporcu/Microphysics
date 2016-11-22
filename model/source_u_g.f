@@ -35,8 +35,8 @@
       USE fldvar, only: ep_g
       USE fldvar, only: u_g, u_go
 
-      USE fun_avg, only: avg_x, avg_z, avg_y
-      USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
+      USE fun_avg, only: avg
+      USE fun_avg, only: avg
       USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
@@ -115,7 +115,7 @@
           IPJKM = FUNIJK(IPLUS(I,J,kminus(i,j,k)),J,kminus(i,j,k))
           IPJMK = FUNIJK(IPLUS(I,jminus(i,j,k),k),jminus(i,j,k),k)
 
-           EPGA = AVG_X(EP_G(IJK),EP_G(IJKE),I)
+           EPGA = AVG(EP_G(IJK),EP_G(IJKE))
 
 ! Impermeable internal surface
          IF (ip_at_e(i,j,k)) THEN

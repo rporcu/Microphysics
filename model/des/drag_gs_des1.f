@@ -344,7 +344,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Functions to average momentum to scalar cell center.
-      use fun_avg, only: AVG_X_E, AVG_Y_N, AVG_Z_T
+      use fun_avg, only: AVG
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag for 3D simulatoins.
@@ -384,14 +384,14 @@
          IJK = FUNIJK(i,j,k)
          IF(fluid_cell(i,j,k)) THEN
             IMJK = funijk(iminus(i,j,k),j,k)
-            Uc(IJK) = AVG_X_E(lUG(IMJK),lUG(IJK),I)
+            Uc(IJK) = AVG(lUG(IMJK),lUG(IJK))
 
             IJMK = funijk(i,jminus(i,j,k),k)
-            Vc(IJK) = AVG_Y_N(lVg(IJMK),lVg(IJK),0)
+            Vc(IJK) = AVG(lVg(IJMK),lVg(IJK))
 
             IF(DO_K) THEN
                IJKM = funijk(i,j,kminus(i,j,k))
-               Wc(IJK) = AVG_Z_T(lWg(IJKM),lWg(IJK),0)
+               Wc(IJK) = AVG(lWg(IJKM),lWg(IJK))
             ELSE
                Wc(IJK) = ZERO
             ENDIF

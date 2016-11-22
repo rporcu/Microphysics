@@ -83,7 +83,7 @@
             IJK  = FUNIJK(i,j,k)
             IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-            EPGA = AVG_Z(EP_G(IJK),EP_G(IJKT),K)
+            EPGA = AVG(EP_G(IJK),EP_G(IJKT))
 
             IF ( .NOT.ip_at_t(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 
@@ -132,11 +132,11 @@
 ! part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>
 !         1/x d/dx(mu.du/dz) xdxdydz =>
 ! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
-               SSX = AVG_Z_H(AVG_X_H(MU_G(IJK),MU_G(IJKE),I),&
-                             AVG_X_H(MU_G(IJKT),MU_G(IJKTE),I),K)*&
+               SSX = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKE)),&
+                           AVG_H(MU_G(IJKT),MU_G(IJKTE)))*&
                         (U_G(IJKP)-U_G(IJK))*ODZ_T(K)*AYZ - &
-                     AVG_Z_H(AVG_X_H(MU_G(IJKW),MU_G(IJK),IM),&
-                             AVG_X_H(MU_G(IJKTW),MU_G(IJKT),IM),K)*&
+                     AVG_H(AVG_H(MU_G(IJKW),MU_G(IJK)),&
+                           AVG_H(MU_G(IJKTW),MU_G(IJKT)))*&
                         (U_G(IMJKP)-U_G(IMJK))*ODZ_T(K)*DY(J)*&
                         (HALF*(DZ(K)+DZ(KP)))
 ! DY(J)*HALF(DZ(k)+DZ(kp)) = oX_E(IM)*AYZ_W(IMJK), but avoids singularity
@@ -144,11 +144,11 @@
 ! part of d/dy (tau_zy) xdxdydz =>
 !         d/dy (mu/x dv/dz) xdxdydz =>
 ! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
-               SSY = AVG_Z_H(AVG_Y_H(MU_G(IJK),MU_G(IJKN),J),&
-                             AVG_Y_H(MU_G(IJKT),MU_G(IJKNT),J),K)*&
+               SSY = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKN)),&
+                           AVG_H(MU_G(IJKT),MU_G(IJKNT)))*&
                         (V_G(IJKP)-V_G(IJK))*ODZ_T(K)*AXZ -&
-                     AVG_Z_H(AVG_Y_H(MU_G(IJKS),MU_G(IJK),JM),&
-                             AVG_Y_H(MU_G(IJKST),MU_G(IJKT),JM),K)*&
+                     AVG_H(AVG_H(MU_G(IJKS),MU_G(IJK)),&
+                           AVG_H(MU_G(IJKST),MU_G(IJKT)))*&
                         (V_G(IJMKP)-V_G(IJMK))*ODZ_T(K)*AXZ
 
 ! part of 1/x d/dz (tau_zz) xdxdydz =>

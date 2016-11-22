@@ -55,7 +55,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
-         USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
+         USE fun_avg, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param, only: dimension_3
@@ -85,15 +85,6 @@
          end function denom
       end interface
 
-      abstract interface
-         function avg_iface(XXXm, XXXp, xL)
-            DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
-            INTEGER, INTENT(IN) :: xL
-            DOUBLE PRECISION :: AVG_IFACE
-         end function avg_iface
-      end interface
-
-      procedure (avg_iface), pointer :: avg => null ()
       procedure (denom), pointer :: denom_neg => null ()
       procedure (denom), pointer :: denom_pos => null ()
 !-----------------------------------------------
@@ -101,15 +92,12 @@
       M = 0
 
       if (axis.eq.'U') then
-         avg => avg_x_e
          denom_neg => denom_u_neg
          denom_pos => denom_u_pos
       else if (axis.eq.'V') then
-         avg => avg_y_n
          denom_neg => denom_w_neg
          denom_pos => denom_w_pos
       else if (axis.eq.'W') then
-         avg => avg_z_t
          denom_neg => denom_w_neg
          denom_pos => denom_w_pos
       endif
@@ -135,7 +123,6 @@
                xxxm = ONE
                xxxp = ZERO
             ELSE IF (B_M(IJK) > ZERO) THEN
-               IP = I
                denominator = denom_pos(i,j,k)
                xxxm = ZERO
                xxxp = ONE
@@ -144,7 +131,7 @@
             ENDIF
 
             IF (denominator > SMALL_NUMBER) THEN
-               B_M(IJK) = SQRT(ABS(B_M(IJK))/(denominator*AVG(xxxm,xxxp,IP)))
+               B_M(IJK) = SQRT(ABS(B_M(IJK))/(denominator*AVG(xxxm,xxxp)))
             ELSE
                B_M(IJK) = ZERO
             ENDIF

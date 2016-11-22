@@ -79,7 +79,7 @@
             IJK  = FUNIJK(i,j,k)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-            EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
+            EPGA = AVG(EP_G(IJK),EP_G(IJKN))
             IF ( .NOT.ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 
                JP = JP1(J)
@@ -127,11 +127,11 @@
 ! part of 1/x d/dx(x.tau_xy) xdxdydz =>
 !         1/x d/dx (x.mu.du/dy) xdxdydz =>
 ! delta (x.mu.du/dy)Ayz |E-W : at (i+1/2 - i-1/2, j+1/2, k)
-               SSX = AVG_Y_H(AVG_X_H(MU_G(IJK),MU_G(IJKE),I),&
-                             AVG_X_H(MU_G(IJKN),MU_G(IJKNE),I),J)*&
+               SSX = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKE)),&
+                           AVG_H(MU_G(IJKN),MU_G(IJKNE)))*&
                      (U_G(IJPK)-U_G(IJK))*ODY_N(J)*AYZ - &
-                     AVG_Y_H(AVG_X_H(MU_G(IJKW),MU_G(IJK),IM),&
-                             AVG_X_H(MU_G(IJKNW),MU_G(IJKN),IM),J)*&
+                     AVG_H(AVG_H(MU_G(IJKW),MU_G(IJK)),&
+                           AVG_H(MU_G(IJKNW),MU_G(IJKN)))*&
                      (U_G(IMJPK)-U_G(IMJK))*ODY_N(J)*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
@@ -143,11 +143,11 @@
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dy) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at (i, j+1/2, k+1/2 - k-1/2)
-               SSZ = AVG_Y_H(AVG_Z_H(MU_G(IJK),MU_G(IJKT),K),&
-                             AVG_Z_H(MU_G(IJKN),MU_G(IJKTN),K),J)*&
+               SSZ = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKT)),&
+                           AVG_H(MU_G(IJKN),MU_G(IJKTN)))*&
                      (W_G(IJPK)-W_G(IJK))*ODY_N(J)*AXY - &
-                     AVG_Y_H(AVG_Z_H(MU_G(IJKB),MU_G(IJK),KM),&
-                             AVG_Z_H(MU_G(IJKBN),MU_G(IJKN),KM),J)*&
+                     AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
+                           AVG_H(MU_G(IJKBN),MU_G(IJKN)))*&
                      (W_G(IJPKM)-W_G(IJKM))*ODY_N(J)*AXY
 
 ! Add the terms

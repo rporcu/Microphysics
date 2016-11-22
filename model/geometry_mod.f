@@ -146,25 +146,6 @@
       LOGICAL :: CYCLIC_Z_MF
 
 
-! Factor for x direction averaging of U velocity: FX_i
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FX
-! 1 - FX_i
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FX_bar
-! Factor for x direction averaging of scalars: FX_i+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FX_E
-! 1 - FX_i+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FX_E_bar
-
-! Factor for y direction averaging of scalars: FY_j+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FY_N
-! 1 - FY_j+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FY_N_bar
-
-! Factor for z direction averaging of scalars: FZ_k+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FZ_T
-! 1 - FZ_k+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: FZ_T_bar
-
 ! East face area - scalar cell
       DOUBLE PRECISION :: AYZ
 ! North face area - scalar cell

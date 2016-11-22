@@ -1,6 +1,6 @@
 MODULE CALC_D_MOD
    use fldvar, only: EP_G
-   use fun_avg, only: AVG_X, AVG_Y, AVG_Z
+   use fun_avg, only: AVG
    use geometry, only: AYZ, AXZ, AXY
    use param1, only: ZERO, SMALL_NUMBER, ONE
    use functions, only: ip_at_e, ip_at_n, ip_at_t
@@ -21,7 +21,7 @@ MODULE CALC_D_MOD
          ELSE
             IJKE = FUNIJK(ieast(i,j,k),j,k)
             AREA_FACE = AYZ
-            EPGA_X = AREA_FACE*AVG_X(EP_G(IJK),EP_G(IJKE),I)
+            EPGA_X = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKE))
          ENDIF
       end function epga_x
 
@@ -39,7 +39,7 @@ MODULE CALC_D_MOD
          ELSE
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
             AREA_FACE = AXZ
-            EPGA_Y = AREA_FACE*AVG_Y(EP_G(IJK),EP_G(IJKN),J)
+            EPGA_Y = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKN))
          ENDIF
       end function epga_y
 
@@ -56,7 +56,7 @@ MODULE CALC_D_MOD
          ELSE
             IJKT = FUNIJK(i,j,ktop(i,j,k))
             AREA_FACE = AXY
-            EPGA_Z = AREA_FACE*AVG_Z(EP_G(IJK),EP_G(IJKT),K)
+            EPGA_Z = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKT))
          ENDIF
 
       end function epga_z

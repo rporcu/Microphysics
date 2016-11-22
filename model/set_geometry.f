@@ -18,10 +18,6 @@
       use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3
       use geometry, only: DO_J, JMIN1, JMAX1, JMAX2, JMAX3, JMIN3
       use geometry, only: DO_K, KMIN1, KMAX1, KMAX2, KMAX3, KMIN3
-! Averaging factors.
-      use geometry, only: FX_E, FX_E_bar, FX, FX_bar
-      use geometry, only: FY_N, FY_N_bar
-      use geometry, only: FZ_T, FZ_T_bar
 ! Cyclic domain flags.
       use geometry, only: CYCLIC
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
@@ -123,35 +119,9 @@
       ODY_N(1) = ONE/DY_N
       ODZ_T(1) = ONE/DZ_T
 
-      FX(1) = HALF
-      FX_BAR(1) = HALF
-      FX_E(1) = HALF
-      FX_E_BAR(1) = HALF
-      FY_N(1) = HALF
-      FY_N_BAR(1) = HALF
-      FZ_T(1) = HALF
-      FZ_T_BAR(1) = HALF
-
       IF(NODESI.NE.1) ODX_E(IMIN3) = ONE/DX_E
       IF(NODESJ.NE.1) ODY_N(JMIN3) = ONE/DY_N
       IF(NODESK.NE.1) ODZ_T(KMIN3) = ONE/DZ_T
-
-      IF(NODESI.NE.1) THEN
-         FX(IMIN3) = HALF
-         FX_BAR(IMIN3) = HALF
-         FX_E(IMIN3) = HALF
-         FX_E_BAR(IMIN3) = HALF
-      ENDIF
-
-      IF(NODESJ.NE.1) THEN
-         FY_N(JMIN3) = HALF
-         FY_N_BAR(JMIN3) = HALF
-      ENDIF
-
-      IF(NODESK.NE.1) THEN
-         FZ_T(KMIN3) = HALF
-         FZ_T_BAR(KMIN3) = HALF
-      ENDIF
 
 
 ! Look at 2 through IMAX1 U-momentum cells
@@ -159,10 +129,6 @@
          DO I = IMIN1, IMAX1
             DX_E = HALF*(DX(I+1)+DX(I))
             ODX_E(I) = ONE/DX_E
-            FX(I) = HALF
-            FX_BAR(I) = ONE - FX(I)
-            FX_E(I) = DX(I+1)/(DX(I+1)+DX(I))
-            FX_E_BAR(I) = ONE - FX_E(I)
          END DO
       ENDIF
 
@@ -171,8 +137,6 @@
          DO J = JMIN1, JMAX1
             DY_N = HALF*(DY(J+1)+DY(J))
             ODY_N(J) = ONE/DY_N
-            FY_N(J) = DY(J+1)/(DY(J+1)+DY(J))
-            FY_N_BAR(J) = ONE - FY_N(J)
          END DO
       ENDIF
 
@@ -181,8 +145,6 @@
          DO K = KMIN1, KMAX1
             DZ_T = HALF*(DZ(K+1)+DZ(K))
             ODZ_T(K) = ONE/DZ_T
-            FZ_T(K) = DZ(K+1)/(DZ(K+1)+DZ(K))
-            FZ_T_BAR(K) = ONE - FZ_T(K)
          END DO
       ENDIF
 
@@ -193,55 +155,10 @@
       ODX_E(IMAX2) = ONE/DX_E
       ODY_N(JMAX2) = ONE/DY_N
       ODZ_T(KMAX2) = ONE/DZ_T
-      FX(IMAX2) = HALF
-      FX_BAR(IMAX2) = HALF
-      FX_E(IMAX2) = HALF
-      FX_E_BAR(IMAX2) = HALF
-
-      FY_N(JMAX2) = HALF
-      FY_N_BAR(JMAX2) = HALF
-
-      FZ_T(KMAX2) = HALF
-      FZ_T_BAR(KMAX2) = HALF
-      FZ_T(KMAX3) = HALF
-      FZ_T_BAR(KMAX3) = HALF
 
       ODX_E(IMAX3) = ONE/DX_E
       ODY_N(JMAX3) = ONE/DY_N
       ODZ_T(KMAX3) = ONE/DZ_T
-      FX(IMAX3) = HALF
-      FX_BAR(IMAX3) = HALF
-      FX_E(IMAX3) = HALF
-      FX_E_BAR(IMAX3) = HALF
-
-      FY_N(JMAX3) = HALF
-      FY_N_BAR(JMAX3) = HALF
-
-
-      IF(CYCLIC_X) THEN
-         FX_E(1) = FX_E(IMAX1)
-         FX_E_BAR(1) = FX_E_BAR(IMAX1)
-          IF(NODESI.NE.1) THEN
-            FX_E(IMIN3) = FX_E(IMAX1-1)
-            FX_E_BAR(IMIN3) = FX_E_BAR(IMAX1-1)
-         ENDIF
-      ENDIF
-      IF (CYCLIC_Y) THEN
-         FY_N(1) = FY_N(JMAX1)
-         FY_N_BAR(1) = FY_N_BAR(JMAX1)
-         IF(NODESJ.NE.1) THEN
-            FY_N(JMIN3) = FY_N(JMAX1-1)
-            FY_N_BAR(JMIN3) = FY_N_BAR(JMAX1-1)
-         ENDIF
-      ENDIF
-      IF (CYCLIC_Z) THEN
-         FZ_T(1) = FZ_T(KMAX1)
-         FZ_T_BAR(1) = FZ_T_BAR(KMAX1)
-         IF(NODESK.NE.1) THEN
-            FZ_T(KMIN3) = FZ_T(KMAX1-1)
-            FZ_T_BAR(KMIN3) = FZ_T_BAR(KMAX1-1)
-         ENDIF
-      ENDIF
 
       CALL FINL_ERR_MSG
 

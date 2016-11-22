@@ -51,7 +51,7 @@
       use functions, only: Funijk
       use functions, only: fluid_cell
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      use fun_avg, only: AVG_X, AVG_Y, AVG_Z
+      use fun_avg, only: AVG
 
       USE param, only: DIMENSION_3
       USE param1, only: ZERO
@@ -83,14 +83,14 @@
          IPJK = funijk(iplus(i,j,k),j,k)
 
          IF((I>IMIN1).AND.(I<IMAX1)) THEN
-            DEL_PHI(1,IJK) = oDX(I)*(AVG_X(PHI(IJK),PHI(IPJK),I) -     &
-               AVG_X(PHI(IMJK),PHI(IJK),I-1))
+            DEL_PHI(1,IJK) = oDX(I)*(AVG(PHI(IJK),PHI(IPJK)) -     &
+               AVG(PHI(IMJK),PHI(IJK)))
          ELSEIF(I == IMIN1) THEN
             DEL_PHI(1,IJK) = 2.0d0*oDX(I) *                            &
-               (AVG_X(PHI(IJK),PHI(IPJK),I) -  PHI(IJK))
+               (AVG(PHI(IJK),PHI(IPJK)) -  PHI(IJK))
          ELSEIF(I == IMAX1) THEN
             DEL_PHI(1,IJK) = 2.0d0*oDX(I) *                            &
-               (PHI(IJK) - AVG_X(PHI(IMJK), PHI(IJK), I-1))
+               (PHI(IJK) - AVG(PHI(IMJK), PHI(IJK)))
          ELSE
             DEL_PHI(1,IJK) = ZERO
          ENDIF
@@ -100,14 +100,14 @@
          IJPK = funijk(i,jplus(i,j,k),k)
 
          IF((J>JMIN1) .AND. (J<JMAX1)) THEN
-            DEL_PHI(2,IJK) = oDY(J)*(AVG_Y(PHI(IJK),PHI(IJPK),J) -     &
-               AVG_Y(PHI(IJMK),PHI(IJK),J-1))
+            DEL_PHI(2,IJK) = oDY(J)*(AVG(PHI(IJK),PHI(IJPK)) -     &
+               AVG(PHI(IJMK),PHI(IJK)))
          ELSEIF(J == JMIN1) THEN
             DEL_PHI(2,IJK) = 2.0d0*oDY(J) *                            &
-               (AVG_Y(PHI(IJK),PHI(IJPK),J) - PHI(IJK))
+               (AVG(PHI(IJK),PHI(IJPK)) - PHI(IJK))
          ELSEIF(J == JMAX1) THEN
             DEL_PHI(2,IJK) = 2.0d0*oDY(J) *                            &
-               (PHI(IJK)- AVG_Y(PHI(IJMK),PHI(IJK),J-1))
+               (PHI(IJK)- AVG(PHI(IJMK),PHI(IJK)))
          ELSE
             DEL_PHI(2,IJK) = ZERO
          ENDIF
@@ -118,14 +118,14 @@
             IJKP = funijk(i,j,kplus(i,j,k))
 
             IF((K>KMIN1) .AND. (K<KMAX1)) THEN
-               DEL_PHI(3,IJK) = oDZ(K)*(AVG_Z(PHI(IJK),PHI(IJKP),K) -  &
-                  AVG_Z(PHI(IJKM),PHI(IJK),K-1))
+               DEL_PHI(3,IJK) = oDZ(K)*(AVG(PHI(IJK),PHI(IJKP)) -  &
+                  AVG(PHI(IJKM),PHI(IJK)))
             ELSEIF(K == KMIN1) THEN
                DEL_PHI(3,IJK) = 2.0d0*oDZ(K) *                         &
-                  (AVG_Z(PHI(IJK),PHI(IJKP),K) - PHI(IJK))
+                  (AVG(PHI(IJK),PHI(IJKP)) - PHI(IJK))
             ELSEIF(K == KMAX1) THEN
                DEL_PHI(3,IJK) = 2.0d0*oDZ(K) *                         &
-                  (PHI(IJK) - AVG_Z(PHI(IJKM),PHI(IJK),K-1))
+                  (PHI(IJK) - AVG(PHI(IJKM),PHI(IJK)))
             ENDIF
          ENDIF
       ENDDO

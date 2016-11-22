@@ -105,10 +105,6 @@
       use geometry, only: oDX, oDX_E
       use geometry, only: oDZ, oDZ_T
       use geometry, only: oDY, oDY_N
-! Averaging factors.
-      use geometry, only: FX_E, FX_E_bar, FX, FX_bar
-      use geometry, only: FY_N, FY_N_bar
-      use geometry, only: FZ_T, FZ_T_bar
 ! Domain flags.
       use geometry, only: ICBC_FLAG
       use geometry, only: FLAG, FLAG3
@@ -154,22 +150,6 @@
 
       ALLOCATE( oDZ   (0:DIMENSION_K), STAT=IER )
       ALLOCATE( oDZ_T (0:DIMENSION_K), STAT=IER )
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( FX     (0:DIMENSION_I), STAT=IER)
-      ALLOCATE( FX_bar (0:DIMENSION_I), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( FX_E     (0:DIMENSION_I), STAT=IER)
-      ALLOCATE( FX_E_bar (0:DIMENSION_I), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( FY_N     (0:DIMENSION_J), STAT=IER )
-      ALLOCATE( FY_N_bar (0:DIMENSION_J), STAT=IER )
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( FZ_T     (0:DIMENSION_K), STAT=IER )
-      ALLOCATE( FZ_T_bar (0:DIMENSION_K), STAT=IER )
       IF(IER /= 0) goto 500
 
 ! Flags for the scalar grid.

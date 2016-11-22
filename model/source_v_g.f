@@ -33,8 +33,7 @@
       USE fldvar, only: ep_g
       USE fldvar, only: v_g, v_go
 
-      USE fun_avg, only: avg_x, avg_z, avg_y
-      USE fun_avg, only: avg_x_e, avg_y_n, avg_z_t
+      USE fun_avg, only: avg
       USE functions, only: ip_at_n, sip_at_n, is_id_at_n
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
@@ -117,7 +116,7 @@
           IMJPK = FUNIJK(IMINUS(I,jplus(i,j,k),K),jplus(i,j,k),k)
           IJPKM = FUNIJK(I,jplus(i,j,k),KMINUS(I,jplus(i,j,k),k))
 
-         EPGA = AVG_Y(EP_G(IJK),EP_G(IJKN),J)
+         EPGA = AVG(EP_G(IJK),EP_G(IJKN))
 
 ! Impermeable internal surface
          IF (ip_at_n(i,j,k)) THEN
@@ -160,10 +159,10 @@
             SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ
 
 ! Volumetric forces
-            ROPGA = AVG_Y(ROP_G(IJK),ROP_G(IJKN),J)
-            ROGA = AVG_Y(RO_G(IJK),RO_G(IJKN),J)
+            ROPGA = AVG(ROP_G(IJK),ROP_G(IJKN))
+            ROGA = AVG(RO_G(IJK),RO_G(IJKN))
 ! Previous time step
-            V0 = AVG_Y(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k),J)*ODT
+            V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k))*ODT
 
 ! Body force
             VBF = ROGA*GRAVITY_Y

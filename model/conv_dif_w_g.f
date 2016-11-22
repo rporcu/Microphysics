@@ -54,7 +54,7 @@
 
       USE fldvar, only: u_g, v_g, w_g
 
-      USE fun_avg, only: avg_z_t, avg_z
+      USE fun_avg, only: avg
       USE functions, only: funijk, kplus
 
       USE param, only: dimension_3
@@ -79,9 +79,9 @@
          IJK = funijk(i,j,k)
          IJKP = funijk(i,j,kplus(i,j,k))
 
-         U(IJK) = AVG_Z(U_G(IJK),U_G(IJKP),K)
-         V(IJK) = AVG_Z(V_G(IJK),V_G(IJKP),K)
-         WW(IJK) = AVG_Z_T(W_G(IJK),W_G(IJKP),0)
+         U(IJK) = AVG(U_G(IJK),U_G(IJKP))
+         V(IJK) = AVG(V_G(IJK),V_G(IJKP))
+         WW(IJK) = AVG(W_G(IJK),W_G(IJKP))
       ENDDO
       ENDDO
       ENDDO
@@ -242,22 +242,18 @@
       C_AB = ODZ(K)
 
 ! East face (i+1/2, j, k+1/2)
-      D_Fe = AVG_Z_H(AVG_X_H(MU_G(IJKC),MU_G(IJKE),I),&
-                     AVG_X_H(MU_G(IJKT),MU_G(IJKTE),I),K)*&
-               C_AE*AYZ
+      D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&
+                   AVG_H(MU_G(IJKT),MU_G(IJKTE)))*C_AE*AYZ
 ! West face (i-1/2, j, k+1/2)
-      D_Fw = AVG_Z_H(AVG_X_H(MU_G(IJKW),MU_G(IJKC),IM),&
-                     AVG_X_H(MU_G(IJKWT),MU_G(IJKT),IM),K)*&
-                C_AW*AYZ
+      D_Fw = AVG_H(AVG_H(MU_G(IJKW),MU_G(IJKC)),&
+                   AVG_H(MU_G(IJKWT),MU_G(IJKT)))*C_AW*AYZ
 
 ! North face (i, j+1/2, k+1/2)
-      D_Fn = AVG_Z_H(AVG_Y_H(MU_G(IJKC),MU_G(IJKN),J),&
-                     AVG_Y_H(MU_G(IJKT),MU_G(IJKTN),J),K)*&
-                C_AN*AXZ
+      D_Fn = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKN)),&
+                   AVG_H(MU_G(IJKT),MU_G(IJKTN)))*C_AN*AXZ
 ! South face (i, j-1/2, k+1/2)
-      D_Fs = AVG_Z_H(AVG_Y_H(MU_G(IJKS),MU_G(IJKC),JM),&
-                     AVG_Y_H(MU_G(IJKST),MU_G(IJKT),JM),K)*&
-                C_AS*AXZ
+      D_Fs = AVG_H(AVG_H(MU_G(IJKS),MU_G(IJKC)),&
+                   AVG_H(MU_G(IJKST),MU_G(IJKT)))*C_AS*AXZ
 
 ! Top face (i, j, k+1)
       D_Ft = MU_G(IJKT)*C_AT*AXY

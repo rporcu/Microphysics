@@ -39,7 +39,7 @@
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's east face.
-      use fun_avg, only: AVG_X
+      use fun_avg, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2
@@ -121,8 +121,8 @@
             IF(fluid_cell(i,j,k)) THEN
                IJKE = FUNIJK(ieast(i,j,k),j,k)
 
-               tmp_A = AVG_X(F_GDS(IJK), F_GDS(IJKE), I)
-               tmp_B = AVG_X(DRAG_BM(IJK,1), DRAG_BM(IJKE,1), I)
+               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKE))
+               tmp_B = AVG(DRAG_BM(IJK,1), DRAG_BM(IJKE,1))
 
                A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
                B_M(IJK) = B_M(IJK) - VOL * tmp_B
@@ -178,7 +178,7 @@
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
-      use fun_avg, only: AVG_Y
+      use fun_avg, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2
@@ -259,8 +259,8 @@
             IF(fluid_cell(i,j,k)) THEN
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-               tmp_A = AVG_Y(F_GDS(IJK), F_GDS(IJKN), J)
-               tmp_B = AVG_Y(DRAG_BM(IJK,2), DRAG_BM(IJKN,2), J)
+               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKN))
+               tmp_B = AVG(DRAG_BM(IJK,2), DRAG_BM(IJKN,2))
 
                A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
                B_M(IJK) = B_M(IJK) - VOL * tmp_B
@@ -311,7 +311,7 @@
 ! IJK function for I,J,K that includes mapped indices.
       use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
-      use fun_avg, only: AVG_Z
+      use fun_avg, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2
@@ -386,8 +386,8 @@
             IF(fluid_cell(i,j,k)) THEN
                IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-               tmp_A = AVG_Z(F_GDS(IJK), F_GDS(IJKT), K)
-               tmp_B = AVG_Z(DRAG_BM(IJK,3), DRAG_BM(IJKT,3), K)
+               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKT))
+               tmp_B = AVG(DRAG_BM(IJK,3), DRAG_BM(IJKT,3))
 
                A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
                B_M(IJK) = B_M(IJK) - VOL * tmp_B
