@@ -27,7 +27,7 @@
 
       USE compar, only: jmap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
+      USE compar, only: istart1, jstart1, jend1, kstart1, kend1
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
@@ -38,7 +38,7 @@
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax, funijk, wall_cell
-      USE geometry, only: jmax1, cyclic_y_pd, flag
+      USE geometry, only: jmax1, cyclic_y_pd
       USE geometry, only: vol
       USE geometry, only: axz
 
@@ -66,33 +66,20 @@
       INTEGER :: I, J, K, IJK, IJKN, &
                  IMJK, IPJK, IJMK, IJPK, IJKP, IJKM, IMJPK, IJPKM
 ! Phase index
-      INTEGER :: M, L, MM
-! Internal surface
-      INTEGER :: ISV
+      INTEGER :: M
 ! Pressure at north cell
       DOUBLE PRECISION :: PgN
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average density
       DOUBLE PRECISION :: ROPGA, ROGA
-! Average viscosity
-      DOUBLE PRECISION :: MUGA
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sdp
 ! Source terms (Volumetric)
       DOUBLE PRECISION :: V0, Vbf
-! Source terms (Volumetric) for GHD theory
-      DOUBLE PRECISION :: Ghd_drag, avgRop
-! Source terms for HYS drag relation
-      DOUBLE PRECISION :: HYS_drag, avgDrag
-! virtual (added) mass
-      DOUBLE PRECISION :: ROP_MA, Vsn, Vss, U_se, Usw, Vse, Vsw, &
-                          Wst, Wsb, Vst, Vsb
 ! jackson terms: local stress tensor quantity
       DOUBLE PRECISION :: ltau_v_g
 !---------------------------------------------------------------------//
-
-      integer err
 
 ! Set reference phase to gas
       M = 0

@@ -69,13 +69,9 @@
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average viscosity
-      DOUBLE PRECISION :: MU_Ge, MU_gbe, MUGA
-! Average dW/Xdz
-      DOUBLE PRECISION :: dWoXdz
+      DOUBLE PRECISION :: MU_Ge, MU_gbe
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
-! Source terms (Volumetric)
-      DOUBLE PRECISION :: Vtzb
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the
 !             use of the *tmp variables below

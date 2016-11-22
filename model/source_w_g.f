@@ -29,7 +29,7 @@
 
       USE compar, only: kmap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
+      USE compar, only: jstart1, kstart1, kend1
 
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
@@ -67,37 +67,23 @@
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IJK, IJKT, IMJK, IJKP, IMJKP,&
-                 IJKE, IJKW, IJKTE, IJKTW, IM, IPJK,   &
+                 IPJK,   &
                  IJKM, IJMK, IJMKP, IJPK
 ! Phase index
-      INTEGER :: M, L, MM
-! Internal surface
-      INTEGER :: ISV
+      INTEGER :: M
 ! Pressure at top cell
       DOUBLE PRECISION :: PgT
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average density
       DOUBLE PRECISION :: ROPGA, ROGA
-! Average viscosity
-      DOUBLE PRECISION :: MUGA
-! Average coefficients
-      DOUBLE PRECISION ::  MUoX
-! Average U_g
-      DOUBLE PRECISION Ugt
 ! Source terms (Surface)
       DOUBLE PRECISION Sdp
 ! Source terms (Volumetric)
       DOUBLE PRECISION V0, Vbf
-! Source terms (Volumetric) for GHD theory
-      DOUBLE PRECISION Ghd_drag, avgRop
-! Source terms for HYS drag relation
-      DOUBLE PRECISION HYS_drag, avgDrag
 ! jackson terms: local stress tensor quantity
       DOUBLE PRECISION :: ltau_w_g
 !---------------------------------------------------------------------//
-
-     integer err
 
 ! Set reference phase to gas
       M = 0

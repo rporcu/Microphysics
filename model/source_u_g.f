@@ -70,7 +70,7 @@
       INTEGER :: I, J, K, IJK, IJKE, IPJK, IJKM, &
                  IPJKM, IMJK, IJMK, IPJMK, IJPK, IJKP
 ! Phase index
-      INTEGER :: M, L, MM
+      INTEGER :: M
 ! Internal surface
       INTEGER :: ISV
 ! Pressure at east cell
@@ -79,17 +79,10 @@
       DOUBLE PRECISION :: EPGA
 ! Average density
       DOUBLE PRECISION :: ROPGA, ROGA
-! Average viscosity
-      DOUBLE PRECISION :: MUGA, MUGTA
-! Average W_g
-      DOUBLE PRECISION :: Wge
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sdp
 ! Source terms (Volumetric)
       DOUBLE PRECISION :: V0, Vbf
-! virtual (added) mass
-      DOUBLE PRECISION :: ROP_MA, U_se, Usw, Vsw, Vse, Usn,&
-                          Uss, Wsb, Wst, Wse, Usb, Ust
 ! local stress tensor quantity
       DOUBLE PRECISION :: ltau_u_g
 !---------------------------------------------------------------------//

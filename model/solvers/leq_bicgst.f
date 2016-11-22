@@ -145,7 +145,7 @@
                                 R,Rtilde, P,Phat, Svec, Shat, Tvec,V
       DOUBLE PRECISION, DIMENSION(0:ITMAX+1) :: alpha,beta,omega,rho
       DOUBLE PRECISION :: TxS, TxT, oam,RtildexV,                   &
-                      RtildexR, aijmax, Rnorm=0, Rnorm0, Snorm, TOLMIN
+                      aijmax, Rnorm=0, Rnorm0, Snorm, TOLMIN
       LOGICAL :: isconverged
       INTEGER :: i, j, k, iter
 !AIKE PFUPGRADE 091409 Modified ijk to ijk2 to avoid compilation error since PF upgrade
