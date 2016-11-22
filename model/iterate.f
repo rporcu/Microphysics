@@ -395,7 +395,7 @@
       DOUBLE PRECISION, PARAMETER :: TOL = 1E-03
 
       DOUBLE PRECISION :: mdot_nm1, delp_nm1
-      DOUBLE PRECISION :: err, delp_xyz
+      DOUBLE PRECISION :: delp_xyz
 
 ! Store previous values (only used for OUTIT>1)
       mdot_nm1 = mdot_n

@@ -534,11 +534,10 @@
 !--------------------------------------------------------------------//
       INTEGER :: lc2, lS2, lE2
       INTEGER :: lc1, lS1, lE1
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
       LOGICAL :: recheck
       INTEGER :: IJK_Pg_Owner, proc
       INTEGER :: gIJK(0:numPEs-1,3)
-      INTEGER :: I_J_K_Pg(3)
       INTEGER :: lpCnt
 
       CHARACTER(len=32) :: cInt

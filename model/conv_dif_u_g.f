@@ -73,8 +73,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: IJK, I,j,k, IP, IPJK
-! for cartesian grid
-      DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
       DO K = kstart3, kend3
@@ -134,8 +132,6 @@
       INTEGER :: imjk, ijmk, ijkm
       INTEGER :: ipjk, ipjmk, ipjkm
 
-! for cartesian grid
-      DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
 ! indices

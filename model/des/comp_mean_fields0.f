@@ -37,8 +37,7 @@
 ! general i, j, k indices
       INTEGER :: I, J, K, IJK, &
                  II, JJ, KK
-      INTEGER :: I1, I2, J1, J2, K1, K2
-      INTEGER :: IDIM, IJK2
+      INTEGER :: IJK2
       INTEGER :: CUR_IJK
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
@@ -67,11 +66,8 @@
       DOUBLE PRECISION, DIMENSION(3) :: DES_VEL_DENSITY
       DOUBLE PRECISION :: DES_ROP_DENSITY
 
-      INTEGER :: COUNT_NODES_OUTSIDE, COUNT_NODES_INSIDE, &
+      INTEGER :: COUNT_NODES_OUTSIDE, &
                  COUNT_NODES_INSIDE_MAX
-      double precision :: RESID_ROPS(MMAX), &
-                          RESID_VEL(3, MMAX)
-      double precision :: NORM_FACTOR
 !Handan Liu added on Jan 17 2013
           DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp
           DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft

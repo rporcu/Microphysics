@@ -1198,7 +1198,6 @@
 !
 !     Variable
       DOUBLE PRECISION Var(DIMENSION_3)
-      integer :: ijk
 
       CHARACTER(LEN=4) :: CMETHOD
 

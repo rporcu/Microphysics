@@ -87,14 +87,10 @@
       DOUBLE PRECISION :: CPU1
 ! time used for computations.
       DOUBLE PRECISION :: CPUTIME_USED, WALLTIME_USED
-! CPU time unit.
-      CHARACTER(LEN=4) :: TUNIT
 ! Save TIME in input file for RESTART_2
       DOUBLE PRECISION :: TIME_SAVE
 ! Temporary storage for DT
       DOUBLE PRECISION :: DT_tmp
-! DISTIO variable for specifying the mfix version
-      CHARACTER(LEN=512) :: version = 'RES = 01.6'
 
 !-----------------------------------------------
 

@@ -70,8 +70,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: IJK, I, J, K, IJKP
-! for cartesian grid
-      DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
 
@@ -127,8 +125,6 @@
       INTEGER :: ijkp, imjkp, ijmkp
       INTEGER :: itmp, jtmp, ktmp
 
-! for cartesian grid
-      DOUBLE PRECISION :: AW, HW, VELW
 !---------------------------------------------------------------------//
 
       IJK = funijk(i,j,k)

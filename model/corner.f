@@ -43,8 +43,6 @@
 !                      Number of corner cells
       INTEGER          NCORN
 
-      integer          itmp, jtmp, ktmp
-
       NCORN = 0
 !
       do k = kstart3, kend3

@@ -68,12 +68,8 @@
       integer :: itmp, jtmp, ktmp
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
-! Average gradients
-      DOUBLE PRECISION :: duodz
 ! Source terms (Surface)
       DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
-! Source terms (Volumetric)
-      DOUBLE PRECISION :: Vxz
 
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the

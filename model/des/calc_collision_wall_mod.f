@@ -40,7 +40,7 @@
       Implicit none
 
       INTEGER :: LL
-      INTEGER :: IJK, NF
+      INTEGER :: NF
       DOUBLE PRECISION ::OVERLAP_N, SQRT_OVERLAP
 
       DOUBLE PRECISION :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
@@ -62,7 +62,7 @@
 ! flag to tell if the orthogonal projection of sphere center to
 ! extended plane detects an overlap
 
-      DOUBLE PRECISION :: MAX_DISTSQ, DISTAPART, FORCE_COH, R_LM
+      DOUBLE PRECISION :: MAX_DISTSQ
       INTEGER :: MAX_NF, axis
       DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
 

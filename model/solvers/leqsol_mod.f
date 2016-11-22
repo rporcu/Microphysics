@@ -134,7 +134,6 @@ CONTAINS
 !-----------------------------------------------
 ! Variable
     INTEGER :: I, J, K, IJK
-    integer :: im1jk, ip1jk, ijm1k, ijp1k, ijkm1, ijkp1
     integer :: class, interval
     integer :: j_start(2), j_end(2)
 !-----------------------------------------------
@@ -749,7 +748,7 @@ CONTAINS
 !-----------------------------------------------
       DOUBLE PRECISION, DIMENSION(JSTART:JEND) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO
-      INTEGER :: IJK, J, CLASS
+      INTEGER :: IJK, J
 !-----------------------------------------------
 
       NEND = JEND

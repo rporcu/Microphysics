@@ -87,18 +87,12 @@
       DOUBLE PRECISION :: Sdp
 ! Source terms (Volumetric)
       DOUBLE PRECISION :: V0, Vbf
-! Source terms (Volumetric) for GHD theory
-      DOUBLE PRECISION :: Ghd_drag, avgRop
-! Source terms for HYS drag relation
-      DOUBLE PRECISION :: HYS_drag, avgDrag
 ! virtual (added) mass
       DOUBLE PRECISION :: ROP_MA, U_se, Usw, Vsw, Vse, Usn,&
                           Uss, Wsb, Wst, Wse, Usb, Ust
 ! local stress tensor quantity
       DOUBLE PRECISION :: ltau_u_g
 !---------------------------------------------------------------------//
-
-      integer err
 
 ! Set reference phase to gas
       M = 0

@@ -78,8 +78,8 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: STL_START, DEFAULT_STL
-      use stl, only: VERTEX, NORM_FACE
+      use stl, only: DEFAULT_STL
+      use stl, only: VERTEX
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -139,17 +139,12 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
-      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
-! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
-! Indicates that a separating axis exists
-      LOGICAL :: OVERLAP
 ! Debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -426,8 +421,8 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: STL_START, DEFAULT_STL
-      use stl, only: VERTEX, NORM_FACE
+      use stl, only: DEFAULT_STL
+      use stl, only: VERTEX
 
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
@@ -487,17 +482,12 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
-      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
-! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
-! Indicates that a separating axis exists
-      LOGICAL :: OVERLAP
 ! Local debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -775,8 +765,8 @@
 
       use des_bc, only: DEM_MI
 
-      use stl, only: STL_START, DEFAULT_STL
-      use stl, only: VERTEX, NORM_FACE
+      use stl, only: DEFAULT_STL
+      use stl, only: VERTEX
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
@@ -835,17 +825,12 @@
       INTEGER, allocatable :: FULL_MAP(:,:)
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
-      INTEGER :: maxEXT(2), minEXT(2)
 ! the length of each side of the inlet boundary
       DOUBLE PRECISION :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and and window size.
       DOUBLE PRECISION :: SHIFT, WINDOW
-! The origin and dimension of MI cells. (STL intersection tests)
-      DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
-! Indicates that a separating axis exists
-      LOGICAL :: OVERLAP
 ! Local Debug flag.
       LOGICAL :: dFlag
 

@@ -39,7 +39,7 @@
 !----------------------------------------------------------------------!
       subroutine des_par_exchange()
 
-      use discretelement, only: DO_NSEARCH, DES_PERIODIC_WALLS
+      use discretelement, only: DES_PERIODIC_WALLS
 
       use desmpi, only: iEXCHFLAG
       use desmpi, only: dSENDBUF, dRECVBUF

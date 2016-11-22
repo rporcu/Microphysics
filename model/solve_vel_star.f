@@ -36,8 +36,6 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! fluid cell index
-      INTEGER :: IJK
 ! temporary velocity arrays
       DOUBLE PRECISION, allocatable :: U_gtmp(:)
       DOUBLE PRECISION, allocatable :: V_gtmp(:)

@@ -51,8 +51,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-! solids phase index
-      INTEGER :: M
 ! Indices
       integer :: i,j,k
       INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP

@@ -61,8 +61,6 @@ module parallel_mpi
 
       fbname=char(i10000)//char(i1000)//char(i100)//char(i10)//char(i1)
 
- 2000 format(/1x,'Number of SMP threads: ',I0,2/)
-
 ! Get the date and time. They give the unique run_id in binary output
 ! files
       CALL GET_RUN_ID

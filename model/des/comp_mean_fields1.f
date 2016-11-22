@@ -30,8 +30,6 @@
       INTEGER I,J,K,IJK
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
-! One divided by the total solids volume.
-      DOUBLE PRECISION :: OoSOLVOL
 ! PVOL times statistical weight, and times filter weight
       DOUBLE PRECISION :: VOL_WT, VOLxWEIGHT
 ! Loop bound for filter

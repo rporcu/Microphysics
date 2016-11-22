@@ -13,10 +13,6 @@
       use output, only: RES_DT
 ! Time-step intervalue between updating the .LOG file.
       use output, only: NLOG
-! VTK
-      USE run, only: RUN_NAME
-      USE mpi_utility, only: XLENGTH,YLENGTH,ZLENGTH
-      USE DISCRETELEMENT, only:DISCRETE_ELEMENT
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -28,11 +24,6 @@
       use error_manager
 
       IMPLICIT NONE
-
-! Local Variables:
-!---------------------------------------------------------------------//
-
-      INTEGER :: L,LV,N_VTK_REGIONS
 
 !......................................................................!
 
