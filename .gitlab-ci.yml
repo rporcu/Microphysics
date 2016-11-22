@@ -4,7 +4,7 @@
 #   paths:
 #     - build/
 
-image: mfixexa
+# image: mfixexa
 
 stages:
   - build
@@ -30,7 +30,7 @@ build_intel:
     - mkdir build_intel
     - cd build_intel
     # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
-    - env INTEL_LICENSE_FILE=/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic FC='/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -stand f08 -check all -Wall' cmake ..
+    - env INTEL_LICENSE_FILE=/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic FC='/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -stand f08 -check all -warn all' cmake ..
     - env INTEL_LICENSE_FILE=/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic make
     - env INTEL_LICENSE_FILE=/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic CTEST_OUTPUT_ON_FAILURE=1 ctest -R build_
 
@@ -45,5 +45,5 @@ benchmarks:
   script:
     - mkdir build-benchmarks
     - cd build-benchmarks
-    - cmake -DCMAKE_BUILD_TYPE=Release -DMPI=1 ..
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
     - env CTEST_OUTPUT_ON_FAILURE=1 ctest -R benchmarks
