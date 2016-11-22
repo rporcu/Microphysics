@@ -148,7 +148,7 @@
          IF(DMP_LOG)WRITE (UNIT_LOG, *) &
             ' MFIX: Do not know how to process'
          IF(DMP_LOG)WRITE (UNIT_LOG, *) ' RUN_TYPE in data file'
-         call mfix_exit(myPE)
+         call mfix_exit()
 
       END SELECT
 

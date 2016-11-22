@@ -299,7 +299,7 @@
       CASE ('MASS_OUTFLOW'); SGN = -ONE; OFF = ONE
       CASE DEFAULT
         write(*,*) 'error in GAS_VOLFLOW_TO_VELOCITY'
-        call mfix_exit(myPE)
+        call mfix_exit()
       END SELECT
 
       SELECT CASE (BC_PLANE(BCV))
@@ -428,7 +428,7 @@
       CASE ('MASS_OUTFLOW'); SGN = -ONE; OFF = ONE
       CASE DEFAULT
         write(*,*) 'error in SOLIDS_VOLFLOW_TO_VELOCITY'
-        call mfix_exit(myPE)
+        call mfix_exit()
       END SELECT
 
       SELECT CASE (BC_PLANE(BCV))

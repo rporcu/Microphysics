@@ -152,7 +152,7 @@
             IF(DMP_LOG) WRITE (*, '(A,A)') &
                'Unknown DRAG_TYPE: ', DRAG_TYPE
             WRITE (UNIT_LOG, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
-            CALL mfix_exit(myPE)
+            CALL mfix_exit()
          END SELECT   ! end selection of drag_type
 
 

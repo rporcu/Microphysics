@@ -418,7 +418,7 @@
 
       IF(OUTIT > MAXOUTIT) THEN
          IF (myPE.EQ.PE_IO) write(*,5400) MAXOUTIT
-         CALL mfix_exit(0)
+         CALL mfix_exit()
       ENDIF
 
       IF (mfix_isnan(mdot_n) .OR. mfix_isnan(delp_n)) THEN

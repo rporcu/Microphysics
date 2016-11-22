@@ -111,13 +111,13 @@
       if(myPE == PE_IO) &
          write(*,"('PointSource setup Error: ',A)") trim(eMsg)
 
-      call mfix_exit(myPE)
+      call mfix_exit()
 
 
   501 continue
       write(*,"('PointSource setup Error: ',I3,2x,A)") myPE, trim(eMsg)
 
-      call mfix_exit(myPE)
+      call mfix_exit()
 
 
       RETURN

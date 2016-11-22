@@ -139,7 +139,7 @@
          WRITE(LINE1,'(A, I2, A)') &
              'Error: LEQ_METHOD = ', METHOD, ' is invalid'
          CALL WRITE_ERROR(LINE0, LINE1, 1)
-         CALL mfix_exit(myPE)
+         CALL mfix_exit()
       END SELECT
 ! ----------------------------------------------------------------<<<
 

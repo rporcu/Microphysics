@@ -51,7 +51,7 @@
 
       IF (N /= 2) THEN
          IF(DMP_LOG)WRITE (UNIT_LOG, 1000) NAME, BC
-         call mfix_exit(myPE)
+         call mfix_exit()
       ENDIF
 
       RETURN
@@ -59,4 +59,3 @@
  1000 FORMAT(/70('*')//' From: CHECK_PLANE',/'Message: ',A,' No ',I3,&
          ' is not a plane',/70('*')/)
       END SUBROUTINE CHECK_PLANE
-

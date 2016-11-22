@@ -69,7 +69,7 @@
          cmethod, TOL, ITMAX, LEQ_MATVECt, LEQ_MSOLVE0t, IER )
       else
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'preconditioner option not found - check mfix.dat and readme'
-         call mfix_exit(myPE)
+         call mfix_exit()
       endif
 
       return
@@ -374,7 +374,7 @@
                endif
             endif
 
-!     call mfix_exit(myPE)
+!     call mfix_exit()
 
 !     Check convergence; continue if necessary
 !     for continuation, it is necessary that omega(i) .ne. 0
@@ -1044,7 +1044,7 @@
       IF (INFO.NE.0) THEN
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
-         call mfix_exit(myPE)
+         call mfix_exit()
       ENDIF
 
       DO I=1,NN
@@ -1145,7 +1145,7 @@
       IF (INFO.NE.0) THEN
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
-         call mfix_exit(myPE)
+         call mfix_exit()
       ENDIF
 
       DO K=1,NN
