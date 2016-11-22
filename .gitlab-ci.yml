@@ -17,19 +17,28 @@ build:
     - mkdir build
     - cd build
     # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
-    - FC='gfortran -g -std=f2008 -fcheck=all -Wall' cmake ..
+    - FC='/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran -g -std=f2008 -fcheck=all -Wall' cmake ..
     - make
     - env CTEST_OUTPUT_ON_FAILURE=1 ctest -R build_
   artifacts:
     paths:
     - build
 
+build_intel:
+  stage: build
+  script:
+    - mkdir build_intel
+    - cd build_intel
+    # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
+    - FC='/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -std=f2008 -fcheck=all -Wall' cmake ..
+    - make
+    - env CTEST_OUTPUT_ON_FAILURE=1 ctest -R build_
+
 test:
   stage: test
   script:
     - cd build
     - env CTEST_OUTPUT_ON_FAILURE=1 ctest -R tests
-
 
 benchmarks:
   stage: benchmarks
