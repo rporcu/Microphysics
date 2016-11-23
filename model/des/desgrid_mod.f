@@ -430,7 +430,6 @@
       use discretelement, only: DIMN
       use discretelement, only: XE, YN, ZT
       use constant
-      use desmpi_wrapper
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -445,6 +444,7 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager
+      use geometry
 
       implicit none
 !-----------------------------------------------
@@ -833,7 +833,6 @@
       use compar
       use constant
       use des_allocate, only: add_pair
-      use desmpi_wrapper
       use discretelement
       use funits
       use geometry
@@ -976,7 +975,6 @@
       use compar
       use discretelement
       use constant
-      use desmpi_wrapper
 
       implicit none
 !-----------------------------------------------

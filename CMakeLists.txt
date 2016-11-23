@@ -112,7 +112,6 @@ set(SOURCES
   model/des/des_time_march.f
   model/des/desgrid_mod.f
   model/des/desmpi_mod.f
-  model/des/desmpi_wrapper_mod.f
   model/des/discretelement_mod.f
   model/des/drag_gp_des.f
   model/des/drag_gs_des0.f

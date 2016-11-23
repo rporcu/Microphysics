@@ -25,7 +25,6 @@
       use physprop
       use sendrecv
       use des_bc
-      use desmpi_wrapper
       use sendrecvnode
 
       use desmpi
@@ -80,13 +79,13 @@
             dsendbuf(1+mod(pface,2))%facebuf(1:isendcnt(pface))
       else
          ltag = message_tag(ineighproc(pface),mype,pface)
-         call des_mpi_irecv(drecvbuf(1+mod(pface,2))%facebuf(:),imaxbuf, &
-                            ineighproc(pface),ltag,irecvreq(pface),lerr)
+         ! call des_mpi_irecv(drecvbuf(1+mod(pface,2))%facebuf(:),imaxbuf, &
+                            ! ineighproc(pface),ltag,irecvreq(pface),lerr)
          ! call mpi_check( name //':mpi_irecv ', lerr )
 
          ltag = message_tag(mype,ineighproc(pface),lrecvface)
-         call des_mpi_isend(dsendbuf(1+mod(pface,2))%facebuf(:),isendcnt(pface), &
-                        ineighproc(pface),ltag,isendreq(pface),lerr)
+         ! call des_mpi_isend(dsendbuf(1+mod(pface,2))%facebuf(:),isendcnt(pface), &
+         !                ineighproc(pface),ltag,isendreq(pface),lerr)
          ! call mpi_check( name //':mpi_isend ', lerr )
 
       end if
@@ -132,9 +131,9 @@
 
 ! wait for both send and recv request completes
       if (ineighproc(pface).ne.mype) then
-         call des_mpi_wait(isendreq(pface),lerr)
+         ! call des_mpi_wait(isendreq(pface),lerr)
          ! call mpi_check( name //':mpi_wait-send', lerr )
-         call des_mpi_wait(irecvreq(pface),lerr)
+         ! call des_mpi_wait(irecvreq(pface),lerr)
          ! call mpi_check( name //':mpi_wait-recv', lerr )
       end if
       return
@@ -170,11 +169,13 @@
       endif
 
       if (ptype .eq. 1) then
-         call des_MPI_Scatterv(irootbuf,iscattercnts,idispls, &
-                               iprocbuf,iscr_recvcnt,lroot,lerr)
+         iprocbuf = irootbuf
+         ! call des_MPI_Scatterv(irootbuf,iscattercnts,idispls, &
+         !                       iprocbuf,iscr_recvcnt,lroot,lerr)
       else
-         call des_MPI_Scatterv(drootbuf,iscattercnts,idispls, &
-                               dprocbuf,iscr_recvcnt,lroot,lerr)
+         dprocbuf = drootbuf
+         ! call des_MPI_Scatterv(drootbuf,iscattercnts,idispls, &
+         !                       dprocbuf,iscr_recvcnt,lroot,lerr)
       end if
       ! call MPI_Check( name //':MPI_Scatterv', lerr )
 
@@ -210,11 +211,13 @@
          lidebug = pdebug
       endif
       if(ptype.eq.1) then
-         call des_MPI_Gatherv(iprocbuf,igath_sendcnt,irootbuf, &
-                              igathercnts,idispls,lroot,lerr)
+         irootbuf = iprocbuf
+         ! call des_MPI_Gatherv(iprocbuf,igath_sendcnt,irootbuf, &
+         !                      igathercnts,idispls,lroot,lerr)
       else
-         call des_MPI_Gatherv(dprocbuf,igath_sendcnt,drootbuf, &
-                              igathercnts,idispls,lroot,lerr)
+          drootbuf = dprocbuf
+         ! call des_MPI_Gatherv(dprocbuf,igath_sendcnt,drootbuf, &
+         !                      igathercnts,idispls,lroot,lerr)
       end if
       ! call MPI_Check( name //':MPI_Gatherv', lerr )
 

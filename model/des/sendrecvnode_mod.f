@@ -21,7 +21,6 @@
       use compar
       use physprop
       use sendrecv
-      use desmpi_wrapper
       use desgrid
       use functions
 !-----------------------------------------------
@@ -226,19 +225,19 @@
          end do
          ltag = message_tag(lneigh,mype)
          ltotal = lend-lstart+1
-         call des_mpi_irecv(drecvnodebuf(lstart:lend),ltotal, &
-                            lneigh,ltag,irecvreqnode(lcount),lerr)
+         ! call des_mpi_irecv(drecvnodebuf(lstart:lend),ltotal, &
+                            ! lneigh,ltag,irecvreqnode(lcount),lerr)
          ! call mpi_check( name //':mpi_irecv ', lerr )
          ltag = message_tag(mype,lneigh)
-         call des_mpi_isend(dsendnodebuf(lstart:lend),ltotal, &
-                            lneigh,ltag,isendreqnode(lcount),lerr)
+         ! call des_mpi_isend(dsendnodebuf(lstart:lend),ltotal, &
+         !                    lneigh,ltag,isendreqnode(lcount),lerr)
          ! call mpi_check( name //':mpi_irecv ', lerr )
       end do
 ! call mpi wait to complete the exchange
       do lcount = 1,itotalneigh
-         call des_mpi_wait(isendreqnode(lcount),lerr)
+         ! call des_mpi_wait(isendreqnode(lcount),lerr)
          ! call mpi_check( name //':mpi_wait-send', lerr )
-         call des_mpi_wait(irecvreqnode(lcount),lerr)
+         ! call des_mpi_wait(irecvreqnode(lcount),lerr)
          ! call mpi_check( name //':mpi_wait-recv', lerr )
       end do
 ! after receiving the buffer the values are either added or

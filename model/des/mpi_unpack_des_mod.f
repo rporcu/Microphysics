@@ -279,7 +279,6 @@
 ! Module Procedures:
 !---------------------------------------------------------------------//
       use des_allocate
-      use desmpi_wrapper, only: DES_MPI_STOP
       use functions, only: IS_NORMAL, IS_NONEXISTENT
       use functions, only: SET_ENTERING, SET_EXITING, SET_NORMAL
 
@@ -328,7 +327,7 @@
             lFOUND = exten_locate_par(lPARID, lPARIJK, lLOCPAR)
             IF(.NOT.lFOUND) THEN
                WRITE(*,1000) iNEIGHPROC(PFACE), MYPE, lPARID
-               CALL DES_MPI_STOP
+               ! CALL DES_MPI_STOP
             ENDIF
          ENDIF
          iGHOST_CNT = iGHOST_CNT - 1
@@ -402,7 +401,7 @@
             if (.not. exten_locate_par(lparid,lparijk,llocpar)) then
                print *,"at buffer location",lbuf," pface = ",pface
                print *,"COULD NOT FIND PARTICLE ",lparid," IN IJK ",lparijk
-               call des_mpi_stop
+               ! call des_mpi_stop
             endif
          endif
 ! 36) Global ID of neighbor particle.
@@ -418,7 +417,7 @@
                print *," fail on  ", myPE
                print *,"at buffer location",lbuf," pface = ",pface
                print *,"COULD NOT FIND NEIGHBOR ",lneighid," IN IJK ",lneighijk
-               call des_mpi_stop
+               ! call des_mpi_stop
             endif
          endif
 

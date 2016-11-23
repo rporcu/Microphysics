@@ -17,7 +17,6 @@
       use physprop
       use sendrecv
       use des_bc
-      use desmpi_wrapper
       use sendrecvnode
       use param, only: DIMENSION_N_s
 
@@ -405,7 +404,7 @@
                enddo
                if (lpar_proc(lcurpar).eq.-1) then
                   WRITE(*,500) lcurpar
-                  call des_mpi_stop
+                  ! call des_mpi_stop
                endif
             enddo
          else
@@ -424,7 +423,7 @@
                end do
                if (lpar_proc(lcurpar).eq.-1) then
                   WRITE(*,501) lcurpar
-                  call des_mpi_stop
+                  ! call des_mpi_stop
                endif
             enddo
          endif  ! if (no_k)
@@ -552,7 +551,7 @@
             endif
          enddo
       enddo
-      call des_mpi_barrier
+      ! call des_mpi_barrier
 
       end subroutine DES_RESTART_GHOST
 

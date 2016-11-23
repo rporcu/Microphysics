@@ -60,7 +60,6 @@
       use mpi_comm_des, only: desmpi_sendrecv_wait
 
       use desgrid, only: desgrid_pic
-      use desmpi_wrapper, only: des_mpi_barrier
       use compar, only: numpes
 
       implicit none
@@ -113,7 +112,7 @@
             end if
          end do
       end do
-      call des_mpi_barrier
+      ! call des_mpi_barrier
 
 !      call des_dbgmpi(5)
 
@@ -149,7 +148,7 @@
          end do
       end do
       call desmpi_cleanup
-      call des_mpi_barrier
+      ! call des_mpi_barrier
 
 !      call des_dbgmpi(2)
 !      call des_dbgmpi(3)
