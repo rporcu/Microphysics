@@ -169,7 +169,7 @@
 
             WRITE(ERR_MSG,1100)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            CALL MFIX_EXIT()
+            CALL MFIX_EXIT(MyPE)
          ENDIF
       ENDIF
 

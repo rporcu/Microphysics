@@ -72,7 +72,7 @@
       else
          IF(DMP_LOG)WRITE (UNIT_LOG,*) &
            'preconditioner option not found - check mfix.dat and readme'
-         call mfix_exit()
+         call mfix_exit(myPE)
       endif
 
       return
@@ -408,7 +408,7 @@
                endif
             endif
 
-!           call mfix_exit()
+!           call mfix_exit(myPE)
 
 ! Check convergence; continue if necessary
 ! for continuation, it is necessary that omega(i) .ne. 0

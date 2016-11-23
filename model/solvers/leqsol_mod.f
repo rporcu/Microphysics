@@ -846,7 +846,7 @@ CONTAINS
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'ROUTINE = ', ' JKSWEEP'
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
-         call mfix_exit()
+         call mfix_exit(myPE)
       ENDIF
 
       DO I=NSTART, NEND
@@ -927,7 +927,7 @@ CONTAINS
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'ROUTINE = ', ' IJSWEEP'
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
-         call mfix_exit()
+         call mfix_exit(myPE)
       ENDIF
 
       DO K=NSTART, NEND
@@ -992,8 +992,8 @@ CONTAINS
           allocate (r1_g(10))
           allocate (r2_g(10))
        endif
-       ! call gather(r1,r1_g)
-       ! call gather(r2,r2_g)
+       call gather(r1,r1_g)
+       call gather(r2,r2_g)
 
        if(myPE.eq.root) then
           prod = 0.0d0
@@ -1083,7 +1083,7 @@ CONTAINS
        else
           allocate (rg_temp(10,4))
        endif
-       ! call gather(r_temp,rg_temp)
+       call gather(r_temp,rg_temp)
 
        if(myPE.eq.root) then
           prod = 0.0d0
