@@ -8,7 +8,6 @@ module mpi_utility
 
   use geometry
   use compar
-  use debug
   implicit none
 
   !       Object-oriented approach to direct to the correct procedure

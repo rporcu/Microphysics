@@ -352,6 +352,7 @@
       use param1, only: UNDEFINED_I
 
       use mpi_utility
+      use funits
 
       implicit none
 !--------------------------------------------------------------------//

@@ -7,6 +7,7 @@
 
       use compar
       use mpi_utility
+      use funits
 
       implicit none
 
@@ -87,7 +88,3 @@
 
       RETURN
       END SUBROUTINE CLOSE_FILE
-
-
-
-

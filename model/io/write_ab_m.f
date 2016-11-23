@@ -18,6 +18,7 @@
       USE mpi_utility
       USE functions
       use machine
+      use funits
 
       IMPLICIT NONE
 !-----------------------------------------------
