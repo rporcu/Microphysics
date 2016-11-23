@@ -22,7 +22,8 @@
 
 ! myPE - my processor id (it varies from 0 to nproc-1)
 ! numPEs - total number of nodes
-      integer :: myPE, numPEs
+      integer, parameter :: myPE = 0
+      integer, parameter :: numPEs = 1
 
 ! mpierr - used by AEOLUS for error checking
       INTEGER :: mpierr

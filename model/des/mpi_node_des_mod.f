@@ -20,7 +20,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use parallel_mpi
       use mpi_utility
       use discretelement
       use desgrid

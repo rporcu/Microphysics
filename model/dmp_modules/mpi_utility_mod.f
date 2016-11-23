@@ -8,7 +8,6 @@ module mpi_utility
 
   use geometry
   use compar
-  use parallel_mpi
   use debug
   implicit none
 

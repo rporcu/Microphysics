@@ -9,7 +9,6 @@
 ! Modules
 !-----------------------------------------------
         use mpi_utility
-        use parallel_mpi
         use geometry
         use sendrecv
         use compar

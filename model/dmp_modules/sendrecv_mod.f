@@ -12,8 +12,6 @@ module sendrecv
   !-----------------------------------------------
   ! Modules
   !-----------------------------------------------
-  use parallel_mpi
-  use debug
   use geometry
   use compar
   use functions
@@ -138,10 +136,10 @@ contains
          (k-k1)*(j2-j1+1)*(i2-i1+1)
     is_same = (gijk .eq. ijkp)
     isok = isok_i .and. isok_j .and. isok_k .and. is_same
-    if (.not.isok) then
-       call write_debug( name, 'i,j,k ', i,j,k )
-       call write_debug( name, 'ijkp, gijk ', ijkp, gijk )
-    endif
+    ! if (.not.isok) then
+    !    call write_debug( name, 'i,j,k ', i,j,k )
+    !    call write_debug( name, 'ijkp, gijk ', ijkp, gijk )
+    ! endif
 
     return
   end subroutine ijk_of
@@ -204,10 +202,10 @@ contains
          (k-k1)*(j2-j1+1)*(i2-i1+1)
     is_same = (gijk .eq. ijkp)
     isok = isok_i .and. isok_j .and. isok_k .and. is_same
-    if (.not.isok) then
-       call write_debug( name, 'i,j,k ', i,j,k )
-       call write_debug( name, 'ijkp, gijk ', ijkp, gijk )
-    endif
+    ! if (.not.isok) then
+    !    call write_debug( name, 'i,j,k ', i,j,k )
+    !    call write_debug( name, 'ijkp, gijk ', ijkp, gijk )
+    ! endif
 
     return
   end subroutine ijk_of_gl
@@ -440,34 +438,34 @@ contains
                 ijk2 = funijk( ii,jj,kk)
 
                 isvalid = (ii.eq.i).and.(jj.eq.j).and.(kk.eq.k).and.(ijk.eq.ijk2)
-                if (.not.isvalid) then
-                   call write_debug( name, 'error with ijk_of ')
+                ! if (.not.isvalid) then
+                !    call write_debug( name, 'error with ijk_of ')
 
-                   call write_debug( name, &
-                        'istart3_all(myPE),iend3_all(myPE) ', &
-                        istart3_all(myPE),iend3_all(myPE) )
-                   call write_debug( name, &
-                        'jstart3_all(myPE),jend3_all(myPE) ', &
-                        jstart3_all(myPE),jend3_all(myPE) )
-                   call write_debug( name, &
-                        'kstart3_all(myPE),kend3_all(myPE) ', &
-                        kstart3_all(myPE),kend3_all(myPE) )
+                !    call write_debug( name, &
+                !         'istart3_all(myPE),iend3_all(myPE) ', &
+                !         istart3_all(myPE),iend3_all(myPE) )
+                !    call write_debug( name, &
+                !         'jstart3_all(myPE),jend3_all(myPE) ', &
+                !         jstart3_all(myPE),jend3_all(myPE) )
+                !    call write_debug( name, &
+                !         'kstart3_all(myPE),kend3_all(myPE) ', &
+                !         kstart3_all(myPE),kend3_all(myPE) )
 
-                   call write_debug( name, 'i,j,k, ijk ', i,j,k, ijk )
-                   call write_debug( name, 'ii,jj,kk,  ijk2 ',&
-                        ii,jj,kk,ijk2 )
+                !    call write_debug( name, 'i,j,k, ijk ', i,j,k, ijk )
+                !    call write_debug( name, 'ii,jj,kk,  ijk2 ',&
+                !         ii,jj,kk,ijk2 )
 
-                endif
+                ! endif
              enddo
           enddo
        enddo
     endif ! Local Function
 
-    if (lidebug.ge.1) then
-       call write_debug( name, 'imap ', imap )
-       call write_debug( name, 'jmap ', jmap )
-       call write_debug( name, 'kmap ', kmap )
-    endif
+    ! if (lidebug.ge.1) then
+    !    call write_debug( name, 'imap ', imap )
+    !    call write_debug( name, 'jmap ', jmap )
+    !    call write_debug( name, 'kmap ', kmap )
+    ! endif
 
 
     ! ----------------------------
@@ -510,10 +508,10 @@ contains
           do i=lbound(ijk2proc,1),ubound(ijk2proc,1)
              isvalid = (ijk2proc(i,j,k) .eq. 1)
              if (.not.isvalid) then
-                call write_debug(name, ' invalid decomposition ')
-                call write_debug(name, 'i,j,k ',i,j,k )
-                call write_debug(name, 'ijk2proc(i,j,k) ', &
-                     ijk2proc(i,j,k))
+                ! call write_debug(name, ' invalid decomposition ')
+                ! call write_debug(name, 'i,j,k ',i,j,k )
+                ! call write_debug(name, 'ijk2proc(i,j,k) ', &
+                !      ijk2proc(i,j,k))
                 call mfix_exit( myPE )
              endif
           enddo
@@ -570,9 +568,9 @@ contains
           iendx(:) = iend3_all(:)
        endif
 
-       if (lidebug.ge.1) then
-          call write_debug(name, 'determine send schedule ', myPE )
-       endif
+       ! if (lidebug.ge.1) then
+       !    call write_debug(name, 'determine send schedule ', myPE )
+       ! endif
 
        ! -----------------------
        ! determine send schedule
@@ -628,10 +626,10 @@ contains
           endif
        enddo
 
-       if (lidebug.ge.1) then
-          call write_debug( name, 'ncount = ', ncount )
-          call write_debug( name, 'nsend, ntotal ', nsend, ntotal )
-       endif
+       ! if (lidebug.ge.1) then
+       !    call write_debug( name, 'ncount = ', ncount )
+       !    call write_debug( name, 'nsend, ntotal ', nsend, ntotal )
+       ! endif
 
        allocate( xsend(nsend+1) )
        allocate( sendijk( max(1,ntotal) ) )
@@ -708,10 +706,10 @@ contains
                '** sendrecv_init: icount != ncount(iproc) ', iproc)
        enddo   ! end do (iter=1,nsend)
 
-       if (lidebug.ge.1) then
-          call write_debug(name, 'determine recv schedule ', myPE )
-       endif
-       ! ----------------------------------------------------------------<<<
+       ! if (lidebug.ge.1) then
+       !    call write_debug(name, 'determine recv schedule ', myPE )
+       ! endif
+       ! ! ----------------------------------------------------------------<<<
 
 
        ! ---------------------------
@@ -804,11 +802,11 @@ contains
        ! ----------------------------------------------------------------<<<
 
 
-       ! second pass to fill in array
-       ! ---------------------------------------------------------------->>>
-       if (lidebug.ge.1) then
-          call write_debug( name, 'recv second pass ', myPE )
-       endif
+       ! ! second pass to fill in array
+       ! ! ---------------------------------------------------------------->>>
+       ! if (lidebug.ge.1) then
+       !    call write_debug( name, 'recv second pass ', myPE )
+       ! endif
 
        ipos = 1
 
@@ -918,13 +916,13 @@ contains
     nullify( kendx )
 
 
-    ! ---------------------------------------------------------------->>>
-    if (lidebug.ge.1) then
-       call write_debug( name, ' allocate message buffers ' )
-       call write_debug( name, 'nrecv1 ', nrecv1 )
-       call write_debug( name, 'recvproc1 ', recvproc1 )
-       call write_debug( name, 'recvtag1 ', recvtag1 )
-       call write_debug( name, 'xrecv1 ', xrecv1 )
+    ! ! ---------------------------------------------------------------->>>
+    ! if (lidebug.ge.1) then
+    !    call write_debug( name, ' allocate message buffers ' )
+    !    call write_debug( name, 'nrecv1 ', nrecv1 )
+    !    call write_debug( name, 'recvproc1 ', recvproc1 )
+    !    call write_debug( name, 'recvtag1 ', recvtag1 )
+    !    call write_debug( name, 'xrecv1 ', xrecv1 )
 
        lmax = size(recvijk1)
        allocate( line(lmax) )
@@ -965,11 +963,11 @@ contains
        deallocate( line )
        nullify( line )
 
-       call write_debug( name, ' allocate message buffers ' )
-       call write_debug( name, 'nsend1 ', nsend1 )
-       call write_debug( name, 'sendproc1 ', sendproc1 )
-       call write_debug( name, 'sendtag1 ', sendtag1 )
-       call write_debug( name, 'xsend1 ', xsend1 )
+       !call write_debug( name, ' allocate message buffers ' )
+       !call write_debug( name, 'nsend1 ', nsend1 )
+       !call write_debug( name, 'sendproc1 ', sendproc1 )
+       !call write_debug( name, 'sendtag1 ', sendtag1 )
+       !call write_debug( name, 'xsend1 ', xsend1 )
 
        lmax = size(sendijk1)
        allocate(line(lmax))
@@ -1084,9 +1082,9 @@ contains
              tag = recvtag( ii )
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'mpi_recv_init: ii,j1,j2 ', &
+                !call write_debug(name, 'mpi_recv_init: ii,j1,j2 ', &
                      ii,j1,j2 )
-                call write_debug(name, 'icount, source, tag ', &
+                !call write_debug(name, 'icount, source, tag ', &
                      icount,source,tag )
              endif
 
@@ -1105,9 +1103,9 @@ contains
              icount = j2-j1+1
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'mpi_send_init: ii,j1,j2 ', &
+                !call write_debug(name, 'mpi_send_init: ii,j1,j2 ', &
                      ii,j1,j2)
-                call write_debug(name, 'icount, dest, tag ', &
+                !call write_debug(name, 'icount, dest, tag ', &
                      icount,dest,tag )
              endif
 
@@ -1123,7 +1121,7 @@ contains
     endif   ! end if (use_persistent_message)
 
     if (lidebug.ge.1) then
-       call write_debug(name, ' end of sendrecv_init ', myPE )
+       !call write_debug(name, ' end of sendrecv_init ', myPE )
     endif
 #endif
 
@@ -1204,7 +1202,7 @@ contains
     ! post asynchronous receives
     ! ---------------------------------------------------------------->>>
     if (lidebug.ge.1) then
-       call write_debug(name, 'post asynchronous receives, nrecv = ', &
+       !call write_debug(name, 'post asynchronous receives, nrecv = ', &
             nrecv)
     endif
 
@@ -1212,14 +1210,14 @@ contains
        recvsize = xrecv( nrecv+1)-1
 
        if (lidebug.ge.1) then
-          call write_debug( name, 'recvsize, ubound(drecvbuffer,1) ',&
+          !call write_debug( name, 'recvsize, ubound(drecvbuffer,1) ',&
                recvsize, ubound(drecvbuffer,1) )
 
-          call write_debug( name, 'ubound(xrecv,1) ', &
+          !call write_debug( name, 'ubound(xrecv,1) ', &
                ubound(xrecv,1) )
-          call write_debug( name, 'ubound(recvproc,1) ', &
+          !call write_debug( name, 'ubound(recvproc,1) ', &
                ubound(recvproc,1) )
-          call write_debug( name, 'ubound(recvtag,1) ', &
+          !call write_debug( name, 'ubound(recvtag,1) ', &
                ubound(recvtag,1) )
        endif
 
@@ -1230,14 +1228,14 @@ contains
        if (use_persistent_message) then
           ! persistent request already established
           if (lidebug.ge.2) then
-             call write_debug( name,'before startall for recv ',&
+             !call write_debug( name,'before startall for recv ',&
                   recv_persistent_request)
           endif
 
           call MPI_STARTALL( nrecv, recv_persistent_request, ierror )
 
           if (lidebug.ge.2) then
-             call write_debug( name,'after startall for recv, ierror',&
+             !call write_debug( name,'after startall for recv, ierror',&
                   ierror)
           endif
 
@@ -1253,9 +1251,9 @@ contains
              tag = recvtag( ii )
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'mpi_irecv: ii,j1,j2 ', &
+                !call write_debug(name, 'mpi_irecv: ii,j1,j2 ', &
                      ii, j1, j2)
-                call write_debug(name, 'count, source, tag ', &
+                !call write_debug(name, 'count, source, tag ', &
                      count,source,tag )
              endif
 
@@ -1273,22 +1271,22 @@ contains
     ! post asynchronous sends
     ! ---------------------------------------------------------------->>>
     if (lidebug.ge.1) then
-       call write_debug(name, 'post asynchronous sends ')
+       !call write_debug(name, 'post asynchronous sends ')
     endif
 
     if (nsend.ge.1) then
        sendsize = xsend( nsend+1)-1
 
        if (lidebug.ge.1) then
-          call write_debug( name, &
+          !call write_debug( name, &
                'sendsize, ubound(dsendbuffer,1) ', &
                sendsize, ubound(dsendbuffer,1) )
 
-          call write_debug( name, 'ubound(xsend,1) ', &
+          !call write_debug( name, 'ubound(xsend,1) ', &
                ubound(xsend,1) )
-          call write_debug( name, 'ubound(sendproc,1) ', &
+          !call write_debug( name, 'ubound(sendproc,1) ', &
                ubound(sendproc,1) )
-          call write_debug( name, 'ubound(sendtag,1) ', &
+          !call write_debug( name, 'ubound(sendtag,1) ', &
                ubound(sendtag,1) )
        endif
 
@@ -1309,14 +1307,14 @@ contains
           enddo
 
           if (lidebug.ge.2) then
-             call write_debug(name,'before mpi_startall send ',&
+             !call write_debug(name,'before mpi_startall send ',&
                   send_persistent_request )
           endif
 
           call MPI_STARTALL( nsend, send_persistent_request, ierror )
 
           if (lidebug .ge.2) then
-             call write_debug(name,'after mpi_startall send ',&
+             !call write_debug(name,'after mpi_startall send ',&
                   send_persistent_request )
           endif
 
@@ -1339,9 +1337,9 @@ contains
              tag = sendtag( ii )
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'mpi_isend: ii,j1,j2 ', &
+                !call write_debug(name, 'mpi_isend: ii,j1,j2 ', &
                      ii,j1,j2)
-                call write_debug(name, 'count, dest, tag ', &
+                !call write_debug(name, 'count, dest, tag ', &
                      count,dest,tag)
              endif
 
@@ -1426,7 +1424,7 @@ contains
     ! ---------------------------------------------------------------->>>
 
     if (lidebug.ge.1) then
-       call write_debug(name, &
+       !call write_debug(name, &
             'post asynchronous receives, nrecv = ', nrecv )
     endif
 
@@ -1435,14 +1433,14 @@ contains
        allocate( irecvbuffer( recvsize ) )
 
        if (lidebug.ge.1) then
-          call write_debug( name, &
+          !call write_debug( name, &
                'recvsize, ubound(irecvbuffer,1) ', &
                recvsize, ubound(irecvbuffer,1) )
-          call write_debug( name, 'ubound(xrecv,1) ', &
+          !call write_debug( name, 'ubound(xrecv,1) ', &
                ubound(xrecv,1) )
-          call write_debug( name, 'ubound(recvproc,1) ', &
+          !call write_debug( name, 'ubound(recvproc,1) ', &
                ubound(recvproc,1) )
-          call write_debug( name, 'ubound(recvtag,1) ', &
+          !call write_debug( name, 'ubound(recvtag,1) ', &
                ubound(recvtag,1) )
        endif
 
@@ -1458,8 +1456,8 @@ contains
           tag = recvtag( ii )
 
           if (lidebug.ge.2) then
-             call write_debug(name, 'mpi_irecv: ii,j1,j2 ', ii,j1,j2 )
-             call write_debug(name, 'count, source, tag ', &
+             !call write_debug(name, 'mpi_irecv: ii,j1,j2 ', ii,j1,j2 )
+             !call write_debug(name, 'count, source, tag ', &
                   count,source,tag )
           endif
 
@@ -1477,7 +1475,7 @@ contains
     !  post asynchronous sends
     ! ---------------------------------------------------------------->>>
     if (lidebug.ge.1) then
-       call write_debug(name, 'post asynchronous sends ')
+       !call write_debug(name, 'post asynchronous sends ')
     endif
 
     if (nsend.ge.1) then
@@ -1485,13 +1483,13 @@ contains
        allocate( isendbuffer( sendsize ) )
 
        if (lidebug.ge.1) then
-          call write_debug( name, 'sendsize, ubound(isendbuffer,1) ',&
+          !call write_debug( name, 'sendsize, ubound(isendbuffer,1) ',&
                sendsize, ubound(isendbuffer,1) )
-          call write_debug( name, 'ubound(xsend,1) ', &
+          !call write_debug( name, 'ubound(xsend,1) ', &
                ubound(xsend,1) )
-          call write_debug( name, 'ubound(sendproc,1) ', &
+          !call write_debug( name, 'ubound(sendproc,1) ', &
                ubound(sendproc,1) )
-          call write_debug( name, 'ubound(sendtag,1) ', &
+          !call write_debug( name, 'ubound(sendtag,1) ', &
                ubound(sendtag,1) )
        endif
 
@@ -1514,8 +1512,8 @@ contains
           tag = sendtag( ii )
 
           if (lidebug.ge.2) then
-             call write_debug(name, 'mpi_isend: ii,j1,j2 ', ii,j1,j2)
-             call write_debug(name, 'count, dest, tag ', count, &
+             !call write_debug(name, 'mpi_isend: ii,j1,j2 ', ii,j1,j2)
+             !call write_debug(name, 'count, dest, tag ', count, &
                   dest, tag)
           endif
 
@@ -1606,7 +1604,7 @@ contains
     ! post asynchronous receives
     ! ---------------------------------------------------------------->>>
     if (lidebug.ge.1) then
-       call write_debug(name, 'post asynchronous receives, nrecv = ',&
+       !call write_debug(name, 'post asynchronous receives, nrecv = ',&
             nrecv )
     endif
 
@@ -1616,13 +1614,13 @@ contains
        allocate( crecvbuffer( recvsize*clen ) )
 
        if (lidebug.ge.1) then
-          call write_debug( name, 'recvsize, ubound(crecvbuffer,1) ', &
+          !call write_debug( name, 'recvsize, ubound(crecvbuffer,1) ', &
                recvsize, ubound(crecvbuffer,1) )
-          call write_debug( name, 'ubound(xrecv,1) ', &
+          !call write_debug( name, 'ubound(xrecv,1) ', &
                ubound(xrecv,1) )
-          call write_debug( name, 'ubound(recvproc,1) ', &
+          !call write_debug( name, 'ubound(recvproc,1) ', &
                ubound(recvproc,1) )
-          call write_debug( name, 'ubound(recvtag,1) ', &
+          !call write_debug( name, 'ubound(recvtag,1) ', &
                ubound(recvtag,1) )
        endif
 
@@ -1641,8 +1639,8 @@ contains
           tag = recvtag( ii )
 
           if (lidebug.ge.2) then
-             call write_debug(name, 'mpi_irecv: ii,j1,j2 ', ii,j1,j2 )
-             call write_debug(name, 'count, source, tag ', &
+             !call write_debug(name, 'mpi_irecv: ii,j1,j2 ', ii,j1,j2 )
+             !call write_debug(name, 'count, source, tag ', &
                   count,source,tag )
           endif
 
@@ -1660,7 +1658,7 @@ contains
     ! post asynchronous sends
     ! ---------------------------------------------------------------->>>
     if (lidebug.ge.1) then
-       call write_debug(name, 'post asynchronous sends ')
+       !call write_debug(name, 'post asynchronous sends ')
     endif
 
     if (nsend.ge.1) then
@@ -1669,13 +1667,13 @@ contains
        allocate( csendbuffer( sendsize*clen ) )
 
        if (lidebug.ge.1) then
-          call write_debug( name, 'sendsize, ubound(csendbuffer,1) ', &
+          !call write_debug( name, 'sendsize, ubound(csendbuffer,1) ', &
                sendsize, ubound(csendbuffer,1) )
-          call write_debug( name, 'ubound(xsend,1) ', &
+          !call write_debug( name, 'ubound(xsend,1) ', &
                ubound(xsend,1) )
-          call write_debug( name, 'ubound(sendproc,1) ', &
+          !call write_debug( name, 'ubound(sendproc,1) ', &
                ubound(sendproc,1) )
-          call write_debug( name, 'ubound(sendtag,1) ', &
+          !call write_debug( name, 'ubound(sendtag,1) ', &
                ubound(sendtag,1) )
        endif
 
@@ -1703,8 +1701,8 @@ contains
           tag = sendtag( ii )
 
           if (lidebug.ge.2) then
-             call write_debug(name, 'mpi_isend: ii,j1,j2 ', ii,j1,j2)
-             call write_debug(name, 'count, dest, tag ', count, &
+             !call write_debug(name, 'mpi_isend: ii,j1,j2 ', ii,j1,j2)
+             !call write_debug(name, 'count, dest, tag ', count, &
                   dest, tag )
           endif
 
@@ -1758,7 +1756,7 @@ contains
 
     if (nsend.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug(name, &
+          !call write_debug(name, &
                'waiting for sends to complete, nsend  = ', nsend )
        endif
 
@@ -1781,7 +1779,7 @@ contains
     ! wait for recvs to complete
     if (nrecv.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug( name, &
+          !call write_debug( name, &
                'waiting for receives to complete, nrecv =  ', nrecv )
        endif
 
@@ -1801,7 +1799,7 @@ contains
              j2 = xrecv( jindex + 1)-1
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2)
+                !call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2)
              endif
 
              do jj=j1,j2
@@ -1881,7 +1879,7 @@ contains
 
     if (nsend.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug(name, &
+          !call write_debug(name, &
                'waiting for sends to complete, nsend  = ', nsend )
        endif
 
@@ -1902,7 +1900,7 @@ contains
     ! wait for recvs to complete
     if (nrecv.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug( name, &
+          !call write_debug( name, &
                'waiting for receives to complete, nrecv =  ', nrecv )
        endif
 
@@ -1916,7 +1914,7 @@ contains
              j2 = xrecv( jindex + 1)-1
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2 )
+                !call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2 )
              endif
 
              do jj=j1,j2
@@ -1995,7 +1993,7 @@ contains
 
     if (nsend.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug(name, &
+          !call write_debug(name, &
                'waiting for sends to complete, nsend  = ', nsend )
        endif
 
@@ -2014,7 +2012,7 @@ contains
     ! wait for recvs to complete
     if (nrecv.ge.1) then
        if (lidebug.ge.1) then
-          call write_debug( name, &
+          !call write_debug( name, &
                'waiting for receives to complete, nrecv =  ', nrecv )
        endif
 
@@ -2028,7 +2026,7 @@ contains
              j2 = xrecv( jindex + 1)-1
 
              if (lidebug.ge.2) then
-                call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2 )
+                !call write_debug(name, 'jindex, j1,j2 ', jindex,j1,j2 )
              endif
 
              do jj=j1,j2
@@ -2343,9 +2341,9 @@ contains
 
              if (lidebug.ge.2) then
 
-                !                  call write_debug(name, 'mpi_recv_init: ii,j1,j2 ', &
+                !                  !call write_debug(name, 'mpi_recv_init: ii,j1,j2 ', &
                 !                                             ii,j1,j2 )
-                !                  call write_debug(name, 'icount, source, tag ', &
+                !                  !call write_debug(name, 'icount, source, tag ', &
                 !                                             icount,source,tag )
              endif
 
@@ -2367,9 +2365,9 @@ contains
 
              if (lidebug.ge.2) then
 
-                !                  call write_debug(name, 'mpi_send_init: ii,j1,j2 ', &
+                !                  !call write_debug(name, 'mpi_send_init: ii,j1,j2 ', &
                 !                                         ii,j1,j2)
-                !                  call write_debug(name, 'icount, dest, tag ', &
+                !                  !call write_debug(name, 'icount, dest, tag ', &
                 !                                         icount,dest,tag )
              endif
 

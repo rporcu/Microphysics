@@ -18,7 +18,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use parallel_mpi
       use mpi_utility
       use discretelement
       use desgrid
@@ -83,12 +82,12 @@
          ltag = message_tag(ineighproc(pface),mype,pface)
          call des_mpi_irecv(drecvbuf(1+mod(pface,2))%facebuf(:),imaxbuf, &
                             ineighproc(pface),ltag,irecvreq(pface),lerr)
-         call mpi_check( name //':mpi_irecv ', lerr )
+         ! call mpi_check( name //':mpi_irecv ', lerr )
 
          ltag = message_tag(mype,ineighproc(pface),lrecvface)
          call des_mpi_isend(dsendbuf(1+mod(pface,2))%facebuf(:),isendcnt(pface), &
                         ineighproc(pface),ltag,isendreq(pface),lerr)
-         call mpi_check( name //':mpi_isend ', lerr )
+         ! call mpi_check( name //':mpi_isend ', lerr )
 
       end if
       return
@@ -134,9 +133,9 @@
 ! wait for both send and recv request completes
       if (ineighproc(pface).ne.mype) then
          call des_mpi_wait(isendreq(pface),lerr)
-         call mpi_check( name //':mpi_wait-send', lerr )
+         ! call mpi_check( name //':mpi_wait-send', lerr )
          call des_mpi_wait(irecvreq(pface),lerr)
-         call mpi_check( name //':mpi_wait-recv', lerr )
+         ! call mpi_check( name //':mpi_wait-recv', lerr )
       end if
       return
       end subroutine desmpi_sendrecv_wait
@@ -177,7 +176,7 @@
          call des_MPI_Scatterv(drootbuf,iscattercnts,idispls, &
                                dprocbuf,iscr_recvcnt,lroot,lerr)
       end if
-      call MPI_Check( name //':MPI_Scatterv', lerr )
+      ! call MPI_Check( name //':MPI_Scatterv', lerr )
 
       return
       end subroutine desmpi_scatterv
@@ -217,7 +216,7 @@
          call des_MPI_Gatherv(dprocbuf,igath_sendcnt,drootbuf, &
                               igathercnts,idispls,lroot,lerr)
       end if
-      call MPI_Check( name //':MPI_Gatherv', lerr )
+      ! call MPI_Check( name //':MPI_Gatherv', lerr )
 
       return
       end subroutine desmpi_gatherv

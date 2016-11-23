@@ -95,7 +95,7 @@
 !-----------------------------------------------
 
 ! Invoke MPI initialization routines and get rank info.
-      CALL PARALLEL_INIT
+      ! CALL PARALLEL_INIT
 
 ! AEOLUS: stop trigger mechanism to terminate MFIX normally before batch
 ! queue terminates. timestep at the beginning of execution
@@ -229,7 +229,7 @@
       CALL WRITE_OUT3 (CPUTIME_USED, WALLTIME_USED, CPU_IO)
 
 ! Finalize and terminate MPI
-      call parallel_fin
+      ! call parallel_fin
 
       CALL FINL_ERR_MSG
 

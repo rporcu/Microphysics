@@ -34,6 +34,7 @@
       USE physprop
       USE run
       USE sendrecv
+      USE funits
 
       IMPLICIT NONE
 !-----------------------------------------------
