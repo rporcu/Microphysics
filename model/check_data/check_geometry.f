@@ -46,28 +46,6 @@
 
       IF(SHIFT) CALL SHIFT_DXYZ
 
-!  Ensure that the cell sizes across cyclic boundaries are comparable
-      IF(CYCLIC_X .OR. CYCLIC_X_PD) THEN
-         IF(DX(IMIN1) /= DX(IMAX1)) THEN
-            WRITE(ERR_MSG,1100) 'DX(IMIN1)',DX(IMIN1),'DX(IMAX1)',DX(IMAX1)
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDIF
-
-      IF(CYCLIC_Y .OR. CYCLIC_Y_PD) THEN
-         IF(DY(JMIN1) /= DY(JMAX1)) THEN
-            WRITE(ERR_MSG,1100) 'DY(JMIN1)',DY(JMIN1),'DY(JMAX1)',DY(JMAX1)
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDIF
-
-      IF(CYCLIC_Z .OR. CYCLIC_Z_PD) THEN
-         IF (DZ(KMIN1) /= DZ(KMAX1)) THEN
-            WRITE(ERR_MSG,1100) 'DZ(KMIN1)',DZ(KMIN1),'DZ(KMAX1)',DZ(KMAX1)
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDIF
-
  1100 FORMAT('Error 1100: Cells adjacent to cyclic boundaries must ',  &
          'be of same size:',/2X,A,' = ',G12.5,/2x,A,' = ',G12.5,/      &
          'Please correct the mfix.dat file.')

@@ -42,8 +42,8 @@
       CALL INIT_ERR_MSG("SET_FILTER_DES")
 
 ! Get the minimum fluid cell dimension
-      DXYZ_MIN = min(minval(DX(IMIN1:IMAX1)),minval(DY(JMIN1:JMAX1)))
-      IF(DO_K) DXYZ_MIN = min(DXYZ_MIN,minval(DZ(KMIN1:KMAX1)))
+      DXYZ_MIN = min(DX,DY)
+      IF(DO_K) DXYZ_MIN = min(DXYZ_MIN,DZ)
 
 ! Get the minimum DES grid cell dimension
       DG_DXYZ_MIN = min(ONE/DG_DXinv, ONE/DG_DYinv)

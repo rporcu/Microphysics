@@ -176,7 +176,7 @@
       USE functions, only: ieast, jnorth, jsouth, ktop, kbot
       USE functions, only: iminus, jminus, kminus
 
-      USE geometry, only: odx, ody_n, odz_t
+      USE geometry, only: odx, ody, odz
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
 
@@ -238,12 +238,12 @@
       IJKS = FUNIJK(i,jtmp,k)
       IJKSE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
 
-      C_AE = ODX(IP)
-      C_AW = ODX(I)
-      C_AN = ODY_N(J)
-      C_AS = ODY_N(JM)
-      C_AT = ODZ_T(K)
-      C_AB = ODZ_T(KM)
+      C_AE = ODX
+      C_AW = ODX
+      C_AN = ODY
+      C_AS = ODY
+      C_AT = ODZ
+      C_AB = ODZ
 
 ! East face (i+1, j, k)
       D_FE = MU_G(IJKE)*C_AE*AYZ

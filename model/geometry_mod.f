@@ -65,11 +65,8 @@
       INTEGER :: KMAX2
 
 ! Cell sizes in the x or r direction
-      DOUBLE PRECISION :: DX (0:DIM_I)
-! Cell sizes in the y direction
-      DOUBLE PRECISION :: DY (0:DIM_J)
-! Cell sizes in the z or theta direction
-      DOUBLE PRECISION :: DZ (0:DIM_K)
+      DOUBLE PRECISION :: DX, DY, DZ
+      DOUBLE PRECISION :: oDX, oDY, oDZ
 
 ! IMAX2 * JMAX2
       INTEGER :: IJMAX2
@@ -106,20 +103,6 @@
 ! Allocatable type causes PG internal error, Ed's soln: pointers
 !      CHARACTER(LEN=3), DIMENSION(:), ALLOCATABLE :: ICBC_FLAG
       character(LEN=3),  dimension(:), pointer :: icbc_flag
-
-! 1 / dx_i
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDX
-! 1 / dy_j
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDY
-! 1 / dz_k
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDZ
-
-! 1 / dx_i+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDX_E
-! 1 / dy_j+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDY_N
-! 1 / dz_k+1/2
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: oDZ_T
 
 
 !  one or more periodic boundary condition is used

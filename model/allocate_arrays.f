@@ -102,9 +102,9 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Domain decomposition and dimensions
-      use geometry, only: oDX, oDX_E
-      use geometry, only: oDZ, oDZ_T
-      use geometry, only: oDY, oDY_N
+      use geometry, only: oDX
+      use geometry, only: oDZ
+      use geometry, only: oDY
 ! Domain flags.
       use geometry, only: ICBC_FLAG
       use geometry, only: FLAG, FLAG3
@@ -136,20 +136,6 @@
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("ALLOCATE_ARRAYS_GEOMETRY")
-
-! Allocate geometry components related to the mesh. Check the
-! allocation error status and abort if any failure is detected.
-      ALLOCATE( oDX   (0:DIMENSION_I), STAT=IER)
-      ALLOCATE( oDX_E (0:DIMENSION_I), STAT=IER)
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( oDY   (0:DIMENSION_J), STAT=IER )
-      ALLOCATE( oDY_N (0:DIMENSION_J), STAT=IER )
-      IF(IER /= 0) goto 500
-
-      ALLOCATE( oDZ   (0:DIMENSION_K), STAT=IER )
-      ALLOCATE( oDZ_T (0:DIMENSION_K), STAT=IER )
-      IF(IER /= 0) goto 500
 
 ! Flags for the scalar grid.
       Allocate( FLAG  (DIMENSION_3), STAT=IER )

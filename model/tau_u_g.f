@@ -134,18 +134,18 @@
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
-               SSX = MU_G(IJKE)*(U_G(IPJK)-U_G(IJK))*ODX(IP)*AYZ - &
-                     MU_G(IJK)*(U_G(IJK)-U_G(IMJK))*ODX(I)*AYZ
+               SSX = MU_G(IJKE)*(U_G(IPJK)-U_G(IJK))*ODX*AYZ - &
+                     MU_G(IJK)*(U_G(IJK)-U_G(IMJK))*ODX*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
                SSY = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKN)),&
                            AVG_H(MU_G(IJKE),MU_G(IJKNE)))*&
-                        (V_G(IPJK)-V_G(IJK))*ODX_E(I)*AXZ - &
+                        (V_G(IPJK)-V_G(IJK))*ODX*AXZ - &
                      AVG_H(AVG_H(MU_G(IJKS),MU_G(IJK)),&
                            AVG_H(MU_G(IJKSE),MU_G(IJKE)))*&
-                        (V_G(IPJMK)-V_G(IJMK))*ODX_E(I)*AXZ
+                        (V_G(IPJMK)-V_G(IJMK))*ODX*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
@@ -154,8 +154,8 @@
                              AVG_H(MU_G(IJKE),MU_G(IJKTE)))
                MU_GBE = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
                               AVG_H(MU_G(IJKBE),MU_G(IJKE)))
-               SSZ = MU_GE*(W_G(IPJK)-W_G(IJK))*ODX_E(I)*AXY - &
-                     MU_GBE*(W_G(IPJKM)-W_G(IJKM))*ODX_E(I)*AXY
+               SSZ = MU_GE*(W_G(IPJK)-W_G(IJK))*ODX*AXY - &
+                     MU_GBE*(W_G(IPJKM)-W_G(IJKM))*ODX*AXY
 
 
 ! Add the terms

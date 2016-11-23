@@ -72,8 +72,8 @@
 
       integer, parameter :: fUnit = 2030
 
-      lOoDx = 1.0d0/dx(1)
-      lOoDy = 1.0d0/dy(1)
+      lOoDx = 1.0d0/dx
+      lOoDy = 1.0d0/dy
 
       lMFIX = 0.0d0
 
@@ -81,11 +81,11 @@
       do lc1=1,15
 
          i = int(lOoDx*pX(lc1))+1
-         Sx(0) = (dble(i)*dx(1) - pX(lc1))*lOoDx
+         Sx(0) = (dble(i)*dx - pX(lc1))*lOoDx
          Sx(1) = 1.0d0 - Sx(0)
 
          j = int(lOoDy*pY(lc1))+1
-         Sy(0) = (dble(j)*dy(1) - pY(lc1))*lOoDy
+         Sy(0) = (dble(j)*dy - pY(lc1))*lOoDy
          Sy(1) = 1.0d0 - Sy(0)
 
          if(is_On_myPE_OWNS(i,j,k)) then

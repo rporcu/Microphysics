@@ -48,13 +48,13 @@
       LI = 0.0d0
 
 ! Calculate the initial height
-      yt = -0.5d0*dy(jmin1)
+      yt = -0.5d0*dy
 
 ! Calculate the U velocity solution at center of domain
       k = kmin1 + (kmax1-kmin1)/2
       i = imin1 + (imax1-imin1)/2
       do j = jmin1, jmax1
-         yt = yt + dy(j)
+         yt = yt + dy
 ! Calculate the exact solution
          lUg = Ug(yt)
          Ug_MFIX = U_G(funijk(i,j,k))
@@ -89,13 +89,13 @@
       LI = 0.0d0
 
 ! Calculate the initial height
-      xt = -0.5d0*dx(imin1)
+      xt = -0.5d0*dx
 
 ! Calculate the U velocity solution at center of domain
       k = kmin1 + (kmax1-kmin1)/2
       j = jmin1 + (jmax1-jmin1)/2
       do i = imin1, imax1
-         xt = xt + dx(i)
+         xt = xt + dx
 ! Calculate the exact solution
          lPg = Pg(xt)
          Pg_MFIX = P_G(funijk(i,j,k))

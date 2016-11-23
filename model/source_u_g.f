@@ -489,8 +489,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY_N(J))
-                              A_M(IJK,N) = -(HALF*BC_HW_G(L)-ODY_N(J))
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY)
+                              A_M(IJK,N) = -(HALF*BC_HW_G(L)-ODY)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (fluid_cell(i,jsouth(i,j,k),k)) THEN
@@ -499,8 +499,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,S) = -(HALF*BC_HW_G(L)-ODY_N(JM))
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY_N(JM))
+                              A_M(IJK,S) = -(HALF*BC_HW_G(L)-ODY)
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (fluid_cell(i,j,ktop(i,j,k))) THEN
@@ -509,8 +509,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,0)=-(HALF*BC_HW_G(L)+ODZ_T(K))
-                              A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ_T(K))
+                              A_M(IJK,0)=-(HALF*BC_HW_G(L)+ODZ)
+                              A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (fluid_cell(i,j,kbot(i,j,k))) THEN
@@ -519,8 +519,8 @@
                               A_M(IJK,0) = -HALF
                               B_M(IJK) = -BC_UW_G(L)
                            ELSE
-                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ_T(KM))
-                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ_T(KM))
+                              A_M(IJK,B) = -(HALF*BC_HW_G(L)-ODZ)
+                              A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODZ)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ENDIF

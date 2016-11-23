@@ -133,11 +133,10 @@
 ! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
                SSX = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKE)),&
                            AVG_H(MU_G(IJKT),MU_G(IJKTE)))*&
-                        (U_G(IJKP)-U_G(IJK))*ODZ_T(K)*AYZ - &
+                        (U_G(IJKP)-U_G(IJK))*ODZ*AYZ - &
                      AVG_H(AVG_H(MU_G(IJKW),MU_G(IJK)),&
                            AVG_H(MU_G(IJKTW),MU_G(IJKT)))*&
-                        (U_G(IMJKP)-U_G(IMJK))*ODZ_T(K)*DY(J)*&
-                        (HALF*(DZ(K)+DZ(KP)))
+                        (U_G(IMJKP)-U_G(IMJK))*ODZ*DY*DZ
 ! DY(J)*HALF(DZ(k)+DZ(kp)) = oX_E(IM)*AYZ_W(IMJK), but avoids singularity
 
 ! part of d/dy (tau_zy) xdxdydz =>
@@ -145,16 +144,16 @@
 ! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
                SSY = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKN)),&
                            AVG_H(MU_G(IJKT),MU_G(IJKNT)))*&
-                        (V_G(IJKP)-V_G(IJK))*ODZ_T(K)*AXZ -&
+                        (V_G(IJKP)-V_G(IJK))*ODZ*AXZ -&
                      AVG_H(AVG_H(MU_G(IJKS),MU_G(IJK)),&
                            AVG_H(MU_G(IJKST),MU_G(IJKT)))*&
-                        (V_G(IJMKP)-V_G(IJMK))*ODZ_T(K)*AXZ
+                        (V_G(IJMKP)-V_G(IJMK))*ODZ*AXZ
 
 ! part of 1/x d/dz (tau_zz) xdxdydz =>
 !         1/x d/dz (mu/x dw/dz) xdxdydz =>
 ! delta (mu/x dw/dz)Axy |T-B : at (i, j, k+1 - k-1)
-               SSZ = MU_G(IJKT)*(W_G(IJKP)-W_G(IJK))*ODZ(KP)*AXY - &
-                     MU_G(IJK)*(W_G(IJK)-W_G(IJKM))*ODZ(K)*AXY
+               SSZ = MU_G(IJKT)*(W_G(IJKP)-W_G(IJK))*ODZ*AXY - &
+                     MU_G(IJK)*(W_G(IJK)-W_G(IJKM))*ODZ*AXY
 
 ! Add the terms
                lTAU_W_G(IJK) =  SBV + SSX + SSY + SSZ

@@ -526,15 +526,6 @@
       IMAX = UNDEFINED_I
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Cell sizes in the x (r) direction. Enter values from DX(0) to
-!    DX(IMAX-1).
-!    o Use uniform mesh size with higher-order discretization methods.
-!  </description>
-!  <arg index="1" id="Cell" min="0" max="DIM_I"/>
-      DX(:DIM_I) = UNDEFINED
-!</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the x (r) direction.</description>
@@ -554,15 +545,6 @@
       JMAX = UNDEFINED_I
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Cell sizes in the y-direction. Enter values from DY(0) to
-!    DY(IMAX-1). Use uniform mesh size with second-order
-!    discretization methods.
-!  </description>
-!  <arg index="1" id="Cell" min="0" max="DIM_J"/>
-      DY(:DIM_J) = UNDEFINED
-!</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the y-direction.</description>
@@ -582,16 +564,6 @@
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Number of cells in the z-direction.</description>
       KMAX = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Cell sizes in the z (theta) direction. Enter values from DZ(0) to
-!    DZ(IMAX-1). Use uniform mesh size with second-order discretization
-!    methods.
-!  </description>
-!  <arg index="1" id="Cell" min="0" max="DIM_K"/>
-      DZ(:DIM_K) = UNDEFINED
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">

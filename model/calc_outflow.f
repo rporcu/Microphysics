@@ -51,39 +51,39 @@
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
                   IJK2 = FUNIJK(iminus(i,j,k),j,k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
                      U_G(IJK2)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
                      U_G(IJK2)*EP_G(IJK2)
                CASE ('E')
                   IJK2 = FUNIJK(iplus(i,j,k),j,k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY(J)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
                      U_G(IJK)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY(J)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
                      U_G(IJK)*EP_G(IJK2)
                CASE ('S')
                   IJK2 = FUNIJK(i,jminus(i,j,k),k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
                      V_G(IJK2)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
                      V_G(IJK2)*EP_G(IJK2)
                CASE ('N')
                   IJK2 = FUNIJK(i,jplus(i,j,k),k)
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DZ(K)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
                      V_G(IJK)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DZ(K)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
                      V_G(IJK)*EP_G(IJK2)
                CASE ('B')
                   IJK2 = FUNIJK(i,j,kminus(i,j,k))
-                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX(I)*DY(J)*&
+                  BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DY*&
                      W_G(IJK2)*ROP_G(IJK2)
-                  BC_VOUT_G(L)=BC_VOUT_G(L)+DX(I)*DY(J)*&
+                  BC_VOUT_G(L)=BC_VOUT_G(L)+DX*DY*&
                      W_G(IJK2)*EP_G(IJK2)
                CASE ('T')
                   IJK2 = FUNIJK(i,j,kplus(i,j,k))
-                  BC_MOUT_G(L)=BC_MOUT_G(L)+DX(I)*DY(J)*&
+                  BC_MOUT_G(L)=BC_MOUT_G(L)+DX*DY*&
                      W_G(IJK)*ROP_G(IJK2)
-                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX(I)*DY(J)*&
+                  BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DY*&
                      W_G(IJK)*EP_G(IJK2)
                END SELECT
 

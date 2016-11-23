@@ -111,7 +111,7 @@
 
                   gst_tmp(i,j,k,1) = xe(ii)
                   gst_tmp(i,j,k,2) = yn(jj)
-                  gst_tmp(i,j,k,3) = merge(DZ(1), zt(kk), NO_K)
+                  gst_tmp(i,j,k,3) = merge(DZ, zt(kk), NO_K)
                   vst_tmp(i,j,k,1) = avg_factor*(u_g(cur_ijk)+u_g(ijpk))
                   vst_tmp(i,j,k,2) = avg_factor*(v_g(cur_ijk)+v_g(ipjk))
 
@@ -298,7 +298,7 @@
                   ipjpk   = funijk_map_c(ii+1,jj+1,kk)
                   GST_TMP(I,J,K,1) = XE(II)
                   GST_TMP(I,J,K,2) = YN(JJ)
-                  GST_TMP(I,J,K,3) = merge(DZ(1), ZT(KK), NO_K)
+                  GST_TMP(I,J,K,3) = merge(DZ, ZT(KK), NO_K)
                   VST_TMP(I,J,K,1) = AVG_FACTOR*(U_G(CUR_IJK)+U_G(IJPK))
                   VST_TMP(I,J,K,2) = AVG_FACTOR*(V_G(CUR_IJK)+V_G(IPJK))
 

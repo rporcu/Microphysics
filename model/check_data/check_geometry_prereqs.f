@@ -93,26 +93,9 @@
          'UNDEFINED_I or 1 when',/A,' is TRUE. Please correct the ',   &
          'mfix.dat file.')
 
-         IF(DZ(1)==UNDEFINED) THEN
-            IF(ZLENGTH==UNDEFINED) THEN
-               DZ(1) = ONE
-               ZLENGTH = ONE
-            ELSE
-               DZ(1) = ZLENGTH
-            ENDIF
-         ELSE
-            IF(ZLENGTH==UNDEFINED) THEN
-               ZLENGTH = DZ(1)
-            ELSE
-               IF(.NOT.COMPARE(ZLENGTH,DZ(1)))THEN
-                  WRITE(ERR_MSG, 1111) 'DZ(1) and ZLENGTH'
-                  CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-               ENDIF
-
-  1111 FORMAT('Error 1111: Illegal geometry: ',A,' are not equal.',/   &
-           'Please correct the mfix.dat file.')
-
-            ENDIF
+         IF(ZLENGTH==UNDEFINED) THEN
+            ZLENGTH = ONE
+            DZ = ONE
          ENDIF
       ENDIF
 

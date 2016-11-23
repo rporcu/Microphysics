@@ -62,9 +62,9 @@
 ! ---------------------------------------------------------------->>>
       IF (DO_I .AND. DELP_X/=UNDEFINED) THEN
          DPODX = DELP_X/XLENGTH
-         PJ = PJ - DPODX*HALF*(DX(IMAX1)+DX(IMAX2))
+         PJ = PJ - DPODX*DX
          DO I = IMAX1, IMIN1, -1
-            PJ = PJ + DPODX*HALF*(DX(I)+DX(I+1))
+            PJ = PJ + DPODX*DX
             DO K = KMIN1, KMAX1
                DO J = JMIN1, JMAX1
 ! Bound Checking
@@ -79,9 +79,9 @@
 
       IF (DO_J .AND. DELP_Y/=UNDEFINED) THEN
          DPODY = DELP_Y/YLENGTH
-         PJ = PJ - DPODY*HALF*(DY(JMAX1)+DY(JMAX2))
+         PJ = PJ - DPODY*DY
          DO J = JMAX1, JMIN1, -1
-            PJ = PJ + DPODY*HALF*(DY(J)+DY(J+1))
+            PJ = PJ + DPODY*DY
             DO K = KMIN1, KMAX1
                DO I = IMIN1, IMAX1
 ! Bound Checking
@@ -96,9 +96,9 @@
 
       IF (DO_K .AND. DELP_Z/=UNDEFINED) THEN
          DPODZ = DELP_Z/ZLENGTH
-         PJ = PJ - DPODZ*HALF*(DZ(KMAX1)+DZ(KMAX2))
+         PJ = PJ - DPODZ*DZ
          DO K = KMAX1, KMIN1, -1
-            PJ = PJ + DPODZ*HALF*(DZ(K)+DZ(K+1))
+            PJ = PJ + DPODZ*DZ
             DO J = JMIN1, JMAX1
                DO I = IMIN1, IMAX1
 ! Bound Checking
@@ -164,13 +164,13 @@
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
                IF (fluid_cell(i,j,k)) THEN
-                  DAREA = DX(I)*DZ(K)
+                  DAREA = DX*DZ
                   AREA = AREA + DAREA
                   IF (RO_G0 == UNDEFINED) THEN
-                     BED_WEIGHT = BED_WEIGHT - DY(J)*GRAVITY_Y*EP_G(IJK)*EOSG(&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(IJK)*EOSG(&
                         MW_AVG,PJ,295.15d0)*DAREA
                   ELSE
-                     BED_WEIGHT = BED_WEIGHT - DY(J)*GRAVITY_Y*EP_G(IJK)*RO_G0&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(IJK)*RO_G0&
                         *DAREA
                   ENDIF
                ENDIF  ! end if (fluid_cell(i,j,k))

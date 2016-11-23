@@ -36,7 +36,7 @@
       USE functions, only: funijk
 
       USE geometry, only: do_k
-      USE geometry, only: odx, odx_e, ody, ody_n, odz, odz_t
+      USE geometry, only: odx, ody, odz
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
@@ -223,7 +223,7 @@
                 IJKU = FUNIJK(itmp,j,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(U(IJK))*DT*ODX_E(I)
+             CF = ABS(U(IJK))*DT*ODX
              DWF = ULTRA_QUICK(PHI_C,CF)
              XSI_E(IJK) = XSI_func(U(IJK),DWF)
 
@@ -238,7 +238,7 @@
                 IJKU = FUNIJK(i,jtmp,k)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(V(IJK))*DT*ODY_N(J)
+             CF = ABS(V(IJK))*DT*ODY
              DWF = ULTRA_QUICK(PHI_C,CF)
              XSI_N(IJK) = XSI_func(V(IJK),DWF)
 
@@ -254,7 +254,7 @@
                    IJKU = FUNIJK(i,j,ktmp)
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*ODZ_T(K)
+                CF = ABS(W(IJK))*DT*ODZ
                 DWF = ULTRA_QUICK(PHI_C,CF)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
@@ -274,38 +274,38 @@
                 IJKC = IJK
                 IJKD = FUNIJK(ieast(i,j,k),j,k)
                 IJKU = FUNIJK(iwest(i,j,k),j,k)
-                ODXC = ODX(I)
-                ODXUC = ODX_E(IM1(I))
+                ODXC = ODX
+                ODXUC = ODX
              ELSE
                 IJKC = FUNIJK(ieast(i,j,k),j,k)
                 IJKD = IJK
                 itmp = ieast(ieast(i,j,k),j,k)
                 IJKU = FUNIJK(itmp,j,k)
-                ODXC = ODX(IP1(I))
-                ODXUC = ODX_E(IP1(I))
+                ODXC = ODX
+                ODXUC = ODX
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(U(IJK))*DT*ODX_E(I)
-             DWF = QUICKEST(PHI_C,CF,ODXC,ODXUC,ODX_E(I))
+             CF = ABS(U(IJK))*DT*ODX
+             DWF = QUICKEST(PHI_C,CF,ODXC,ODXUC,ODX)
              XSI_E(IJK) = XSI_func(U(IJK),DWF)
 
              IF (V(IJK) >= ZERO) THEN
                 IJKC = IJK
                 IJKD = FUNIJK(i,jnorth(i,j,k),k)
                 IJKU = FUNIJK(i,jsouth(i,j,k),k)
-                ODYC = ODY(J)
-                ODYUC = ODY_N(JM1(J))
+                ODYC = ODY
+                ODYUC = ODY
              ELSE
                 IJKC = FUNIJK(i,jnorth(i,j,k),k)
                 IJKD = IJK
                 jtmp = jnorth(i,jnorth(i,j,k),k)
                 IJKU = FUNIJK(i,jtmp,k)
-                ODYC = ODY(JP1(J))
-                ODYUC = ODY_N(JP1(J))
+                ODYC = ODY
+                ODYUC = ODY
              ENDIF
              PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(V(IJK))*DT*ODY_N(J)
-             DWF = QUICKEST(PHI_C,CF,ODYC,ODYUC,ODY_N(J))
+             CF = ABS(V(IJK))*DT*ODY
+             DWF = QUICKEST(PHI_C,CF,ODYC,ODYUC,ODY)
              XSI_N(IJK) = XSI_func(V(IJK),DWF)
 
              IF (DO_K) THEN
@@ -313,19 +313,19 @@
                    IJKC = IJK
                    IJKD = FUNIJK(i,j,ktop(i,j,k))
                    IJKU = FUNIJK(i,j,kbot(i,j,k))
-                   ODZC = ODZ(K)
-                   ODZUC = ODZ_T(KM1(K))
+                   ODZC = ODZ
+                   ODZUC = ODZ
                 ELSE
                    IJKC = FUNIJK(i,j,ktop(i,j,k))
                    IJKD = IJK
                    ktmp = ktop(i,j,ktop(i,j,k))
                    IJKU = FUNIJK(i,j,ktmp)
-                   ODZC = ODZ(KP1(K))
-                   ODZUC = ODZ_T(KP1(K))
+                   ODZC = ODZ
+                   ODZUC = ODZ
                 ENDIF
                 PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*ODZ_T(K)
-                DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ_T(K))
+                CF = ABS(W(IJK))*DT*ODZ
+                DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ)
                 XSI_T(IJK) = XSI_func(W(IJK),DWF)
              ENDIF
               end do

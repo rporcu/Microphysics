@@ -57,20 +57,20 @@
 ! Each loop starts at 2 and goes to max+2 (i.e., imin1=2, imax2=imax+2)
 ! However, the indices range to include ghost cells (0-imax2) to avoid
 ! multiple if statements in particles_in_cell
-      XE(IMIN2-1) = ZERO-DX(IMIN2)
+      XE(IMIN2-1) = ZERO-DX
       DO I = IMIN2, IMAX2
-         XE(I) = XE(I-1) + DX(I)
+         XE(I) = XE(I-1) + DX
       ENDDO
 
-      YN(JMIN2-1) = ZERO-DY(JMIN2)
+      YN(JMIN2-1) = ZERO-DY
       DO J  = JMIN2, JMAX2
-         YN(J) = YN(J-1) + DY(J)
+         YN(J) = YN(J-1) + DY
       ENDDO
 
       IF(DIMN.EQ.3) THEN
-         ZT(KMIN2-1) = ZERO-DZ(KMIN2)
+         ZT(KMIN2-1) = ZERO-DZ
          DO K = KMIN2, KMAX2
-            ZT(K) = ZT(K-1) + DZ(K)
+            ZT(K) = ZT(K-1) + DZ
          ENDDO
       ENDIF
 

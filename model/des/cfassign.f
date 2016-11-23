@@ -147,10 +147,10 @@
 
 ! the existing variable vol(ijk) is not used here for cut-cell reasons
 ! see r. garg for discussion
-         vol_ijk   = dx(I) *dy(J) *dz(K)
-         vol_ipjk  = dx(IP)*dy(J) *dz(K)
-         vol_ijpk  = dx(I) *dy(JP)*dz(K)
-         vol_ipjpk = dx(IP)*dy(JP)*dz(K)
+         vol_ijk   = dx*dy*dz
+         vol_ipjk  = dx*dy*dz
+         vol_ijpk  = dx*dy*dz
+         vol_ipjpk = dx*dy*dz
 
          vol_node_uncorr = avg_factor*(vol_ijk + vol_ipjk + vol_ijpk + vol_ipjpk)
          vol_node_actual_count = vol_node_count
@@ -187,10 +187,10 @@
             ijpkp  = funijk(I, JP,KP)
             ipjpkp = funijk(IP,JP,KP)
 
-            vol_ijkp   = dx(I) *dy(J) *dz(KP)
-            vol_ipjkp  = dx(IP)*dy(J) *dz(KP)
-            vol_ijpkp  = dx(I) *dy(JP)*dz(KP)
-            vol_ipjpkp = dx(IP)*dy(JP)*dz(KP)
+            vol_ijkp   = dx*dy*dz
+            vol_ipjkp  = dx*dy*dz
+            vol_ijpkp  = dx*dy*dz
+            vol_ipjpkp = dx*dy*dz
 
             vol_node_uncorr = avg_factor*(vol_node_uncorr + vol_ijkp + &
                vol_ipjkp + vol_ijpkp + vol_ipjpkp)

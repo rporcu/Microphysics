@@ -180,7 +180,7 @@
       USE functions, only: iminus, jminus, kminus
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
 
-      USE geometry, only: odx_e, ody, odz_t
+      USE geometry, only: odx, ody, odz
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
 
@@ -238,12 +238,12 @@
       IJKW  = funijk(itmp,j,k)
       IJKNW = funijk(itmp,jnorth(itmp,j,k),k)
 
-      C_AE = ODX_E(I)
-      C_AW = ODX_E(IM)
-      C_AN = ODY(JP)
-      C_AS = ODY(J)
-      C_AT = ODZ_T(K)
-      C_AB = ODZ_T(KM)
+      C_AE = ODX
+      C_AW = ODX
+      C_AN = ODY
+      C_AS = ODY
+      C_AT = ODZ
+      C_AB = ODZ
 
 ! East face (i+1/2, j+1/2, k)
       D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&

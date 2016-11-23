@@ -125,7 +125,7 @@
 
             GST_TMP(I,J,K,1) = XE(II)
             GST_TMP(I,J,K,2) = YN(JJ)
-            GST_TMP(I,J,K,3) = merge(DZ(1), ZT(KK), NO_K)
+            GST_TMP(I,J,K,3) = merge(DZ, ZT(KK), NO_K)
 
          ENDDO
          ENDDO

@@ -40,14 +40,14 @@
          POSITION="APPEND",STATUS='OLD')
 
 ! Calculate then initial height
-      yt = -0.5d0*dy(jmin1)
+      yt = -0.5d0*dy
 
 ! generate grid locations for exact solution calculation
       k = kmin1 + (kmax1-kmin1)/2
       i = imin1 + (imax1-imin1)/2
       do j = jmin1, jmax1
 ! Calculate cell height (assumed uniform spacing)
-         yt = yt + dy(j)
+         yt = yt + dy
 ! Calculate exact solution
          lUg = Ug(yt)
 

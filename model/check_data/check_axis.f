@@ -7,7 +7,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_AXIS(NA, DIMEN, ALENGTH, DA, AXIS, &
-         AXIS_INDEX, NO_IJK, SHIFT)
+         AXIS_INDEX, NO_IJK)
 
 !-----------------------------------------------
 ! Modules
@@ -23,17 +23,15 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! number of axis cells (IMAX,JMAX,KMAX)
+! number of axis cells (IMAX, JMAX, KMAX)
       INTEGER, INTENT(INOUT) :: NA
 ! maximum number of cells along axis based on domain decomposition
       INTEGER, INTENT(IN) :: DIMEN
-! axis length (XLENGTH,YLENGTH,ZLENGTH)
+! axis length (XLENGTH, YLENGTH, ZLENGTH)
       DOUBLE PRECISION, INTENT(INOUT) :: ALENGTH
 ! flag that specifies whether variation along that axis is
 ! considered (passed variable for NO_I, NO_J, or NO_K)
       LOGICAL, INTENT(IN) :: NO_IJK
-! shift dx, dy and dz values (true only for new and restart_1 runs)
-      LOGICAL, INTENT(IN) :: SHIFT
 ! axis checked ('X','Y','Z')
       CHARACTER, INTENT(IN) :: AXIS
 ! index associated with AXIS ('I','J','K')
@@ -45,7 +43,7 @@
 ! as the first element.  An error check has been added to ensure that
 ! DX, DY and DZ definitions in mfix.dat starts with the zeroth
 ! element; i.e. DA(1).
-      DOUBLE PRECISION, INTENT(INOUT), DIMENSION(DIMEN) :: DA
+      DOUBLE PRECISION, INTENT(OUT) :: DA
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -65,84 +63,23 @@
 
       CALL INIT_ERR_MSG("CHECK_AXIS")
 
-! 0) Ensure that if DA is defined then it starts with DA(1); i.e. DX(0), DY(0) or DZ(0)
-      IF(.NOT.NO_IJK)THEN
-        IF( DA(2) /= UNDEFINED .AND. DA(1) == UNDEFINED) THEN
-          WRITE(ERR_MSG, 1001) AXIS
-          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-        ENDIF
-      ENDIF
-
 ! 1) MAKE SURE AT LEAST TWO OF NA, ALENGTH, DA ARE SPECIFIED
-      N_SPECIFIED = 0
-      IF (NA /= UNDEFINED_I) N_SPECIFIED = N_SPECIFIED + 1
-      IF (ALENGTH /= UNDEFINED) N_SPECIFIED = N_SPECIFIED + 1
-      IF (DA(1) /= UNDEFINED) N_SPECIFIED = N_SPECIFIED + 1
-      IF (N_SPECIFIED < 2) THEN
-         WRITE(ERR_MSG, 1101) AXIS, AXIS, AXIS, AXIS_INDEX
+      IF (NA == UNDEFINED_I .or. ALENGTH == UNDEFINED) THEN
+         WRITE(ERR_MSG, 1101) AXIS, AXIS, AXIS_INDEX
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1101 FORMAT('Error 1101: Insufficient grid information for ',A1,'-',   &
-         'axis. You must',/'specify at least two of the following: ',  &
-         A1,'LENGTH, D',A1,', and ',A1,'MAX','Please correct the ',    &
+         'axis. You must',/'specify the following: ',  &
+         A1,'LENGTH and ',A1,'MAX',/'Please correct the ',    &
          'mfix.dat file.')
-
-
-! 2) NUMBER OF CELLS NOT SPECIFIED - calculate NA based on
-!    input that was specified
-      IF(NA == UNDEFINED_I) THEN
-        IF(no_ijk) THEN
-          na = 1
-        ELSE
-          IF(DA(2) == UNDEFINED) THEN
-            TEMP_STOR = ALENGTH/DA(1)
-            NA = NINT(TEMP_STOR)
-            IF(NA - 1 > 0) DA(2:NA) = DA(1)
-          ELSE
-            NA = DIMEN
-            DO LC = 2, DIMEN
-               IF (DA(LC) == UNDEFINED) THEN
-                  NA = LC - 1
-                  EXIT
-               ENDIF
-            ENDDO
-          ENDIF
-        ENDIF
-        GO TO 700
-      ENDIF
 
 
       IF(NA>=0 .AND. NA<=DIMEN) THEN
 
-! 3) AXIS LENGTH NOT SPECIFIED - calculate ALENGTH based on
-!    input that was specified
-         IF (ALENGTH == UNDEFINED) THEN
-            IF(no_ijk) THEN
-               ALENGTH = DA(1)
-            ELSE
-               IF(DA(2) == UNDEFINED) THEN
-                  IF(NA - 1 > 0) DA(2:NA) = DA(1)
-               ENDIF
-               ALENGTH = 0.0
-               IF (NA > 0) ALENGTH = SUM(DA(:NA))
-            ENDIF
-         ENDIF
-
 ! 4) CELL SIZE NOT SPECIFIED - calculate NON_VARIABLE DA based on
 !    input that was specified
-         IF(DA(1) == UNDEFINED) THEN
-            TEMP_STOR = ALENGTH/DBLE(NA)
-            IF(NA > 0) DA(:NA) = TEMP_STOR
-         ENDIF
-
-! 5) ALL 3 SPECIFIED
-         IF(.NOT.NO_IJK) THEN
-            IF(DA(2) == UNDEFINED) THEN
-               IF (NA - 1 > 0) DA(2:NA) = DA(1)
-            ENDIF
-         ENDIF
-
+            DA = ALENGTH/DBLE(NA)
       ENDIF
 
 ! 6) CHECK CONSISTENCY OF AXIS INPUT
@@ -162,11 +99,11 @@
 
       lSUM = 0.0
       DO LC = 1, NA
-         IF (DA(LC)<=0.0 .OR. DA(LC)==UNDEFINED) THEN
+         IF (DA<=0.0 .OR. DA==UNDEFINED) THEN
             WRITE(ERR_MSG, 1201) trim(iVar(AXIS,LC))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         lSUM = lSUM + DA(LC)
+         lSUM = lSUM + DA
       ENDDO
 
  1201 FORMAT('Error 1201: D',A,' is not specified or negative. ',      &
@@ -181,7 +118,7 @@
 
          DO LC = 1, NA
             WRITE(ERR_MSG,"(4x,A,' = ',A)") trim(iVar('D'//AXIS,LC)),   &
-               trim(iVal(DA(LC)))
+               trim(iVal(DA))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
          ENDDO
          WRITE(ERR_MSG,"('Please correct the mfix.dat file')")
@@ -191,16 +128,6 @@
  1202 FORMAT('Error 1202: ',A1,'LENGTH and sum(D',A1,') are not ',     &
          'consistent.',/3x,A1,'LENGTH = ',g12.5,3x,'sum(D',A1,') = ',  &
          g12.5,/3x,'ERROR   = ',g12.5,3x,'ERR TOL = ',g12.5,/'  ')
-
-      DO LC = NA + 1, DIMEN
-         IF(SHIFT .AND. DA(LC)/=UNDEFINED) THEN
-            WRITE(ERR_MSG, 1205) AXIS, AXIS_INDEX
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDDO
-
- 1205 FORMAT('Error 1205: Too many D',A1,' values specified. Only ',A1,&
-         'MAX permitted.',/'Please correct the mfix.dat file.')
 
 
       CALL FINL_ERR_MSG

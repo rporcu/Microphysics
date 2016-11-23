@@ -194,7 +194,7 @@
       IC_START(3)=IC_Z_B(ICV);   IC_END(3)=IC_Z_T(ICV)
 
       DOML = IC_END-IC_START
-      IF(NO_K) DOML(3)=DZ(1)
+      IF(NO_K) DOML(3)=DZ
 
 ! Volume of the IC region
       DOM_VOL = DOML(1)*DOML(2)*DOML(3)

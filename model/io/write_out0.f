@@ -276,12 +276,12 @@
       DO L = 1, DIMENSION_IC
          IF (IC_DEFINED(L)) THEN
             WRITE (UNIT_OUT, 1510) L
-            LOC(1) = LOCATION(IC_I_W(L),DX) - HALF*DX(IC_I_W(L))
-            LOC(2) = LOCATION(IC_I_E(L),DX) + HALF*DX(IC_I_E(L))
-            LOC(3) = LOCATION(IC_J_S(L),DY) - HALF*DY(IC_J_S(L))
-            LOC(4) = LOCATION(IC_J_N(L),DY) + HALF*DY(IC_J_N(L))
-            LOC(5) = LOCATION(IC_K_B(L),DZ) - HALF*DZ(IC_K_B(L))
-            LOC(6) = LOCATION(IC_K_T(L),DZ) + HALF*DZ(IC_K_T(L))
+            LOC(1) = LOCATION(IC_I_W(L),DX) - HALF*DX
+            LOC(2) = LOCATION(IC_I_E(L),DX) + HALF*DX
+            LOC(3) = LOCATION(IC_J_S(L),DY) - HALF*DY
+            LOC(4) = LOCATION(IC_J_N(L),DY) + HALF*DY
+            LOC(5) = LOCATION(IC_K_B(L),DZ) - HALF*DZ
+            LOC(6) = LOCATION(IC_K_T(L),DZ) + HALF*DZ
             WRITE (UNIT_OUT, 1520) IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), IC_Y_S&
                (L), LOC(3), IC_Y_N(L), LOC(4), IC_Z_B(L), LOC(5), IC_Z_T(L), &
                LOC(6)
@@ -326,12 +326,12 @@
                WRITE (UNIT_OUT, 1619)
             END SELECT
             IF (BC_TYPE(L)(1:2)/='CG') THEN
-               LOC(1) = LOCATION(BC_I_W(L),DX) - HALF*DX(BC_I_W(L))
-               LOC(2) = LOCATION(BC_I_E(L),DX) + HALF*DX(BC_I_E(L))
-               LOC(3) = LOCATION(BC_J_S(L),DY) - HALF*DY(BC_J_S(L))
-               LOC(4) = LOCATION(BC_J_N(L),DY) + HALF*DY(BC_J_N(L))
-               LOC(5) = LOCATION(BC_K_B(L),DZ) - HALF*DZ(BC_K_B(L))
-               LOC(6) = LOCATION(BC_K_T(L),DZ) + HALF*DZ(BC_K_T(L))
+               LOC(1) = LOCATION(BC_I_W(L),DX) - HALF*DX
+               LOC(2) = LOCATION(BC_I_E(L),DX) + HALF*DX
+               LOC(3) = LOCATION(BC_J_S(L),DY) - HALF*DY
+               LOC(4) = LOCATION(BC_J_N(L),DY) + HALF*DY
+               LOC(5) = LOCATION(BC_K_B(L),DZ) - HALF*DZ
+               LOC(6) = LOCATION(BC_K_T(L),DZ) + HALF*DZ
                WRITE (UNIT_OUT, 1620) BC_X_W(L), LOC(1), BC_X_E(L), LOC(2), BC_Y_S&
                (L), LOC(3), BC_Y_N(L), LOC(4), BC_Z_B(L), LOC(5), BC_Z_T(L), &
                LOC(6)
@@ -590,13 +590,10 @@
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
 !
-!                      Index for which the location is required
-      INTEGER          L2
-!
-!                      Cell sizes (DX, DY, or DZ)
-!//EFD Nov/11 avoid using dx(*)
-!//      DOUBLE PRECISION DX(*)
-      DOUBLE PRECISION DX(0:L2)
+! Index for which the location is required
+      INTEGER :: L2
+! Cell sizes (DX, DY, or DZ)
+      DOUBLE PRECISION :: DX
 !
 !  Local variables
 !
@@ -604,15 +601,8 @@
       INTEGER          L
 !-----------------------------------------------
 !
-      LOCATION =  HALF*DX(1)
-      L = 2
-      IF (L2 - 1 > 0) THEN
+      LOCATION = HALF*DX + DX*dble(L2-1)
 
-
-         LOCATION = LOCATION + SUM(HALF*(DX(1:(L2-1))+DX(2:L2)))
-         L = L2 + 1
-
-      ENDIF
       RETURN
       END FUNCTION LOCATION
 

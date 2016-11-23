@@ -288,12 +288,12 @@ MODULE interpolation
 
 ! Determine the shift index necessary to account for the quadrant of
 ! the fluid cell where the particle is located.
-      IF( DES_POS_NEW(NP,1) <= XE(PC(1))-HALF*DX(PC(1)))THEN
+      IF( DES_POS_NEW(NP,1) <= XE(PC(1))-HALF*DX)THEN
          I_SHIFT = 0
       ELSE
          I_SHIFT = 1
       ENDIF
-      IF( DES_POS_NEW(NP,2) <= YN(PC(2))-HALF*DY(PC(2)))THEN
+      IF( DES_POS_NEW(NP,2) <= YN(PC(2))-HALF*DY)THEN
          J_SHIFT = 0
       ELSE
          J_SHIFT = 1
@@ -301,7 +301,7 @@ MODULE interpolation
       IF(DIMN == 2) THEN
          K_SHIFT = 0
       ELSE
-         IF( DES_POS_NEW(NP,3) <= ZT(PC(3))-HALF*DZ(PC(3)))THEN
+         IF( DES_POS_NEW(NP,3) <= ZT(PC(3))-HALF*DZ)THEN
             K_SHIFT = 0
          ELSE
             K_SHIFT = 1
@@ -443,18 +443,18 @@ MODULE interpolation
                   IF(II .LT. IMIN1)THEN
 ! Shift from the east side of the domain to the west side.
                      II = IMAX2 + (II-IMIN1)
-                     STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX(II) - XLENGTH
+                     STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX - XLENGTH
                   ELSEIF(II .GT. IMAX1) THEN
 ! Shift for the west side of the domain to the east side.
                      II = II - IMAX
-                     STNCL_GEMTY(I,J,K,1) = XLENGTH + XE(II) - HALF*DX(II)
+                     STNCL_GEMTY(I,J,K,1) = XLENGTH + XE(II) - HALF*DX
                   ELSE
 ! No shift needed. Use actual node location.
-                     STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX(II)
+                     STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX
                   ENDIF
                ELSE
 ! If the YZ plane is not periodic, calculate the position of the node.
-                  STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX(II)
+                  STNCL_GEMTY(I,J,K,1) = XE(II) - HALF*DX
 ! Due to the restrictions on non periodic 1 <= II and II <= IMAX2.
 ! Shift the II east/west to reflect the cell value at the boundary.
                   IF(II .EQ. 1)THEN
@@ -467,18 +467,18 @@ MODULE interpolation
                   IF(JJ .LT. JMIN1) THEN
 ! Shift from the north side of the domain to the south side.
                      JJ = JMAX2 + (JJ-JMIN1)
-                     STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY(JJ) - YLENGTH
+                     STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY - YLENGTH
                   ELSEIF(JJ .GT. JMAX1) THEN
 ! Shift from the south side of the domain to the north side.
                      JJ = JJ - JMAX
-                     STNCL_GEMTY(I,J,K,2) = YLENGTH + YN(JJ) - HALF*DY(JJ)
+                     STNCL_GEMTY(I,J,K,2) = YLENGTH + YN(JJ) - HALF*DY
                   ELSE
 ! No shift needed. Use the nodes actual position.
-                     STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY(JJ)
+                     STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY
                   ENDIF
                ELSE
 ! If the XZ plane is not periodic, calculate the position of the node.
-                  STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY(JJ)
+                  STNCL_GEMTY(I,J,K,2) = YN(JJ) - HALF*DY
 ! Due to the restrictions on non periodic 1 <= II and II <= IMAX2.
 ! Shift the II east/west to reflect the cell value at the boundary.
                   IF(JJ .EQ. 1)THEN
@@ -492,18 +492,18 @@ MODULE interpolation
                      IF(KK .LT. KMIN1) THEN
 ! Shift from the top side of the domain to the bottom side.
                         KK = KMAX1 + (KK-KMIN1)
-                        STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ(KK) - ZLENGTH
+                        STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ - ZLENGTH
                      ELSEIF(KK .GT. KMAX1) THEN
 ! Shift from the bottom side of the domain to the top side.
                         KK = KK - KMAX
-                        STNCL_GEMTY(I,J,K,3) = ZLENGTH + ZT(KK) - HALF*DZ(KK)
+                        STNCL_GEMTY(I,J,K,3) = ZLENGTH + ZT(KK) - HALF*DZ
                      ELSE
 ! No shift needed. Use actual node location.
-                        STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ(KK)
+                        STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ
                      ENDIF
                   ELSE
 ! If the XY plane is not periodic, calculate the position of the node.
-                     STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ(KK)
+                     STNCL_GEMTY(I,J,K,3) = ZT(KK) - HALF*DZ
 ! Due to the restrictions on non periodic 1 <= II and II <= IMAX2.
 ! Shift the II east/west to reflect the cell value at the boundary.
                      IF(KK .EQ. 1)THEN

@@ -40,59 +40,29 @@
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
 !
-!                      BC number
+! BC number
       INTEGER :: BCV
-!
-!                      I, J, and K
-      INTEGER ::  I, J, K
 !-----------------------------------------------
 !
 
       DO BCV = 1, DIMENSION_BC
          IF (BC_DEFINED(BCV)) THEN
             BC_AREA(BCV) = ZERO
-            IF (BC_PLANE(BCV) == 'W') THEN
-               I = BC_I_W(BCV)
-               DO K = BC_K_B(BCV), BC_K_T(BCV)
-                  J = BC_J_S(BCV)
-                  IF (BC_J_N(BCV) - BC_J_S(BCV) + 1 > 0) THEN
-                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DY(BC_J_S(BCV):BC_J_N(BCV))*&
-                        DZ(K))
-                     J = BC_J_N(BCV) + 1
-                  ENDIF
-               END DO
-            ELSE IF (BC_PLANE(BCV) == 'E') THEN
-               I = BC_I_W(BCV)
-               DO K = BC_K_B(BCV), BC_K_T(BCV)
-                  J = BC_J_S(BCV)
-                  IF (BC_J_N(BCV) - BC_J_S(BCV) + 1 > 0) THEN
-                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DY(BC_J_S(BCV):BC_J_N(BCV))*&
-                        DZ(K))
-                     J = BC_J_N(BCV) + 1
-                  ENDIF
-               END DO
+            IF (BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV) == 'E') THEN
+               BC_AREA(BCV) = &
+                  DY*dble(BC_J_N(BCV)-BC_J_S(BCV)+1)* &
+                  DZ*dble(BC_K_T(BCV)-BC_K_B(BCV)+1)
             ELSE IF (BC_PLANE(BCV)=='S' .OR. BC_PLANE(BCV)=='N') THEN
-               J = BC_J_S(BCV)
-               DO K = BC_K_B(BCV), BC_K_T(BCV)
-                  I = BC_I_W(BCV)
-                  IF (BC_I_E(BCV) - BC_I_W(BCV) + 1 > 0) THEN
-                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DX(BC_I_W(BCV):BC_I_E(BCV)))
-                     I = BC_I_E(BCV) + 1
-                  ENDIF
-               END DO
+               BC_AREA(BCV) = &
+                  DX*dble(BC_I_E(BCV)-BC_I_W(BCV)+1)* &
+                  DZ*dble(BC_K_T(BCV)-BC_K_B(BCV)+1)
             ELSE IF (BC_PLANE(BCV)=='B' .OR. BC_PLANE(BCV)=='T') THEN
-               K = BC_K_B(BCV)
-               DO J = BC_J_S(BCV), BC_J_N(BCV)
-                  I = BC_I_W(BCV)
-                  IF (BC_I_E(BCV) - BC_I_W(BCV) + 1 > 0) THEN
-                     BC_AREA(BCV) = BC_AREA(BCV) + SUM(DX(BC_I_W(BCV):BC_I_E(BCV))*&
-                        DY(J))
-                     I = BC_I_E(BCV) + 1
-                  ENDIF
-               END DO
+               BC_AREA(BCV) = &
+                  DX*dble(BC_I_E(BCV)-BC_I_W(BCV)+1)* &
+                  DY*dble(BC_J_N(BCV)-BC_J_S(BCV)+1)
             ENDIF
          ENDIF
-      END DO
+      ENDDO
 
 
       RETURN

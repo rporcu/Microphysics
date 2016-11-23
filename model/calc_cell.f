@@ -26,7 +26,7 @@
 ! number of cells in the corresponding direction (IMAX, JMAX, or KMAX)
       INTEGER, INTENT(IN) :: N_DIR
 ! the cell lengths along the corresponding axis (DX, DY or DZ)
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(0:(N_DIR+3)) :: D_DIR
+      DOUBLE PRECISION, INTENT(IN) :: D_DIR
 ! the i, j, or k cell index that corresponds to the x, y or z
 ! reactor_location (calculated value)
       INTEGER, INTENT(INOUT) :: CELL_LOC
@@ -42,11 +42,11 @@
       CELL_LOC = -1
       CELL_START = 0.0d0
       DO LC = 2, N_DIR + 1
-         CELL_END = CELL_START + D_DIR(LC)
-         IF (REACTOR_LOC <= CELL_START + HALF*D_DIR(LC)) THEN
+         CELL_END = CELL_START + D_DIR
+         IF (REACTOR_LOC <= CELL_START + HALF*D_DIR) THEN
             CELL_LOC = LC - 1
             RETURN
-         ELSEIF (REACTOR_LOC <= CELL_END + HALF*D_DIR(LC+1)) THEN
+         ELSEIF (REACTOR_LOC <= CELL_END + HALF*D_DIR) THEN
             CELL_LOC = LC
             RETURN
          ENDIF
@@ -81,7 +81,7 @@
 ! reactor_location to be found
       INTEGER, INTENT(IN) :: CELL_LOC
 ! the cell lengths along the corresponding axis (DX, DY or DZ)
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(0:CELL_LOC) :: D_DIR
+      DOUBLE PRECISION, INTENT(IN) :: D_DIR
 ! the x, y or z location along the axis that corresponds to the i, j
 ! k cell index  (calculated value)
       DOUBLE PRECISION, INTENT(INOUT) :: REACTOR_LOC
@@ -95,7 +95,7 @@
       REACTOR_LOC = 0.0d0
       LC = 2
       IF (CELL_LOC - 1 > 0) THEN
-         REACTOR_LOC = REACTOR_LOC + SUM(D_DIR(2:CELL_LOC))
+         REACTOR_LOC = REACTOR_LOC + D_DIR*(CELL_LOC-2)
          LC = CELL_LOC + 1
       ENDIF
       RETURN
@@ -126,7 +126,7 @@
 ! Number of cells in this direction (IMAX,JMAX,KMAX)
       INTEGER, INTENT(in) :: N_DIR
 ! Cell lengths (DX,DY,DZ)
-      DOUBLE PRECISION, INTENT(IN) :: D_DIR(0:(N_DIR+3))
+      DOUBLE PRECISION, INTENT(IN) :: D_DIR
 ! Cell indices corresponding to LOC
       INTEGER, INTENT(out) :: CELL
 
@@ -142,7 +142,7 @@
 
       CELL_START = 0.0d0
       DO LC=2, N_DIR+1
-         CELL_END = CELL_START + D_DIR(LC)
+         CELL_END = CELL_START + D_DIR
          IF(CELL_START <= LOC .AND. LOC <= CELL_END) THEN
             CELL = LC
             RETURN

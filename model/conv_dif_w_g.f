@@ -168,7 +168,7 @@
       USE functions, only: ieast, iwest, jnorth, jsouth, ktop
       USE functions, only: iminus, jminus, kminus
 
-      USE geometry, only: odx_e, ody_n, odz
+      USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
 
       USE functions, only: im1, jm1, kp1
@@ -234,12 +234,12 @@
          IJKC = IJK
       ENDIF
 
-      C_AE = ODX_E(I)
-      C_AW = ODX_E(IM)
-      C_AN = ODY_N(J)
-      C_AS = ODY_N(JM)
-      C_AT = ODZ(KP)
-      C_AB = ODZ(K)
+      C_AE = ODX
+      C_AW = ODX
+      C_AN = ODY
+      C_AS = ODY
+      C_AT = ODZ
+      C_AB = ODZ
 
 ! East face (i+1/2, j, k+1/2)
       D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&
