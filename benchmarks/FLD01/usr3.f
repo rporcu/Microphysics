@@ -57,6 +57,7 @@
       use geometry, only: dx, dy
       use functions, only: IS_ON_MYPE_OWNS
       use functions, only: FUNIJK
+      use mpi_utility, only: GLOBAL_ALL_SUM
       use compar, only: myPE, PE_IO
 
       double precision, intent(in) :: pX(:), pY(:)
@@ -97,7 +98,7 @@
          endif
       enddo
 
-      ! call global_all_sum(lMFIX)
+      call global_all_sum(lMFIX)
       if(myPE /= PE_IO) RETURN
 
 ! Open file for output

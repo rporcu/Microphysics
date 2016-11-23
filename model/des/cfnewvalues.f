@@ -15,6 +15,7 @@
       USE des_bc
       USE discretelement
       USE fldvar
+      USE mpi_utility
       USE param
       USE param1
       USE physprop

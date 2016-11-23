@@ -80,6 +80,7 @@
       USE geometry
       USE bc
       USE compar
+      USE sendrecv
       USE discretelement
       USE functions
       implicit none

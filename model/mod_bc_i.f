@@ -17,6 +17,7 @@
       USE geometry, only: ICBC_FLAG
 
       USE compar
+      USE mpi_utility
 
       use error_manager
       USE functions
@@ -57,7 +58,7 @@
 
 ! Establish the OWNER of the BC
       OWNER = merge(myPE, 0, IS_ON_myPE_owns(I_W, J_S, K_B))
-      ! CALL GLOBAL_ALL_SUM(OWNER)
+      CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
 
@@ -83,15 +84,15 @@
       ENDIF
 
 ! The owner distributes the new Iw/Ie coordinates to the other ranks.
-      ! CALL BCAST(I_W,   OWNER)
-      ! CALL BCAST(I_E,   OWNER)
-      ! CALL BCAST(BC_PLANE(BCV), OWNER)
+      CALL BCAST(I_W,   OWNER)
+      CALL BCAST(I_E,   OWNER)
+      CALL BCAST(BC_PLANE(BCV), OWNER)
 
 
 ! If there is an error, send IJK/IPJK to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-         ! CALL BCAST(IPJK,OWNER)
-         ! CALL BCAST(IJK, OWNER)
+         CALL BCAST(IPJK,OWNER)
+         CALL BCAST(IJK, OWNER)
 
          WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B,                 &
             IJK, ICBC_FLAG(IJK),  IPJK, ICBC_FLAG(IPJK)
@@ -136,7 +137,7 @@
       ENDDO
 
 ! Sync up the error flag across all processes.
-      ! CALL GLOBAL_ALL_OR(ERROR)
+      CALL GLOBAL_ALL_OR(ERROR)
 
 ! If an error is detected, have each rank open a log file and write
 ! it's own message. Otherwise, we need to send all the data back to
@@ -186,3 +187,4 @@
 
       RETURN
       END SUBROUTINE MOD_BC_I
+

@@ -113,6 +113,7 @@ CONTAINS
     USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs
     USE geometry, ONLY: do_k
     USE param, ONLY: DIMENSION_3
+    USE sendrecv, ONLY: send_recv
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -167,7 +168,7 @@ CONTAINS
       endif
 
 
-       ! call send_recv(Avar,nlayers_bicgs)
+       call send_recv(Avar,nlayers_bicgs)
     RETURN
 
   CONTAINS
@@ -204,6 +205,7 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
+    USE sendrecv
     USE functions
     IMPLICIT NONE
 !-----------------------------------------------
@@ -255,7 +257,7 @@ CONTAINS
           enddo
        enddo
 
-       ! call send_recv(var,nlayers_bicgs)
+       call send_recv(var,nlayers_bicgs)
     ENDIF
 
     NITER = LEN( CMETHOD )
@@ -316,7 +318,7 @@ CONTAINS
                 ENDDO
 
              ENDDO
-             ! call send_recv(var,nlayers_bicgs)
+             call send_recv(var,nlayers_bicgs)
 
 ! IJ Loop
 ! --------------------------------
@@ -339,7 +341,7 @@ CONTAINS
                 ENDDO
 
              ENDDO
-             ! call send_recv(var,nlayers_bicgs)
+             call send_recv(var,nlayers_bicgs)
 
 ! IK Loop
 ! --------------------------------
@@ -474,7 +476,7 @@ CONTAINS
 
 
 ! this is called for all settings of leq_pc
-       ! IF (DO_SENDRECV) call send_recv(var,nlayers_bicgs)
+       IF (DO_SENDRECV) call send_recv(var,nlayers_bicgs)
 
 
     ENDDO   ! end do iter=1,niter
@@ -507,7 +509,7 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
-    USE functions
+    USE sendrecv
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -544,7 +546,7 @@ CONTAINS
     else
        var(:) = b_m(:)
     endif
-    ! call send_recv(var,nlayers_bicgs)
+    call send_recv(var,nlayers_bicgs)
 
     return
   end subroutine leq_msolve0
@@ -574,6 +576,7 @@ CONTAINS
     USE param1
     USE geometry
     USE compar
+    USE sendrecv
     USE functions
     IMPLICIT NONE
 !-----------------------------------------------
@@ -607,7 +610,7 @@ CONTAINS
           enddo
        enddo
 
-    ! call send_recv(var,nlayers_bicgs)
+    call send_recv(var,nlayers_bicgs)
 
     return
   end subroutine leq_msolve1
@@ -638,6 +641,8 @@ CONTAINS
       USE geometry
       USE compar
       USE funits
+      USE sendrecv
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -719,6 +724,8 @@ CONTAINS
       USE geometry
       USE compar
       USE funits
+      USE sendrecv
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -949,6 +956,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+    use mpi_utility
     use geometry
     use compar
     use functions
@@ -982,7 +990,7 @@ CONTAINS
              enddo
           enddo
 
-          ! call global_all_sum(prod, dot_product_par)
+          call global_all_sum(prod, dot_product_par)
 
     else
        if(myPE.eq.root) then
@@ -1009,7 +1017,7 @@ CONTAINS
           enddo
 
        endif
-       ! call bcast( prod)
+       call bcast( prod)
 
        dot_product_par = prod
 
@@ -1032,6 +1040,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+    use mpi_utility
     use geometry
     use compar
     use functions
@@ -1069,7 +1078,7 @@ CONTAINS
           enddo
        enddo
 
-       ! call global_all_sum(prod, dot_product_par2)
+       call global_all_sum(prod, dot_product_par2)
 
     else
        allocate (r_temp(DIMENSION_3,4))
@@ -1099,7 +1108,7 @@ CONTAINS
              enddo
           enddo
        endif
-       ! call bcast( prod)
+       call bcast( prod)
 
        dot_product_par2 = prod
 

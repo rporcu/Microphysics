@@ -18,6 +18,9 @@
       USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
       use mpi_funs_des, only: des_par_exchange
 
+      use mpi_utility
+      use sendrecv
+
       USE error_manager
 
       IMPLICIT NONE
@@ -61,7 +64,7 @@
       ENDDO
 
 ! Sync up the error flag across all processes.
-      ! CALL GLOBAL_ALL_SUM(IER)
+      CALL GLOBAL_ALL_SUM(IER)
       IF(IER == 0) RETURN
 
 ! Point of no return: Report errors and abort

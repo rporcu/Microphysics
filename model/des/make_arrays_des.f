@@ -18,6 +18,7 @@
       USE funits
       USE geometry
       use mpi_funs_des, only: DES_PAR_EXCHANGE
+      USE mpi_utility
       USE param1
       USE run
       USE stl
@@ -86,7 +87,7 @@
          ighost_cnt = 0
          lpip_all = 0
          lpip_all(mype) = pip
-         ! call global_all_sum(lpip_all)
+         call global_all_sum(lpip_all)
          lglobal_id = sum(lpip_all(0:mype-1))
          imax_global_id = 0
          do lcurpar  = 1,pip
@@ -94,7 +95,7 @@
             iglobal_id(lcurpar) = lglobal_id
             imax_global_id = iglobal_id(pip)
          end do
-         ! call global_all_max(imax_global_id)
+         call global_all_max(imax_global_id)
 
 ! Initialize old values
          omega_new(:,:)   = zero
@@ -104,7 +105,7 @@
 
          CALL READ_RES0_DES
          imax_global_id = maxval(iglobal_id(1:pip))
-         ! call global_all_max(imax_global_id)
+         call global_all_max(imax_global_id)
 
       ELSE
 

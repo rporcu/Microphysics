@@ -22,10 +22,12 @@
       USE funits
       USE geometry
       USE ic
+      USE mpi_utility
       USE param
       USE param1
       USE physprop
       USE scales
+      USE sendrecv
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -145,7 +147,7 @@
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
-            CALL MFIX_EXIT()
+            CALL MFIX_EXIT(myPE)
          ENDIF
       ENDIF
 
@@ -178,8 +180,8 @@
          ENDDO    ! end do loop (k=kmin1,kmax1)
 
 ! Global Sum
-         ! call global_all_sum(bed_weight)
-         ! call global_all_sum(area)
+         call global_all_sum(bed_weight)
+         call global_all_sum(area)
          IF (AREA /= 0.0) BED_WEIGHT = BED_WEIGHT/AREA
 
          PJ = PJ + BED_WEIGHT
@@ -197,7 +199,7 @@
 
   100 CONTINUE
 
-      ! call send_recv(P_G,2)
+      call send_recv(P_G,2)
 
       RETURN
 

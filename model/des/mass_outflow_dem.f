@@ -14,6 +14,8 @@
       use bc
       use functions
 
+      use mpi_utility, only: GLOBAL_ALL_OR
+
       implicit none
 
       LOGICAL, INTENT(INOUT) :: FORCE_NSEARCH

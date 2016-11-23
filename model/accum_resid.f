@@ -27,6 +27,7 @@
       USE param1
       USE geometry
       USE compar
+      USE mpi_utility
       USE residual
       USE run
       IMPLICIT NONE
@@ -56,7 +57,7 @@
          RESID_PACK(LOCAL_INDEX) = DEN_RESID(NN)
       ENDDO
 
-      ! call global_all_sum(RESID_PACK)
+      call global_all_sum(RESID_PACK)
 
 ! Unpack the numerators and denominators from the global sum vector
 

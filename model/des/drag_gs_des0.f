@@ -25,6 +25,7 @@
       USE geometry
       USE bc
       USE compar
+      USE sendrecv
       USE discretelement
       USE drag
       USE interpolation
@@ -197,6 +198,7 @@
       USE geometry
       USE bc
       USE compar
+      USE sendrecv
       USE discretelement
       USE drag
       USE interpolation

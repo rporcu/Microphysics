@@ -22,6 +22,7 @@
 ! Modules
 !-----------------------------------------------
       USE geometry
+      USE mpi_utility
       USE param
       USE param1
       USE physprop

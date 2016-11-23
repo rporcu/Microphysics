@@ -20,9 +20,8 @@
       use run, only: DEM_SOLIDS
 
       use functions, only: IS_NORMAL
+      use mpi_utility
       use error_manager
-      use compar
-      use geometry
 
       IMPLICIT NONE
 
@@ -53,7 +52,7 @@
          IF(DO_K .AND. (K > KEND1 .OR. K < KSTART1)) IER = 1
       ENDDO
 
-      ! CALL GLOBAL_ALL_SUM(IER)
+      CALL GLOBAL_ALL_SUM(IER)
       IF(IER == 0) RETURN
 
       IF(DEM_SOLIDS) CALL CHECK_CELL_MOVEMENT_DEM
@@ -83,9 +82,8 @@
       use discretelement, only: DES_POS_NEW, DES_VEL_NEW
 
       use functions, only: IS_NORMAL
+      use mpi_utility
       USE error_manager
-      use geometry
-      use compar
 
       IMPLICIT NONE
 
@@ -143,6 +141,6 @@
 
 
       CALL WRITE_DES_DATA
-      CALL MFIX_EXIT()
+      CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE CHECK_CELL_MOVEMENT_DEM

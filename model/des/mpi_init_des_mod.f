@@ -10,10 +10,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+      use parallel_mpi
+      use mpi_utility
       use discretelement
       use desgrid
       use compar
       use physprop
+      use sendrecv
       use des_bc
       use desmpi_wrapper
       use sendrecvnode
@@ -427,7 +430,7 @@
             enddo
          endif  ! if (no_k)
       endif ! if (my_pe.eq.pe_io)
-      ! call bcast(lproc_parcnt(0:numpes-1),pe_io)
+      call bcast(lproc_parcnt(0:numpes-1),pe_io)
 
 ! second pass: set and allocate scatter related variables
       pip = lproc_parcnt(mype)

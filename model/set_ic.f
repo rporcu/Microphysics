@@ -22,6 +22,7 @@
       USE scales
       USE compar
       USE run
+      USE sendrecv
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------

@@ -20,6 +20,7 @@
       USE param1
       USE physprop
       USE run
+      use mpi_utility
 
       use bc
 

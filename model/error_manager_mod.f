@@ -84,6 +84,10 @@
 ! Undefined character string.
       use param1, only: UNDEFINED_C
 
+! Global Routine Access:
+!---------------------------------------------------------------------//
+      use mpi_utility, only: GLOBAL_ALL_SUM
+
       implicit none
 
 ! Local Variables:
@@ -120,11 +124,11 @@
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
          IF(myPE  == PE_IO) WRITE (*, 1000) 'short'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
          IF(myPE == PE_IO) WRITE (*, 1000) 'long'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
@@ -153,10 +157,10 @@
 
 ! Verify that the .LOG file was successfully opened. Otherwise, flag the
 ! error and abort.
-      ! CALL GLOBAL_ALL_SUM(IER)
+      CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
          IF(myPE == PE_IO) WRITE(*,1001) trim(FILE_NAME)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
       RETURN
@@ -180,6 +184,8 @@
 !......................................................................!
       SUBROUTINE INIT_ERR_MSG(CALLER)
 
+! Rank ID of process
+      use compar, only: myPE
 ! Flag: My rank reports errors.
       use funits, only: DMP_LOG
 ! File unit for LOG messages.
@@ -195,7 +201,7 @@
          IF(SCR_LOG) WRITE(*,1000) CALL_DEPTH
          IF(DMP_LOG) WRITE(UNIT_LOG,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
 ! Store the caller routines name.
          CALL_DEPTH = CALL_DEPTH + 1
@@ -225,6 +231,8 @@
 !......................................................................!
       SUBROUTINE FINL_ERR_MSG
 
+! Rank ID of process
+      use compar, only: myPE
 ! Flag: My rank reports errors.
       use funits, only: DMP_LOG
 ! File unit for LOG messages.
@@ -248,7 +256,7 @@
       IF(CALL_DEPTH < 1) THEN
          IF(SCR_LOG) WRITE(*,1000)
          IF(DMP_LOG) WRITE(UNIT_LOG,1000)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
 ! Store the current caller, clear the array position, and decrement
 ! the counter.
@@ -281,7 +289,7 @@
          ENDDO
          IF(SCR_LOG) WRITE(*,1003)
          IF(DMP_LOG) WRITE(UNIT_LOG, 1003)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
 ! This shouldn't be needed, but it doesn't hurt.
@@ -500,7 +508,7 @@
 ! Abort the run if specified.
       IF(A_FLAG) THEN
          IF(D_FLAG) WRITE(*,3000) myPE
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
       RETURN

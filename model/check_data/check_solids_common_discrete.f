@@ -42,6 +42,9 @@
       use run, only: RUN_TYPE
       use discretelement, only: GENER_PART_CONFIG
 
+      USE mpi_utility
+
+
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: undefined, undefined_c
@@ -50,7 +53,6 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager
-      use geometry
 
       implicit none
 

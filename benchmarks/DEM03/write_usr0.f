@@ -28,6 +28,7 @@
       use discretelement
       use functions
       use physprop
+      use mpi_utility
 
       IMPLICIT NONE
 
@@ -66,7 +67,7 @@
       close(6587)
 
       particles = pip
-      ! call global_all_sum(particles)
+      call global_all_sum(particles)
 
       RETURN
       END SUBROUTINE GET_PARTICLES

@@ -156,6 +156,12 @@ set(SOURCES
   model/discretization_mod.f
   model/display_resid.f
   model/dmp_modules/compar_mod.f
+  model/dmp_modules/dbg_util_mod.f
+  model/dmp_modules/debug_mod.f
+  model/dmp_modules/gridmap_mod.f
+  model/dmp_modules/mpi_utility_mod.f
+  model/dmp_modules/parallel_mpi_mod.f
+  model/dmp_modules/sendrecv_mod.f
   model/drag_mod.f
   model/eos_mod.f
   model/error_manager_mod.f

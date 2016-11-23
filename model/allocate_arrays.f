@@ -118,6 +118,7 @@
 
 ! Module procedures
 !---------------------------------------------------------------------//
+      use mpi_utility, only: GLOBAL_ALL_SUM
       use error_manager
 
       IMPLICIT NONE
@@ -173,9 +174,9 @@
 ! successfull, do nothing. Otherwise, flag the error and abort.
 ! Note that the allocation status is checked in groups. This can
 ! be increase if tracking the source of an allocation failure.
-  ! 500 CALL GLOBAL_ALL_SUM(IER)
+  500 CALL GLOBAL_ALL_SUM(IER)
 
-    500 IF(IER /= 0) THEN
+      IF(IER /= 0) THEN
          WRITE(ERR_MSG,1100)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF

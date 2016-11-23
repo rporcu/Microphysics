@@ -15,6 +15,7 @@
       USE funits
       USE geometry
       USE leqsol
+      USE mpi_utility
       USE output
       USE param
       USE param1

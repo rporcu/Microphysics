@@ -34,6 +34,7 @@
       USE physprop
       USE funits
       USE compar
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------

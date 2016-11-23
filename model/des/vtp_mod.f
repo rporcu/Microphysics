@@ -1,5 +1,7 @@
       MODULE vtp
 
+      use mpi_utility
+
       use desmpi
       use mpi_comm_des
       use error_manager
@@ -207,7 +209,7 @@
       LOCAL_CNT = PIP - iGHOST_CNT
 
 ! Calculate the total number of particles system-wide.
-      ! call global_sum(LOCAL_CNT, GLOBAL_CNT)
+      call global_sum(LOCAL_CNT, GLOBAL_CNT)
       NumberOfPoints = GLOBAL_CNT
       WRITE(NoPc,"(I10.10)") NumberOfPoints
 
@@ -217,7 +219,7 @@
 ! Collect the number of particles on each rank.all ranks.
       lgathercnts = 0
       lgathercnts(myPE) = LOCAL_CNT
-      ! call global_sum(lgathercnts,igathercnts)
+      call global_sum(lgathercnts,igathercnts)
 
 ! Calculate the rank displacements.
       idispls(0) = 0
@@ -255,7 +257,7 @@
          ENDIF
       ENDIF
 
-      ! CALL GLOBAL_ALL_MAX(IER)
+      CALL GLOBAL_ALL_MAX(IER)
 
       IF(IER /= 0) THEN
          CALL INIT_ERR_MSG("VTP_MOD --> OPEN_VTP")
@@ -406,7 +408,7 @@
       ENDIF ! if myPE == PE_IO and not distributed IO
 
 
-      ! CAlL GLOBAL_ALL_SUM(IER)
+      CAlL GLOBAL_ALL_SUM(IER)
       IF(IER /= 0) THEN
          SELECT CASE(IER)
          CASE(1); WRITE(ERR_MSG,1101) trim(FNAME_PVD)

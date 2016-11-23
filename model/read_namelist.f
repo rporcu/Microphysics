@@ -94,7 +94,7 @@
       inquire(file='mfix.dat',exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          IF(myPE == PE_IO) WRITE(*,1000)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
          'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
@@ -104,7 +104,7 @@
          OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             IF(myPE == PE_IO) WRITE (*,1100)
-            CALL MFIX_EXIT()
+            CALL MFIX_EXIT(myPE)
          ENDIF
 
       ENDIF
@@ -124,7 +124,7 @@
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
             WRITE (*, 1100) trim(iVAL(LINE_NO)), trim(ival(MAXCOL)), &
                LINE_STRING(1:MAXCOL)
-            CALL MFIX_EXIT()
+            CALL MFIX_EXIT(myPE)
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &

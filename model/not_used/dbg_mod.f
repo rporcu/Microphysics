@@ -20,6 +20,7 @@
       use param1, only: UNDEFINED_I
       use param1, only: UNDEFINED_C
 
+      use mpi_utility
 
       IMPLICIT NONE
 
@@ -138,13 +139,13 @@
 ! Some basic logical checks:
       IF(iLB > iUB .OR. iLB<iMin3 .OR. iUB>iMax3) THEN
          IF(DMP_LOG) WRITE(*,1000)'I',iLB,iMin3,iUB,iMax3
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSEIF(jLB > jUB .OR. jLB<jMin3 .OR. jUB>jMax3) THEN
          IF(DMP_LOG) WRITE(*,1000)'J',jLB,jMin3,jUB,jMax3
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSEIF(kLB > kUB .OR. kLB<kMin3 .OR. kUB>kMax3) THEN
          IF(DMP_LOG) WRITE(*,1000)'K',kLB,kMin3,kUB,kMax3
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
 
@@ -236,6 +237,7 @@
 !      use geometry
 !      use indices
 !      use run
+!      use sendrecv
       use functions
       use param, only: dimension_3
       use param1, only: zero
@@ -277,7 +279,7 @@
             WRITE(*,"(' USR0 should contain a call to initExtract.')")
             WRITE(*,"(' Forcing a hard stop.')")
          ENDIF
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
       AmFName=''
@@ -347,12 +349,12 @@
          endif
 
 ! Global sum updates lAm and lBm for all ranks.
-         ! CALL global_all_sum(lA_m)
-         ! CALL global_all_sum(lB_m)
-         ! if(dbgMode) then
-         !    CALL global_all_sum(OWNER)
-         !    CALL global_all_sum(NBGHS)
-         ! endif
+         CALL global_all_sum(lA_m)
+         CALL global_all_sum(lB_m)
+         if(dbgMode) then
+            CALL global_all_sum(OWNER)
+            CALL global_all_sum(NBGHS)
+         endif
 
          if(myPE==PE_IO) then
             CALL Am_to_Aout(I, J, K, NBGHS, OWNER, lA_m)
@@ -573,6 +575,7 @@
       SUBROUTINE dbg_write(lMsg, Flush)
 
       use compar
+!      use sendrecv
 
       implicit none
 
@@ -621,13 +624,13 @@
 ! If the initialization routine was not called, flag the error and exit.
       IF(initNotCalled)THEN
          IF(DMP_LOG) WRITE(*,1000)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
 ! Verify that the files are unlocked.
       IF(dbgLock)THEN
          IF(DMP_LOG) WRITE(*,1001)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
          dbgLock = .TRUE.
       ENDIF
@@ -635,7 +638,7 @@
 ! Allocate indice arrays.
       IF(allocated(i_ofBuff))THEN
          IF(DMP_LOG) WRITE(*,1002) 'i_ofBuff'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
          allocate( i_ofBuff(dbgDIMN) )
          i_ofBuff = 0
@@ -643,7 +646,7 @@
 
       IF(allocated(j_ofBuff))THEN
          IF(DMP_LOG) WRITE(*,1002) 'j_ofBuff'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
          allocate( j_ofBuff(dbgDIMN) )
          j_ofBuff = 0
@@ -651,7 +654,7 @@
 
       IF(allocated(k_ofBuff))THEN
          IF(DMP_LOG) WRITE(*,1002) 'k_ofBuff'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
          allocate( k_ofBuff(dbgDIMN) )
          k_ofBuff = 0
@@ -659,7 +662,7 @@
 
       IF(allocated(ijk_Buff))THEN
          IF(DMP_LOG) WRITE(*,1002) 'ijk_Buff'
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ELSE
          allocate( ijk_Buff(dbgDIMN) )
          ijk_Buff = 0
@@ -695,10 +698,10 @@
                status='new', iostat=iErr)
          ENDIF
       ENDIF
-      ! CALL BCAST(iErr, PE_IO)
+      CALL BCAST(iErr, PE_IO)
       IF(iErr /= 0)THEN
          IF(myPE == PE_IO) write(*,1003) trim(VarFName)
-         CALL MFIX_EXIT()
+         CALL MFIX_EXIT(myPE)
       ENDIF
 
 ! Set printIJK Flag. Only print the IJK values if this is the first time
@@ -960,6 +963,8 @@
       use param1
       use physprop
       use run
+      use sendrecv
+      USE mpi_utility
       USE functions
 
       implicit none
@@ -1021,13 +1026,13 @@
       MSG='  > Collecting array data.'
       if(dbgMode) CALL DBG_WRITE(trim(MSG))
 ! Global sum updates lAm and lBm for all ranks.
-      ! CALL global_all_sum(outBuff_i)
-      ! if(pwIJK) then
-      !    CALL global_all_sum(i_ofBuff)
-      !    CALL global_all_sum(j_ofBuff)
-      !    CALL global_all_sum(ijk_Buff)
-      !    if(do_K)CALL global_all_sum(k_ofBuff)
-      ! endif
+      CALL global_all_sum(outBuff_i)
+      if(pwIJK) then
+         CALL global_all_sum(i_ofBuff)
+         CALL global_all_sum(j_ofBuff)
+         CALL global_all_sum(ijk_Buff)
+         if(do_K)CALL global_all_sum(k_ofBuff)
+      endif
 
 ! Write the data.
       MSG='  > Calling arrayExtract_prnt.'
@@ -1064,6 +1069,8 @@
       use param1
       use physprop
       use run
+      use sendrecv
+      USE mpi_utility
       USE functions
 
       implicit none
@@ -1126,13 +1133,13 @@
       MSG='  > Collecting array data.'
       CALL DBG_WRITE(trim(MSG))
 
-      ! CALL global_all_sum(outBuff_dp)
-      ! if(pwIJK) then
-      !    CALL global_all_sum(i_ofBuff)
-      !    CALL global_all_sum(j_ofBuff)
-      !    CALL global_all_sum(ijk_Buff)
-      !    if(do_K)CALL global_all_sum(k_ofBuff)
-      ! endif
+      CALL global_all_sum(outBuff_dp)
+      if(pwIJK) then
+         CALL global_all_sum(i_ofBuff)
+         CALL global_all_sum(j_ofBuff)
+         CALL global_all_sum(ijk_Buff)
+         if(do_K)CALL global_all_sum(k_ofBuff)
+      endif
 
 ! Write the data.
       MSG='  > Calling arrayExtract_prnt.'
@@ -1167,6 +1174,8 @@
       use param1
       use physprop
       use run
+      use sendrecv
+      USE mpi_utility
       USE functions
 
       implicit none
@@ -1229,13 +1238,13 @@
       MSG='  > Collecting array data.'
       if(dbgMode) CALL DBG_WRITE(trim(MSG))
 ! Global sum updates lAm and lBm for all ranks.
-      ! CALL global_all_sum(outBuff_i)
-      ! if(pwIJK) then
-      !    CALL global_all_sum(i_ofBuff)
-      !    CALL global_all_sum(j_ofBuff)
-      !    CALL global_all_sum(ijk_Buff)
-      !    if(do_K)CALL global_all_sum(k_ofBuff)
-      ! endif
+      CALL global_all_sum(outBuff_i)
+      if(pwIJK) then
+         CALL global_all_sum(i_ofBuff)
+         CALL global_all_sum(j_ofBuff)
+         CALL global_all_sum(ijk_Buff)
+         if(do_K)CALL global_all_sum(k_ofBuff)
+      endif
 
 ! Write the data.
       MSG='  > Calling arrayExtract_prnt.'

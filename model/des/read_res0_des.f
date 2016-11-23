@@ -12,12 +12,12 @@
       use desmpi
       use discretelement
       use error_manager
-      use geometry
       use machine
-      use mpi_init_des, only: DES_RESTART_GHOST
+      use mpi_utility
       use param1
       use read_res1_des
       use run
+      use mpi_init_des, only: DES_RESTART_GHOST
 
       implicit none
 

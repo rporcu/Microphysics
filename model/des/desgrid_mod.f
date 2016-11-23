@@ -423,7 +423,6 @@
       subroutine desgrid_init()
 
       use funits
-      use geometry
       use compar
       use discretelement, only: DES_PERIODIC_WALLS_X
       use discretelement, only: DES_PERIODIC_WALLS_Y

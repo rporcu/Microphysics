@@ -176,6 +176,7 @@
       use desmpi, only: iSENDINDICES
       use desmpi, only: iGhostPacketSize
 
+      use mpi_utility, only: global_all_max
       use error_manager
       use discretelement, only: dimn
       implicit none
@@ -209,7 +210,7 @@
          if(lparcnt > lmaxcnt) lmaxcnt = lparcnt
       enddo
 
-      ! if(check_global) call global_all_max(lmaxcnt)
+      if(check_global) call global_all_max(lmaxcnt)
 
       if (imaxbuf < (1.0+0.5*lfactor)*lmaxcnt*iGhostPacketSize) then
          pbuf = imaxbuf

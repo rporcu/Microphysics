@@ -9,14 +9,15 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^c
       subroutine WRITE_RES0_DES
 
-      use compar
-      use des_bc
-      use discretelement
-      use error_manager
-      use geometry
       use param1
+      use compar
+      use discretelement
       use run
+      use des_bc
+
+      use error_manager
       use write_res1_des
+      use mpi_utility
 
       implicit none
 !-----------------------------------------------

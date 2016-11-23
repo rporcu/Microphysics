@@ -64,6 +64,7 @@ CONTAINS
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
       use functions, only: funijk, is_on_mype_owns, iminus, jminus, kminus
+      use mpi_utility, only: global_all_max
       use param, only: dimension_bc
       use param1, only: zero, small_number
       use run, only: units
@@ -106,7 +107,7 @@ CONTAINS
          ENDDO
       ENDDO
 
-      ! CALL GLOBAL_ALL_MAX(maxVEL, MAX_VEL_INLET)
+      CALL GLOBAL_ALL_MAX(maxVEL, MAX_VEL_INLET)
 
 ! If no inlet velocity is specified, use an upper limit defined in
 ! toleranc_mod.f
@@ -154,6 +155,7 @@ CONTAINS
       USE run
       USE toleranc
       USE compar
+      USE mpi_utility
       USE discretelement
       USE functions
 
@@ -191,7 +193,7 @@ LOOP_FLUID: DO K = kstart3, kend3
       ENDDO
       ENDDO LOOP_FLUID
 
-      ! CALL GLOBAL_ALL_OR(CHECK_VEL_BOUND, ALL_IS_ERROR)
+      CALL GLOBAL_ALL_OR(CHECK_VEL_BOUND, ALL_IS_ERROR)
       IF(ALL_IS_ERROR) CHECK_VEL_BOUND = .TRUE.
 
       RETURN

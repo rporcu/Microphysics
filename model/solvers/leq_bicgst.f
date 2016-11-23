@@ -106,6 +106,8 @@
       USE param1
       USE geometry
       USE compar
+      USE mpi_utility
+      USE sendrecv
       USE leqsol
       USE functions
       IMPLICIT NONE
@@ -255,7 +257,7 @@
 !     ------------
                ier = 0
             endif
-            ! call send_recv(var,2)
+            call send_recv(var,2)
             return
          endif ! rho(i-1).eq.0
 
@@ -421,7 +423,7 @@
          endif
       endif
 
-      ! call send_recv(var,2)
+      call send_recv(var,2)
 
       return
       end subroutine LEQ_BICGS0t
@@ -455,6 +457,8 @@
       USE geometry
       USE compar
       USE funits
+      USE sendrecv
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -559,6 +563,8 @@
       USE geometry
       USE compar
       USE funits
+      USE sendrecv
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -668,6 +674,8 @@
       USE param1
       USE geometry
       USE compar
+      USE sendrecv
+      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -753,7 +761,7 @@
 
       endif
 
-      ! call send_recv(Avar,nlayers_bicgs)
+      call send_recv(Avar,nlayers_bicgs)
       return
       END SUBROUTINE LEQ_MATVECt
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -783,6 +791,7 @@
       USE param1
       USE geometry
       USE compar
+      USE sendrecv
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -842,7 +851,7 @@
             enddo
          enddo
 
-      ! call send_recv(var,nlayers_bicgs)
+      call send_recv(var,nlayers_bicgs)
 
       ENDIF
 
@@ -946,7 +955,7 @@
 
             ENDIF
 
-            ! IF (DO_SENDRECV) call send_recv(var,nlayers_bicgs)
+            IF (DO_SENDRECV) call send_recv(var,nlayers_bicgs)
 
          ENDIF
 
@@ -1167,6 +1176,7 @@
       USE param1
       USE geometry
       USE compar
+      USE sendrecv
       USE leqsol
 
       IMPLICIT NONE
@@ -1194,7 +1204,7 @@
 !     do nothing or no preconditioning
 
       var(:) = b_m(:)
-      ! call send_recv(var,nlayers_bicgs)
+      call send_recv(var,nlayers_bicgs)
 
       return
       end subroutine leq_msolve0t
@@ -1210,6 +1220,7 @@
       USE param1
       USE geometry
       USE compar
+      USE sendrecv
       USE functions
       use leqsol
 
@@ -1252,7 +1263,7 @@
          enddo
       enddo
 
-      ! call send_recv(var,nlayers_bicgs)
+      call send_recv(var,nlayers_bicgs)
 
       return
       end subroutine leq_msolve1t

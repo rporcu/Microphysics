@@ -91,6 +91,7 @@
       SUBROUTINE INIT_WRITE_RES_DES(BASE, lVERSION, lNEXT_REC)
 
       use compar, only: numPEs
+      use mpi_utility, only: GLOBAL_SUM
 
       use discretelement, only: PIP, iGHOST_CNT
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
@@ -133,7 +134,7 @@
          pPROCCNT = PIP - iGHOST_CNT
 
 ! Rank 0 gets the total number of gloabl particles.
-         ! CALL GLOBAL_SUM(pPROCCNT, pROOTCNT)
+         CALL GLOBAL_SUM(pPROCCNT, pROOTCNT)
 
 ! Serial IO does not store ghost particle data.
          lGHOST_CNT = 0
@@ -145,7 +146,7 @@
          lGatherCnts = 0
          lGatherCnts(myPE) = pPROCCNT
 
-         ! CALL GLOBAL_SUM(lGatherCnts, pGATHER)
+         CALL GLOBAL_SUM(lGatherCnts, pGATHER)
 
 ! Calculate the displacements for each process in the global array.
          pDISPLS(0) = 0
@@ -170,7 +171,7 @@
          ENDDO
 
 ! Rank 0 gets the total number of global particles.
-         ! CALL GLOBAL_SUM(cPROCCNT, cROOTCNT)
+         CALL GLOBAL_SUM(cPROCCNT, cROOTCNT)
 
 ! Construct an array for the Root process that states the number of
 ! (real) particles on each process.
@@ -179,7 +180,7 @@
          lGatherCnts = 0
          lGatherCnts(myPE) = cPROCCNT
 
-         ! CALL GLOBAL_SUM(lGatherCnts, cGATHER)
+         CALL GLOBAL_SUM(lGatherCnts, cGATHER)
 
 ! Calculate the displacements for each process in the global array.
          cDISPLS(0) = 0

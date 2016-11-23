@@ -17,6 +17,7 @@
       USE discretelement
       USE error_manager
       USE funits
+      USE gridmap
       USE leqsol
       USE param
       USE param1
@@ -62,7 +63,7 @@
       CALL SET_CONSTANTS
 
 ! Partition the domain and set indices
-      ! CALL GRIDMAP_INIT
+      CALL GRIDMAP_INIT
 
 ! Check the minimum solids phase requirements.
       CALL CHECK_SOLIDS_MODEL_PREREQS

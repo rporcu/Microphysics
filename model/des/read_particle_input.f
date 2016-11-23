@@ -18,6 +18,7 @@
       use funits
       use geometry, only: NO_K
       use mpi_init_des, only: des_scatter_particle
+      use mpi_utility
 
       implicit none
 !-----------------------------------------------
@@ -67,8 +68,8 @@
       ENDIF
 
 ! Collect the error message and quit.
-      ! CALL GLOBAL_ALL_SUM(IOS)
-      IF(IOS /= 0) CALL MFIX_EXIT()
+      CALL GLOBAL_ALL_SUM(IOS)
+      IF(IOS /= 0) CALL MFIX_EXIT(myPE)
 
  1100 FORMAT('Error 1100: FATAL - DEM particle input file not found!')
 
@@ -127,8 +128,8 @@
 
          ENDIF
 
-         ! CALL GLOBAL_ALL_SUM(IOS)
-         IF(IOS /= 0) CALL MFIX_EXIT()
+         CALL GLOBAL_ALL_SUM(IOS)
+         IF(IOS /= 0) CALL MFIX_EXIT(myPE)
 
          CALL DES_SCATTER_PARTICLE
 
@@ -147,6 +148,6 @@
       IF(dmp_log)write(unit_log,"(/1X,70('*')//,A,/10X,A,/1X,70('*')/)")&
          ' From: read_par_input -',&
          ' particle_input.dat file is missing.  Terminating run.'
-      CALL MFIX_EXIT()
+      CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE READ_PAR_INPUT

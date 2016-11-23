@@ -28,12 +28,12 @@
       USE drag
       USE fldvar
       USE functions
-      USE funits
       USE geometry
       USE param
       USE param1
       USE physprop
       USE run
+      USE sendrecv
 
       IMPLICIT NONE
 !-----------------------------------------------

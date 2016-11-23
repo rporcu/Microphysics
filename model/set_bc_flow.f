@@ -312,6 +312,7 @@
       USE bc
       USE funits
       USE compar
+      USE sendrecv
       USE discretelement
 
       use error_manager

@@ -32,6 +32,8 @@
       USE run
       USE funits
       USE compar
+      USE mpi_utility
+      USE sendrecv
       USE in_binary_512
 
       IMPLICIT NONE
@@ -81,11 +83,11 @@
       end if
 
 
-      ! call bcast(VERSION, PE_IO)        !//PAR_I/O BCAST0c
-      ! call bcast(VERSION_NUMBER, PE_IO) !//PAR_I/O BCAST0r
-      ! call bcast(TIME, PE_IO)           !//PAR_I/O BCAST0d
-      ! call bcast(NSTEP, PE_IO)          !//PAR_I/O BCAST0i
-      ! if (VERSION_NUMBER >= 1.12) call bcast(DT, PE_IO)   !//PAR_I/O BCAST0d
+      call bcast(VERSION, PE_IO)        !//PAR_I/O BCAST0c
+      call bcast(VERSION_NUMBER, PE_IO) !//PAR_I/O BCAST0r
+      call bcast(TIME, PE_IO)           !//PAR_I/O BCAST0d
+      call bcast(NSTEP, PE_IO)          !//PAR_I/O BCAST0i
+      if (VERSION_NUMBER >= 1.12) call bcast(DT, PE_IO)   !//PAR_I/O BCAST0d
 
 !
       call readScatterRes(EP_G,array2, array1, 0, NEXT_REC)
@@ -106,8 +108,8 @@
       deallocate( array2 )
 !      call MPI_barrier(MPI_COMM_WORLD,mpierr)
 
-      ! call send_recv(rop_g)
-      ! call send_recv(ro_g)
+      call send_recv(rop_g)
+      call send_recv(ro_g)
 
 
       IF (DT_FAC == ONE) DT = DT_SAVE
@@ -128,6 +130,8 @@
       USE geometry
       USE funits
       USE compar
+      USE mpi_utility
+      USE sendrecv
       USE in_binary_512
       IMPLICIT NONE
       double precision, dimension(ijkmax2) :: array1
@@ -148,7 +152,7 @@
          CALL IN_BIN_512 (UNIT_RES, array1, IJKMAX2, NEXT_REC)
          CALL convert_from_io_dp(array1, array2, IJKMAX2)
       end if
-      ! call scatter(VAR, array2, PE_IO)
+      call scatter(VAR, array2, PE_IO)
 
       End subroutine readScatterRes
 
@@ -190,6 +194,8 @@
       USE run
       USE funits
       USE compar
+      USE mpi_utility
+      USE sendrecv
       use functions
 
       IMPLICIT NONE

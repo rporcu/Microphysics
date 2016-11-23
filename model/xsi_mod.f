@@ -46,6 +46,8 @@
 
       USE run, only: dt
 
+      USE sendrecv, only: send_recv
+
       USE error_manager, only: err_msg, init_err_msg, finl_err_msg
       USE error_manager, only: ival, flush_err_msg
       IMPLICIT NONE
@@ -565,9 +567,9 @@
 
        END SELECT
 
-      ! call send_recv(XSI_E,2)
-      ! call send_recv(XSI_N,2)
-      ! call send_recv(XSI_T,2)
+      call send_recv(XSI_E,2)
+      call send_recv(XSI_N,2)
+      call send_recv(XSI_T,2)
 
       RETURN
       END SUBROUTINE CALC_XSI
