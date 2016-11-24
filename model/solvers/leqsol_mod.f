@@ -992,8 +992,10 @@ CONTAINS
           allocate (r1_g(10))
           allocate (r2_g(10))
        endif
-       call gather(r1,r1_g)
-       call gather(r2,r2_g)
+       r1_g = r1
+       ! call gather(r1,r1_g)
+       r2_g = r2
+       ! call gather(r2,r2_g)
 
        if(myPE.eq.root) then
           prod = 0.0d0
@@ -1083,7 +1085,8 @@ CONTAINS
        else
           allocate (rg_temp(10,4))
        endif
-       call gather(r_temp,rg_temp)
+       rg_temp = r_temp
+       ! call gather(r_temp,rg_temp)
 
        if(myPE.eq.root) then
           prod = 0.0d0

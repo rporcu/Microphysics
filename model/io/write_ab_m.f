@@ -72,12 +72,14 @@
 
 
 
-      call gather(b_m(:),array2,root)
+      array2 = b_m
+      ! call gather(b_m(:),array2,root)
 
 
       do L = -3,3
 
-      call gather(a_m(:,L),array1,root)
+      array1 = a_m(:,L)
+      ! call gather(a_m(:,L),array1,root)
 
       DO K = Kmin2, Kmax2
       DO I = Imin2, Imax2
