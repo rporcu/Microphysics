@@ -26,7 +26,6 @@
       USE param1
       USE physprop
       USE scales
-      USE sendrecv
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -198,7 +197,7 @@
 
   100 CONTINUE
 
-      call send_recv(P_G,2)
+      ! call send_recv(P_G,2)
 
       RETURN
 

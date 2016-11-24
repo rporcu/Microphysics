@@ -189,7 +189,6 @@
       use param1
       use physprop
       use run
-      use sendrecv
       use toleranc
       use usr
       use ps

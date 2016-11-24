@@ -18,8 +18,6 @@
       USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
       use mpi_funs_des, only: des_par_exchange
 
-      use sendrecv
-
       USE error_manager
 
       IMPLICIT NONE

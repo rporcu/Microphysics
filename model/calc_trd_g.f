@@ -30,7 +30,6 @@
       USE geometry
       USE fldvar
       USE compar
-      USE sendrecv
       USE bc
       USE functions
       IMPLICIT NONE
@@ -108,7 +107,6 @@
       USE geometry
       USE fldvar
       USE compar
-      USE sendrecv
       USE bc
       USE functions
       IMPLICIT NONE

@@ -20,7 +20,6 @@
       USE param1
       USE physprop
       USE run
-      USE sendrecv
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -51,13 +50,13 @@
       end if
 
 ! Local Send Receive - need to be moved to source later!!
-      call send_recv(EP_g,2)
-      call send_recv(P_g,2)
-      call send_recv(RO_g,2)
-      call send_recv(ROP_g,2)
-      call send_recv(U_g,2)
-      call send_recv(V_g,2)
-      call send_recv(W_g,2)
+      ! call send_recv(EP_g,2)
+      ! call send_recv(P_g,2)
+      ! call send_recv(RO_g,2)
+      ! call send_recv(ROP_g,2)
+      ! call send_recv(U_g,2)
+      ! call send_recv(V_g,2)
+      ! call send_recv(W_g,2)
 
       call gatherWriteRes (EP_g,array2, array1, NEXT_REC)
       call gatherWriteRes (P_g,array2, array1, NEXT_REC)
@@ -85,7 +84,7 @@
       USE geometry
       USE funits
       USE compar
-      USE sendrecv
+      USE param
 
       USE in_binary_512
 

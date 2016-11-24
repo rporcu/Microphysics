@@ -19,7 +19,6 @@
       use run, only: CALL_USR
       use run, only: NSTEP
       use run, only: TIME, TSTOP, DT
-      use sendrecv
 
       IMPLICIT NONE
 !------------------------------------------------
@@ -180,8 +179,8 @@
          WRITE(ERR_MSG,"('<---------- END DES_TIME_MARCH ----------')")
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ELSE
-         call send_recv(ep_g,2)
-         call send_recv(rop_g,2)
+         ! call send_recv(ep_g,2)
+         ! call send_recv(rop_g,2)
 
          TMP_WALL = WALL_TIME() - TMP_WALL
          IF(TMP_WALL > 1.0d-10) THEN

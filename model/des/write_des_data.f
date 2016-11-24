@@ -25,7 +25,6 @@
       USE run
       USE geometry
       USE physprop
-      USE sendrecv
       USE des_bc
 
       use error_manager

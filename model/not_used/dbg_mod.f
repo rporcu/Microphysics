@@ -235,7 +235,6 @@
 !      use geometry
 !      use indices
 !      use run
-!      use sendrecv
       use functions
       use param, only: dimension_3
       use param1, only: zero
@@ -573,7 +572,6 @@
       SUBROUTINE dbg_write(lMsg, Flush)
 
       use compar
-!      use sendrecv
 
       implicit none
 
@@ -961,7 +959,6 @@
       use param1
       use physprop
       use run
-      use sendrecv
       USE functions
 
       implicit none
@@ -1066,7 +1063,6 @@
       use param1
       use physprop
       use run
-      use sendrecv
       USE functions
 
       implicit none
@@ -1170,7 +1166,6 @@
       use param1
       use physprop
       use run
-      use sendrecv
       USE functions
 
       implicit none

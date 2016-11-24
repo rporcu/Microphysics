@@ -22,7 +22,6 @@
       use desgrid
       use compar
       use physprop
-      use sendrecv
       use des_bc
       use sendrecvnode
 

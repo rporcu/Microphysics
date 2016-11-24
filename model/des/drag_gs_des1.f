@@ -201,8 +201,6 @@
       use geometry, only: VOL
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
-! MPI wrapper for halo exchange.
-      use sendrecv, only: SEND_RECV
 
       use functions, only: IS_NONEXISTENT, IS_ENTERING, &
          IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
@@ -321,8 +319,8 @@
       ENDDO
 
 ! Update the drag force and sources in ghost layers.
-      CALL SEND_RECV(F_GDS, 2)
-      CALL SEND_RECV(DRAG_BM, 2)
+      ! CALL SEND_RECV(F_GDS, 2)
+      ! CALL SEND_RECV(DRAG_BM, 2)
 
       deallocate( UGC, VGC, WGC )
 

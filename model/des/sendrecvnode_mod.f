@@ -19,7 +19,6 @@
       use discretelement
       use compar
       use physprop
-      use sendrecv
       use desgrid
       use functions
 !-----------------------------------------------

@@ -29,8 +29,6 @@
 
       use param1, only: ONE, UNDEFINED
 
-      use sendrecvnode, only: DES_SETNODEINDICES
-
       use error_manager
 
       IMPLICIT NONE
@@ -88,7 +86,7 @@
 ! Compute the volume of nodes needed in drag_fgs_des0.f
          CALL COMPUTE_VOLUME_OF_NODES
 ! Setup MPI exchange arrys for nodes
-         CALL DES_SETNODEINDICES
+         ! CALL DES_SETNODEINDICES
 
       CASE(DES_INTERP_DPVM, DES_INTERP_GAUSS)
          OoFILTER_VOL = 0.25d0/(FILTER_WIDTH_INTERP**3)

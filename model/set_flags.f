@@ -20,7 +20,6 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
       USE boundfunijk
       USE functions
       IMPLICIT NONE
@@ -187,7 +186,6 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -304,9 +302,9 @@
 
 ! deallocate storage of temporary flag arrays
       deallocate( flag_temp )
-      call send_recv(flag_t,1)
-      call send_recv(flag_n,1)
-      call send_recv(flag_e,1)
+      ! call send_recv(flag_t,1)
+      ! call send_recv(flag_n,1)
+      ! call send_recv(flag_e,1)
 
       RETURN
       END SUBROUTINE SET_FLAGS1

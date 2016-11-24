@@ -37,7 +37,6 @@
       USE physprop
       USE funits
       USE compar
-      USE sendrecv
       USE discretelement
       USE functions
 
@@ -56,13 +55,13 @@
 
       CALL INIT_ERR_MSG("CHECK_DATA_20")
 
-      call send_recv(p_g,2)
-      call send_recv(ep_g,2)
-      call send_recv(w_g,2)
-      call send_recv(u_g,2)
-      call send_recv(v_g,2)
-      call send_recv( ROP_G, 2 )
-      call send_recv( RO_G, 2 )
+      ! call send_recv(p_g,2)
+      ! call send_recv(ep_g,2)
+      ! call send_recv(w_g,2)
+      ! call send_recv(u_g,2)
+      ! call send_recv(v_g,2)
+      ! call send_recv( ROP_G, 2 )
+      ! call send_recv( RO_G, 2 )
 
       ABORT = .FALSE.
 

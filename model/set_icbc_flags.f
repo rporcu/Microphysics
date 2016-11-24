@@ -120,7 +120,6 @@
 
       use run, only: RUN_TYPE
 
-      use sendrecv
 
       use error_manager
       use functions
@@ -176,7 +175,7 @@
 
       ELSE
 ! If no erros, sync up the ghost cell layers.
-         CALL SEND_RECV(ICBC_FLAG,1)
+         ! CALL SEND_RECV(ICBC_FLAG,1)
       ENDIF
 
 ! Clean up and return.
@@ -215,7 +214,6 @@
 
       use param, only: dimension_ic
 
-      use sendrecv
       use error_manager
       use functions
 
@@ -253,7 +251,7 @@
       ENDDO IC_LP
 
 ! Update the ICBC flag on ghost cells.
-      CALL SEND_RECV(ICBC_FLAG, 1)
+      ! CALL SEND_RECV(ICBC_FLAG, 1)
 
 
 ! Clean up and return.
@@ -282,7 +280,6 @@
       USE bc
       USE funits
       USE compar
-      USE sendrecv
       USE functions
 
       use error_manager
@@ -334,7 +331,7 @@
          ENDIF
       ENDDO
 
-      CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(ICBC_FLAG,1)
 
       CALL FINL_ERR_MSG
 
@@ -362,9 +359,6 @@
       USE bc
       USE funits
       USE compar
-      USE sendrecv
-
-      use sendrecv
       use functions
 
       use error_manager
@@ -504,7 +498,7 @@
       ENDDO ! BC Loop
 
 ! Sync the ICBC flag across ghost layers
-      CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(ICBC_FLAG,1)
 
       CALL FINL_ERR_MSG
 

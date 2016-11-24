@@ -27,7 +27,6 @@
       USE physprop
       USE run
       USE scales
-      USE sendrecv         ! for filling the boundary information
       USE toleranc
       USE ur_facs
       USE fldvar

@@ -9,7 +9,6 @@
 ! Modules
 !-----------------------------------------------
         use geometry
-        use sendrecv
         use compar
         use run
 

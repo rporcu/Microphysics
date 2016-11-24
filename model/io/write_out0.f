@@ -28,7 +28,6 @@
       USE physprop
       USE run
       USE scales
-      USE sendrecv
       USE toleranc
       USE ur_facs
 
@@ -625,7 +624,6 @@
       USE funits
       USE geometry
       USE compar         !//d
-      USE sendrecv    !//d
       USE functions
       IMPLICIT NONE
       integer ijk,i,j,k

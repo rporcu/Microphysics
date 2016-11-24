@@ -19,7 +19,6 @@
       use param, only: dimension_bc
       use param1, only: undefined_i
 
-      use sendrecv
       IMPLICIT NONE
 
 ! Local variables
@@ -60,7 +59,7 @@
       ENDDO
 
 ! Make T_g nonzero in k=0,1 ghost layers when k-decomposition employed
-      call send_recv(P_G,2)
+      ! call send_recv(P_G,2)
 
       RETURN
       END SUBROUTINE SET_BC0

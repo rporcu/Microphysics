@@ -51,7 +51,6 @@
       USE fldvar
       USE geometry
       USE compar
-      USE sendrecv
       USE discretelement
       use desgrid
       use desmpi
@@ -113,7 +112,7 @@
       ENDDO
 
 ! Halo exchange of solids volume fraction data.
-      CALL SEND_RECV(DES_ROP_S,2)
+      ! CALL SEND_RECV(DES_ROP_S,2)
 
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER

@@ -32,7 +32,6 @@
       USE run
       USE funits
       USE compar
-      USE sendrecv
       USE in_binary_512
 
       IMPLICIT NONE
@@ -107,8 +106,8 @@
       deallocate( array2 )
 !      call MPI_barrier(MPI_COMM_WORLD,mpierr)
 
-      call send_recv(rop_g)
-      call send_recv(ro_g)
+      ! call send_recv(rop_g)
+      ! call send_recv(ro_g)
 
 
       IF (DT_FAC == ONE) DT = DT_SAVE
@@ -129,7 +128,6 @@
       USE geometry
       USE funits
       USE compar
-      USE sendrecv
       USE in_binary_512
       IMPLICIT NONE
       double precision, dimension(ijkmax2) :: array1
@@ -193,7 +191,6 @@
       USE run
       USE funits
       USE compar
-      USE sendrecv
       use functions
 
       IMPLICIT NONE
