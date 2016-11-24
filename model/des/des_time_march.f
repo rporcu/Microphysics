@@ -16,7 +16,6 @@
       use functions
       use machine
       use mpi_funs_des, only: DES_PAR_EXCHANGE
-      use mpi_utility
       use run, only: CALL_USR
       use run, only: NSTEP
       use run, only: TIME, TSTOP, DT
@@ -66,7 +65,7 @@
       ENDIF   ! end if/else (des_continuum_coupled)
 
       NP = PIP - IGHOST_CNT
-      CALL GLOBAL_ALL_SUM(NP)
+      ! CALL GLOBAL_ALL_SUM(NP)
 
       IF(DES_CONTINUUM_COUPLED) THEN
          WRITE(ERR_MSG, 1000) trim(iVal(factor)), trim(iVAL(NP))

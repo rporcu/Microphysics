@@ -225,7 +225,6 @@
 ! Number of particles in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
-      use mpi_utility
       use sendrecv
 
       USE error_manager

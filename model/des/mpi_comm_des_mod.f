@@ -18,7 +18,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use mpi_utility
       use discretelement
       use desgrid
       use compar
@@ -57,7 +56,7 @@
 ! local variables
 !-----------------------------------------------
       character(len=80), parameter :: name = 'desmpi_sendrecv_init'
-      integer :: ldebug,ltag,lerr,lrecvface
+      integer :: ldebug,ltag,lrecvface
 !-----------------------------------------------
 
 ! set the debug flag
@@ -120,7 +119,7 @@
 ! local variables
 !-----------------------------------------------
       character(len=80), parameter :: name = 'desmpi_sendrecv_wait'
-      integer :: ldebug,lerr
+      integer :: ldebug
 !-----------------------------------------------
 
 ! set the debug flag
@@ -157,7 +156,7 @@
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
-      integer lroot,lidebug,lerr
+      integer lroot,lidebug
       character(len=80), parameter :: name = 'desmpi_scatterv'
 !-----------------------------------------------
 
@@ -200,7 +199,7 @@
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
-      integer lroot,lidebug,lerr
+      integer lroot,lidebug
       character(len=80), parameter :: name = 'des_gather'
 !-----------------------------------------------
 

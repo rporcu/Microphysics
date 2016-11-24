@@ -104,7 +104,6 @@
       USE param1
       USE geometry
       USE compar
-      USE mpi_utility
       USE sendrecv
       USE leqsol
       USE functions

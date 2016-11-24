@@ -19,7 +19,6 @@
       use param, only: dimension_bc
       use param1, only: undefined_i
 
-      use mpi_utility
       use sendrecv
       IMPLICIT NONE
 
@@ -351,8 +350,8 @@
       use param1, only: UNDEFINED
       use param1, only: UNDEFINED_I
 
-      use mpi_utility
       use funits
+      use compar
 
       implicit none
 !--------------------------------------------------------------------//
@@ -518,7 +517,6 @@
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use mpi_utility
       use functions
       implicit none
 
@@ -600,7 +598,7 @@
 ! Sync gIJK across all processes. Select the lowest ranked process that
 ! has gIJK defined. This choice is arbitray and doesn't really matter.
 ! It just needs to be consistent.
-         CALL global_all_sum(gIJK)
+         ! CALL global_all_sum(gIJK)
          proc_lp: do proc=0, numPEs-1
             if(gIJK(proc,1) /= 0) then
                IJK_P_g(1) = gIJK(proc,1)

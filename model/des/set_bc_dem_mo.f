@@ -18,7 +18,6 @@
 
       use funits, only: DMP_LOG
 
-      use mpi_utility
       use error_manager
       use functions
 

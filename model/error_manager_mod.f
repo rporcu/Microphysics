@@ -84,10 +84,6 @@
 ! Undefined character string.
       use param1, only: UNDEFINED_C
 
-! Global Routine Access:
-!---------------------------------------------------------------------//
-      use mpi_utility, only: GLOBAL_ALL_SUM
-
       implicit none
 
 ! Local Variables:
@@ -157,7 +153,7 @@
 
 ! Verify that the .LOG file was successfully opened. Otherwise, flag the
 ! error and abort.
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
          IF(myPE == PE_IO) WRITE(*,1001) trim(FILE_NAME)
          CALL MFIX_EXIT(myPE)

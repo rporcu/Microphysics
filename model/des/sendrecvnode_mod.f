@@ -16,7 +16,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use mpi_utility
       use discretelement
       use compar
       use physprop
@@ -212,7 +211,7 @@
 ! local variables
 !-----------------------------------------------
       character(len=80), parameter :: name = 'des_exchangenode'
-      integer :: lindx,lcount,lcount2,lneigh,ltag,lerr
+      integer :: lindx,lcount,lcount2,lneigh,ltag
       integer :: lstart,lend,ltotal
 !-----------------------------------------------
 

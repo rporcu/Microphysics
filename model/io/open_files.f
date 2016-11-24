@@ -165,15 +165,12 @@
 !......................................................................!
       LOGICAL FUNCTION ERROR_OPENING(IER_l)
 
-! MPI Wrapper function.
-      use mpi_utility, only: GLOBAL_ALL_SUM
-
 ! Array containing error flags from all ranks.
       INTEGER, INTENT(IN) :: IER_L(0:numPEs-1)
 ! Initialize error flags.
       ERROR_OPENING = .FALSE.
 ! Globally collect flags.
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
 ! Report errors.
       IF(sum(IER_l) /= 0) ERROR_OPENING = .TRUE.
 

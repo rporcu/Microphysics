@@ -30,7 +30,6 @@ CONTAINS
          USE fldvar, ONLY: EP_G
          USE functions, ONLY: IS_ON_myPE_wobnd, FUNIJK
          USE functions, ONLY: IS_ON_myPE_wobnd, fluid_cell
-         USE mpi_utility, ONLY: GLOBAL_ALL_SUM
          USE param1, ONLY: ZERO
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -70,8 +69,8 @@ CONTAINS
       END DO
       END DO
 
-      CALL GLOBAL_ALL_SUM(SUM_VOL)
-      CALL GLOBAL_ALL_SUM(SUM_G)
+      ! CALL GLOBAL_ALL_SUM(SUM_VOL)
+      ! CALL GLOBAL_ALL_SUM(SUM_G)
 
       VAVG_G = SUM_G/SUM_VOL
 
@@ -83,7 +82,6 @@ CONTAINS
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, ONLY: is_on_mype_wobnd, fluid_cell
       USE functions, ONLY: funijk
-      USE mpi_utility, ONLY: global_all_sum
       USE param1
 
       IMPLICIT NONE
@@ -121,8 +119,8 @@ CONTAINS
       END DO
       END DO
 
-      CALL GLOBAL_ALL_SUM(SUM_AREA)
-      CALL GLOBAL_ALL_SUM(SUM_G)
+      ! CALL GLOBAL_ALL_SUM(SUM_AREA)
+      ! CALL GLOBAL_ALL_SUM(SUM_G)
 
       VAVG_Flux_G = SUM_G/SUM_AREA
 

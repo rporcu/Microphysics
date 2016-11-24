@@ -642,7 +642,6 @@ CONTAINS
       USE compar
       USE funits
       USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -725,7 +724,6 @@ CONTAINS
       USE compar
       USE funits
       USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -956,7 +954,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    use mpi_utility
     use geometry
     use compar
     use functions
@@ -990,7 +987,7 @@ CONTAINS
              enddo
           enddo
 
-          call global_all_sum(prod, dot_product_par)
+          ! call global_all_sum(prod, dot_product_par)
 
     else
        if(myPE.eq.root) then
@@ -1017,7 +1014,7 @@ CONTAINS
           enddo
 
        endif
-       call bcast( prod)
+       !call bcast( prod)
 
        dot_product_par = prod
 
@@ -1040,7 +1037,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    use mpi_utility
     use geometry
     use compar
     use functions
@@ -1078,7 +1074,7 @@ CONTAINS
           enddo
        enddo
 
-       call global_all_sum(prod, dot_product_par2)
+       ! call global_all_sum(prod, dot_product_par2)
 
     else
        allocate (r_temp(DIMENSION_3,4))
@@ -1108,7 +1104,7 @@ CONTAINS
              enddo
           enddo
        endif
-       call bcast( prod)
+       !call bcast( prod)
 
        dot_product_par2 = prod
 

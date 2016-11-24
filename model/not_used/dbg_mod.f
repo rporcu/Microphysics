@@ -20,8 +20,6 @@
       use param1, only: UNDEFINED_I
       use param1, only: UNDEFINED_C
 
-      use mpi_utility
-
       IMPLICIT NONE
 
       PRIVATE
@@ -349,11 +347,11 @@
          endif
 
 ! Global sum updates lAm and lBm for all ranks.
-         CALL global_all_sum(lA_m)
-         CALL global_all_sum(lB_m)
+         ! CALL global_all_sum(lA_m)
+         ! CALL global_all_sum(lB_m)
          if(dbgMode) then
-            CALL global_all_sum(OWNER)
-            CALL global_all_sum(NBGHS)
+            ! CALL global_all_sum(OWNER)
+            ! CALL global_all_sum(NBGHS)
          endif
 
          if(myPE==PE_IO) then
@@ -698,7 +696,7 @@
                status='new', iostat=iErr)
          ENDIF
       ENDIF
-      CALL BCAST(iErr, PE_IO)
+      !CALL BCAST(iErr, PE_IO)
       IF(iErr /= 0)THEN
          IF(myPE == PE_IO) write(*,1003) trim(VarFName)
          CALL MFIX_EXIT(myPE)
@@ -964,7 +962,6 @@
       use physprop
       use run
       use sendrecv
-      USE mpi_utility
       USE functions
 
       implicit none
@@ -1070,7 +1067,6 @@
       use physprop
       use run
       use sendrecv
-      USE mpi_utility
       USE functions
 
       implicit none
@@ -1175,7 +1171,6 @@
       use physprop
       use run
       use sendrecv
-      USE mpi_utility
       USE functions
 
       implicit none

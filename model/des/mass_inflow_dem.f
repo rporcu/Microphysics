@@ -15,7 +15,6 @@
       use discretelement
       use functions
 
-      use mpi_utility, only: BCAST
 
       implicit none
 
@@ -62,7 +61,7 @@
 ! All ranks generate random numbers but PE_IO BCASTS its values so that
 ! the calculated position (with random wiggles) is the same on all ranks.
          CALL RANDOM_NUMBER(RAND)
-         CALL BCAST(RAND)
+         ! !CALL BCAST(RAND)
 
 ! Check if any particles need seeded this time step.
          IF(DEM_MI_TIME(BCV_I) > S_TIME) CYCLE
@@ -179,9 +178,9 @@
          OCCUPANTS = DEM_MI(lBCV_I)%OCCUPANTS
          DEM_MI(lBCV_I)%VACANCY = MOD(VACANCY,OCCUPANTS) + 1
 !      ELSE
-!         call bcast(lpar_rad)
-!         call bcast(lpar_pos)
-!         call bcast(m)
+!         !call bcast(lpar_rad)
+!         !call bcast(lpar_pos)
+!         !call bcast(m)
 !      ENDIF
 
 

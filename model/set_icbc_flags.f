@@ -37,7 +37,6 @@
       use param1, only: zero
       use run, only: RUN_TYPE
 
-      use mpi_utility
       use functions
 
       implicit none
@@ -121,7 +120,6 @@
 
       use run, only: RUN_TYPE
 
-      use mpi_utility
       use sendrecv
 
       use error_manager
@@ -149,7 +147,7 @@
       ENDDO
 
 ! Sync up the error flag across all processes.
-      CALL GLOBAL_ALL_OR(ERROR)
+      ! CALL GLOBAL_ALL_OR(ERROR)
 
 ! If an error is detected, have each rank open a log file and write
 ! it's own message. Otherwise, we need to send all the data back to
@@ -218,7 +216,6 @@
       use param, only: dimension_ic
 
       use sendrecv
-      use mpi_utility
       use error_manager
       use functions
 
@@ -367,7 +364,6 @@
       USE compar
       USE sendrecv
 
-      use mpi_utility
       use sendrecv
       use functions
 
@@ -466,7 +462,7 @@
             ENDDO
 
 ! Sync the error flag over all ranks.
-            CALL GLOBAL_ALL_OR(ERROR)
+            ! CALL GLOBAL_ALL_OR(ERROR)
 
 ! Report errors and exit.
             IF(ERROR)THEN

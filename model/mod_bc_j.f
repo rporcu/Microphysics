@@ -16,7 +16,6 @@
       USE geometry, only: ICBC_FLAG
 
       USE compar
-      USE mpi_utility
 
       use error_manager
       USE functions
@@ -52,7 +51,7 @@
 
 ! Establish the OWNER of the BC
       OWNER = merge(myPE, 0, IS_ON_myPE_owns(I_W,J_S,K_B))
-      CALL GLOBAL_ALL_SUM(OWNER)
+      ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER)THEN
 
@@ -74,14 +73,14 @@
          ENDIF
       ENDIF
 
-      CALL BCAST(J_S,OWNER)
-      CALL BCAST(J_N,OWNER)
-      CALL BCAST(BC_PLANE(BCV),OWNER)
+      !CALL BCAST(J_S,OWNER)
+      !CALL BCAST(J_N,OWNER)
+      !CALL BCAST(BC_PLANE(BCV),OWNER)
 
 ! If there is an error, send IJK/IPJK to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-         CALL BCAST(IJPK,OWNER)
-         CALL BCAST(IJK, OWNER)
+         !CALL BCAST(IJPK,OWNER)
+         !CALL BCAST(IJK, OWNER)
 
          WRITE(ERR_MSG, 1100) BCV, J_S, J_N, I_W, K_B,                 &
             IJK, ICBC_FLAG(IJK),  IJPK, ICBC_FLAG(IJPK)
@@ -125,7 +124,7 @@
 
 
 ! Sync up the error flag across all processes.
-      CALL GLOBAL_ALL_OR(ERROR)
+      ! CALL GLOBAL_ALL_OR(ERROR)
 
 ! If an error is detected, have each rank open a log file and write
 ! it's own message. Otherwise, we need to send all the data back to

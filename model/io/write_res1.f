@@ -15,7 +15,6 @@
       USE fldvar
       USE funits
       USE geometry
-      USE mpi_utility
       USE output
       USE param
       USE param1
@@ -86,7 +85,6 @@
       USE geometry
       USE funits
       USE compar
-      USE mpi_utility
       USE sendrecv
 
       USE in_binary_512
@@ -101,7 +99,8 @@
 
 !     call MPI_Barrier(MPI_COMM_WORLD,mpierr)  !//PAR_I/O enforce barrier here
 
-      CALL gather (VAR,array2,root)
+      array2 = var
+      ! CALL gather (VAR,array2,root)
 
       if (myPE.eq.PE_IO) then
          call convert_to_io_dp(array2,array1,ijkmax2)

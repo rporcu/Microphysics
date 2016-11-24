@@ -11,7 +11,6 @@
       use run, only: BATCH_WALLCLOCK
       use run, only: TERM_BUFFER
 
-      use mpi_utility, only: BCAST
       use time_cpu, only: WALL_START
 
       use machine, only: WALL_TIME
@@ -70,6 +69,6 @@
 ! This routine was restructured so all MPI ranks to the same action. As
 ! a result, broadcasting the BATCHQ flag may not be needed.
       pEXIT_SIGNAL = (WALL_HAULT .OR. USER_HAULT) .OR. pEXIT_SIGNAL
-      call bcast (pEXIT_SIGNAL,PE_IO)
+      ! call bcast (pEXIT_SIGNAL,PE_IO)
 
       END SUBROUTINE CHECK_BATCH_QUEUE_END

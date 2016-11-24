@@ -19,7 +19,6 @@
       USE drag
       USE interpolation
       use desmpi
-      USE mpi_utility
 
 
       use mpi_node_des, only: des_addnodevalues_mean_fields
@@ -286,8 +285,10 @@
          ENDDO
 
 
-         CALL GLOBAL_SUM(MASS_SOL1, MASS_SOL1_ALL)
-         CALL GLOBAL_SUM(MASS_SOL2, MASS_SOL2_ALL)
+         mass_sol1_all = mass_sol1
+         ! CALL GLOBAL_SUM(MASS_SOL1, MASS_SOL1_ALL)
+         mass_sol2_all = mass_sol2
+         ! CALL GLOBAL_SUM(MASS_SOL2, MASS_SOL2_ALL)
          if(myPE.eq.pe_IO) THEN
             WRITE(*,'(/,5x,A,4(2x,g17.8),/)') &
                  'SOLIDS MASS DISCRETE AND CONTINUUM =  ', &

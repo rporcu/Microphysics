@@ -10,7 +10,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use mpi_utility
       use discretelement
       use desgrid
       use compar
@@ -22,9 +21,7 @@
 
       use desmpi
 
-
       contains
-
 
 !----------------------------------------------------------------------!
 !  Module: DESMPI_INIT                                                 !
@@ -428,7 +425,7 @@
             enddo
          endif  ! if (no_k)
       endif ! if (my_pe.eq.pe_io)
-      call bcast(lproc_parcnt(0:numpes-1),pe_io)
+      !!call bcast(lproc_parcnt(0:numpes-1),pe_io)
 
 ! second pass: set and allocate scatter related variables
       pip = lproc_parcnt(mype)

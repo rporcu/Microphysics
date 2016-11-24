@@ -52,7 +52,6 @@
 ! Parameter constatns.
       USE param1, only: ONE, ZERO, UNDEFINED
 
-!      USE mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -157,7 +156,6 @@
 ! Parameter constatns.
       USE param1, only: ZERO, HALF, ONE, UNDEFINED
 
-!      USE mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -676,13 +674,3 @@
          'Description:',A,/'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_SOLIDS_DEM_COLL_HERTZ
-
-
-
-
-
-
-
-
-
-

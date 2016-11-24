@@ -17,7 +17,7 @@
 
       use error_manager
       use write_res1_des
-      use mpi_utility
+      use geometry
 
       implicit none
 !-----------------------------------------------

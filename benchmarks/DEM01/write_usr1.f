@@ -34,7 +34,6 @@
       use discretelement, only: max_pip, particles
       use discretelement, only: des_vel_new
       use functions, only: is_normal
-      use mpi_utility, only: global_sum
 
       implicit none
 
@@ -55,7 +54,8 @@
          endif
       enddo
 
-      call global_sum(gTemp, gTemp0)
+      gTemp0 = gTemp
+      ! call global_sum(gTemp, gTemp0)
 
       if(myPE == PE_IO) then
          gTemp = gTemp0/(3.0d0*DBLE(particles))

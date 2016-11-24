@@ -23,7 +23,6 @@
 
       USE geometry
       USE compar
-      USE mpi_utility
       USE functions
 
       use machine

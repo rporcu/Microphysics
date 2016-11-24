@@ -15,7 +15,6 @@
       USE param1
 
       USE compar
-      USE mpi_utility
       USE functions
       use machine
       use funits

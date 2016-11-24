@@ -85,8 +85,6 @@
       use compar, only: numPEs
       use machine, only: OPEN_N1
 
-      use mpi_utility, only: BCAST
-      use mpi_utility, only: GLOBAL_ALL_SUM
 
       implicit none
 
@@ -163,11 +161,11 @@
             CALL FLUSH_ERR_MSG
          ENDIF
 
-         CALL BCAST(lVERSION, PE_IO)
+         ! !CALL BCAST(lVERSION, PE_IO)
 
 ! Allocate the collision restart map array. All ranks allocatet this
 ! array so that mapping the collision data can be done in parallel.
-         CALL BCAST(cIN_COUNT, PE_IO)
+         ! !CALL BCAST(cIN_COUNT, PE_IO)
          allocate( cRestartMap(cIN_COUNT), STAT=IER)
          IF(IER/=0) THEN
             WRITE(ERR_MSG, 1200) 'cRestartMap', trim(iVAL(cIN_COUNT))
@@ -177,7 +175,7 @@
  1200 FORMAT('Error 1200: Unable to allocate sufficient memory to ',&
          'read in DES',/'restart file. size(',A,') = ',A)
 
-         CALL GLOBAL_ALL_SUM(IER)
+         ! CALL GLOBAL_ALL_SUM(IER)
          IF(IER/=0) CALL MFIX_EXIT(myPE)
 
       ENDIF
@@ -233,7 +231,6 @@
       use geometry, only: NO_K
       use compar, only: numPEs
 
-      use mpi_utility, only: GLOBAL_SUM
       USE in_binary_512
 
       implicit none
@@ -288,7 +285,8 @@
 ! Construct an array for the Root process that states the number of
 ! (real) particles on each process.
       lScatterCnts(:) = 0; lScatterCnts(mype) = PIP
-      CALL GLOBAL_SUM(lScatterCnts,pSCATTER)
+      pSCATTER = lScatterCnts
+      ! CALL GLOBAL_SUM(lScatterCnts,pSCATTER)
 
 ! Calculate the displacements for each process in the global array.
       pDispls(0) = 0
@@ -323,8 +321,6 @@
       use compar, only: JSTART1_ALL, JEND1_ALL
       use compar, only: KSTART1_ALL, KEND1_ALL
 
-      use mpi_utility, only: BCAST
-      use mpi_utility, only: GLOBAL_ALL_SUM
 
       implicit none
 
@@ -421,11 +417,11 @@
  1002 FORMAT(3x,'X POS: ',g12.5,/3x,'Y POS: ',g12.5,/3x,'Z POS: ',g12.5)
 
 ! Send out the error flag and exit if needed.
-      CALL BCAST(IER, PE_IO)
+      ! !CALL BCAST(IER, PE_IO)
       IF(IER(PE_IO) /= 0) CALL MFIX_EXIT(myPE)
 
 ! PE_IO sends out the number of particles for each process.
-      CALL BCAST(lPAR_CNT(0:NUMPES-1), PE_IO)
+      ! !CALL BCAST(lPAR_CNT(0:NUMPES-1), PE_IO)
 
 ! Each process stores the number of particles-on-its-process. The error
 ! flag is set if that number exceeds the maximum.
@@ -433,7 +429,7 @@
       CALL PARTICLE_GROW(PIP)
 
 ! Global collection of error flags to abort it the max was exceeded.
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
          WRITE(ERR_MSG,1100)
          CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
@@ -545,9 +541,6 @@
       use compar, only: numPEs
 
       use mpi_init_des, only: DES_RESTART_GHOST
-      use mpi_utility, only: BCAST
-      use mpi_utility, only: GLOBAL_SUM
-      use mpi_utility, only: GLOBAL_ALL_SUM
       use in_binary_512i
 
       implicit none
@@ -582,7 +575,7 @@
       ENDIF
 
 ! Broadcast collision data to all the other processes.
-       CALL GLOBAL_ALL_SUM(iPAR_COL)
+       ! CALL GLOBAL_ALL_SUM(iPAR_COL)
 
 ! Determine which process owns the neighbor datasets. This is done either
 ! through matching global ids or a search. The actual method depends
@@ -602,7 +595,7 @@
 ! Construct an array for the Root process that states the number of
 ! (real) particles on each process.
       lScatterCnts(:) = 0; lScatterCnts(mype) = NEIGH_NUM
-      CALL GLOBAL_SUM(lScatterCnts,cSCATTER)
+      ! CALL GLOBAL_SUM(lScatterCnts,cSCATTER)
 
 ! Calculate the displacements for each process in the global array.
       cDispls(0) = 0
@@ -630,8 +623,6 @@
       use discretelement, only: NEIGH_MAX, NEIGH_NUM
       use functions, only: IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
 
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use mpi_utility, only: GLOBAL_ALL_MAX
 
       implicit none
 
@@ -654,10 +645,10 @@
       IER = 0
 
       MAX_ID = maxval(IGLOBAL_ID(1:PIP))
-      CALL GLOBAL_ALL_MAX(MAX_ID)
+      ! CALL GLOBAL_ALL_MAX(MAX_ID)
 
       allocate(lGLOBAL_OWNER(MAX_ID), STAT=lSTAT)
-      CALL GLOBAL_ALL_SUM(lSTAT)
+      ! CALL GLOBAL_ALL_SUM(lSTAT)
 
 ! All ranks successfully allocated the array. This permits a crude
 ! but much faster collision owner detection.
@@ -711,7 +702,7 @@
 
 ! Calculate the number of matched collisions over all processes. Throw
 ! and error if it doesn't match the number of read collisions.
-      CALL GLOBAL_ALL_SUM(lCOL_CNT)
+      ! CALL GLOBAL_ALL_SUM(lCOL_CNT)
       IF(sum(lCOL_CNT) /= cIN_COUNT) THEN
          WRITE(ERR_MSG,1000) cIN_COUNT, sum(lCOL_CNT)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -722,7 +713,7 @@
          'Matched Collisions:   ',I10)
 
 ! Sync the collision restart map arcross all ranks.
-      CALL GLOBAL_ALL_SUM(cRestartMap)
+      ! CALL GLOBAL_ALL_SUM(cRestartMap)
 
 ! Error checking and cleanup.
       DO LC1 = 1, cIN_COUNT
@@ -753,7 +744,7 @@
       ENDDO
 
 ! Send out the error flag and exit if needed.
-      CALL GLOBAL_ALL_SUM(IER, PE_IO)
+      ! CALL GLOBAL_ALL_SUM(IER, PE_IO)
       IF(IER /= 0) CALL MFIX_EXIT(myPE)
 
 ! Each process stores the number of particles-on-its-process. The error
@@ -782,8 +773,6 @@
       use discretelement, only: iGLOBAL_ID
       use discretelement, only: PIP
 
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use mpi_utility, only: GLOBAL_ALL_MAX
 
       use funits, only: DMP_LOG
 
@@ -811,10 +800,10 @@
       dFlag = (DMP_LOG .AND. setDBG)
 
       MAX_ID = maxval(IGLOBAL_ID(1:PIP))
-      CALL GLOBAL_ALL_MAX(MAX_ID)
+      ! CALL GLOBAL_ALL_MAX(MAX_ID)
 
       allocate(iLOCAL_ID(MAX_ID), STAT=lSTAT)
-      CALL GLOBAL_ALL_SUM(lSTAT)
+      ! CALL GLOBAL_ALL_SUM(lSTAT)
 
 ! All ranks successfully allocated the array. This permits a crude
 ! but much faster collision owner detection.
@@ -863,7 +852,7 @@
 ! 1100 FORMAT('Error 1100: Particle neighbor local indices are invalid.',/  &
 !         5x,'Global-ID    Local-ID',/' 1:  ',2(3x,I9),/' 2:  ',2(3x,I9))
 
-      CALL GLOBAL_ALL_SUM(UNMATCHED)
+      ! CALL GLOBAL_ALL_SUM(UNMATCHED)
       IF(UNMATCHED /= 0) THEN
          WRITE(ERR_MSG,1101) trim(iVal(UNMATCHED))
          CALL FLUSH_ERR_MSG
@@ -888,7 +877,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_0I(lNEXT_REC, INPUT_I)
 
-      use mpi_utility, only: BCAST
 
       IMPLICIT NONE
 
@@ -899,7 +887,7 @@
          READ(RDES_UNIT, REC=lNEXT_REC) INPUT_I
       ELSE
          IF(myPE == PE_IO) READ(RDES_UNIT, REC=lNEXT_REC) INPUT_I
-         CALL BCAST(INPUT_I, PE_IO)
+         ! !CALL BCAST(INPUT_I, PE_IO)
       ENDIF
 
       lNEXT_REC = lNEXT_REC + 1
@@ -915,7 +903,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1I(lNEXT_REC, INPUT_I)
 
-      use mpi_utility, only: BCAST
       USE in_binary_512i
 
       IMPLICIT NONE
@@ -932,7 +919,7 @@
       ELSE
          IF(myPE == PE_IO) &
             CALL IN_BIN_512i(RDES_UNIT, INPUT_I, lSIZE, lNEXT_REC)
-         CALL BCAST(INPUT_I, PE_IO)
+         ! !CALL BCAST(INPUT_I, PE_IO)
       ENDIF
 
 
@@ -947,7 +934,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_0D(lNEXT_REC, INPUT_D)
 
-      use mpi_utility, only: BCAST
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       DOUBLE PRECISION, INTENT(OUT) :: INPUT_D
@@ -956,7 +942,7 @@
          READ(RDES_UNIT, REC=lNEXT_REC) INPUT_D
       ELSE
          IF(myPE == PE_IO) READ(RDES_UNIT, REC=lNEXT_REC) INPUT_D
-         CALL BCAST(INPUT_D, PE_IO)
+         ! !CALL BCAST(INPUT_D, PE_IO)
       ENDIF
       lNEXT_REC = lNEXT_REC + 1
 
@@ -971,7 +957,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1D(lNEXT_REC, INPUT_D)
 
-      use mpi_utility, only: BCAST
       USE in_binary_512
 
       IMPLICIT NONE
@@ -988,7 +973,7 @@
       ELSE
          IF(myPE == PE_IO) &
             CALL IN_BIN_512(RDES_UNIT, INPUT_D, lSIZE, lNEXT_REC)
-         CALL BCAST(INPUT_D, PE_IO)
+         ! !CALL BCAST(INPUT_D, PE_IO)
       ENDIF
 
 
@@ -1003,7 +988,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_0L(lNEXT_REC, OUTPUT_L)
 
-      use mpi_utility, only: BCAST
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       LOGICAL, INTENT(OUT) :: OUTPUT_L
@@ -1016,7 +1000,7 @@
          READ(RDES_UNIT, REC=lNEXT_REC) OUTPUT_I
       ELSE
          IF(myPE == PE_IO) READ(RDES_UNIT, REC=lNEXT_REC) OUTPUT_I
-         CALL BCAST(OUTPUT_I, PE_IO)
+         ! !CALL BCAST(OUTPUT_I, PE_IO)
       ENDIF
 
       IF(OUTPUT_I == 1) OUTPUT_L = .TRUE.
@@ -1033,7 +1017,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1L(lNEXT_REC, INPUT_L)
 
-      use mpi_utility, only: BCAST
       USE in_binary_512i
 
       IMPLICIT NONE
@@ -1053,7 +1036,7 @@
       ELSE
          IF(myPE == PE_IO) &
             CALL IN_BIN_512i(RDES_UNIT, INPUT_I, lSIZE, lNEXT_REC)
-         CALL BCAST(INPUT_I, PE_IO)
+         ! !CALL BCAST(INPUT_I, PE_IO)
       ENDIF
 
       DO LC1=1, LSIZE

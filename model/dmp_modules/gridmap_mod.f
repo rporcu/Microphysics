@@ -8,7 +8,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-        use mpi_utility
         use geometry
         use sendrecv
         use compar
@@ -112,9 +111,9 @@
 
                CLOSE(777)
             ENDIF
-            CALL BCAST(ISIZE1_ALL)
-            CALL BCAST(JSIZE1_ALL)
-            CALL BCAST(KSIZE1_ALL)
+            !CALL BCAST(ISIZE1_ALL)
+            !CALL BCAST(JSIZE1_ALL)
+            !CALL BCAST(KSIZE1_ALL)
             allocate( ISIZE_ALL(0:NODESI-1))
             allocate( JSIZE_ALL(0:NODESJ-1))
             allocate( KSIZE_ALL(0:NODESK-1))

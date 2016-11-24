@@ -6,7 +6,6 @@
       USE funits, only : UNIT_LOG
 
       use compar
-      use mpi_utility
       use funits
 
       implicit none
@@ -31,7 +30,7 @@
       ENDIF
 
 ! Terminate MPI.
-      CALL exitMPI(myID_l)
+      ! CALL exitMPI(myID_l)
 
 ! Close any open files.
       CALL CLOSE_FILE(UNIT_OUT)

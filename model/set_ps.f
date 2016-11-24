@@ -17,7 +17,6 @@
       use ps
       use compar
       use geometry
-      use mpi_utility
       use functions
 
       implicit none
@@ -88,7 +87,7 @@
 ! Each process (in DMP) only knows about the volume of the point source
 ! it sees. Invoke send/recv so that all process can calculate the total
 ! volume.
-         CALL global_all_sum(lData_dp, gData_dp)
+         ! CALL global_all_sum(lData_dp, gData_dp)
 
          PS_VOLUME(PSV) = sum(gData_dp)
          if(PS_VOLUME(PSV) == ZERO) then
@@ -194,7 +193,6 @@
       use toleranc
       use usr
       use ps
-      use mpi_utility
       use functions
 
       IMPLICIT NONE
@@ -239,7 +237,7 @@
       enddo
 
 ! Collect flag information on root.
-      CALL global_sum(lFlags_i, gFlags_i)
+      ! CALL global_sum(lFlags_i, gFlags_i)
 
 ! Write some information to the screen.
       if(myPE == PE_IO) then

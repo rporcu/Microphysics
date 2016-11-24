@@ -20,7 +20,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use mpi_utility
       use discretelement
       use desgrid
       use compar

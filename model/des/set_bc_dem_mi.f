@@ -327,7 +327,6 @@
 
       use funits, only: DMP_LOG
 
-      use mpi_utility
       use error_manager
       use desgrid, only: dg_IMIN1, dg_IMAX1
       use desgrid, only: dg_JMIN1, dg_JMAX1

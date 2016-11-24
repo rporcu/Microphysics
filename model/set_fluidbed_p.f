@@ -22,7 +22,6 @@
       USE funits
       USE geometry
       USE ic
-      USE mpi_utility
       USE param
       USE param1
       USE physprop
@@ -180,8 +179,8 @@
          ENDDO    ! end do loop (k=kmin1,kmax1)
 
 ! Global Sum
-         call global_all_sum(bed_weight)
-         call global_all_sum(area)
+         ! call global_all_sum(bed_weight)
+         ! call global_all_sum(area)
          IF (AREA /= 0.0) BED_WEIGHT = BED_WEIGHT/AREA
 
          PJ = PJ + BED_WEIGHT

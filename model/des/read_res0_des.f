@@ -13,11 +13,11 @@
       use discretelement
       use error_manager
       use machine
-      use mpi_utility
       use param1
       use read_res1_des
       use run
       use mpi_init_des, only: DES_RESTART_GHOST
+      use geometry
 
       implicit none
 

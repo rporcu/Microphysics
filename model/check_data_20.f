@@ -41,7 +41,6 @@
       USE discretelement
       USE functions
 
-      use mpi_utility
       use error_manager
 
       IMPLICIT NONE
@@ -121,7 +120,7 @@
       ENDDO  ! end do K = kstart2, kend2
 
 
-      CALL GLOBAL_ALL_OR(ABORT)
+      ! CALL GLOBAL_ALL_OR(ABORT)
       IF(ABORT) THEN
          WRITE(ERR_MSG, 2000)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
@@ -150,7 +149,7 @@
       ENDDO   ! K = kstart2, kend2
 
 
-      CALL GLOBAL_ALL_OR(ABORT)
+      ! CALL GLOBAL_ALL_OR(ABORT)
       IF(ABORT) THEN
          WRITE(ERR_MSG, 2000)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)

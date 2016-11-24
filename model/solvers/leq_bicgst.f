@@ -106,7 +106,6 @@
       USE param1
       USE geometry
       USE compar
-      USE mpi_utility
       USE sendrecv
       USE leqsol
       USE functions
@@ -458,7 +457,6 @@
       USE compar
       USE funits
       USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -564,7 +562,6 @@
       USE compar
       USE funits
       USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
@@ -675,7 +672,6 @@
       USE geometry
       USE compar
       USE sendrecv
-      USE mpi_utility
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------

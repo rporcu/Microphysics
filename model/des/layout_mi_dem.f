@@ -94,9 +94,6 @@
 ! Module procedures
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use mpi_utility, only: GLOBAL_ALL_MAX
-      use mpi_utility, only: GLOBAL_ALL_MIN
       use stl_functions_des, only: TRI_BOX_OVERLAP
       use functions, only: IS_ON_myPE_OWNS
 
@@ -271,8 +268,8 @@
       ENDDO
 
 ! Sync the full map across all ranks.
-      CALL GLOBAL_ALL_SUM(OCCUPANTS)
-      CALL GLOBAL_ALL_SUM(FULL_MAP)
+      ! CALL GLOBAL_ALL_SUM(OCCUPANTS)
+      ! CALL GLOBAL_ALL_SUM(FULL_MAP)
 
 ! Throw an error and exit if there are no occupants.
       IF(OCCUPANTS == 0) THEN
@@ -326,7 +323,7 @@
          ENDDO
       ENDIF
 
-      CALL GLOBAL_ALL_SUM(RAND_MAP)
+      ! CALL GLOBAL_ALL_SUM(RAND_MAP)
 
 ! Initialize the vacancy pointer.
       DEM_MI(BCV_I)%VACANCY = 1
@@ -437,9 +434,6 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use mpi_utility, only: GLOBAL_ALL_MAX
-      use mpi_utility, only: GLOBAL_ALL_MIN
       use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
@@ -613,8 +607,8 @@
       ENDDO
 
 ! Sync the full map across all ranks.
-      CALL GLOBAL_ALL_SUM(OCCUPANTS)
-      CALL GLOBAL_ALL_SUM(FULL_MAP)
+      ! CALL GLOBAL_ALL_SUM(OCCUPANTS)
+      ! CALL GLOBAL_ALL_SUM(FULL_MAP)
 
 ! Throw an error and exit if there are no occupants.
       IF(OCCUPANTS == 0) THEN
@@ -668,7 +662,7 @@
          ENDDO
       ENDIF
 
-      CALL GLOBAL_ALL_SUM(RAND_MAP)
+      ! CALL GLOBAL_ALL_SUM(RAND_MAP)
 
 ! Initialize the vacancy pointer.
       DEM_MI(BCV_I)%VACANCY = 1
@@ -777,9 +771,6 @@
 ! Module procedures
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
-      use mpi_utility, only: GLOBAL_ALL_SUM
-      use mpi_utility, only: GLOBAL_ALL_MAX
-      use mpi_utility, only: GLOBAL_ALL_MIN
       use stl_functions_des, only: TRI_BOX_OVERLAP
       use functions, only: IS_ON_myPE_OWNS
 
@@ -936,8 +927,8 @@
       ENDDO
 
 ! Sync the full map across all ranks.
-      CALL GLOBAL_ALL_SUM(OCCUPANTS)
-      CALL GLOBAL_ALL_SUM(FULL_MAP)
+      ! CALL GLOBAL_ALL_SUM(OCCUPANTS)
+      ! CALL GLOBAL_ALL_SUM(FULL_MAP)
 
 ! Throw an error and exit if there are no occupants.
       IF(OCCUPANTS == 0) THEN
@@ -991,7 +982,7 @@
          ENDDO
       ENDIF
 
-      CALL GLOBAL_ALL_SUM(RAND_MAP)
+      ! CALL GLOBAL_ALL_SUM(RAND_MAP)
 
 ! Initialize the vacancy pointer.
       DEM_MI(BCV_I)%VACANCY = 1
@@ -1083,7 +1074,6 @@
 
 ! Module procedures
 !---------------------------------------------------------------------//
-      use mpi_utility, only: GLOBAL_ALL_SUM
       use error_manager
       use functions
 
@@ -1137,7 +1127,6 @@
 
       END SELECT
 
-      CALL GLOBAL_ALL_SUM(DEM_MI(BCV_I)%OWNER(:))
 
       RETURN
       END SUBROUTINE SET_DEM_MI_OWNER

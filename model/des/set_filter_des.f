@@ -30,7 +30,6 @@
       use param1, only: ONE, UNDEFINED
 
       use sendrecvnode, only: DES_SETNODEINDICES
-      use mpi_utility, only: GLOBAL_ALL_MIN
 
       use error_manager
 
@@ -51,7 +50,7 @@
 ! Get the minimum DES grid cell dimension
       DG_DXYZ_MIN = min(ONE/DG_DXinv, ONE/DG_DYinv)
       IF(DO_K) DG_DXYZ_MIN = min(DG_DXYZ_MIN, ONE/DG_DZinv)
-      CALL GLOBAL_ALL_MIN(DG_DXYZ_MIN)
+      ! CALL GLOBAL_ALL_MIN(DG_DXYZ_MIN)
 
 ! Verify that the interpolation scheme doesn't exceed the grid.
       IF(DES_INTERP_WIDTH /= UNDEFINED) THEN

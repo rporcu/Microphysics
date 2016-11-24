@@ -42,7 +42,6 @@
 ! Rank ID of current process
       use compar, only: myPE
 ! Global communication function to sum to all ranks.
-      use mpi_utility, only: GLOBAL_ALL_SUM
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -93,7 +92,7 @@
       ENDDO
 
 
-      CALL GLOBAL_ALL_SUM(IER)
+      ! CALL GLOBAL_ALL_SUM(IER)
       IF(IER == 0) RETURN
 
 

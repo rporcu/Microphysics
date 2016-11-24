@@ -29,8 +29,6 @@
 ! IC Region gas volume fraction.
       use ic, only: IC_EP_G
 
-      use mpi_utility
-
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager
@@ -51,7 +49,8 @@
 
       ENDDO
 
-      CALL GLOBAL_SUM(PIP,PARTICLES)
+      particles = pip
+      ! CALL GLOBAL_SUM(PIP,PARTICLES)
 
       WRITE(ERR_MSG, 1004) PARTICLES
  1004 FORMAT(/,'Total number of particles in the system: ',I15)
@@ -111,7 +110,6 @@
 
 ! to access random number generator subroutines
       use randomno
-      use mpi_utility
       use functions, only: SET_NORMAL, fluid_cell, FUNIJK
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
@@ -132,6 +130,10 @@
       use error_manager
       use param, only: dim_m
       use param, only: dimension_i, dimension_j, dimension_k
+      use funits
+      use compar
+      use funits
+      use geometry
 
       IMPLICIT NONE
 
@@ -342,7 +344,7 @@
       ENDDO JJ_LP
 
 ! Collect the data
-      CALL GLOBAL_ALL_SUM(SOLIDS_DATA)
+      ! CALL GLOBAL_ALL_SUM(SOLIDS_DATA)
 
 ! Verify that the IC region volume is not zero.
       IF(SOLIDS_DATA(0) <= 0.0d0) THEN

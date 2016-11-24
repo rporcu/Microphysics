@@ -31,7 +31,6 @@
       use compar
       use funits
       use geometry
-      use mpi_utility
       use param1
       use fldvar
       use physprop
@@ -76,7 +75,8 @@
 
 ! In case of negative density force exit from the physical property
 ! calculation routine and reduce the time step
-      CALL global_all_sum(Err_l, Err_g)
+      err_g = err_l
+      ! CALL global_all_sum(Err_l, Err_g)
       IER = maxval(Err_g)
       if(IER == 0) return
 

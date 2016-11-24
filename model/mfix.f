@@ -70,7 +70,6 @@
       USE functions
       USE funits
       USE machine
-      USE mpi_utility
       USE output
       USE param
       USE param1

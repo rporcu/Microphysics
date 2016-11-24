@@ -21,7 +21,6 @@
       USE ic
       USE leqsol
       USE machine
-      USE mpi_utility
       USE output
       USE param
       USE param1
@@ -456,7 +455,7 @@
  1202 FORMAT(7X,'Cyclic boundary conditions in ',A,' direction',A)
  1203 FORMAT(7X,'Pressure drop (DELP_',A,') = ',G12.5)
  1210 FORMAT(7X,'X-direction cell sizes (DX) and East face locations:')
- 1211 FORMAT(7X,'Minimum value of X, or R (XMIN) =',G12.5)
+ ! 1211 FORMAT(7X,'Minimum value of X, or R (XMIN) =',G12.5)
  1212 FORMAT(7X,'Number of cells in X, or R, direction (IMAX) = ',I4)
  1213 FORMAT(7X,'Reactor length in X, or R, direction (XLENGTH) =',G12.5//)
  1220 FORMAT(7X,'Y-direction cell sizes (DY) and North face locations:')
@@ -626,7 +625,6 @@
       USE funits
       USE geometry
       USE compar         !//d
-      USE mpi_utility    !//d
       USE sendrecv    !//d
       USE functions
       IMPLICIT NONE
@@ -649,8 +647,8 @@
 
 !//SP Filling the processor ghost layer with the correct values
 
-      call gather (icbc_flag,array1,PE_IO)
-      call scatter (icbc_flag,array1,PE_IO)
+      ! call gather (icbc_flag,array1,PE_IO)
+      ! call scatter (icbc_flag,array1,PE_IO)
 
 !
 !  Superimpose internal surface flags on Initial and boundary condition flags
@@ -682,7 +680,8 @@
       ENDDO
       ENDDO
       ENDDO
-      call gather (array2,array3,PE_IO)
+      array3 = array2
+      ! call gather (array2,array3,PE_IO)
 
       if(myPE.eq.PE_IO) then
         WRITE (UNIT_OUT, 2000)
