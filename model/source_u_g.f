@@ -27,10 +27,6 @@
       USE constant, only: gravity_x
       USE bc, only: delp_x
 
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
-
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
       USE fldvar, only: u_g, u_go
@@ -55,6 +51,10 @@
       USE scales, only: p_scale
       USE fldvar, only: tau_u_g
       USE toleranc, only: dil_ep_s
+      use compar, only: imap
+      use compar, only: istart2, iend2
+      use compar, only: jstart2, jend2
+      use compar, only: kstart2, kend2
       IMPLICIT NONE
 
 ! Dummy Arguments
@@ -71,8 +71,6 @@
                  IPJKM, IMJK, IJMK, IPJMK, IJPK, IJKP
 ! Phase index
       INTEGER :: M
-! Internal surface
-      INTEGER :: ISV
 ! Pressure at east cell
       DOUBLE PRECISION :: PgE
 ! Average volume fraction

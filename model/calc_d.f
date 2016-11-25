@@ -82,14 +82,14 @@ MODULE CALC_D_MOD
       use scales, only: P_SCALE
 ! Flags: Impermeable surface and mass flow at north face, IJK of cell to north
       use functions, only: funijk
-      USE compar, only: istart3, iend3, jstart3, jend3, kend3, imap
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and size of solids phase arrays.
       use param, only: DIMENSION_3
+      use compar, only: istart2, iend2
+      use compar, only: jstart2, jend2
+      use compar, only: kstart2, kend2
 
       IMPLICIT NONE
 

@@ -52,15 +52,15 @@
 
       SUBROUTINE ADJUST_A_G(axis, A_M, B_M)
 
-      USE compar, only: istart3, iend3, jstart3, jend3, kend3, imap
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
          USE fun_avg, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param, only: dimension_3
          USE param1, only: ONE, ZERO, small_number
       use functions, only: funijk
+      use compar, only: istart2, iend2
+      use compar, only: jstart2, jend2
+      use compar, only: kstart2, kend2
       IMPLICIT NONE
 
 !                      Indices

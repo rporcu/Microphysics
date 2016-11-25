@@ -14,8 +14,6 @@
       INTEGER, INTENT(IN) :: myID
 ! Logical showing that a file unit is open.
       LOGICAL :: isOpen
-! The value passed via the dummy argument or the process ID.
-      INTEGER :: myID_l
 ! Process ID (myPE) converted to a character string.
       CHARACTER(len=64) :: myID_c
 

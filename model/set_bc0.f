@@ -14,7 +14,6 @@
 ! Modules
 !--------------------------------------------------------------------//
       use bc, only: bc_type, bc_defined
-      use fldvar, only: p_g
 
       use param, only: dimension_bc
       use param1, only: undefined_i

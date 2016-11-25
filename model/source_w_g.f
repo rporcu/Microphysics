@@ -27,10 +27,6 @@
       USE constant, only: gravity_z
       USE bc, only: delp_z
 
-      USE compar, only: kmap
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: jstart1, kstart1, kend1
-
       USE fldvar, only: p_g, ro_g, rop_g, rop_go
       USE fldvar, only: ep_g
       USE fldvar, only: w_g, w_go
@@ -54,6 +50,10 @@
       USE scales, only: p_scale
       USE fldvar, only: tau_w_g
       USE toleranc, only: dil_ep_s
+      use compar, only: kmap
+      use compar, only: istart2, iend2
+      use compar, only: jstart2, jend2
+      use compar, only: kstart2, kend2
       IMPLICIT NONE
 
 ! Dummy arguments
