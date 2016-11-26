@@ -14,6 +14,7 @@
       use bc, only: BC_PLANE
 
       USE geometry, only: ICBC_FLAG
+      USE ic
 
       USE compar
 
@@ -58,12 +59,12 @@
          IJK  = FUNIJK(I_W, J_S,   K_B)
          IJPK = FUNIJK(I_W, J_S+1, K_B)
 
-         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(IJPK)(1:1)=='.') THEN
+         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(i_w,j_s+1,k_b)==icbc_fluid) THEN
             J_S = J_S
             J_N = J_N
             BC_PLANE(BCV) = 'N'
 
-         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. ICBC_FLAG(IJK)(1:1)=='.') THEN
+         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. ICBC_FLAG(i_w,j_s,k_b)==icbc_fluid) THEN
             J_S = J_S + 1
             J_N = J_N + 1
             BC_PLANE(BCV) = 'S'
@@ -83,7 +84,7 @@
          !CALL BCAST(IJK, OWNER)
 
          WRITE(ERR_MSG, 1100) BCV, J_S, J_N, I_W, K_B,                 &
-            IJK, ICBC_FLAG(IJK),  IJPK, ICBC_FLAG(IJPK)
+            IJK, ICBC_FLAG(i_w,j_s,k_b),  IJPK, ICBC_FLAG(i_w,j_s+1,k_b)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -116,8 +117,8 @@
          IJK_WALL  = FUNIJK(I,J_WALL, K)
          IJK_FLUID = FUNIJK(I,J_FLUID,K)
 
-          IF(.NOT.(WALL_ICBC_FLAG(i,j_wall,k) .AND. &
-             ICBC_FLAG(IJK_FLUID)(1:1)=='.')) ERROR = .TRUE.
+          IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND. &
+                        ICBC_FLAG(i,j_fluid,k)== icbc_fluid)) ERROR = .TRUE.
 
        ENDDO
        ENDDO
@@ -149,12 +150,12 @@
             IJK_WALL  = FUNIJK(I,J_WALL ,K)
             IJK_FLUID = FUNIJK(I,J_FLUID,K)
 
-            IF(.NOT.(WALL_ICBC_FLAG(i,j_wall,k) .AND.                    &
-               ICBC_FLAG(IJK_FLUID)(1:1)=='.')) THEN
+            IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND.                    &
+                          ICBC_FLAG(i,j_fluid,k)==icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
-                  I, J_WALL,  K, IJK_WALL, ICBC_FLAG(IJK_WALL),        &
-                  I, J_FLUID, K, IJK_FLUID, ICBC_FLAG(IJK_FLUID)
+                  I, J_WALL,  K, IJK_WALL,  ICBC_FLAG(i,j_wall ,k),        &
+                  I, J_FLUID, K, IJK_FLUID, ICBC_FLAG(i,j_fluid,k)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
 

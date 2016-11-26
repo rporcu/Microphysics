@@ -16,6 +16,7 @@
       USE param1
       USE fldvar
       USE geometry
+      USE ic
       USE bc
       USE physprop
       USE funits
@@ -27,7 +28,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I, J, K, IJK, IJK1
+      INTEGER :: i, j, k, ib, jb, kb
       integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
@@ -55,35 +56,44 @@
       DO i = istart4, iend4
          DO j = jstart4, jend4
             DO k = kstart4, kend4
+              SELECT CASE (icbc_flag(i,j,k))
+                CASE (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
+ 
+                ib = min( iend3, max (istart3, i+1) )
+                jb = min( jend3, max (jstart3, j) )
+                kb = min( kend3, max (kstart3, k) )
 
-              IJK = funijk(i, j, k)
-              SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
-                CASE ('p', 'P', 'I', 'O', 'o')
-
-                ijk1 = bound_funijk(i+1, j, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
-
-                ijk1 = bound_funijk(i-1, j, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
-
-                ijk1 = bound_funijk(i, j+1, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
-
-                ijk1 = bound_funijk(i, j-1, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
-
-                ijk1 = bound_funijk(i, j, k+1)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
-
-                ijk1 = bound_funijk(i, j, k-1)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+ 
+                ib = min( iend3, max (istart3, i-1) )
+                jb = min( jend3, max (jstart3, j) )
+                kb = min( kend3, max (kstart3, k) )
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+ 
+                ib = min( iend3, max (istart3, i) )
+                jb = min( jend3, max (jstart3, j+1) )
+                kb = min( kend3, max (kstart3, k) )
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+ 
+                ib = min( iend3, max (istart3, i) )
+                jb = min( jend3, max (jstart3, j-1) )
+                kb = min( kend3, max (kstart3, k) )
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+ 
+                ib = min( iend3, max (istart3, i) )
+                jb = min( jend3, max (jstart3, j) )
+                kb = min( kend3, max (kstart3, k+1) )
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+ 
+                ib = min( iend3, max (istart3, i) )
+                jb = min( jend3, max (jstart3, j) )
+                kb = min( kend3, max (kstart3, k-1) )
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
               END SELECT
             ENDDO
           ENDDO
       ENDDO
 ! ----------------------------------------------------------------<<<
-
-
 ! Define the numerical value of the variable flag for all cells based
 ! on the corresponding character value of icbc_flag.  By this point the
 ! icbc_flag has been defined in all cells
@@ -92,36 +102,34 @@
          do j = jstart3, jend3
            do i = istart3, iend3
 
-           ijk = funijk(i,j,k)
-
-         SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
-         CASE ('.')
+         SELECT CASE (ICBC_FLAG(i,j,k))
+         CASE (icbc_fluid)
             FLAG(i,j,k) = 1
-         CASE ('p')
+         CASE (icbc_p_inf)
             FLAG(i,j,k) = 10
-         CASE ('P')
+         CASE (icbc_p_out)
             FLAG(i,j,k) = 11
-         CASE ('I')
+         CASE (icbc_m_inf)
             FLAG(i,j,k) = 20
-         CASE ('O')
+         CASE (icbc_m_out)
             FLAG(i,j,k) = 21
-         CASE ('o')
+         CASE (icbc_outfl)
             FLAG(i,j,k) = 31
-         CASE ('W')
+         CASE (icbc_no_s)
             FLAG(i,j,k) = 100
-         CASE ('S')
+         CASE (icbc_free)
             FLAG(i,j,k) = 101
-         CASE ('s')
+         CASE (icbc_pslip)
             FLAG(i,j,k) = 102
-         CASE ('c')
+         CASE (icbc_cycl)
             FLAG(i,j,k) = 106
-         CASE ('C')
+         CASE (icbc_cyclp)
             FLAG(i,j,k) = 107
          CASE DEFAULT
 
 ! Access to only one thread at a time
-            IF(DMP_LOG)WRITE (UNIT_LOG, 1000) IJK, ICBC_FLAG(IJK)
-            call mfix_exit(myPE)
+!           IF (DMP_LOG)WRITE (UNIT_LOG, 1000) i,j,k, ICBC_FLAG(i,j,k)
+!           call mfix_exit(myPE)
          END SELECT
 ! ----------------------------------------------------------------<<<
 

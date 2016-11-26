@@ -35,33 +35,37 @@
       SUBROUTINE INIT_ICBC_FLAG
 
       use param1, only: zero
-      use run, only: RUN_TYPE
-
+      use ic
       use functions
+      use run, only: run_type
 
       implicit none
       INTEGER :: I, J, K, IJK
 
 ! Initialize the icbc_flag array.
-      DO K = kStart3, kEnd3
-      DO J = jStart3, jEnd3
-      DO I = iStart3, iEnd3
+      DO k = kstart3, kend3
+      DO j = jstart3, jend3
+      DO i = istart3, iend3
 
          IJK = FUNIJK(I,J,K)
 
-! Initialize the ICBC Flag
-         ICBC_FLAG(IJK) = merge('   ', '.--', RUN_TYPE == 'NEW')
+         ! Initialize the ICBC Flag
+         if (run_type == 'NEW') then
+            icbc_flag(i,j,k) = icbc_undef
+         else
+            icbc_flag(i,j,k) = icbc_fluid
+         endif
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
          IF (DO_K) THEN
             IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
                IF (CYCLIC_Z_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
+                  ICBC_FLAG(i,j,k) = icbc_cyclp
                ELSEIF (CYCLIC_Z) THEN
-                  ICBC_FLAG(IJK) = 'c--'
+                  ICBC_FLAG(i,j,k) = icbc_cycl
                ELSE
-                  ICBC_FLAG(IJK) = 'W--'
+                  ICBC_FLAG(i,j,k) = icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -69,11 +73,11 @@
          IF(DO_J)THEN
             IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
                IF (CYCLIC_Y_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
+                  ICBC_FLAG(i,j,k) = icbc_cyclp
                ELSEIF (CYCLIC_Y) THEN
-                  ICBC_FLAG(IJK) = 'c--'
+                  ICBC_FLAG(i,j,k) = icbc_cycl
                ELSE
-                 ICBC_FLAG(IJK) = 'W--'
+                 ICBC_FLAG(i,j,k) = icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -81,11 +85,11 @@
          IF(DO_I)THEN
             IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
                IF (CYCLIC_X_PD) THEN
-                  ICBC_FLAG(IJK) = 'C--'
+                  ICBC_FLAG(i,j,k) = icbc_cyclp
                ELSEIF (CYCLIC_X) THEN
-                  ICBC_FLAG(IJK) = 'c--'
+                  ICBC_FLAG(i,j,k) = icbc_cycl
                ELSE
-                  ICBC_FLAG(IJK) = 'W--'
+                  ICBC_FLAG(i,j,k) = icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -93,7 +97,7 @@
          IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
              (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
              (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
-            IF (ICBC_FLAG(IJK) /= 'S--') ICBC_FLAG(IJK) = 'W--'
+            IF (ICBC_FLAG(i,j,k) /= icbc_free) ICBC_FLAG(i,j,k) = icbc_no_s
          ENDIF
 
       ENDDO ! end do loop (i=istart3, iend3)
@@ -117,10 +121,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_ICBC_FLAG
 
-
       use run, only: RUN_TYPE
 
-
+      use ic, only: icbc_undef
       use error_manager
       use functions
 
@@ -132,15 +135,13 @@
 
       IF(RUN_TYPE(1:3) /= 'NEW') RETURN
 
-
-
       CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
 
-! First check for any errors.
+      ! First check for any errors.
       DO K = kStart2, kEnd2
       DO J = jStart2, jEnd2
       DO I = iStart2, iEnd2
-         IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') ERROR = .TRUE.
+         IF (ICBC_FLAG(i,j,k) == icbc_undef) ERROR = .TRUE.
       ENDDO
       ENDDO
       ENDDO
@@ -161,7 +162,7 @@
          DO K = kStart2, kEnd2
          DO J = jStart2, jEnd2
          DO I = iStart2, iEnd2
-            IF(ICBC_FLAG(FUNIJK(I,J,K)) == '   ') THEN
+            IF (ICBC_FLAG(i,j,k) == icbc_undef) then
                WRITE(ERR_MSG,1101) I, J, K
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
@@ -211,6 +212,7 @@
       use ic, only: IC_I_W, IC_I_E
       use ic, only: IC_J_S, IC_J_N
       use ic, only: IC_K_B, IC_K_T
+      use ic, only: icbc_fluid
 
       use param, only: dimension_ic
 
@@ -239,10 +241,9 @@
          DO K = IC_K_B(ICV), IC_K_T(ICV)
          DO J = IC_J_S(ICV), IC_J_N(ICV)
          DO I = IC_I_W(ICV), IC_I_E(ICV)
-            IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-            IF(DEAD_CELL_AT(I,J,K)) CYCLE
-            IJK = FUNIJK(I,J,K)
-            WRITE(ICBC_FLAG(IJK)(1:3),"('.',I2.2)") MOD(ICV,100)
+            if  (.not.is_on_myPE_plus2layers(I,J,K)) CYCLE
+            if (dead_cell_at(I,J,K)) CYCLE
+            icbc_flag(i,j,k) = icbc_fluid
          ENDDO
          ENDDO
          ENDDO
@@ -278,6 +279,7 @@
       USE fldvar
       USE physprop
       USE bc
+      USE ic
       USE funits
       USE compar
       USE functions
@@ -313,17 +315,14 @@
             DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-               IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF(DEAD_CELL_AT(I,J,K)) CYCLE
-
-               IJK = FUNIJK(I,J,K)
+               if (.not. is_on_myPE_plus2layers(i,j,k)) CYCLE
+               if (dead_cell_at(I,J,K)) CYCLE
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
-               CASE('FREE_SLIP_WALL'); ICBC_FLAG(IJK)(1:1) = 'S'
-               CASE('NO_SLIP_WALL');   ICBC_FLAG(IJK)(1:1) = 'W'
-               CASE('PAR_SLIP_WALL');  ICBC_FLAG(IJK)(1:1) = 's'
+                  CASE('FREE_SLIP_WALL'); ICBC_FLAG(i,j,k) = icbc_free
+                  CASE('NO_SLIP_WALL');   ICBC_FLAG(i,j,k) = icbc_no_s
+                  CASE('PAR_SLIP_WALL');  ICBC_FLAG(i,j,k) = icbc_pslip
                END SELECT
-               WRITE (ICBC_FLAG(IJK)(2:3),"(I2.2)") MOD(BCV,100)
             ENDDO
             ENDDO
             ENDDO
@@ -357,6 +356,7 @@
       USE fldvar
       USE physprop
       USE bc
+      USE ic
       USE funits
       USE compar
       use functions
@@ -432,20 +432,16 @@
                IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
-               IJK = FUNIJK(I,J,K)
-
-! Verify that the FLOW BC is overwriting a wall.
+               ! Verify that the FLOW BC is overwriting a wall.
                IF(WALL_ICBC_FLAG(i,j,k)) THEN
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE ('P_OUTFLOW');    ICBC_FLAG(IJK)(1:1) = 'P'
-                  CASE ('MASS_INFLOW');  ICBC_FLAG(IJK)(1:1) = 'I'
-                  CASE ('MASS_OUTFLOW'); ICBC_FLAG(IJK)(1:1) = 'O'
-                  CASE ('OUTFLOW');      ICBC_FLAG(IJK)(1:1) = 'o'
-                  CASE ('P_INFLOW');     ICBC_FLAG(IJK)(1:1) = 'p'
+                     CASE ('P_OUTFLOW');    ICBC_FLAG(i,j,k) = icbc_p_out
+                     CASE ('MASS_INFLOW');  ICBC_FLAG(i,j,k) = icbc_m_inf
+                     CASE ('MASS_OUTFLOW'); ICBC_FLAG(i,j,k) = icbc_m_out
+                     CASE ('OUTFLOW');      ICBC_FLAG(i,j,k) = icbc_outfl
+                     CASE ('P_INFLOW');     ICBC_FLAG(i,j,k) = icbc_p_inf
                   END SELECT
-
-                  WRITE(ICBC_FLAG(IJK)(2:3),"(I2.2)") MOD(BCV,100)
 
                ELSE
                   ERROR = .TRUE.
@@ -480,7 +476,7 @@
 
 ! Verify that the FLOW BC is overwriting a wall.
                   IF(.NOT.WALL_ICBC_FLAG(i,j,k)) THEN
-                     WRITE(ERR_MSG, 1201) I,J,K, ICBC_FLAG(IJK)
+                     WRITE(ERR_MSG, 1201) I,J,K, ICBC_FLAG(i,j,k)
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF
 

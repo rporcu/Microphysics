@@ -98,10 +98,9 @@
 ! Flag for Top surface
       INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_T
 ! Cell flags (bc/ic conditions)
-! Allocatable type causes PG internal error, Ed's soln: pointers
-!      CHARACTER(LEN=3), DIMENSION(:), ALLOCATABLE :: ICBC_FLAG
-      character(LEN=3),  dimension(:), pointer :: icbc_flag
 
+! Allocatable type causes PG internal error, Ed's soln: pointers
+      integer,  dimension(:,:,:), allocatable :: icbc_flag
 
 !  one or more periodic boundary condition is used
       LOGICAL :: CYCLIC

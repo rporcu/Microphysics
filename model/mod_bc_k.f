@@ -14,6 +14,7 @@
       use bc, only: BC_PLANE
 
       USE geometry, only: ICBC_FLAG
+      USE ic
 
       USE compar
 
@@ -60,11 +61,11 @@
          IJK  = FUNIJK(I_W, J_S, K_B)
          IJKP = FUNIJK(I_W, J_S, K_B+1)
 
-         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(IJKP)(1:1)=='.')THEN
+         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(i_w,j_s,k_b+1)==icbc_fluid)THEN
             K_B = K_B
             K_T = K_T
             BC_PLANE(BCV) = 'T'
-         ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .AND. ICBC_FLAG(IJK)(1:1)=='.')THEN
+         ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .AND. ICBC_FLAG(i_w,j_s,k_b)==icbc_fluid)THEN
             K_B = K_B + 1
             K_T = K_T + 1
             BC_PLANE(BCV) = 'B'
@@ -84,7 +85,7 @@
          !CALL BCAST(IJK, OWNER)
 
          WRITE(ERR_MSG, 1100) BCV, K_B, K_T, I_W, J_S,                 &
-            IJK, ICBC_FLAG(IJK),  IJKP, ICBC_FLAG(IJKP)
+            IJK, ICBC_FLAG(i_w,j_s,k_b),  IJKP, ICBC_FLAG(i_w,j_s,k_b+1)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -118,7 +119,7 @@
          IJK_FLUID = FUNIJK(I,J,K_FLUID)
 
          IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                       &
-            ICBC_FLAG(IJK_FLUID)(1:1)=='.')) ERROR = .TRUE.
+                       ICBC_FLAG(i,j,k_fluid)==icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -149,12 +150,12 @@
             IJK_WALL = FUNIJK(I,J,K_WALL)
             IJK_FLUID = FUNIJK(I,J,K_FLUID)
 
-            IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                    &
-               ICBC_FLAG(IJK_FLUID)(1:1)=='.')) THEN
+            if (.not. (WALL_ICBC_FLAG(i,j,k_wall) .AND. &
+                            ICBC_FLAG(i,j,k_fluid)==icbc_fluid) ) THEN
 
                WRITE(ERR_MSG, 1201) &
-                  I, J, K_WALL,  IJK_WALL,  ICBC_FLAG(IJK_WALL),       &
-                  I, J, K_FLUID, IJK_FLUID, ICBC_FLAG(IJK_FLUID)
+                  I, J, K_WALL,  IJK_WALL,  ICBC_FLAG(i,j,k_wall),       &
+                  I, J, K_FLUID, IJK_FLUID, ICBC_FLAG(i,j,k_fluid)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
 

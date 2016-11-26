@@ -8,7 +8,6 @@
       INTEGER :: DIMENSION_K  ! Z-Axis
 ! Number of computational cells
       INTEGER :: DIMENSION_3  !
-      INTEGER :: DIMENSION_3L ! Local subdomain
       INTEGER :: DIMENSION_3G ! Global
       INTEGER :: DIMENSION_3P ! POST_MFIX
 ! Number of computational cells for higher order schemes

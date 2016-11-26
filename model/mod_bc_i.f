@@ -15,6 +15,7 @@
       use bc, only: BC_PLANE
 
       USE geometry, only: ICBC_FLAG
+      USE ic
 
       USE compar
 
@@ -60,23 +61,25 @@
       ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
-
+ 
          IJK  = FUNIJK(I_W,   J_S, K_B)
          IPJK = FUNIJK(I_W+1, J_S, K_B)
-
-! Flow on west boundary (fluid cell on east).
-         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(IPJK)(1:1)=='.') THEN
+ 
+         ! Flow on west boundary (fluid cell on east).
+         if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
+                  icbc_flag(i_w+1,j_s,k_b) .eq. icbc_fluid) then
             I_W = I_W
             I_E = I_E
             BC_PLANE(BCV) = 'E'
-
-! Flow on east boundary (fluid cell on west).
-         ELSEIF(WALL_ICBC_FLAG(i_w+1,j_s,k_b) .AND. ICBC_FLAG(IJK)(1:1)=='.') THEN
+ 
+         ! Flow on east boundary (fluid cell on west).
+         elseif (wall_icbc_flag(i_w+1,j_s,k_b) .and. &
+                      icbc_flag(i_w  ,j_s,k_b) .eq. icbc_fluid) then
             I_W = I_W + 1
             I_E = I_E + 1
             BC_PLANE(BCV) = 'W'
-
-! Set the plane of a value we know to be wrong so we can detect the error.
+ 
+         ! Set the plane of a value we know to be wrong so we can detect the error.
          ELSE
             BC_PLANE(BCV) = '.'
          ENDIF
@@ -94,7 +97,7 @@
          !CALL BCAST(IJK, OWNER)
 
          WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B,                 &
-            IJK, ICBC_FLAG(IJK),  IPJK, ICBC_FLAG(IPJK)
+            IJK, ICBC_FLAG(i_w,j_s,k_b), IPJK, ICBC_FLAG(i_w+1,j_s,k_b)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -129,8 +132,8 @@
          IJK_FLUID = FUNIJK(I_FLUID,J,K)
 
 ! Verify that the the fluid and wall cells match the ICBC_FLAG.
-         IF(.NOT.(WALL_ICBC_FLAG(i_wall,j,k) .AND.                       &
-            ICBC_FLAG(IJK_FLUID)(1:1) == '.')) ERROR = .TRUE.
+         IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
+                       ICBC_FLAG(i_fluid,j,k) == icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -159,12 +162,12 @@
             IJK_WALL = FUNIJK(I_WALL,J,K)
             IJK_FLUID = FUNIJK(I_FLUID,J,K)
 
-            IF(.NOT.(WALL_ICBC_FLAG(i_wall,j,k) .AND.                    &
-               ICBC_FLAG(IJK_FLUID)(1:1) == '.')) THEN
+            IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
+                          ICBC_FLAG(i_fluid,j,k) == icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
-                  I_WALL,  J, K, IJK_WALL, ICBC_FLAG(IJK_WALL),        &
-                  I_FLUID, J, K, IJK_FLUID, ICBC_FLAG(IJK_FLUID)
+                  I_WALL,  J, K, IJK_WALL, ICBC_FLAG(i_wall,j,k),        &
+                  I_FLUID, J, K, IJK_FLUID, ICBC_FLAG(i_fluid,j,k)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
          ENDDO
