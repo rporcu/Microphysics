@@ -124,7 +124,6 @@
 ! Axis decomposition
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3, DIMENSION_4
-      USE param, only: DIMENSION_3L
 
 ! Module procedures
 !---------------------------------------------------------------------//
@@ -152,17 +151,15 @@
       IF(IER /= 0) goto 500
 
 ! Flags for the momentum grids.
-      Allocate( FLAG_E (istart3:iend3,jstart3:jend3,kstart3:kend3), STAT=IER)
-      Allocate( FLAG_N (istart3:iend3,jstart3:jend3,kstart3:kend3), STAT=IER)
-      Allocate( FLAG_T (istart3:iend3,jstart3:jend3,kstart3:kend3), STAT=IER)
-      IF(IER /= 0) goto 500
+      Allocate( FLAG_E (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( FLAG_N (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( FLAG_T (istart3:iend3,jstart3:jend3,kstart3:kend3))
 
 ! Text flags for scalar grid.
-      Allocate( ICBC_FLAG (DIMENSION_3L), STAT=IER )
-      IF(IER /= 0) goto 500
+      Allocate( icbc_flag (istart3:iend3,jstart3:jend3,kstart3:kend3))
 
 ! total volume of each cell's surrounding stencil cells
-      Allocate( VOL_SURR (istart3:iend3,jstart3:jend3,kstart3:kend3), STAT=IER)
+      Allocate( VOL_SURR (istart3:iend3,jstart3:jend3,kstart3:kend3))
 
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.
