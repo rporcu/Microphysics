@@ -277,6 +277,7 @@
       implicit none
       integer, intent(in) :: i,j,k
       integer :: ijk
+      ijk = funijk(i,j,k)
       DEFAULT_WALL_AT = ICBC_FLAG(IJK)(2:3) .EQ. '--' .AND. &
          (ICBC_FLAG(IJK)(1:1) .NE. 'c'  .AND. &
          ICBC_FLAG(IJK)(1:1) .NE. 'C')
