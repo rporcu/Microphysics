@@ -107,7 +107,7 @@
       LOGICAL FUNCTION EXCLUDE_DEM_MI_CELL(lI, lJ, lK)
 
       use functions, only: FUNIJK
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: IS_ON_myPE_plus2layers
 
       use compar, only: DEAD_CELL_AT
@@ -122,7 +122,7 @@
       IF(.NOT.IS_ON_myPE_plus2layers(lI,lJ,lK)) RETURN
       IF(DEAD_CELL_AT(lI,lJ,lK)) RETURN
       IJK = FUNIJK(lI,lJ,lK)
-      IF(.NOT.fluid_cell(li,lj,lk)) RETURN
+      IF(.NOT.fluid_at(li,lj,lk)) RETURN
 
       EXCLUDE_DEM_MI_CELL = .FALSE.
       RETURN

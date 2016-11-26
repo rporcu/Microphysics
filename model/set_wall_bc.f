@@ -78,9 +78,8 @@
             IF(K1.NE.KSTART2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1,&
-                J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
 
@@ -91,9 +90,8 @@
             IF(K1.NE.KEND2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1, &
-               J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
 
@@ -104,9 +102,8 @@
             IF(J1.NE.JSTART2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1, &
-                J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
 
@@ -117,9 +114,8 @@
             IF(J1.NE.JEND2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1, &
-               J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
 
@@ -130,9 +126,8 @@
             IF(I1.NE.ISTART2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1, &
-                J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
 
@@ -143,9 +138,8 @@
             IF(I1.NE.IEND2) EXIT
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
-            IF (DEFAULT_WALL_AT(IJK)) CALL SET_WALL_BC1 (I1, I1, &
-                J1, J1, K1, K1)
+            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
+                 (I1, I1, J1, J1, K1, K1)
          ENDDO
       ENDDO
       RETURN
@@ -222,14 +216,13 @@
 
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
-
-               IF(NS_WALL_AT(IJK))THEN
+               IF(NS_WALL_AT(i,j,k))THEN
                   SIGN0 = -ONE
                ELSE
                   SIGN0 = ONE
                ENDIF
 
-               IF (wall_cell(i,j,k)) THEN
+               IF (wall_at(i,j,k)) THEN
                   IMJK = funijk(iminus(i,j,k),j,k)
                   IJMK = funijk(i,jminus(i,j,k),k)
                   IJKM = funijk(i,j,kminus(i,j,k))
@@ -238,54 +231,54 @@
                   IJKP = funijk(i,j,kplus(i,j,k))
 
 ! Fluid cell at West
-                  IF (.NOT.wall_cell(iminus(i,j,k),j,k)) THEN
+                  IF (.NOT.wall_at(iminus(i,j,k),j,k)) THEN
                      LFLUID = IMJK
 ! Wall cell at North
-                     IF (wall_cell(i,jplus(i,j,k),k)) THEN
+                     IF (wall_at(i,jplus(i,j,k),k)) THEN
                         V_G(IJK) = SIGN0*V_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
+                     IF (wall_at(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at East
-                  IF (.NOT.wall_cell(iplus(i,j,k),j,k)) THEN
+                  IF (.NOT.wall_at(iplus(i,j,k),j,k)) THEN
                      LFLUID = IPJK
 ! Wall cell at North
-                     IF (wall_cell(i,jplus(i,j,k),k)) THEN
+                     IF (wall_at(i,jplus(i,j,k),k)) THEN
                         V_G(IJK) = SIGN0*V_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
+                     IF (wall_at(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 
 ! Fluid cell at South
-                  IF (.NOT.wall_cell(i,jminus(i,j,k),k)) THEN
+                  IF (.NOT.wall_at(i,jminus(i,j,k),k)) THEN
                      LFLUID = IJMK
 ! Wall cell at East
-                     IF (wall_cell(iplus(i,j,k),j,k)) THEN
+                     IF (wall_at(iplus(i,j,k),j,k)) THEN
                         U_G(IJK) = SIGN0*U_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
+                     IF (wall_at(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at North
-                  IF (.NOT.wall_cell(i,jplus(i,j,k),k)) THEN
+                  IF (.NOT.wall_at(i,jplus(i,j,k),k)) THEN
                      LFLUID = IJPK
 ! Wall cell at East
-                     IF (wall_cell(iplus(i,j,k),j,k)) THEN
+                     IF (wall_at(iplus(i,j,k),j,k)) THEN
                         U_G(IJK) = SIGN0*U_G(LFLUID)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_cell(i,j,kplus(i,j,k))) THEN
+                     IF (wall_at(i,j,kplus(i,j,k))) THEN
                         W_G(IJK) = SIGN0*W_G(LFLUID)
                      ENDIF
                   ENDIF
@@ -293,33 +286,33 @@
 
                   IF (DO_K) THEN
 ! Fluid cell at Bottom
-                     IF (.NOT.wall_cell(i,j,kminus(i,j,k))) THEN
+                     IF (.NOT.wall_at(i,j,kminus(i,j,k))) THEN
                         LFLUID = IJKM
 ! Wall cell at East
-                        IF (wall_cell(iplus(i,j,k),j,k)) THEN
+                        IF (wall_at(iplus(i,j,k),j,k)) THEN
                            U_G(IJK) = SIGN0*U_G(LFLUID)
                         ENDIF
 ! Wall cell at North
-                        IF (wall_cell(i,jplus(i,j,k),k)) THEN
+                        IF (wall_at(i,jplus(i,j,k),k)) THEN
                            V_G(IJK) = SIGN0*V_G(LFLUID)
                         ENDIF
                      ENDIF
 
 ! Fluid cell at Top
-                     IF (.NOT.wall_cell(i,j,kplus(i,j,k))) THEN
+                     IF (.NOT.wall_at(i,j,kplus(i,j,k))) THEN
                         LFLUID = IJKP
 ! Wall cell at East
-                        IF (wall_cell(iplus(i,j,k),j,k)) THEN
+                        IF (wall_at(iplus(i,j,k),j,k)) THEN
                            U_G(IJK) = SIGN0*U_G(LFLUID)
                         ENDIF
 ! Wall cell at North
-                        IF (wall_cell(i,jplus(i,j,k),k)) THEN
+                        IF (wall_at(i,jplus(i,j,k),k)) THEN
                            V_G(IJK) = SIGN0*V_G(LFLUID)
                         ENDIF
                      ENDIF
                   ENDIF   ! end if (do_k)
 
-               ENDIF   ! end if (wall_cell(i,j,k))
+               ENDIF   ! end if (wall_at(i,j,k))
             ENDDO   ! end do loop (i = i1, i2)
          ENDDO   ! end do loop (j = j1, j2)
       ENDDO   ! end do loop (k = k1, k2)

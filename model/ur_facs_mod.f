@@ -62,7 +62,7 @@ MODULE ur_facs
 
              ijk = funijk(i,j,k)
 
-            IF (fluid_cell(i,j,k)) THEN
+            IF (fluid_at(i,j,k)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
@@ -79,7 +79,7 @@ MODULE ur_facs
              do i = istart3, iend3
 
              ijk = funijk(i,j,k)
-            IF (FLOW_AT_E(IJK)) THEN
+            IF (FLOW_AT_E(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
@@ -96,7 +96,7 @@ MODULE ur_facs
              do i = istart3, iend3
 
              ijk = funijk(i,j,k)
-            IF (FLOW_AT_N(IJK)) THEN
+            IF (FLOW_AT_N(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
@@ -115,7 +115,7 @@ MODULE ur_facs
 
              ijk = funijk(i,j,k)
 
-            IF (FLOW_AT_T(IJK)) THEN
+            IF (FLOW_AT_T(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1

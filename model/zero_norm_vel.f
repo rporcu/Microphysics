@@ -42,7 +42,7 @@
 
           ijk = funijk(i,j,k)
 
-         IF (.NOT.WALL_AT(IJK)) THEN
+         IF (.NOT.wall_at(i,j,k)) THEN
             IF (ip_at_e(i,j,k)) U_G(IJK) = ZERO
             IF (ip_at_n(i,j,k)) V_G(IJK) = ZERO
             IF (ip_at_t(i,j,k)) W_G(IJK) = ZERO
@@ -55,11 +55,11 @@
             U_G(IJK) = ZERO
             V_G(IJK) = ZERO
             W_G(IJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (I==IMAX2 .OR. &
+            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (I==IMAX2 .OR. &
                 I==IMAX3))) U_G(IMJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (J==JMAX2 .OR. &
+            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (J==JMAX2 .OR. &
                 J==JMAX3))) V_G(IJMK) = ZERO
-            IF (.NOT.(CYCLIC_AT(IJK) .AND. (K==KMAX2 .OR. &
+            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (K==KMAX2 .OR. &
                 K==KMAX3))) W_G(IJKM) = ZERO
          ENDIF
 

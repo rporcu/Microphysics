@@ -169,7 +169,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, wall_cell
+      USE functions, only: funijk, wall_at
       USE functions, only: ieast, iwest, jnorth, jsouth, ktop
       USE functions, only: iminus, jminus, kminus
 
@@ -233,7 +233,7 @@
       IJKS  = FUNIJK(i,jtmp,k)
       IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
-      IF (wall_cell(i,j,k)) THEN
+      IF (wall_at(i,j,k)) THEN
          IJKC = IJKT
       ELSE
          IJKC = IJK
@@ -328,7 +328,7 @@
           DO I = istart3, iend3
          IJK = funijk(i,j,k)
 
-         IF (FLOW_AT_T(IJK)) THEN
+         IF (FLOW_AT_T(i,j,k)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
@@ -353,7 +353,7 @@
                A_W_G(iplus(i,j,k),j,k,W) = D_Fe
             ENDIF
 ! West face (i-1/2, j, k+1/2)
-            IF (.NOT.FLOW_AT_T(IMJK)) THEN
+            IF (.NOT.FLOW_AT_T(iminus(i,j,k),j,k)) THEN
                IF (Flux_w >= ZERO) THEN
                   A_W_G(I,J,K,W) = D_Fw + Flux_w
                ELSE
@@ -371,7 +371,7 @@
                A_W_G(i,jplus(i,j,k),k,S) = D_Fn
             ENDIF
 ! South face (i, j-1/2, k+1/2)
-            IF (.NOT.FLOW_AT_T(IJMK)) THEN
+            IF (.NOT.FLOW_AT_T(i,jminus(i,j,k),k)) THEN
               IF (Flux_s >= ZERO) THEN
                   A_W_G(I,J,K,S) = D_Fs + Flux_s
                ELSE
@@ -389,7 +389,7 @@
                A_W_G(i,j,kplus(i,j,k),B) = D_Ft
             ENDIF
 ! Bottom face (i, j, k)
-            IF (.NOT.FLOW_AT_T(IJKM)) THEN
+            IF (.NOT.FLOW_AT_T(i,j,kminus(i,j,k))) THEN
                IF (Flux_b >= ZERO) THEN
                   A_W_G(I,J,K,B) = D_Fb + Flux_b
                ELSE
@@ -490,7 +490,7 @@
           DO I = istart3, iend3
          IJK = funijk(i,j,k)
 
-         IF (FLOW_AT_T(IJK)) THEN
+         IF (FLOW_AT_T(i,j,k)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
             CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
@@ -509,7 +509,7 @@
             A_W_G(I,J,K,E) = D_Fe - XSI_E(IJK)*Flux_e
             A_W_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(IJK))*Flux_e
 ! West face (i-1/2, j, k+1/2)
-            IF (.NOT.FLOW_AT_T(IMJK)) THEN
+            IF (.NOT.FLOW_AT_T(iminus(i,j,k),j,k)) THEN
                A_W_G(I,J,K,W) = D_Fw + (ONE - XSI_E(IMJK))*Flux_w
             ENDIF
 
@@ -518,7 +518,7 @@
             A_W_G(I,J,K,N) = D_Fn - XSI_N(IJK)*Flux_n
             A_W_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(IJK))*Flux_n
 ! South face (i, j-1/2, k+1/2)
-            IF (.NOT.FLOW_AT_T(IJMK)) THEN
+            IF (.NOT.FLOW_AT_T(i,jminus(i,j,k),k)) THEN
                A_W_G(I,J,K,S) = D_Fs + (ONE - XSI_N(IJMK))*Flux_s
             ENDIF
 
@@ -526,7 +526,7 @@
             A_W_G(I,J,K,T) = D_Ft - XSI_T(IJK)*Flux_t
             A_W_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(IJK))*Flux_t
 ! Bottom face (i, j, k)
-            IF (.NOT.FLOW_AT_T(IJKM)) THEN
+            IF (.NOT.FLOW_AT_T(i,j,kminus(i,j,k))) THEN
               A_W_G(I,J,K,B) = D_Fb + (ONE - XSI_T(IJKM))*Flux_b
             ENDIF
 

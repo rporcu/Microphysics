@@ -43,7 +43,7 @@ MODULE functions
 ! Logical functions to identify indicated condition:
 !---------------------------------------------------------------------//
 ! logical function to identify various fluid/flow cells
-! LOGICAL :: fluid_cell
+! LOGICAL :: fluid_at
 ! LOGICAL :: P_FLOW_AT
 ! LOGICAL :: P_OUTFLOW_AT
 ! LOGICAL :: MASS_OUTFLOW_AT
@@ -52,8 +52,8 @@ MODULE functions
 ! LOGICAL :: FLUIDorP_FLOW_AT
 
 ! logical function to identify various wall cells
-! LOGICAL :: wall_cell
-! LOGICAL :: ns_wall_cell, fs_wall_cell, ps_wall_cell
+! LOGICAL :: wall_at
+! LOGICAL :: ns_wall_at, fs_wall_at, ps_wall_at
 ! LOGICAL :: DEFAULT_WALL_AT
 ! LOGICAL :: WALL_ICBC_FLAG
 

@@ -33,7 +33,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
 ! IJK of cell to east.
       use functions, only: ieast
 ! IJK function for I,J,K that includes mapped indices.
@@ -86,7 +86,7 @@
 
          IJK = FUNIJK(i,j,k)
 
-            IF(.NOT.fluid_cell(i,j,k)) CYCLE
+            IF(.NOT.fluid_at(i,j,k)) CYCLE
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -120,7 +120,7 @@
         DO I = istart3, iend3
 
             IJK = FUNIJK(i,j,k)
-            IF(fluid_cell(i,j,k)) THEN
+            IF(fluid_at(i,j,k)) THEN
                IJKE = FUNIJK(ieast(i,j,k),j,k)
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKE))
@@ -174,7 +174,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
 ! IJK of cell to north.
       use functions, only: jnorth
 ! IJK function for I,J,K that includes mapped indices.
@@ -223,7 +223,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.fluid_cell(i,j,k)) CYCLE
+            IF(.NOT.fluid_at(i,j,k)) CYCLE
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -259,7 +259,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(fluid_cell(i,j,k)) THEN
+            IF(fluid_at(i,j,k)) THEN
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKN))
@@ -308,7 +308,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
 ! IJK of cell to top.
       use functions, only: ktop
 ! IJK function for I,J,K that includes mapped indices.
@@ -358,7 +358,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.fluid_cell(i,j,k)) CYCLE
+            IF(.NOT.fluid_at(i,j,k)) CYCLE
 
             IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
             IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
@@ -388,7 +388,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(fluid_cell(i,j,k)) THEN
+            IF(fluid_at(i,j,k)) THEN
                IJKT = FUNIJK(i,j,ktop(i,j,k))
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKT))

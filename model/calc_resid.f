@@ -85,7 +85,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IJKW = FUNIJK(iwest(i,j,k),j,k)
             IJKE = FUNIJK(ieast(i,j,k),j,k)
             IJKS = FUNIJK(i,jsouth(i,j,k),k)
@@ -289,7 +289,7 @@
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
-         IF (fluid_cell(i,j,k) .AND. ABS(VAR(IJK)) > TOL) THEN
+         IF (fluid_at(i,j,k) .AND. ABS(VAR(IJK)) > TOL) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
@@ -475,7 +475,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
 
 ! evaluating the residual at cell ijk:
             NUM1 = ABS(B_M(I,J,K))
@@ -662,7 +662,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(wall_cell(i,j,k)) cycle
+        IF(wall_at(i,j,k)) cycle
 
          IF (.NOT.ip_at_e(i,j,k)) THEN
 
@@ -868,8 +868,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(wall_cell(i,j,k)) cycle
-
+        IF(wall_at(i,j,k)) cycle
 
          IF (.NOT.ip_at_n(i,j,k)) THEN
 
@@ -1077,7 +1076,7 @@
         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
 ! Skip walls where some values are undefined.
-        IF(wall_cell(i,j,k)) cycle
+        IF(wall_at(i,j,k)) cycle
 
          IF (.NOT.ip_at_t(i,j,k)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)

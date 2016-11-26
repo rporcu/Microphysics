@@ -47,7 +47,7 @@
 ! Flag for 3D simulations.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: is_normal
 
 ! Global Parameters:
@@ -96,7 +96,7 @@
          i = pijk(np,1)
          j = pijk(np,2)
          k = pijk(np,3)
-         if (.NOT.fluid_cell(i,j,k)) CYCLE
+         if (.NOT.fluid_at(i,j,k)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO
@@ -348,7 +348,7 @@
 ! Flag for 3D simulatoins.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: funijk, iminus, jminus, kminus
 
 ! Global Parameters:
@@ -380,7 +380,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-         IF(fluid_cell(i,j,k)) THEN
+         IF(fluid_at(i,j,k)) THEN
             IMJK = funijk(iminus(i,j,k),j,k)
             Uc(IJK) = AVG(lUG(IMJK),lUG(IJK))
 

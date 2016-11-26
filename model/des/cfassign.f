@@ -155,22 +155,22 @@
          vol_node_uncorr = avg_factor*(vol_ijk + vol_ipjk + vol_ijpk + vol_ipjpk)
          vol_node_actual_count = vol_node_count
 
-         IF(.NOT.FLUID_AT(ijk)) THEN
+         IF(.NOT.fluid_at(iraw,jraw,kraw)) THEN
             vol_node_actual_count = vol_node_actual_count - 1
             vol_ijk  = zero
          ENDIF
 
-         IF(.NOT.FLUID_AT(ipjk)) THEN
+         IF(.NOT.fluid_at(ip,j,k)) THEN
             vol_node_actual_count = vol_node_actual_count - 1
             vol_ipjk  = zero
          ENDIF
 
-         IF(.NOT.FLUID_AT(ijpk)) THEN
+         IF(.NOT.fluid_at(i,jp,k)) THEN
             vol_node_actual_count = vol_node_actual_count - 1
             vol_ijpk  = zero
          ENDIF
 
-         IF(.NOT.FLUID_AT(ipjpk)) THEN
+         IF(.NOT.fluid_at(ip,jp,k)) THEN
             vol_node_actual_count = vol_node_actual_count - 1
             vol_ipjpk = zero
          ENDIF
@@ -178,7 +178,7 @@
 ! this will have non-zero values for non-fluid cells at the
 ! west/south/bottom borders but not for east/north/top borders?
          des_vol_node(ijk) = avg_factor*(vol_ijk + vol_ipjk + &
-            vol_ijpk + vol_ipjpk)
+                                         vol_ijpk + vol_ipjpk)
 
          IF (DO_K) THEN
             KP     = kmap_c(kraw+1)
@@ -195,22 +195,22 @@
             vol_node_uncorr = avg_factor*(vol_node_uncorr + vol_ijkp + &
                vol_ipjkp + vol_ijpkp + vol_ipjpkp)
 
-            IF(.NOT.FLUID_AT(ijkp)) THEN
+            IF(.NOT.fluid_at(i,j,kp)) THEN
                vol_node_actual_count = vol_node_actual_count - 1
                vol_ijkp   = zero
             ENDIF
 
-            IF(.NOT.FLUID_AT(ipjkp)) THEN
+            IF(.NOT.fluid_at(ip,j,kp)) THEN
                vol_node_actual_count = vol_node_actual_count - 1
                vol_ipjkp  = zero
             ENDIF
 
-            IF(.NOT.FLUID_AT(ijpkp)) THEN
+            IF(.NOT.fluid_at(i,jp,kp)) THEN
                vol_node_actual_count = vol_node_actual_count - 1
                vol_ijpkp  = zero
             ENDIF
 
-            IF(.NOT.FLUID_AT(ipjpkp)) THEN
+            IF(.NOT.fluid_at(ip,jp,kp)) THEN
                vol_node_actual_count = vol_node_actual_count - 1
                vol_ipjpkp = zero
             ENDIF

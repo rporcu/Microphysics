@@ -72,7 +72,7 @@
       DO J = jstart2, jend2
       DO I = istart2, iend2
          IJK = FUNIJK(I,J,K)
-         IF (.NOT.WALL_AT(IJK)) THEN
+         IF (.NOT.wall_at(i,j,k)) THEN
 
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
@@ -113,7 +113,7 @@
             IF(W_G(IJKM) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K-1, 'W_G')
 
-         ENDIF  ! IF (.NOT.WALL_AT(IJK)) THEN
+         ENDIF  ! IF (.NOT.WALL_AT(i,j,k)) THEN
       ENDDO  ! end do I = istart2, iend2
       ENDDO  ! end do J = jstart2, jend2
       ENDDO  ! end do K = kstart2, kend2
@@ -136,13 +136,13 @@
       DO I = istart2, iend2
          IJK = FUNIJK(I,J,K)
 
-         IF (FLAG(IJK)==1 .OR. FLAG(IJK)==20) THEN
+         IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
 
 ! Ep_g must have a value > 0 and < 1
             IF(EP_G(IJK) < SMALL_NUMBER .OR. EP_G(IJK) > ONE) &
                CALL REPORT_UNPHYSICAL(ABORT, I, J, K, 'EP_G', EP_G(IJK))
 
-         ENDIF   ! IF (FLAG(IJK)==1 .OR. FLAG(IJK)==20) THEN
+         ENDIF   ! IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
       ENDDO   ! I = istart2, iend2
       ENDDO   ! J = jstart2, jend2
       ENDDO   ! K = kstart2, kend2

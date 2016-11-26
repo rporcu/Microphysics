@@ -80,7 +80,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
          ijk = funijk(i,j,k)
 
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
@@ -117,7 +117,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                ENDIF
             ENDIF
 
-         ELSE   ! if/else branch .not.fluid_cell(i,j,k)
+         ELSE   ! if/else branch .not.fluid_at(i,j,k)
 ! set the value (correction) in all wall and flow boundary cells to zero
 ! note the matrix coefficients and source vector should already be zero
 ! from the initialization of A and B but the following ensures the zero
@@ -130,7 +130,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             A_M(I,J,K,B) = ZERO
             A_M(I,J,K,0) = -ONE
             B_M(I,J,K) = ZERO
-         ENDIF   ! end if/else branch fluid_cell(i,j,k)
+         ENDIF   ! end if/else branch fluid_at(i,j,k)
       ENDDO
       ENDDO
       ENDDO
@@ -145,7 +145,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
                ijk = funijk(i,j,k)
 
-               if (fluid_cell(i,j,k)) THEN
+               if (fluid_at(i,j,k)) THEN
                   A_M(I,J,K,0) = A_M(I,J,K,0) - &
                      fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
                      EP_G(IJK)*VOL*ODT
@@ -166,7 +166,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
            do i = istart3, iend3
 
            ijk = funijk(i,j,k)
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IPJK = FUNIJK(iplus(i,j,k),j,k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
@@ -175,12 +175,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
-            if(p_flow_at(imjk)) A_m(I,J,K,W) = ZERO
-            if(p_flow_at(ipjk)) A_m(I,J,K,E) = ZERO
-            if(p_flow_at(ijmk)) A_m(I,J,K,S) = ZERO
-            if(p_flow_at(ijpk)) A_m(I,J,K,N) = ZERO
-            if(p_flow_at(ijkm)) A_m(I,J,K,B) = ZERO
-            if(p_flow_at(ijkp)) A_m(I,J,K,T) = ZERO
+            if(p_flow_at(iminus(i,j,k),j,k)) A_m(I,J,K,W) = ZERO
+            if(p_flow_at(iplus(i,j,k),j,k))  A_m(I,J,K,E) = ZERO
+            if(p_flow_at(i,jminus(i,j,k),k)) A_m(I,J,K,S) = ZERO
+            if(p_flow_at(i,jplus(i,j,k),k))  A_m(I,J,K,N) = ZERO
+            if(p_flow_at(i,j,kminus(i,j,k))) A_m(I,J,K,B) = ZERO
+            if(p_flow_at(i,j,kplus(i,j,k)))  A_m(I,J,K,T) = ZERO
          ENDIF
           end do
         end do

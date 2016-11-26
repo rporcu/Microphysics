@@ -29,6 +29,7 @@
 ! Local variables
 !-----------------------------------------------
       INTEGER :: I, J, K, L, IJK
+      INTEGER :: count
       INTEGER :: I1, I2, J1, J2, K1, K2, II, JJ, KK, IJK2
       INTEGER :: lcurpar, lpip_all(0:numpes-1), lglobal_id
 
@@ -40,32 +41,36 @@
 ! cfassign and des_init_bc called before reading the particle info
       CALL CFASSIGN
 
-      VOL_SURR(:) = ZERO
+      vol_surr(:,:,:) = ZERO
 
-      ! initialize VOL_SURR array
+      ! Initialize vol_surr array
       DO K = KSTART2, KEND1
          DO J = JSTART2, JEND1
             DO I = ISTART2, IEND1
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
+
                IJK = funijk(I,J,K)
                I1 = I
-               I2 = I+1
+               I2 = ip1(i)
                J1 = J
-               J2 = J+1
+               J2 = jp1(j)
                K1 = K
-               K2 = merge(K, K+1, NO_K)
+               K2 = kp1(k)
 
-! looping over stencil points (node values)
-               DO KK = K1, K2
-                  DO JJ = J1, J2
-                     DO II = I1, I2
-                        IF (DEAD_CELL_AT(II,JJ,KK)) CYCLE  ! skip dead cells
-                        IJK2 = funijk_map_c(II, JJ, KK)
-                        IF(fluid_at(IJK2)) &
-                           VOL_SURR(IJK) = VOL_SURR(IJK)+VOL
-                     ENDDO
-                  ENDDO
-               ENDDO
+               ! Looping over stencil points (node values)
+               count = 0
+               if(fluid_at(i1,j1,k1)) count = count + 1
+               if(fluid_at(i2,j1,k1)) count = count + 1
+               if(fluid_at(i1,j2,k1)) count = count + 1
+               if(fluid_at(i2,j2,k1)) count = count + 1
+               if(do_k) then
+                  if(fluid_at(i1,j1,k2)) count = count + 1
+                  if(fluid_at(i2,j1,k2)) count = count + 1
+                  if(fluid_at(i1,j2,k2)) count = count + 1
+                  if(fluid_at(i2,j2,k2)) count = count + 1
+               endif
+               vol_surr(i,j,k) = dble(count) * vol
+
             ENDDO
          ENDDO
       ENDDO

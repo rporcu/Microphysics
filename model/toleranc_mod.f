@@ -105,7 +105,7 @@
       LOGICAL FUNCTION IS_SMALL (V, TOL)
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: fluid_cell, funijk
+      use functions, only: fluid_at, funijk
       use param, only: dimension_3
       IMPLICIT NONE
 
@@ -127,7 +127,7 @@
 
              ijk = funijk(i,j,k)
 
-             if (fluid_cell(i,j,k)) then
+             if (fluid_at(i,j,k)) then
                if (abs(V(ijk)) > TOL) return
              end if
           end do

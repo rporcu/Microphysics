@@ -21,7 +21,7 @@
       use geometry, only: dx, dy, dz
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: is_on_mype_plus2layers
       use functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
       use compar, only: dead_cell_at

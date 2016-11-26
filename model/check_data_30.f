@@ -78,7 +78,7 @@
 
          IJK = FUNIJK(I,J,K)
 
-         IF(FLOW_AT(IJK)) THEN
+         IF(FLOW_AT(i,j,k)) THEN
 
 ! Turbulent viscosity of fluid phase.
             IF(MU_g(IJK) /= ZERO) CALL REPORT_ERROR                   &
@@ -147,13 +147,13 @@
       DO I = ISTART2, IEND2
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IJK = FUNIJK(I,J,K)
-         IF (.NOT.WALL_AT(IJK)) THEN
+         IF (.NOT.WALL_AT(i,j,k)) THEN
 
 ! Gas viscosity must be non-negative.
             IF(MU_G(IJK) < ZERO) CALL REPORT_ERROR                     &
                (IER, I, J, K, MU_G(IJK), '<', ZERO, 'MU_G')
 
-         ENDIF ! IF(.NOT.WALL_AT(IJK))
+         ENDIF ! IF(.NOT.WALL_AT(i,j,k))
       ENDDO ! DO I = ISTART2, IEND2
       ENDDO ! DO J = JSTART2, JEND2
       ENDDO ! DO K = KSTART2, KEND2

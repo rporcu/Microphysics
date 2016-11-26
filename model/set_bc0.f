@@ -584,7 +584,7 @@
 ! Only the rank that owns this I/J/K proceeds.
             if(.NOT.IS_ON_myPE_owns(I,J,K)) cycle
 ! If there is fluid at this location, store the IJK and exit loops.
-            if(fluid_cell(i,j,k)) then
+            if(fluid_at(i,j,k)) then
                gIJK(myPE,1) = I
                gIJK(myPE,2) = J
                gIJK(myPE,3) = K

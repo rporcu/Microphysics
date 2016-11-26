@@ -60,7 +60,7 @@
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
 
-               IF (.NOT.WALL_AT(IJK)) THEN
+               IF (.NOT.WALL_AT(i,j,k)) THEN
                   IF (EPGX /= UNDEFINED) EP_G(IJK) = EPGX
 
                   IF (IC_TYPE(L) == 'PATCH') THEN

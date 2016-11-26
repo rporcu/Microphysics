@@ -76,7 +76,7 @@
         DO J = jstart2, jend2
           DO I = istart2, iend2
          IJK = FUNIJK(i,j,k)
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IPJK = FUNIJK(iplus(i,j,k),j,k)
             IJPK = FUNIJK(i,jplus(i,j,k),k)
             IJKP = FUNIJK(i,j,kplus(i,j,k))
@@ -100,14 +100,14 @@
 
 ! West face (i-1/2, j, k)
             IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
+            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
                AM = ROP_GE(IMJK)*AYZ
                A_M(I,J,K,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
+            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
                AM = ROP_GN(IJMK)*AXZ
                A_M(I,J,K,S) = AM
             ENDIF
@@ -115,12 +115,12 @@
 ! Bottom face (i, j, k-1/2)
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
-               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
+               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
                   AM = ROP_GT(IJKM)*AXY
                   A_M(I,J,K,B) = AM
                ENDIF
             ENDIF
-         ENDIF   ! end if (fluid_cell(i,j,k))
+         ENDIF   ! end if (fluid_at(i,j,k))
       ENDDO
       ENDDO
       ENDDO

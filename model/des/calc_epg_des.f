@@ -36,7 +36,7 @@
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: FUNIJK
 
 ! Rank ID of current process
@@ -72,7 +72,7 @@
 
          IJK = FUNIJK(i,j,k)
 ! Skip wall cells.
-         IF(.NOT.fluid_cell(i,j,k)) CYCLE
+         IF(.NOT.fluid_at(i,j,k)) CYCLE
 ! Initialize EP_g and the accumulator.
          EP_G(IJK) = ONE
          SUM_EPS = ZERO
@@ -113,7 +113,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.fluid_cell(i,j,k)) CYCLE
+            IF(.NOT.fluid_at(i,j,k)) CYCLE
             IF(EP_G(IJK) > ZERO .AND. EP_G(IJK) <= ONE) CYCLE
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&

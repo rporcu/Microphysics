@@ -90,15 +90,13 @@
       INTEGER :: IJKMAX4, IJKMIN4
 
 ! Cell flags.
-      INTEGER, DIMENSION(:), ALLOCATABLE :: FLAG
-! Cell flags with 3rd layer.
-      INTEGER, DIMENSION(:), ALLOCATABLE :: FLAG3
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG
 ! Flag for the East surface
-      INTEGER, DIMENSION(:), ALLOCATABLE :: FLAG_E
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_E
 ! Flag for North surface
-      INTEGER, DIMENSION(:), ALLOCATABLE :: FLAG_N
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_N
 ! Flag for Top surface
-      INTEGER, DIMENSION(:), ALLOCATABLE :: FLAG_T
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_T
 ! Cell flags (bc/ic conditions)
 ! Allocatable type causes PG internal error, Ed's soln: pointers
 !      CHARACTER(LEN=3), DIMENSION(:), ALLOCATABLE :: ICBC_FLAG
@@ -137,6 +135,6 @@
       DOUBLE PRECISION :: VOL
 
 ! Total volume of cell's DES stencil neighbors
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VOL_SURR
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: vol_surr
 
       END MODULE geometry
