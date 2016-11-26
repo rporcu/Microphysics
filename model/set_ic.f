@@ -70,9 +70,9 @@
                         PGX /= UNDEFINED)
                   ENDIF
 
-                  IF (UGX /= UNDEFINED) U_G(IJK) = UGX
-                  IF (VGX /= UNDEFINED) V_G(IJK) = VGX
-                  IF (WGX /= UNDEFINED) W_G(IJK) = WGX
+                  IF (UGX /= UNDEFINED) U_G(I,J,K) = UGX
+                  IF (VGX /= UNDEFINED) V_G(I,J,K) = VGX
+                  IF (WGX /= UNDEFINED) W_G(I,J,K) = WGX
 
 
 ! end of modifications for GHD theory

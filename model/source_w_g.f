@@ -140,7 +140,7 @@
             ELSE IF (EP_G(FUNIJK(i,j,ktop(i,j,k))) > DIL_EP_S) THEN
                A_M(I,J,K,T) = ONE
             ELSE
-               B_M(I,J,K) = -W_G(IJK)
+               B_M(I,J,K) = -W_G(I,J,K)
             ENDIF
 
 ! Normal case
@@ -672,7 +672,7 @@
                         A_M(I,J,K,T) = ZERO
                         A_M(I,J,K,B) = ZERO
                         A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = -W_G(IJK)
+                        B_M(I,J,K) = -W_G(I,J,K)
                         IF (BC_PLANE(L) == 'B') THEN
 ! if the fluid cell is on the bottom side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
@@ -684,7 +684,7 @@
                            A_M(i,j,kbot(i,j,k),T) = ZERO
                            A_M(i,j,kbot(i,j,k),B) = ZERO
                            A_M(i,j,kbot(i,j,k),0) = -ONE
-                           B_M(i,j,kbot(i,j,k)) = -W_G(FUNIJK(i,j,kbot(i,j,k)))
+                           B_M(i,j,kbot(i,j,k)) = -W_G(i,j,kbot(i,j,k))
                         ENDIF
                      ENDDO
                   ENDDO

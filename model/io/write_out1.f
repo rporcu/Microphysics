@@ -30,38 +30,38 @@
 !
       if (myPE == PE_IO) WRITE (UNIT_OUT, 1000) CHAR(12), TIME
       array1 = P_g
-      ! call gather (P_g,array1,root)    !//
+      ! call gather (P_g,array1,root)
       if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'P_g')
 !
       if (myPE == PE_IO) WRITE (UNIT_OUT, 1100) CHAR(12), TIME
       array1 = EP_g
-      ! call gather (EP_g,array1,root)    !//
+      ! call gather (EP_g,array1,root)
       if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'EP_g')
 !
       if (myPE == PE_IO) WRITE (UNIT_OUT, 1200) CHAR(12), TIME
       array1 = RO_g
-      ! call gather (RO_g,array1,root)    !//
+      ! call gather (RO_g,array1,root)
       if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'RO_g')
 !
-      if (myPE == PE_IO) WRITE (UNIT_OUT, 1800) CHAR(12), TIME
-      array1 = U_g
-      ! call gather (U_g,array1,root)    !//
-      if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'U_g')
+      !if (myPE == PE_IO) WRITE (UNIT_OUT, 1800) CHAR(12), TIME
+      !array1 = U_g
+      ! call gather (U_g,array1,root)
+      !if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'U_g')
 !
-      if (myPE == PE_IO) WRITE (UNIT_OUT, 1900) CHAR(12), TIME
-      array1 = V_g
-      ! call gather (V_g,array1,root)    !//
-      if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'V_g')
+      !if (myPE == PE_IO) WRITE (UNIT_OUT, 1900) CHAR(12), TIME
+      !array1 = V_g
+      ! call gather (V_g,array1,root)
+      !if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'V_g')
 !
-      if (myPE == PE_IO) WRITE (UNIT_OUT, 2000) CHAR(12), TIME
-      array1 = W_g
-      ! call gather (W_g,array1,root)    !//
-      if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'W_g')
+      !if (myPE == PE_IO) WRITE (UNIT_OUT, 2000) CHAR(12), TIME
+      !array1 = W_g
+      ! call gather (W_g,array1,root)
+      !if (myPE == PE_IO) CALL OUT_ARRAY (array1, 'W_g')
 !
       if (myPE == PE_IO) WRITE (UNIT_OUT, '(/1X,1A1)') CHAR(12)
       IF (CALL_USR) CALL USR_WRITE_OUT1
 
-      deallocate(array1)  !//
+      deallocate(array1)
 !
 !             form feed character = CHAR(12)
       if (myPE == PE_IO) WRITE (UNIT_OUT, '(/1X,1A1)') CHAR(12)

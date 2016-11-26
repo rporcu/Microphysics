@@ -48,9 +48,9 @@
       Allocate( RO_g (DIMENSION_3) )
       Allocate( ROP_g (DIMENSION_3) )
 
-      Allocate( U_g (DIMENSION_3) )
-      Allocate( V_g (DIMENSION_3) )
-      Allocate( W_g (DIMENSION_3) )
+      Allocate( U_g (is3:ie3,js3:je3,ks3:ke3) )
+      Allocate( V_g (is3:ie3,js3:je3,ks3:ke3) )
+      Allocate( W_g (is3:ie3,js3:je3,ks3:ke3) )
 
       Allocate( EP_go  (is3:ie3,js3:je3,ks3:ke3))
       Allocate( P_go   (is3:ie3,js3:je3,ks3:ke3))
@@ -65,7 +65,7 @@
       Allocate( d_n(is3:ie3,js3:je3,ks3:ke3))
       Allocate( d_t(is3:ie3,js3:je3,ks3:ke3))
 
-      Allocate( Pp_g(DIMENSION_3p) )
+      Allocate( Pp_g(is3:ie3,js3:je3,ks3:ke3) )
 
 !physprop
       Allocate( MU_g (DIMENSION_3) )

@@ -40,8 +40,8 @@
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
 !
-!                      Indices
-      INTEGER          I, J, K, IJK, IMJK, IJMK, IJKM, IM
+! Indices
+      INTEGER :: I, J, K
 !
 !=======================================================================
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
@@ -50,15 +50,12 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-         IF (.NOT.wall_at(i,j,k)) THEN
-            IM = IM1(I)
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
+            IF (.NOT.WALL_AT(i,j,k)) THEN
 
-            TRD_G(IJK) = (U_G(IJK)-U_G(IMJK))*ODX + (&
-              V_G(IJK)-V_G(IJMK))*ODY + (W_G(IJK)-W_G(IJKM))*ODZ
+              TRD_G(FUNIJK(i,j,k)) = &
+                 (U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX + &
+                 (V_G(I,J,K)-V_G(i,jminus(i,j,k),k))*ODY + &
+                 (W_G(I,J,K)-W_G(i,j,kminus(i,j,k)))*ODZ
 
 
          ENDIF

@@ -93,12 +93,12 @@ CONTAINS
             IJK = FUNIJK(I,J,K)
 
             SELECT CASE (BC_PLANE(L))
-            CASE ('E'); maxVEL = max(maxVEL,abs(U_G(IJK)))
-            CASE ('N'); maxVEL = max(maxVEL,abs(V_G(IJK)))
-            CASE ('T'); maxVEL = max(maxVEL,abs(W_G(IJK)))
-            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(funijk(iminus(i,j,k),j,k))))
-            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(funijk(i,jminus(i,j,k),k))))
-            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(funijk(i,j,kminus(i,j,k)))))
+            CASE ('E'); maxVEL = max(maxVEL,abs(U_G(I,J,K)))
+            CASE ('N'); maxVEL = max(maxVEL,abs(V_G(I,J,K)))
+            CASE ('T'); maxVEL = max(maxVEL,abs(W_G(I,J,K)))
+            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(iminus(i,j,k),j,k)))
+            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(i,jminus(i,j,k),k)))
+            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(i,j,kminus(i,j,k))))
             END SELECT
 
          ENDDO
@@ -177,12 +177,12 @@ LOOP_FLUID: DO K = kstart3, kend3
          IJK = FUNIJK(i,j,k)
 
          IF (fluid_at(i,j,k)) THEN
-            IF(ABS(U_G(IJK)) > MAX_INLET_VEL .OR. &
-               ABS(V_G(IJK)) > MAX_INLET_VEL .OR. &
-               ABS(W_G(IJK)) > MAX_INLET_VEL) THEN
+            IF(ABS(U_G(I,J,K)) > MAX_INLET_VEL .OR. &
+               ABS(V_G(I,J,K)) > MAX_INLET_VEL .OR. &
+               ABS(W_G(I,J,K)) > MAX_INLET_VEL) THEN
                CHECK_VEL_BOUND = .TRUE.
                WRITE(*,1000) MAX_INLET_VEL, I, J, K, &
-                             EP_g(IJK), U_G(IJK), V_G(IJK), W_G(IJK)
+                             EP_g(IJK), U_G(I,J,K), V_G(I,J,K), W_G(I,J,K)
                EXIT LOOP_FLUID
             ENDIF
          ENDIF

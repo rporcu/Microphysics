@@ -52,7 +52,7 @@
          lUg = Ug(yt)
 
 ! Get the MFIX solution
-         Ug_MFIX = U_G(funijk(i,j,k))
+         Ug_MFIX = U_G(i,j,k)
 
          absErr = abs(lUg - Ug_MFIX)
          relErr = abs(absErr/max(abs(lUg), SMALL_NUMBER))

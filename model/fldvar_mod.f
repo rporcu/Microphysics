@@ -25,11 +25,11 @@
 ! Macroscopic gas density (current and previous time-step values)
       DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:), ROP_go(:,:,:)
 ! x-component of gas velocity (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  U_g(:), U_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  U_g(:,:,:), U_go(:,:,:)
 ! y-component of gas velocity (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  V_g(:), V_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  V_g(:,:,:), V_go(:,:,:)
 ! z-component of gas velocity (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  W_g(:), W_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  W_g(:,:,:), W_go(:,:,:)
 
 ! Gas viscosity
       DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:)
@@ -57,6 +57,6 @@
       DOUBLE PRECISION, ALLOCATABLE ::  d_n(:,:,:)
       DOUBLE PRECISION, ALLOCATABLE ::  d_t(:,:,:)
 !
-      DOUBLE PRECISION, ALLOCATABLE ::  Pp_g(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  Pp_g(:,:,:)
 
       END MODULE fldvar

@@ -39,7 +39,7 @@ CONTAINS
       DOUBLE PRECISION, INTENT(IN) :: VOL
 
 ! component of gas velocity
-      DOUBLE PRECISION, INTENT(IN) ::  VEL_G(:)
+      DOUBLE PRECISION, INTENT(IN) ::  VEL_G(:,:,:)
 
 !     Integral of U_g*EP_g for entire volume
       DOUBLE PRECISION :: sum_g
@@ -60,10 +60,10 @@ CONTAINS
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-      IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
+         IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_at(i,j,k)) THEN
             SUM_VOL = SUM_VOL + VOL
-            SUM_G = SUM_G + vel_G(IJK)*EP_G(IJK)*VOL
+            SUM_G = SUM_G + vel_G(I,J,K)*EP_G(IJK)*VOL
          ENDIF
       END DO
       END DO

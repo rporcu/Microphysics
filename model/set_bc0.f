@@ -244,23 +244,17 @@
          P_G(IJK) = SCALE_PRESSURE(BC_P_G(BCV))
          EP_G(IJK) = BC_EP_G(BCV)
 
-         U_G(IJK) = BC_U_G(BCV)
-         V_G(IJK) = BC_V_G(BCV)
-         W_G(IJK) = BC_W_G(BCV)
+         U_G(I,J,K) = BC_U_G(BCV)
+         V_G(I,J,K) = BC_V_G(BCV)
+         W_G(I,J,K) = BC_W_G(BCV)
 
 ! When the boundary plane is located on the E, N, T side of the domain
 ! (fluid cell is located w, s, b), set the component of velocity normal
 ! to the boundary plane of the adjacent fluid cell
          SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W')
-               FIJK = BOUND_FUNIJK(IM1(I),J,K)
-               U_G(FIJK) = BC_U_G(BCV)
-            CASE ('S')
-               FIJK = BOUND_FUNIJK(I,JM1(J),K)
-               V_G(FIJK) = BC_V_G(BCV)
-            CASE ('B')
-               FIJK = BOUND_FUNIJK(I,J,KM1(K))
-               W_G(FIJK) = BC_W_G(BCV)
+            CASE ('W'); U_G(im1(i),j,k) = BC_U_G(BCV)
+            CASE ('S'); V_G(i,jm1(j),k) = BC_V_G(BCV)
+            CASE ('B'); W_G(i,j,km1(k)) = BC_W_G(BCV)
          END SELECT
 
       ENDDO   ! do i

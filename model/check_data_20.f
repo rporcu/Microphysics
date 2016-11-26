@@ -88,29 +88,29 @@
             IF(ROP_G(IJK) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'ROP_G')
 
-            IF(U_G(IJK) == UNDEFINED) &
+            IF(U_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'U_G')
 
 
-            IF(V_G(IJK) == UNDEFINED) then
+            IF(V_G(I,J,K) == UNDEFINED) then
                write(*,*) 'here'
                CALL REPORT_ERROR(ABORT, I, J, K, 'V_G')
             endif
 
-            IF(W_G(IJK) == UNDEFINED) &
+            IF(W_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'W_G')
 
-            IF(U_G(IMJK) == UNDEFINED) &
+            IF(U_G(iminus(i,j,k),j,k) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I-1, J, K, 'U_G')
 
 
-            IF(V_G(IJMK) == UNDEFINED) then
+            IF(V_G(i,jminus(i,j,k),k) == UNDEFINED) then
                write(*,*) 'or here'
                CALL REPORT_ERROR(ABORT, I, J-1, K, 'V_G')
             endif
 
 
-            IF(W_G(IJKM) == UNDEFINED) &
+            IF(W_G(i,j,kminus(i,j,k)) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K-1, 'W_G')
 
          ENDIF  ! IF (.NOT.WALL_AT(i,j,k)) THEN

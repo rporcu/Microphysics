@@ -104,26 +104,23 @@
                   ii = iw + i-1
                   jj = js + j-1
                   kk = kb + k-1
-                  cur_ijk = funijk_map_c(ii,jj,kk)
-                  ipjk    = funijk_map_c(ii+1,jj,kk)
-                  ijpk    = funijk_map_c(ii,jj+1,kk)
-                  ipjpk   = funijk_map_c(ii+1,jj+1,kk)
 
                   gst_tmp(i,j,k,1) = xe(ii)
                   gst_tmp(i,j,k,2) = yn(jj)
                   gst_tmp(i,j,k,3) = merge(DZ, zt(kk), NO_K)
-                  vst_tmp(i,j,k,1) = avg_factor*(u_g(cur_ijk)+u_g(ijpk))
-                  vst_tmp(i,j,k,2) = avg_factor*(v_g(cur_ijk)+v_g(ipjk))
+                  vst_tmp(i,j,k,1) = avg_factor*&
+                     (u_g(ii,jj,kk)+u_g(ii,jp1(jj),kk))
+                  vst_tmp(i,j,k,2) = avg_factor*&
+                     (v_g(ii,jj,kk)+v_g(ip1(ii),jj,kk))
 
                   if(DO_K) then
-                     ijpkp   = funijk_map_c(ii,jj+1,kk+1)
-                     ipjkp   = funijk_map_c(ii+1,jj,kk+1)
-                     ipjpkp  = funijk_map_c(ii+1,jj+1,kk+1)
-                     ijkp    = funijk_map_c(ii,jj,kk+1)
-                     vst_tmp(i,j,k,1) = vst_tmp(i,j,k,1) + avg_factor*(u_g(ijkp) + u_g(ijpkp))
-                     vst_tmp(i,j,k,2) = vst_tmp(i,j,k,2) + avg_factor*(v_g(ijkp) + v_g(ipjkp))
-                     vst_tmp(i,j,k,3) = avg_factor*(w_g(cur_ijk)+&
-                          w_g(ijpk)+w_g(ipjk)+w_g(ipjpk))
+                     vst_tmp(i,j,k,1) = vst_tmp(i,j,k,1) + avg_factor*&
+                        (u_g(ii,jj,kp1(kk)) + u_g(ii,jp1(jj),kp1(kk)))
+                     vst_tmp(i,j,k,2) = vst_tmp(i,j,k,2) + avg_factor*&
+                        (v_g(ii,jj,kp1(kk)) + v_g(ip1(ii),jj,kp1(kk)))
+                     vst_tmp(i,j,k,3) = avg_factor*(w_g(ii,jj,kk)+&
+                        w_g(ii,jp1(jj),kk)+w_g(ip1(ii),jj,kk)+&
+                        w_g(ip1(ii),jp1(jj),kk))
                   else
                      vst_tmp(i,j,k,3) = 0.d0
                   ENDIF
@@ -292,29 +289,28 @@
                   ii = iw + i-1
                   jj = js + j-1
                   kk = kb + k-1
-                  cur_ijk = funijk_map_c(ii,jj,kk)
-                  ipjk    = funijk_map_c(ii+1,jj,kk)
-                  ijpk    = funijk_map_c(ii,jj+1,kk)
-                  ipjpk   = funijk_map_c(ii+1,jj+1,kk)
                   GST_TMP(I,J,K,1) = XE(II)
                   GST_TMP(I,J,K,2) = YN(JJ)
                   GST_TMP(I,J,K,3) = merge(DZ, ZT(KK), NO_K)
-                  VST_TMP(I,J,K,1) = AVG_FACTOR*(U_G(CUR_IJK)+U_G(IJPK))
-                  VST_TMP(I,J,K,2) = AVG_FACTOR*(V_G(CUR_IJK)+V_G(IPJK))
+                  VST_TMP(I,J,K,1) = AVG_FACTOR*&
+                     (U_G(ii,jj,kk)+U_G(ii,jp1(jj),kk))
+                  VST_TMP(I,J,K,2) = AVG_FACTOR*&
+                     (V_G(ii,jj,kk)+V_G(ip1(ii),jj,kk))
 
                   IF(DO_K) THEN
                      IJPKP   = FUNIJK_MAP_C(II,JJ+1,KK+1)
                      IPJKP   = FUNIJK_MAP_C(II+1,JJ,KK+1)
                      IPJPKP  = FUNIJK_MAP_C(II+1,JJ+1,KK+1)
                      IJKP    = FUNIJK_MAP_C(II,JJ,KK+1)
-                     VST_TMP(I,J,K,1) = VST_TMP(I,J,K,1) + &
-                     AVG_FACTOR*(U_G(IJKP) + U_G(IJPKP))
+                     VST_TMP(I,J,K,1) = VST_TMP(I,J,K,1) + AVG_FACTOR*&
+                        (U_G(Ii,jj,kp1(kk)) + U_G(ii,jp1(jj),kp1(kk)))
 
-                     VST_TMP(I,J,K,2) = VST_TMP(I,J,K,2) + &
-                     AVG_FACTOR*(V_G(IJKP) + V_G(IPJKP))
+                     VST_TMP(I,J,K,2) = VST_TMP(I,J,K,2) + AVG_FACTOR*&
+                        (V_G(ii,jj,kp1(kk)) + V_G(ip1(ii),jj,kp1(kk)))
 
-                     VST_TMP(I,J,K,3) = AVG_FACTOR*(W_G(CUR_IJK)+&
-                          W_G(IJPK)+W_G(IPJK)+W_G(IPJPK))
+                     VST_TMP(I,J,K,3) = AVG_FACTOR*(W_G(ii,jj,kk)+&
+                        W_G(ii,jp1(jj),kk)+W_G(IP1(ii),jj,kk)+&
+                        W_G(IP1(ii),JP1(jj),kK))
                   ELSE
                      VST_TMP(I,J,K,3) = 0.D0
                   ENDIF

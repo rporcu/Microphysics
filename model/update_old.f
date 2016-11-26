@@ -39,9 +39,9 @@
                P_go(i,j,k) = P_g(ijk)
                Ro_go(i,j,k) = Ro_g(ijk)
                Rop_go(i,j,k) = Rop_g(ijk)
-               U_go(i,j,k) = U_g(ijk)
-               V_go(i,j,k) = V_g(ijk)
-               W_go(i,j,k) = W_g(ijk)
+               U_go(i,j,k) = U_g(i,j,k)
+               V_go(i,j,k) = V_g(i,j,k)
+               W_go(i,j,k) = W_g(i,j,k)
             enddo
          enddo
       enddo

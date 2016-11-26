@@ -37,17 +37,17 @@
 ! Local variables
 !-----------------------------------------------
 ! temporary velocity arrays
-      DOUBLE PRECISION, allocatable :: U_gtmp(:)
-      DOUBLE PRECISION, allocatable :: V_gtmp(:)
-      DOUBLE PRECISION, allocatable :: W_gtmp(:)
+      DOUBLE PRECISION, allocatable :: U_gtmp(:,:,:)
+      DOUBLE PRECISION, allocatable :: V_gtmp(:,:,:)
+      DOUBLE PRECISION, allocatable :: W_gtmp(:,:,:)
 ! linear equation solver method and iterations
       INTEGER :: LEQM, LEQI
 
 !-----------------------------------------------
 
-      allocate(U_gtmp(DIMENSION_3))
-      allocate(V_gtmp(DIMENSION_3))
-      allocate(W_gtmp(DIMENSION_3))
+      allocate(U_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(V_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(W_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       call lock_ambm        ! locks arrys a_m and b_m
 

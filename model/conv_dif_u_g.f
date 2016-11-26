@@ -61,36 +61,33 @@
       USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg
-      USE functions, only: funijk, iplus
+      USE functions, only: iplus
       USE geometry, only: do_k
       USE functions, only:  ip1
 
-      USE param, only: dimension_3
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(OUT) :: U(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: V(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: WW(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: U&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: V&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: WW&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: IJK, I,j,k, IP, IPJK
+      INTEGER :: I,J,K
 !---------------------------------------------------------------------//
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-
-            IJK = funijk(i,j,k)
-            IP = IP1(I)
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-
-            U(IJK) = AVG(U_G(IJK),U_G(IPJK))
-            V(IJK) = AVG(V_G(IJK),V_G(IPJK))
-            IF (DO_K) WW(IJK) = AVG(W_G(IJK),W_G(IPJK))
+            U(I,J,K) = AVG(U_G(I,J,K), U_G(iplus(i,j,k),j,k))
+            V(I,J,K) = AVG(V_G(I,J,K), V_G(iplus(i,j,k),j,k))
+            IF (DO_K) WW(I,J,K) = AVG(W_G(I,J,K), W_G(iplus(i,j,k),j,k))
           ENDDO
         ENDDO
       ENDDO
@@ -492,20 +489,15 @@
       DOUBLE PRECISION :: Flux_e, flux_w, flux_n, flux_s
       DOUBLE PRECISION :: flux_t, flux_b
 
-! temporary use of global arrays:
-! x directional velocity
-      DOUBLE PRECISION, allocatable :: U(:)
-! y directional velocity
-      DOUBLE PRECISION, allocatable :: V(:)
-! z directional velocity
-      DOUBLE PRECISION, allocatable :: WW(:)
+! x, y, z directional velocity
+      DOUBLE PRECISION, allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
 !---------------------------------------------------------------------//
 
       call lock_xsi_array
 
-      allocate(  U(DIMENSION_3) )
-      allocate(  V(DIMENSION_3) )
-      allocate( WW(DIMENSION_3) )
+      allocate(  U(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(  V(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( WW(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
       CALL GET_UCELL_GVTERMS(U, V, WW)
 

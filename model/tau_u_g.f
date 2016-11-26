@@ -99,6 +99,9 @@
                itmp = iplus(i,j,k)
                IPJMK = FUNIJK(itmp,jminus(itmp,j,k),k)
 
+
+               IPJMK = FUNIJK(iplus(i,j,k),jminus(i,j,k),k)
+
                ktmp = kminus(i,j,k)
                IPJKM = FUNIJK(iplus(i,j,ktmp),j,ktmp)
 
@@ -134,18 +137,19 @@
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
-               SSX = MU_G(IJKE)*(U_G(IPJK)-U_G(IJK))*ODX*AYZ - &
-                     MU_G(IJK)*(U_G(IJK)-U_G(IMJK))*ODX*AYZ
+               SSX = MU_G(IJKE)*(U_G(iplus(i,j,k),j,k)-U_G(I,J,K))*ODX*AYZ - &
+                  MU_G(IJK)*(U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
                SSY = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKN)),&
                            AVG_H(MU_G(IJKE),MU_G(IJKNE)))*&
-                        (V_G(IPJK)-V_G(IJK))*ODX*AXZ - &
+                        (V_G(iplus(i,j,k),j,k)-V_G(I,J,K))*ODX*AXZ - &
                      AVG_H(AVG_H(MU_G(IJKS),MU_G(IJK)),&
                            AVG_H(MU_G(IJKSE),MU_G(IJKE)))*&
-                        (V_G(IPJMK)-V_G(IJMK))*ODX*AXZ
+                           (V_G(iplus(i,j,k),jminus(i,j,k),k)-&
+                           V_G(i,jminus(i,j,k),k))*ODX*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
@@ -154,8 +158,9 @@
                              AVG_H(MU_G(IJKE),MU_G(IJKTE)))
                MU_GBE = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
                               AVG_H(MU_G(IJKBE),MU_G(IJKE)))
-               SSZ = MU_GE*(W_G(IPJK)-W_G(IJK))*ODX*AXY - &
-                     MU_GBE*(W_G(IPJKM)-W_G(IJKM))*ODX*AXY
+               SSZ = MU_GE*(W_G(iplus(i,j,k),j,k)-W_G(I,J,K))*ODX*AXY - &
+                  MU_GBE*(W_G(IPlus(i,j,k),J,KMinus(i,j,k))-&
+                  W_G(I,J,KMinus(i,j,k)))*ODX*AXY
 
 
 ! Add the terms

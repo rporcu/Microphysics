@@ -114,21 +114,12 @@
 ! w, s, or b plane then velocity of the adjacent fluid cell is set)?
 ! It should not really matter for MI...
             SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W')
-               IJK2 = funijk(iminus(i,j,k),j,k)
-               U_G(IJK2) = BC_JET_G(BCV)
-            CASE ('E')
-               U_G(IJK) = BC_JET_G(BCV)
-            CASE ('S')
-               IJK2 =  funijk(i,jminus(i,j,k),k)
-               V_G(IJK2) = BC_JET_G(BCV)
-            CASE ('N')
-               V_G(IJK) = BC_JET_G(BCV)
-            CASE ('B')
-               IJK2 =  funijk(i,j,kminus(i,j,k))
-               W_G(IJK2) = BC_JET_G(BCV)
-            CASE ('T')
-               W_G(IJK) = BC_JET_G(BCV)
+            CASE ('W'); U_G(iminus(i,j,k),j,k) = BC_JET_G(BCV)
+            CASE ('E'); U_G(I,J,K) = BC_JET_G(BCV)
+            CASE ('S'); V_G(i,jminus(i,j,k),k) = BC_JET_G(BCV)
+            CASE ('N'); V_G(I,J,K) = BC_JET_G(BCV)
+            CASE ('B'); W_G(i,j,kminus(i,j,k)) = BC_JET_G(BCV)
+            CASE ('T'); W_G(I,J,K) = BC_JET_G(BCV)
             END SELECT
          ENDDO
          ENDDO
@@ -299,21 +290,12 @@
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
             IJK = FUNIJK(I,J,K)
             SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W')
-               IJK2 = funijk(iminus(i,j,k),j,k)
-               U_G(IJK2) = BC_U_G(BCV)
-            CASE ('E')
-               U_G(IJK) = BC_U_G(BCV)
-            CASE ('S')
-               IJK2 = funijk(i,jminus(i,j,k),k)
-               V_G(IJK2) = BC_V_G(BCV)
-            CASE ('N')
-               V_G(IJK) = BC_V_G(BCV)
-            CASE ('B')
-               IJK2 = funijk(i,j,kminus(i,j,k))
-               W_G(IJK2) = BC_W_G(BCV)
-            CASE ('T')
-               W_G(IJK) = BC_W_G(BCV)
+            CASE ('W'); U_G(iminus(i,j,k),j,k) = BC_U_G(BCV)
+            CASE ('E'); U_G(I,J,K) = BC_U_G(BCV)
+            CASE ('S'); V_G(i,jminus(i,j,k),k) = BC_V_G(BCV)
+            CASE ('N'); V_G(I,J,K) = BC_V_G(BCV)
+            CASE ('B'); W_G(i,j,kminus(i,j,k)) = BC_W_G(BCV)
+            CASE ('T'); W_G(I,J,K) = BC_W_G(BCV)
             END SELECT
 
          ENDDO

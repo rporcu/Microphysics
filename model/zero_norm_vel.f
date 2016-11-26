@@ -33,35 +33,30 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      integer :: i,j,k
-      INTEGER :: IJK, IMJK, IJMK, IJKM
+      integer :: i,j,k,ijk
 
       do k = kstart3, kend3
         do j = jstart3, jend3
           do i = istart3, iend3
 
-          ijk = funijk(i,j,k)
 
-         IF (.NOT.wall_at(i,j,k)) THEN
-            IF (ip_at_e(i,j,k)) U_G(IJK) = ZERO
-            IF (ip_at_n(i,j,k)) V_G(IJK) = ZERO
-            IF (ip_at_t(i,j,k)) W_G(IJK) = ZERO
-         ELSE
+            IF (.NOT.WALL_AT(i,j,k)) THEN
+               IF (ip_at_e(i,j,k)) U_G(I,J,K) = ZERO
+               IF (ip_at_n(i,j,k)) V_G(I,J,K) = ZERO
+               IF (ip_at_t(i,j,k)) W_G(I,J,K) = ZERO
+            ELSE
 
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
+               U_G(I,J,K) = ZERO
+               V_G(I,J,K) = ZERO
+               W_G(I,J,K) = ZERO
 
-            U_G(IJK) = ZERO
-            V_G(IJK) = ZERO
-            W_G(IJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (I==IMAX2 .OR. &
-                I==IMAX3))) U_G(IMJK) = ZERO
-            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (J==JMAX2 .OR. &
-                J==JMAX3))) V_G(IJMK) = ZERO
-            IF (.NOT.(CYCLIC_AT(i,j,k) .AND. (K==KMAX2 .OR. &
-                K==KMAX3))) W_G(IJKM) = ZERO
-         ENDIF
+               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (I==IMAX2 .OR. &
+                   I==IMAX3))) U_G(IMinus(i,j,k),J,K) = ZERO
+               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (J==JMAX2 .OR. &
+                   J==JMAX3))) V_G(I,JMinus(i,j,k),K) = ZERO
+               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (K==KMAX2 .OR. &
+                   K==KMAX3))) W_G(I,J,KMinus(i,j,k)) = ZERO
+            ENDIF
 
           end do
         end do

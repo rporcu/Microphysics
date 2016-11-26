@@ -57,7 +57,7 @@
          yt = yt + dy
 ! Calculate the exact solution
          lUg = Ug(yt)
-         Ug_MFIX = U_G(funijk(i,j,k))
+         Ug_MFIX = U_G(i,j,k)
 
          absErr = abs(lUg - Ug_MFIX)
          relErr = abs(absErr/max(abs(lUg), 1.0d-15))

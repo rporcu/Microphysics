@@ -83,7 +83,7 @@
 ! --------------------------------------------------------------------//
                IF (fluid_at(iminus(i,j,k),j,k)) THEN
                   FIJK = FUNIJK(iminus(i,j,k),j,k)
-                  RVEL_G = U_G(FIJK)
+                  RVEL_G = U_G(iminus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
@@ -98,15 +98,15 @@
 !   is set and may differ from the value of the adjacent fluid cell.
 ! - For the solids phase this seems unnecessary..? Differences may arise
                   IF (ROP_G(IJK) > ZERO) THEN
-                    U_G(IJK) = ROP_G(FIJK)*U_G(FIJK)/ROP_G(IJK)
+                    U_G(I,J,K) = ROP_G(FIJK)*U_G(iminus(i,j,k),j,k)/ROP_G(IJK)
                   ELSE
-                     U_G(IJK) = ZERO
+                     U_G(I,J,K) = ZERO
                   ENDIF
 
 ! the tangential components are not explicitly handled in the boundary
 ! condition routines of the corresponding momentum equation
-                  V_G(IJK) = V_G(FIJK)
-                  W_G(IJK) = W_G(FIJK)
+                  V_G(I,J,K) = V_G(iminus(i,j,k),j,k)
+                  W_G(I,J,K) = W_G(iminus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
                ENDIF
@@ -118,7 +118,7 @@
                   FIJK = FUNIJK(iplus(i,j,k),j,k)
 ! define normal component such that it is positive when exiting the
 ! domain
-                  RVEL_G = -U_G(IJK)
+                  RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
@@ -128,15 +128,15 @@
 ! momentum eqn) is kept. values for the velocity components in the off
 ! directions are modified (needed for PO or O boundaries but not MO or
 ! PI as velocities should be fully specified by this point)
-                  IF (U_G(IJK) == UNDEFINED) THEN
+                  IF (U_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(IJK) > ZERO) THEN
-                        U_G(IJK) = ROP_G(FIJK)*U_G(FIJK)/ROP_G(IJK)
+                        U_G(I,J,K) = ROP_G(FIJK)*U_G(iplus(i,j,k),j,k)/ROP_G(IJK)
                      ELSE
-                        U_G(IJK) = ZERO
+                        U_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  V_G(IJK) = V_G(FIJK)
-                  W_G(IJK) = W_G(FIJK)
+                  V_G(I,J,K) = V_G(iplus(i,j,k),j,k)
+                  W_G(I,J,K) = W_G(iplus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
                ENDIF
@@ -146,18 +146,18 @@
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,jminus(i,j,k),k)) THEN
                   FIJK = FUNIJK(i,jminus(i,j,k),k)
-                  RVEL_G = V_G(FIJK)
+                  RVEL_G = V_G(i,jminus(i,j,k),k)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(IJK) > ZERO) THEN
-                     V_G(IJK) = ROP_G(FIJK)*V_G(FIJK)/ROP_G(IJK)
+                     V_G(I,J,K) = ROP_G(FIJK)*V_G(i,jminus(i,j,k),k)/ROP_G(IJK)
                   ELSE
-                     V_G(IJK) = ZERO
+                     V_G(I,J,K) = ZERO
                   ENDIF
-                  U_G(IJK) = U_G(FIJK)
-                  W_G(IJK) = W_G(FIJK)
+                  U_G(I,J,K) = U_G(i,jminus(i,j,k),k)
+                  W_G(I,J,K) = W_G(i,jminus(i,j,k),k)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
                ENDIF
@@ -167,20 +167,20 @@
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,jplus(i,j,k),k)) THEN
                   FIJK = FUNIJK(i,jplus(i,j,k),k)
-                  RVEL_G = -V_G(IJK)
+                  RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
 
-                  IF (V_G(IJK) == UNDEFINED) THEN
+                  IF (V_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(IJK) > ZERO) THEN
-                        V_G(IJK) = ROP_G(FIJK)*V_G(FIJK)/ROP_G(IJK)
+                        V_G(I,J,K) = ROP_G(FIJK)*V_G(i,jplus(i,j,k),k)/ROP_G(IJK)
                      ELSE
-                        V_G(IJK) = ZERO
+                        V_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  U_G(IJK) = U_G(FIJK)
-                  W_G(IJK) = W_G(FIJK)
+                  U_G(I,J,K) = U_G(i,jplus(i,j,k),k)
+                  W_G(I,J,K) = W_G(i,jplus(i,j,k),k)
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
                ENDIF
@@ -190,44 +190,44 @@
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,j,kminus(i,j,k))) THEN
                   FIJK = FUNIJK(i,j,kminus(i,j,k))
-                  RVEL_G = W_G(FIJK)
+                  RVEL_G = W_G(i,j,kminus(i,j,k))
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(IJK) > ZERO) THEN
-                     W_G(IJK) = ROP_G(FIJK)*W_G(FIJK)/ROP_G(IJK)
+                     W_G(I,J,K) = ROP_G(FIJK)*W_G(i,j,kminus(i,j,k))/ROP_G(IJK)
                   ELSE
-                     W_G(IJK) = ZERO
+                     W_G(I,J,K) = ZERO
                   ENDIF
-                  U_G(IJK) = U_G(FIJK)
-                  V_G(IJK) = V_G(FIJK)
+                  U_G(I,J,K) = U_G(i,j,kminus(i,j,k))
+                  V_G(I,J,K) = V_G(i,j,kminus(i,j,k))
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   
+               ENDIF
 
 
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,j,kplus(i,j,k))) THEN
                   FIJK = FUNIJK(i,j,kplus(i,j,k))
-                  RVEL_G = -W_G(IJK)
+                  RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
                   CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
 
-                  IF (W_G(IJK) == UNDEFINED) THEN
+                  IF (W_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(IJK) > ZERO) THEN
-                        W_G(IJK) = ROP_G(FIJK)*W_G(FIJK)/ROP_G(IJK)
+                        W_G(I,J,K) = ROP_G(FIJK)*W_G(i,j,kplus(i,j,k))/ROP_G(IJK)
                      ELSE
-                        W_G(IJK) = ZERO
+                        W_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  U_G(IJK) = U_G(FIJK)
-                  V_G(IJK) = V_G(FIJK)
+                  U_G(I,J,K) = U_G(i,j,kplus(i,j,k))
+                  V_G(I,J,K) = V_G(i,j,kplus(i,j,k))
 
                   CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
-               ENDIF   
+               ENDIF
 
             ENDDO   ! end do (i=i1,i2)
          ENDDO   ! end do (j=j1,j2)

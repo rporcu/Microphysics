@@ -34,7 +34,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I,J,K,IJK, IJKE, IJKN, IJKT
+      INTEGER :: I,J,K,IJK
 !-----------------------------------------------
 
 ! Underrelax pressure correction.  Velocity corrections should not be
@@ -47,18 +47,14 @@
             IJK = FUNIJK(i,j,k)
             IF (FLUIDORP_FLOW_AT(i,j,k)) THEN
 
-              P_G(IJK) = P_G(IJK) + UR_FAC(1)*PP_G(IJK)
+              P_G(IJK) = P_G(IJK) + UR_FAC(1)*PP_G(I,J,K)
 
-              IJKE = FUNIJK(ieast(i,j,k),j,k)
-              IJKN = FUNIJK(i,jnorth(i,j,k),k)
-
-              U_G(IJK) = U_G(IJK) - D_E(I,J,K)*(PP_G(IJKE)-PP_G(IJK))
-              V_G(IJK) = V_G(IJK) - D_N(I,J,K)*(PP_G(IJKN)-PP_G(IJK))
-
-              IF (DO_K) THEN
-                 IJKT = FUNIJK(i,j,ktop(i,j,k))
-                 W_G(IJK) = W_G(IJK) - D_T(I,J,K)*(PP_G(IJKT) - PP_G(IJK))
-              ENDIF
+              U_G(I,J,K) = U_G(I,J,K) - &
+                 D_E(I,J,K)*(PP_G(ieast(i,j,k),j,k)-PP_G(I,J,K))
+              V_G(I,J,K) = V_G(I,J,K) - &
+                 D_N(I,J,K)*(PP_G(i,jnorth(i,j,k),k)-PP_G(I,J,K))
+              IF (DO_K) W_G(I,J,K) = W_G(I,J,K) - &
+                    D_T(I,J,K)*(PP_G(i,j,ktop(i,j,k)) - PP_G(I,J,K))
 
             ENDIF
 

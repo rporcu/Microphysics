@@ -128,26 +128,26 @@
 ! delta (x.mu.du/dy)Ayz |E-W : at (i+1/2 - i-1/2, j+1/2, k)
                SSX = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKE)),&
                            AVG_H(MU_G(IJKN),MU_G(IJKNE)))*&
-                     (U_G(IJPK)-U_G(IJK))*ODY*AYZ - &
+                     (U_G(I,JPlus(i,j,k),K)-U_G(I,J,K))*ODY*AYZ - &
                      AVG_H(AVG_H(MU_G(IJKW),MU_G(IJK)),&
                            AVG_H(MU_G(IJKNW),MU_G(IJKN)))*&
-                     (U_G(IMJPK)-U_G(IMJK))*ODY*AYZ
+                     (U_G(IMinus(i,j,k),JPlus(i,j,k),K)-U_G(IMinus(i,j,k),J,K))*ODY*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dy) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at (i, j+1 - j-1, k)
-               SSY = MU_G(IJKN)*(V_G(IJPK)-V_G(IJK))*ODY*AXZ - &
-                     MU_G(IJK)*(V_G(IJK)-V_G(IJMK))*ODY*AXZ
+               SSY = MU_G(IJKN)*(V_G(I,JPlus(i,j,k),K)-V_G(I,J,K))*ODY*AXZ - &
+                     MU_G(IJK)*(V_G(I,J,K)-V_G(I,JMinus(i,j,k),K))*ODY*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dy) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at (i, j+1/2, k+1/2 - k-1/2)
                SSZ = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKT)),&
                            AVG_H(MU_G(IJKN),MU_G(IJKTN)))*&
-                     (W_G(IJPK)-W_G(IJK))*ODY*AXY - &
+                     (W_G(I,JPlus(i,j,k),K)-W_G(I,J,K))*ODY*AXY - &
                      AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
                            AVG_H(MU_G(IJKBN),MU_G(IJKN)))*&
-                     (W_G(IJPKM)-W_G(IJKM))*ODY*AXY
+                     (W_G(I,JPlus(i,j,k),KMinus(i,j,k))-W_G(I,J,KMinus(i,j,k)))*ODY*AXY
 
 ! Add the terms
                lTAU_V_G(IJK) = SBV + SSX + SSY + SSZ

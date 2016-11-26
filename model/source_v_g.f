@@ -136,7 +136,7 @@
             ELSE IF (EP_G(FUNIJK(i,jnorth(i,j,k),k)) > DIL_EP_S) THEN
                A_M(I,J,K,N) = ONE
             ELSE
-               B_M(I,J,K) = -V_G(IJK)
+               B_M(I,J,K) = -V_G(I,J,K)
             ENDIF
 
 ! Normal case
@@ -650,7 +650,6 @@
                      DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
 ! setting the velocity in the boundary cell equal to what is known
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -659,12 +658,11 @@
                         A_M(I,J,K,T) = ZERO
                         A_M(I,J,K,B) = ZERO
                         A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = -V_G(IJK)
+                        B_M(I,J,K) = -V_G(I,J,K)
                         IF (BC_PLANE(L) == 'S') THEN
 ! if the fluid cell is on the south side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
 ! known in that cell
-                           IJKS = FUNIJK(i,jsouth(i,j,k),k)
                            A_M(i,jsouth(i,j,k),k,E) = ZERO
                            A_M(i,jsouth(i,j,k),k,W) = ZERO
                            A_M(i,jsouth(i,j,k),k,N) = ZERO
@@ -672,7 +670,7 @@
                            A_M(i,jsouth(i,j,k),k,T) = ZERO
                            A_M(i,jsouth(i,j,k),k,B) = ZERO
                            A_M(i,jsouth(i,j,k),k,0) = -ONE
-                           B_M(i,jsouth(i,j,k),k) = -V_G(IJKS)
+                           B_M(i,jsouth(i,j,k),k) = -V_G(i,jsouth(i,j,k),k)
                         ENDIF
                      ENDDO
                   ENDDO

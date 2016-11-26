@@ -60,7 +60,7 @@
       use compar, only: myPE, PE_IO
 
       double precision, intent(in) :: pX(:), pY(:)
-      double precision, intent(in) :: pVel(:)
+      double precision, intent(in) :: pVel(:,:,:)
       double precision, intent(in) :: pGhia(:)
       character(len=1), intent(in) :: pVar
 
@@ -90,10 +90,10 @@
 
          if(is_On_myPE_OWNS(i,j,k)) then
             lMFIX(lc1) = &
-               pVel(funijk(i-1,j-1,k))*Sx(0)*Sy(0) + &
-               pVel(funijk(i  ,j-1,k))*Sx(1)*Sy(0) + &
-               pVel(funijk(i-1,j  ,k))*Sx(0)*Sy(1) + &
-               pVel(funijk(i  ,j  ,k))*Sx(1)*Sy(1)
+               pVel(i-1,j-1,k)*Sx(0)*Sy(0) + &
+               pVel(i  ,j-1,k)*Sx(1)*Sy(0) + &
+               pVel(i-1,j  ,k)*Sx(0)*Sy(1) + &
+               pVel(i  ,j  ,k)*Sx(1)*Sy(1)
          endif
       enddo
 
