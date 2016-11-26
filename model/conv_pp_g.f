@@ -45,7 +45,6 @@
       use matrix, only: e, w, s, n, t, b
       USE physprop
       USE geometry
-      USE compar
       USE functions
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
