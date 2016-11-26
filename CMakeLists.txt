@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
 project("MFIX" Fortran)
 
 include_directories(model/include)
@@ -51,7 +51,6 @@ set(SOURCES
   model/calc_outflow.f
   model/calc_resid.f
   model/calc_trd_g.f
-  model/check_ab_m.f
   model/check_bqend.f
   model/check_convergence.f
   model/check_data/check_axis.f
@@ -241,7 +240,6 @@ set(SOURCES
   model/solvers/DGTSV.f
   model/solvers/dgtsl.f
   model/solvers/leq_bicgs.f
-  model/solvers/leq_bicgst.f
   model/solvers/leqsol_mod.f
   model/solvers/solve_lin_eq.f
   model/solvers/xerbla.f
