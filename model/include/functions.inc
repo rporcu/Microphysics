@@ -26,7 +26,7 @@
 ! 1-D indices I, J, and K.
       INTEGER FUNCTION funijk(li,lj,lk)
       USE compar, only: c0, c1, c2
-      IMPLICIT NONE
+      implicit none
       INTEGER, INTENT(IN) :: LI, LJ, LK
       funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
@@ -35,7 +35,7 @@
 ! the 1-D indices I, J, K and IPROC.
       INTEGER FUNCTION FUNIJK_PROC(LI, LJ, LK, lproc)
       USE compar
-      IMPLICIT NONE
+      implicit none
       INTEGER, INTENT(IN) :: LI, LJ, LK, lproc
       FUNIJK_PROC = 1 + (li - istart3_all(lproc))+ &
          (lj-jstart3_all(lproc))*(iend3_all(lproc)-istart3_all(lproc)+1) &
@@ -47,7 +47,7 @@
 ! 1-D indices I, J, and K.
       INTEGER FUNCTION FUNIJK_GL (LI, LJ, LK)
       USE geometry
-      IMPLICIT NONE
+      implicit none
       INTEGER, INTENT(IN) :: LI, LJ, LK
       FUNIJK_GL = 1 + (LJ - jmin3) + (LI-imin3)*(jmax3-jmin3+1) &
          + (LK-kmin3)*(jmax3-jmin3+1)*(imax3-imin3+1)
@@ -57,7 +57,7 @@
 ! I, J, and K in IO format
       INTEGER FUNCTION FUNIJK_IO (LI, LJ, LK)
       USE geometry
-      IMPLICIT NONE
+      implicit none
       INTEGER, INTENT(IN) :: LI, LJ, LK
       FUNIJK_IO = 1 + (LI - imin2) + (LJ-jmin2)*(imax2-imin2+1) &
          + (LK-kmin2)*(jmax2-jmin2+1)*(imax2-imin2+1)
@@ -76,7 +76,7 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION IS_ON_myPE_OWNS(LI, LJ, LK)
         USE compar
-        IMPLICIT NONE
+        implicit none
 
         INTEGER, INTENT(IN) :: LI, LJ, LK
 
@@ -104,7 +104,7 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION IS_ON_myPE_wobnd (LI, LJ, LK)
         USE compar
-        IMPLICIT NONE
+        implicit none
 
         INTEGER, INTENT(IN) :: LI, LJ, LK
 
@@ -128,7 +128,7 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION IS_ON_myPE_plus1layer (LI, LJ, LK)
         USE compar
-        IMPLICIT NONE
+        implicit none
 
         INTEGER, INTENT(IN) :: LI, LJ, LK
 
@@ -152,7 +152,7 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION IS_ON_myPE_plus2layers (LI, LJ, LK)
         USE compar
-        IMPLICIT NONE
+        implicit none
 
         INTEGER, INTENT(IN) :: LI, LJ, LK
 
@@ -165,36 +165,29 @@
       END FUNCTION IS_ON_myPE_plus2layers
 
 !---------------------------------------------------------------------//
-! logical function to identify a fluid cell
-      LOGICAL FUNCTION FLUID_AT(IJK)
-      USE geometry, only: flag
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      FLUID_AT    = FLAG(IJK) .EQ. 1
-      END FUNCTION FLUID_AT
-
-      logical function fluid_cell(i,j,k)
+      ! logical function to identify a fluid cell
+      logical function fluid_at(i,j,k)
          use geometry, only: flag
          implicit none
          integer, intent(in) :: i,j,k
-         fluid_cell = (flag(funijk(i,j,k)).eq.1)
-      end function fluid_cell
+         fluid_at = (flag(i,j,k).eq.1)
+      end function fluid_at
 
-! logical function to identify a specified pressure inflow cell
-      LOGICAL FUNCTION P_FLOW_AT(IJK)
+      ! logical function to identify a specified pressure inflow cell
+      logical function p_flow_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      P_FLOW_AT = FLAG(IJK) .EQ. 10 .OR. &
-         FLAG(IJK) .EQ. 11
+      implicit none
+      integer i,j,k
+      P_FLOW_AT = flag(i,j,k) .EQ. 10 .OR. &
+                  flag(i,j,k) .EQ. 11
       END FUNCTION P_FLOW_AT
 
-! logical function to identify a specified pressure outflow cell
-      LOGICAL FUNCTION P_OUTFLOW_AT(IJK)
+      ! logical function to identify a specified pressure outflow cell
+      logical function p_outflow_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      P_OUTFLOW_AT= FLAG(IJK) .EQ. 11
+      implicit none
+      integer i,j,k
+      P_OUTFLOW_AT= flag(i,j,k) .EQ. 11
       END FUNCTION P_OUTFLOW_AT
 
 ! logical function to identify either a specified pressure inflow
@@ -204,93 +197,74 @@
       USE geometry
       implicit none
       integer, intent(in) :: i,j,k
-      FLUIDorP_FLOW_AT = (flag(FUNIJK(i,j,k)) .LE. 11)
+      FLUIDorP_FLOW_AT = (flag(i,j,k) .LE. 11)
       end function FLUIDorP_FLOW_AT
 
 ! logical function to identify a specified mass outflow cell
-      LOGICAL FUNCTION MASS_OUTFLOW_AT(IJK)
+      logical function mass_outflow_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      MASS_OUTFLOW_AT= FLAG(IJK) .EQ. 21
+      implicit none
+      integer i,j,k
+      MASS_OUTFLOW_AT= flag(i,j,k) .EQ. 21
       END FUNCTION MASS_OUTFLOW_AT
 
 ! logical function to identify a specified outflow cell
-      LOGICAL FUNCTION OUTFLOW_AT(IJK)
+      logical function outflow_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      OUTFLOW_AT  = FLAG(IJK) .EQ. 31
+      implicit none
+      integer i,j,k
+      OUTFLOW_AT  = flag(i,j,k) .EQ. 31
       END FUNCTION OUTFLOW_AT
 
 ! logical function to identify any type of flow in/out at cell
 ! pressure inflow/outflow, mass inflow/outflow or outflow
-      LOGICAL FUNCTION FLOW_AT(IJK)
+      logical function flow_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      FLOW_AT     = FLAG(IJK) .GE. 10 .AND. FLAG(IJK) .LE. 31
+      implicit none
+      integer i,j,k
+      FLOW_AT     = flag(i,j,k) .GE. 10 .AND. flag(i,j,k) .LE. 31
       END FUNCTION FLOW_AT
 
 ! Logical function to identify default walls
-      LOGICAL FUNCTION WALL_AT(IJK)
+      logical function wall_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      WALL_AT     = FLAG(IJK) .GE. 100
+      implicit none
+      INTEGER i,j,k
+      WALL_AT     = flag(i,j,k) .GE. 100
       END FUNCTION WALL_AT
 
-      logical function wall_cell(i,j,k)
-         use geometry, only: flag
-         implicit none
-         integer, intent(in) :: i,j,k
-         wall_cell = (flag(funijk(i,j,k)).ge.100)
-      end function wall_cell
-
 ! Logical function to identify a No-slip wall cell
-      LOGICAL FUNCTION NS_WALL_AT(IJK)
+      logical function ns_wall_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      NS_WALL_AT  = FLAG(IJK) .EQ. 100
-      END FUNCTION NS_WALL_AT
-
-      ! Logical function to identify a no-slip wall cell
-      logical function ns_wall_cell(i,j,k)
-         use geometry, only: flag
-         implicit none
-         integer, intent(in) :: i,j,k
-         ns_wall_cell = (flag(funijk(i,j,k)).eq.100)
-      end function ns_wall_cell
+      implicit none
+      INTEGER i,j,k
+      NS_WALL_AT  = flag(i,j,k) .EQ. 100
+      end function ns_wall_at
 
 ! Logical function to identify a Free-slip wall cell
-      LOGICAL FUNCTION FS_WALL_AT(IJK)
-      USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      FS_WALL_AT  = FLAG(IJK) .EQ. 101
-      END FUNCTION FS_WALL_AT
-
-      logical function fs_wall_cell(i,j,k)
+      logical function fs_wall_at(i,j,k)
          use geometry, only: flag
          implicit none
          integer, intent(in) :: i,j,k
-         fs_wall_cell = (flag(funijk(i,j,k)).eq.101)
-      end function fs_wall_cell
+         fs_wall_at = (flag(i,j,k).eq.101)
+      end function fs_wall_at
 
 ! Logical function to identify a Partial-slip wall cell
-      LOGICAL FUNCTION PS_WALL_AT(IJK)
+      logical function ps_wall_at(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      PS_WALL_AT  = FLAG(IJK) .EQ. 102
-      END FUNCTION PS_WALL_AT
+      implicit none
+      integer i,j,k
+      ps_wall_at  = flag(i,j,k) .EQ. 102
+      end function ps_wall_at
 
 ! Logical function to identify wall ICBC_FLAG
-      LOGICAL FUNCTION WALL_ICBC_FLAG(IJK)
+      LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer :: ijk
+      ijk = funijk(i,j,k)
+
       WALL_ICBC_FLAG = ICBC_FLAG(IJK)(1:1) .EQ. 'W' .OR. &
          ICBC_FLAG(IJK)(1:1) .EQ. 'S' .OR. &
          ICBC_FLAG(IJK)(1:1) .EQ. 's' .OR. &
@@ -298,10 +272,11 @@
          ICBC_FLAG(IJK)(1:1) .EQ. 'C'
       END FUNCTION WALL_ICBC_FLAG
 
-      LOGICAL FUNCTION DEFAULT_WALL_AT(IJK)
+      LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer :: ijk
       DEFAULT_WALL_AT = ICBC_FLAG(IJK)(2:3) .EQ. '--' .AND. &
          (ICBC_FLAG(IJK)(1:1) .NE. 'c'  .AND. &
          ICBC_FLAG(IJK)(1:1) .NE. 'C')
@@ -310,123 +285,122 @@
 
 ! Cyclic
 !---------------------------------------------------------------------//
-      LOGICAL FUNCTION CYCLIC_AT(IJK)
+      LOGICAL FUNCTION CYCLIC_AT(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      CYCLIC_AT = FLAG(IJK) .EQ. 106 .OR. &
-         FLAG(IJK) .EQ. 107
+      implicit none
+      INTEGER i,j,k
+      CYCLIC_AT = (FLAG(i,j,k) .EQ. 106 .OR. FLAG(i,j,k) .EQ. 107)
       END FUNCTION CYCLIC_AT
 
 ! logical function to identify cyclic condition at east boundary
-      LOGICAL FUNCTION CYCLIC_AT_E(IJK)
+      LOGICAL FUNCTION CYCLIC_AT_E(i,j,k)
       USE geometry, only: flag_e
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      CYCLIC_AT_E   = FLAG_E(IJK) .EQ. 2000
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      CYCLIC_AT_E   = FLAG_E(i,j,k) .EQ. 2000
       END FUNCTION CYCLIC_AT_E
 
 ! logical function to identify cyclic condition at north boundary
-      LOGICAL FUNCTION CYCLIC_AT_N(IJK)
+      LOGICAL FUNCTION CYCLIC_AT_N(i,j,k)
       USE geometry, only: flag_n
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      CYCLIC_AT_N   = FLAG_N(IJK) .EQ. 2000
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      CYCLIC_AT_N   = FLAG_N(i,j,k) .EQ. 2000
       END FUNCTION CYCLIC_AT_N
 
 ! logical function to identify cyclic condition at top boundary
-      LOGICAL FUNCTION CYCLIC_AT_T(IJK)
+      LOGICAL FUNCTION CYCLIC_AT_T(i,j,k)
       USE geometry, only: flag_t
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      CYCLIC_AT_T   = FLAG_T(IJK) .EQ. 2000
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      CYCLIC_AT_T   = FLAG_T(i,j,k) .EQ. 2000
       END FUNCTION CYCLIC_AT_T
 
 
 ! Flow boundaries
 !---------------------------------------------------------------------//
 ! identify flow at east boundary
-      LOGICAL FUNCTION FLOW_AT_E(IJK)
+      LOGICAL FUNCTION FLOW_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      FLOW_AT_E   = FLAG_E(IJK) .GE. 2000 .AND.&
-         FLAG_E(IJK) .LE. 2011
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      FLOW_AT_E   = FLAG_E(i,j,k) .GE. 2000 .AND.&
+                    FLAG_E(i,j,k) .LE. 2011
       END FUNCTION FLOW_AT_E
 
 ! identify specified flow north boundary
-      LOGICAL FUNCTION FLOW_AT_N(IJK)
+      LOGICAL FUNCTION FLOW_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      FLOW_AT_N   = FLAG_N(IJK) .GE. 2000 .AND.&
-         FLAG_N(IJK) .LE. 2011
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      FLOW_AT_N   = FLAG_N(i,j,k) .GE. 2000 .AND.&
+                    FLAG_N(i,j,k) .LE. 2011
       END FUNCTION FLOW_AT_N
 
 ! identify specified flow top boundary
-      LOGICAL FUNCTION FLOW_AT_T(IJK)
+      LOGICAL FUNCTION FLOW_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: IJK
-      FLOW_AT_T   = FLAG_T(IJK) .GE. 2000 .AND.&
-         FLAG_T(IJK) .LE. 2011
+      implicit none
+      INTEGER, INTENT(IN) :: i,j,k
+      FLOW_AT_T   = FLAG_T(i,j,k) .GE. 2000 .AND.&
+                    FLAG_T(i,j,k) .LE. 2011
       END FUNCTION FLOW_AT_T
 
 ! identify const. pressure flow top boundary
-      LOGICAL FUNCTION PFLOW_AT_E(IJK)
+      LOGICAL FUNCTION PFLOW_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      PFLOW_AT_E  = FLAG_E(IJK) .EQ. 2010 .OR.&
-         FLAG_E(IJK) .EQ. 2011
+      implicit none
+      INTEGER i,j,k
+      PFLOW_AT_E  = FLAG_E(i,j,k) .EQ. 2010 .OR.&
+                    FLAG_E(i,j,k) .EQ. 2011
       END FUNCTION PFLOW_AT_E
 
 ! identify const. pressure flow north boundary
-      LOGICAL FUNCTION PFLOW_AT_N(IJK)
+      LOGICAL FUNCTION PFLOW_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      PFLOW_AT_N  = FLAG_N(IJK) .EQ. 2010 .OR.&
-         FLAG_N(IJK) .EQ. 2011
+      implicit none
+      INTEGER i,j,k
+      PFLOW_AT_N  = FLAG_N(i,j,k) .EQ. 2010 .OR.&
+                    FLAG_N(i,j,k) .EQ. 2011
       END FUNCTION PFLOW_AT_N
 
 ! identify const. pressure flow east boundary
-      LOGICAL FUNCTION PFLOW_AT_T(IJK)
+      LOGICAL FUNCTION PFLOW_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      PFLOW_AT_T  = FLAG_T(IJK) .EQ. 2010 .OR.&
-         FLAG_T(IJK) .EQ. 2011
+      implicit none
+      INTEGER i,j,k
+      PFLOW_AT_T  = FLAG_T(i,j,k) .EQ. 2010 .OR.&
+                    FLAG_T(i,j,k) .EQ. 2011
       END FUNCTION PFLOW_AT_T
 
 ! identify specified flow east boundary
-      LOGICAL FUNCTION MFLOW_AT_E(IJK)
+      LOGICAL FUNCTION MFLOW_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      MFLOW_AT_E  = FLAG_E(IJK) .EQ. 2020 .OR. &
-         FLAG_E(IJK) .EQ. 2021 .OR. &
-         FLAG_E(IJK) .EQ. 2031
+      implicit none
+      INTEGER i,j,k
+      MFLOW_AT_E  = FLAG_E(i,j,k) .EQ. 2020 .OR. &
+                    FLAG_E(i,j,k) .EQ. 2021 .OR. &
+                    FLAG_E(i,j,k) .EQ. 2031
       END FUNCTION MFLOW_AT_E
 
 ! identify specified flow north boundary
-      LOGICAL FUNCTION MFLOW_AT_N(IJK)
+      LOGICAL FUNCTION MFLOW_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      MFLOW_AT_N  = FLAG_N(IJK) .EQ. 2020 .OR. &
-         FLAG_N(IJK) .EQ. 2021 .OR. &
-         FLAG_N(IJK) .EQ. 2031
+      implicit none
+      INTEGER i,j,k
+      MFLOW_AT_N  = FLAG_N(i,j,k) .EQ. 2020 .OR. &
+                    FLAG_N(i,j,k) .EQ. 2021 .OR. &
+                    FLAG_N(i,j,k) .EQ. 2031
       END FUNCTION MFLOW_AT_N
 
 ! identify specified flow top boundary
-      LOGICAL FUNCTION MFLOW_AT_T(IJK)
+      LOGICAL FUNCTION MFLOW_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      MFLOW_AT_T  = FLAG_T(IJK) .EQ. 2020 .OR. &
-         FLAG_T(IJK) .EQ. 2021 .OR. &
-         FLAG_T(IJK) .EQ. 2031
+      implicit none
+      INTEGER i,j,k
+      MFLOW_AT_T  = FLAG_T(i,j,k) .EQ. 2020 .OR. &
+                    FLAG_T(i,j,k) .EQ. 2021 .OR. &
+                    FLAG_T(i,j,k) .EQ. 2031
       END FUNCTION MFLOW_AT_T
 
 
@@ -438,7 +412,7 @@
       use geometry
       implicit none
       integer, intent(in) :: i,j,k
-      ip_at_e = flag_e(funijk(i,j,k)) .LT. 1000
+      ip_at_e = flag_e(i,j,k) .LT. 1000
       end function ip_at_e
 
 ! Logical function to identify IP (impermeable surface) North of the cell
@@ -446,7 +420,7 @@
       use geometry
       implicit none
       integer, intent(in) :: i,j,k
-      ip_at_n = flag_n(funijk(i,j,k)) .LT. 1000
+      ip_at_n = flag_n(i,j,k) .LT. 1000
       end function ip_at_n
 
 ! Logical function to identify IP (impermeable surface) Top of the cell
@@ -454,64 +428,64 @@
       use geometry
       implicit none
       integer, intent(in) :: i,j,k
-      ip_at_t = flag_t(funijk(i,j,k)) .LT. 1000
+      ip_at_t = flag_t(i,j,k) .LT. 1000
       end function ip_at_t
 
 ! Logical function to identify SP or IP (semi or impermeable surface)
 ! at east of the cell
-      LOGICAL FUNCTION SIP_AT_E(IJK)
+      LOGICAL FUNCTION SIP_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SIP_AT_E    = (FLAG_E(IJK) .LT. 2000)
+      implicit none
+      INTEGER i,j,k
+      SIP_AT_E    = (FLAG_E(i,j,k) .LT. 2000)
       END FUNCTION SIP_AT_E
 
 ! Logical function to identify SP or IP (semi or impermeable surface)
 ! at north of the cell
-      LOGICAL FUNCTION SIP_AT_N(IJK)
+      LOGICAL FUNCTION SIP_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SIP_AT_N    = (FLAG_N(IJK) .LT. 2000)
+      implicit none
+      INTEGER i,j,k
+      SIP_AT_N    = (FLAG_N(i,j,k) .LT. 2000)
       END FUNCTION SIP_AT_N
 
 ! Logical function to identify SP or IP (semi or impermeable surface)
 ! at top of the cell
-      LOGICAL FUNCTION SIP_AT_T(IJK)
+      LOGICAL FUNCTION SIP_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SIP_AT_T    = (FLAG_T(IJK) .LT. 2000)
+      implicit none
+      INTEGER i,j,k
+      SIP_AT_T    = (FLAG_T(i,j,k) .LT. 2000)
       END FUNCTION SIP_AT_T
 
 ! Logical function to identify SP (semi-permeable surface) at east
 ! of cell
-      LOGICAL FUNCTION SP_AT_E(IJK)
+      LOGICAL FUNCTION SP_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SP_AT_E     = (FLAG_E(IJK) .LT. 2000) .AND. &
-         (FLAG_E(IJK) .GE. 1000)
+      implicit none
+      INTEGER i,j,k
+      SP_AT_E     = (FLAG_E(i,j,k) .LT. 2000) .AND. &
+         (FLAG_E(i,j,k) .GE. 1000)
       END FUNCTION SP_AT_E
 
 ! Logical function to identify SP (semi-permeable surface) at north
 ! of cell
-      LOGICAL FUNCTION SP_AT_N(IJK)
+      LOGICAL FUNCTION SP_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SP_AT_N     = (FLAG_N(IJK) .LT. 2000) .AND. &
-         (FLAG_N(IJK) .GE. 1000)
+      implicit none
+      INTEGER i,j,k
+      SP_AT_N     = (FLAG_N(i,j,k) .LT. 2000) .AND. &
+         (FLAG_N(i,j,k) .GE. 1000)
       END FUNCTION SP_AT_N
 
 ! Logical function to identify SP (semi-permeable surface) at top
 ! of cell
-      LOGICAL FUNCTION SP_AT_T(IJK)
+      LOGICAL FUNCTION SP_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      SP_AT_T     = (FLAG_T(IJK) .LT. 2000) .AND. &
-         (FLAG_T(IJK) .GE. 1000)
+      implicit none
+      INTEGER i,j,k
+      SP_AT_T     = (FLAG_T(i,j,k) .LT. 2000) .AND. &
+         (FLAG_T(i,j,k) .GE. 1000)
       END FUNCTION SP_AT_T
 
 
@@ -519,75 +493,75 @@
 ! Integer functions to return internal surface ID
 !---------------------------------------------------------------------//
 ! Internal surface ID for east face
-      INTEGER FUNCTION IS_ID_AT_E(IJK)
+      INTEGER FUNCTION IS_ID_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_ID_AT_E = FLAG_E(IJK) - 1000
+      implicit none
+      INTEGER i,j,k
+      IS_ID_AT_E = FLAG_E(i,j,k) - 1000
       END FUNCTION IS_ID_AT_E
 
 ! Internal surface ID for north face
-      INTEGER FUNCTION IS_ID_AT_N(IJK)
+      INTEGER FUNCTION IS_ID_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_ID_AT_N  = FLAG_N(IJK) - 1000
+      implicit none
+      INTEGER i,j,k
+      IS_ID_AT_N  = FLAG_N(i,j,k) - 1000
       END FUNCTION IS_ID_AT_N
 
 ! Internal surface ID for top face
-      INTEGER FUNCTION IS_ID_AT_T(IJK)
+      INTEGER FUNCTION IS_ID_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_ID_AT_T  = FLAG_T(IJK) - 1000
+      implicit none
+      INTEGER i,j,k
+      IS_ID_AT_T  = FLAG_T(i,j,k) - 1000
       END FUNCTION IS_ID_AT_T
 
 ! Logical function to identify IS at East of the cell
-      LOGICAL FUNCTION IS_AT_E(IJK)
+      LOGICAL FUNCTION IS_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_AT_E     = FLAG_E(IJK) .LT. 2000
+      implicit none
+      INTEGER i,j,k
+      IS_AT_E     = FLAG_E(i,j,k) .LT. 2000
       END FUNCTION IS_AT_E
 
 ! Logical function to identify IS at North of the cell
-      LOGICAL FUNCTION IS_AT_N(IJK)
+      LOGICAL FUNCTION IS_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_AT_N     = FLAG_N(IJK) .LT. 2000
+      implicit none
+      INTEGER i,j,k
+      IS_AT_N     = FLAG_N(i,j,k) .LT. 2000
       END FUNCTION IS_AT_N
 
 ! Logical function to identify IS at Top of the cell
-      LOGICAL FUNCTION IS_AT_T(IJK)
+      LOGICAL FUNCTION IS_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      IS_AT_T     = FLAG_T(IJK) .LT. 2000
+      implicit none
+      INTEGER i,j,k
+      IS_AT_T     = FLAG_T(i,j,k) .LT. 2000
       END FUNCTION IS_AT_T
 
 ! Logical function to identify No IS at East of the cell
-      LOGICAL FUNCTION NO_IS_AT_E(IJK)
+      LOGICAL FUNCTION NO_IS_AT_E(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      NO_IS_AT_E  = FLAG_E(IJK) .GE. 2000
+      implicit none
+      INTEGER i,j,k
+      NO_IS_AT_E  = FLAG_E(i,j,k) .GE. 2000
       END FUNCTION NO_IS_AT_E
 
 ! Logical function to identify No IS at North of the cell
-      LOGICAL FUNCTION NO_IS_AT_N(IJK)
+      LOGICAL FUNCTION NO_IS_AT_N(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      NO_IS_AT_N  = FLAG_N(IJK) .GE. 2000
+      implicit none
+      INTEGER i,j,k
+      NO_IS_AT_N  = FLAG_N(i,j,k) .GE. 2000
       END FUNCTION NO_IS_AT_N
 
 ! Logical function to identify No IS at Top of the cell
-      LOGICAL FUNCTION NO_IS_AT_T(IJK)
+      LOGICAL FUNCTION NO_IS_AT_T(i,j,k)
       USE geometry
-      IMPLICIT NONE
-      INTEGER IJK
-      NO_IS_AT_T  = FLAG_T(IJK) .GE. 2000
+      implicit none
+      INTEGER i,j,k
+      NO_IS_AT_T  = FLAG_T(i,j,k) .GE. 2000
       END FUNCTION NO_IS_AT_T
 
 ! Misc
@@ -596,7 +570,7 @@
 ! Function that returns the maximum of zero or input
       DOUBLE PRECISION FUNCTION ZMAX(XXX)
       USE param1, only: zero
-      IMPLICIT NONE
+      implicit none
       DOUBLE PRECISION XXX
       ZMAX       = MAX(XXX, ZERO)
       END FUNCTION ZMAX
@@ -701,17 +675,14 @@
       use geometry, only  : imin1,imax1,cyclic_x
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (i.eq.imin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (i.eq.imin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          iminus = i
       else
          iminus = max(istart3, i-1)
       end if
 
-      if (cyclic_x .and. (iminus < imin1) .and. .not.wall_at(ijk)) iminus = imax1
+      if (cyclic_x .and. (iminus < imin1) .and. .not.wall_at(i,j,k)) iminus = imax1
 
       end function iminus
 
@@ -723,17 +694,14 @@
       use geometry, only  : imin1,imax1,cyclic_x
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (i.eq.imax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (i.eq.imax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          iplus = i
       else
          iplus = min(iend3, i+1)
       end if
 
-      if (cyclic_x .and. (iplus > imax1) .and. .not.wall_at(ijk)) iplus = imin1
+      if (cyclic_x .and. (iplus > imax1) .and. .not.wall_at(i,j,k)) iplus = imin1
 
       end function iplus
 
@@ -744,17 +712,14 @@
       use geometry, only  : jmin1,jmax1,cyclic_y
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (j.eq.jmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (j.eq.jmin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          jminus = j
       else
          jminus = max(jstart3, j-1)
       end if
 
-      if (cyclic_y .and. (jminus < jmin1) .and. .not.wall_at(ijk)) jminus = jmax1
+      if (cyclic_y .and. (jminus < jmin1) .and. .not.wall_at(i,j,k)) jminus = jmax1
 
       end function jminus
 
@@ -765,17 +730,14 @@
       use geometry, only  : jmin1,jmax1,cyclic_y
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (j.eq.jmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (j.eq.jmax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          jplus = j
       else
          jplus = min(jend3, j+1)
       end if
 
-      if (cyclic_y .and. (jplus > jmax1) .and. .not.wall_at(ijk)) jplus = jmin1
+      if (cyclic_y .and. (jplus > jmax1) .and. .not.wall_at(i,j,k)) jplus = jmin1
 
       end function jplus
 
@@ -787,17 +749,14 @@
       use geometry, only  : kmin1,kmax1,cyclic_z
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (k.eq.kmin1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (k.eq.kmin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          kminus = k
       else
          kminus = max(kstart3, k-1)
       end if
 
-      if (cyclic_z .and. (kminus < kmin1) .and. .not.wall_at(ijk)) kminus = kmax1
+      if (cyclic_z .and. (kminus < kmin1) .and. .not.wall_at(i,j,k)) kminus = kmax1
 
       end function kminus
 
@@ -809,17 +768,14 @@
       use geometry, only  : kmin1,kmax1,cyclic_z
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijk
 
-      ijk = funijk(i,j,k)
-
-      if (k.eq.kmax1 .and. (wall_at(ijk) .or. flow_at(ijk)) ) then
+      if (k.eq.kmax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
          kplus = k
       else
          kplus = min(kend3, k+1)
       end if
 
-      if (cyclic_z .and. (kplus > kmax1) .and. .not.wall_at(ijk)) kplus = kmin1
+      if (cyclic_z .and. (kplus > kmax1) .and. .not.wall_at(i,j,k)) kplus = kmin1
 
       end function kplus
 
@@ -829,11 +785,8 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ipjk
 
-      ipjk = funijk(iplus(i,j,k),j,k)
-
-      if (wall_at(ipjk)) then
+      if (wall_at(iplus(i,j,k),j,k)) then
          ieast = i
       else
          ieast = iplus(i,j,k)
@@ -847,11 +800,8 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: imjk
 
-      imjk = funijk(iminus(i,j,k),j,k)
-
-      if (wall_at(imjk)) then
+      if (wall_at(iminus(i,j,k),j,k)) then
          iwest = i
       else
          iwest = iminus(i,j,k)
@@ -865,11 +815,8 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijpk
 
-      ijpk = funijk(i,jplus(i,j,k),k)
-
-      if (wall_at(ijpk)) then
+      if (wall_at(i,jplus(i,j,k),k)) then
          jnorth = j
       else
          jnorth = jplus(i,j,k)
@@ -883,11 +830,8 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: ijmk
 
-      ijmk = funijk(i,jminus(i,j,k),k)
-
-      if (wall_at(ijmk)) then
+      if (wall_at(i,jminus(i,j,k),k)) then
          jsouth = j
       else
          jsouth = jminus(i,j,k)
@@ -901,12 +845,11 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: kp,ijkp
+      integer             :: kp
 
       kp = kplus(i,j,k)
-      ijkp = funijk(i,j,kp)
 
-      if (wall_at(ijkp)) then
+      if (wall_at(i,j,kp)) then
          ktop = k
       else
          ktop = kp
@@ -920,12 +863,11 @@
 
       implicit none
       integer, intent(in) :: i,j,k
-      integer             :: km,ijkm
+      integer             :: km
 
       km = kminus(i,j,k)
-      ijkm = funijk(i,j,km)
 
-      if (wall_at(ijkm)) then
+      if (wall_at(i,j,km)) then
          kbot = k
       else
          kbot = km

@@ -16,7 +16,7 @@ MODULE CALC_D_MOD
 
          IJK = FUNIJK(i,j,k)
 
-         IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(IJK)) THEN   !impermeable
+         IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(i,j,k)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
             IJKE = FUNIJK(ieast(i,j,k),j,k)
@@ -34,7 +34,7 @@ MODULE CALC_D_MOD
 
          IJK = FUNIJK(i,j,k)
 
-         IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(IJK)) THEN
+         IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(i,j,k)) THEN
             EPGA_Y = ZERO
          ELSE
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
@@ -51,7 +51,7 @@ MODULE CALC_D_MOD
          DOUBLE PRECISION :: AREA_FACE
 
          IJK = FUNIJK(i,j,k)
-         IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(IJK)) THEN
+         IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(i,j,k)) THEN
             EPGA_Z = ZERO
          ELSE
             IJKT = FUNIJK(i,j,ktop(i,j,k))

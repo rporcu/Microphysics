@@ -435,7 +435,7 @@
                IJK = FUNIJK(I,J,K)
 
 ! Verify that the FLOW BC is overwriting a wall.
-               IF(WALL_ICBC_FLAG(IJK)) THEN
+               IF(WALL_ICBC_FLAG(i,j,k)) THEN
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
                   CASE ('P_OUTFLOW');    ICBC_FLAG(IJK)(1:1) = 'P'
@@ -479,7 +479,7 @@
                   IJK = FUNIJK(I,J,K)
 
 ! Verify that the FLOW BC is overwriting a wall.
-                  IF(.NOT.WALL_ICBC_FLAG(IJK)) THEN
+                  IF(.NOT.WALL_ICBC_FLAG(i,j,k)) THEN
                      WRITE(ERR_MSG, 1201) I,J,K, ICBC_FLAG(IJK)
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF

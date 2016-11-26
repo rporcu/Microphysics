@@ -38,7 +38,7 @@
       use particle_filter, only: DES_INTERP_ON
 
       use functions, only: funijk
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
 
       use functions, only: IS_NONEXISTENT
       use functions, only: IS_ENTERING, IS_ENTERING_GHOST
@@ -98,7 +98,7 @@
             i = PIJK(NP,1)
             j = PIJK(NP,2)
             k = PIJK(NP,3)
-            if (.NOT.fluid_cell(i,j,k)) CYCLE
+            if (.NOT.fluid_at(i,j,k)) CYCLE
 
             IF(DES_INTERP_ON) THEN
                lPF = ZERO

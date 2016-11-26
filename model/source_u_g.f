@@ -219,9 +219,9 @@
       USE output
       USE compar
       USE fun_avg
-      USE functions, only: funijk, fs_wall_cell, ns_wall_cell
+      USE functions, only: funijk, fs_wall_at, ns_wall_at
       USE functions, only: is_on_mype_plus2layers
-      USE functions, only: wall_cell, fluid_cell
+      USE functions, only: wall_at, fluid_at
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
@@ -266,7 +266,7 @@
                IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
                IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I1,J1,K1)
-               IF (ns_wall_cell(i1,j1,k1)) THEN
+               IF (ns_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
                   A_M(IJK,E) = ZERO
@@ -277,7 +277,7 @@
                   A_M(IJK,B) = ZERO
                   A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
-               ELSEIF (fs_wall_cell(i1,j1,k1)) THEN
+               ELSEIF (fs_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
                   A_M(IJK,E) = ZERO
@@ -299,7 +299,7 @@
                IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
                IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I1,J1,K1)
-               IF (ns_wall_cell(i1,j1,k1)) THEN
+               IF (ns_wall_at(i1,j1,k1)) THEN
                   A_M(IJK,E) = ZERO
                   A_M(IJK,W) = ZERO
                   A_M(IJK,N) = ZERO
@@ -308,7 +308,7 @@
                   A_M(IJK,B) = -ONE
                   A_M(IJK,0) = -ONE
                   B_M(IJK) = ZERO
-               ELSEIF (fs_wall_cell(i1,j1,k1)) THEN
+               ELSEIF (fs_wall_at(i1,j1,k1)) THEN
                   A_M(IJK,E) = ZERO
                   A_M(IJK,W) = ZERO
                   A_M(IJK,N) = ZERO
@@ -329,7 +329,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IJK = FUNIJK(I1,J1,K1)
-            IF (ns_wall_cell(i1,j1,k1)) THEN
+            IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(IJK,E) = ZERO
                A_M(IJK,W) = ZERO
                A_M(IJK,N) = -ONE
@@ -338,7 +338,7 @@
                A_M(IJK,B) = ZERO
                A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
-            ELSEIF (fs_wall_cell(i1,j1,k1)) THEN
+            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
                A_M(IJK,E) = ZERO
                A_M(IJK,W) = ZERO
                A_M(IJK,N) = ONE
@@ -358,7 +358,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IJK = FUNIJK(I1,J1,K1)
-            IF (ns_wall_cell(i1,j1,k1)) THEN
+            IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(IJK,E) = ZERO
                A_M(IJK,W) = ZERO
                A_M(IJK,N) = ZERO
@@ -367,7 +367,7 @@
                A_M(IJK,B) = ZERO
                A_M(IJK,0) = -ONE
                B_M(IJK) = ZERO
-            ELSEIF (fs_wall_cell(i1,j1,k1)) THEN
+            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
                A_M(IJK,E) = ZERO
                A_M(IJK,W) = ZERO
                A_M(IJK,N) = ZERO
@@ -402,7 +402,7 @@
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
-                        IF (.NOT.wall_cell(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(IJK,E) = ZERO
                         A_M(IJK,W) = ZERO
                         A_M(IJK,N) = ZERO
@@ -411,13 +411,13 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
+                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
                            A_M(IJK,N) = -ONE
-                        else iF (fluid_cell(i,jsouth(i,j,k),k)) THEN
+                        else iF (fluid_at(i,jsouth(i,j,k),k)) THEN
                            A_M(IJK,S) = -ONE
-                        else iF (fluid_cell(i,j,ktop(i,j,k))) THEN
+                        else iF (fluid_at(i,j,ktop(i,j,k))) THEN
                            A_M(IJK,T) = -ONE
-                        else iF (fluid_cell(i,j,kbot(i,j,k))) THEN
+                        else iF (fluid_at(i,j,kbot(i,j,k))) THEN
                            A_M(IJK,B) = -ONE
                         ENDIF
                      ENDDO
@@ -437,7 +437,7 @@
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
-                        IF (.NOT.wall_cell(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(IJK,E) = ZERO
                         A_M(IJK,W) = ZERO
                         A_M(IJK,N) = ZERO
@@ -446,13 +446,13 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
+                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
                            A_M(IJK,N) = ONE
-                        else if (fluid_cell(i,jsouth(i,j,k),k)) THEN
+                        else if (fluid_at(i,jsouth(i,j,k),k)) THEN
                            A_M(IJK,S) = ONE
-                        else if (fluid_cell(i,j,ktop(i,j,k))) THEN
+                        else if (fluid_at(i,j,ktop(i,j,k))) THEN
                            A_M(IJK,T) = ONE
-                        else if (fluid_cell(i,j,kbot(i,j,k))) THEN
+                        else if (fluid_at(i,j,kbot(i,j,k))) THEN
                            A_M(IJK,B) = ONE
                         ENDIF
                      ENDDO
@@ -472,7 +472,7 @@
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IJK = FUNIJK(I,J,K)
-                        IF (.NOT.wall_cell(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         JM = JM1(J)
                         KM = KM1(K)
                         A_M(IJK,E) = ZERO
@@ -483,7 +483,7 @@
                         A_M(IJK,B) = ZERO
                         A_M(IJK,0) = -ONE
                         B_M(IJK) = ZERO
-                        if (fluid_cell(i,jnorth(i,j,k),k)) THEN
+                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,N) = -HALF
                               A_M(IJK,0) = -HALF
@@ -493,7 +493,7 @@
                               A_M(IJK,N) = -(HALF*BC_HW_G(L)-ODY)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_cell(i,jsouth(i,j,k),k)) THEN
+                        else if (fluid_at(i,jsouth(i,j,k),k)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,S) = -HALF
                               A_M(IJK,0) = -HALF
@@ -503,7 +503,7 @@
                               A_M(IJK,0) = -(HALF*BC_HW_G(L)+ODY)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_cell(i,j,ktop(i,j,k))) THEN
+                        else if (fluid_at(i,j,ktop(i,j,k))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,T) = -HALF
                               A_M(IJK,0) = -HALF
@@ -513,7 +513,7 @@
                               A_M(IJK,T)=-(HALF*BC_HW_G(L)-ODZ)
                               B_M(IJK) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_cell(i,j,kbot(i,j,k))) THEN
+                        else if (fluid_at(i,j,kbot(i,j,k))) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(IJK,B) = -HALF
                               A_M(IJK,0) = -HALF
@@ -750,7 +750,7 @@
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
             ijk = funijk(i,j,k)
-            if(.NOT. fluid_cell(i,j,k)) cycle
+            if(.NOT. fluid_at(i,j,k)) cycle
 
             pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 

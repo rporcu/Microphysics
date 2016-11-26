@@ -150,7 +150,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.WALL_AT(IJK)) THEN
+         IF(.NOT.WALL_AT(i,j,k)) THEN
 
             RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),293.15d0)
             ROP_G(IJK) = RO_G(IJK)*EP_G(IJK)

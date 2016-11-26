@@ -96,27 +96,27 @@
 
          SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
          CASE ('.')
-            FLAG(IJK) = 1
+            FLAG(i,j,k) = 1
          CASE ('p')
-            FLAG(IJK) = 10
+            FLAG(i,j,k) = 10
          CASE ('P')
-            FLAG(IJK) = 11
+            FLAG(i,j,k) = 11
          CASE ('I')
-            FLAG(IJK) = 20
+            FLAG(i,j,k) = 20
          CASE ('O')
-            FLAG(IJK) = 21
+            FLAG(i,j,k) = 21
          CASE ('o')
-            FLAG(IJK) = 31
+            FLAG(i,j,k) = 31
          CASE ('W')
-            FLAG(IJK) = 100
+            FLAG(i,j,k) = 100
          CASE ('S')
-            FLAG(IJK) = 101
+            FLAG(i,j,k) = 101
          CASE ('s')
-            FLAG(IJK) = 102
+            FLAG(i,j,k) = 102
          CASE ('c')
-            FLAG(IJK) = 106
+            FLAG(i,j,k) = 106
          CASE ('C')
-            FLAG(IJK) = 107
+            FLAG(i,j,k) = 107
          CASE DEFAULT
 
 ! Access to only one thread at a time
@@ -126,9 +126,9 @@
 ! ----------------------------------------------------------------<<<
 
 ! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
-         FLAG_E(IJK) = UNDEFINED_I
-         FLAG_N(IJK) = UNDEFINED_I
-         FLAG_T(IJK) = UNDEFINED_I
+         FLAG_E(i,j,k) = UNDEFINED_I
+         FLAG_N(i,j,k) = UNDEFINED_I
+         FLAG_T(i,j,k) = UNDEFINED_I
           end do
         end do
       end do
@@ -225,62 +225,68 @@
 
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
-         IF (wall_cell(i,j,k)) THEN
+         IF (wall_at(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 ! the default is equivalent to an impermeable surface and these cells
 ! will be treated as such in the momentum routines
-            FLAG_E(IJK) = 0
-            FLAG_N(IJK) = 0
-            FLAG_T(IJK) = 0
-            FLAG_E(IMJK) = 0
-            FLAG_N(IJMK) = 0
-            FLAG_T(IJKM) = 0
+            FLAG_E(i,j,k) = 0
+            FLAG_N(i,j,k) = 0
+            FLAG_T(i,j,k) = 0
+            FLAG_E(iminus(i,j,k),j,k) = 0
+            FLAG_N(i,jminus(i,j,k),k) = 0
+            FLAG_T(i,j,kminus(i,j,k)) = 0
 
-            IF (CYCLIC_AT(IJK)) THEN
+            IF (CYCLIC_AT(i,j,k)) THEN
 ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(IMJK)) FLAG_E(IMJK) = 2000
+                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) FLAG_E(iminus(i,j,k),j,k) = 2000
                      ELSEIF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(IMJK)) FLAG_E(IMJK) = 2000
+                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) FLAG_E(iminus(i,j,k),j,k) = 2000
                      ENDIF
                   ENDIF
                ENDIF
                IF (J == JMAX2) THEN
                   IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3)) THEN
                      IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(IJMK)) FLAG_N(IJMK) = 2000
+                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) FLAG_N(i,jminus(i,j,k),k) = 2000
                      ELSE IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(IJMK)) FLAG_N(IJMK) = 2000
+                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) FLAG_N(i,jminus(i,j,k),k) = 2000
                      ENDIF
                   ENDIF
                 ENDIF
                IF (K == KMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3) .AND. &
-                       .NOT.WALL_AT(IJKM)) FLAG_T(IJKM) = 2000
+                       .NOT.WALL_AT(i,j,kminus(i,j,k))) FLAG_T(i,j,kminus(i,j,k)) = 2000
                   ENDIF
                ENDIF
 
-            ENDIF   ! end if cyclic_at(ijk)
+            ENDIF   ! end if cyclic_at(i,j,k)
 
 ! ----------------------------------------------------------------<<<
-         ELSEIF (fluid_cell(i,j,k)) THEN
+         ELSEIF (fluid_at(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 
-            IF ( .NOT.WALL_AT(IMJK) .AND. FLAG_E(IMJK)==UNDEFINED_I) &
-               FLAG_E(IMJK) = 2000 + FLAG(IMJK)
-            IF ( .NOT.WALL_AT(IJMK) .AND. FLAG_N(IJMK)==UNDEFINED_I) &
-               FLAG_N(IJMK) = 2000 + FLAG(IJMK)
-            IF ( .NOT.WALL_AT(IJKM) .AND. FLAG_T(IJKM)==UNDEFINED_I) &
-               FLAG_T(IJKM) = 2000 + FLAG(IJKM)
-            IF ( .NOT.WALL_AT(IPJK) .AND. FLAG_E(IJK)==UNDEFINED_I) &
-               FLAG_E(IJK) = 2000 + FLAG(IPJK)
-            IF ( .NOT.WALL_AT(IJPK) .AND. FLAG_N(IJK)==UNDEFINED_I) &
-               FLAG_N(IJK) = 2000 + FLAG(IJPK)
-            IF ( .NOT.WALL_AT(IJKP) .AND. FLAG_T(IJK)==UNDEFINED_I) &
-               FLAG_T(IJK) = 2000 + FLAG(IJKP)
+            IF ( .NOT.WALL_AT(iminus(i,j,k),j,k) .AND. FLAG_E(iminus(i,j,k),j,k)==UNDEFINED_I) &
+               FLAG_E(iminus(i,j,k),j,k) = 2000 + FLAG(iminus(i,j,k),j,k)
+
+            IF ( .NOT.WALL_AT(i,jminus(i,j,k),k) .AND. FLAG_N(i,jminus(i,j,k),k)==UNDEFINED_I) &
+               FLAG_N(i,jminus(i,j,k),k) = 2000 + FLAG(i,jminus(i,j,k),k)
+
+            IF ( .NOT.WALL_AT(i,j,kminus(i,j,k)) .AND. FLAG_T(i,j,kminus(i,j,k))==UNDEFINED_I) &
+               FLAG_T(i,j,kminus(i,j,k)) = 2000 + FLAG(i,j,kminus(i,j,k))
+
+            IF ( .NOT.WALL_AT(iplus(i,j,k),j,k) .AND. FLAG_E(i,j,k)==UNDEFINED_I) &
+               FLAG_E(i,j,k) = 2000 + FLAG(iplus(i,j,k),j,k)
+
+            IF ( .NOT.WALL_AT(i,jplus(i,j,k),k) .AND. FLAG_N(i,j,k)==UNDEFINED_I) &
+               FLAG_N(i,j,k) = 2000 + FLAG(i,jplus(i,j,k),k)
+
+            IF ( .NOT.WALL_AT(i,j,kplus(i,j,k)) .AND. FLAG_T(i,j,k)==UNDEFINED_I) &
+               FLAG_T(i,j,k) = 2000 + FLAG(i,j,kplus(i,j,k))
+
 
          ENDIF
 

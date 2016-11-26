@@ -47,7 +47,7 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: funijk
-      USE functions, only: fluid_cell
+      USE functions, only: fluid_at
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -84,7 +84,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IJKE = FUNIJK(ieast(i,j,k),j,k)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
             IJKT = FUNIJK(i,j,ktop(i,j,k))
@@ -99,7 +99,7 @@
                ROP_E(IJK) = ROP(IJKE)
             ENDIF
 ! West face (i-1/2, j, k)
-            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
+            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
                IJKW = FUNIJK(iwest(i,j,k),j,k)
                IF (U(IMJK) >= ZERO) THEN
                   ROP_E(IMJK) = ROP(IJKW)
@@ -116,7 +116,7 @@
                ROP_N(IJK) = ROP(IJKN)
             ENDIF
 ! South face (i, j-1/2, k)
-            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
+            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
                IJKS = FUNIJK(i,jsouth(i,j,k),k)
                IF (V(IJMK) >= ZERO) THEN
                  ROP_N(IJMK) = ROP(IJKS)
@@ -135,7 +135,7 @@
                   ROP_T(IJK) = ROP(IJKT)
                ENDIF
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
+               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
                   IJKB = FUNIJK(i,j,kbot(i,j,k))
                   IF (W(IJKM) >= ZERO) THEN
                      ROP_T(IJKM) = ROP(IJKB)
@@ -145,7 +145,7 @@
                ENDIF
             ENDIF   ! end if do_k
 
-         ENDIF   ! end if fluid_cell
+         ENDIF   ! end if fluid_at
       ENDDO
       ENDDO
       ENDDO
@@ -171,7 +171,7 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: funijk
-      USE functions, only: fluid_cell
+      USE functions, only: fluid_at
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -218,7 +218,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             IJKE = FUNIJK(ieast(i,j,k),j,k)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
             IJKT = FUNIJK(i,j,ktop(i,j,k))
@@ -230,7 +230,7 @@
             ROP_E(IJK) = ((ONE-XSI_E(IJK))*ROP(IJK)+&
                          XSI_E(IJK)*ROP(IJKE))
 ! West face (i-1/2, j, k)
-            IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
+            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
                IJKW = FUNIJK(iwest(i,j,k),j,k)
                ROP_E(IMJK) = ((ONE - XSI_E(IMJK))*ROP(IJKW)+&
                              XSI_E(IMJK)*ROP(IJK))
@@ -241,7 +241,7 @@
             ROP_N(IJK) = ((ONE-XSI_N(IJK))*ROP(IJK)+&
                          XSI_N(IJK)*ROP(IJKN))
 ! South face (i, j-1/2, k)
-            IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
+            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
                IJKS = FUNIJK(i,jsouth(i,j,k),k)
                ROP_N(IJMK) = ((ONE - XSI_N(IJMK))*ROP(IJKS)+&
                              XSI_N(IJMK)*ROP(IJK))
@@ -255,14 +255,14 @@
                ROP_T(IJK) = ((ONE - XSI_T(IJK))*ROP(IJK)+&
                             XSI_T(IJK)*ROP(IJKT))
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
+               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
                   IJKB = FUNIJK(i,j,kbot(i,j,k))
                   ROP_T(IJKM) = ((ONE - XSI_T(IJKM))*ROP(IJKB)+&
                                 XSI_T(IJKM)*ROP(IJK))
                ENDIF
             ENDIF   ! end if do_k
 
-         ENDIF   ! end if fluid_cell
+         ENDIF   ! end if fluid_at
       ENDDO
       ENDDO
       ENDDO

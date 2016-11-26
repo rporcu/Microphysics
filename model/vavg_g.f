@@ -29,7 +29,7 @@ CONTAINS
 !-----------------------------------------------
          USE fldvar, ONLY: EP_G
          USE functions, ONLY: IS_ON_myPE_wobnd, FUNIJK
-         USE functions, ONLY: IS_ON_myPE_wobnd, fluid_cell
+         USE functions, ONLY: IS_ON_myPE_wobnd, fluid_at
          USE param1, ONLY: ZERO
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -61,7 +61,7 @@ CONTAINS
 
          IJK = FUNIJK(i,j,k)
       IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             SUM_VOL = SUM_VOL + VOL
             SUM_G = SUM_G + vel_G(IJK)*EP_G(IJK)*VOL
          ENDIF
@@ -80,7 +80,7 @@ CONTAINS
       DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE)
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, ONLY: is_on_mype_wobnd, fluid_cell
+      USE functions, ONLY: is_on_mype_wobnd, fluid_at
       USE functions, ONLY: funijk
       USE param1
 
@@ -111,7 +111,7 @@ CONTAINS
 
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
-         IF (fluid_cell(i,j,k)) THEN
+         IF (fluid_at(i,j,k)) THEN
             SUM_G = SUM_G + Flux_g(IJK)
             SUM_AREA = SUM_AREA + A_FACE
          ENDIF

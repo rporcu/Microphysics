@@ -96,7 +96,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.fluid_cell(i,j,k)) CYCLE
+         IF(.NOT.fluid_at(i,j,k)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
          DO M = 1, MMAX

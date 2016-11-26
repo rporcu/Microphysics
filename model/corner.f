@@ -51,7 +51,7 @@
 
            ijk = funijk(i,j,k)
 
-         IF (WALL_AT(IJK).AND..NOT.CYCLIC_AT(IJK)) THEN
+         IF (WALL_AT(i,j,k).AND..NOT.CYCLIC_AT(i,j,k)) THEN
 !
 !----------------------------------------------------------------
             IMJK = FUNIJK(iminus(i,j,k),j,k)
@@ -63,42 +63,42 @@
 !----------------------------------------------------------------
             NUM = 0
 !
-            IF (fluid_cell(iminus(i,j,k),j,k)) then
+            IF (fluid_at(iminus(i,j,k),j,k)) then
                NUM = NUM + 1
                DIR(W) = .TRUE.
             ELSE
                DIR(W) = .FALSE.
             ENDIF
 !
-            IF (fluid_cell(iplus(i,j,k),j,k)) then
+            IF (fluid_at(iplus(i,j,k),j,k)) then
                NUM = NUM + 1
                DIR(E) = .TRUE.
             ELSE
                DIR(E) = .FALSE.
             ENDIF
 !
-            IF (fluid_cell(i,jminus(i,j,k),k)) then
+            IF (fluid_at(i,jminus(i,j,k),k)) then
                NUM = NUM + 1
                DIR(S) = .TRUE.
             ELSE
                DIR(S) = .FALSE.
             ENDIF
 !
-            IF (fluid_cell(i,jplus(i,j,k),k)) then
+            IF (fluid_at(i,jplus(i,j,k),k)) then
                NUM = NUM + 1
                DIR(N) = .TRUE.
             ELSE
                DIR(N) = .FALSE.
             ENDIF
 !
-            IF (fluid_cell(i,j,kminus(i,j,k))) then
+            IF (fluid_at(i,j,kminus(i,j,k))) then
                NUM = NUM + 1
                DIR(B) = .TRUE.
             ELSE
                DIR(B) = .FALSE.
             ENDIF
 !
-            IF (fluid_cell(i,j,kplus(i,j,k))) then
+            IF (fluid_at(i,j,kplus(i,j,k))) then
                NUM = NUM + 1
                DIR(T) = .TRUE.
             ELSE

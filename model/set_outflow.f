@@ -44,7 +44,7 @@
       use fldvar, only: u_g, v_g, w_g
 
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk,fluid_cell
+      use functions, only: funijk,fluid_at
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
       use compar, only: dead_cell_at
 
@@ -81,7 +81,7 @@
 
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(iminus(i,j,k),j,k)) THEN
+               IF (fluid_at(iminus(i,j,k),j,k)) THEN
                   FIJK = FUNIJK(iminus(i,j,k),j,k)
                   RVEL_G = U_G(FIJK)
 
@@ -114,7 +114,7 @@
 
 ! Fluid cell at East
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(iplus(i,j,k),j,k)) THEN
+               IF (fluid_at(iplus(i,j,k),j,k)) THEN
                   FIJK = FUNIJK(iplus(i,j,k),j,k)
 ! define normal component such that it is positive when exiting the
 ! domain
@@ -144,7 +144,7 @@
 
 ! Fluid cell at South
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(i,jminus(i,j,k),k)) THEN
+               IF (fluid_at(i,jminus(i,j,k),k)) THEN
                   FIJK = FUNIJK(i,jminus(i,j,k),k)
                   RVEL_G = V_G(FIJK)
 
@@ -165,7 +165,7 @@
 
 ! Fluid cell at North
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(i,jplus(i,j,k),k)) THEN
+               IF (fluid_at(i,jplus(i,j,k),k)) THEN
                   FIJK = FUNIJK(i,jplus(i,j,k),k)
                   RVEL_G = -V_G(IJK)
 
@@ -188,7 +188,7 @@
 
 ! Fluid cell at Bottom
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(i,j,kminus(i,j,k))) THEN
+               IF (fluid_at(i,j,kminus(i,j,k))) THEN
                   FIJK = FUNIJK(i,j,kminus(i,j,k))
                   RVEL_G = W_G(FIJK)
 
@@ -209,7 +209,7 @@
 
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
-               IF (FLUID_CELL(i,j,kplus(i,j,k))) THEN
+               IF (fluid_at(i,j,kplus(i,j,k))) THEN
                   FIJK = FUNIJK(i,j,kplus(i,j,k))
                   RVEL_G = -W_G(IJK)
 

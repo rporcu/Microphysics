@@ -211,7 +211,7 @@
 ! indices
       INTEGER :: I,J,K, IJK, IJKNB
       INTEGER :: NB
-      INTEGER, DIMENSION(6) :: NBCELL
+      INTEGER, DIMENSION(6) :: ibcell, jbcell, kbcell
       LOGICAL :: NB_FOUND
 
 
@@ -223,7 +223,7 @@
 
          IJK = FUNIJK(i,j,k)
 
-         IF (FLUID_AT(IJK).AND.EP_G(IJK)==UNDEFINED) THEN
+         IF (fluid_at(i,j,k).AND.EP_G(IJK)==UNDEFINED) THEN
 
 ! Detects new fluid cells that used to be blocked cells with undefined
 ! values. When a fluid cell has undefined void fraction, this means all
@@ -233,20 +233,36 @@
 ! variables will be copied over. If no valid fluid cell is found, the
 ! code will continue and will likely stop during the check_data_30
 ! (zero species mass fractions will yield a zero specific heat).
-            NBCELL(1) = funijk(iminus(i,j,k),j,k)
-            NBCELL(2) = funijk(i,jminus(i,j,k),k)
-            NBCELL(3) = funijk(i,j,kminus(i,j,k))
-            NBCELL(4) = funijk(iplus(i,j,k),j,k)
-            NBCELL(5) = funijk(i,jplus(i,j,k),k)
-            NBCELL(6) = funijk(i,j,kplus(i,j,k))
+
+            IBCELL(1) = iminus(i,j,k)
+            IBCELL(2) = i
+            IBCELL(3) = i
+            IBCELL(4) = iplus(i,j,k)
+            IBCELL(5) = i
+            IBCELL(6) = i
+
+            JBCELL(1) = j
+            JBCELL(2) = jminus(i,j,k)
+            JBCELL(3) = j
+            JBCELL(4) = j
+            JBCELL(5) = jplus(i,j,k)
+            JBCELL(6) = j
+
+            KBCELL(1) = k
+            KBCELL(2) = k
+            KBCELL(3) = kminus(i,j,k)
+            KBCELL(4) = k
+            KBCELL(5) = k
+            KBCELL(6) = kplus(i,j,k)
 
             NB_FOUND = .FALSE.
 
             DO NB = 1,6
 
-               IJKNB = NBCELL(NB)
+               IJKNB = FUNIJK(ibcell(nb),jbcell(nb),kbcell(nb))
 
-               IF(FLUID_AT(IJKNB).AND.EP_G(IJKNB)/=UNDEFINED) THEN
+               IF(FLUID_AT(ibcell(nb),jbcell(nb),kbcell(nb)) .and. &
+                      EP_G(IJKNB)/=UNDEFINED) THEN
                   NB_FOUND = .TRUE.
                   WRITE (*, 1010) MyPE, I,J,K
 
@@ -258,7 +274,6 @@
                   U_G(IJK) = U_G(IJKNB)
                   V_G(IJK) = V_G(IJKNB)
                   W_G(IJK) = W_G(IJKNB)
-
 
                   EXIT ! Exit as soon as first valid neighbor cell is found
                ENDIF  ! NB is a fluid cell

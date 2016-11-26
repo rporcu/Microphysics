@@ -51,7 +51,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF (.NOT.WALL_AT(IJK)) THEN
+         IF (.NOT.wall_at(i,j,k)) THEN
             IM = IM1(I)
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)

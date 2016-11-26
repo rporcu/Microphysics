@@ -10,7 +10,7 @@
 ! Fluid grid loop bounds.
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
-      use functions, only: WALL_AT
+      use functions, only: wall_at
       use functions, only: funijk
 
       use error_manager
@@ -44,7 +44,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         IF(WALL_AT(IJK)) cycle
+         if (wall_at(i,j,k)) cycle
 
 ! Calculate the fluid density and bulk density
 !         RO_G(IJK) =
@@ -109,7 +109,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-            IF(WALL_AT(IJK)) cycle
+            IF(WALL_AT(i,j,k)) cycle
 
 ! Calculate the solids density.
 !            RO_S(IJK,M) =
@@ -167,7 +167,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(WALL_AT(IJK)) cycle
+         if (wall_at(i,j,k)) cycle
 
 ! Calculate the fluid density and bulk density
 !         C_PG(IJK) =
@@ -193,7 +193,7 @@
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
       use functions, only: funijk
-      use functions, only: WALL_AT
+      use functions, only: wall_at
 ! Number of solids phases
       use physprop, only: MMAX
 
@@ -226,7 +226,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-            IF(WALL_AT(IJK)) cycle
+            if (wall_at(i,j,k)) cycle
 
 ! Calculate the solids phase specific heat.
 !            C_PS(IJK,M) =

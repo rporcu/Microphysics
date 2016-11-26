@@ -41,7 +41,7 @@
       IMPLICIT NONE
 
       INTEGER :: L, IDX
-      INTEGER :: IJK, IJKt
+      INTEGER :: IJK
 
       INTEGER :: I, J, K
       INTEGER :: IC, JC, KC
@@ -93,9 +93,8 @@
             IDX=IDX+1
             WEIGHT = WEIGHT_I(IC)*WEIGHT_J(JC)*WEIGHT_K(KC)
             IF(IS_ON_MYPE_PLUS2LAYERS(I+IC,J+JC,K+KC)) THEN
-               IJKt = FUNIJK(I+IC,J+JC,K+KC)
-               IF(fluid_cell(i+ic,j+jc,k+kc) .OR. CYCLIC_AT(IJKt)) THEN
-                  FILTER_CELL(IDX,L) = IJKt
+               IF(fluid_at(i+ic,j+jc,k+kc) .OR. CYCLIC_AT(i+ic,j+jc,k+kc)) THEN
+                  FILTER_CELL(IDX,L) = FUNIJK(i+ic,j+jc,k+kc)
                   FILTER_WEIGHT(IDX,L) = WEIGHT
                ELSE
                   FILTER_CELL(IDX,L) = IJK

@@ -24,7 +24,7 @@
       USE fldvar, only: ro_g0, mu_g0, mu_g
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: wall_at, fluid_cell, funijk
+      use functions, only: wall_at, fluid_at, funijk
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -50,12 +50,12 @@
 
            ijk = funijk(i,j,k)
 
-           IF (.NOT.WALL_AT(IJK)) THEN
+           IF (.NOT.WALL_AT(i,j,k)) THEN
 ! Fluid and inflow/outflow cells: FLAG < 100
             IF (RO_G0 /= UNDEFINED) RO_G(IJK) = RO_G0
            ENDIF
 
-           IF (fluid_cell(i,j,k)) THEN
+           IF (fluid_at(i,j,k)) THEN
 ! Strictly Fluid cells: FLAG = 1
             IF (MU_G0 /= UNDEFINED) THEN
                MU_G(IJK) = MU_G0

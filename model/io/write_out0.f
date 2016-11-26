@@ -650,19 +650,19 @@
         array2(ijk)(1:3) = icbc_flag(ijk)(1:3)
         IF (ip_at_e(i,j,k)) THEN
            array2(IJK)(4:4) = 'E'
-        ELSE IF (SIP_AT_E(IJK)) THEN
+        ELSE IF (SIP_AT_E(i,j,k)) THEN
            array2(IJK)(4:4) = 'e'
         ENDIF
 !
         IF (ip_at_n(i,j,k)) THEN
            array2(IJK)(4:4) = 'N'
-        ELSE IF (SIP_AT_N(IJK)) THEN
+        ELSE IF (SIP_AT_N(i,j,k)) THEN
            array2(IJK)(4:4) = 'n'
         ENDIF
 !
         IF (ip_at_t(i,j,k)) THEN
            array2(IJK)(4:4) = 'T'
-        ELSE IF (SIP_AT_T(IJK)) THEN
+        ELSE IF (SIP_AT_T(i,j,k)) THEN
            array2(IJK)(4:4) = 't'
         ENDIF
       ENDDO

@@ -23,7 +23,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: Funijk
-      use functions, only: fluid_cell
+      use functions, only: fluid_at
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use fun_avg, only: AVG
 
@@ -51,7 +51,7 @@
 
          IJK = FUNIJK(i,j,k)
          DEL_PHI(:,IJK) = ZERO
-         IF(.NOT.fluid_cell(i,j,k)) CYCLE
+         IF(.NOT.fluid_at(i,j,k)) CYCLE
 
          IMJK = funijk(iminus(i,j,k),j,k)
          IPJK = funijk(iplus(i,j,k),j,k)
