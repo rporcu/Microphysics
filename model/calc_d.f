@@ -90,6 +90,9 @@ MODULE CALC_D_MOD
       use compar, only: istart2, iend2
       use compar, only: jstart2, jend2
       use compar, only: kstart2, kend2
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
 
       IMPLICIT NONE
 
@@ -100,7 +103,9 @@ MODULE CALC_D_MOD
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN):: A_m(DIMENSION_3,-3:3)
+      DOUBLE PRECISION, INTENT(IN):: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -134,7 +139,7 @@ MODULE CALC_D_MOD
 
          IJK = FUNIJK(i,j,k)
 
-         TMPdp = -A_M(IJK,0)
+         TMPdp = -A_M(I,J,K,0)
          IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN

@@ -113,6 +113,9 @@ CONTAINS
     USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs
     USE geometry, ONLY: do_k
     USE param, ONLY: DIMENSION_3
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -120,13 +123,11 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-!      DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-    DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+    DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector AVar
-!      DOUBLE PRECISION, INTENT(OUT) :: AVar(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: AVar(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
@@ -140,13 +141,13 @@ CONTAINS
             do i = istart,iend
                do j = jstart,jend
                   ijk = funijk(i,j,k)
-                  AVar(ijk) =  A_m(ijk,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
-                             + A_m(ijk,-2) * Var(funijk(i,jminus(i,j,k),k))   &
-                             + A_m(ijk,-1) * Var(funijk(iminus(i,j,k),j,k))   &
-                             + A_m(ijk, 0) * Var(funijk(i,j,k)            )   &
-                             + A_m(ijk, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
-                             + A_m(ijk, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
-                             + A_m(ijk, 3) * Var(funijk(i,j,kplus(i,j,k)) )
+                  AVar(ijk) =  A_m(i,j,k,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
+                             + A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
+                             + A_m(i,j,k,-1) * Var(funijk(iminus(i,j,k),j,k))   &
+                             + A_m(i,j,k, 0) * Var(funijk(i,j,k)            )   &
+                             + A_m(i,j,k, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
+                             + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
+                             + A_m(i,j,k, 3) * Var(funijk(i,j,kplus(i,j,k)) )
                enddo
             enddo
          enddo
@@ -156,11 +157,11 @@ CONTAINS
          do i = istart,iend
             do j = jstart,jend
                ijk = funijk(i,j,k)
-               AVar(ijk) =  A_m(ijk,-2) * Var(funijk(i,jminus(i,j,k),k))   &
-                          + A_m(ijk,-1) * Var(funijk(iminus(i,j,k),j,k))   &
-                          + A_m(ijk, 0) * Var(funijk(i,j,k)            )   &
-                          + A_m(ijk, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
-                          + A_m(ijk, 2) * Var(funijk(i,jplus(i,j,k),k) )
+               AVar(ijk) =  A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
+                          + A_m(i,j,k,-1) * Var(funijk(iminus(i,j,k),j,k))   &
+                          + A_m(i,j,k, 0) * Var(funijk(i,j,k)            )   &
+                          + A_m(i,j,k, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
+                          + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )
             enddo
          enddo
 
@@ -212,13 +213,12 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
-    DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+    DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-    DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+    DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -250,7 +250,7 @@ CONTAINS
           do i = istart3,iend3
              do j = jstart3,jend3
                 IJK = funijk(i,j,k)
-                VAR(IJK) = B_M(IJK)
+                VAR(IJK) = B_M(I,J,K)
              enddo
           enddo
        enddo
@@ -515,13 +515,12 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
-    DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+    DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-    DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+    DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
@@ -532,18 +531,14 @@ CONTAINS
 !-----------------------------------------------
 
 ! do nothing or no preconditioning
-    if (use_doloop) then   ! mfix.dat keyword default=false
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-          var(ijk) = b_m(ijk)
+          var(ijk) = b_m(i,j,k)
        enddo
        enddo
        enddo
-    else
-       var(:) = b_m(:)
-    endif
     ! call send_recv(var,nlayers_bicgs)
 
     return
@@ -582,13 +577,12 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
-    DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+    DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-    DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+    DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-!      DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
     DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
@@ -602,7 +596,7 @@ CONTAINS
           do i=istart2,iend2
              do j=jstart2,jend2
                 ijk = funijk( i,j,k )
-                var(ijk) = b_m(ijk)/A_m(ijk,0)
+                var(ijk) = b_m(i,j,k)/A_m(i,j,k,0)
              enddo
           enddo
        enddo
@@ -650,9 +644,11 @@ CONTAINS
 ! Variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -669,11 +665,11 @@ CONTAINS
          IJK = FUNIJK(I,J,K)
          IM1JK = funijk(iminus(i,j,k),j,k)
          IP1JK = funijk(iplus(i,j,k),j,k)
-         DD(J) = A_M(IJK,  0)
-         CC(J) = A_M(IJK, -2)
-         EE(J) = A_M(IJK,  2)
-         BB(J) = B_M(IJK) -  A_M(IJK,-1) * Var( IM1JK )  &
-                          -  A_M(IJK, 1) * Var( IP1JK )
+         DD(J) = A_M(I,J,K,  0)
+         CC(J) = A_M(I,J,K, -2)
+         EE(J) = A_M(I,J,K,  2)
+         BB(J) = B_M(I,J,K) -  A_M(I,J,K,-1) * Var( IM1JK )  &
+                          -  A_M(I,J,K, 1) * Var( IP1JK )
       ENDDO
 
       CC(NSTART) = ZERO
@@ -731,9 +727,11 @@ CONTAINS
 ! Variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -747,13 +745,13 @@ CONTAINS
 
       DO J=NSTART, NEND
          IJK = funijk(i,j,k)
-         DD(J) = A_M(IJK,  0)
-         CC(J) = A_M(IJK, -2)
-         EE(J) = A_M(IJK,  2)
-         BB(J) = B_M(IJK) -  A_M(IJK,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
-                          -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) ) &
-                          -  A_M(IJK,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
-                          -  A_M(IJK, 3) * Var( funijk(i,j,kplus(i,j,k)) )
+         DD(J) = A_M(I,J,K,  0)
+         CC(J) = A_M(I,J,K, -2)
+         EE(J) = A_M(I,J,K,  2)
+         BB(J) = B_M(I,J,K) -  A_M(I,J,K,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
+                          -  A_M(I,J,K, 1) * Var( funijk(iplus(i,j,k),j,k) ) &
+                          -  A_M(I,J,K,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
+                          -  A_M(I,J,K, 3) * Var( funijk(i,j,kplus(i,j,k)) )
       ENDDO
 
       CC(NSTART) = ZERO
@@ -813,9 +811,11 @@ CONTAINS
 ! Variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -828,13 +828,13 @@ CONTAINS
 
       DO I=NSTART,NEND
          IJK = FUNIJK(I,J,K)
-         DD(I) = A_M(IJK,  0)
-         CC(I) = A_M(IJK, -1)
-         EE(I) = A_M(IJK,  1)
-         BB(I) = B_M(IJK)    -  A_M(IJK,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
-                             -  A_M(IJK, 2) * Var( funijk(i,jplus(i,j,k) ,k) ) &
-                             -  A_M(IJK,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
-                             -  A_M(IJK, 3) * Var( funijk(i,j ,kplus(i,j,k))  )
+         DD(I) = A_M(I,J,K,  0)
+         CC(I) = A_M(I,J,K, -1)
+         EE(I) = A_M(I,J,K,  1)
+         BB(I) = B_M(I,J,K)    -  A_M(I,J,K,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
+                             -  A_M(I,J,K, 2) * Var( funijk(i,jplus(i,j,k) ,k) ) &
+                             -  A_M(I,J,K,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
+                             -  A_M(I,J,K, 3) * Var( funijk(i,j ,kplus(i,j,k))  )
       ENDDO
 
       CC(NSTART) = ZERO
@@ -894,9 +894,11 @@ CONTAINS
 ! Variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -909,13 +911,13 @@ CONTAINS
 
       DO K=NSTART, NEND
          IJK = FUNIJK(I,J,K)
-         DD(K) = A_M(IJK,  0)
-         CC(K) = A_M(IJK, -3)
-         EE(K) = A_M(IJK,  3)
-         BB(K) = B_M(IJK)    -  A_M(IJK,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
-                             -  A_M(IJK, 2) * Var( funijk(i,jplus(i,j,k),k) ) &
-                             -  A_M(IJK,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
-                             -  A_M(IJK, 1) * Var( funijk(iplus(i,j,k),j,k) )
+         DD(K) = A_M(I,J,K,  0)
+         CC(K) = A_M(I,J,K, -3)
+         EE(K) = A_M(I,J,K,  3)
+         BB(K) = B_M(I,J,K)    -  A_M(I,J,K,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
+                             -  A_M(I,J,K, 2) * Var( funijk(i,jplus(i,j,k),k) ) &
+                             -  A_M(I,J,K,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
+                             -  A_M(I,J,K, 1) * Var( funijk(iplus(i,j,k),j,k) )
       ENDDO
 
       CC(NSTART) = ZERO

@@ -42,12 +42,17 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+! Dummy arguments
+!---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! maximum term in b_m expression
-      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -81,32 +86,33 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
             bma = (ROP_G(IJK)-ROP_GO(I,J,K))*VOL*ODT
-            bme = A_M(IJK,E)*U_G(IJK)
-            bmw = A_M(IJK,W)*U_G(IMJK)
-            bmn = A_M(IJK,N)*V_G(IJK)
-            bms = A_M(IJK,S)*V_G(IJMK)
-            bmt = A_M(IJK,T)*W_G(IJK)
-            bmb = A_M(IJK,B)*W_G(IJKM)
-            B_M(IJK) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
-            B_MMAX(IJK) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), abs(bms), abs(bmt), abs(bmb))
+            bme = A_M(I,J,K,E)*U_G(IJK)
+            bmw = A_M(I,J,K,W)*U_G(IMJK)
+            bmn = A_M(I,J,K,N)*V_G(IJK)
+            bms = A_M(I,J,K,S)*V_G(IJMK)
+            bmt = A_M(I,J,K,T)*W_G(IJK)
+            bmb = A_M(I,J,K,B)*W_G(IJKM)
+            B_M(I,J,K) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
+            B_MMAX(I,J,K) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
+               abs(bms), abs(bmt), abs(bmb))
 
-            A_M(IJK,E) = A_M(IJK,E)*D_E(i,j,k)
-            A_M(IJK,W) = A_M(IJK,W)*D_E(iminus(i,j,k),j,k)
-            A_M(IJK,N) = A_M(IJK,N)*D_N(i,j,k)
-            A_M(IJK,S) = A_M(IJK,S)*D_N(i,jminus(i,j,k),k)
-            A_M(IJK,T) = A_M(IJK,T)*D_T(i,j,k)
-            A_M(IJK,B) = A_M(IJK,B)*D_T(i,j,kminus(i,j,k))
+            A_M(I,J,K,E) = A_M(I,J,K,E)*D_E(i,j,k)
+            A_M(I,J,K,W) = A_M(I,J,K,W)*D_E(iminus(i,j,k),j,k)
+            A_M(I,J,K,N) = A_M(I,J,K,N)*D_N(i,j,k)
+            A_M(I,J,K,S) = A_M(I,J,K,S)*D_N(i,jminus(i,j,k),k)
+            A_M(I,J,K,T) = A_M(I,J,K,T)*D_T(i,j,k)
+            A_M(I,J,K,B) = A_M(I,J,K,B)*D_T(i,j,kminus(i,j,k))
 
-            A_M(IJK,0) = -(A_M(IJK,E)+A_M(IJK,W)+A_M(IJK,N)+A_M(IJK,S) + &
-               A_M(IJK,T)+A_M(IJK,B))
+            A_M(I,J,K,0) = -(A_M(I,J,K,E)+A_M(I,J,K,W)+A_M(I,J,K,N)+A_M(I,J,K,S) + &
+               A_M(I,J,K,T)+A_M(I,J,K,B))
 
-            IF (ABS(A_M(IJK,0)) < SMALL_NUMBER) THEN
-               IF (ABS(B_M(IJK)) < SMALL_NUMBER) THEN
-                  A_M(IJK,0) = -ONE
-                  B_M(IJK) = ZERO
+            IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
+               IF (ABS(B_M(I,J,K)) < SMALL_NUMBER) THEN
+                  A_M(I,J,K,0) = -ONE
+                  B_M(I,J,K) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
                   WRITE (LINE, '(A,I6,A,I1,A,G12.5)') 'Error: At IJK = ', IJK, &
-                     ' M = ', 0, ' A = 0 and b = ', B_M(IJK)
+                     ' M = ', 0, ' A = 0 and b = ', B_M(I,J,K)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
                ENDIF
             ENDIF
@@ -116,14 +122,14 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! note the matrix coefficients and source vector should already be zero
 ! from the initialization of A and B but the following ensures the zero
 ! value.
-            A_M(IJK,E) = ZERO
-            A_M(IJK,W) = ZERO
-            A_M(IJK,N) = ZERO
-            A_M(IJK,S) = ZERO
-            A_M(IJK,T) = ZERO
-            A_M(IJK,B) = ZERO
-            A_M(IJK,0) = -ONE
-            B_M(IJK) = ZERO
+            A_M(I,J,K,E) = ZERO
+            A_M(I,J,K,W) = ZERO
+            A_M(I,J,K,N) = ZERO
+            A_M(I,J,K,S) = ZERO
+            A_M(I,J,K,T) = ZERO
+            A_M(I,J,K,B) = ZERO
+            A_M(I,J,K,0) = -ONE
+            B_M(I,J,K) = ZERO
          ENDIF   ! end if/else branch fluid_cell(i,j,k)
       ENDDO
       ENDDO
@@ -140,7 +146,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                ijk = funijk(i,j,k)
 
                if (fluid_cell(i,j,k)) THEN
-                  A_M(IJK,0) = A_M(IJK,0) - &
+                  A_M(I,J,K,0) = A_M(I,J,K,0) - &
                      fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
                      EP_G(IJK)*VOL*ODT
                end if
@@ -169,12 +175,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
-            if(p_flow_at(imjk)) A_m(IJK,W) = ZERO
-            if(p_flow_at(ipjk)) A_m(IJK,E) = ZERO
-            if(p_flow_at(ijmk)) A_m(IJK,S) = ZERO
-            if(p_flow_at(ijpk)) A_m(IJK,N) = ZERO
-            if(p_flow_at(ijkm)) A_m(IJK,B) = ZERO
-            if(p_flow_at(ijkp)) A_m(IJK,T) = ZERO
+            if(p_flow_at(imjk)) A_m(I,J,K,W) = ZERO
+            if(p_flow_at(ipjk)) A_m(I,J,K,E) = ZERO
+            if(p_flow_at(ijmk)) A_m(I,J,K,S) = ZERO
+            if(p_flow_at(ijpk)) A_m(I,J,K,N) = ZERO
+            if(p_flow_at(ijkm)) A_m(I,J,K,B) = ZERO
+            if(p_flow_at(ijkp)) A_m(I,J,K,T) = ZERO
          ENDIF
           end do
         end do
@@ -183,10 +189,9 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 ! Specify P' to zero for incompressible flows. Check set_bc0
 ! for details on selection of IJK_P_g.
       IF (IJK_P_G(1) /= UNDEFINED_I) THEN
-         ijk = funijk(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3))
-         B_M(IJK) = ZERO
-         A_M(IJK,:) = ZERO
-         A_M(IJK,0) = -ONE
+         B_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = ZERO
+         A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = ZERO
+         A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -ONE
       ENDIF
 
       call unlock_xsi_array

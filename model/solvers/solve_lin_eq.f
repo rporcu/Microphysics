@@ -46,9 +46,11 @@
 ! variable
       DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
 ! septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! phase index
       INTEGER, INTENT(IN) :: M
 ! maximum number of iterations (generally leq_it)
@@ -79,8 +81,6 @@
       DOUBLE PRECISION :: max_resid_local, tol_resid_max
 ! convergence tolerance for leq solver
       DOUBLE PRECISION :: TOL
-! transpose of septadiaganol matrix A_M
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:) :: A_MT
 ! indices
       INTEGER :: I,J,K,II, IJK
 ! for constructing local character strings
@@ -112,26 +112,8 @@
       SELECT CASE (METHOD)
 
       CASE (2)
-! BICGSTAB: BIConjugate Gradients STabilized method
-         IF(do_transpose) THEN  ! mfix.dat keyword default=false
-            allocate( A_mt(-3:3, DIMENSION_3 ))
-            DO K = kstart3, kend3
-            DO J = jstart3, jend3
-            DO I = istart3, iend3
-            IJK = FUNIJK(i,j,k)
-               do ii=-3,3
-                  A_mt(ii,ijk) = A_m(ijk,ii)
-               enddo
-            ENDDO
-            ENDDO
-            ENDDO
-            call leq_bicgst(VNAME, VNO, VAR, A_Mt(:,:), B_M(:), &
-                            SWEEP, TOL, PC, ITMAX, IER)
-            deallocate( A_mt )
-         ELSE
-            call leq_bicgs(VNAME, VNO, VAR, A_M(:,:), B_M(:),&
+            call leq_bicgs(VNAME, VNO, VAR, A_M, B_M,&
                            SWEEP, TOL, PC, ITMAX, IER)
-         ENDIF
 
       CASE DEFAULT
          LINE0(1:14) = 'SOLVE_LIN_EQ: '

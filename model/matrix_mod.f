@@ -21,11 +21,10 @@
 !-----------------------------------------------
 
 ! linear equation matrix and vector
-      DOUBLE PRECISION, DIMENSION(:, :), ALLOCATABLE :: A_m
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: B_m
+      DOUBLE PRECISION, DIMENSION(:,:,:, :), ALLOCATABLE :: A_m
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: B_m
 
       LOGICAL :: ambm_locked = .false.
-
 
 ! Definitions for sparse matrix
       INTEGER, PARAMETER :: e = 1
@@ -78,19 +77,21 @@
       IMPLICIT NONE
 
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+! Vector b_m
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-! Source vector
-      DOUBLE PRECISION :: b_m(DIMENSION_3)
 !-----------------------------------------------
 !
-      A_M(:,B) = ZERO
-      A_M(:,S) = ZERO
-      A_M(:,W) = ZERO
-      A_M(:,0) = -ONE
-      A_M(:,E) = ZERO
-      A_M(:,N) = ZERO
-      A_M(:,T) = ZERO
+      A_M(:,:,:,B) = ZERO
+      A_M(:,:,:,S) = ZERO
+      A_M(:,:,:,W) = ZERO
+      A_M(:,:,:,0) = -ONE
+      A_M(:,:,:,E) = ZERO
+      A_M(:,:,:,N) = ZERO
+      A_M(:,:,:,T) = ZERO
       B_M = ZERO
 
       RETURN

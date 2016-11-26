@@ -31,9 +31,11 @@ MODULE ur_facs
 ! Variable
       DOUBLE PRECISION :: Var(DIMENSION_3)
 ! Septadiagonal matrix
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 !   Vector b_m
-      DOUBLE PRECISION :: B_m(DIMENSION_3)
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Equation ID
       INTEGER :: EQ
 ! Axis ID: U, V, W, S (scalar)
@@ -61,10 +63,10 @@ MODULE ur_facs
              ijk = funijk(i,j,k)
 
             IF (fluid_cell(i,j,k)) THEN
-               AP = A_M(IJK,0)
+               AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
-                  A_M(IJK,0) = AP*F1
-                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+                  A_M(I,J,K,0) = AP*F1
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
              end do
@@ -78,10 +80,10 @@ MODULE ur_facs
 
              ijk = funijk(i,j,k)
             IF (FLOW_AT_E(IJK)) THEN
-               AP = A_M(IJK,0)
+               AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
-                  A_M(IJK,0) = AP*F1
-                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+                  A_M(I,J,K,0) = AP*F1
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
              end do
@@ -95,10 +97,10 @@ MODULE ur_facs
 
              ijk = funijk(i,j,k)
             IF (FLOW_AT_N(IJK)) THEN
-               AP = A_M(IJK,0)
+               AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
-                  A_M(IJK,0) = AP*F1
-                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+                  A_M(I,J,K,0) = AP*F1
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
 
@@ -114,10 +116,10 @@ MODULE ur_facs
              ijk = funijk(i,j,k)
 
             IF (FLOW_AT_T(IJK)) THEN
-               AP = A_M(IJK,0)
+               AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
-                  A_M(IJK,0) = AP*F1
-                  B_M(IJK) = B_M(IJK) + AP*VAR(IJK)*F2
+                  A_M(I,J,K,0) = AP*F1
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
                ENDIF
             ENDIF
 

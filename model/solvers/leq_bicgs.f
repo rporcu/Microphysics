@@ -34,15 +34,14 @@
 ! variable number (not really used here; see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-!      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
-
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-!      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
 ! Note: this setting only seems to matter when leq_pc='line'
@@ -116,14 +115,13 @@
 ! variable number (not really used here-see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-!      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
       DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-!      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3,-3:3)
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3,-3:3), INTENT(INOUT) :: A_m
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-!      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: B_m
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
       CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
@@ -157,7 +155,7 @@
                           aijmax, oam
       DOUBLE PRECISION :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
       LOGICAL :: isconverged
-      INTEGER :: i, j, k, ijk
+      INTEGER :: i, j, k, ijk, ii, jj, kk
       INTEGER :: iter
       DOUBLE PRECISION, DIMENSION(2) :: TxS_TxT
 !-----------------------------------------------
@@ -207,10 +205,10 @@
             do i = istart2,iend2
                do j = jstart2,jend2
                   IJK = funijk(i,j,k)
-                  aijmax = maxval(abs(A_M(ijk,:)) )
+                  aijmax = maxval(abs(A_M(i,j,k,:)) )
                   OAM = one/aijmax
-                  A_M(IJK,:) = A_M(IJK,:)*OAM
-                  B_M(IJK) = B_M(IJK)*OAM
+                  A_M(I,J,K,:) = A_M(I,J,K,:)*OAM
+                  B_M(I,J,K) = B_M(I,J,K)*OAM
                enddo
             enddo
          enddo
@@ -224,7 +222,14 @@
 ! ---------------------------------------------------------------->>>
       call MATVEC(Vname, Var, A_M, R)   ! returns R=A*Var
 
-      R(:) = B_m(:) - R(:)
+      do k = kstart3,kend3
+         do i = istart3,iend3
+            do j = jstart3,jend3
+               IJK = funijk(i,j,k)
+               R(IJK) = B_M(I,J,K) - R(IJK)
+            enddo
+         enddo
+      enddo
 
       ! call send_recv(R,nlayers_bicgs)
 
@@ -340,7 +345,14 @@
 !                  Rnorm = sqrt( dot_product_par( Var, Var ) )
 !                  print*,'leq_bicgs, initial: ', Vname,' Vnorm ', Rnorm
 
-                  R(:) = B_m(:) - R(:)
+                  do kk = kstart3,kend3
+                     do jj = jstart3,jend3
+                        do ii = istart3,iend3
+                           IJK = funijk(ii,jj,kk)
+                           R(IJK) = B_M(iI,jJ,kK) - R(IJK)
+                        enddo
+                     enddo
+                  enddo
 
                   if(is_serial) then
                      Rnorm =  dot_product( R, R )
@@ -430,7 +442,14 @@
 
       if (idebugl >= 1) then
          call MATVEC(Vname, Var, A_m, R)   ! returns R=A*Var
-         R(:) = R(:) - B_m(:)
+         do kk = kstart3,kend3
+            do jj = jstart3,jend3
+               do ii = istart3,iend3
+                  IJK = funijk(ii,jj,kk)
+                  R(IJK) = R(IJK) - B_M(iI,jJ,kK)
+               enddo
+            enddo
+         enddo
 
          if(is_serial) then
             Rnorm = dot_product( R,R)

@@ -43,30 +43,20 @@
       INTEGER          IJK
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 !
 !                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3)
+      DOUBLE PRECISION :: b_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !                      Source vector
       DOUBLE PRECISION var(DIMENSION_3)
 
-      double precision, allocatable :: array1(:) , array2(:)
-      double precision, allocatable :: am(:,:)
-!
 !-----------------------------------------------
 !
       integer i, j, k
 
-      if (myPE == PE_IO) then
-         allocate (array1(ijkmax3))
-         allocate (array2(ijkmax3))
-         allocate (am(ijkmax3,-3:3))
-      else
-         allocate (array1(1))
-         allocate (array2(1))
-         allocate (am(1,-3:3))
-      end if
 
       if (myPE == PE_IO) then
          IF(DMP_LOG)WRITE (UNIT_LOG,*) ' Note : write_am_m is VERY inefficient '
@@ -81,10 +71,7 @@
       end if
 
 
-      do L = -3,3
 
-      array1 = a_m(:,L)
-      ! call gather(a_m(:,L),array1,root)
 
       DO K = Kmin2, Kmax2
       DO I = Imin2, Imax2
@@ -92,48 +79,16 @@
 
       IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
-      IJK = FUNIJK_GL(IMAP_C(I),JMAP_C(J),KMAP_C(K))
-!     IJK = FUNIJK_GL(I,J,K)
-
-      if (myPE == PE_IO) am(ijk,l) = array1(ijk)
-
-
-      END DO
-      END DO
-      END DO
-
-      end do
-
-      array1 = var
-      ! call gather(var(:),array1,root)
-      array2 = b_m
-      ! call gather(b_m(:),array2,root)
-
-      DO K = Kmin2, Kmax2
-      DO I = Imin2, Imax2
-      DO J = Jmin2, Jmax2
-
-      IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-
-!     IJK = FUNIJK_GL(I,J,K)
       IJK = FUNIJK_GL(IMAP_C(I),JMAP_C(J),KMAP_C(K))
 
       if (myPE == PE_IO .AND. DMP_LOG)&
          WRITE (UNIT_LOG, '(I5, 3(I3), 9(1X,G9.2))') &
          FUNIJK_IO(I,J,K), I, J, K,&
-         (AM(ijk,L),L=-3,3), array2(IJK), array1(IJK)
+         (A_M(i,j,k,L),L=-3,3), b_m(I,J,K), var(IJK)
 
       END DO
       END DO
       END DO
-
-      deallocate (array1)    !//
-      deallocate (array2)    !//
 
       RETURN
       END SUBROUTINE WRITE_AB_M_VAR
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 020 New local variables for parallelization: array1,array2,i,j,k
-!// 400 Added mpi_utility module and other global reduction (gather) calls

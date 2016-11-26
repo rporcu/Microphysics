@@ -35,7 +35,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3, imap
+      USE compar, only: imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
       USE param
@@ -47,14 +47,19 @@
       USE geometry
       USE compar
       USE functions
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
       IMPLICIT NONE
-!-----------------------------------------------
+
 ! Dummy arguments
-!-----------------------------------------------
+!---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -79,33 +84,33 @@
 
 ! East face (i+1/2, j, k)
             AM = ROP_GE(IJK)*AYZ
-            A_M(IJK,E) = AM
-            A_M(IPJK,W) = AM
+            A_M(I,J,K,E) = AM
+            A_M(iplus(i,j,k),j,k,W) = AM
 
 ! North face (i, j+1/2, k)
             AM = ROP_GN(IJK)*AXZ
-            A_M(IJK,N) = AM
-            A_M(IJPK,S) = AM
+            A_M(I,J,K,N) = AM
+            A_M(I,jplus(i,j,k),K,S) = AM
 
 ! Top face (i, j, k+1/2)
             IF (DO_K) THEN
                AM = ROP_GT(IJK)*AXY
-               A_M(IJK,T) = AM
-               A_M(IJKP,B) = AM
+               A_M(I,J,K,T) = AM
+               A_M(I,J,kplus(i,j,k),B) = AM
             ENDIF
 
 ! West face (i-1/2, j, k)
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IF (.NOT.fluid_cell(iminus(i,j,k),j,k)) THEN
                AM = ROP_GE(IMJK)*AYZ
-               A_M(IJK,W) = AM
+               A_M(I,J,K,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IF (.NOT.fluid_cell(i,jminus(i,j,k),k)) THEN
                AM = ROP_GN(IJMK)*AXZ
-               A_M(IJK,S) = AM
+               A_M(I,J,K,S) = AM
             ENDIF
 
 ! Bottom face (i, j, k-1/2)
@@ -113,7 +118,7 @@
                IJKM = FUNIJK(i,j,kminus(i,j,k))
                IF (.NOT.fluid_cell(i,j,kminus(i,j,k))) THEN
                   AM = ROP_GT(IJKM)*AXY
-                  A_M(IJK,B) = AM
+                  A_M(I,J,K,B) = AM
                ENDIF
             ENDIF
          ENDIF   ! end if (fluid_cell(i,j,k))

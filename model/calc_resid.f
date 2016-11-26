@@ -32,9 +32,11 @@
 ! Variable being evaluated
       DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+!   Vector b_m
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -92,18 +94,18 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK) - (A_M(IJK,0)*VAR(IJK)+A_M(IJK,E)*VAR(IJKE)+&
-               A_M(IJK,W)*VAR(IJKW)+A_M(IJK,N)*VAR(IJKN)+A_M(IJK,S)*VAR(&
+            NUM1 = B_M(I,J,K) - (A_M(I,J,K,0)*VAR(IJK)+A_M(I,J,K,E)*VAR(IJKE)+&
+               A_M(I,J,K,W)*VAR(IJKW)+A_M(I,J,K,N)*VAR(IJKN)+A_M(I,J,K,S)*VAR(&
                IJKS))
 
             IF (DO_K) THEN
                IJKB = FUNIJK(i,j,kbot(i,j,k))
                IJKT = FUNIJK(i,j,ktop(i,j,k))
-               NUM1 = NUM1 - (A_M(IJK,T)*VAR(IJKT)+A_M(IJK,B)*VAR(IJKB))
+               NUM1 = NUM1 - (A_M(I,J,K,T)*VAR(IJKT)+A_M(I,J,K,B)*VAR(IJKB))
             ENDIF
 
             NUM1 = ABS(NUM1)
-            DEN1 = ABS(A_M(IJK,0)*VAR(IJK))
+            DEN1 = ABS(A_M(I,J,K,0)*VAR(IJK))
 ! storing value of residual at each ijk location
             RESID_IJK(IJK) = NUM1
 
@@ -232,9 +234,11 @@
 ! Variable being evaluated
       DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -295,17 +299,17 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK) - (A_M(IJK,0)*VAR(IJK)+A_M(IJK,E)*VAR(IPJK)+&
-               A_M(IJK,W)*VAR(IMJK)+A_M(IJK,N)*VAR(IJPK)+A_M(IJK,S)*VAR(&
+            NUM1 = B_M(I,J,K) - (A_M(I,J,K,0)*VAR(IJK)+A_M(I,J,K,E)*VAR(IPJK)+&
+               A_M(I,J,K,W)*VAR(IMJK)+A_M(I,J,K,N)*VAR(IJPK)+A_M(I,J,K,S)*VAR(&
                IJMK))
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
                IJKP = FUNIJK(i,j,kplus(i,j,k))
-               NUM1 = NUM1 - (A_M(IJK,T)*VAR(IJKP)+A_M(IJK,B)*VAR(IJKM))
+               NUM1 = NUM1 - (A_M(I,J,K,T)*VAR(IJKP)+A_M(I,J,K,B)*VAR(IJKM))
             ENDIF
 
             NUM1 = ABS(NUM1)
-            DEN1 = ABS(A_M(IJK,0)*VAR(IJK))
+            DEN1 = ABS(A_M(I,J,K,0)*VAR(IJK))
 ! storing value of residual at each ijk location
             RESID_IJK(IJK) = NUM1
 
@@ -429,8 +433,9 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+!   Vector b_m
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Normalization factor
       DOUBLE PRECISION, INTENT(IN) :: NORM
 ! Numerator and denominator
@@ -473,7 +478,7 @@
          IF (fluid_cell(i,j,k)) THEN
 
 ! evaluating the residual at cell ijk:
-            NUM1 = ABS(B_M(IJK))
+            NUM1 = ABS(B_M(I,J,K))
             IF (NUM1 > MAX_RESID) THEN
                MAX_RESID = NUM1
                IJK_RESID = IJK
@@ -607,9 +612,11 @@
 ! W velocity (z-dir), used here for scaling
       DOUBLE PRECISION, INTENT(IN) :: W_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -667,13 +674,13 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK) - (A_M(IJK,0)*U_M(IJK)+&
-               A_M(IJK,E)*U_M(IPJK)+A_M(IJK,W)*U_M(IMJK)+&
-               A_M(IJK,N)*U_M(IJPK)+A_M(IJK,S)*U_M(IJMK))
+            NUM1 = B_M(I,J,K) - (A_M(I,J,K,0)*U_M(IJK)+&
+               A_M(I,J,K,E)*U_M(IPJK)+A_M(I,J,K,W)*U_M(IMJK)+&
+               A_M(I,J,K,N)*U_M(IJPK)+A_M(I,J,K,S)*U_M(IJMK))
             IF (DO_K) THEN
                IJKM = funijk(i,j,kminus(i,j,k))
                IJKP = funijk(i,j,kplus(i,j,k))
-               NUM1 = NUM1 - (A_M(IJK,T)*U_M(IJKP)+A_M(IJK,B)*U_M(IJKM))
+               NUM1 = NUM1 - (A_M(I,J,K,T)*U_M(IJKP)+A_M(I,J,K,B)*U_M(IJKM))
             ENDIF
 
 ! Ignore momentum residual in stagnant regions.  Need an alternative
@@ -681,7 +688,7 @@
             VEL = SQRT(U_M(IJK)**2+V_M(IJK)**2+W_M(IJK)**2)
             IF (VEL > SMALL_NUMBER) THEN
                NUM1 = ABS(NUM1)
-               DEN1 = ABS(A_M(IJK,0)*VEL)
+               DEN1 = ABS(A_M(I,J,K,0)*VEL)
 ! storing value of residual at each ijk location
                RESID_IJK(IJK) = NUM1
 ! adding to terms that are accumulated
@@ -811,9 +818,11 @@
 ! W velocity (z-dir), used here for scaling
       DOUBLE PRECISION, INTENT(IN) :: W_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -872,13 +881,13 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK) - (A_M(IJK,0)*V_M(IJK)+&
-               A_M(IJK,E)*V_M(IPJK)+A_M(IJK,W)*V_M(IMJK)+&
-               A_M(IJK,N)*V_M(IJPK)+A_M(IJK,S)*V_M(IJMK))
+            NUM1 = B_M(I,J,K) - (A_M(I,J,K,0)*V_M(IJK)+&
+               A_M(I,J,K,E)*V_M(IPJK)+A_M(I,J,K,W)*V_M(IMJK)+&
+               A_M(I,J,K,N)*V_M(IJPK)+A_M(I,J,K,S)*V_M(IJMK))
             IF (DO_K) THEN
                IJKM = funijk(i,j,kminus(i,j,k))
                IJKP = funijk(i,j,kplus(i,j,k))
-               NUM1 = NUM1 - (A_M(IJK,T)*V_M(IJKP)+A_M(IJK,B)*V_M(IJKM))
+               NUM1 = NUM1 - (A_M(I,J,K,T)*V_M(IJKP)+A_M(I,J,K,B)*V_M(IJKM))
             ENDIF
 
 ! Ignore momentum residual in stagnant regions.  Need an alternative
@@ -886,7 +895,7 @@
             VEL = SQRT(U_M(IJK)**2+V_M(IJK)**2+W_M(IJK)**2)
             IF (VEL > SMALL_NUMBER) THEN
                NUM1 = ABS(NUM1)
-               DEN1 = ABS(A_M(IJK,0)*VEL)
+               DEN1 = ABS(A_M(I,J,K,0)*VEL)
 ! storing value of residual at each ijk location
                RESID_IJK(IJK) = NUM1
 ! adding to terms that are accumulated
@@ -1018,9 +1027,11 @@
 ! W velocity (z-dir), used here for scaling
       DOUBLE PRECISION, INTENT(IN) :: W_m(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m(DIMENSION_3, -3:3)
-! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+!   Vector b_m
+      DOUBLE PRECISION :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
@@ -1077,13 +1088,13 @@
 ! evaluating the residual at cell ijk:
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
-            NUM1 = B_M(IJK) - (A_M(IJK,0)*W_M(IJK)+&
-               A_M(IJK,E)*W_M(IPJK)+A_M(IJK,W)*W_M(IMJK)+&
-               A_M(IJK,N)*W_M(IJPK)+A_M(IJK,S)*W_M(IJMK))
+            NUM1 = B_M(I,J,K) - (A_M(I,J,K,0)*W_M(IJK)+&
+               A_M(I,J,K,E)*W_M(IPJK)+A_M(I,J,K,W)*W_M(IMJK)+&
+               A_M(I,J,K,N)*W_M(IJPK)+A_M(I,J,K,S)*W_M(IJMK))
             IF (DO_K) THEN
                IJKM = funijk(i,j,kminus(i,j,k))
                IJKP = funijk(i,j,kplus(i,j,k))
-               NUM1 = NUM1 - (A_M(IJK,T)*W_M(IJKP)+A_M(IJK,B)*W_M(IJKM))
+               NUM1 = NUM1 - (A_M(I,J,K,T)*W_M(IJKP)+A_M(I,J,K,B)*W_M(IJKM))
             ENDIF
 
 ! Ignore momentum residual in stagnant regions.  Need an alternative
@@ -1091,7 +1102,7 @@
             VEL = SQRT(U_M(IJK)**2+V_M(IJK)**2+W_M(IJK)**2)
             IF (VEL > SMALL_NUMBER) THEN
                NUM1 = ABS(NUM1)
-               DEN1 = ABS(A_M(IJK,0)*VEL)
+               DEN1 = ABS(A_M(I,J,K,0)*VEL)
 ! storing value of residual at each ijk location
                RESID_IJK(IJK) = NUM1
 ! adding to terms that are accumulated

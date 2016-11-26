@@ -62,15 +62,11 @@
 ! temporary use of global arrays:
 ! arraym1 (locally b_mmax)
 ! vector B_M based on dominate term in correction equation
-!      DOUBLE PRECISION :: B_MMAX(DIMENSION_3)
-! Septadiagonal matrix A_m, vector B_m
-!      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
-!      DOUBLE PRECISION B_m(DIMENSION_3)
 !-----------------------------------------------
+! Vector b_m
+      DOUBLE PRECISION, allocatable :: B_MMAX(:,:,:)
 
-      DOUBLE PRECISION, allocatable :: B_MMAX(:)
-
-      ALLOCATE(B_MMAX(DIMENSION_3))
+      ALLOCATE(B_MMAX(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       call lock_ambm
 
@@ -145,9 +141,11 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! maximum term in b_m expression
-      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -176,8 +174,8 @@
             if(fluid_cell(i,j,k)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
-               B_M(IJK) = B_M(IJK) - pSource
-               B_MMAX(IJK) = max(abs(B_MMAX(IJK)), abs(B_M(IJK)))
+               B_M(I,J,K) = B_M(I,J,K) - pSource
+               B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(B_M(I,J,K)))
             endif
 
          enddo

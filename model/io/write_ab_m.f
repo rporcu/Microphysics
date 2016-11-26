@@ -20,44 +20,29 @@
       use funits
 
       IMPLICIT NONE
+
+! Dummy arguments
+!---------------------------------------------------------------------//
+! Septadiagonal matrix A_m
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+! Vector b_m
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+!                      Phase index
+      INTEGER          M
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-!
-!                      Local index
+! Local index
       INTEGER          L
-!
-!                      Phase index
-      INTEGER          M
-!
-!                      cell index
-      INTEGER          IJK
-!
-!                      Septadiagonal matrix A_m
-      DOUBLE PRECISION A_m(DIMENSION_3, -3:3)
-!
-!                      Source vector
-      DOUBLE PRECISION b_m(DIMENSION_3)
-
-      double precision, allocatable :: array1(:) , array2(:)   !//
-      double precision, allocatable :: am(:,:)                !//
-!
 !-----------------------------------------------
 !
       integer i, j, k
 
-      if (myPE == PE_IO) then
-         allocate (array1(ijkmax3))
-         allocate (array2(ijkmax3))
-         allocate (am(ijkmax3,-3:3))
-      else
-         allocate (array1(1))
-         allocate (array2(1))
-         allocate (am(1,-3:3))
-      end if
 
       if (myPE == PE_IO) then
          IF(DMP_LOG)WRITE (UNIT_LOG,*) ' Note : write_am_m is VERY inefficient '
@@ -72,56 +57,20 @@
 
 
 
-      array2 = b_m
-      ! call gather(b_m(:),array2,root)
-
-
-      do L = -3,3
-
-      array1 = a_m(:,L)
-      ! call gather(a_m(:,L),array1,root)
-
       DO K = Kmin2, Kmax2
       DO I = Imin2, Imax2
       DO J = Jmin2, Jmax2
 
       IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-
-!     IJK = FUNIJK_GL(IMAP_C(I),JMAP_C(J),KMAP_C(K))
-      IJK = FUNIJK_GL(I,J,K)
-
-      if (myPE == PE_IO) am(ijk,l) = array1(ijk)
-
-
-      END DO
-      END DO
-      END DO
-
-      end do
-
-      DO K = Kmin2, Kmax2
-      DO I = Imin2, Imax2
-      DO J = Jmin2, Jmax2
-
-      IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-
-      IJK = FUNIJK_GL(I,J,K)
 
       if (myPE == PE_IO .AND. DMP_LOG) &
          WRITE (UNIT_LOG, '(I5, 3(I3), 8(1X,G9.2))') &
-         FUNIJK_IO(I,J,K), I, J, K,(AM(ijk,L),L=-3,3), array2(IJK)
+         FUNIJK_IO(I,J,K), I, J, K,(A_M(i,j,k,L),L=-3,3), B_M(i,j,k)
 
       END DO
       END DO
       END DO
 
-      deallocate (array1)    !//
-      deallocate (array2)    !//
 
       RETURN
       END SUBROUTINE WRITE_AB_M
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!// 020 New local variables for parallelization: array1,array2,i,j,k
-!// 400 Added mpi_utility module and other global reduction (gather) calls

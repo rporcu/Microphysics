@@ -30,9 +30,17 @@
 ! Variables
 !-----------------------------------------------
 
+      integer :: is3, ie3
+      integer :: js3, je3
+      integer :: ks3, ke3
+
+      is3 = istart3;   ie3 = iend3
+      js3 = jstart3;   je3 = jend3
+      ks3 = kstart3;   ke3 = kend3
+
 !ambm
-      Allocate( A_m(DIMENSION_3, -3:3) )
-      Allocate( B_m(DIMENSION_3) )
+      Allocate( A_m(is3:ie3,js3:je3,ks3:ke3, -3:3) )
+      Allocate( B_m(is3:ie3,js3:je3,ks3:ke3) )
 
 !fldvar
       Allocate( EP_g (DIMENSION_3) )
@@ -44,18 +52,18 @@
       Allocate( V_g (DIMENSION_3) )
       Allocate( W_g (DIMENSION_3) )
 
-      Allocate( EP_go  (istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( P_go   (istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( RO_go  (istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( ROP_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( EP_go  (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( P_go   (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( RO_go  (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( ROP_go (is3:ie3,js3:je3,ks3:ke3))
 
-      Allocate( U_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( V_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( W_go (istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( U_go (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( V_go (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( W_go (is3:ie3,js3:je3,ks3:ke3))
 
-      Allocate( d_e(istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( d_n(istart3:iend3,jstart3:jend3,kstart3:kend3))
-      Allocate( d_t(istart3:iend3,jstart3:jend3,kstart3:kend3))
+      Allocate( d_e(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( d_n(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( d_t(is3:ie3,js3:je3,ks3:ke3))
 
       Allocate( Pp_g(DIMENSION_3p) )
 

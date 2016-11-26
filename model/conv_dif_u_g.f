@@ -18,14 +18,19 @@
       USE run, only: momentum_x_eq
       USE run, only: discretize
       use fldvar
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
@@ -325,7 +330,8 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -360,36 +366,36 @@
 
 ! East face (i+1, j, k)
             IF (Flux_e >= ZERO) THEN
-               A_U_G(IJK,E) = D_Fe
-               A_U_G(IPJK,W) = D_Fe + Flux_e
+               A_U_G(I,J,K,E) = D_Fe
+               A_U_G(iplus(i,j,k),j,k,W) = D_Fe + Flux_e
             ELSE
-               A_U_G(IJK,E) = D_Fe - Flux_e
-               A_U_G(IPJK,W) = D_Fe
+               A_U_G(I,J,K,E) = D_Fe - Flux_e
+               A_U_G(iplus(i,j,k),j,k,W) = D_Fe
             ENDIF
 ! West face (i, j, k)
             IF (.NOT.FLOW_AT_E(IMJK)) THEN
                IF (Flux_w >= ZERO) THEN
-                  A_U_G(IJK,W) = D_Fw + Flux_w
+                  A_U_G(I,J,K,W) = D_Fw + Flux_w
                ELSE
-                  A_U_G(IJK,W) = D_Fw
+                  A_U_G(I,J,K,W) = D_Fw
                ENDIF
             ENDIF
 
 
 ! North face (i+1/2, j+1/2, k)
             IF (Flux_n >= ZERO) THEN
-               A_U_G(IJK,N) = D_Fn
-               A_U_G(IJPK,S) = D_Fn + Flux_n
+               A_U_G(I,J,K,N) = D_Fn
+               A_U_G(i,jplus(i,j,k),k,S) = D_Fn + Flux_n
             ELSE
-               A_U_G(IJK,N) = D_Fn - Flux_n
-               A_U_G(IJPK,S) = D_Fn
+               A_U_G(I,J,K,N) = D_Fn - Flux_n
+               A_U_G(i,jplus(i,j,k),k,S) = D_Fn
             ENDIF
 ! South face (i+1/2, j-1/2, k)
             IF (.NOT.FLOW_AT_E(IJMK)) THEN
                IF (Flux_s >= ZERO) THEN
-                  A_U_G(IJK,S) = D_Fs + Flux_s
+                  A_U_G(I,J,K,S) = D_Fs + Flux_s
                ELSE
-                  A_U_G(IJK,S) = D_Fs
+                  A_U_G(I,J,K,S) = D_Fs
                ENDIF
             ENDIF
 
@@ -401,18 +407,18 @@
 
 ! Top face (i+1/2, j, k+1/2)
                IF (Flux_t >= ZERO) THEN
-                  A_U_G(IJK,T) = D_Ft
-                  A_U_G(IJKP,B) = D_Ft + Flux_t
+                  A_U_G(I,J,K,T) = D_Ft
+                  A_U_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
                ELSE
-                  A_U_G(IJK,T) = D_Ft - Flux_t
-                  A_U_G(IJKP,B) = D_Ft
+                  A_U_G(I,J,K,T) = D_Ft - Flux_t
+                  A_U_G(i,j,kplus(i,j,k),B) = D_Ft
                ENDIF
 ! Bottom face (i+1/2, j, k-1/2)
                IF (.NOT.FLOW_AT_E(IJKM)) THEN
                   IF (Flux_b >= ZERO) THEN
-                     A_U_G(IJK,B) = D_Fb + Flux_b
+                     A_U_G(I,J,K,B) = D_Fb + Flux_b
                   ELSE
-                     A_U_G(IJK,B) = D_Fb
+                     A_U_G(I,J,K,B) = D_Fb
                   ENDIF
                ENDIF
             ENDIF   ! end if (do_k)
@@ -471,7 +477,8 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -526,20 +533,20 @@
             IJPK = FUNIJK(i,jplus(i,j,k),k)
 
 ! East face (i+1, j, k)
-            A_U_G(IJK,E) = D_Fe - XSI_E(IJK) * Flux_e
-            A_U_G(IPJK,W) = D_Fe + (ONE - XSI_E(IJK)) * Flux_e
+            A_U_G(I,J,K,E) = D_Fe - XSI_E(IJK) * Flux_e
+            A_U_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(IJK)) * Flux_e
 ! West face (i, j, k)
             IF (.NOT.FLOW_AT_E(IMJK)) THEN
-               A_U_G(IJK,W) = D_Fw + (ONE - XSI_E(IMJK)) * Flux_w
+               A_U_G(I,J,K,W) = D_Fw + (ONE - XSI_E(IMJK)) * Flux_w
             ENDIF
 
 
 ! North face (i+1/2, j+1/2, k)
-            A_U_G(IJK,N) = D_Fn - XSI_N(IJK) * Flux_n
-            A_U_G(IJPK,S) = D_Fn + (ONE - XSI_N(IJK)) * Flux_n
+            A_U_G(I,J,K,N) = D_Fn - XSI_N(IJK) * Flux_n
+            A_U_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(IJK)) * Flux_n
 ! South face (i+1/2, j-1/2, k)
             IF (.NOT.FLOW_AT_E(IJMK)) THEN
-               A_U_G(IJK,S) = D_Fs + (ONE - XSI_N(IJMK)) * Flux_s
+               A_U_G(I,J,K,S) = D_Fs + (ONE - XSI_N(IJMK)) * Flux_s
             ENDIF
 
 ! Top face (i+1/2, j, k+1/2)
@@ -548,11 +555,11 @@
                IJKM = FUNIJK(i,j,kminus(i,j,k))
                IJKP = FUNIJK(i,j,kplus(i,j,k))
 
-               A_U_G(IJK,T) = D_Ft - XSI_T(IJK) * Flux_t
-               A_U_G(IJKP,B) = D_Ft + (ONE - XSI_T(IJK)) * Flux_t
+               A_U_G(I,J,K,T) = D_Ft - XSI_T(IJK) * Flux_t
+               A_U_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(IJK)) * Flux_t
 ! Bottom face (i+1/2, j, k-1/2)
                IF (.NOT.FLOW_AT_E(IJKM)) THEN
-                  A_U_G(IJK,B) = D_Fb + (ONE - XSI_T(IJKM)) * Flux_b
+                  A_U_G(I,J,K,B) = D_Fb + (ONE - XSI_T(IJKM)) * Flux_b
                ENDIF
             ENDIF   ! end if (do_k)
 

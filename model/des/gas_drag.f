@@ -49,9 +49,11 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -104,8 +106,8 @@
                   (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
             ENDIF
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL
+            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -124,8 +126,8 @@
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKE))
                tmp_B = AVG(DRAG_BM(IJK,1), DRAG_BM(IJKE,1))
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL * tmp_B
+               A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
+               B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO
@@ -188,10 +190,11 @@
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3, -3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -242,8 +245,8 @@
                   (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
             ENDIF
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL
+            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -262,8 +265,8 @@
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKN))
                tmp_B = AVG(DRAG_BM(IJK,2), DRAG_BM(IJKN,2))
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL * tmp_B
+               A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
+               B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO
@@ -321,9 +324,11 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_M(DIMENSION_3,-3:3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_M(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -369,8 +374,8 @@
             tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
                DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
 
-            A_M(IJK,0) = A_M(IJK,0) + tmp_A*VOL
-            B_M(IJK) = B_M(IJK) + tmp_B*VOL
+            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
 
          ENDDO
          ENDDO
@@ -389,8 +394,8 @@
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKT))
                tmp_B = AVG(DRAG_BM(IJK,3), DRAG_BM(IJKT,3))
 
-               A_M(IJK,0) = A_M(IJK,0) - VOL * tmp_A
-               B_M(IJK) = B_M(IJK) - VOL * tmp_B
+               A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
+               B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B
             ENDIF
          ENDDO
          ENDDO

@@ -61,7 +61,19 @@
       use compar, only: istart2, iend2
       use compar, only: jstart2, jend2
       use compar, only: kstart2, kend2
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
       IMPLICIT NONE
+
+! Dummy arguments
+!---------------------------------------------------------------------//
+! Septadiagonal matrix A_m
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+! Vector b_m
+      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !                      Indices
       INTEGER          IP, IJK
@@ -70,11 +82,6 @@
       INTEGER          M, I, J, K
 !
       CHARACTER, INTENT(IN) :: axis
-!                      Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m(DIMENSION_3, -3:3)
-!
-!                      Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m(DIMENSION_3)
 
       DOUBLE PRECISION :: denominator, xxxm, xxxp
 
@@ -108,21 +115,21 @@
 
          IJK = FUNIJK(i,j,k)
 
-         IF (ABS(A_M(IJK,0)) < SMALL_NUMBER) THEN
-            A_M(IJK,E) = ZERO
-            A_M(IJK,W) = ZERO
-            A_M(IJK,N) = ZERO
-            A_M(IJK,S) = ZERO
-            A_M(IJK,T) = ZERO
-            A_M(IJK,B) = ZERO
-            A_M(IJK,0) = -ONE
-            IF (B_M(IJK) < ZERO) THEN
+         IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
+            A_M(I,J,K,E) = ZERO
+            A_M(I,J,K,W) = ZERO
+            A_M(I,J,K,N) = ZERO
+            A_M(I,J,K,S) = ZERO
+            A_M(I,J,K,T) = ZERO
+            A_M(I,J,K,B) = ZERO
+            A_M(I,J,K,0) = -ONE
+            IF (B_M(I,J,K) < ZERO) THEN
                IP = IP1(I)
 
                denominator = denom_neg(i,j,k)
                xxxm = ONE
                xxxp = ZERO
-            ELSE IF (B_M(IJK) > ZERO) THEN
+            ELSE IF (B_M(I,J,K) > ZERO) THEN
                denominator = denom_pos(i,j,k)
                xxxm = ZERO
                xxxp = ONE
@@ -131,9 +138,9 @@
             ENDIF
 
             IF (denominator > SMALL_NUMBER) THEN
-               B_M(IJK) = SQRT(ABS(B_M(IJK))/(denominator*AVG(xxxm,xxxp)))
+               B_M(I,J,K) = SQRT(ABS(B_M(I,J,K))/(denominator*AVG(xxxm,xxxp)))
             ELSE
-               B_M(IJK) = ZERO
+               B_M(I,J,K) = ZERO
             ENDIF
          ENDIF
       END DO
