@@ -129,7 +129,7 @@
 
 ! Access to only one thread at a time
 !           IF (DMP_LOG)WRITE (UNIT_LOG, 1000) i,j,k, ICBC_FLAG(i,j,k)
-!           call mfix_exit(myPE)
+            call mfix_exit(myPE)
          END SELECT
 ! ----------------------------------------------------------------<<<
 
