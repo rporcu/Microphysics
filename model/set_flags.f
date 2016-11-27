@@ -20,6 +20,7 @@
       USE physprop
       USE funits
       USE compar
+      use ic
       USE boundfunijk
       USE functions
       IMPLICIT NONE
@@ -57,26 +58,26 @@
             DO k = kstart4, kend4
 
               IJK = funijk(i, j, k)
-              SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
-                CASE ('p', 'P', 'I', 'O', 'o')
+              SELECT CASE (ICBC_FLAG(IJK))
+                CASE (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
 
                 ijk1 = bound_funijk(i+1, j, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
 
                 ijk1 = bound_funijk(i-1, j, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
 
                 ijk1 = bound_funijk(i, j+1, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
 
                 ijk1 = bound_funijk(i, j-1, k)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
 
                 ijk1 = bound_funijk(i, j, k+1)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
 
                 ijk1 = bound_funijk(i, j, k-1)
-                IF(TRIM(ICBC_FLAG(IJK1)(1:1)) == 'W')ICBC_FLAG(IJK1)(1:1)='S'
+                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
               END SELECT
             ENDDO
           ENDDO
@@ -94,28 +95,28 @@
 
            ijk = funijk(i,j,k)
 
-         SELECT CASE (TRIM(ICBC_FLAG(IJK)(1:1)))
-         CASE ('.')
+         SELECT CASE (ICBC_FLAG(IJK))
+         CASE (icbc_fluid)
             FLAG(i,j,k) = 1
-         CASE ('p')
+         CASE (icbc_p_inf)
             FLAG(i,j,k) = 10
-         CASE ('P')
+         CASE (icbc_p_out)
             FLAG(i,j,k) = 11
-         CASE ('I')
+         CASE (icbc_m_inf)
             FLAG(i,j,k) = 20
-         CASE ('O')
+         CASE (icbc_m_out)
             FLAG(i,j,k) = 21
-         CASE ('o')
+         CASE (icbc_outfl)
             FLAG(i,j,k) = 31
-         CASE ('W')
+         CASE (icbc_no_s)
             FLAG(i,j,k) = 100
-         CASE ('S')
+         CASE (icbc_free)
             FLAG(i,j,k) = 101
-         CASE ('s')
+         CASE (icbc_pslip)
             FLAG(i,j,k) = 102
-         CASE ('c')
+         CASE (icbc_cycl)
             FLAG(i,j,k) = 106
-         CASE ('C')
+         CASE (icbc_cyclp)
             FLAG(i,j,k) = 107
          CASE DEFAULT
 

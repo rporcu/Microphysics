@@ -107,7 +107,7 @@
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
-      CALL WRITE_FLAGS
+!     CALL WRITE_FLAGS
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0

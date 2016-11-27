@@ -375,8 +375,7 @@
          LOGICAL FUNCTION IS_PSW(boundary_condition)
             implicit none
             INTEGER, intent(in) :: boundary_condition
-            IS_PSW = ((boundary_condition .eq. CG_PSW) &
-                 )
+            IS_PSW = ((boundary_condition .eq. CG_PSW) )
          END FUNCTION IS_PSW
 
       END MODULE bc
