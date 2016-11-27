@@ -277,11 +277,11 @@
                      IF (.NOT.wall_at(i,j,kminus(i,j,k))) THEN
 ! Wall cell at East
                         IF (wall_at(iplus(i,j,k),j,k)) THEN
-                           U_G(I,J,K) = SIGN0*U_G(iplus(i,j,k),j,k)
+                           U_G(I,J,K) = SIGN0*U_G(i,j,kminus(i,j,k))
                         ENDIF
 ! Wall cell at North
                         IF (wall_at(i,jplus(i,j,k),k)) THEN
-                           V_G(I,J,K) = SIGN0*V_G(iplus(i,j,k),j,k)
+                           V_G(I,J,K) = SIGN0*V_G(i,j,kminus(i,j,k))
                         ENDIF
                      ENDIF
 
