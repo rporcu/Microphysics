@@ -14,8 +14,7 @@
       CONTAINS
 
 
-      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, XSI_E, XSI_N, XSI_T, &
-                          incr)
+      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -33,7 +32,6 @@
       USE discretization, only: central_scheme
 
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-      USE functions, only: funijk
 
       USE geometry, only: do_k
       USE geometry, only: odx, ody, odz
@@ -55,23 +53,24 @@
 ! discretization method
       INTEGER, INTENT(IN) :: DISCR
 ! convected quantity
-      DOUBLE PRECISION, INTENT(IN) :: PHI(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: phi(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: V(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: W(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Convection weighting factors
-      DOUBLE PRECISION, INTENT(OUT) :: XSI_e(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: XSI_n(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: XSI_t(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(out) :: xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(out) :: xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(out) :: xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! shear indicator
       INTEGER, INTENT(IN) :: incr
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, IJKC, IJKD, IJKU
-      INTEGER :: i, j, k, itmp, jtmp, ktmp
+      INTEGER :: IC, ID, IU, JC, JD, JU, KC, KD, KU
+      INTEGER :: i, j, k
 !
       DOUBLE PRECISION :: PHI_C
 ! down wind factor
@@ -89,10 +88,9 @@
        do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
-             ijk = funijk(i,j,k)
-             XSI_E(IJK) = XSI_func(U(IJK),ZERO)
-             XSI_N(IJK) = XSI_func(V(IJK),ZERO)
-             IF (DO_K) XSI_T(IJK) = XSI_func(W(IJK),ZERO)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),ZERO)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),ZERO)
+             IF (DO_K) XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
            end do
          end do
        end do
@@ -102,50 +100,49 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             DWF = SUPERBEE(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
-             ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
-             ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
              DWF = SUPERBEE(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
+             ELSE
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
+             ENDIF
+
+             PHI_C = PHI_C_OF(PHI(i,JU,k),PHI(i,JC,k),PHI(i,JD,k))
+             DWF = SUPERBEE(PHI_C)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+
+                PHI_C = PHI_C_OF(PHI(i,j,KU),PHI(i,j,KC),PHI(i,j,KD))
                 DWF = SUPERBEE(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -156,50 +153,46 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
              DWF = SMART(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = j
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = SMART(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
                 DWF = SMART(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -210,53 +203,50 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = i
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(U(IJK))*DT*ODX
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
+             CF = ABS(U(i,j,k))*DT*ODX
              DWF = ULTRA_QUICK(PHI_C,CF)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(V(IJK))*DT*ODY
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
+             CF = ABS(V(i,j,k))*DT*ODY
              DWF = ULTRA_QUICK(PHI_C,CF)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*ODZ
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+                CF = ABS(W(i,j,k))*DT*ODZ
                 DWF = ULTRA_QUICK(PHI_C,CF)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -268,65 +258,61 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
                 ODXC = ODX
                 ODXUC = ODX
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
                 ODXC = ODX
                 ODXUC = ODX
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(U(IJK))*DT*ODX
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
+             CF = ABS(U(i,j,k))*DT*ODX
              DWF = QUICKEST(PHI_C,CF,ODXC,ODXUC,ODX)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
                 ODYC = ODY
                 ODYUC = ODY
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
                 ODYC = ODY
                 ODYUC = ODY
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-             CF = ABS(V(IJK))*DT*ODY
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
+             CF = ABS(V(i,j,k))*DT*ODY
              DWF = QUICKEST(PHI_C,CF,ODYC,ODYUC,ODY)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                    ODZC = ODZ
                    ODZUC = ODZ
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                    ODZC = ODZ
                    ODZUC = ODZ
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
-                CF = ABS(W(IJK))*DT*ODZ
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+                CF = ABS(W(i,j,k))*DT*ODZ
                 DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -338,50 +324,46 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MUSCL(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = MUSCL(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
                 DWF = MUSCL(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -393,50 +375,46 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = VANLEER(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = j
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = j
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = VANLEER(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
                 DWF = VANLEER(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -448,51 +426,47 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MINMOD(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = MINMOD(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
 
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
                 DWF = MINMOD(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do
@@ -503,50 +477,46 @@
           do k = kstart3, kend3
             do j = jstart3, jend3
               do i = istart3, iend3
-                ijk = funijk(i,j,k)
 
-             IF (U(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(iwest(i,j,k),j,k)
+             IF (U(i,j,k) >= ZERO) THEN
+                IC = I
+                ID = ieast(i,j,k)
+                IU = iwest(i,j,k)
              ELSE
-                IJKC = FUNIJK(ieast(i,j,k),j,k)
-                IJKD = IJK
-                itmp = ieast(ieast(i,j,k),j,k)
-                IJKU = FUNIJK(itmp,j,k)
+                IC = ieast(i,j,k)
+                ID = I
+                IU = ieast(ieast(i,j,k),j,k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = CENTRAL_SCHEME(PHI_C)
-             XSI_E(IJK) = XSI_func(U(IJK),DWF)
+             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
-             IF (V(IJK) >= ZERO) THEN
-                IJKC = IJK
-                IJKD = FUNIJK(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jsouth(i,j,k),k)
+             IF (V(i,j,k) >= ZERO) THEN
+                JC = J
+                JD = jnorth(i,j,k)
+                JU = jsouth(i,j,k)
              ELSE
-                IJKC = FUNIJK(i,jnorth(i,j,k),k)
-                IJKD = IJK
-                jtmp = jnorth(i,jnorth(i,j,k),k)
-                IJKU = FUNIJK(i,jtmp,k)
+                JC = jnorth(i,j,k)
+                JD = J
+                JU = jnorth(i,jnorth(i,j,k),k)
              ENDIF
-             PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+             PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = CENTRAL_SCHEME(PHI_C)
-             XSI_N(IJK) = XSI_func(V(IJK),DWF)
+             XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (DO_K) THEN
-                IF (W(IJK) >= ZERO) THEN
-                   IJKC = IJK
-                   IJKD = FUNIJK(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,kbot(i,j,k))
+                IF (W(i,j,k) >= ZERO) THEN
+                   KC = K
+                   KD = ktop(i,j,k)
+                   KU = kbot(i,j,k)
                 ELSE
-                   IJKC = FUNIJK(i,j,ktop(i,j,k))
-                   IJKD = IJK
-                   ktmp = ktop(i,j,ktop(i,j,k))
-                   IJKU = FUNIJK(i,j,ktmp)
+                   KC = ktop(i,j,k)
+                   KD = K
+                   KU = ktop(i,j,ktop(i,j,k))
                 ENDIF
-                PHI_C = PHI_C_OF(PHI(IJKU),PHI(IJKC),PHI(IJKD))
+                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
                 DWF = CENTRAL_SCHEME(PHI_C)
-                XSI_T(IJK) = XSI_func(W(IJK),DWF)
+                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
              ENDIF
               end do
             end do

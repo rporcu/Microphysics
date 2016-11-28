@@ -15,8 +15,7 @@
       IMPLICIT NONE
 
 ! discretization factors xsi of dimension_3
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: XSI_e, XSI_n, &
-                                                     XSI_t
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: XSI_e, XSI_n, XSI_t
 
       LOGICAL :: xsi_array_locked = .false.
 

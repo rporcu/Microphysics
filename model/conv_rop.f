@@ -20,8 +20,7 @@
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, &
-                         ROP_gE, ROP_gN, ROP_gT)
+         CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT)
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), ROP_g, U_g, V_g, W_g, &
                          ROP_gE, ROP_gN, ROP_gT)
@@ -59,88 +58,73 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(IN) :: ROP(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: V(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: W(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, I, J, K
-      INTEGER :: IJKE, IJKN, IJKT
-      INTEGER :: IJKW, IJKS, IJKB
-      INTEGER :: IMJK, IJMK, IJKM
+      INTEGER :: I, J, K
 !---------------------------------------------------------------------//
-
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
 
          IF (fluid_at(i,j,k)) THEN
-            IJKE = FUNIJK(ieast(i,j,k),j,k)
-            IJKN = FUNIJK(i,jnorth(i,j,k),k)
-            IJKT = FUNIJK(i,j,ktop(i,j,k))
-
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
-            IF (U(IJK) >= ZERO) THEN
-               ROP_E(IJK) = ROP(IJK)
+            IF (U(i,j,k) >= ZERO) THEN
+               ROP_E(i,j,k) = ROP(i,j,k)
             ELSE
-               ROP_E(IJK) = ROP(IJKE)
+               ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
             ENDIF
 ! West face (i-1/2, j, k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
-               IJKW = FUNIJK(iwest(i,j,k),j,k)
-               IF (U(IMJK) >= ZERO) THEN
-                  ROP_E(IMJK) = ROP(IJKW)
+               IF (U(iminus(i,j,k),j,k) >= ZERO) THEN
+                  ROP_E(iminus(i,j,k),j,k) = ROP(iwest(i,j,k),j,k)
                ELSE
-                  ROP_E(IMJK) = ROP(IJK)
+                  ROP_E(iminus(i,j,k),j,k) = ROP(i,j,k)
                ENDIF
             ENDIF
 
 
 ! North face (i, j+1/2, k)
-            IF (V(IJK) >= ZERO) THEN
-               ROP_N(IJK) = ROP(IJK)
+            IF (V(i,j,k) >= ZERO) THEN
+               ROP_N(i,j,k) = ROP(i,j,k)
             ELSE
-               ROP_N(IJK) = ROP(IJKN)
+               ROP_N(i,j,k) = ROP(i,jnorth(i,j,k),k)
             ENDIF
 ! South face (i, j-1/2, k)
             IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
-               IJKS = FUNIJK(i,jsouth(i,j,k),k)
-               IF (V(IJMK) >= ZERO) THEN
-                 ROP_N(IJMK) = ROP(IJKS)
+               IF (V(i,jminus(i,j,k),k) >= ZERO) THEN
+                 ROP_N(i,jminus(i,j,k),k) = ROP(i,jsouth(i,j,k),k)
                ELSE
-                 ROP_N(IJMK) = ROP(IJK)
+                 ROP_N(i,jminus(i,j,k),k) = ROP(i,j,k)
                ENDIF
             ENDIF
 
 
             IF (DO_K) THEN
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
 ! Top face (i, j, k+1/2)
-               IF (W(IJK) >= ZERO) THEN
-                  ROP_T(IJK) = ROP(IJK)
+               IF (W(i,j,k) >= ZERO) THEN
+                  ROP_T(i,j,k) = ROP(i,j,k)
                ELSE
-                  ROP_T(IJK) = ROP(IJKT)
+                  ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
                ENDIF
 ! Bottom face (i, j, k-1/2)
                IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  IJKB = FUNIJK(i,j,kbot(i,j,k))
-                  IF (W(IJKM) >= ZERO) THEN
-                     ROP_T(IJKM) = ROP(IJKB)
+                  IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
+                     ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
                   ELSE
-                     ROP_T(IJKM) = ROP(IJK)
+                     ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,k)
                   ENDIF
                ENDIF
             ENDIF   ! end if do_k
@@ -188,20 +172,19 @@
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(IN) :: ROP(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(in) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
       DOUBLE PRECISION, INTENT(IN) :: U(DIMENSION_3)
       DOUBLE PRECISION, INTENT(IN) :: V(DIMENSION_3)
       DOUBLE PRECISION, INTENT(IN) :: W(DIMENSION_3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
 !
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: I,J,K,IJK, IJKE, IJKN, IJKT
-      INTEGER :: IJKW, IJKS, IJKB, IMJK, IJMK, IJKM
+      INTEGER :: I,J,K
       Integer :: incr
 
 !---------------------------------------------------------------------//
@@ -212,53 +195,42 @@
       incr=0
       CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr)
 
-
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
 
          IF (fluid_at(i,j,k)) THEN
-            IJKE = FUNIJK(ieast(i,j,k),j,k)
-            IJKN = FUNIJK(i,jnorth(i,j,k),k)
-            IJKT = FUNIJK(i,j,ktop(i,j,k))
-
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
 
 ! East face (i+1/2, j, k)
-            ROP_E(IJK) = ((ONE-XSI_E(IJK))*ROP(IJK)+&
-                         XSI_E(IJK)*ROP(IJKE))
+            ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
+                               XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
 ! West face (i-1/2, j, k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
-               IJKW = FUNIJK(iwest(i,j,k),j,k)
-               ROP_E(IMJK) = ((ONE - XSI_E(IMJK))*ROP(IJKW)+&
-                             XSI_E(IMJK)*ROP(IJK))
+               ROP_E(iminus(i,j,k),j,k) = &
+                             ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(iwest(i,j,k),j,k) + &
+                                     XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
             ENDIF
 
 
 ! North face (i, j+1/2, k)
-            ROP_N(IJK) = ((ONE-XSI_N(IJK))*ROP(IJK)+&
-                         XSI_N(IJK)*ROP(IJKN))
+            ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
+                               XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
 ! South face (i, j-1/2, k)
             IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
-               IJKS = FUNIJK(i,jsouth(i,j,k),k)
-               ROP_N(IJMK) = ((ONE - XSI_N(IJMK))*ROP(IJKS)+&
-                             XSI_N(IJMK)*ROP(IJK))
+               ROP_N(i,jminus(i,j,k),k) = ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
+                                                  XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
             ENDIF
 
 
             IF (DO_K) THEN
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! Top face (i, j, k+1/2)
-               ROP_T(IJK) = ((ONE - XSI_T(IJK))*ROP(IJK)+&
-                            XSI_T(IJK)*ROP(IJKT))
+               ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
+                                    XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
 ! Bottom face (i, j, k-1/2)
                IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  IJKB = FUNIJK(i,j,kbot(i,j,k))
-                  ROP_T(IJKM) = ((ONE - XSI_T(IJKM))*ROP(IJKB)+&
-                                XSI_T(IJKM)*ROP(IJK))
+                  ROP_T(i,j,kminus(i,j,k)) = ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
+                                                     XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
                ENDIF
             ENDIF   ! end if do_k
 

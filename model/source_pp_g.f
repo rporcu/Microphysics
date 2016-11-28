@@ -67,8 +67,10 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
       CHARACTER(LEN=80) :: LINE(1)
 ! temporary use of global arrays:
 ! xsi_array: convection weighting factors
-!      DOUBLE PRECISION XSI_e(DIMENSION_3), XSI_n(DIMENSION_3),&
-!                       XSI_t(DIMENSION_3)
+!      DOUBLE PRECISION XSI_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
+!      DOUBLE PRECISION XSI_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
+!      DOUBLE PRECISION XSI_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !-----------------------------------------------
       call lock_xsi_array
 

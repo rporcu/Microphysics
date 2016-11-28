@@ -78,9 +78,10 @@
       Allocate( TAU_W_g(is3:ie3,js3:je3,ks3:ke3))
 
 !xsi_array
-      Allocate( Xsi_e(DIMENSION_3) )
-      Allocate( Xsi_n(DIMENSION_3) )
-      Allocate( Xsi_t(DIMENSION_3) )
+      Allocate( xsi_e(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( xsi_n(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( xsi_t(is3:ie3,js3:je3,ks3:ke3))
+
 
 !mflux
       Allocate( Flux_gE(is3:ie3,js3:je3,ks3:ke3))

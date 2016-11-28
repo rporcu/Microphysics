@@ -255,6 +255,4 @@
       RETURN
       END FUNCTION PHI_C_OF
 
-
-
       END MODULE discretization

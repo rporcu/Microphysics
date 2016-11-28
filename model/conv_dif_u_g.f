@@ -108,7 +108,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE geometry, only: do_k
       USE fldvar, only: flux_ge, flux_gn, flux_gt
@@ -169,7 +168,6 @@
       use matrix, only: e, w, s, n, t, b
       USE param1, only: zero
 
-
       use fldvar
 
       IMPLICIT NONE
@@ -186,8 +184,6 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ijk
-      INTEGER :: imjk, ijmk, ijkm
       INTEGER :: ip, jm, km
       INTEGER :: ijkc, ijke, ijkn, ijkne, ijks, ijkse
       INTEGER :: ijkt, ijkte, ijkb, ijkbe
@@ -195,12 +191,6 @@
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
-
-      IJK = funijk(i,j,k)
-
-      IMJK = FUNIJK(iminus(i,j,k),j,k)
-      IJMK = FUNIJK(i,jminus(i,j,k),k)
-      IJKM = FUNIJK(i,j,kminus(i,j,k))
 
       IP = IP1(I)
       JM = JM1(J)
@@ -211,7 +201,7 @@
       IF (wall_at(i,j,k))  THEN
          IJKC = IJKE
       ELSE
-         IJKC = IJK
+         IJKC = FUNIJK(i,j,k)
       ENDIF
 
       jtmp = jnorth(i,j,k)
@@ -233,7 +223,6 @@
       D_FE = MU_G(IJKE)*C_AE*AYZ
 ! West face (i, j, k)
       D_FW = MU_G(IJKC)*C_AW*AYZ
-
 
 ! North face (i+1/2, j+1/2, k)
       D_FN = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKN)),&
@@ -314,8 +303,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, I, J, K
-      INTEGER :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Face mass flux
       DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
       DOUBLE PRECISION :: flux_t, flux_b
@@ -327,7 +315,6 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_E(i,j,k)) THEN
 
@@ -336,11 +323,6 @@
                flux_s, flux_t, flux_b, i, j, k)
             CALL GET_UCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
-
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJPK = FUNIJK(i,jplus(i,j,k),k)
 
 ! East face (i+1, j, k)
             IF (Flux_e >= ZERO) THEN
@@ -379,9 +361,6 @@
 
 
             IF (DO_K) THEN
-
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
-               IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! Top face (i+1/2, j, k+1/2)
                IF (Flux_t >= ZERO) THEN
@@ -460,7 +439,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I,J,K,IJK, IPJK, IMJK, IJPK, IJMK, IJKP, IJKM
+      INTEGER :: I,J,K
 ! indicator for shear
       INTEGER :: incr
 ! Diffusion parameter
@@ -483,13 +462,11 @@
 
 ! shear indicator:
       incr=1
-      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, &
-                     XSI_T, incr)
+      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr)
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_E(i,j,k)) THEN
 
@@ -499,39 +476,31 @@
             CALL GET_UCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJPK = FUNIJK(i,jplus(i,j,k),k)
-
 ! East face (i+1, j, k)
-            A_U_G(I,J,K,E) = D_Fe - XSI_E(IJK) * Flux_e
-            A_U_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(IJK)) * Flux_e
+            A_U_G(I,J,K,E) = D_Fe - XSI_E(i,j,k) * Flux_e
+            A_U_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(i,j,k)) * Flux_e
 ! West face (i, j, k)
             IF (.NOT.FLOW_AT_E(iminus(i,j,k),j,k)) THEN
-               A_U_G(I,J,K,W) = D_Fw + (ONE - XSI_E(IMJK)) * Flux_w
+               A_U_G(I,J,K,W) = D_Fw + (ONE - XSI_E(iminus(i,j,k),j,k)) * Flux_w
             ENDIF
 
 
 ! North face (i+1/2, j+1/2, k)
-            A_U_G(I,J,K,N) = D_Fn - XSI_N(IJK) * Flux_n
-            A_U_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(IJK)) * Flux_n
+            A_U_G(I,J,K,N) = D_Fn - XSI_N(i,j,k) * Flux_n
+            A_U_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(i,j,k)) * Flux_n
 ! South face (i+1/2, j-1/2, k)
             IF (.NOT.FLOW_AT_E(i,jminus(i,j,k),k)) THEN
-               A_U_G(I,J,K,S) = D_Fs + (ONE - XSI_N(IJMK)) * Flux_s
+               A_U_G(I,J,K,S) = D_Fs + (ONE - XSI_N(i,jminus(i,j,k),k)) * Flux_s
             ENDIF
 
 ! Top face (i+1/2, j, k+1/2)
             IF (DO_K) THEN
 
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
-               IJKP = FUNIJK(i,j,kplus(i,j,k))
-
-               A_U_G(I,J,K,T) = D_Ft - XSI_T(IJK) * Flux_t
-               A_U_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(IJK)) * Flux_t
+               A_U_G(I,J,K,T) = D_Ft - XSI_T(i,j,k) * Flux_t
+               A_U_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(i,j,k)) * Flux_t
 ! Bottom face (i+1/2, j, k-1/2)
                IF (.NOT.FLOW_AT_E(i,j,kminus(i,j,k))) THEN
-                  A_U_G(I,J,K,B) = D_Fb + (ONE - XSI_T(IJKM)) * Flux_b
+                  A_U_G(I,J,K,B) = D_Fb + (ONE - XSI_T(i,j,kminus(i,j,k))) * Flux_b
                ENDIF
             ENDIF   ! end if (do_k)
 

@@ -190,8 +190,6 @@
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
 
-
-
       IJK = funijk(i,j,k)
 
       IMJK = FUNIJK(iminus(i,j,k),j,k)
@@ -283,7 +281,7 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_t
 
       USE param1, only: zero
@@ -312,7 +310,6 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_T(i,j,k)) THEN
 
@@ -322,13 +319,6 @@
 
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
-
-            IPJK = funijk(iplus(i,j,k),j,k)
-            IJPK = funijk(i,jplus(i,j,k),k)
-            IJKP = funijk(i,j,kplus(i,j,k))
-            IMJK = funijk(iminus(i,j,k),j,k)
-            IJMK = funijk(i,jminus(i,j,k),k)
-            IJKM = funijk(i,j,kminus(i,j,k))
 
 ! East face (i+1/2, j, k+1/2)
             IF (Flux_e >= ZERO) THEN
@@ -415,7 +405,7 @@
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: w_g
 
-      USE functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
+      USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: flow_at_t
 
       USE param1, only: one
@@ -468,7 +458,6 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = funijk(i,j,k)
 
          IF (FLOW_AT_T(i,j,k)) THEN
 
@@ -478,36 +467,29 @@
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
                d_ft, d_fb, i, j, k)
 
-            IPJK = funijk(iplus(i,j,k),j,k)
-            IJPK = funijk(i,jplus(i,j,k),k)
-            IJKP = funijk(i,j,kplus(i,j,k))
-            IMJK = funijk(iminus(i,j,k),j,k)
-            IJMK = funijk(i,jminus(i,j,k),k)
-            IJKM = funijk(i,j,kminus(i,j,k))
-
 ! East face (i+1/2, j, k+1/2)
-            A_W_G(I,J,K,E) = D_Fe - XSI_E(IJK)*Flux_e
-            A_W_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(IJK))*Flux_e
+            A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
+            A_W_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(i,j,k))*Flux_e
 ! West face (i-1/2, j, k+1/2)
             IF (.NOT.FLOW_AT_T(iminus(i,j,k),j,k)) THEN
-               A_W_G(I,J,K,W) = D_Fw + (ONE - XSI_E(IMJK))*Flux_w
+               A_W_G(I,J,K,W) = D_Fw + (ONE - XSI_E(iminus(i,j,k),j,k))*Flux_w
             ENDIF
 
 
 ! North face (i, j+1/2, k+1/2)
-            A_W_G(I,J,K,N) = D_Fn - XSI_N(IJK)*Flux_n
-            A_W_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(IJK))*Flux_n
+            A_W_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
+            A_W_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(i,j,k))*Flux_n
 ! South face (i, j-1/2, k+1/2)
             IF (.NOT.FLOW_AT_T(i,jminus(i,j,k),k)) THEN
-               A_W_G(I,J,K,S) = D_Fs + (ONE - XSI_N(IJMK))*Flux_s
+               A_W_G(I,J,K,S) = D_Fs + (ONE - XSI_N(i,jminus(i,j,k),k))*Flux_s
             ENDIF
 
 ! Top face (i, j, k+1)
-            A_W_G(I,J,K,T) = D_Ft - XSI_T(IJK)*Flux_t
-            A_W_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(IJK))*Flux_t
+            A_W_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
+            A_W_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(i,j,k))*Flux_t
 ! Bottom face (i, j, k)
             IF (.NOT.FLOW_AT_T(i,j,kminus(i,j,k))) THEN
-              A_W_G(I,J,K,B) = D_Fb + (ONE - XSI_T(IJKM))*Flux_b
+              A_W_G(I,J,K,B) = D_Fb + (ONE - XSI_T(i,j,kminus(i,j,k)))*Flux_b
             ENDIF
 
          ENDIF   ! end if flow_at_t
