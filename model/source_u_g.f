@@ -38,7 +38,7 @@
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax
 
-      USE geometry, only: imax1, cyclic_x_pd, imax
+      USE geometry, only: imax1, cyclic_x_pd
       USE geometry, only: vol
       USE geometry, only: ayz
 
@@ -155,8 +155,8 @@
             SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ
 
 ! Volumetric forces
-            ROPGA = HALF * (ROP_G(IJK) + ROP_G(IJKE))
             ROGA  = HALF * (RO_G(IJK) + RO_G(IJKE))
+            ROPGA = HALF * (ROP_G(I,J,K) + ROP_G(ieast(i,j,k),j,k))
 ! Previous time step
             V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT
 

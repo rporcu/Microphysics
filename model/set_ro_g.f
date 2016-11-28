@@ -37,7 +37,7 @@
 ! boundary cells (redundant-remove in set_bc0?)
              IF (.NOT.wall_at(i,j,k)) THEN
                RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),295.15d0)
-               ROP_G(IJK) = EP_G(IJK)*RO_G(IJK)
+               ROP_G(i,j,k) = EP_G(IJK)*RO_G(IJK)
             ENDIF
 
          end do
@@ -59,7 +59,7 @@
                RO_G(IJK) = RO_G0
 ! set_bc0 will have already defined rop_g in MI and PI boundary cells
 ! (redundant-remove in set_bc0?)
-               ROP_G(IJK) = EP_G(IJK)*RO_G(IJK)
+               ROP_G(i,j,k) = EP_G(IJK)*RO_G(IJK)
             ENDIF
          end do
          end do
@@ -68,5 +68,3 @@
 
       RETURN
       END SUBROUTINE SET_RO_G
-
-

@@ -52,37 +52,37 @@
                CASE ('W')
                   IJK2 = FUNIJK(iminus(i,j,k),j,k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
-                     U_G(iminus(i,j,k),j,k)*ROP_G(IJK2)
+                     U_G(iminus(i,j,k),j,k)*ROP_G(iminus(i,j,k),j,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
                      U_G(iminus(i,j,k),j,k)*EP_G(IJK2)
                CASE ('E')
                   IJK2 = FUNIJK(iplus(i,j,k),j,k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
-                     U_G(I,J,K)*ROP_G(IJK2)
+                     U_G(I,J,K)*ROP_G(iplus(i,j,k),j,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
                      U_G(I,J,K)*EP_G(IJK2)
                CASE ('S')
                   IJK2 = FUNIJK(i,jminus(i,j,k),k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
-                     V_G(i,jminus(i,j,k),k)*ROP_G(IJK2)
+                     V_G(i,jminus(i,j,k),k)*ROP_G(i,jminus(i,j,k),k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
                      V_G(i,jminus(i,j,k),k)*EP_G(IJK2)
                CASE ('N')
                   IJK2 = FUNIJK(i,jplus(i,j,k),k)
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
-                     V_G(I,J,K)*ROP_G(IJK2)
+                     V_G(I,J,K)*ROP_G(i,jplus(i,j,k),k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
                      V_G(I,J,K)*EP_G(IJK2)
                CASE ('B')
                   IJK2 = FUNIJK(i,j,kminus(i,j,k))
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DY*&
-                     W_G(i,j,kminus(i,j,k))*ROP_G(IJK2)
+                     W_G(i,j,kminus(i,j,k))*ROP_G(i,j,kminus(i,j,k))
                   BC_VOUT_G(L)=BC_VOUT_G(L)+DX*DY*&
                      W_G(i,j,kminus(i,j,k))*EP_G(IJK2)
                CASE ('T')
                   IJK2 = FUNIJK(i,j,kplus(i,j,k))
                   BC_MOUT_G(L)=BC_MOUT_G(L)+DX*DY*&
-                     W_G(I,J,K)*ROP_G(IJK2)
+                     W_G(I,J,K)*ROP_G(i,j,kplus(i,j,k))
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DY*&
                      W_G(I,J,K)*EP_G(IJK2)
                END SELECT

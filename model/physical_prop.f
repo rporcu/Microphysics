@@ -153,7 +153,7 @@
          IF(.NOT.WALL_AT(i,j,k)) THEN
 
             RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),293.15d0)
-            ROP_G(IJK) = RO_G(IJK)*EP_G(IJK)
+            ROP_G(i,j,k) = RO_G(IJK)*EP_G(IJK)
 
             IF(RO_G(IJK) < ZERO) THEN
                Err_l(myPE) = 100

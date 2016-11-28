@@ -85,7 +85,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
-            bma = (ROP_G(IJK)-ROP_GO(I,J,K))*VOL*ODT
+            bma = (ROP_G(I,J,K)-ROP_GO(I,J,K))*VOL*ODT
             bme = A_M(I,J,K,E)*U_G(I,J,K)
             bmw = A_M(I,J,K,W)*U_G(iminus(i,j,k),j,k)
             bmn = A_M(I,J,K,N)*V_G(I,J,K)

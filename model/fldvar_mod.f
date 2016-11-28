@@ -23,7 +23,7 @@
 ! Gas density (current and previous time-step values)
       DOUBLE PRECISION, ALLOCATABLE ::  RO_g(:), RO_go(:,:,:)
 ! Macroscopic gas density (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:), ROP_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:,:,:), ROP_go(:,:,:)
 ! x-component of gas velocity (current and previous time-step values)
       DOUBLE PRECISION, ALLOCATABLE ::  U_g(:,:,:), U_go(:,:,:)
 ! y-component of gas velocity (current and previous time-step values)

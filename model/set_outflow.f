@@ -86,7 +86,7 @@
                   RVEL_G = U_G(iminus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -97,8 +97,8 @@
 !   compressible cases with a PO/PI boundary where P_g of the boundary
 !   is set and may differ from the value of the adjacent fluid cell.
 ! - For the solids phase this seems unnecessary..? Differences may arise
-                  IF (ROP_G(IJK) > ZERO) THEN
-                    U_G(I,J,K) = ROP_G(FIJK)*U_G(iminus(i,j,k),j,k)/ROP_G(IJK)
+                  IF (ROP_G(I,J,K) > ZERO) THEN
+                    U_G(I,J,K) = ROP_G(iminus(i,j,k),j,k)*U_G(iminus(i,j,k),j,k)/ROP_G(I,J,K)
                   ELSE
                      U_G(I,J,K) = ZERO
                   ENDIF
@@ -121,7 +121,7 @@
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -129,8 +129,8 @@
 ! directions are modified (needed for PO or O boundaries but not MO or
 ! PI as velocities should be fully specified by this point)
                   IF (U_G(I,J,K) == UNDEFINED) THEN
-                     IF (ROP_G(IJK) > ZERO) THEN
-                        U_G(I,J,K) = ROP_G(FIJK)*U_G(iplus(i,j,k),j,k)/ROP_G(IJK)
+                     IF (ROP_G(I,J,K) > ZERO) THEN
+                        U_G(I,J,K) = ROP_G(iplus(i,j,k),j,k)*U_G(iplus(i,j,k),j,k)/ROP_G(I,J,K)
                      ELSE
                         U_G(I,J,K) = ZERO
                      ENDIF
@@ -149,10 +149,10 @@
                   RVEL_G = V_G(i,jminus(i,j,k),k)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
-                  IF (ROP_G(IJK) > ZERO) THEN
-                     V_G(I,J,K) = ROP_G(FIJK)*V_G(i,jminus(i,j,k),k)/ROP_G(IJK)
+                  IF (ROP_G(I,J,K) > ZERO) THEN
+                     V_G(I,J,K) = ROP_G(i,jminus(i,j,k),k)*V_G(i,jminus(i,j,k),k)/ROP_G(I,J,K)
                   ELSE
                      V_G(I,J,K) = ZERO
                   ENDIF
@@ -170,11 +170,11 @@
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
-                     IF (ROP_G(IJK) > ZERO) THEN
-                        V_G(I,J,K) = ROP_G(FIJK)*V_G(i,jplus(i,j,k),k)/ROP_G(IJK)
+                     IF (ROP_G(I,J,K) > ZERO) THEN
+                        V_G(I,J,K) = ROP_G(i,jplus(i,j,k),k)*V_G(i,jplus(i,j,k),k)/ROP_G(I,J,K)
                      ELSE
                         V_G(I,J,K) = ZERO
                      ENDIF
@@ -193,10 +193,10 @@
                   RVEL_G = W_G(i,j,kminus(i,j,k))
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
-                  IF (ROP_G(IJK) > ZERO) THEN
-                     W_G(I,J,K) = ROP_G(FIJK)*W_G(i,j,kminus(i,j,k))/ROP_G(IJK)
+                  IF (ROP_G(I,J,K) > ZERO) THEN
+                     W_G(I,J,K) = ROP_G(i,j,kminus(i,j,k))*W_G(i,j,kminus(i,j,k))/ROP_G(I,J,K)
                   ELSE
                      W_G(I,J,K) = ZERO
                   ENDIF
@@ -214,11 +214,11 @@
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
-                  CALL SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
-                     IF (ROP_G(IJK) > ZERO) THEN
-                        W_G(I,J,K) = ROP_G(FIJK)*W_G(i,j,kplus(i,j,k))/ROP_G(IJK)
+                     IF (ROP_G(I,J,K) > ZERO) THEN
+                        W_G(I,J,K) = ROP_G(i,j,kplus(i,j,k))*W_G(i,j,kplus(i,j,k))/ROP_G(I,J,K)
                      ELSE
                         W_G(I,J,K) = ZERO
                      ENDIF
@@ -289,7 +289,7 @@
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV, IJK, FIJK, RVEL_G, RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -303,6 +303,7 @@
 !---------------------------------------------------------------------//
       use param, only: dimension_m
       use param1, only: undefined, zero, one
+      use functions, only: funijk
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -310,7 +311,7 @@
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
 ! ijk index for boundary cell
-      INTEGER, INTENT(IN) :: IJK
+      INTEGER, INTENT(IN) :: I,J,K
 ! ijk index for adjacent fluid cell
       INTEGER, INTENT(IN) :: FIJK
 ! the gas or solids velocity in the fluid cell adjacent to the boundary
@@ -326,7 +327,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: M
+      INTEGER :: M, IJK
 ! solids volume fraction
       DOUBLE PRECISION :: EPs
 ! sum of solids phases volume fractions
@@ -334,6 +335,8 @@
 ! sum of solids phases bulk densities
       DOUBLE PRECISION :: SUM_ROPS
 !---------------------------------------------------------------------//
+
+      IJK = FUNIJK(I,J,K)
 
 ! initializing summation quantities
       SUM_ROPS = ZERO
@@ -362,7 +365,7 @@
 
 ! now that ep_g in the boundary cell is known, define the bulk density
 ! of the gas phase in the boundary cell
-      ROP_G(IJK) = RO_G(IJK)*EP_G(IJK)
+      ROP_G(i,j,k) = RO_G(IJK)*EP_G(IJK)
 
       RETURN
       END SUBROUTINE SET_OUTFLOW_EP

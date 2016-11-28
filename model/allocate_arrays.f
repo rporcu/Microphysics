@@ -46,7 +46,7 @@
       Allocate( EP_g (DIMENSION_3) )
       Allocate( P_g (DIMENSION_3) )
       Allocate( RO_g (DIMENSION_3) )
-      Allocate( ROP_g (DIMENSION_3) )
+      Allocate( ROP_g (is3:ie3,js3:je3,ks3:ke3) )
 
       Allocate( U_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( V_g (is3:ie3,js3:je3,ks3:ke3) )

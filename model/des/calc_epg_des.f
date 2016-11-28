@@ -82,7 +82,7 @@
          ENDDO
 ! Calculate the gas phase volume fraction and bulk density.
          EP_G(IJK) = ONE - SUM_EPS
-         ROP_G(IJK) = RO_G(IJK) * EP_G(IJK)
+         ROP_G(i,j,k) = RO_G(IJK) * EP_G(IJK)
 ! Flag an error if gas volume fraction is unphysical.
          IF(DES_CONTINUUM_COUPLED) THEN
             IF(EP_G(IJK) <= ZERO .OR. EP_G(IJK) > ONE) IER = IER + 1

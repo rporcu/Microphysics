@@ -150,8 +150,8 @@
             SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ
 
 ! Volumetric forces
-            ROPGA = AVG(ROP_G(IJK),ROP_G(IJKN))
             ROGA = AVG(RO_G(IJK),RO_G(IJKN))
+            ROPGA = AVG(ROP_G(I,J,K),ROP_G(i,jnorth(i,j,k),k))
 ! Previous time step
             V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k))*ODT
 

@@ -85,7 +85,7 @@
                CALL REPORT_ERROR(ABORT, I, J, K, 'P_G')
             IF(RO_G(IJK) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'RO_G')
-            IF(ROP_G(IJK) == UNDEFINED) &
+            IF(ROP_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'ROP_G')
 
             IF(U_G(I,J,K) == UNDEFINED) &
