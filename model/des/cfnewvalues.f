@@ -18,7 +18,6 @@
       USE param
       USE param1
       USE physprop
-      use geometry, only: DO_K, NO_K
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local Variables

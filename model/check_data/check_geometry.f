@@ -17,17 +17,12 @@
       use geometry, only: DY, YLENGTH
       use geometry, only: DZ, ZLENGTH
 
-      use geometry, only: NO_I, IMIN1, IMAX, IMAX1, IMAX3
-      use geometry, only: NO_J, JMIN1, JMAX, JMAX1, JMAX3
-      use geometry, only: NO_K, KMIN1, KMAX, KMAX1, KMAX3
+      use geometry, only: NO_I, IMAX, IMAX3
+      use geometry, only: NO_J, JMAX, JMAX3
+      use geometry, only: NO_K, KMAX, KMAX3
 
 ! Runtime flag specifying 2D simulations
 !      use geometry, only: NO_K
-
-      use geometry, only: CYCLIC_X, CYCLIC_X_PD
-      use geometry, only: CYCLIC_Y, CYCLIC_Y_PD
-      use geometry, only: CYCLIC_Z, CYCLIC_Z_PD
-!      use geometry, only: COORDINATES
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -45,11 +40,6 @@
       CALL CHECK_AXIS(KMAX, KMAX3, ZLENGTH, DZ, 'Z', 'K', NO_K)
 
       IF(SHIFT) CALL SHIFT_DXYZ
-
- 1100 FORMAT('Error 1100: Cells adjacent to cyclic boundaries must ',  &
-         'be of same size:',/2X,A,' = ',G12.5,/2x,A,' = ',G12.5,/      &
-         'Please correct the mfix.dat file.')
-
 
       CALL FINL_ERR_MSG
 

@@ -46,11 +46,11 @@
             IF (MU_G0 == UNDEFINED) MU_G(IJK) = to_SI*1.7D-4 * &
                (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
 
-            LAMBDA_G(IJK) = -F2O3*MU_G(IJK)
+            LAMBDA_G(i,j,k) = -F2O3*MU_G(IJK)
 
          ELSE
             MU_G(IJK)  = ZERO
-            LAMBDA_G(IJK) = ZERO
+            LAMBDA_G(i,j,k) = ZERO
          ENDIF   ! end if (fluid_at(i,j,k))
 
       ENDDO

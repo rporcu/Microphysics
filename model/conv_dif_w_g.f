@@ -14,7 +14,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param, only: dimension_3
       USE run, only: momentum_z_eq
       USE run, only: discretize
       use compar, only: istart3, iend3
@@ -76,7 +75,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: IJK, I, J, K, IJKP
+      INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
 
@@ -125,31 +124,20 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ijk, imjk, ijmk, ijkm
-      INTEGER :: ijkp, imjkp, ijmkp
       INTEGER :: itmp, jtmp
 
 !---------------------------------------------------------------------//
 
-      IJK = funijk(i,j,k)
-
-      IJKP = funijk(i,j,kplus(i,j,k))
-      IJKM = funijk(i,j,kminus(i,j,k))
-
       itmp  = iminus(i,j,k)
-      IMJK  = funijk(itmp,j,k)
-      IMJKP = funijk(itmp,j,kplus(itmp,j,k))
 
       jtmp  = jminus(i,j,k)
-      IJMK  = funijk(i,jtmp,k)
-      IJMKP = funijk(i,jtmp,kplus(i,jtmp,k))
 
-      Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IJKP))
-      Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IMJKP))
-      Flux_n = HALF * (Flux_gN(IJK) + Flux_gN(IJKP))
-      Flux_s = HALF * (Flux_gN(IJMK) + Flux_gN(IJMKP))
-      Flux_t = HALF * (Flux_gT(IJK) + Flux_gT(IJKP))
-      Flux_b = HALF * (Flux_gT(IJKM) + Flux_gT(IJK))
+      Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(i,j,kplus(i,j,k)))
+      Flux_w = HALF * (Flux_gE(itmp,j,k) + Flux_gE(itmp,j,kplus(itmp,j,k)))
+      Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(i,j,kplus(i,j,k)))
+      Flux_s = HALF * (Flux_gN(i,jtmp,k) + Flux_gN(i,jtmp,kplus(i,jtmp,k)))
+      Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,j,kplus(i,j,k)))
+      Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + Flux_gT(i,j,k))
 
       RETURN
       END SUBROUTINE GET_WCELL_GCFLUX_TERMS
@@ -298,7 +286,6 @@
       USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_t
 
-      USE param, only: dimension_3
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
@@ -431,7 +418,6 @@
       USE functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: flow_at_t
 
-      USE param, only: dimension_3
       USE param1, only: one
 
       use matrix, only: e, w, n, s, t, b

@@ -40,7 +40,6 @@
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param, only: dimension_3
       USE param1, only: zero, one, half
       USE run, only: momentum_y_eq
       USE run, only: odt
@@ -161,7 +160,7 @@
 
 ! if jackson, implement jackson form of governing equations (ep_g dot
 ! del tau_g): multiply by void fraction otherwise by 1
-            ltau_v_g = tau_v_g(ijk)
+            ltau_v_g = tau_v_g(i,j,k)
 
 
 ! Collect the terms
@@ -244,7 +243,7 @@
       INTEGER :: L
 ! Indices
       INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2, IJK, &
-                 IM, KM, IJKS, IJMK, IJPK
+                 IM, KM, IJMK
 ! Phase index
       INTEGER :: M
 !-----------------------------------------------

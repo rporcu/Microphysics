@@ -35,10 +35,8 @@
 ! Local variables
 !-----------------------------------------------
 ! general i, j, k indices
-      INTEGER :: I, J, K, IJK, cur_ijk
+      INTEGER :: I, J, K, IJK
       INTEGER :: II, JJ, KK
-      INTEGER :: IPJK, IJPK, IJKP,&
-                 IPJPK, IPJKP, IJPKP, IPJPKP
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
       INTEGER :: lli, llj, llk
@@ -210,8 +208,8 @@
 ! general i, j, k indices
       INTEGER :: I, J, K, IJK, cur_ijk
       INTEGER :: II, JJ, KK
-      INTEGER :: IPJK, IJPK, IJKP, IMJK, IJMK, IJKM,&
-                 IPJPK, IPJKP, IJPKP, IPJPKP, &
+      INTEGER :: IJKP, IMJK, IJMK, IJKM,&
+                 IPJKP, IJPKP, IPJPKP, &
                  IMJMK, IMJKM, IJMKM, IMJMKM
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)

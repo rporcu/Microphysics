@@ -14,17 +14,11 @@
       use geometry, only: DX, oDX
       use geometry, only: DY, oDZ
       use geometry, only: DZ, oDY
-! Domain indices.
-      use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3
-      use geometry, only: DO_J, JMIN1, JMAX1, JMAX2, JMAX3, JMIN3
-      use geometry, only: DO_K, KMIN1, KMAX1, KMAX2, KMAX3, KMIN3
 ! Cyclic domain flags.
       use geometry, only: CYCLIC
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
       use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
       use geometry, only: CYCLIC_Z, CYCLIC_Z_PD, CYCLIC_Z_MF
-! MPI-Domain decompoint and rank flags.
-      use compar, only: NODESI, NODESJ, NODESK
 ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
 

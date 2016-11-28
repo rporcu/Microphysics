@@ -14,7 +14,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param, only: dimension_3
       USE run, only: momentum_y_eq
       USE run, only: discretize
       use fldvar
@@ -132,35 +131,22 @@
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: ijk, imjk, ijmk, ijkm
-      INTEGER :: ijpk, imjpk, ijpkm
       INTEGER :: itmp,ktmp
 
 !---------------------------------------------------------------------//
 ! indices
-      IJK  = funijk(i,j,k)
-
-      IJPK = FUNIJK(i,jplus(i,j,k),k)
-      IJMK = FUNIJK(i,jminus(i,j,k),k)
-
       itmp  = iminus(i,j,k)
-      IMJK  = FUNIJK(itmp,j,k)
-      IMJPK = FUNIJK(itmp,jplus(itmp,j,k),k)
-
       ktmp  = kminus(i,j,k)
-      IJKM  = FUNIJK(i,j,ktmp)
-      IJPKM = FUNIJK(i,jplus(i,j,ktmp),ktmp)
 
+      Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(i,jplus(i,j,k),k))
+      Flux_w = HALF * (Flux_gE(itmp,j,k) + Flux_gE(itmp,jplus(itmp,j,k),k))
 
-      Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IJPK))
-      Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IMJPK))
-
-      Flux_n = HALF * (Flux_gN(IJK) + Flux_gN(IJPK))
-      Flux_s = HALF * (Flux_gN(IJMK) + Flux_gN(IJK))
+      Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(i,jplus(i,j,k),k))
+      Flux_s = HALF * (Flux_gN(i,jminus(i,j,k),k) + Flux_gN(i,j,k))
 
       IF (DO_K) THEN
-         Flux_t = HALF * (Flux_gT(IJK) + Flux_gT(IJPK))
-         Flux_b = HALF * (Flux_gT(IJKM) + Flux_gT(IJPKM))
+         Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,jplus(i,j,k),k))
+         Flux_b = HALF * (Flux_gT(i,j,ktmp) + Flux_gT(i,jplus(i,j,ktmp),ktmp))
       ENDIF
 
       RETURN
@@ -456,7 +442,6 @@
 
       USE geometry, only: do_k
 
-      USE param, only: dimension_3
       USE param1, only: one
 
       use matrix, only: e, w, n, s, t, b

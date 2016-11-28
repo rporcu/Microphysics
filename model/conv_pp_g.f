@@ -35,9 +35,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: imap
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart1, iend1, jstart1, jend1, kstart1, kend1
       USE param
       USE param1
       USE fldvar
@@ -82,18 +80,18 @@
             IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! East face (i+1/2, j, k)
-            AM = ROP_GE(IJK)*AYZ
+            AM = ROP_GE(I,J,K)*AYZ
             A_M(I,J,K,E) = AM
             A_M(iplus(i,j,k),j,k,W) = AM
 
 ! North face (i, j+1/2, k)
-            AM = ROP_GN(IJK)*AXZ
+            AM = ROP_GN(I,J,K)*AXZ
             A_M(I,J,K,N) = AM
             A_M(I,jplus(i,j,k),K,S) = AM
 
 ! Top face (i, j, k+1/2)
             IF (DO_K) THEN
-               AM = ROP_GT(IJK)*AXY
+               AM = ROP_GT(I,J,K)*AXY
                A_M(I,J,K,T) = AM
                A_M(I,J,kplus(i,j,k),B) = AM
             ENDIF
@@ -101,14 +99,14 @@
 ! West face (i-1/2, j, k)
             IMJK = FUNIJK(iminus(i,j,k),j,k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
-               AM = ROP_GE(IMJK)*AYZ
+               AM = ROP_GE(iminus(i,j,k),j,k)*AYZ
                A_M(I,J,K,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
             IJMK = FUNIJK(i,jminus(i,j,k),k)
             IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
-               AM = ROP_GN(IJMK)*AXZ
+               AM = ROP_GN(i,jminus(i,j,k),k)*AXZ
                A_M(I,J,K,S) = AM
             ENDIF
 
@@ -116,7 +114,7 @@
             IF (DO_K) THEN
                IJKM = FUNIJK(i,j,kminus(i,j,k))
                IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  AM = ROP_GT(IJKM)*AXY
+                  AM = ROP_GT(i,j,kminus(i,j,k))*AXY
                   A_M(I,J,K,B) = AM
                ENDIF
             ENDIF

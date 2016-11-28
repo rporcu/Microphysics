@@ -1,6 +1,6 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: CALC_trD_g(trD_g, IER)                                 C
+!  Module name: CALC_trD_g(IER)g, IER)                                 C
 !  Purpose: Calculate the trace of gas phase rate of strain tensor     C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 19-DEC-96  C
@@ -52,7 +52,7 @@
           DO I = istart3, iend3
             IF (.NOT.WALL_AT(i,j,k)) THEN
 
-              TRD_G(FUNIJK(i,j,k)) = &
+              TRD_G(i,j,k) = &
                  (U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX + &
                  (V_G(I,J,K)-V_G(i,jminus(i,j,k),k))*ODY + &
                  (W_G(I,J,K)-W_G(i,j,kminus(i,j,k)))*ODZ

@@ -55,7 +55,6 @@
          USE fun_avg, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
-         USE param, only: dimension_3
          USE param1, only: ONE, ZERO, small_number
       use functions, only: funijk
       use compar, only: istart2, iend2

@@ -86,8 +86,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K, IJK
-! IJK index for setting velocity bc
-      INTEGER :: IJK2
 !---------------------------------------------------------------------//
 
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .AND. &
@@ -220,8 +218,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K, IJK
-! IJK index for setting velocity bc
-      INTEGER :: IJK2
 !---------------------------------------------------------------------//
 
       CALL CALC_OUTFLOW(BCV)

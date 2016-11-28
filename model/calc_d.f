@@ -86,7 +86,6 @@ MODULE CALC_D_MOD
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and size of solids phase arrays.
-      use param, only: DIMENSION_3
       use compar, only: istart2, iend2
       use compar, only: jstart2, jend2
       use compar, only: kstart2, kend2

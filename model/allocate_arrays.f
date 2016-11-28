@@ -71,11 +71,11 @@
       Allocate( MU_g (DIMENSION_3) )
 
 !visc_g
-      Allocate( trD_g(DIMENSION_3) )
-      Allocate( LAMBDA_g (DIMENSION_3p) )
-      Allocate( TAU_U_g(DIMENSION_3p) )
-      Allocate( TAU_V_g(DIMENSION_3p) )
-      Allocate( TAU_W_g(DIMENSION_3p) )
+      Allocate( trD_g(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( LAMBDA_g(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( TAU_U_g(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( TAU_V_g(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( TAU_W_g(is3:ie3,js3:je3,ks3:ke3))
 
 !xsi_array
       Allocate( Xsi_e(DIMENSION_3) )
@@ -83,15 +83,13 @@
       Allocate( Xsi_t(DIMENSION_3) )
 
 !mflux
-      Allocate( Flux_gE(DIMENSION_3p) )
-      Allocate( Flux_gN(DIMENSION_3p) )
-      Allocate( Flux_gT(DIMENSION_3p) )
+      Allocate( Flux_gE(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( Flux_gN(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( Flux_gT(is3:ie3,js3:je3,ks3:ke3))
 
-      Allocate( ROP_gE(DIMENSION_3p) )
-      Allocate( ROP_gN(DIMENSION_3p) )
-      Allocate( ROP_gT(DIMENSION_3p) )
-
-
+      Allocate( ROP_gE(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( ROP_gN(is3:ie3,js3:je3,ks3:ke3))
+      Allocate( ROP_gT(is3:ie3,js3:je3,ks3:ke3))
 
       RETURN
       END SUBROUTINE ALLOCATE_ARRAYS
@@ -111,10 +109,6 @@
 !---------------------------------------------------------------------//
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-! Domain decomposition and dimensions
-      use geometry, only: oDX
-      use geometry, only: oDZ
-      use geometry, only: oDY
 ! Domain flags.
       use geometry, only: ICBC_FLAG
       use geometry, only: FLAG

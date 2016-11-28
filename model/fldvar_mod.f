@@ -34,22 +34,22 @@
 ! Gas viscosity
       DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:)
 ! Second coefficient of viscosity
-      DOUBLE PRECISION, ALLOCATABLE ::  LAMBDA_G(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  LAMBDA_G(:,:,:)
 ! trace of D_g at i, j, k
-      DOUBLE PRECISION, ALLOCATABLE ::  trD_g(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  trD_g(:,:,:)
 
 ! cross terms
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_U_g(:)
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_V_g(:)
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_W_g(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_U_g(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_V_g(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_W_g(:,:,:)
 
 
 !--- Fluxes ----------------------------------------------------------//
 
-! Gas mass fluxes at the east, north, and top facess
-      DOUBLE PRECISION, ALLOCATABLE ::  Flux_gE(:), Flux_gN(:), Flux_gT(:)
+! Gas mass fluxes at the east, north, and top faces
+      DOUBLE PRECISION, ALLOCATABLE ::  Flux_gE(:,:,:), Flux_gN(:,:,:), Flux_gT(:,:,:)
 ! macroscopic gas density at east, north, and top faces
-      DOUBLE PRECISION, ALLOCATABLE ::  ROP_gE(:), ROP_gN(:), ROP_gT(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  ROP_gE(:,:,:), ROP_gN(:,:,:), ROP_gT(:,:,:)
 
 !--- Pressure correction ---------------------------------------------//
 

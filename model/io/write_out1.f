@@ -14,7 +14,7 @@
       USE fldvar
       USE run
       USE funits
-      USE compar             !//d
+      USE compar
       use geometry
 
       IMPLICIT NONE
@@ -70,10 +70,4 @@
  1000 FORMAT(1X,A1,/5X,'--- Gas pressure (P_g) at time ',G12.5,' ---',2/)
  1100 FORMAT(1X,A1,/5X,'--- Void fraction (EP_g) at time ',G12.5,' ---',2/)
  1200 FORMAT(1X,A1,/5X,'--- Gas density (RO_g) at time ',G12.5,' ---',2/)
- 1800 FORMAT(1X,A1,/5X,'--- X-component of gas velocity (U_g) at time ',G12.5,&
-         ' ---',2/)
- 1900 FORMAT(1X,A1,/5X,'--- Y-component of gas velocity (V_g) at time ',G12.5,&
-         ' ---',2/)
- 2000 FORMAT(1X,A1,/5X,'--- Z-component of gas velocity (W_g) at time ',G12.5,&
-         ' ---',2/)
       END SUBROUTINE WRITE_OUT1
