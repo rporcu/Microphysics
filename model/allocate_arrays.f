@@ -43,9 +43,9 @@
       Allocate( B_m(is3:ie3,js3:je3,ks3:ke3) )
 
 !fldvar
-      Allocate( EP_g (DIMENSION_3) )
-      Allocate( P_g (DIMENSION_3) )
-      Allocate( RO_g (DIMENSION_3) )
+      Allocate( EP_g (is3:ie3,js3:je3,ks3:ke3) )
+      Allocate( P_g (is3:ie3,js3:je3,ks3:ke3) )
+      Allocate( RO_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( ROP_g (is3:ie3,js3:je3,ks3:ke3) )
 
       Allocate( U_g (is3:ie3,js3:je3,ks3:ke3) )
@@ -115,9 +115,6 @@
       use geometry, only: FLAG_E, FLAG_N, FLAG_T
 ! Domain volumes and areas.
       use geometry, only: VOL_SURR
-! Axis decomposition
-      USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
-      USE param, only: DIMENSION_3, DIMENSION_4
 
 ! Module procedures
 !---------------------------------------------------------------------//

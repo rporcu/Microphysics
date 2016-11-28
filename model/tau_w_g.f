@@ -82,7 +82,7 @@
             IJK  = FUNIJK(i,j,k)
             IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-            EPGA = AVG(EP_G(IJK),EP_G(IJKT))
+            EPGA = AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
 
             IF ( .NOT.ip_at_t(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 

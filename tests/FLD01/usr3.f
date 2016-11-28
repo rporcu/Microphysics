@@ -98,7 +98,7 @@
          xt = xt + dx
 ! Calculate the exact solution
          lPg = Pg(xt)
-         Pg_MFIX = P_G(funijk(i,j,k))
+         Pg_MFIX = P_G(i,j,k)
 
          absErr = abs(lPg - Pg_MFIX)
          relErr = abs(absErr/max(abs(lPg), 1.0d-15))

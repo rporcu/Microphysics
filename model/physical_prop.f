@@ -152,10 +152,10 @@
          IJK = FUNIJK(i,j,k)
          IF(.NOT.WALL_AT(i,j,k)) THEN
 
-            RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),293.15d0)
-            ROP_G(i,j,k) = RO_G(IJK)*EP_G(IJK)
+            RO_G(i,j,k) = EOSG(MW_AVG,P_G(I,J,K),293.15d0)
+            ROP_G(i,j,k) = RO_G(i,j,k)*EP_G(I,J,K)
 
-            IF(RO_G(IJK) < ZERO) THEN
+            IF(RO_G(I,J,K) < ZERO) THEN
                Err_l(myPE) = 100
                IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(i, j, k, wHeader)
             ENDIF
@@ -224,8 +224,8 @@
       endif
 
       write(lUnit,1001) FUNIJK(i,j,k), i, j, k
-      write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(FUNIJK(i,j,k))
-      write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(FUNIJK(i,j,k))
+      write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(i,j,k)
+      write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(i,j,k)
 
       close(lUnit)
 

@@ -147,8 +147,8 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 
                if (fluid_at(i,j,k)) THEN
                   A_M(I,J,K,0) = A_M(I,J,K,0) - &
-                     fac*DROODP_G(RO_G(IJK),P_G(IJK))*&
-                     EP_G(IJK)*VOL*ODT
+                     fac*DROODP_G(RO_G(I,J,K),P_G(I,J,K))*&
+                     EP_G(I,J,K)*VOL*ODT
                end if
 
              end do

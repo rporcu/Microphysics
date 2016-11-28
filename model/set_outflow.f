@@ -85,7 +85,7 @@
                   FIJK = FUNIJK(iminus(i,j,k),j,k)
                   RVEL_G = U_G(iminus(i,j,k),j,k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
@@ -120,7 +120,7 @@
 ! domain
                   RVEL_G = -U_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iplus(i,j,k),j,k)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
@@ -148,7 +148,7 @@
                   FIJK = FUNIJK(i,jminus(i,j,k),k)
                   RVEL_G = V_G(i,jminus(i,j,k),k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jminus(i,j,k),k)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
@@ -169,7 +169,7 @@
                   FIJK = FUNIJK(i,jplus(i,j,k),k)
                   RVEL_G = -V_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jplus(i,j,k),k)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
@@ -192,7 +192,7 @@
                   FIJK = FUNIJK(i,j,kminus(i,j,k))
                   RVEL_G = W_G(i,j,kminus(i,j,k))
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kminus(i,j,k))
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
@@ -213,7 +213,7 @@
                   FIJK = FUNIJK(i,j,kplus(i,j,k))
                   RVEL_G = -W_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kplus(i,j,k))
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
@@ -245,7 +245,7 @@
 !  to their value in the adjacent fluid cell.                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_MISC(BCV, IJK, FIJK)
+      SUBROUTINE SET_OUTFLOW_MISC(BCV, I,J,K, FI,FJ,FK)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -264,16 +264,16 @@
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
 ! ijk index for boundary cell
-      INTEGER, INTENT(IN) :: IJK
+      INTEGER, INTENT(IN) :: I,J,K
 ! ijk index for adjacent fluid cell
-      INTEGER, INTENT(IN) :: FIJK
+      INTEGER, INTENT(IN) :: FI,FJ,FK
 !---------------------------------------------------------------------//
 
       IF (BC_TYPE(BCV) /= 'P_OUTFLOW' .AND. &
-          BC_TYPE(BCV) /= 'P_INFLOW') P_G(IJK) = P_G(FIJK)
+          BC_TYPE(BCV) /= 'P_INFLOW') P_G(I,J,K) = P_G(FI,FJ,FK)
 
-      IF (RO_G0 == UNDEFINED) RO_G(IJK) = &
-         EOSG(MW_AVG,P_G(IJK),295.15d0)
+      IF (RO_G0 == UNDEFINED) RO_G(I,J,K) = &
+         EOSG(MW_AVG,P_G(I,J,K),295.15d0)
 
 
       RETURN
@@ -361,11 +361,11 @@
 ! if bc_ep_g undefined, set ep_g accordingly (based on flow condition
 ! or based on bc_rop_s). if bc_ep_g is defined its set value will be
 ! maintained (from set_bc0).
-      IF (BC_EP_G(BCV) == UNDEFINED) EP_G(IJK) = ONE - SUM_EPS
+      IF (BC_EP_G(BCV) == UNDEFINED) EP_G(I,J,K) = ONE - SUM_EPS
 
 ! now that ep_g in the boundary cell is known, define the bulk density
 ! of the gas phase in the boundary cell
-      ROP_G(i,j,k) = RO_G(IJK)*EP_G(IJK)
+      ROP_G(i,j,k) = RO_G(I,J,K)*EP_G(I,J,K)
 
       RETURN
       END SUBROUTINE SET_OUTFLOW_EP

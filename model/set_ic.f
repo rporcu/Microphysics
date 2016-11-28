@@ -61,12 +61,12 @@
                IJK = FUNIJK(I,J,K)
 
                IF (.NOT.WALL_AT(i,j,k)) THEN
-                  IF (EPGX /= UNDEFINED) EP_G(IJK) = EPGX
+                  IF (EPGX /= UNDEFINED) EP_G(I,J,K) = EPGX
 
                   IF (IC_TYPE(L) == 'PATCH') THEN
-                      IF (PGX /= UNDEFINED) P_G(IJK) = SCALE_PRESSURE(PGX)
+                      IF (PGX /= UNDEFINED) P_G(I,J,K) = SCALE_PRESSURE(PGX)
                   ELSE
-                     P_G(IJK) = merge(SCALE_PRESSURE(PGX), UNDEFINED,           &
+                     P_G(I,J,K) = merge(SCALE_PRESSURE(PGX), UNDEFINED,           &
                         PGX /= UNDEFINED)
                   ENDIF
 

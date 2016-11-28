@@ -109,7 +109,10 @@
                IJK = FILTER_CELL(LC,NP)
                WEIGHT = FILTER_WEIGHT(LC,NP)
 ! Gas phase volume fraction.
-               lEPG = lEPG + EP_G(IJK)*WEIGHT
+               i = -1 ! FIXME
+               j = -1 ! FIXME
+               k = -1 ! FIXME
+               lEPG = lEPG + EP_G(I,J,K)*WEIGHT
 ! Gas phase velocity.
                VELFP(1) = VELFP(1) + UGC(IJK)*WEIGHT
                VELFP(2) = VELFP(2) + VGC(IJK)*WEIGHT
@@ -119,7 +122,7 @@
             ENDDO
          ELSE
             IJK = PIJK(NP,4)
-            lEPG = EP_G(IJK)
+            lEPG = EP_G(I,J,K)
             VELFP(1) = UGC(IJK)
             VELFP(2) = VGC(IJK)
             VELFP(3) = WGC(IJK)
@@ -217,7 +220,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, LC
+      INTEGER :: NP, IJK, LC, I, J, K
 ! Interpolation weight
       DOUBLE PRECISION :: WEIGHT
 ! Interpolated gas phase quanties.
@@ -271,7 +274,7 @@
                IJK = FILTER_CELL(LC,NP)
                WEIGHT = FILTER_WEIGHT(LC,NP)
 ! Gas phase volume fraction.
-               lEPG = lEPG + EP_G(IJK)*WEIGHT
+               lEPG = lEPG + EP_G(I,J,K)*WEIGHT
 ! Gas phase velocity.
                VELFP(1) = VELFP(1) + UGC(IJK)*WEIGHT
                VELFP(2) = VELFP(2) + VGC(IJK)*WEIGHT
@@ -279,14 +282,17 @@
             ENDDO
          ELSE
             IJK = PIJK(NP,4)
-            lEPG = EP_G(IJK)
+            lEPG = EP_G(I,J,K)
             VELFP(1) = UGC(IJK)
             VELFP(2) = VGC(IJK)
             VELFP(3) = WGC(IJK)
          ENDIF
 
 ! This avoids FP exceptions for some ghost particles.
-         IF(lEPg == ZERO) lEPG = EP_g(PIJK(NP,4))
+         I = PIJK(NP,1)
+         J = PIJK(NP,2)
+         K = PIJK(NP,3)
+         IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
          CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)

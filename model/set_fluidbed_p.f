@@ -71,7 +71,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (fluid_at(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -88,7 +88,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (fluid_at(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -105,7 +105,7 @@
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IJK = FUNIJK(I,J,K)
-                  IF (fluid_at(i,j,k)) P_G(IJK) = SCALE_PRESSURE(PJ)
+                  IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
          ENDDO
@@ -132,7 +132,7 @@
             DO J = jstart3, jend3
             DO I = istart3, iend3
                IJK = FUNIJK(i,j,k)
-               IF (fluid_at(i,j,k)) P_G(IJK) = ZERO
+               IF (fluid_at(i,j,k)) P_G(I,J,K) = ZERO
             ENDDO
             ENDDO
             ENDDO
@@ -167,10 +167,10 @@
                   DAREA = DX*DZ
                   AREA = AREA + DAREA
                   IF (RO_G0 == UNDEFINED) THEN
-                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(IJK)*EOSG(&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(I,J,K)*EOSG(&
                         MW_AVG,PJ,295.15d0)*DAREA
                   ELSE
-                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(IJK)*RO_G0&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(I,J,K)*RO_G0&
                         *DAREA
                   ENDIF
                ENDIF  ! end if (fluid_at(i,j,k))
@@ -188,7 +188,7 @@
                IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
-               IF(fluid_at(i,j,k).AND.P_G(IJK)==UNDEFINED)P_G(IJK)=SCALE_PRESSURE(PJ)
+               IF(fluid_at(i,j,k).AND.P_G(I,J,K)==UNDEFINED)P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)
       ENDDO   ! end do (j=jmax2,jimn1, -1)

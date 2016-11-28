@@ -74,18 +74,18 @@
 ! Skip wall cells.
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 ! Initialize EP_g and the accumulator.
-         EP_G(IJK) = ONE
+         EP_G(I,J,K) = ONE
          SUM_EPS = ZERO
 ! Sum the DES solids volume fraction.
          DO M = 1, MMAX
             SUM_EPS = SUM_EPS + DES_ROP_S(IJK,M)/RO_S0(M)
          ENDDO
 ! Calculate the gas phase volume fraction and bulk density.
-         EP_G(IJK) = ONE - SUM_EPS
-         ROP_G(i,j,k) = RO_G(IJK) * EP_G(IJK)
+         EP_G(I,J,K) = ONE - SUM_EPS
+         ROP_G(i,j,k) = RO_G(I,J,K) * EP_G(I,J,K)
 ! Flag an error if gas volume fraction is unphysical.
          IF(DES_CONTINUUM_COUPLED) THEN
-            IF(EP_G(IJK) <= ZERO .OR. EP_G(IJK) > ONE) IER = IER + 1
+            IF(EP_G(I,J,K) <= ZERO .OR. EP_G(I,J,K) > ONE) IER = IER + 1
          ENDIF
       ENDDO
       ENDDO
@@ -114,10 +114,10 @@
 
          IJK = FUNIJK(i,j,k)
             IF(.NOT.fluid_at(i,j,k)) CYCLE
-            IF(EP_G(IJK) > ZERO .AND. EP_G(IJK) <= ONE) CYCLE
+            IF(EP_G(I,J,K) > ZERO .AND. EP_G(I,J,K) <= ONE) CYCLE
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&
-               trim(iVal(J)), trim(iVal(K)),EP_G(IJK), &
+               trim(iVal(J)), trim(iVal(K)),EP_G(I,J,K), &
                trim(iVal(PINC(IJK))), VOL
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 

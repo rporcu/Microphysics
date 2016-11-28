@@ -144,7 +144,7 @@
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(IJK))
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(I,J,K))
 
 ! Calculate the gas-solids drag force on the particle
             D_FORCE(1:3) = F_GP(NP)*(VELFP-VEL_NEW)
@@ -333,7 +333,7 @@
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(IJK))
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(I,J,K))
 
 !-----------------------------------------------------------------<<<
 ! Calculate the corresponding gas solids drag force that is used in

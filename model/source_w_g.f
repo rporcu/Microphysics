@@ -43,7 +43,6 @@
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param, only: dimension_3
       USE param1, only: zero, one, half
       USE run, only: momentum_z_eq
       USE run, only: odt
@@ -110,7 +109,7 @@
           IMJKP = FUNIJK(iminus(i,j,k),j,KPLUS(iminus(i,j,k),j,k))
           IJMKP = FUNIJK(i,jminus(i,j,k),KPLUS(i,jminus(i,j,k),k))
 
-         EPGA = AVG(EP_G(IJK),EP_G(IJKT))
+         EPGA = AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
 
 ! Impermeable internal surface
          IF (ip_at_t(i,j,k)) THEN
@@ -135,9 +134,9 @@
             B_M(I,J,K) = ZERO
 ! set velocity equal to that of bottom or top cell if solids are
 ! present in those cells else set velocity equal to known value
-            IF (EP_G(FUNIJK(i,j,kbot(i,j,k))) > DIL_EP_S) THEN
+            IF (EP_G(i,j,kbot(i,j,k)) > DIL_EP_S) THEN
                A_M(I,J,K,B) = ONE
-            ELSE IF (EP_G(FUNIJK(i,j,ktop(i,j,k))) > DIL_EP_S) THEN
+            ELSE IF (EP_G(i,j,ktop(i,j,k)) > DIL_EP_S) THEN
                A_M(I,J,K,T) = ONE
             ELSE
                B_M(I,J,K) = -W_G(I,J,K)
@@ -149,14 +148,14 @@
 ! Surface forces
 
 ! Pressure term
-            PGT = P_G(IJKT)
+            PGT = P_G(i,j,ktop(i,j,k))
             IF (CYCLIC_Z_PD) THEN
-               IF (KMAP(K).EQ.KMAX1) PGT = P_G(IJKT) - DELP_Z
+               IF (KMAP(K).EQ.KMAX1) PGT = P_G(i,j,ktop(i,j,k)) - DELP_Z
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGT - P_G(IJK))*AXY
+            SDP = -P_SCALE*EPGA*(PGT - P_G(I,J,K))*AXY
 
 ! Volumetric forces
-            ROGA = AVG(RO_G(IJK),RO_G(IJKT))
+            ROGA = AVG(RO_G(I,J,K),RO_G(i,j,ktop(i,j,k)))
             ROPGA = AVG(ROP_G(I,J,K),ROP_G(i,j,ktop(i,j,k)))
 
 ! Previous time step
@@ -257,7 +256,7 @@
       INTEGER :: L
 ! Indices
       INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2, IJK,&
-                 IM, JM, IJKB, IJKM, IJKP
+                 IM, JM
 ! Phase index
       INTEGER :: M
 

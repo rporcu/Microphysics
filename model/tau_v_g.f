@@ -78,7 +78,7 @@
             IJK  = FUNIJK(i,j,k)
             IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-            EPGA = AVG(EP_G(IJK),EP_G(IJKN))
+            EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
             IF ( .NOT.ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S) THEN
 
                JP = JP1(J)

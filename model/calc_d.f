@@ -8,55 +8,44 @@ MODULE CALC_D_MOD
    CONTAINS
 
       double precision function epga_x(i,j,k)
-         use functions, only: FUNIJK, ieast
+         use functions, only: ieast
          implicit none
          integer, intent(in) :: i,j,k
-         integer :: IJK,IJKE
          DOUBLE PRECISION :: AREA_FACE
-
-         IJK = FUNIJK(i,j,k)
 
          IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(i,j,k)) THEN   !impermeable
             EPGA_X = ZERO
          ELSE
-            IJKE = FUNIJK(ieast(i,j,k),j,k)
             AREA_FACE = AYZ
-            EPGA_X = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKE))
+            EPGA_X = AREA_FACE*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
          ENDIF
       end function epga_x
 
       double precision function epga_y(i,j,k)
-         use functions, only: FUNIJK, jnorth
+         use functions, only: jnorth
          implicit none
          integer, intent(in) :: i,j,k
-         integer :: IJK, IJKN
          DOUBLE PRECISION :: AREA_FACE
-
-         IJK = FUNIJK(i,j,k)
 
          IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(i,j,k)) THEN
             EPGA_Y = ZERO
          ELSE
-            IJKN = FUNIJK(i,jnorth(i,j,k),k)
             AREA_FACE = AXZ
-            EPGA_Y = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKN))
+            EPGA_Y = AREA_FACE*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
          ENDIF
       end function epga_y
 
       double precision function epga_z(i,j,k)
-         use functions, only: FUNIJK, ktop
+         use functions, only: ktop
          implicit none
          integer, intent(in) :: i,j,k
-         integer :: IJK, IJKT
          DOUBLE PRECISION :: AREA_FACE
 
-         IJK = FUNIJK(i,j,k)
          IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(i,j,k)) THEN
             EPGA_Z = ZERO
          ELSE
-            IJKT = FUNIJK(i,j,ktop(i,j,k))
             AREA_FACE = AXY
-            EPGA_Z = AREA_FACE*AVG(EP_G(IJK),EP_G(IJKT))
+            EPGA_Z = AREA_FACE*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
          ENDIF
 
       end function epga_z

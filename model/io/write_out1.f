@@ -19,13 +19,13 @@
 
       IMPLICIT NONE
 
-      double precision, allocatable :: array1(:)    !//d
+      double precision, allocatable :: array1(:,:,:)
 
 
       if (myPE == PE_IO) then
-         allocate (array1(ijkmax3))     !//d
+         allocate (array1(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       else
-         allocate (array1(1))           !//d
+         allocate (array1(1,1,1))
       end if
 !
       if (myPE == PE_IO) WRITE (UNIT_OUT, 1000) CHAR(12), TIME

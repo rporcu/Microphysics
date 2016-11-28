@@ -79,11 +79,11 @@
             IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! check gas phase fields
-            IF(EP_G(IJK) == UNDEFINED) &
+            IF(EP_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'EP_G')
-            IF(P_G(IJK) == UNDEFINED) &
+            IF(P_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'P_G')
-            IF(RO_G(IJK) == UNDEFINED) &
+            IF(RO_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'RO_G')
             IF(ROP_G(I,J,K) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'ROP_G')
@@ -139,8 +139,8 @@
          IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
 
 ! Ep_g must have a value > 0 and < 1
-            IF(EP_G(IJK) < SMALL_NUMBER .OR. EP_G(IJK) > ONE) &
-               CALL REPORT_UNPHYSICAL(ABORT, I, J, K, 'EP_G', EP_G(IJK))
+            IF(EP_G(I,J,K) < SMALL_NUMBER .OR. EP_G(I,J,K) > ONE) &
+               CALL REPORT_UNPHYSICAL(ABORT, I, J, K, 'EP_G', EP_G(I,J,K))
 
          ENDIF   ! IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
       ENDDO   ! I = istart2, iend2

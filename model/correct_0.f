@@ -47,7 +47,7 @@
             IJK = FUNIJK(i,j,k)
             IF (FLUIDORP_FLOW_AT(i,j,k)) THEN
 
-              P_G(IJK) = P_G(IJK) + UR_FAC(1)*PP_G(I,J,K)
+              P_G(I,J,K) = P_G(I,J,K) + UR_FAC(1)*PP_G(I,J,K)
 
               U_G(I,J,K) = U_G(I,J,K) - &
                  D_E(I,J,K)*(PP_G(ieast(i,j,k),j,k)-PP_G(I,J,K))

@@ -36,8 +36,8 @@
 ! set_bc0 will have already defined ro_g and rop_g in MI and PI
 ! boundary cells (redundant-remove in set_bc0?)
              IF (.NOT.wall_at(i,j,k)) THEN
-               RO_G(IJK) = EOSG(MW_AVG,P_G(IJK),295.15d0)
-               ROP_G(i,j,k) = EP_G(IJK)*RO_G(IJK)
+               RO_G(i,j,k) = EOSG(MW_AVG,P_G(i,j,k),295.15d0)
+               ROP_G(i,j,k) = EP_G(I,J,K)*RO_G(i,j,k)
             ENDIF
 
          end do
@@ -56,10 +56,10 @@
 ! assign ro_g and calculate rop_g in all fluid and flow boundary cells
 ! set_constprop will have already defined ro_g in fluid and flow
 ! boundary cells (redundant- remove here?)
-               RO_G(IJK) = RO_G0
+               RO_G(i,j,k) = RO_G0
 ! set_bc0 will have already defined rop_g in MI and PI boundary cells
 ! (redundant-remove in set_bc0?)
-               ROP_G(i,j,k) = EP_G(IJK)*RO_G(IJK)
+               ROP_G(i,j,k) = EP_G(I,J,K)*RO_G(i,j,k)
             ENDIF
          end do
          end do

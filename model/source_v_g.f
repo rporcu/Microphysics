@@ -107,7 +107,7 @@
           IMJPK = FUNIJK(IMINUS(I,jplus(i,j,k),K),jplus(i,j,k),k)
           IJPKM = FUNIJK(I,jplus(i,j,k),KMINUS(I,jplus(i,j,k),k))
 
-         EPGA = AVG(EP_G(IJK),EP_G(IJKN))
+         EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
 
 ! Impermeable internal surface
          IF (ip_at_n(i,j,k)) THEN
@@ -130,9 +130,9 @@
             A_M(I,J,K,B) = ZERO
             A_M(I,J,K,0) = -ONE
             B_M(I,J,K) = ZERO
-            IF (EP_G(FUNIJK(i,jsouth(i,j,k),k)) > DIL_EP_S) THEN
+            IF (EP_G(i,jsouth(i,j,k),k) > DIL_EP_S) THEN
                A_M(I,J,K,S) = ONE
-            ELSE IF (EP_G(FUNIJK(i,jnorth(i,j,k),k)) > DIL_EP_S) THEN
+            ELSE IF (EP_G(i,jnorth(i,j,k),k) > DIL_EP_S) THEN
                A_M(I,J,K,N) = ONE
             ELSE
                B_M(I,J,K) = -V_G(I,J,K)
@@ -143,14 +143,14 @@
 
 ! Surface forces
 ! Pressure term
-            PGN = P_G(IJKN)
+            PGN = P_G(i,jnorth(i,j,k),k)
             IF (CYCLIC_Y_PD) THEN
-               IF (JMAP(J).EQ.JMAX1)PGN = P_G(IJKN) - DELP_Y
+               IF (JMAP(J).EQ.JMAX1)PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGN - P_G(IJK))*AXZ
+            SDP = -P_SCALE*EPGA*(PGN - P_G(I,J,K))*AXZ
 
 ! Volumetric forces
-            ROGA = AVG(RO_G(IJK),RO_G(IJKN))
+            ROGA = AVG(RO_G(I,J,K),RO_G(i,jnorth(i,j,k),k))
             ROPGA = AVG(ROP_G(I,J,K),ROP_G(i,jnorth(i,j,k),k))
 ! Previous time step
             V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k))*ODT

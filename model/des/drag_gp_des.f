@@ -52,7 +52,7 @@
 ! Local variables
 !-----------------------------------------------
 ! indices, associated with current particle
-      INTEGER :: IJK
+      INTEGER :: IJK, I, J, K
 ! solids phase index, associated with current particle
       INTEGER :: M
 ! Slip velocity and its magnitude
@@ -81,11 +81,14 @@
 
 ! values based on current particle
       IJK = PIJK(NP,4)
+      I = PIJK(NP,1)
+      J = PIJK(NP,2)
+      K = PIJK(NP,3)
 ! solids phase index of current particle
       M = PIJK(NP,5)
 ! Gas material and bulk densities
-      ROg = RO_G(IJK)
-      ROPg = RO_G(IJK) * EPg
+      ROg = RO_G(I,J,K)
+      ROPg = RO_G(I,J,K) * EPg
 ! Laminar viscosity.
       Mu = MU_G(IJK)
 ! Slip velocity and its magnitude

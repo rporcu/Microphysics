@@ -123,8 +123,8 @@
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IJK = BOUND_FUNIJK(I,J,K)
 
-         P_G(IJK) = SCALE_PRESSURE(BC_P_G(BCV))
-         IF (BC_EP_G(BCV) /= UNDEFINED) EP_G(IJK) = BC_EP_G(BCV)
+         P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
+         IF (BC_EP_G(BCV) /= UNDEFINED) EP_G(I,J,K) = BC_EP_G(BCV)
 
       ENDDO   ! do i
       ENDDO   ! do j
@@ -239,8 +239,8 @@
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IJK = BOUND_FUNIJK(I,J,K)
 
-         P_G(IJK) = SCALE_PRESSURE(BC_P_G(BCV))
-         EP_G(IJK) = BC_EP_G(BCV)
+         P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
+         EP_G(I,J,K) = BC_EP_G(BCV)
 
          U_G(I,J,K) = BC_U_G(BCV)
          V_G(I,J,K) = BC_V_G(BCV)

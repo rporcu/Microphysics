@@ -52,7 +52,7 @@
 
            IF (.NOT.WALL_AT(i,j,k)) THEN
 ! Fluid and inflow/outflow cells: FLAG < 100
-            IF (RO_G0 /= UNDEFINED) RO_G(IJK) = RO_G0
+            IF (RO_G0 /= UNDEFINED) RO_G(I,J,K) = RO_G0
            ENDIF
 
            IF (fluid_at(i,j,k)) THEN

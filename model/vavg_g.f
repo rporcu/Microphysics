@@ -63,7 +63,7 @@ CONTAINS
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_at(i,j,k)) THEN
             SUM_VOL = SUM_VOL + VOL
-            SUM_G = SUM_G + vel_G(I,J,K)*EP_G(IJK)*VOL
+            SUM_G = SUM_G + vel_G(I,J,K)*EP_G(I,J,K)*VOL
          ENDIF
       END DO
       END DO

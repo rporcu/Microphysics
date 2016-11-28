@@ -17,11 +17,11 @@
       DOUBLE PRECISION :: MW_AVG
 
 ! Void fraction (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  EP_g(:), EP_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  EP_g(:,:,:), EP_go(:,:,:)
 ! Gas pressure (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  P_g(:), P_gO(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  P_g(:,:,:), P_gO(:,:,:)
 ! Gas density (current and previous time-step values)
-      DOUBLE PRECISION, ALLOCATABLE ::  RO_g(:), RO_go(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  RO_g(:,:,:), RO_go(:,:,:)
 ! Macroscopic gas density (current and previous time-step values)
       DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:,:,:), ROP_go(:,:,:)
 ! x-component of gas velocity (current and previous time-step values)

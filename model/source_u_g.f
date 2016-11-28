@@ -110,7 +110,7 @@
           IPJKM = FUNIJK(IPLUS(I,J,kminus(i,j,k)),J,kminus(i,j,k))
           IPJMK = FUNIJK(IPLUS(I,jminus(i,j,k),k),jminus(i,j,k),k)
 
-           EPGA = AVG(EP_G(IJK),EP_G(IJKE))
+          EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
 ! Impermeable internal surface
          IF (ip_at_e(i,j,k)) THEN
@@ -135,9 +135,9 @@
             B_M(I,J,K) = ZERO
 ! set velocity equal to that of west or east cell if solids are present
 ! in those cells else set velocity equal to known value
-            IF (EP_G(FUNIJK(iwest(i,j,k),j,k)) > DIL_EP_S) THEN
+            IF (EP_G(iwest(i,j,k),j,k) > DIL_EP_S) THEN
                A_M(I,J,K,W) = ONE
-            ELSE IF (EP_G(FUNIJK(ieast(i,j,k),j,k)) > DIL_EP_S) THEN
+            ELSE IF (EP_G(ieast(i,j,k),j,k) > DIL_EP_S) THEN
                A_M(I,J,K,E) = ONE
             ELSE
                B_M(I,J,K) = -U_G(I,J,K)
@@ -148,14 +148,14 @@
 
 ! Surface forces
 ! Pressure term
-            PGE = P_G(IJKE)
+            PGE = P_G(ieast(i,j,k),j,k)
             IF (CYCLIC_X_PD) THEN
-               IF (IMAP(I).EQ.IMAX1) PGE = P_G(IJKE) - DELP_X
+               IF (IMAP(I).EQ.IMAX1) PGE = P_G(ieast(i,j,k),j,k) - DELP_X
             ENDIF
-            SDP = -P_SCALE*EPGA*(PGE - P_G(IJK))*AYZ
+            SDP = -P_SCALE*EPGA*(PGE - P_G(I,J,K))*AYZ
 
 ! Volumetric forces
-            ROGA  = HALF * (RO_G(IJK) + RO_G(IJKE))
+            ROGA  = HALF * (RO_G(I,J,K) + RO_G(ieast(i,j,k),j,k))
             ROPGA = HALF * (ROP_G(I,J,K) + ROP_G(ieast(i,j,k),j,k))
 ! Previous time step
             V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT

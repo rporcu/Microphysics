@@ -35,9 +35,9 @@
          do j=jstart3,jend3
             do i=istart3, iend3
                ijk = funijk(i,j,k)
-               Ep_g(ijk) = Ep_go(i,j,k)
-               P_g(ijk) = P_go(i,j,k)
-               Ro_g(ijk) = Ro_go(i,j,k)
+               Ep_g(i,j,k) = Ep_go(i,j,k)
+               P_g(i,j,k) = P_go(i,j,k)
+               Ro_g(i,j,k) = Ro_go(i,j,k)
                Rop_g(i,j,k) = Rop_go(i,j,k)
                U_g(i,j,k) = U_go(i,j,k)
                V_g(i,j,k) = V_go(i,j,k)

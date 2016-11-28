@@ -182,7 +182,7 @@ LOOP_FLUID: DO K = kstart3, kend3
                ABS(W_G(I,J,K)) > MAX_INLET_VEL) THEN
                CHECK_VEL_BOUND = .TRUE.
                WRITE(*,1000) MAX_INLET_VEL, I, J, K, &
-                             EP_g(IJK), U_G(I,J,K), V_G(I,J,K), W_G(I,J,K)
+                             EP_g(I,J,K), U_G(I,J,K), V_G(I,J,K), W_G(I,J,K)
                EXIT LOOP_FLUID
             ENDIF
          ENDIF
