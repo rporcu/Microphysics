@@ -36,18 +36,17 @@
 ! south/bottom j,k cell indices of yz plane
       INTEGER :: J_s, K_b
 
+      INTEGER :: j,k
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-!     'IJK' indices
       INTEGER :: OWNER
-      INTEGER :: J, K
-      INTEGER :: IJK , IPJK
 
       INTEGER :: IER
       LOGICAL :: ERROR
-      INTEGER :: I_FLUID, IJK_FLUID
-      INTEGER :: I_WALL,  IJK_WALL
+      INTEGER :: I_FLUID
+      INTEGER :: I_WALL
 
       CALL INIT_ERR_MSG("MOD_BC_I")
 
@@ -62,9 +61,6 @@
       ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
- 
-         IJK  = FUNIJK(I_W,   J_S, K_B)
-         IPJK = FUNIJK(I_W+1, J_S, K_B)
  
          ! Flow on west boundary (fluid cell on east).
          if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
@@ -93,22 +89,16 @@
       !CALL BCAST(BC_PLANE(BCV), OWNER)
 
 
-! If there is an error, send IJK/IPJK to all ranks. Report and exit.
+! If there is an error, send I,J,K to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-         !CALL BCAST(IPJK,OWNER)
-         !CALL BCAST(IJK, OWNER)
-
-         WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B,                 &
-            IJK, ICBC_FLAG(i_w,j_s,k_b), IPJK, ICBC_FLAG(i_w+1,j_s,k_b)
+         WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B 
+!           ICBC_FLAG(i_w,j_s,k_b), ICBC_FLAG(i_w+1,j_s,k_b)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1100 FORMAT('Error 1100: Cannot locate flow plane for boundary ',     &
          'condition ',I3,'.',2/3x,'I West   =  ',I6,' I East   = ',I6,/&
-         3x,'J South  =  ',I6,' K Bottom = ',I6,2/' The following ',   &
-         'should conttain a wall cell and fluid cell:',/3x,'IJK  ',I9, &
-         ' :: ',A3,/3x,'IPJK ',I9,' :: ',A3,2/' Maybe no IC was ',     &
-         'specified for the fluid cell.')
+         3x,'J South  =  ',I6,' K Bottom = ',I6)
 
 ! Store the new values in the global data array.
       BC_I_W(BCV) = I_W
@@ -130,10 +120,7 @@
          IF(DEAD_CELL_AT(I_FLUID,J,K)) CYCLE
          IF(DEAD_CELL_AT(I_WALL, J,K)) CYCLE
 
-         IJK_WALL = FUNIJK(I_WALL,J,K)
-         IJK_FLUID = FUNIJK(I_FLUID,J,K)
-
-! Verify that the the fluid and wall cells match the ICBC_FLAG.
+         ! Verify that the the fluid and wall cells match the ICBC_FLAG.
          IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
                    mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) ERROR = .TRUE.
 
@@ -161,15 +148,12 @@
             IF(DEAD_CELL_AT(I_FLUID,J,K)) CYCLE
             IF(DEAD_CELL_AT(I_WALL, J,K)) CYCLE
 
-            IJK_WALL = FUNIJK(I_WALL,J,K)
-            IJK_FLUID = FUNIJK(I_FLUID,J,K)
-
             IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
                       mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
-                  I_WALL,  J, K, IJK_WALL, ICBC_FLAG(i_wall,j,k),        &
-                  I_FLUID, J, K, IJK_FLUID, ICBC_FLAG(i_fluid,j,k)
+                  I_WALL,  J, K, ICBC_FLAG(i_wall,j,k),        &
+                  I_FLUID, J, K, ICBC_FLAG(i_fluid,j,k)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
          ENDDO
@@ -184,8 +168,7 @@
  1200 FORMAT('Error 1200: Illegal geometry for boundary condition:',I3)
 
  1201 FORMAT(' ',/14X,'I',7X,'J',7X,'K',7X,'IJK',4x,'FLAG',/3x,        &
-         'WALL ',3(2x,I6),2x,I9,3x,A,/3x,'FLUID',3(2x,I6),2x,I9,3x,A)
-
+         'WALL ',3(2x,I6),3x,I3,/3x,'FLUID',3(2x,I6),3x,I3)
 
       CALL FINL_ERR_MSG
 
