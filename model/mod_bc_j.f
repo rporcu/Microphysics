@@ -14,6 +14,7 @@
       use bc, only: BC_PLANE
 
       USE geometry, only: ICBC_FLAG
+      use ic, only: icbc_fluid
 
       USE compar
 
@@ -58,12 +59,14 @@
          IJK  = FUNIJK(I_W, J_S,   K_B)
          IJPK = FUNIJK(I_W, J_S+1, K_B)
 
-         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(IJPK)(1:1)=='.') THEN
+         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. &
+            mod(ICBC_FLAG(IJPK),1000) == icbc_fluid) THEN
             J_S = J_S
             J_N = J_N
             BC_PLANE(BCV) = 'N'
 
-         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. ICBC_FLAG(IJK)(1:1)=='.') THEN
+         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. &
+            mod(ICBC_FLAG(IJK),1000) == icbc_fluid) THEN
             J_S = J_S + 1
             J_N = J_N + 1
             BC_PLANE(BCV) = 'S'
@@ -117,7 +120,7 @@
          IJK_FLUID = FUNIJK(I,J_FLUID,K)
 
           IF(.NOT.(WALL_ICBC_FLAG(i,j_wall,k) .AND. &
-             ICBC_FLAG(IJK_FLUID)(1:1)=='.')) ERROR = .TRUE.
+             mod(ICBC_FLAG(IJK_FLUID),1000) == icbc_fluid)) ERROR = .TRUE.
 
        ENDDO
        ENDDO
@@ -150,7 +153,7 @@
             IJK_FLUID = FUNIJK(I,J_FLUID,K)
 
             IF(.NOT.(WALL_ICBC_FLAG(i,j_wall,k) .AND.                    &
-               ICBC_FLAG(IJK_FLUID)(1:1)=='.')) THEN
+               mod(ICBC_FLAG(IJK_FLUID),1000) == icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
                   I, J_WALL,  K, IJK_WALL, ICBC_FLAG(IJK_WALL),        &

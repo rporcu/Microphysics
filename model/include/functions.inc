@@ -259,28 +259,34 @@
 
 ! Logical function to identify wall ICBC_FLAG
       LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
-      USE geometry
+      use geometry
+      use ic
       implicit none
       integer, intent(in) :: i,j,k
-      integer :: ijk
+      integer :: ijk,icbc
       ijk = funijk(i,j,k)
+      icbc = mod(ICBC_FLAG(IJK),1000)
 
-      WALL_ICBC_FLAG = ICBC_FLAG(IJK)(1:1) .EQ. 'W' .OR. &
-         ICBC_FLAG(IJK)(1:1) .EQ. 'S' .OR. &
-         ICBC_FLAG(IJK)(1:1) .EQ. 's' .OR. &
-         ICBC_FLAG(IJK)(1:1) .EQ. 'c' .OR. &
-         ICBC_FLAG(IJK)(1:1) .EQ. 'C'
+      WALL_ICBC_FLAG = &
+        (ICBC .EQ. icbc_no_s  .OR. &
+         ICBC .EQ. icbc_free  .OR. &
+         ICBC .EQ. icbc_pslip .OR. &
+         ICBC .EQ. icbc_cycl  .OR. &
+         ICBC .EQ. icbc_cyclp)
       END FUNCTION WALL_ICBC_FLAG
 
       LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
-      USE geometry
+      use geometry
+      use ic
       implicit none
       integer, intent(in) :: i,j,k
-      integer :: ijk
+      integer :: ijk, icbc
       ijk = funijk(i,j,k)
-      DEFAULT_WALL_AT = ICBC_FLAG(IJK)(2:3) .EQ. '--' .AND. &
-         (ICBC_FLAG(IJK)(1:1) .NE. 'c'  .AND. &
-         ICBC_FLAG(IJK)(1:1) .NE. 'C')
+
+      icbc = mod(icbc_flag(IJK),1000)
+      DEFAULT_WALL_AT = (ICBC .NE. icbc_cycl  .and. &
+         ICBC .NE. icbc_cyclp .and. icbc_flag(ijk) < 1000)
+
       END FUNCTION DEFAULT_WALL_AT
 
 

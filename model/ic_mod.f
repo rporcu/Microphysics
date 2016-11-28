@@ -104,5 +104,34 @@
 ! Flag to extend the lattice distribution in a given IC to available area
       LOGICAL :: IC_DES_FIT_TO_REGION (DIMENSION_IC)
 
+   !  Cell flag definitions
+   !
+   !  ICBC_FLAG BC_TYPE             Cell type
+   !  ----- --------- -------        ---------
+   !             UNDEF        0 Undefined
+   !    .        -            1 Cell containing gas or solids or both
+   !    p      P_INFLOW       2 Specified pressure inflow cell
+   !    P      P_OUTFLOW      3 Specified pressure outflow cell
+   !    I      MASS_INFLOW    4 Specified mass flux inflow cell
+   !    O      MASS_OUTFLOW   5 Specified mass flux outflow cell
+   !    o      OUTFLOW        6 outflow cell
+   !    W      NO_SLIP_WALL   7 Internal/external wall with no-slip b.c.
+   !    S      FREE_SLIP_WALL 8 Internal/external wall with free-slip
+   !    s      PAR_SLIP_WALL  9 Internal/external wall with partial-slip b.c.
+   !    c      CYCLIC         10 Cyclic b.c.
+   !    C      CYCLIC_PD      11 yclic b.c. with pressure drop
+
+   integer, parameter :: icbc_undef = 0
+   integer, parameter :: icbc_fluid = 1
+   integer, parameter :: icbc_p_inf = 2
+   integer, parameter :: icbc_p_out = 3
+   integer, parameter :: icbc_m_inf = 4
+   integer, parameter :: icbc_m_out = 5
+   integer, parameter :: icbc_outfl = 6
+   integer, parameter :: icbc_no_s  = 7
+   integer, parameter :: icbc_free  = 8
+   integer, parameter :: icbc_pslip = 9
+   integer, parameter :: icbc_cycl  = 10
+   integer, parameter :: icbc_cyclp = 11
 
       END MODULE ic
