@@ -203,7 +203,7 @@
                   U_G(I,J,K) = U_G(i,j,kminus(i,j,k))
                   V_G(I,J,K) = V_G(i,j,kminus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,j,kminus(i,j,k))
                ENDIF
 
 
@@ -226,7 +226,7 @@
                   U_G(I,J,K) = U_G(i,j,kplus(i,j,k))
                   V_G(I,J,K) = V_G(i,j,kplus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,j,kplus(i,j,k))
                ENDIF
 
             ENDDO   ! end do (i=i1,i2)

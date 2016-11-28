@@ -19,8 +19,6 @@
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
       use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
       use geometry, only: CYCLIC_Z, CYCLIC_Z_PD, CYCLIC_Z_MF
-! MPI-Domain decompoint and rank flags.
-      use compar, only: NODESI, NODESJ, NODESK
 ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
 
