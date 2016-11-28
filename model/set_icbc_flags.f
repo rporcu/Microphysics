@@ -62,11 +62,11 @@
          IF (DO_K) THEN
             IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
                IF (CYCLIC_Z_PD) THEN
-                  ICBC_FLAG(IJK) = icbc_cyclp
+                  ICBC_FLAG(IJK) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_Z) THEN
-                  ICBC_FLAG(IJK) = icbc_cycl
+                  ICBC_FLAG(IJK) = 1000 + icbc_cycl
                ELSE
-                  ICBC_FLAG(IJK) = icbc_no_s
+                  ICBC_FLAG(IJK) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -74,11 +74,11 @@
          IF(DO_J)THEN
             IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
                IF (CYCLIC_Y_PD) THEN
-                  ICBC_FLAG(IJK) = icbc_cyclp
+                  ICBC_FLAG(IJK) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_Y) THEN
-                  ICBC_FLAG(IJK) = icbc_cycl
+                  ICBC_FLAG(IJK) = 1000 + icbc_cycl
                ELSE
-                 ICBC_FLAG(IJK) = icbc_no_s
+                  ICBC_FLAG(IJK) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -86,11 +86,11 @@
          IF(DO_I)THEN
             IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
                IF (CYCLIC_X_PD) THEN
-                  ICBC_FLAG(IJK) = icbc_cyclp
+                  ICBC_FLAG(IJK) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_X) THEN
-                  ICBC_FLAG(IJK) = icbc_cycl
+                  ICBC_FLAG(IJK) = 1000 + icbc_cycl
                ELSE
-                  ICBC_FLAG(IJK) = icbc_no_s
+                  ICBC_FLAG(IJK) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -246,7 +246,7 @@
             IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
             IF(DEAD_CELL_AT(I,J,K)) CYCLE
             IJK = FUNIJK(I,J,K)
-            ICBC_FLAG(IJK) = icbc_fluid 
+            ICBC_FLAG(IJK) = 1000*ICV + icbc_fluid
          ENDDO
          ENDDO
          ENDDO
@@ -324,9 +324,12 @@
                IJK = FUNIJK(I,J,K)
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE('FREE_SLIP_WALL'); ICBC_FLAG(IJK) = icbc_free
-                  CASE('NO_SLIP_WALL');   ICBC_FLAG(IJK) = icbc_no_s
-                  CASE('PAR_SLIP_WALL');  ICBC_FLAG(IJK) = icbc_pslip
+               CASE('FREE_SLIP_WALL')
+                  ICBC_FLAG(IJK) = 1000*BCV + icbc_free
+               CASE('NO_SLIP_WALL')
+                  ICBC_FLAG(IJK) = 1000*BCV + icbc_no_s
+               CASE('PAR_SLIP_WALL')
+                  ICBC_FLAG(IJK) = 1000*BCV + icbc_pslip
                END SELECT
             ENDDO
             ENDDO
@@ -443,11 +446,16 @@
                IF(WALL_ICBC_FLAG(i,j,k)) THEN
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
-                     CASE ('P_OUTFLOW');    ICBC_FLAG(IJK) = icbc_p_out
-                     CASE ('MASS_INFLOW');  ICBC_FLAG(IJK) = icbc_m_inf
-                     CASE ('MASS_OUTFLOW'); ICBC_FLAG(IJK) = icbc_m_out
-                     CASE ('OUTFLOW');      ICBC_FLAG(IJK) = icbc_outfl
-                     CASE ('P_INFLOW');     ICBC_FLAG(IJK) = icbc_p_inf
+                  CASE ('P_OUTFLOW')
+                     ICBC_FLAG(IJK) = 1000*BCV + icbc_p_out
+                  CASE ('MASS_INFLOW')
+                     ICBC_FLAG(IJK) = 1000*BCV + icbc_m_inf
+                  CASE ('MASS_OUTFLOW')
+                     ICBC_FLAG(IJK) = 1000*BCV + icbc_m_out
+                  CASE ('OUTFLOW')
+                     ICBC_FLAG(IJK) = 1000*BCV + icbc_outfl
+                  CASE ('P_INFLOW')
+                     ICBC_FLAG(IJK) = 1000*BCV + icbc_p_inf
                   END SELECT
 
                ELSE

@@ -61,11 +61,13 @@
          IJK  = FUNIJK(I_W, J_S, K_B)
          IJKP = FUNIJK(I_W, J_S, K_B+1)
 
-         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. ICBC_FLAG(IJKP)==icbc_fluid)THEN
+         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. &
+            mod(ICBC_FLAG(IJKP),1000) == icbc_fluid)THEN
             K_B = K_B
             K_T = K_T
             BC_PLANE(BCV) = 'T'
-         ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .AND. ICBC_FLAG(IJK)==icbc_fluid)THEN
+         ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .AND. &
+            mod(ICBC_FLAG(IJK),1000) == icbc_fluid)THEN
             K_B = K_B + 1
             K_T = K_T + 1
             BC_PLANE(BCV) = 'B'
@@ -119,7 +121,7 @@
          IJK_FLUID = FUNIJK(I,J,K_FLUID)
 
          IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                       &
-                       ICBC_FLAG(IJK_FLUID)==icbc_fluid)) ERROR = .TRUE.
+            mod(ICBC_FLAG(IJK_FLUID),1000)==icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -151,7 +153,7 @@
             IJK_FLUID = FUNIJK(I,J,K_FLUID)
 
             IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                    &
-                          ICBC_FLAG(IJK_FLUID)==icbc_fluid)) THEN
+               mod(ICBC_FLAG(IJK_FLUID),1000)==icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
                   I, J, K_WALL,  IJK_WALL,  ICBC_FLAG(IJK_WALL),       &

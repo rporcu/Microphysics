@@ -263,15 +263,16 @@
       use ic
       implicit none
       integer, intent(in) :: i,j,k
-      integer :: ijk
+      integer :: ijk,icbc
       ijk = funijk(i,j,k)
+      icbc = mod(ICBC_FLAG(IJK),1000)
 
       WALL_ICBC_FLAG = &
-        (ICBC_FLAG(IJK) .EQ. icbc_no_s  .OR. &
-         ICBC_FLAG(IJK) .EQ. icbc_free  .OR. &
-         ICBC_FLAG(IJK) .EQ. icbc_pslip .OR. &
-         ICBC_FLAG(IJK) .EQ. icbc_cycl  .OR. &
-         ICBC_FLAG(IJK) .EQ. icbc_cyclp)
+        (ICBC .EQ. icbc_no_s  .OR. &
+         ICBC .EQ. icbc_free  .OR. &
+         ICBC .EQ. icbc_pslip .OR. &
+         ICBC .EQ. icbc_cycl  .OR. &
+         ICBC .EQ. icbc_cyclp)
       END FUNCTION WALL_ICBC_FLAG
 
       LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
@@ -279,10 +280,13 @@
       use ic
       implicit none
       integer, intent(in) :: i,j,k
-      integer :: ijk
+      integer :: ijk, icbc
       ijk = funijk(i,j,k)
-      DEFAULT_WALL_AT = (ICBC_FLAG(IJK) .NE. icbc_cycl  .and. &
-                         ICBC_FLAG(IJK) .NE. icbc_cyclp)
+
+      icbc = mod(icbc_flag(IJK),1000)
+      DEFAULT_WALL_AT = (ICBC .NE. icbc_cycl  .and. &
+         ICBC .NE. icbc_cyclp .and. icbc_flag(ijk) < 1000)
+
       END FUNCTION DEFAULT_WALL_AT
 
 

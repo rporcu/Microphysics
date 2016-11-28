@@ -28,7 +28,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I, J, K, IJK, IJK1
+      INTEGER :: I, J, K, IJK, IJK1, INC
       integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
@@ -57,27 +57,34 @@
          DO j = jstart4, jend4
             DO k = kstart4, kend4
 
-              IJK = funijk(i, j, k)
-              SELECT CASE (ICBC_FLAG(IJK))
+               IJK = funijk(i, j, k)
+               INC = ICBC_FLAG(IJK) - mod(ICBC_FLAG(IJK),1000)
+              SELECT CASE (mod(ICBC_FLAG(IJK),1000))
                 CASE (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
 
                 ijk1 = bound_funijk(i+1, j, k)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
 
                 ijk1 = bound_funijk(i-1, j, k)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
 
                 ijk1 = bound_funijk(i, j+1, k)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
 
                 ijk1 = bound_funijk(i, j-1, k)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
 
                 ijk1 = bound_funijk(i, j, k+1)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
 
                 ijk1 = bound_funijk(i, j, k-1)
-                IF(ICBC_FLAG(IJK1) == icbc_no_s)ICBC_FLAG(IJK1)=icbc_free
+                IF(ICBC_FLAG(IJK1) == icbc_no_s) &
+                   ICBC_FLAG(IJK1)=icbc_free+INC
               END SELECT
             ENDDO
           ENDDO
@@ -95,7 +102,7 @@
 
            ijk = funijk(i,j,k)
 
-         SELECT CASE (ICBC_FLAG(IJK))
+         SELECT CASE (mod(ICBC_FLAG(IJK),1000))
          CASE (icbc_fluid)
             FLAG(i,j,k) = 1
          CASE (icbc_p_inf)
