@@ -14,7 +14,6 @@
       use time_cpu, only: WALL_START
 
       use machine, only: WALL_TIME
-      use compar, only: PE_IO
 
       use error_manager
 

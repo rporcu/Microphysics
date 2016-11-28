@@ -44,7 +44,6 @@
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param, only: dimension_3
       USE param1, only: zero, one, half
       USE run, only: momentum_x_eq
       USE run, only: odt
@@ -164,7 +163,7 @@
 ! Body force
             VBF = ROGA*GRAVITY_X
 
-            ltau_u_g = tau_u_g(ijk)
+            ltau_u_g = tau_u_g(i,j,k)
 
 ! Collect the terms
             A_M(I,J,K,0) = -(A_M(I,J,K,E)+A_M(I,J,K,W)+&
@@ -250,7 +249,7 @@
       INTEGER :: L
 ! Indices
       INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2, IJK,&
-                  JM, KM, IJKW, IMJK, IP, IPJK
+                  JM, KM, IMJK, IP, IPJK
 ! Phase index
       INTEGER :: M
 !-----------------------------------------------

@@ -90,7 +90,7 @@ CONTAINS
       DOUBLE PRECISION, INTENT(IN) :: A_FACE
 
 ! gas mass flux
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) ::  Flux_g
+      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
 
       INTEGER :: I,J,K, IJK
 
@@ -112,7 +112,7 @@ CONTAINS
          IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_at(i,j,k)) THEN
-            SUM_G = SUM_G + Flux_g(IJK)
+            SUM_G = SUM_G + Flux_g(I,J,K)
             SUM_AREA = SUM_AREA + A_FACE
          ENDIF
       END DO

@@ -12,7 +12,6 @@
       use desgrid, only: desgrid_pic
       use discretelement
       use error_manager
-      use fldvar, only: EP_g, ROP_g
       use functions
       use machine
       use mpi_funs_des, only: DES_PAR_EXCHANGE

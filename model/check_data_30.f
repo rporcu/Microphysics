@@ -85,8 +85,8 @@
                (IER, I, J, K, MU_G(IJK), '/=', ZERO, 'MU_G')
 
 ! Granular second coefficient of viscosity.
-            IF(LAMBDA_G(IJK) /= ZERO) CALL REPORT_ERROR               &
-               (IER, I, J, K, LAMBDA_G(IJK), '/=', ZERO, 'LAMBDA_G')
+            IF(LAMBDA_G(i,j,k) /= ZERO) CALL REPORT_ERROR               &
+               (IER, I, J, K, LAMBDA_G(i,j,k), '/=', ZERO, 'LAMBDA_G')
 ! Gas conductivity.
 
          ENDIF

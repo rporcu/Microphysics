@@ -230,8 +230,6 @@
 !--------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K, IJK
-! ijk index for setting normal component of velocity
-      INTEGER :: FIJK
 !--------------------------------------------------------------------//
 
       DO K = BC_K_B(BCV), BC_K_T(BCV)

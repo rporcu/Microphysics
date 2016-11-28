@@ -14,7 +14,6 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param, only: dimension_3
       USE run, only: momentum_x_eq
       USE run, only: discretize
       use fldvar
@@ -127,34 +126,17 @@
 
       INTEGER, INTENT(IN) :: i, j, k
 
-! Local variables
 !---------------------------------------------------------------------//
-! indices
-      INTEGER :: ijk
-      INTEGER :: imjk, ijmk, ijkm
-      INTEGER :: ipjk, ipjmk, ipjkm
-
-!---------------------------------------------------------------------//
-
-! indices
-      IJK  = funijk(I,J,K)
-
-      IMJK = FUNIJK(iminus(i,j,k),j,k)
-      IPJK = FUNIJK(iplus(i,j,k),j,k)
-      IJMK = FUNIJK(i,jminus(i,j,k),k)
-      IJKM = FUNIJK(i,j,kminus(i,j,k))
-      IPJMK = FUNIJK(iplus(i,jminus(i,j,k),k),jminus(i,j,k),k)
-      IPJKM = FUNIJK(iplus(i,j,kminus(i,j,k)),j,kminus(i,j,k))
 
 ! First calculate the fluxes at the faces
-      Flux_e = HALF * (Flux_gE(IJK) + Flux_gE(IPJK))
-      Flux_w = HALF * (Flux_gE(IMJK) + Flux_gE(IJK))
-      Flux_n = HALF * (Flux_gN(IJK) + Flux_gN(IPJK))
-      Flux_s = HALF * (Flux_gN(IJMK) + Flux_gN(IPJMK))
+      Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(iplus(i,j,k),j,k))
+      Flux_w = HALF * (Flux_gE(iminus(i,j,k),j,k) + Flux_gE(i,j,k))
+      Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(iplus(i,j,k),j,k))
+      Flux_s = HALF * (Flux_gN(i,jminus(i,j,k),k) + Flux_gN(iplus(i,jminus(i,j,k),k),jminus(i,j,k),k))
 
       IF (DO_K) THEN
-         Flux_t = HALF * (Flux_gT(IJK) + Flux_gT(IPJK))
-         Flux_b = HALF * (Flux_gT(IJKM) + Flux_gT(IPJKM))
+         Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(iplus(i,j,k),j,k))
+         Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + Flux_gT(iplus(i,j,kminus(i,j,k)),j,kminus(i,j,k)))
       ENDIF
       RETURN
       END SUBROUTINE GET_UCELL_GCFLUX_TERMS
@@ -319,7 +301,6 @@
 
       USE geometry, only: do_k
 
-      USE param, only: dimension_3
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
       IMPLICIT NONE
@@ -458,7 +439,6 @@
 
       USE geometry, only: do_k
 
-      USE param, only: dimension_3
       USE param1, only: one
 
       use matrix, only: e, w, n, s, t, b

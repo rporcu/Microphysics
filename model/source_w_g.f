@@ -166,7 +166,7 @@
             VBF = ROPGA*GRAVITY_Z
 
 
-            ltau_w_g = tau_w_g(ijk)
+            ltau_w_g = tau_w_g(i,j,k)
 
 ! Collect the terms
 

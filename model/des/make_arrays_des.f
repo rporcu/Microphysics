@@ -30,7 +30,7 @@
 !-----------------------------------------------
       INTEGER :: I, J, K, L, IJK
       INTEGER :: count
-      INTEGER :: I1, I2, J1, J2, K1, K2, II, JJ, KK, IJK2
+      INTEGER :: I1, I2, J1, J2, K1, K2
       INTEGER :: lcurpar, lpip_all(0:numpes-1), lglobal_id
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")

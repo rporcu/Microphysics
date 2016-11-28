@@ -130,8 +130,8 @@
 ! combines 1/x d/dx (x.lambda.trcD) xdxdydz - (lambda/x.trcD) xdxdydz =>
 !              d/dx (lambda.trcD) xdxdydz
 ! delta (lambda.trcD)Ap |E-W : at (i+1 - i-1), j, k
-               SBV = (LAMBDA_G(IJKE)*TRD_G(IJKE)-&
-                      LAMBDA_G(IJK)*TRD_G(IJK))*AYZ
+               SBV = (LAMBDA_G(ieast(i,j,k),j,k)*TRD_G(ieast(i,j,k),j,k)-&
+                      LAMBDA_G(i,j,k)*TRD_G(i,j,k))*AYZ
 
 ! shear stress terms at i+1/2, j, k
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>

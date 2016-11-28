@@ -14,10 +14,6 @@
       use geometry, only: DX, oDX
       use geometry, only: DY, oDZ
       use geometry, only: DZ, oDY
-! Domain indices.
-      use geometry, only: DO_I, IMIN1, IMAX1, IMAX2, IMAX3, IMIN3
-      use geometry, only: DO_J, JMIN1, JMAX1, JMAX2, JMAX3, JMIN3
-      use geometry, only: DO_K, KMIN1, KMAX1, KMAX2, KMAX3, KMIN3
 ! Cyclic domain flags.
       use geometry, only: CYCLIC
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF

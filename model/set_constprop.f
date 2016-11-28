@@ -59,7 +59,7 @@
 ! Strictly Fluid cells: FLAG = 1
             IF (MU_G0 /= UNDEFINED) THEN
                MU_G(IJK) = MU_G0
-               LAMBDA_G(IJK) = -(2.0d0/3.0d0)*MU_G0
+               LAMBDA_G(i,j,k) = -(2.0d0/3.0d0)*MU_G0
               ENDIF
            ENDIF
 

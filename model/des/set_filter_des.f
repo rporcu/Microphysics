@@ -9,9 +9,9 @@
       SUBROUTINE SET_FILTER_DES
 
 ! Runtime Flag: Invoke gas/solids coupled simulation.
-      use geometry, only: DX, IMIN1, IMAX1
-      use geometry, only: DY, JMIN1, JMAX1
-      use geometry, only: DZ, KMIN1, KMAX1, DO_K
+      use geometry, only: DX
+      use geometry, only: DY
+      use geometry, only: DZ, DO_K
 
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
       use particle_filter, only: DES_INTERP_NONE

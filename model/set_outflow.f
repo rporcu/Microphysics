@@ -108,7 +108,7 @@
                   V_G(I,J,K) = V_G(iminus(i,j,k),j,k)
                   W_G(I,J,K) = W_G(iminus(i,j,k),j,k)
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, iminus(i,j,k),j,k)
                ENDIF
 
 
@@ -138,7 +138,7 @@
                   V_G(I,J,K) = V_G(iplus(i,j,k),j,k)
                   W_G(I,J,K) = W_G(iplus(i,j,k),j,k)
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, iplus(i,j,k),j,k)
                ENDIF
 
 
@@ -159,7 +159,7 @@
                   U_G(I,J,K) = U_G(i,jminus(i,j,k),k)
                   W_G(I,J,K) = W_G(i,jminus(i,j,k),k)
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,jminus(i,j,k),k)
                ENDIF
 
 
@@ -182,7 +182,7 @@
                   U_G(I,J,K) = U_G(i,jplus(i,j,k),k)
                   W_G(I,J,K) = W_G(i,jplus(i,j,k),k)
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,jplus(i,j,k),k)
                ENDIF
 
 
@@ -203,7 +203,7 @@
                   U_G(I,J,K) = U_G(i,j,kminus(i,j,k))
                   V_G(I,J,K) = V_G(i,j,kminus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, FIJK)
                ENDIF
 
 
@@ -226,7 +226,7 @@
                   U_G(I,J,K) = U_G(i,j,kplus(i,j,k))
                   V_G(I,J,K) = V_G(i,j,kplus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(IJK, FIJK)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K, FIJK)
                ENDIF
 
             ENDDO   ! end do (i=i1,i2)
@@ -383,7 +383,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_OUTFLOW_FLUXES(IJK,FIJK)
+      SUBROUTINE SET_OUTFLOW_FLUXES(I,J,K,FI,FJ,FK)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -392,14 +392,14 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! ijk index for boundary cell
-      INTEGER, INTENT(IN) :: IJK
+      INTEGER, INTENT(IN) :: I,J,K
 ! ijk index for adjacent fluid cell
-      INTEGER, INTENT(IN) :: FIJK
+      INTEGER, INTENT(IN) :: FI,FJ,FK
 !---------------------------------------------------------------------//
 
-      Flux_gE(IJK) = Flux_gE(FIJK)
-      Flux_gN(IJK) = Flux_gN(FIJK)
-      Flux_gT(IJK) = Flux_gT(FIJK)
+      Flux_gE(I,J,K) = Flux_gE(FI,FJ,FK)
+      Flux_gN(I,J,K) = Flux_gN(FI,FJ,FK)
+      Flux_gT(I,J,K) = Flux_gT(FI,FJ,FK)
 
       RETURN
       END SUBROUTINE SET_OUTFLOW_FLUXES

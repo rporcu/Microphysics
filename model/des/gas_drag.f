@@ -27,8 +27,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
@@ -168,8 +166,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
@@ -302,8 +298,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Size of IJK arrays and solids phase..
-      use param, only: DIMENSION_3
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell

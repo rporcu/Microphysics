@@ -52,12 +52,10 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! number of items specified from NA, ALENGTH, DA
-      INTEGER :: N_SPECIFIED
 ! loop counter
       INTEGER :: LC
 ! temporary storage
-      DOUBLE PRECISION :: TEMP_STOR, lSUM, lERR
+      DOUBLE PRECISION :: lSUM, lERR
 !-----------------------------------------------
 
 

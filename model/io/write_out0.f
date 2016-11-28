@@ -595,10 +595,6 @@
 ! Cell sizes (DX, DY, or DZ)
       DOUBLE PRECISION :: DX
 !
-!  Local variables
-!
-!                      Index
-      INTEGER          L
 !-----------------------------------------------
 !
       LOCATION = HALF*DX + DX*dble(L2-1)
