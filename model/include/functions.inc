@@ -257,26 +257,35 @@
       ps_wall_at  = flag(i,j,k) .EQ. 102
       end function ps_wall_at
 
-      ! Logical function to identify wall ICBC_FLAG
-      logical function WALL_ICBC_FLAG(i,j,k)
-      use geometry
-      use ic
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: i,j,k
-      WALL_ICBC_FLAG = ICBC_FLAG(i,j,k) .EQ. icbc_no_s  .OR. &
-                       ICBC_FLAG(i,j,k) .EQ. icbc_free  .OR. &
-                       ICBC_FLAG(i,j,k) .EQ. icbc_pslip .OR. &
-                       ICBC_FLAG(i,j,k) .EQ. icbc_cycl  .OR. &
-                       ICBC_FLAG(i,j,k) .EQ. icbc_cyclp
-      END FUNCTION WALL_ICBC_FLAG
-
-      logical function DEFAULT_WALL_AT(i,j,k)
+      LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
       use geometry
       use ic
       implicit none
       integer, intent(in) :: i,j,k
-      DEFAULT_WALL_AT = (ICBC_FLAG(i,j,k) .NE. icbc_cycl .and. &
-                         ICBC_FLAG(i,j,k) .NE. icbc_cyclp)
+      integer :: icbc
+
+      icbc = mod(icbc_flag(i,j,k),1000)
+
+      WALL_ICBC_FLAG = &
+        (icbc .EQ. icbc_no_s  .OR. &
+         icbc .EQ. icbc_free  .OR. &
+         icbc .EQ. icbc_pslip .OR. &
+         icbc .EQ. icbc_cycl  .OR. &
+         icbc .EQ. icbc_cyclp)
+
+      END FUNCTION WALL_ICBC_FLAG
+
+      LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
+      use geometry
+      use ic
+      implicit none
+      integer, intent(in) :: i,j,k
+      integer             :: icbc
+      icbc = mod(icbc_flag(i,j,k),1000)
+
+      DEFAULT_WALL_AT = (ICBC .NE. icbc_cycl  .and. &
+                         ICBC .NE. icbc_cyclp .and. icbc_flag(i,j,k) < 1000)
+
       END FUNCTION DEFAULT_WALL_AT
 
 ! Cyclic

@@ -17,7 +17,8 @@
       USE geometry, only: ICBC_FLAG
       USE ic
 
-      USE compar
+      use compar
+      use ic, only: icbc_fluid
 
       use error_manager
       USE functions
@@ -67,14 +68,15 @@
  
          ! Flow on west boundary (fluid cell on east).
          if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
-                  icbc_flag(i_w+1,j_s,k_b) .eq. icbc_fluid) then
+              mod(icbc_flag(i_w+1,j_s,k_b),1000) .eq. icbc_fluid) then
             I_W = I_W
             I_E = I_E
             BC_PLANE(BCV) = 'E'
  
          ! Flow on east boundary (fluid cell on west).
          elseif (wall_icbc_flag(i_w+1,j_s,k_b) .and. &
-                      icbc_flag(i_w  ,j_s,k_b) .eq. icbc_fluid) then
+                  mod(icbc_flag(i_w  ,j_s,k_b),1000) .eq. icbc_fluid) then
+
             I_W = I_W + 1
             I_E = I_E + 1
             BC_PLANE(BCV) = 'W'
@@ -133,7 +135,7 @@
 
 ! Verify that the the fluid and wall cells match the ICBC_FLAG.
          IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
-                       ICBC_FLAG(i_fluid,j,k) == icbc_fluid)) ERROR = .TRUE.
+                   mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -163,7 +165,7 @@
             IJK_FLUID = FUNIJK(I_FLUID,J,K)
 
             IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
-                          ICBC_FLAG(i_fluid,j,k) == icbc_fluid)) THEN
+                      mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) THEN
 
                WRITE(ERR_MSG, 1201) &
                   I_WALL,  J, K, IJK_WALL, ICBC_FLAG(i_wall,j,k),        &

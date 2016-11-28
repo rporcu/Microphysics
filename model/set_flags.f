@@ -21,6 +21,7 @@
       USE physprop
       USE funits
       USE compar
+      use ic
       USE boundfunijk
       USE functions
       IMPLICIT NONE
@@ -28,7 +29,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: i, j, k, ib, jb, kb
+      INTEGER :: i, j, k, ib, jb, kb, inc
       integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
@@ -56,40 +57,48 @@
       DO i = istart4, iend4
          DO j = jstart4, jend4
             DO k = kstart4, kend4
-              SELECT CASE (icbc_flag(i,j,k))
-                CASE (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
+
+              select case (mod(icbc_flag(i,j,k),1000))
+                case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
  
                 ib = min( iend3, max (istart3, i+1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
  
                 ib = min( iend3, max (istart3, i-1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
  
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j+1) )
                 kb = min( kend3, max (kstart3, k) )
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
  
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j-1) )
                 kb = min( kend3, max (kstart3, k) )
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
  
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k+1) )
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
  
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k-1) )
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free
-              END SELECT
+                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
+                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+
+              end select
+
             ENDDO
           ENDDO
       ENDDO
@@ -102,41 +111,39 @@
          do j = jstart3, jend3
            do i = istart3, iend3
 
-         SELECT CASE (ICBC_FLAG(i,j,k))
-         CASE (icbc_fluid)
-            FLAG(i,j,k) = 1
-         CASE (icbc_p_inf)
-            FLAG(i,j,k) = 10
-         CASE (icbc_p_out)
-            FLAG(i,j,k) = 11
-         CASE (icbc_m_inf)
-            FLAG(i,j,k) = 20
-         CASE (icbc_m_out)
-            FLAG(i,j,k) = 21
-         CASE (icbc_outfl)
-            FLAG(i,j,k) = 31
-         CASE (icbc_no_s)
-            FLAG(i,j,k) = 100
-         CASE (icbc_free)
-            FLAG(i,j,k) = 101
-         CASE (icbc_pslip)
-            FLAG(i,j,k) = 102
-         CASE (icbc_cycl)
-            FLAG(i,j,k) = 106
-         CASE (icbc_cyclp)
-            FLAG(i,j,k) = 107
-         CASE DEFAULT
+              select case (mod(icbc_flag(i,j,k),1000))
 
-! Access to only one thread at a time
-!           IF (DMP_LOG)WRITE (UNIT_LOG, 1000) i,j,k, ICBC_FLAG(i,j,k)
-            call mfix_exit(myPE)
-         END SELECT
-! ----------------------------------------------------------------<<<
+                CASE (icbc_fluid)
+                   FLAG(i,j,k) = 1
+                CASE (icbc_p_inf)
+                   FLAG(i,j,k) = 10
+                CASE (icbc_p_out)
+                   FLAG(i,j,k) = 11
+                CASE (icbc_m_inf)
+                   FLAG(i,j,k) = 20
+                CASE (icbc_m_out)
+                   FLAG(i,j,k) = 21
+                CASE (icbc_outfl)
+                   FLAG(i,j,k) = 31
+                CASE (icbc_no_s)
+                   FLAG(i,j,k) = 100
+                CASE (icbc_free)
+                   FLAG(i,j,k) = 101
+                CASE (icbc_pslip)
+                   FLAG(i,j,k) = 102
+                CASE (icbc_cycl)
+                   FLAG(i,j,k) = 106
+                CASE (icbc_cyclp)
+                   FLAG(i,j,k) = 107
+                CASE DEFAULT
 
-! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
-         FLAG_E(i,j,k) = UNDEFINED_I
-         FLAG_N(i,j,k) = UNDEFINED_I
-         FLAG_T(i,j,k) = UNDEFINED_I
+              end select 
+
+              ! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
+              flag_e(i,j,k) = UNDEFINED_I
+              flag_n(i,j,k) = UNDEFINED_I
+              flag_t(i,j,k) = UNDEFINED_I
+
           end do
         end do
       end do
