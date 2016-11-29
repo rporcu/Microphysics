@@ -8,64 +8,27 @@
 !  U_g momentum eq. becoming zero.                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   USE geometry, only: ayz, axz, axy
-   USE fldvar, only: rop_g
-   USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
    contains
 
-      double precision function denom_u_neg(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_u_neg = ROP_G(ieast(i,j,k),j,k)*AYZ
-      end function denom_u_neg
-
-      double precision function denom_u_pos(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_u_pos = ROP_G(i,j,k)*AYZ
-      end function denom_u_pos
-
-      double precision function denom_v_neg(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_v_neg = ROP_G(i,jnorth(i,j,k),k)*AXZ
-      end function denom_v_neg
-
-      double precision function denom_v_pos(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_v_pos = ROP_G(i,j,k)*AXZ
-      end function denom_v_pos
-
-      double precision function denom_w_neg(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_w_neg = ROP_G(i,j,ktop(i,j,k))*AXY
-      end function denom_w_neg
-
-      double precision function denom_w_pos(i,j,k)
-         implicit none
-         integer, intent(in) :: i,j,k
-         denom_w_pos = ROP_G(i,j,k)*AXY
-      end function denom_w_pos
-
-      SUBROUTINE ADJUST_A_G(axis, A_M, B_M)
+      subroutine adjust_a_g(axis, A_M, B_M, ROP_G)
 
          USE fun_avg, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
-      use compar, only: istart2, iend2
-      use compar, only: jstart2, jend2
-      use compar, only: kstart2, kend2
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
-      IMPLICIT NONE
 
-! Dummy arguments
+         USE geometry, only: ayz, axz, axy
+         USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
+
+         use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+         use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+
+         implicit none
+
 !---------------------------------------------------------------------//
+      CHARACTER, INTENT(IN) :: axis
+
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -73,45 +36,21 @@
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-!                      Indices
+      DOUBLE PRECISION, INTENT(INOUT) :: ROP_G&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+!---------------------------------------------------------------------//
+
       INTEGER          IP
-!
-!                      Phase index
-      INTEGER          M, I, J, K
-!
-      CHARACTER, INTENT(IN) :: axis
+      INTEGER          I, J, K
 
-      DOUBLE PRECISION :: denominator, xxxm, xxxp
-
-      abstract interface
-         function denom (i,j,k)
-            DOUBLE PRECISION :: denom
-            integer, intent (in) :: i,j,k
-         end function denom
-      end interface
-
-      procedure (denom), pointer :: denom_neg => null ()
-      procedure (denom), pointer :: denom_pos => null ()
-!-----------------------------------------------
-
-      M = 0
-
-      if (axis.eq.'U') then
-         denom_neg => denom_u_neg
-         denom_pos => denom_u_pos
-      else if (axis.eq.'V') then
-         denom_neg => denom_w_neg
-         denom_pos => denom_w_pos
-      else if (axis.eq.'W') then
-         denom_neg => denom_w_neg
-         denom_pos => denom_w_pos
-      endif
+      double precision :: denominator, xxxm, xxxp
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
 
          IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
+
             A_M(I,J,K,E) = ZERO
             A_M(I,J,K,W) = ZERO
             A_M(I,J,K,N) = ZERO
@@ -119,16 +58,34 @@
             A_M(I,J,K,T) = ZERO
             A_M(I,J,K,B) = ZERO
             A_M(I,J,K,0) = -ONE
+
             IF (B_M(I,J,K) < ZERO) THEN
                IP = IP1(I)
 
-               denominator = denom_neg(i,j,k)
+               if (axis .eq. 'U') then
+                  denominator = ROP_G(ieast(i,j,k),j,k)*AYZ
+               else if (axis .eq. 'V') then
+                  denominator = ROP_G(i,jnorth(i,j,k),k)*AXZ
+               else if (axis .eq. 'W') then
+                  denominator = ROP_G(i,j,ktop(i,j,k))*AXY
+               end if
+
                xxxm = ONE
                xxxp = ZERO
+
             ELSE IF (B_M(I,J,K) > ZERO) THEN
-               denominator = denom_pos(i,j,k)
+
+               if (axis .eq. 'U') then
+                  denominator = ROP_G(i,j,k)*AYZ
+               else if (axis .eq. 'V') then
+                  denominator = ROP_G(i,j,k)*AXZ
+               else if (axis .eq. 'W') then
+                  denominator = ROP_G(i,j,k)*AXY
+               end if
+
                xxxm = ZERO
                xxxp = ONE
+
             ELSE
                denominator = ZERO
             ENDIF
@@ -143,6 +100,6 @@
       END DO
       END DO
 
-      RETURN
-      END SUBROUTINE ADJUST_A_G
+      end subroutine adjust_a_g
+
    end MODULE ADJUST_A

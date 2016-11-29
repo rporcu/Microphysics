@@ -1,55 +1,3 @@
-MODULE CALC_D_MOD
-   use fldvar, only: EP_G
-   use fun_avg, only: AVG
-   use geometry, only: AYZ, AXZ, AXY
-   use param1, only: ZERO, SMALL_NUMBER, ONE
-   use functions, only: ip_at_e, ip_at_n, ip_at_t
-   use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
-   CONTAINS
-
-      double precision function epga_x(i,j,k)
-         use functions, only: ieast
-         implicit none
-         integer, intent(in) :: i,j,k
-         DOUBLE PRECISION :: AREA_FACE
-
-         IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(i,j,k)) THEN   !impermeable
-            EPGA_X = ZERO
-         ELSE
-            AREA_FACE = AYZ
-            EPGA_X = AREA_FACE*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
-         ENDIF
-      end function epga_x
-
-      double precision function epga_y(i,j,k)
-         use functions, only: jnorth
-         implicit none
-         integer, intent(in) :: i,j,k
-         DOUBLE PRECISION :: AREA_FACE
-
-         IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(i,j,k)) THEN
-            EPGA_Y = ZERO
-         ELSE
-            AREA_FACE = AXZ
-            EPGA_Y = AREA_FACE*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
-         ENDIF
-      end function epga_y
-
-      double precision function epga_z(i,j,k)
-         use functions, only: ktop
-         implicit none
-         integer, intent(in) :: i,j,k
-         DOUBLE PRECISION :: AREA_FACE
-
-         IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(i,j,k)) THEN
-            EPGA_Z = ZERO
-         ELSE
-            AREA_FACE = AXY
-            EPGA_Z = AREA_FACE*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
-         ENDIF
-
-      end function epga_z
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CALC_d_n                                                !
@@ -59,7 +7,11 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(D, AXIS, A_M)
+MODULE CALC_D_MOD
+
+   CONTAINS
+
+      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -75,12 +27,16 @@ MODULE CALC_D_MOD
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and size of solids phase arrays.
-      use compar, only: istart2, iend2
-      use compar, only: jstart2, jend2
-      use compar, only: kstart2, kend2
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
+
+      use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+
+      use fun_avg, only: AVG
+      use geometry, only: AYZ, AXZ, AXY
+      use param1, only: ZERO, SMALL_NUMBER, ONE
+      use functions, only: ip_at_e, ip_at_n, ip_at_t
+      use functions, only: ieast, jnorth, ktop
+      use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
 
       IMPLICIT NONE
 
@@ -90,48 +46,59 @@ MODULE CALC_D_MOD
       DOUBLE PRECISION, INTENT(OUT) :: d(:,:,:)
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
-! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN):: A_m&
+! Septadiagonal matrix A_M
+      DOUBLE PRECISION, INTENT(IN):: A_M&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
+      DOUBLE PRECISION, INTENT(IN):: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Usual Indices
-      INTEGER :: I,J,K,IJK
+      INTEGER :: I,J,K
+
 ! Temp variable for double precision values.
       DOUBLE PRECISION :: TMPdp
+      DOUBLE PRECISION :: EPGA
 !......................................................................!
-
-      abstract interface
-         function epga_t (i,j,k)
-            DOUBLE PRECISION :: epga_t
-            integer, intent (in) :: i,j,k
-         end function epga_t
-      end interface
-
-! Average volume fraction at momentum cell centers
-      procedure (epga_t), pointer :: epga => null ()
-
-      if (axis.eq.'X') then
-         EPGA => EPGA_X
-      else if (axis.eq.'Y') then
-         EPGA => EPGA_Y
-      else if (axis.eq.'Z') then
-         EPGA => EPGA_Z
-      endif
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
 
-         IJK = FUNIJK(i,j,k)
-
          TMPdp = -A_M(I,J,K,0)
-         IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(IJK)
+
+         IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(FUNIJK(i,j,k))
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN
-            D(I,J,K) = P_SCALE*EPGA(i,j,k)/TMPdp
+
+            if (axis.eq.'X') then
+
+               IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(i,j,k)) THEN   !impermeable
+                  EPGA = ZERO
+               ELSE
+                  EPGA = AYZ*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
+               ENDIF
+
+            else if (axis.eq.'Y') then
+
+               IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(i,j,k)) THEN
+                  EPGA = ZERO
+               ELSE
+                  EPGA = AXZ*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
+               ENDIF
+
+            else if (axis.eq.'Z') then
+               IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(i,j,k)) THEN
+                  EPGA = ZERO
+               ELSE
+                  EPGA = AXY*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
+               ENDIF
+            endif
+
+            D(I,J,K) = P_SCALE*EPGA/TMPdp
+
          ELSE
             D(I,J,K) = ZERO
          ENDIF
@@ -140,6 +107,6 @@ MODULE CALC_D_MOD
       ENDDO
       ENDDO
 
-      RETURN
    END SUBROUTINE CALC_D
+
    END MODULE CALC_D_MOD

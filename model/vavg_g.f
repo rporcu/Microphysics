@@ -22,24 +22,27 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      DOUBLE PRECISION FUNCTION VAVG_G (vel_g, vol)
+      DOUBLE PRECISION FUNCTION VAVG_G (vel_g, ep_g, vol)
 
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-         USE fldvar, ONLY: EP_G
-         USE functions, ONLY: IS_ON_myPE_wobnd
-         USE functions, ONLY: IS_ON_myPE_wobnd, fluid_at
-         USE param1, ONLY: ZERO
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE functions, ONLY: IS_ON_myPE_wobnd
+      USE functions, ONLY: IS_ON_myPE_wobnd, fluid_at
+      USE param1   , ONLY: ZERO
 
       IMPLICIT NONE
 
-! Cell volume
-      DOUBLE PRECISION, INTENT(IN) :: VOL
+      ! Cell volume
+      DOUBLE PRECISION, INTENT(IN   ) :: VOL
 
-! component of gas velocity
-      DOUBLE PRECISION, INTENT(IN) ::  VEL_G(:,:,:)
+      ! component of gas velocity
+      DOUBLE PRECISION, INTENT(IN   ) :: vel_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !     Integral of U_g*EP_g for entire volume
       DOUBLE PRECISION :: sum_g

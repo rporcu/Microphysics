@@ -16,7 +16,7 @@
       USE calc_d_mod, only: calc_d
       USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE discretelement, only: des_continuum_coupled
-      USE fldvar  , only: d_e, d_n, d_t, u_g, v_g, w_g
+      USE fldvar  , only: d_e, d_n, d_t, u_g, v_g, w_g, rop_g, ep_g
       USE fldvar  , only: flux_ge, flux_gn, flux_gt
       USE fldvar  , only: mu_g
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
@@ -75,11 +75,11 @@
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_X_EQ(0)) THEN
-         CALL CALC_D(D_E, "X", A_M)
+         CALL CALC_D(D_E, "X", A_M, ep_g)
       ENDIF
 
 ! handle special case where center coefficient is zero
-      IF (MOMENTUM_X_EQ(0)) CALL ADJUST_A_G ('U', A_M, B_M)
+      IF (MOMENTUM_X_EQ(0)) CALL adjust_a_g ('U', A_M, B_M, ROP_G)
 
 ! calculate modifications to the A matrix center coefficient and B
 ! source vector for treating DEM drag terms
@@ -121,10 +121,10 @@
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_Y_EQ(0)) THEN
-         CALL CALC_D(D_N, "Y", A_M)
+         CALL CALC_D(D_N, "Y", A_M, ep_g)
       ENDIF
 
-      IF (MOMENTUM_Y_EQ(0)) CALL ADJUST_A_G('V',A_M, B_M)
+      IF (MOMENTUM_Y_EQ(0)) CALL adjust_a_g('V',A_M, B_M, ROP_G)
 
       IF(DES_CONTINUUM_COUPLED) THEN
          CALL GAS_DRAG_V(A_M, B_M, IER)
@@ -164,10 +164,10 @@
 
 ! calculate coefficients for the pressure correction equation
          IF (MOMENTUM_Z_EQ(0)) THEN
-            CALL CALC_D(D_T, "Z", A_M)
+            CALL CALC_D(D_T, "Z", A_M, ep_g)
          ENDIF
 
-         IF (MOMENTUM_Z_EQ(0)) CALL ADJUST_A_G('W',A_M, B_M)
+         IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)
 
          IF(DES_CONTINUUM_COUPLED) THEN
             CALL GAS_DRAG_W(A_M, B_M, IER)
