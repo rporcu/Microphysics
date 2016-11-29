@@ -107,7 +107,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                   A_M(I,J,K,0) = -ONE
                   B_M(I,J,K) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
-                  WRITE (LINE, '(A,I3,x,I3,x,I3,A,I1,A,G12.5)') 'Error: At IJK = ', i,j,k, &
+                  WRITE (LINE, '(A,I3,1x,I3,1x,I3,A,I1,A,G12.5)') 'Error: At IJK = ', i,j,k, &
                      ' M = ', 0, ' A = 0 and b = ', B_M(I,J,K)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
                ENDIF
