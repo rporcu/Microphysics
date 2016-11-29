@@ -34,7 +34,7 @@
 !-----------------------------------------------
 
 !  Cell flag definitions
-!  FLAG  ICBC_FLAG BC_TYPE        Cell type
+!  FLAG1   FLAG0   BC_TYPE        Cell type
 !  ----- --------- -------        ---------
 !   1       .        -            Cell containing gas or solids or both
 !  10       p      P_INFLOW       Specified pressure inflow cell
@@ -58,44 +58,50 @@
          DO j = jstart4, jend4
             DO k = kstart4, kend4
 
-              select case (mod(icbc_flag(i,j,k),1000))
+              select case (mod(flag(i,j,k,0),1000))
                 case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
 
                 ib = min( iend3, max (istart3, i+1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
                 ib = min( iend3, max (istart3, i-1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j+1) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j-1) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k+1) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k-1) )
-                inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
-                if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
+                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
+                if (flag(ib,jb,kb,0) == icbc_no_s) &
+                   flag(ib,jb,kb,0) = icbc_free+inc
 
               end select
 
@@ -104,45 +110,34 @@
       ENDDO
 ! ----------------------------------------------------------------<<<
 ! Define the numerical value of the variable flag for all cells based
-! on the corresponding character value of icbc_flag.  By this point the
-! icbc_flag has been defined in all cells
+! on the corresponding character value of flag0.  By this point the
+! flag0 has been defined in all cells
 ! ---------------------------------------------------------------->>>
       do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
 
-              select case (mod(icbc_flag(i,j,k),1000))
+              select case (mod(flag(i,j,k,0),1000))
 
-                CASE (icbc_fluid)
-                   FLAG(i,j,k) = 1
-                CASE (icbc_p_inf)
-                   FLAG(i,j,k) = 10
-                CASE (icbc_p_out)
-                   FLAG(i,j,k) = 11
-                CASE (icbc_m_inf)
-                   FLAG(i,j,k) = 20
-                CASE (icbc_m_out)
-                   FLAG(i,j,k) = 21
-                CASE (icbc_outfl)
-                   FLAG(i,j,k) = 31
-                CASE (icbc_no_s)
-                   FLAG(i,j,k) = 100
-                CASE (icbc_free)
-                   FLAG(i,j,k) = 101
-                CASE (icbc_pslip)
-                   FLAG(i,j,k) = 102
-                CASE (icbc_cycl)
-                   FLAG(i,j,k) = 106
-                CASE (icbc_cyclp)
-                   FLAG(i,j,k) = 107
+                CASE (icbc_fluid);  FLAG(i,j,k,1) = 1
+                CASE (icbc_p_inf);  FLAG(i,j,k,1) = 10
+                CASE (icbc_p_out);  FLAG(i,j,k,1) = 11
+                CASE (icbc_m_inf);  FLAG(i,j,k,1) = 20
+                CASE (icbc_m_out);  FLAG(i,j,k,1) = 21
+                CASE (icbc_outfl);  FLAG(i,j,k,1) = 31
+                CASE (icbc_no_s);   FLAG(i,j,k,1) = 100
+                CASE (icbc_free);   FLAG(i,j,k,1) = 101
+                CASE (icbc_pslip);  FLAG(i,j,k,1) = 102
+                CASE (icbc_cycl);   FLAG(i,j,k,1) = 106
+                CASE (icbc_cyclp);  FLAG(i,j,k,1) = 107
                 CASE DEFAULT
 
               end select
 
               ! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
-              flag_e(i,j,k) = UNDEFINED_I
-              flag_n(i,j,k) = UNDEFINED_I
-              flag_t(i,j,k) = UNDEFINED_I
+              flag(i,j,k,2) = UNDEFINED_I
+              flag(i,j,k,3) = UNDEFINED_I
+              flag(i,j,k,4) = UNDEFINED_I
 
           end do
         end do
@@ -217,37 +212,42 @@
 ! ---------------------------------------------------------------->>>
 ! the default is equivalent to an impermeable surface and these cells
 ! will be treated as such in the momentum routines
-            FLAG_E(i,j,k) = 0
-            FLAG_N(i,j,k) = 0
-            FLAG_T(i,j,k) = 0
-            FLAG_E(iminus(i,j,k),j,k) = 0
-            FLAG_N(i,jminus(i,j,k),k) = 0
-            FLAG_T(i,j,kminus(i,j,k)) = 0
+            FLAG(i,j,k,2) = 0
+            FLAG(i,j,k,3) = 0
+            FLAG(i,j,k,4) = 0
+            FLAG(iminus(i,j,k),j,k,2) = 0
+            FLAG(i,jminus(i,j,k),k,3) = 0
+            FLAG(i,j,kminus(i,j,k),4) = 0
 
             IF (CYCLIC_AT(i,j,k)) THEN
 ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) FLAG_E(iminus(i,j,k),j,k) = 2000
+                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) &
+                           FLAG(iminus(i,j,k),j,k,2) = 2000
                      ELSEIF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) FLAG_E(iminus(i,j,k),j,k) = 2000
+                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) &
+                           FLAG(iminus(i,j,k),j,k,2) = 2000
                      ENDIF
                   ENDIF
                ENDIF
                IF (J == JMAX2) THEN
                   IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3)) THEN
                      IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) FLAG_N(i,jminus(i,j,k),k) = 2000
+                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) &
+                           FLAG(i,jminus(i,j,k),k,3) = 2000
                      ELSE IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) FLAG_N(i,jminus(i,j,k),k) = 2000
+                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) &
+                           FLAG(i,jminus(i,j,k),k,3) = 2000
                      ENDIF
                   ENDIF
                 ENDIF
                IF (K == KMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3) .AND. &
-                       .NOT.WALL_AT(i,j,kminus(i,j,k))) FLAG_T(i,j,kminus(i,j,k)) = 2000
+                        .NOT.WALL_AT(i,j,kminus(i,j,k))) &
+                        FLAG(i,j,kminus(i,j,k),4) = 2000
                   ENDIF
                ENDIF
 
@@ -257,23 +257,29 @@
          ELSEIF (fluid_at(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 
-            IF ( .NOT.WALL_AT(iminus(i,j,k),j,k) .AND. FLAG_E(iminus(i,j,k),j,k)==UNDEFINED_I) &
-               FLAG_E(iminus(i,j,k),j,k) = 2000 + FLAG(iminus(i,j,k),j,k)
+            IF ( .NOT.WALL_AT(iminus(i,j,k),j,k) .AND. &
+               FLAG(iminus(i,j,k),j,k,2)==UNDEFINED_I) &
+               FLAG(iminus(i,j,k),j,k,2) = 2000 + FLAG(iminus(i,j,k),j,k,1)
 
-            IF ( .NOT.WALL_AT(i,jminus(i,j,k),k) .AND. FLAG_N(i,jminus(i,j,k),k)==UNDEFINED_I) &
-               FLAG_N(i,jminus(i,j,k),k) = 2000 + FLAG(i,jminus(i,j,k),k)
+            IF ( .NOT.WALL_AT(iplus(i,j,k),j,k) .AND. &
+               FLAG(i,j,k,2)==UNDEFINED_I) &
+               FLAG(i,j,k,2) = 2000 + FLAG(iplus(i,j,k),j,k,1)
 
-            IF ( .NOT.WALL_AT(i,j,kminus(i,j,k)) .AND. FLAG_T(i,j,kminus(i,j,k))==UNDEFINED_I) &
-               FLAG_T(i,j,kminus(i,j,k)) = 2000 + FLAG(i,j,kminus(i,j,k))
+            IF ( .NOT.WALL_AT(i,jminus(i,j,k),k) .AND. &
+               FLAG(i,jminus(i,j,k),k,3)==UNDEFINED_I) &
+               FLAG(i,jminus(i,j,k),k,3) = 2000 + FLAG(i,jminus(i,j,k),k,1)
 
-            IF ( .NOT.WALL_AT(iplus(i,j,k),j,k) .AND. FLAG_E(i,j,k)==UNDEFINED_I) &
-               FLAG_E(i,j,k) = 2000 + FLAG(iplus(i,j,k),j,k)
+            IF ( .NOT.WALL_AT(i,jplus(i,j,k),k) .AND. &
+               FLAG(i,j,k,3)==UNDEFINED_I) &
+               FLAG(i,j,k,3) = 2000 + FLAG(i,jplus(i,j,k),k,1)
 
-            IF ( .NOT.WALL_AT(i,jplus(i,j,k),k) .AND. FLAG_N(i,j,k)==UNDEFINED_I) &
-               FLAG_N(i,j,k) = 2000 + FLAG(i,jplus(i,j,k),k)
+            IF ( .NOT.WALL_AT(i,j,kminus(i,j,k)) .AND. &
+               FLAG(i,j,kminus(i,j,k),4)==UNDEFINED_I) &
+               FLAG(i,j,kminus(i,j,k),4) = 2000 + FLAG(i,j,kminus(i,j,k),1)
 
-            IF ( .NOT.WALL_AT(i,j,kplus(i,j,k)) .AND. FLAG_T(i,j,k)==UNDEFINED_I) &
-               FLAG_T(i,j,k) = 2000 + FLAG(i,j,kplus(i,j,k))
+            IF ( .NOT.WALL_AT(i,j,kplus(i,j,k)) .AND. &
+               FLAG(i,j,k,4)==UNDEFINED_I) &
+               FLAG(i,j,k,4) = 2000 + FLAG(i,j,kplus(i,j,k),1)
 
 
          ENDIF

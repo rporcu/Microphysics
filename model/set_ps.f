@@ -218,7 +218,7 @@
                lc1 = lc1 + 1
                if(fluid_at(i,j,k)) then
                   lFlags_i(lc1,1) = myPE
-                  lFlags_i(lc1,2) = FLAG(i,j,k)
+                  lFlags_i(lc1,2) = FLAG(i,j,k,1)
                endif
             enddo
          enddo

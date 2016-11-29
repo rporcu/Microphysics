@@ -13,7 +13,7 @@
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      USE geometry, only: ICBC_FLAG
+      USE geometry, only: FLAG
       use ic, only: icbc_fluid
 
       USE compar
@@ -55,13 +55,15 @@
 
       IF(myPE == OWNER)THEN
 
-         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. mod(ICBC_FLAG(i_w,j_s+1,k_b),1000)==icbc_fluid) THEN
+         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. &
+            mod(FLAG(i_w,j_s+1,k_b,0),1000)==icbc_fluid) THEN
 
             J_S = J_S
             J_N = J_N
             BC_PLANE(BCV) = 'N'
 
-         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. mod(ICBC_FLAG(i_w,j_s,k_b),1000)==icbc_fluid) THEN
+         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. &
+            mod(FLAG(i_w,j_s,k_b,0),1000)==icbc_fluid) THEN
 
             J_S = J_S + 1
             J_N = J_N + 1
@@ -105,7 +107,7 @@
       DO I = BC_I_W(BCV), BC_I_E(BCV)
 
           IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND. &
-                    mod(ICBC_FLAG(i,j_fluid,k),1000)== icbc_fluid)) ERROR = .TRUE.
+             mod(FLAG(i,j_fluid,k,0),1000)== icbc_fluid)) ERROR = .TRUE.
 
        ENDDO
        ENDDO
@@ -130,11 +132,10 @@
          DO I = BC_I_W(BCV), BC_I_E(BCV)
 
             IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND.                    &
-                      mod(ICBC_FLAG(i,j_fluid,k),1000)==icbc_fluid)) THEN
+               mod(FLAG(i,j_fluid,k,0),1000)==icbc_fluid)) THEN
 
-               WRITE(ERR_MSG, 1201) &
-                  I, J_WALL,  K, ICBC_FLAG(i,j_wall ,k),        &
-                  I, J_FLUID, K, ICBC_FLAG(i,j_fluid,k)
+               WRITE(ERR_MSG, 1201) I, J_WALL, K,FLAG(i,j_wall ,k,0), &
+                  I, J_FLUID, K, FLAG(i,j_fluid,k,0)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
 

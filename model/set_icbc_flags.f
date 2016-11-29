@@ -40,20 +40,21 @@
       use run, only: run_type
 
       implicit none
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 
 ! Initialize the icbc_flag array.
       DO k = kstart3, kend3
       DO j = jstart3, jend3
       DO i = istart3, iend3
 
-         IJK = FUNIJK(I,J,K)
 
-         ! Initialize the ICBC Flag
+         write(*,*)i,j,k
+
+! Initialize the ICBC Flag
          if (run_type == 'NEW') then
-            icbc_flag(i,j,k) = icbc_undef
+            flag(i,j,k,0) = icbc_undef
          else
-            icbc_flag(i,j,k) = icbc_fluid
+            flag(i,j,k,0) = icbc_fluid
          endif
 
 ! If at domain boundaries then set default values (wall or, if
@@ -61,11 +62,11 @@
          IF (DO_K) THEN
             IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
                IF (CYCLIC_Z_PD) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cyclp
+                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_Z) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cycl
+                  FLAG(i,j,k,0) = 1000 + icbc_cycl
                ELSE
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_no_s
+                  FLAG(i,j,k,0) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -73,11 +74,11 @@
          IF(DO_J)THEN
             IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
                IF (CYCLIC_Y_PD) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cyclp
+                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_Y) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cycl
+                  FLAG(i,j,k,0) = 1000 + icbc_cycl
                ELSE
-                 ICBC_FLAG(i,j,k) = 1000 + icbc_no_s
+                  FLAG(i,j,k,0) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -85,11 +86,11 @@
          IF(DO_I)THEN
             IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
                IF (CYCLIC_X_PD) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cyclp
+                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
                ELSEIF (CYCLIC_X) THEN
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_cycl
+                  FLAG(i,j,k,0) = 1000 + icbc_cycl
                ELSE
-                  ICBC_FLAG(i,j,k) = 1000 + icbc_no_s
+                  FLAG(i,j,k,0) = 1000 + icbc_no_s
                ENDIF
             ENDIF
          ENDIF
@@ -97,7 +98,7 @@
          IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
              (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
              (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
-            IF (ICBC_FLAG(i,j,k) /= icbc_free) ICBC_FLAG(i,j,k) = icbc_no_s
+            IF (FLAG(i,j,k,0) /= icbc_free) FLAG(i,j,k,0) = icbc_no_s
          ENDIF
 
       ENDDO ! end do loop (i=istart3, iend3)
@@ -140,7 +141,7 @@
       DO K = kStart2, kEnd2
       DO J = jStart2, jEnd2
       DO I = iStart2, iEnd2
-         IF (ICBC_FLAG(i,j,k) == icbc_undef) ERROR = .TRUE.
+         IF (FLAG(i,j,k,0) == icbc_undef) ERROR = .TRUE.
       ENDDO
       ENDDO
       ENDDO
@@ -161,7 +162,7 @@
          DO K = kStart2, kEnd2
          DO J = jStart2, jEnd2
          DO I = iStart2, iEnd2
-            IF (ICBC_FLAG(i,j,k) == icbc_undef) then
+            IF (FLAG(i,j,k,0) == icbc_undef) then
                WRITE(ERR_MSG,1101) I, J, K
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
@@ -175,7 +176,7 @@
 
       ELSE
 ! If no erros, sync up the ghost cell layers.
-         ! CALL SEND_RECV(ICBC_FLAG,1)
+         ! CALL SEND_RECV(FLAG,1)
       ENDIF
 
 ! Clean up and return.
@@ -240,7 +241,7 @@
          DO K = IC_K_B(ICV), IC_K_T(ICV)
             DO J = IC_J_S(ICV), IC_J_N(ICV)
                DO I = IC_I_W(ICV), IC_I_E(ICV)
-                  icbc_flag(i,j,k) = 1000*ICV + icbc_fluid
+                  flag(i,j,k,0) = 1000*ICV + icbc_fluid
                ENDDO
             ENDDO
          ENDDO
@@ -249,7 +250,7 @@
       ENDDO IC_LP
 
 ! Update the ICBC flag on ghost cells.
-      ! CALL SEND_RECV(ICBC_FLAG, 1)
+      ! CALL SEND_RECV(FLAG, 1)
 
 
 ! Clean up and return.
@@ -308,9 +309,9 @@
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE('FREE_SLIP_WALL'); ICBC_FLAG(i,j,k) = 1000*BCV + icbc_free
-                  CASE('NO_SLIP_WALL');   ICBC_FLAG(i,j,k) = 1000*BCV + icbc_no_s
-                  CASE('PAR_SLIP_WALL');  ICBC_FLAG(i,j,k) = 1000*BCV + icbc_pslip
+                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,0) = 1000*BCV + icbc_free
+                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,0) = 1000*BCV + icbc_no_s
+                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,0) = 1000*BCV + icbc_pslip
                END SELECT
             ENDDO
             ENDDO
@@ -319,7 +320,7 @@
          ENDIF
       ENDDO
 
-      ! CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(FLAG,1)
 
       CALL FINL_ERR_MSG
 
@@ -355,7 +356,7 @@
       IMPLICIT NONE
 
 ! loop/variable indices
-      INTEGER :: BCV, I, J, K, IJK
+      INTEGER :: BCV, I, J, K
 
       INTEGER :: IER
 
@@ -410,7 +411,7 @@
                BC_K_T(BCV) = KMAX2
             ENDIF
 
-! Set add the BC to the ICBC_FLAG. If a "non-wall" BC is found, then flag
+! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag
 ! this as an error. The next triple-loop will take care of reporting the
 ! error.
             ERROR = .FALSE.
@@ -422,11 +423,11 @@
                IF(WALL_ICBC_FLAG(i,j,k)) THEN
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
-                     CASE ('P_OUTFLOW');    ICBC_FLAG(i,j,k) = 1000*BCV + icbc_p_out
-                     CASE ('MASS_INFLOW');  ICBC_FLAG(i,j,k) = 1000*BCV + icbc_m_inf
-                     CASE ('MASS_OUTFLOW'); ICBC_FLAG(i,j,k) = 1000*BCV + icbc_m_out
-                     CASE ('OUTFLOW');      ICBC_FLAG(i,j,k) = 1000*BCV + icbc_outfl
-                     CASE ('P_INFLOW');     ICBC_FLAG(i,j,k) = 1000*BCV + icbc_p_inf
+                     CASE ('P_OUTFLOW');    FLAG(i,j,k,0) = 1000*BCV + icbc_p_out
+                     CASE ('MASS_INFLOW');  FLAG(i,j,k,0) = 1000*BCV + icbc_m_inf
+                     CASE ('MASS_OUTFLOW'); FLAG(i,j,k,0) = 1000*BCV + icbc_m_out
+                     CASE ('OUTFLOW');      FLAG(i,j,k,0) = 1000*BCV + icbc_outfl
+                     CASE ('P_INFLOW');     FLAG(i,j,k,0) = 1000*BCV + icbc_p_inf
                   END SELECT
 
                ELSE
@@ -455,11 +456,9 @@
                DO J = BC_J_S(BCV), BC_J_N(BCV)
                DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-                  IJK = FUNIJK(I,J,K)
-
 ! Verify that the FLOW BC is overwriting a wall.
                   IF(.NOT.WALL_ICBC_FLAG(i,j,k)) THEN
-                     WRITE(ERR_MSG, 1201) I,J,K, ICBC_FLAG(i,j,k)
+                     WRITE(ERR_MSG, 1201) I,J,K, FLAG(i,j,k,0)
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF
 
@@ -477,7 +476,7 @@
       ENDDO ! BC Loop
 
 ! Sync the ICBC flag across ghost layers
-      ! CALL SEND_RECV(ICBC_FLAG,1)
+      ! CALL SEND_RECV(FLAG,1)
 
       CALL FINL_ERR_MSG
 

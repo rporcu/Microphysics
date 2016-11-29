@@ -14,7 +14,7 @@
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      USE geometry, only: ICBC_FLAG
+      USE geometry, only: FLAG
       USE ic
 
       use compar
@@ -64,14 +64,14 @@
 
          ! Flow on west boundary (fluid cell on east).
          if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
-              mod(icbc_flag(i_w+1,j_s,k_b),1000) .eq. icbc_fluid) then
+            mod(flag(i_w+1,j_s,k_b,0),1000) .eq. icbc_fluid) then
             I_W = I_W
             I_E = I_E
             BC_PLANE(BCV) = 'E'
 
          ! Flow on east boundary (fluid cell on west).
          elseif (wall_icbc_flag(i_w+1,j_s,k_b) .and. &
-                  mod(icbc_flag(i_w  ,j_s,k_b),1000) .eq. icbc_fluid) then
+            mod(flag(i_w,j_s,k_b,0),1000) .eq. icbc_fluid) then
 
             I_W = I_W + 1
             I_E = I_E + 1
@@ -92,7 +92,7 @@
 ! If there is an error, send I,J,K to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
          WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B
-!           ICBC_FLAG(i_w,j_s,k_b), ICBC_FLAG(i_w+1,j_s,k_b)
+!           FLAG(i_w,j_s,k_b,0), FLAG(i_w+1,j_s,k_b,0)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -114,9 +114,9 @@
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
-! Verify that the the fluid and wall cells match the ICBC_FLAG.
+! Verify that the the fluid and wall cells match the FLAG.
          IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
-                   mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) ERROR = .TRUE.
+            mod(FLAG(i_fluid,j,k,0),1000) == icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -138,11 +138,10 @@
          DO J = BC_J_S(BCV), BC_J_N(BCV)
 
             IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
-                      mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) THEN
+               mod(FLAG(i_fluid,j,k,0),1000) == icbc_fluid)) THEN
 
-               WRITE(ERR_MSG, 1201) &
-                  I_WALL,  J, K, ICBC_FLAG(i_wall,j,k),        &
-                  I_FLUID, J, K, ICBC_FLAG(i_fluid,j,k)
+               WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,0),  &
+                  I_FLUID, J, K, FLAG(i_fluid,j,k,0)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
          ENDDO

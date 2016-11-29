@@ -90,16 +90,7 @@
       INTEGER :: IJKMAX4, IJKMIN4
 
 ! Cell flags.
-      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG
-! Flag for the East surface
-      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_E
-! Flag for North surface
-      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_N
-! Flag for Top surface
-      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: FLAG_T
-
-! Cell flags (bc/ic conditions)
-      integer,  dimension(:,:,:), allocatable :: icbc_flag
+      INTEGER, DIMENSION(:,:,:,:), ALLOCATABLE :: FLAG
 
 !  one or more periodic boundary condition is used
       LOGICAL :: CYCLIC

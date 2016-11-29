@@ -137,7 +137,7 @@
       DO J = jstart2, jend2
       DO I = istart2, iend2
 
-         IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
+         IF (FLAG(i,j,k,1)==1 .OR. FLAG(i,j,k,1)==20) THEN
 
 ! Ep_g must have a value > 0 and < 1
             IF(EP_G(I,J,K) < SMALL_NUMBER .OR. EP_G(I,J,K) > ONE) &

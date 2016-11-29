@@ -13,7 +13,7 @@
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      USE geometry, only: ICBC_FLAG
+      USE geometry, only: FLAG
       use ic, only: icbc_fluid
 
       USE compar
@@ -58,13 +58,13 @@
       IF(myPE == OWNER) THEN
 
          IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .and.  &
-             mod(ICBC_FLAG(i_w,j_s,k_b+1),1000) ==icbc_fluid) then
+            mod(FLAG(i_w,j_s,k_b+1,0),1000) ==icbc_fluid) then
             K_B = K_B
             K_T = K_T
             BC_PLANE(BCV) = 'T'
 
          ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .and. &
-                 mod(ICBC_FLAG(i_w,j_s,k_b),1000) == icbc_fluid) then
+            mod(FLAG(i_w,j_s,k_b,0),1000) == icbc_fluid) then
             K_B = K_B + 1
             K_T = K_T + 1
             BC_PLANE(BCV) = 'B'
@@ -104,7 +104,7 @@
 
 ! Only check cells that you own and contain fluid.
          IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                       &
-                   mod(ICBC_FLAG(i,j,k_fluid),1000)==icbc_fluid)) ERROR = .TRUE.
+            mod(FLAG(i,j,k_fluid,0),1000)==icbc_fluid)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -128,11 +128,10 @@
 
 ! Only check cells that you own and contain fluid.
             if (.not. (WALL_ICBC_FLAG(i,j,k_wall) .AND. &
-                        mod(ICBC_FLAG(i,j,k_fluid),1000)==icbc_fluid) ) THEN
+               mod(FLAG(i,j,k_fluid,0),1000)==icbc_fluid) ) THEN
 
-               WRITE(ERR_MSG, 1201) &
-                  I, J, K_WALL,  ICBC_FLAG(i,j,k_wall),       &
-                  I, J, K_FLUID, ICBC_FLAG(i,j,k_fluid)
+               WRITE(ERR_MSG, 1201) I, J, K_WALL,  FLAG(i,j,k_wall,0),  &
+                  I, J, K_FLUID, FLAG(i,j,k_fluid,0)
                CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             ENDIF
 
