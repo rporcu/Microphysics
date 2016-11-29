@@ -57,18 +57,18 @@
       K_B = BC_K_B(BCV)
 
 ! Establish the OWNER of the BC
-      OWNER = merge(myPE, 0, IS_ON_myPE_owns(I_W, J_S, K_B))
+      OWNER = myPE
       ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
- 
+
          ! Flow on west boundary (fluid cell on east).
          if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
               mod(icbc_flag(i_w+1,j_s,k_b),1000) .eq. icbc_fluid) then
             I_W = I_W
             I_E = I_E
             BC_PLANE(BCV) = 'E'
- 
+
          ! Flow on east boundary (fluid cell on west).
          elseif (wall_icbc_flag(i_w+1,j_s,k_b) .and. &
                   mod(icbc_flag(i_w  ,j_s,k_b),1000) .eq. icbc_fluid) then
@@ -76,7 +76,7 @@
             I_W = I_W + 1
             I_E = I_E + 1
             BC_PLANE(BCV) = 'W'
- 
+
          ! Set the plane of a value we know to be wrong so we can detect the error.
          ELSE
             BC_PLANE(BCV) = '.'
@@ -91,7 +91,7 @@
 
 ! If there is an error, send I,J,K to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-         WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B 
+         WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B
 !           ICBC_FLAG(i_w,j_s,k_b), ICBC_FLAG(i_w+1,j_s,k_b)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -114,13 +114,7 @@
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
-
-         IF(.NOT.IS_ON_myPE_plus2layers(I_FLUID,J,K)) CYCLE
-         IF(.NOT.IS_ON_myPE_plus2layers(I_WALL, J,K)) CYCLE
-         IF(DEAD_CELL_AT(I_FLUID,J,K)) CYCLE
-         IF(DEAD_CELL_AT(I_WALL, J,K)) CYCLE
-
-         ! Verify that the the fluid and wall cells match the ICBC_FLAG.
+! Verify that the the fluid and wall cells match the ICBC_FLAG.
          IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
                    mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) ERROR = .TRUE.
 
@@ -142,11 +136,6 @@
 
          DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
-
-            IF(.NOT.IS_ON_myPE_plus2layers(I_FLUID,J,K)) CYCLE
-            IF(.NOT.IS_ON_myPE_plus2layers(I_WALL, J,K)) CYCLE
-            IF(DEAD_CELL_AT(I_FLUID,J,K)) CYCLE
-            IF(DEAD_CELL_AT(I_WALL, J,K)) CYCLE
 
             IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
                       mod(ICBC_FLAG(i_fluid,j,k),1000) == icbc_fluid)) THEN

@@ -40,10 +40,8 @@
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_i_w, bc_i_e
 
-      use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk,fluid_at
+      use functions, only: fluid_at, funijk
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
-      use compar   , only: dead_cell_at
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use param, only: dimension_m
@@ -83,10 +81,6 @@
       DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
-! Check if current i,j,k resides on this PE
-               IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF(DEAD_CELL_AT(I,J,K)) CYCLE
-
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
                IF (fluid_at(iminus(i,j,k),j,k)) THEN
@@ -308,6 +302,7 @@
 !---------------------------------------------------------------------//
       use bc, only: bc_ep_g
       use fldvar, only: rop_g, ro_g, ep_g
+      use functions, only: funijk
       use discretelement, only: discrete_element
       use discretelement, only: des_rop_s
       use physprop, only: mmax, ro_s0
@@ -316,7 +311,7 @@
 !---------------------------------------------------------------------//
       use param, only: dimension_m
       use param1, only: undefined, zero, one
-      use functions, only: funijk
+
       IMPLICIT NONE
 
 ! Dummy arguments

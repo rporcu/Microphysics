@@ -16,8 +16,7 @@
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE functions, only: dead_cell_at, default_wall_at
-      USE functions, only: is_on_myPE_plus2layers
+      USE functions, only: default_wall_at
       USE geometry, only: imax2, jmax2, kmax2
 
       implicit none
@@ -79,8 +78,6 @@
       DO J1 = JSTART3, JEND3
          DO I1 = ISTART3, IEND3
             IF(K1.NE.KSTART2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -91,8 +88,6 @@
       DO J1 = JSTART3, JEND3
          DO I1 = ISTART3, IEND3
             IF(K1.NE.KEND2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -103,8 +98,6 @@
       DO K1 = KSTART3, KEND3
          DO I1 = ISTART3, IEND3
             IF(J1.NE.JSTART2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -115,8 +108,6 @@
       DO K1 = KSTART3, KEND3
          DO I1 = ISTART3, IEND3
             IF(J1.NE.JEND2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -127,8 +118,6 @@
       DO K1 = KSTART3, KEND3
          DO J1 = JSTART3, JEND3
             IF(I1.NE.ISTART2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -139,8 +128,6 @@
       DO K1 = KSTART3, KEND3
          DO J1 = JSTART3, JEND3
             IF(I1.NE.IEND2) EXIT
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
                  (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
@@ -168,7 +155,7 @@
       USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      USE functions, only: dead_cell_at, ns_wall_at, wall_at
+      USE functions, only: ns_wall_at, wall_at
       USE geometry , only: do_k
       IMPLICIT NONE
 !-----------------------------------------------
@@ -215,8 +202,6 @@
       DO K = K1, K2
          DO J = J1, J2
             DO I = I1, I2
-
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
                IF(NS_WALL_AT(i,j,k))THEN
                   SIGN0 = -ONE

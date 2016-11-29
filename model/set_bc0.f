@@ -104,8 +104,6 @@
       use scales, only: scale_pressure
       use toleranc, only: tmin
 
-      use functions, only: is_on_mype_plus2layers
-      use compar, only: dead_cell_at
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use boundfunijk, only: bound_funijk
 
@@ -122,17 +120,13 @@
 ! Local variables
 !--------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !--------------------------------------------------------------------//
 
 
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
       DO I = BC_I_W(BCV), BC_I_E(BCV)
-         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-         IJK = BOUND_FUNIJK(I,J,K)
-
          P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
          IF (BC_EP_G(BCV) /= UNDEFINED) EP_G(I,J,K) = BC_EP_G(BCV)
 
@@ -223,9 +217,7 @@
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: im1, jm1, km1
-      use functions, only: is_on_mype_plus2layers
       use boundfunijk, only: bound_funijk
-      use compar, only: dead_cell_at
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -242,15 +234,12 @@
 ! Local variables
 !--------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !--------------------------------------------------------------------//
 
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
       DO I = BC_I_W(BCV), BC_I_E(BCV)
-         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-         IJK = BOUND_FUNIJK(I,J,K)
 
          P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
          EP_G(I,J,K) = BC_EP_G(BCV)
@@ -587,8 +576,6 @@
                iErr = 1001
             END SELECT
 
-! Only the rank that owns this I/J/K proceeds.
-            if(.NOT.IS_ON_myPE_owns(I,J,K)) cycle
 ! If there is fluid at this location, store the IJK and exit loops.
             if(fluid_at(i,j,k)) then
                gIJK(myPE,1) = I
@@ -658,9 +645,6 @@
          cInt=''; write(cInt,*) IJK_P_g(3)
          write(*,"(',',A,')',2/)") trim(adjustl(cInt))
       endif
-
-      IF(.NOT.IS_ON_myPE_plus2layers&
-         &(IJK_P_g(1),IJK_P_g(2),IJK_P_g(3))) IJK_P_g = UNDEFINED_I
 
       IERR = 0
       RETURN

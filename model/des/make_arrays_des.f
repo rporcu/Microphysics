@@ -47,7 +47,6 @@
       DO K = KSTART2, KEND1
          DO J = JSTART2, JEND1
             DO I = ISTART2, IEND1
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
                IJK = funijk(I,J,K)
                I1 = I

@@ -115,10 +115,6 @@
 
 !        integer, allocatable, dimension(:,:,:) :: funijk
 
-!       Flag to identify dead (unused cells)
-
-        LOGICAL, allocatable, dimension(:,:,:) :: DEAD_CELL_AT
-
 !       Flag to know if above neighbor arrays have been allocated
 
         LOGICAL :: INCREMENT_ARRAYS_ALLOCATED

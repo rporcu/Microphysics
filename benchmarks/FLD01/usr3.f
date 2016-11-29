@@ -55,7 +55,6 @@
       SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, pGhia, pVar)
 
       use geometry, only: dx, dy
-      use functions, only: IS_ON_MYPE_OWNS
       use functions, only: FUNIJK
       use compar, only: myPE, PE_IO
 
@@ -88,13 +87,11 @@
          Sy(0) = (dble(j)*dy - pY(lc1))*lOoDy
          Sy(1) = 1.0d0 - Sy(0)
 
-         if(is_On_myPE_OWNS(i,j,k)) then
-            lMFIX(lc1) = &
-               pVel(i-1,j-1,k)*Sx(0)*Sy(0) + &
-               pVel(i  ,j-1,k)*Sx(1)*Sy(0) + &
-               pVel(i-1,j  ,k)*Sx(0)*Sy(1) + &
-               pVel(i  ,j  ,k)*Sx(1)*Sy(1)
-         endif
+         lMFIX(lc1) = &
+            pVel(i-1,j-1,k)*Sx(0)*Sy(0) + &
+            pVel(i  ,j-1,k)*Sx(1)*Sy(0) + &
+            pVel(i-1,j  ,k)*Sx(0)*Sy(1) + &
+            pVel(i  ,j  ,k)*Sx(1)*Sy(1)
       enddo
 
       ! call global_all_sum(lMFIX)

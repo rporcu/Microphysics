@@ -95,7 +95,6 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
-      use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
 
@@ -226,7 +225,6 @@
          K = MESH_H(H)
          FULL_MAP(W,H) = 0
 
-         IF(.NOT.IS_ON_myPE_owns(I,J,K)) CYCLE
 
          IF(DO_K) THEN
 
@@ -434,7 +432,6 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
-      use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
 
@@ -564,7 +561,6 @@
          K = MESH_H(H)
          FULL_MAP(W,H) = 0
 
-         IF(.NOT.IS_ON_myPE_owns(I,J,K)) CYCLE
 
          IF(DO_K) THEN
 
@@ -772,7 +768,6 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
-      use functions, only: IS_ON_myPE_OWNS
 
       use error_manager
 
@@ -898,7 +893,6 @@
          J = MESH_H(H)
          FULL_MAP(W,H) = 0
 
-         IF(.NOT.IS_ON_myPE_owns(I,J,K)) CYCLE
 
          CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
          CALL CALC_CELL_INTERSECT(MESH_Q(H), DY, JMAX, J)
@@ -1101,8 +1095,7 @@
          DO LC1=1,OCCUPANTS
             I = DEM_MI(BCV_I)%W(LC1)
             K = DEM_MI(BCV_I)%H(LC1)
-            IF(IS_ON_myPE_owns(I,J,K)) &
-               DEM_MI(BCV_I)%OWNER(LC1) = myPE
+            DEM_MI(BCV_I)%OWNER(LC1) = myPE
          ENDDO
 
       CASE('E','W')
@@ -1111,8 +1104,7 @@
          DO LC1=1,OCCUPANTS
             J = DEM_MI(BCV_I)%W(LC1)
             K = DEM_MI(BCV_I)%H(LC1)
-            IF(IS_ON_myPE_owns(I,J,K)) &
-               DEM_MI(BCV_I)%OWNER(LC1) = myPE
+            DEM_MI(BCV_I)%OWNER(LC1) = myPE
          ENDDO
 
       CASE('T','B')
@@ -1121,8 +1113,7 @@
          DO LC1=1,OCCUPANTS
             I = DEM_MI(BCV_I)%W(LC1)
             J = DEM_MI(BCV_I)%H(LC1)
-            IF(IS_ON_myPE_owns(I,J,K)) &
-               DEM_MI(BCV_I)%OWNER(LC1) = myPE
+            DEM_MI(BCV_I)%OWNER(LC1) = myPE
          ENDDO
 
       END SELECT

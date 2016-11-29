@@ -238,13 +238,11 @@
 
 !  Set ICBC flag
          DO K = IC_K_B(ICV), IC_K_T(ICV)
-         DO J = IC_J_S(ICV), IC_J_N(ICV)
-         DO I = IC_I_W(ICV), IC_I_E(ICV)
-            if  (.not.is_on_myPE_plus2layers(I,J,K)) CYCLE
-            if (dead_cell_at(I,J,K)) CYCLE
-            icbc_flag(i,j,k) = 1000*ICV + icbc_fluid
-         ENDDO
-         ENDDO
+            DO J = IC_J_S(ICV), IC_J_N(ICV)
+               DO I = IC_I_W(ICV), IC_I_E(ICV)
+                  icbc_flag(i,j,k) = 1000*ICV + icbc_fluid
+               ENDDO
+            ENDDO
          ENDDO
 
 
@@ -313,9 +311,6 @@
             DO K = BC_K_B(BCV), BC_K_T(BCV)
             DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
-
-               if (.not. is_on_myPE_plus2layers(i,j,k)) CYCLE
-               if (dead_cell_at(I,J,K)) CYCLE
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
                   CASE('FREE_SLIP_WALL'); ICBC_FLAG(i,j,k) = 1000*BCV + icbc_free
@@ -428,10 +423,7 @@
             DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-               IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF(DEAD_CELL_AT(I,J,K)) CYCLE
-
-               ! Verify that the FLOW BC is overwriting a wall.
+! Verify that the FLOW BC is overwriting a wall.
                IF(WALL_ICBC_FLAG(i,j,k)) THEN
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
@@ -467,9 +459,6 @@
                DO K = BC_K_B(BCV), BC_K_T(BCV)
                DO J = BC_J_S(BCV), BC_J_N(BCV)
                DO I = BC_I_W(BCV), BC_I_E(BCV)
-
-                  IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                  IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
                   IJK = FUNIJK(I,J,K)
 

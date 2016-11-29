@@ -18,7 +18,7 @@
       USE eos      , ONLY: EOSG
       USE fldvar   , only: p_g, ep_g
       USE fldvar   , only: mw_avg, ro_g0
-      USE functions, only: is_on_mype_owns, fluid_at
+      USE functions, only: fluid_at
       use funits   , only: dmp_log, unit_log
       USE geometry
       USE ic       , only: ic_p_g, ic_defined
@@ -66,8 +66,6 @@
             DO K = KMIN1, KMAX1
                DO J = JMIN1, JMAX1
 ! Bound Checking
-                  IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
-                  IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -82,8 +80,6 @@
             DO K = KMIN1, KMAX1
                DO I = IMIN1, IMAX1
 ! Bound Checking
-                  IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
-                  IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -98,8 +94,6 @@
             DO J = JMIN1, JMAX1
                DO I = IMIN1, IMAX1
 ! Bound Checking
-                  IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
-                  IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -154,8 +148,6 @@
          AREA = 0.0
          DO K = KMIN1, KMAX1
             DO I = IMIN1, IMAX1
-               IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IF (fluid_at(i,j,k)) THEN
                   DAREA = DX*DZ
                   AREA = AREA + DAREA
@@ -178,8 +170,6 @@
          PJ = PJ + BED_WEIGHT
          DO K = KMIN1, KMAX1
             DO I = IMIN1, IMAX1
-               IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IF(fluid_at(i,j,k).AND.P_G(I,J,K)==UNDEFINED)P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)

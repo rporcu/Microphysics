@@ -208,7 +208,6 @@
       DO K = KSTART2, KEND1
       DO J = JSTART2, JEND1
       DO I = ISTART2, IEND1
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IJK = funijk(I,J,K)
          if (vol_surr(i,j,k).eq.ZERO) CYCLE ! no fluid_at any of the stencil points have
 
@@ -221,7 +220,6 @@
             DO KK = K, merge(K+1, K, DO_K)
             DO JJ = J, J+1
             DO II = I, I+1
-               IF (DEAD_CELL_AT(II,JJ,KK)) CYCLE  ! skip dead cells
 
                IJK2 = funijk_map_c(II, JJ, KK)
                IF(fluid_at(II,JJ,KK).and.(IS_ON_myPE_wobnd(II, JJ, KK))) THEN

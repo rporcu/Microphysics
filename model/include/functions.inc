@@ -31,30 +31,6 @@
       funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
 
-!----------------------------------------------------------------------!
-!  Function: IS_ON_myPE_OWNS                                           !
-!                                                                      !
-!  Purpose: Returns TRUE if the I,J,K values point to a computational  !
-!  cell that is OWNED by the current process.                          !
-!                                                                      !
-!  o Ownership is defined as belonging to the current PE's domain but  !
-!    as a cell in any of the PE's ghost layers.                        !
-!                                                                      !
-!  o Each computational cell is owned by one -and only one- PE.        !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION IS_ON_myPE_OWNS(LI, LJ, LK)
-        USE compar
-        implicit none
-
-        INTEGER, INTENT(IN) :: LI, LJ, LK
-
-      IS_ON_MYPE_OWNS = &
-         LI >= ISTART .AND. LI <= IEND .AND. &
-         LJ >= JSTART .AND. LJ <= JEND .AND. &
-         LK >= KSTART .AND. LK <= KEND
-
-      RETURN
-      END FUNCTION IS_ON_MYPE_OWNS
 
 !----------------------------------------------------------------------!
 !  Function: IS_ON_myPE_WOBND                                          !
@@ -83,54 +59,6 @@
 
       RETURN
       END FUNCTION IS_ON_myPE_wobnd
-
-!----------------------------------------------------------------------!
-!  Function: IS_ON_myPE_Plus1Layer                                     !
-!                                                                      !
-!  Purpose: Returns TRUE if the I,J,K values point to a computational  !
-!  cell that is OWNED by the current process or contained in the fisrt !
-!  layer of ghost cells seen by the current PE.                        !
-!                                                                      !
-!  o This is a superset of IS_ON_myPE_OWNS.                            !
-!                                                                      !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION IS_ON_myPE_plus1layer (LI, LJ, LK)
-        USE compar
-        implicit none
-
-        INTEGER, INTENT(IN) :: LI, LJ, LK
-
-      IS_ON_MYPE_PLUS1LAYER = &
-         LI >= ISTART2 .AND. LI <= IEND2 .AND. &
-         LJ >= JSTART2 .AND. LJ <= JEND2 .AND. &
-         LK >= KSTART2 .AND. LK <= KEND2
-
-      RETURN
-      END FUNCTION IS_ON_myPE_plus1layer
-
-!----------------------------------------------------------------------!
-!  Function: IS_ON_myPE_Plus2Layer                                     !
-!                                                                      !
-!  Purpose: Returns TRUE if the I,J,K values point to a computational  !
-!  cell that is OWNED by the current process or contained in the fisrt !
-!  two layers of ghost cells seen by the current PE.                   !
-!                                                                      !
-!  o This is a superset of IS_ON_Plus1Layer.                           !
-!                                                                      !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION IS_ON_myPE_plus2layers (LI, LJ, LK)
-        USE compar
-        implicit none
-
-        INTEGER, INTENT(IN) :: LI, LJ, LK
-
-      IS_ON_MYPE_PLUS2LAYERS = &
-         LI >= ISTART3 .AND. LI <= IEND3 .AND. &
-         LJ >= JSTART3 .AND. LJ <= JEND3 .AND. &
-         LK >= KSTART3 .AND. LK <= KEND3
-
-      RETURN
-      END FUNCTION IS_ON_myPE_plus2layers
 
 !---------------------------------------------------------------------//
       ! logical function to identify a fluid cell

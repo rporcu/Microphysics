@@ -193,12 +193,10 @@
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: odx, odz
       USE functions, only: fs_wall_at, ns_wall_at
-      USE functions, only: is_on_mype_plus2layers
       USE functions, only: wall_at, fluid_at
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: jminus, jplus, jm1
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use compar, only: dead_cell_at
 
       IMPLICIT NONE
 
@@ -242,8 +240,6 @@
          K1 = 1
          DO J1 = jmin3,jmax3
             DO I1 = imin3, imax3
-               IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-               IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
                IF (ns_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and oppostive to the adjacent fluid cell value)
@@ -274,8 +270,6 @@
          K1 = KMAX2
          DO J1 = jmin3,jmax3
             DO I1 = imin3, imax3
-               IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-               IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
                IF (ns_wall_at(i1,j1,k1)) THEN
                   A_M(I1,J1,K1,E) = ZERO
                   A_M(I1,J1,K1,W) = ZERO
@@ -304,8 +298,6 @@
       I1 = 1
       DO K1 = kmin3, kmax3
          DO J1 = jmin3, jmax3
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(I1,J1,K1,E) = -ONE
                A_M(I1,J1,K1,W) = ZERO
@@ -332,8 +324,6 @@
       I1 = IMAX2
       DO K1 = kmin3, kmax3
          DO J1 = jmin3, jmax3
-            IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
-            IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = -ONE
@@ -374,8 +364,6 @@
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -408,8 +396,6 @@
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -442,8 +428,6 @@
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -517,8 +501,6 @@
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                           IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            A_M(I,J,K,E) = ZERO
                            A_M(I,J,K,W) = ZERO
                            A_M(I,J,K,N) = ZERO
@@ -547,8 +529,6 @@
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                           IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            A_M(I,J,K,E) = ZERO
                            A_M(I,J,K,W) = ZERO
                            A_M(I,J,K,N) = ZERO
@@ -578,8 +558,6 @@
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                           IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                            A_M(i,jplus(i,j,k),k,E) = ZERO
                            A_M(i,jplus(i,j,k),k,W) = ZERO
                            A_M(i,jplus(i,j,k),k,N) = ONE
@@ -609,8 +587,6 @@
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-                        IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 ! setting the velocity in the boundary cell equal to what is known
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -715,9 +691,6 @@
          do k = PS_K_B(PSV), PS_K_T(PSV)
          do j = lJS, lJN
          do i = PS_I_W(PSV), PS_I_E(PSV)
-
-            if(.NOT.IS_ON_myPE_plus2layers(I,J,K)) cycle
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
             if(.NOT.fluid_at(i,j,k)) cycle
 
