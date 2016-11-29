@@ -144,17 +144,10 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE bc
-      USE geometry
-      USE physprop
-      USE run
-      USE toleranc
-      USE compar
-      USE discretelement
-      USE functions
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE fldvar, only: u_g, v_g, w_g, ep_g
+      USE toleranc, only: max_inlet_vel
+      USE functions, only: fluid_at
 
       IMPLICIT NONE
 !-----------------------------------------------

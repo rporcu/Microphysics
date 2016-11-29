@@ -18,24 +18,22 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TRD_G
+      SUBROUTINE CALC_TRD_G(trd_g)
 !
 !     Include param.inc file to specify parameter values
 !
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE compar
-      USE bc
+      USE fldvar, only: u_g, v_g, w_g
+!     USE compar
+!     USE bc
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
+     double precision, intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------

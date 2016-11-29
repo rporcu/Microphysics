@@ -7,23 +7,23 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      SUBROUTINE SET_IC
+      SUBROUTINE SET_IC(ep_g, p_g, u_g, v_g, w_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE constant
-      USE physprop
+      USE compar, only: istart3,iend,jstart3,jend3,kstart3,kend3
       USE ic
-      USE fldvar
-      USE scales
-      USE compar
-      USE run
+      USE scales, only: scale_pressure
       USE functions
       IMPLICIT NONE
+
+      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

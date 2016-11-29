@@ -35,32 +35,30 @@
 !  mu.grad(u)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_U_G(lTAU_U_G)
+      SUBROUTINE CALC_TAU_U_G(lTAU_U_G,trd_g)
 
 ! Modules
 !---------------------------------------------------------------------//
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param, only: dimension_3
       USE param1, only: zero, half
-      USE constant
-      USE physprop
-      USE fldvar
-      USE run
-      USE toleranc, only: dil_ep_s
-      USE geometry
-      USE compar
+      USE fldvar, only: ep_g, u_g, v_g, w_g, w_g, lambda_g, mu_g
       USE functions
+      USE toleranc, only: dil_ep_s
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! TAU_U_g
-      DOUBLE PRECISION, INTENT(OUT) :: lTAU_U_g(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: lTAU_U_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IP, JM, KM
-      INTEGER :: IJK
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average viscosity
@@ -76,7 +74,6 @@
           DO J = jstart3, jend3
             DO I = istart3, iend3
 
-            IJK  = FUNIJK(i,j,k)
             EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
             IF (.NOT.ip_at_e(i,j,k) .AND. EPGA>DIL_EP_S) THEN
@@ -133,10 +130,10 @@
 
 
 ! Add the terms
-               lTAU_U_G(IJK) = SBV + SSX + SSY + SSZ
+               lTAU_U_G(i,j,k) = SBV + SSX + SSY + SSZ
 
             ELSE
-               lTAU_U_G(IJK) = ZERO
+               lTAU_U_G(i,j,k) = ZERO
             ENDIF   ! end if (.NOT.ip_at_e(i,j,k) .AND. EPGA>DIL_EP_S)
          ENDDO
          ENDDO

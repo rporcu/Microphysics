@@ -50,13 +50,11 @@
 !  and top face of a w-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GVTERMS(U, V, WW)
+      SUBROUTINE GET_WCELL_GVTERMS(U, V, WW, u_g, v_g, w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
-      USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg
       USE functions, only: kplus
@@ -71,6 +69,12 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: WW&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT( in) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT( in) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT( in) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -82,9 +86,9 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-            U(I,J,K)  = AVG(U_G(I,J,K),U_G(i,j,kplus(i,j,k)))
-            V(I,J,K)  = AVG(V_G(I,J,K),V_G(i,j,kplus(i,j,k)))
-            WW(I,J,K) = AVG(W_G(I,J,K),W_G(i,j,kplus(i,j,k)))
+            U(I,J,K)  = avg(u_g(I,J,K),U_G(i,j,kplus(i,j,k)))
+            V(I,J,K)  = avg(v_g(I,J,K),V_G(i,j,kplus(i,j,k)))
+            WW(I,J,K) = avg(w_g(I,J,K),W_G(i,j,kplus(i,j,k)))
           ENDDO
         ENDDO
       ENDDO
@@ -382,7 +386,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE fldvar, only: w_g
+      USE fldvar, only: u_g, v_g, w_g
 
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: flow_at_t
@@ -427,7 +431,7 @@
       allocate(  V(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate( WW(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
-      CALL GET_WCELL_GVTERMS(U, V, WW)
+      CALL GET_WCELL_GVTERMS(U, V, WW, u_g, v_g, w_g )
 
 ! shear indicator:
       incr=0

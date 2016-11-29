@@ -77,7 +77,6 @@
 ! Check if current i,j,k resides on this PE
                IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                IF(DEAD_CELL_AT(I,J,K)) CYCLE
-               IJK = FUNIJK(I,J,K)
 
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
@@ -86,7 +85,7 @@
                   RVEL_G = U_G(iminus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -289,7 +288,7 @@
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Global variables
 !---------------------------------------------------------------------//

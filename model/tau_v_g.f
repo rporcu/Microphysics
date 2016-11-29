@@ -32,32 +32,30 @@
 !  (i.e., those of the form mu.grad(v)                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_V_G(lTAU_V_G)
+      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param
-      USE param1
-      USE constant
-      USE physprop
-      USE fldvar
-      USE run
-      USE toleranc
-      USE geometry
-      USE compar
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE param, only: dimension_3
+      USE param1, only: zero, half
+      USE fldvar, only: ep_g, u_g, v_g, w_g, w_g, lambda_g, mu_g
       USE functions
+      USE toleranc, only: dil_ep_s
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! TAU_V_g
-      DOUBLE PRECISION, INTENT(OUT) :: lTAU_V_g(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: lTAU_V_g&
+          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IM, JP, KM
-      INTEGER :: IJK
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Source terms (Surface)
@@ -70,8 +68,6 @@
         DO K = kstart3, kend3
          DO J = jstart3, jend3
           DO I = istart3, iend3
-
-            IJK  = FUNIJK(i,j,k)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
             IF ( .NOT.ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S) THEN
@@ -125,10 +121,10 @@
                     *(W_G(I,JPlus(i,j,k),KMinus(i,j,k))-W_G(I,J,KMinus(i,j,k)))*ODY*AXY
 
 ! Add the terms
-               lTAU_V_G(IJK) = SBV + SSX + SSY + SSZ
+               lTAU_V_G(i,j,k) = SBV + SSX + SSY + SSZ
 
             ELSE
-               lTAU_V_G(IJK) = ZERO
+               lTAU_V_G(i,j,k) = ZERO
             ENDIF   ! end if (.NOT. ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S)
          ENDDO
          ENDDO

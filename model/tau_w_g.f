@@ -35,32 +35,31 @@
 !  mu.grad(w)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_W_G(lTAU_W_G)
+      SUBROUTINE CALC_TAU_W_G(lTAU_W_G,trd_g)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param
-      USE param1
-      USE constant
-      USE physprop
-      USE fldvar
-      USE run
-      USE toleranc
-      USE geometry
-      USE compar
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE param, only: dimension_3
+      USE param1, only: zero, half
+      USE fldvar, only: ep_g, u_g, v_g, w_g, w_g, lambda_g, mu_g
       USE functions
+      USE toleranc, only: dil_ep_s
+
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! TAU_W_g
-      DOUBLE PRECISION, INTENT(OUT) :: lTAU_w_g(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: lTAU_w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IM, JM, KP
-      INTEGER :: IJK
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Source terms (Surface)
@@ -75,7 +74,6 @@
          DO J = jstart3, jend3
           DO I = istart3, iend3
 
-            IJK  = FUNIJK(i,j,k)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
 
@@ -130,11 +128,11 @@
                      MU_G(i,j,k)*(W_G(I,J,K)-W_G(I,J,KMinus(i,j,k)))*ODZ*AXY
 
 ! Add the terms
-               lTAU_W_G(IJK) =  SBV + SSX + SSY + SSZ
+               lTAU_W_G(i,j,k) =  SBV + SSX + SSY + SSZ
 
 
             ELSE
-               lTAU_W_G(IJK) = ZERO
+               lTAU_W_G(i,j,k) = ZERO
             ENDIF   ! end if (.NOT. ip_at_t(i,j,k) .AND. EPGA>DIL_EP_S)
          ENDDO
          ENDDO

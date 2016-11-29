@@ -7,18 +7,24 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_RO_G
+      SUBROUTINE SET_RO_G(ro_g,rop_g,p_g,ep_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only:  istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE constant
-      USE eos, only: EOSG
-      USE fldvar
+      USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      USE eos      , only: EOSG
+      USE fldvar   , only: mw_avg, ro_g0
       USE param1   , only: UNDEFINED
       USE functions, only: wall_at
+
       IMPLICIT NONE
+
+      double precision, intent(inout) ::  ro_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::   p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::  ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

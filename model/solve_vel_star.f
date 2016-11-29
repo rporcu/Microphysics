@@ -8,24 +8,19 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOLVE_VEL_STAR(IER)
 
-      USE adjust_a
-      USE calc_d_mod, ONLY: calc_d
-      USE compar
-      USE discretelement
-      USE drag
-      USE fldvar
-      USE geometry
-      USE leqsol
-      USE matrix
-      USE output
-      USE param
-      USE param1
-      USE physprop
-      USE ps
-      USE residual
-      USE run
-      USE toleranc
-      USE ur_facs
+      USE adjust_a  , only: adjust_a_g
+      USE calc_d_mod, only: calc_d
+      USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE discretelement, only: des_continuum_coupled
+      USE fldvar  , only: d_e, d_n, d_t, u_g, v_g, w_g
+      USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc 
+      USE fun_avg , only: do_k
+      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm 
+      USE ur_facs , only: under_relax
+      USE ps      , only: point_source
+      USE residual, only: resid, den_resid, max_resid, ijk_resid, &
+                          resid_u, resid_v, resid_w, num_resid
+      USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
 
       IMPLICIT NONE
 !-----------------------------------------------

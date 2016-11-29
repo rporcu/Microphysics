@@ -104,23 +104,28 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_TRD_AND_TAU()
+      SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g)
 
-! Stress tensor cross terms.
-      USE fldvar, only : TAU_U_G, TAU_V_G, TAU_W_G
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       implicit none
 
-!-----------------------------------------------------------------------
+      ! Stress tensor cross terms.
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-! Calculate the trace of the stress tensor (gas phase; m=0)
-      CALL CALC_TRD_G
+      ! Calculate the trace of the stress tensor (gas phase; m=0)
+      CALL CALC_TRD_G(trd_g)
 
-! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      CALL CALC_TAU_U_G (TAU_U_G)
-      CALL CALC_TAU_V_G (TAU_V_G)
-      CALL CALC_TAU_W_G (TAU_W_G)
+      ! Calculate the cross terms of the stress tensor (gas phase; m=0)
+      CALL CALC_TAU_U_G (TAU_U_G,trd_g)
+      CALL CALC_TAU_V_G (TAU_V_G,trd_g)
+      CALL CALC_TAU_W_G (TAU_W_G,trd_g)
 
-
-      RETURN
       END SUBROUTINE CALC_TRD_AND_TAU

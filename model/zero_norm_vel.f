@@ -14,21 +14,24 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE ZERO_NORM_VEL
+      SUBROUTINE ZERO_NORM_VEL(u_g,v_g,w_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE physprop
-      USE fldvar
-      USE compar
-      USE discretelement
-      USE functions
+      USE param1   , only: zero
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE geometry , only: imax2, jmax2, kmax2
+      USE geometry , only: imax3, jmax3, kmax3
+      USE functions, only: iminus, jminus, kminus
+      USE functions, only: ip_at_e, ip_at_n, ip_at_t, cyclic_at, wall_at
 
       IMPLICIT NONE
+
+      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

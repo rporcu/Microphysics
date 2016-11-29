@@ -128,7 +128,7 @@
       CALL CALC_COEFF_ALL (0, IER)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
-      CALL CALC_TRD_AND_TAU()
+      CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g)
 
 ! Check rates and sums of mass fractions every NLOG time steps
       IF (NSTEP == NCHECK) THEN

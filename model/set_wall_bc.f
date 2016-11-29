@@ -12,17 +12,15 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE bc
-      USE fldvar
-      USE geometry
-      USE physprop
-      USE run
-      USE funits
-      USE compar
-      USE functions
-      IMPLICIT NONE
+      USE bc, only: bc_defined, bc_type, dimension_bc
+      USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+      USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+      USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      USE functions, only: dead_cell_at, default_wall_at
+      USE functions, only: is_on_myPE_plus2layers
+      USE geometry, only: imax2, jmax2, kmax2
+
+      implicit none
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -159,16 +157,12 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       USE bc
-      USE fldvar
-      USE geometry
-      USE physprop
-      USE run
-      USE funits
-      USE compar
-      USE functions
+      USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+      USE fldvar, only: u_g, v_g, w_g
+      USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
+      USE functions, only: dead_cell_at, ns_wall_at, wall_at
+      USE geometry , only: do_k
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

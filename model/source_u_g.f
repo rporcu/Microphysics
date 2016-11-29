@@ -27,11 +27,9 @@
       USE constant, only: gravity_x
       USE bc, only: delp_x
 
-      USE fldvar, only: p_g, ro_g, rop_g, rop_go
-      USE fldvar, only: ep_g
-      USE fldvar, only: u_g, u_go
+      USE fldvar, only: p_g, ep_g, ro_g, rop_g, rop_go, u_g, u_go
+      USE fldvar, only: tau_u_g
 
-      USE fun_avg, only: avg
       USE fun_avg, only: avg
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
@@ -47,7 +45,6 @@
       USE run, only: momentum_x_eq
       USE run, only: odt
       USE scales, only: p_scale
-      USE fldvar, only: tau_u_g
       USE toleranc, only: dil_ep_s
       use compar, only: imap
       use compar, only: istart2, iend2
@@ -166,7 +163,7 @@
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_U_G_BC (A_M, B_M)
+      CALL SOURCE_U_G_BC (A_M, B_M, U_G)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -190,27 +187,22 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(A_M, B_M)
+      SUBROUTINE SOURCE_U_G_BC(A_M, B_M, U_G)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       use matrix, only: e, w, s, n, t, b
-      USE fldvar
-      USE run
       USE bc
-      USE fun_avg  , only: do_k, jmax2, kmax2
-      USE fun_avg  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
-      USE fun_avg  , only: ody, odz
+      USE geometry  , only: do_k, jmax2, kmax2
+      USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
+      USE geometry  , only: ody, odz
       USE functions, only: fs_wall_at, ns_wall_at
       USE functions, only: is_on_mype_plus2layers
       USE functions, only: wall_at, fluid_at
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-      USE functions, only: iminus, iplus
-      USE functions, only: im1, ip1, jm1, jp1, km1, kp1
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
+      USE functions, only: iminus, iplus, im1
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use compar, only: dead_cell_at
       IMPLICIT NONE
 
@@ -221,6 +213,9 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+! Velocity u_g
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local Variables
@@ -668,18 +663,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_U_G(A_M, B_M)
 
-      use compar
-      use constant
-      use geometry
-      use param1, only: small_number
-      use fldvar
+      use param1   , only: small_number
+      use geometry , only: vol
+      use functions, only: dead_cell_at, fluid_at, is_on_myPE_plus2layers
+      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use ps
-      use run
-      use functions
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
-      IMPLICIT NONE
+
+      implicit none
 
 ! Dummy arguments
 !---------------------------------------------------------------------//

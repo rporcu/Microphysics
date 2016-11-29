@@ -176,20 +176,20 @@
       CALL SET_CONSTPROP
 
 ! Set initial conditions
-      CALL SET_IC
+      CALL SET_IC(ep_g, p_g, u_g, v_g, w_g)
 
 ! Set point sources.
       CALL SET_PS
 
 ! Set boundary conditions
-      CALL ZERO_NORM_VEL
+      CALL ZERO_NORM_VEL(u_g,v_g,w_g)
       CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0)
 
 ! Set the pressure field for a fluidized bed
       IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P
 
 ! Initialize densities.
-      IF (RUN_TYPE == 'NEW') CALL SET_RO_G
+      IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g)
 
 ! Initialize time dependent boundary conditions
       CALL SET_BC1

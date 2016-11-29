@@ -27,25 +27,20 @@
       USE constant, only: gravity_z
       USE bc, only: delp_z
 
-      USE fldvar, only: p_g, ro_g, rop_g, rop_go
-      USE fldvar, only: ep_g
-      USE fldvar, only: w_g, w_go
+      USE fldvar, only: p_g, ep_g, ro_g, rop_g, rop_go, w_g, w_go
 
-      USE fun_avg, only: avg_h
-      USE fun_avg, only: avg
+      USE fun_avg, only: avg, avg_h
       USE functions, only: ip_at_t, sip_at_t, is_id_at_t
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax, wall_at
       USE geometry, only: kmax1, cyclic_z_pd
-      USE geometry, only: vol
-      USE geometry, only: axy
+      USE geometry, only: vol, axy
 
       use matrix, only: e, w, s, n, t, b
 
       USE param1, only: zero, one, half
-      USE run, only: momentum_z_eq
-      USE run, only: odt
+      USE run, only: momentum_z_eq, odt
       USE scales, only: p_scale
       USE fldvar, only: tau_w_g
       USE toleranc, only: dil_ep_s
@@ -166,7 +161,7 @@
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_W_G_BC (A_M, B_M)
+      CALL SOURCE_W_G_BC (A_M, B_M, W_G)
 
       RETURN
       END SUBROUTINE SOURCE_W_G
@@ -188,7 +183,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_W_G_BC(A_M, B_M)
+      SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G)
 
 !-----------------------------------------------
 ! Modules
@@ -196,19 +191,14 @@
       USE param
       USE param1
       use matrix, only: e, w, s, n, t, b
-      USE scales
-      USE constant
-      USE fldvar
-      USE run
-      USE toleranc
-      USE geometry
       USE bc
-      USE output
-      USE compar
-      USE fun_avg
+      USE geometry , only: imax2,imin3,imax3
+      USE geometry , only: jmax2,jmin3,jmax3
+      USE geometry , only:       kmin3,kmax3
+      USE geometry , only: odx, ody
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
-      USE functions, only: fluid_at, wall_at, ns_wall_at, fs_wall_at
+      USE functions, only: dead_cell_at, fluid_at, wall_at, ns_wall_at, fs_wall_at
       USE functions, only: is_on_mype_plus2layers
       USE functions, only: im1, jm1
 
@@ -224,6 +214,9 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+! Velocity
+      DOUBLE PRECISION, INTENT(INOUT) :: W_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------
@@ -690,17 +683,11 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use compar
-      use constant
-      use geometry
-      use param1, only: small_number, zero
-      use fldvar
+      use compar  , only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      use param1  , only: small_number, zero
+      use geometry, only: vol
       use ps
-      use run
-      use functions
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
+      use functions, only: dead_cell_at, fluid_at, is_on_myPE_plus2layers
       IMPLICIT NONE
 
 ! Dummy arguments

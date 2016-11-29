@@ -16,7 +16,6 @@
 !---------------------------------------------------------------------//
       USE run, only: momentum_x_eq
       USE run, only: discretize
-      use fldvar
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
@@ -40,8 +39,6 @@
          CALL STORE_A_U_G1(A_M)
       ENDIF
 
-
-      RETURN
       END SUBROUTINE CONV_DIF_U_G
 
 
@@ -51,13 +48,11 @@
 !  and top face of a u-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_UCELL_GVTERMS(U, V, WW)
+      SUBROUTINE GET_UCELL_GVTERMS(U, V, WW, u_g, v_g, w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
-      USE fldvar, only: u_g, v_g, w_g
 
       USE fun_avg, only: avg
       USE functions, only: iplus
@@ -73,6 +68,12 @@
       DOUBLE PRECISION, INTENT(OUT) :: V&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: WW&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(in ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(in ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(in ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
@@ -388,7 +389,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE fldvar, only: u_g
+      USE fldvar, only: u_g, v_g, w_g
 
       USE functions, only: flow_at_e
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
@@ -431,7 +432,7 @@
       allocate(  V(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate( WW(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
-      CALL GET_UCELL_GVTERMS(U, V, WW)
+      CALL GET_UCELL_GVTERMS(U, V, WW, u_g, v_g, w_g)
 
 ! shear indicator:
       incr=1
