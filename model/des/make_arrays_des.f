@@ -144,8 +144,6 @@
 
       CALL NEIGHBOUR
 
-! Calculate interpolation weights
-      CALL CALC_INTERP_WEIGHTS
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS
 

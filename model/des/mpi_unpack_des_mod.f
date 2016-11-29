@@ -54,10 +54,6 @@
       use discretelement, only: OMEGA_NEW
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS, PVOL
-! Number of cells used in interpolation
-      use particle_filter, only: FILTER_SIZE
-! Cells and weights for interpolation
-      use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
       use discretelement, only: PIJK
 ! Number of particles on the process (max particle array size)
@@ -144,11 +140,6 @@
 ! 9) Exiting particle flag
             call unpack_dbuf(lbuf,tmp,pface)
             if (tmp) call set_exiting_ghost(llocpar)
-! 12) Interpolation verights
-            IF(FILTER_SIZE > 0) THEN
-               call unpack_dbuf(lbuf,filter_cell(:,llocpar),pface)
-               call unpack_dbuf(lbuf,filter_weight(:,llocpar),pface)
-            ENDIF
 
 
 ! Calculate the volume of the ghost particle.
@@ -202,11 +193,6 @@
 ! 11) User varaible
             IF(DES_USR_VAR_SIZE > 0)&
                call unpack_dbuf(lbuf,des_usr_var(ispot,:),pface)
-! 12) Interpolation verights
-            IF(FILTER_SIZE > 0) THEN
-               call unpack_dbuf(lbuf,filter_cell(:,ispot),pface)
-               call unpack_dbuf(lbuf,filter_weight(:,ispot),pface)
-            ENDIF
 
             ighost_updated(ispot) = .true.
             lnewspot(lcurpar) = ispot

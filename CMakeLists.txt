@@ -93,7 +93,6 @@ set(SOURCES
   model/des/calc_epg_des.f
   model/des/calc_force_dem.f
   model/des/calc_grad_des.f
-  model/des/calc_interp_weights.f
   model/des/calc_pg_grad.f
   model/des/cfassign.f
   model/des/cffctowall.f

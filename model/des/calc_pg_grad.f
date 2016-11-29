@@ -33,9 +33,6 @@
       use fldvar, only: P_G
 
       use discretelement, only: MAX_PIP, PIJK, DES_EXPLICITLY_COUPLED
-      use particle_filter, only: FILTER_CELL
-      use particle_filter, only: FILTER_WEIGHT
-      use particle_filter, only: DES_INTERP_ON
 
       use functions, only: funijk
       use functions, only: fluid_at
@@ -100,16 +97,7 @@
             k = PIJK(NP,3)
             if (.NOT.fluid_at(i,j,k)) CYCLE
 
-            IF(DES_INTERP_ON) THEN
-               lPF = ZERO
-               DO LC=1,LP_BND
-                  IJK = FILTER_CELL(LC,NP)
-                  WEIGHT = FILTER_WEIGHT(LC,NP)
-                  lPF = lPF + P_FORCE(:,IJK)*WEIGHT
-               ENDDO
-            ELSE
-               lPF = P_FORCE(:,PIJK(NP,4))
-            ENDIF
+             lPF = P_FORCE(:,PIJK(NP,4))
 
 ! Include gas pressure and gas-solids drag
             DRAG_FC(NP,:) = DRAG_FC(NP,:) + lPF*PVOL(NP)

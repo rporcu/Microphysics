@@ -221,8 +221,6 @@
       use particle_filter, only: DES_INTERP_MEAN_FIELDS
 ! Flag: Interplate variables for drag calculation.
       use particle_filter, only: DES_INTERP_ON
-! Size of interpolation filter
-      use particle_filter, only: FILTER_SIZE
 ! Runtime FLag: 3D simulation
       use geometry, only: DO_K
 
@@ -295,19 +293,6 @@
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-      CASE(DES_INTERP_DPVM, DES_INTERP_GAUSS)
-
-! Set the size of the interpolation filter.
-         FILTER_SIZE = merge(27, 9, DO_K)
-
-         IF(DES_INTERP_WIDTH == UNDEFINED) THEN
-            WRITE(ERR_MSG,2120) trim(adjustl(DES_INTERP_SCHEME))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
- 2120 FORMAT('Error 2120: The selected interpolation scheme (',A,') ', &
-         'requires',/'a DES_INTERP_WIDTH. Please correct the ',        &
-         'input file.')
 
       END SELECT
 

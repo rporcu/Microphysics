@@ -15,8 +15,6 @@
       use desgrid
       use desmpi
       USE functions
-      use particle_filter, only: FILTER_WEIGHT
-      use particle_filter, only: FILTER_CELL
       use physprop, only:MMAX, RO_S0
 
       IMPLICIT NONE
@@ -29,34 +27,18 @@
       INTEGER I,J,K,IJK
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
-! PVOL times statistical weight, and times filter weight
-      DOUBLE PRECISION :: VOL_WT, VOLxWEIGHT
-! Loop bound for filter
-      INTEGER :: LP_BND
-
 
 !-----------------------------------------------
 
       SOLVOLINC(:,:) = ZERO
-
-! Loop bounds for interpolation.
-      LP_BND = merge(27,9,DO_K)
-
 ! Calculate the gas phase forces acting on each particle.
       do NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP) .and. .NOT.IS_GHOST(NP)) CYCLE
 
-         VOL_WT = PVOL(NP)
 ! Particle phase for data binning.
          M = PIJK(NP,5)
-
-         DO LC=1,LP_BND
-            IJK = FILTER_CELL(LC,NP)
-! Particle volume times the weight for this cell.
-            VOLxWEIGHT = VOL_WT*FILTER_WEIGHT(LC,NP)
 ! Accumulate total solids volume (by phase)
-            SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOLxWEIGHT
-         ENDDO
+         SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + PVOL(NP)
       ENDDO
 
 ! Calculate the cell average solids velocity, the bulk density,
@@ -81,7 +63,6 @@
       ENDDO
       ENDDO
       ENDDO
-
 
 ! Halo exchange of solids volume fraction data.
       ! calL SEND_RECV(DES_ROP_S,2)

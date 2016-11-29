@@ -64,8 +64,6 @@
       use desmpi
       use discretelement
       use functions
-      use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
-      use particle_filter, only: FILTER_SIZE
 
       IMPLICIT NONE
 
@@ -116,13 +114,6 @@
 ! Particle center drag coefficient and explicit drag force
       F_GP(LB:UB) = ZERO
       DRAG_FC(LB:UB,:) = ZERO
-
-
-! Interpolation variables.
-      IF(FILTER_SIZE > 0)THEN
-         FILTER_CELL(:,LB:UB) = -1
-         FILTER_WEIGHT(:,LB:UB) = ZERO
-      ENDIF
 
 ! Higher order time integration variables.
       IF (DO_OLD) THEN

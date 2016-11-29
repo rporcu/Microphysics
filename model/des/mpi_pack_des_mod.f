@@ -52,10 +52,6 @@
       use discretelement, only: OMEGA_NEW
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS
-! Number of cells used in interpolation
-      use particle_filter, only: FILTER_SIZE
-! Cells and weights for interpolation
-      use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
       use discretelement, only: PIJK
 ! User-defined variables for each particle.
@@ -131,11 +127,6 @@
 ! 11) User Variable
             IF(DES_USR_VAR_SIZE > 0) &
                call pack_dbuf(lbuf,des_usr_var(lcurpar,:),pface)
-! 12) Interpolation weights
-            IF(FILTER_SIZE > 0) THEN
-               call pack_dbuf(lbuf,filter_cell(:,lcurpar),pface)
-               call pack_dbuf(lbuf,filter_weight(:,lcurpar),pface)
-            ENDIF
 
             lpar_cnt = lpar_cnt + 1
          end do

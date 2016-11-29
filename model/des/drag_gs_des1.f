@@ -28,8 +28,6 @@
       use discretelement, only: MAX_PIP
 ! Flag to use interpolation
       use particle_filter, only: DES_INTERP_ON
-! Interpolation cells and weights
-      use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! IJK of fluid cell containing particles center
       use discretelement, only: PIJK
 ! Drag force on each particle
@@ -104,52 +102,28 @@
 
 ! Calculate the gas volume fraction, velocity, and pressure force at
 ! the particle's position.
-         IF(DES_INTERP_ON) THEN
-            DO LC=1,LP_BND
-               IJK = FILTER_CELL(LC,NP)
-               WEIGHT = FILTER_WEIGHT(LC,NP)
-! Gas phase volume fraction.
-               i = -1 ! FIXME
-               j = -1 ! FIXME
-               k = -1 ! FIXME
-               lEPG = lEPG + EP_G(I,J,K)*WEIGHT
-! Gas phase velocity.
-               VELFP(1) = VELFP(1) + UGC(IJK)*WEIGHT
-               VELFP(2) = VELFP(2) + VGC(IJK)*WEIGHT
-               VELFP(3) = VELFP(3) + WGC(IJK)*WEIGHT
-! Gas pressure force.
-               lPF = lPF + P_FORCE(:,IJK)*WEIGHT
-            ENDDO
-         ELSE
-            IJK = PIJK(NP,4)
-            lEPG = EP_G(I,J,K)
-            VELFP(1) = UGC(IJK)
-            VELFP(2) = VGC(IJK)
-            VELFP(3) = WGC(IJK)
-            lPF = P_FORCE(:,IJK)
-         ENDIF
+         IJK = PIJK(NP,4)
+         lEPG = EP_G(I,J,K)
+         VELFP(1) = UGC(IJK)
+         VELFP(2) = VGC(IJK)
+         VELFP(3) = WGC(IJK)
+         lPF = P_FORCE(:,IJK)
 
 ! For explicit coupling, use the drag coefficient calculated for the
 ! gas phase drag calculations.
-         IF(DES_EXPLICITLY_COUPLED) THEN
-
-            DRAG_FC(NP,:) = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
-
-         ELSE
 
 ! Calculate the drag coefficient.
-            CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
 
 ! Calculate the gas-solids drag force on the particle
-            D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
+         D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
-            FC(NP,:) = FC(NP,:) + D_FORCE(:)
+         FC(NP,:) = FC(NP,:) + D_FORCE(:)
 
-            FC(NP,:) = FC(NP,:) + lPF*PVOL(NP)
+         FC(NP,:) = FC(NP,:) + lPF*PVOL(NP)
 
-         ENDIF
 
       ENDDO
 
@@ -188,8 +162,6 @@
       use discretelement, only: MAX_PIP
 ! Flag to use interpolation
       use particle_filter, only: DES_INTERP_ON
-! Interpolation cells and weights
-      use particle_filter, only: FILTER_CELL, FILTER_WEIGHT
 ! IJK of fluid cell containing particles center
       use discretelement, only: PIJK
 ! Drag force on each particle
@@ -245,15 +217,8 @@
       F_GDS = ZERO
       DRAG_BM = ZERO
 
-! Loop bounds for interpolation.
-      LP_BND = merge(27,9,DO_K)
-
 ! Calculate the cell center gas velocities.
-      IF(DES_EXPLICITLY_COUPLED) THEN
-         CALL CALC_CELL_CENTER_GAS_VEL(U_GO, V_GO, W_GO, UGC, VGC, WGC)
-      ELSE
-         CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
-      ENDIF
+      CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
 
 ! Calculate the gas phase forces acting on each particle.
 
@@ -273,24 +238,11 @@
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
-         IF(DES_INTERP_ON) THEN
-            DO LC=1,LP_BND
-               IJK = FILTER_CELL(LC,NP)
-               WEIGHT = FILTER_WEIGHT(LC,NP)
-! Gas phase volume fraction.
-               lEPG = lEPG + EP_G(I,J,K)*WEIGHT
-! Gas phase velocity.
-               VELFP(1) = VELFP(1) + UGC(IJK)*WEIGHT
-               VELFP(2) = VELFP(2) + VGC(IJK)*WEIGHT
-               VELFP(3) = VELFP(3) + WGC(IJK)*WEIGHT
-            ENDDO
-         ELSE
-            IJK = PIJK(NP,4)
-            lEPG = EP_G(I,J,K)
-            VELFP(1) = UGC(IJK)
-            VELFP(2) = VGC(IJK)
-            VELFP(3) = WGC(IJK)
-         ENDIF
+         IJK = PIJK(NP,4)
+         lEPG = EP_G(I,J,K)
+         VELFP(1) = UGC(IJK)
+         VELFP(2) = VGC(IJK)
+         VELFP(3) = WGC(IJK)
 
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
@@ -301,26 +253,14 @@
 
          lDRAG_BM = lFORCE*DES_VEL_NEW(NP,:)
 
-         IF(DES_INTERP_ON) THEN
-            DO LC=1,LP_BND
-               IJK = FILTER_CELL(LC,NP)
-               WEIGHT = FILTER_WEIGHT(LC,NP)/VOL
+         IJK = PIJK(NP,4)
+         WEIGHT = ONE/VOL
 
-               DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
-               DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
-               DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
-               F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
-            ENDDO
-         ELSE
-            IJK = PIJK(NP,4)
-            WEIGHT = ONE/VOL
+         DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
+         DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
+         DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
 
-            DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
-            DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
-            DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
-
-            F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
-         ENDIF
+         F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
 
       ENDDO
 

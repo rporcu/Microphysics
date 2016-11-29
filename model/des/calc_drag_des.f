@@ -98,8 +98,6 @@
 
 ! Bin particles to the fluid grid.
       CALL PARTICLES_IN_CELL
-! Calculate interpolation weights
-      CALL CALC_INTERP_WEIGHTS
 ! Calculate mean fields (EPg).
       CALL COMP_MEAN_FIELDS
 

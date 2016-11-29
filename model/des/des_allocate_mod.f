@@ -39,9 +39,6 @@ CONTAINS
       use particle_filter, only: DES_INTERP_GARG
       use particle_filter, only: DES_INTERP_DPVM
       use particle_filter, only: DES_INTERP_GAUSS
-      use particle_filter, only: FILTER_SIZE
-      use particle_filter, only: FILTER_CELL
-      use particle_filter, only: FILTER_WEIGHT
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -163,9 +160,6 @@ CONTAINS
       ALLOCATE(VXF_GDS(DIMENSION_3))
 
       SELECT CASE(DES_INTERP_SCHEME_ENUM)
-      CASE(DES_INTERP_DPVM, DES_INTERP_GAUSS)
-         ALLOCATE(FILTER_CELL(FILTER_SIZE, MAX_PIP))
-         ALLOCATE(FILTER_WEIGHT(FILTER_SIZE, MAX_PIP))
       CASE(DES_INTERP_GARG)
          ALLOCATE(DES_ROPS_NODE(DIMENSION_3, MMAX))
          ALLOCATE(DES_VEL_NODE(DIMENSION_3, DIMN, MMAX))
@@ -350,10 +344,6 @@ CONTAINS
            call integer_grow(NEIGHBOR_INDEX,MAX_PIP)
            call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP)
 
-           IF(FILTER_SIZE > 0) THEN
-              call integer_grow2(FILTER_CELL,MAX_PIP)
-              call real_grow2(FILTER_WEIGHT,MAX_PIP)
-           ENDIF
 
            IF (DO_OLD) THEN
               call real_grow2_reverse(DES_ACC_OLD,MAX_PIP)
