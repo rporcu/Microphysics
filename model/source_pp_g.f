@@ -26,7 +26,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G, DIMENSION_3
+      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
       USE fldvar, ONLY: U_G, V_G, W_G,ROP_G, ROP_GO, RO_G, P_G, EP_G

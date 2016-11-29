@@ -36,7 +36,7 @@
       USE functions, only: ip_at_t, sip_at_t, is_id_at_t
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
-      USE functions, only: zmax, funijk, wall_at
+      USE functions, only: zmax, wall_at
       USE geometry, only: kmax1, cyclic_z_pd
       USE geometry, only: vol
       USE geometry, only: axy
@@ -208,7 +208,7 @@
       USE fun_avg
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
-      USE functions, only: funijk, fluid_at, wall_at, ns_wall_at, fs_wall_at
+      USE functions, only: fluid_at, wall_at, ns_wall_at, fs_wall_at
       USE functions, only: is_on_mype_plus2layers
       USE functions, only: im1, jm1
 

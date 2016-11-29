@@ -211,7 +211,7 @@
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
-      use compar, only: dead_cell_at 
+      use compar, only: dead_cell_at
       IMPLICIT NONE
 
 ! Dummy arguments

@@ -185,9 +185,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: ip, jm, km, ic
-      INTEGER :: ijke, ijkn, ijkne, ijks, ijkse
-      INTEGER :: ijkt, ijkte, ijkb, ijkbe
-      INTEGER :: jtmp,ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
@@ -196,21 +193,11 @@
       JM = JM1(J)
       KM = KM1(K)
 
-      IJKE = FUNIJK(ieast(i,j,k),j,k)
-
       IF (wall_at(i,j,k))  THEN
          IC = ieast(i,j,k)
       ELSE
          IC = i
       ENDIF
-
-      jtmp = jnorth(i,j,k)
-      IJKN = FUNIJK(i,jtmp,k)
-      IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
-
-      jtmp = jsouth(i,j,k)
-      IJKS = FUNIJK(i,jtmp,k)
-      IJKSE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
 
       C_AE = ODX
       C_AW = ODX
@@ -225,30 +212,22 @@
       D_FW = MU_G(ic,j,k)*C_AW*AYZ
 
 ! North face (i+1/2, j+1/2, k)
-      D_FN = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,jtmp,k)),&
-                   AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*C_AN*AXZ
+      D_FN = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,jnorth(i,j,k),k)),&
+                   AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jnorth(i,j,k),k),jnorth(i,j,k),k)))*C_AN*AXZ
 ! South face (i+1/2, j-1/2, k)
-      D_FS = AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(IC,J,K)),&
-                   AVG_H(MU_G(ieast(i,jtmp,k),jtmp,k),MU_G(ieast(i,j,k),j,k)))*C_AS*AXZ
+      D_FS = AVG_H(AVG_H(MU_G(i,jsouth(i,j,k),k),MU_G(IC,J,K)),&
+                   AVG_H(MU_G(ieast(i,jsouth(i,j,k),k),jsouth(i,j,k),k),MU_G(ieast(i,j,k),j,k)))*C_AS*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
       IF (DO_K) THEN
 
-         ktmp = ktop(i,j,k)
-         IJKT  = FUNIJK(i,j,ktmp)
-         IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
-
-         ktmp  = kbot(i,j,k)
-         IJKB  = FUNIJK(i,j,ktmp)
-         IJKBE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
-
 ! Top face (i+1/2, j, k+1/2)
-         D_FT = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,j,ktmp)),&
-                      AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktmp),j,ktmp)))*C_AT*AXY
+         D_FT = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,j,ktop(i,j,k))),&
+                      AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktop(i,j,k)),j,ktop(i,j,k))))*C_AT*AXY
 ! Bottom face (i+1/2, j, k-1/2)
-         D_FB = AVG_H(AVG_H(MU_G(i,j,ktmp),MU_G(IC,J,K)),&
-                      AVG_H(MU_G(ieast(i,j,ktmp),j,ktmp),MU_G(ieast(i,j,k),j,k)))*C_AB*AXY
+         D_FB = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(IC,J,K)),&
+                      AVG_H(MU_G(ieast(i,j,kbot(i,j,k)),j,kbot(i,j,k)),MU_G(ieast(i,j,k),j,k)))*C_AB*AXY
       ENDIF
 
 

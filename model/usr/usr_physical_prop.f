@@ -204,7 +204,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indicies
-      INTEGER :: M, I, J, K, IJK
+      INTEGER :: M, I, J, K
 !......................................................................!
 
 ! The following error message is used to make sure that if a user

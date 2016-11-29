@@ -199,7 +199,6 @@
       use fldvar, only: RO_g
 ! Gas phase pressure.
       use fldvar, only: P_g
-      use functions, only: funijk
 
       INTEGER, intent(in) :: i, j, k
       LOGICAL, intent(inout) :: tHeader

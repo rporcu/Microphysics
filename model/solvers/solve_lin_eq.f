@@ -27,7 +27,6 @@
       USE residual
       USE toleranc
       USE leqsol
-      use functions, only: funijk
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -81,8 +80,6 @@
       DOUBLE PRECISION :: max_resid_local, tol_resid_max
 ! convergence tolerance for leq solver
       DOUBLE PRECISION :: TOL
-! indices
-      INTEGER :: I,J,K,II, IJK
 ! for constructing local character strings
       CHARACTER(LEN=80) :: LINE0, LINE1
 !-----------------------------------------------

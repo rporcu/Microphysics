@@ -160,6 +160,7 @@
       USE functions, only: ieast, iwest, jnorth, jsouth, ktop
       USE functions, only: iminus, jminus, kminus
 
+
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
 
@@ -181,42 +182,21 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ijk, imjk, ijmk, ijkm
       INTEGER :: kp, im, jm, kc
-      INTEGER :: ijkt, ijke, ijkte, ijkw, ijkwt
-      INTEGER :: ijkn, ijktn, ijks, ijkst
       INTEGER :: itmp, jtmp, ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
-
-      IJK = funijk(i,j,k)
-
-      IMJK = FUNIJK(iminus(i,j,k),j,k)
-      IJMK = FUNIJK(i,jminus(i,j,k),k)
-      IJKM = FUNIJK(i,j,kminus(i,j,k))
 
       KP = KP1(K)
       IM = IM1(I)
       JM = JM1(J)
 
       ktmp = ktop(i,j,k)
-      IJKT = FUNIJK(i,j,ktmp)
-
-      IJKE  = FUNIJK(ieast(i,j,k),j,k)
 
       itmp = iwest(i,j,k)
-      IJKW  = FUNIJK(itmp,j,k)
-      IJKWT = FUNIJK(itmp,j,ktop(itmp,j,k))
-
-      IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
-      IJKTN = FUNIJK(i,jnorth(i,j,ktmp),ktmp)
-
-      IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
       jtmp  = jsouth(i,j,k)
-      IJKS  = FUNIJK(i,jtmp,k)
-      IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
       IF (wall_at(i,j,k)) THEN
          kc = ktop(i,j,k)

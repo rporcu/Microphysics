@@ -45,7 +45,7 @@ CONTAINS
       DOUBLE PRECISION :: sum_g
 
 !                      Indices
-      INTEGER :: I,J,K, IJK
+      INTEGER :: I,J,K
 
 !                      Total volume of computational cells
       DOUBLE PRECISION SUM_VOL
@@ -90,7 +90,7 @@ CONTAINS
 ! gas mass flux
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
 
-      INTEGER :: I,J,K, IJK
+      INTEGER :: I,J,K
 
 ! Integral of U_g*ROP_g*Area
       DOUBLE PRECISION :: SUM_G

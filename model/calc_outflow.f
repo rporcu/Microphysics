@@ -23,7 +23,7 @@
       use fldvar, only: rop_g, ep_g
       use functions, only: fluid_at
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk, iplus, iminus, jplus, jminus, kplus, kminus
+      use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use compar, only: dead_cell_at
       IMPLICIT NONE
 
@@ -35,7 +35,7 @@
 ! Local variables
 !--------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !--------------------------------------------------------------------//
 
       BC_OUT_N(L) = BC_OUT_N(L) + 1
@@ -45,7 +45,6 @@
 ! Check if current i,j,k resides on this PE
                IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-               IJK = FUNIJK(I,J,K)
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&

@@ -60,11 +60,7 @@
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K, IP, JM, KM
-      INTEGER :: IJK, IJKE, IJKN, IJKS, IJKT, IJKB
-      INTEGER :: IJKNE, IJKSE, IJKTE, IJKBE
-      INTEGER :: IPJK, IMJK, IJMK, IJKM
-      INTEGER :: IPJMK, IPJKM
-      INTEGER :: itmp, jtmp, ktmp
+      INTEGER :: IJK
 ! Average volume fraction
       DOUBLE PRECISION :: EPGA
 ! Average viscosity
@@ -81,8 +77,6 @@
             DO I = istart3, iend3
 
             IJK  = FUNIJK(i,j,k)
-            IJKE = FUNIJK(ieast(i,j,k),j,k)
-
             EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
             IF (.NOT.ip_at_e(i,j,k) .AND. EPGA>DIL_EP_S) THEN
@@ -90,39 +84,6 @@
                IP = IP1(I)
                JM = JM1(J)
                KM = KM1(K)
-
-               IPJK = FUNIJK(iplus(i,j,k),j,k)
-               IMJK = FUNIJK(iminus(i,j,k),j,k)
-               IJMK = FUNIJK(i,jminus(i,j,k),k)
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
-
-               itmp = iplus(i,j,k)
-               IPJMK = FUNIJK(itmp,jminus(itmp,j,k),k)
-
-
-               IPJMK = FUNIJK(iplus(i,j,k),jminus(i,j,k),k)
-
-               ktmp = kminus(i,j,k)
-               IPJKM = FUNIJK(iplus(i,j,ktmp),j,ktmp)
-
-               IJKE = FUNIJK(ieast(i,j,k),j,k)
-
-               jtmp = jnorth(i,j,k)
-               IJKN  = FUNIJK(i,jtmp,k)
-               IJKNE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
-
-               jtmp = jsouth(i,j,k)
-               IJKS  = FUNIJK(i,jtmp,k)
-               IJKSE = FUNIJK(ieast(i,jtmp,k),jtmp,k)
-
-               ktmp = ktop(i,j,k)
-               IJKT  = FUNIJK(i,j,ktmp)
-               IJKTE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
-
-               ktmp = kbot(i,j,k)
-               IJKB  = FUNIJK(i,j,ktmp)
-               IJKBE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
-
 
 ! Surface forces at i+1/2, j, k
 ! bulk viscosity term
@@ -143,21 +104,29 @@
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
-               SSY = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,jtmp,k)),&
-                           AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*&
-                        (V_G(iplus(i,j,k),j,k)-V_G(I,J,K))*ODX*AXZ - &
-                     AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(i,j,k)),&
-                           AVG_H(MU_G(ieast(i,jtmp,k),jtmp,k),MU_G(ieast(i,j,k),j,k)))*&
-                           (V_G(iplus(i,j,k),jminus(i,j,k),k)-&
-                           V_G(i,jminus(i,j,k),k))*ODX*AXZ
+               SSY = AVG_H(AVG_H(MU_G(i,j,k), &
+                                 MU_G(i,jnorth(i,j,k),k)), &
+                           AVG_H(MU_G(ieast(i,j,k),j,k), &
+                                 MU_G(ieast(i,jnorth(i,j,k),k),jnorth(i,j,k),k))) &
+                     *(V_G(iplus(i,j,k),j,k)-V_G(I,J,K))*ODX*AXZ &
+                     - AVG_H(AVG_H(MU_G(i,jsouth(i,j,k),k), &
+                                   MU_G(i,j,k)), &
+                             AVG_H(MU_G(ieast(i,jsouth(i,j,k),k),jsouth(i,j,k),k), &
+                                   MU_G(ieast(i,j,k),j,k))) &
+                          *(V_G(iplus(i,j,k),jminus(i,j,k),k) &
+                         - V_G(i,jminus(i,j,k),k))*ODX*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at i+1/2, j, (k+1/2 - k-1/2)
-               MU_GE = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,j,ktmp)),&
-                             AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktmp),j,ktmp)))
-               MU_GBE = AVG_H(AVG_H(MU_G(i,j,ktmp),MU_G(i,j,k)),&
-                              AVG_H(MU_G(ieast(i,j,ktmp),j,ktmp),MU_G(ieast(i,j,k),j,k)))
+               MU_GE = AVG_H(AVG_H(MU_G(i,j,k), &
+                                   MU_G(i,j,ktop(i,j,k))), &
+                             AVG_H(MU_G(ieast(i,j,k),j,k), &
+                                   MU_G(ieast(i,j,ktop(i,j,k)),j,ktop(i,j,k))))
+               MU_GBE = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)), &
+                                    MU_G(i,j,k)), &
+                              AVG_H(MU_G(ieast(i,j,kbot(i,j,k)),j,kbot(i,j,k)), &
+                                    MU_G(ieast(i,j,k),j,k)))
                SSZ = MU_GE*(W_G(iplus(i,j,k),j,k)-W_G(I,J,K))*ODX*AXY - &
                   MU_GBE*(W_G(IPlus(i,j,k),J,KMinus(i,j,k))-&
                   W_G(I,J,KMinus(i,j,k)))*ODX*AXY

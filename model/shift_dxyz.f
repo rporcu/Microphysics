@@ -26,32 +26,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE SHIFT_DXYZ
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
       USE param
       USE param1
       USE geometry
       IMPLICIT NONE
-!-----------------------------------------------
-!   G l o b a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
-!              loop counter
-      INTEGER :: LC
-!-----------------------------------------------
-!
-!
-!
       RETURN
       END SUBROUTINE SHIFT_DXYZ
-
-!// Comments on the modifications for DMP version implementation
-!// 120 Added new initializations at IMAX2, JMAX2, KMAX2 etc.

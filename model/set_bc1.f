@@ -73,7 +73,7 @@
       use param1, only: undefined
 
       use functions, only: is_on_mype_plus2layers
-      use functions, only: funijk, iminus, jminus, kminus
+      use functions, only: iminus, jminus, kminus
       use compar, only: dead_cell_at
 
       IMPLICIT NONE
@@ -85,7 +85,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .AND. &
@@ -107,7 +107,6 @@
          DO I = BC_I_W(BCV), BC_I_E(BCV)
             IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I,J,K)
 ! Why is the velocity of the boundary cell not always set (in case of
 ! w, s, or b plane then velocity of the adjacent fluid cell is set)?
 ! It should not really matter for MI...
@@ -202,7 +201,7 @@
       use bc, only: bc_vout_g
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
-      use functions, only: funijk, iminus, jminus, kminus
+      use functions, only: iminus, jminus, kminus
       use functions, only: is_on_mype_plus2layers
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero, small_number
@@ -217,7 +216,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
       CALL CALC_OUTFLOW(BCV)
@@ -284,7 +283,6 @@
          DO I = BC_I_W(BCV), BC_I_E(BCV)
             IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I,J,K)
             SELECT CASE (TRIM(BC_PLANE(BCV)))
             CASE ('W'); U_G(iminus(i,j,k),j,k) = BC_U_G(BCV)
             CASE ('E'); U_G(I,J,K) = BC_U_G(BCV)

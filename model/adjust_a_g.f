@@ -10,7 +10,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    USE geometry, only: ayz, axz, axy
    USE fldvar, only: rop_g
-   USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop, funijk
+   USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
    contains
 
@@ -56,7 +56,6 @@
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
-      use functions, only: funijk
       use compar, only: istart2, iend2
       use compar, only: jstart2, jend2
       use compar, only: kstart2, kend2
@@ -75,7 +74,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !                      Indices
-      INTEGER          IP, IJK
+      INTEGER          IP
 !
 !                      Phase index
       INTEGER          M, I, J, K
@@ -111,8 +110,6 @@
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
-
-         IJK = FUNIJK(i,j,k)
 
          IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
             A_M(I,J,K,E) = ZERO

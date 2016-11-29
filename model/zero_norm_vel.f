@@ -33,7 +33,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      integer :: i,j,k,ijk
+      integer :: i,j,k
 
       do k = kstart3, kend3
         do j = jstart3, jend3

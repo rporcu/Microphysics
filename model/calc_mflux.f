@@ -38,7 +38,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE functions, only: funijk, fluid_at
+      USE functions, only: fluid_at
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
