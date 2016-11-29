@@ -121,7 +121,7 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-! fluxes through faces of given ijk u-momentum cell
+! fluxes through faces of given u-momentum cell
       DOUBLE PRECISION, INTENT(OUT) :: flux_e, flux_w
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
       DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
@@ -130,22 +130,17 @@
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: itmp,ktmp
-
-!---------------------------------------------------------------------//
-! indices
-      itmp  = iminus(i,j,k)
-      ktmp  = kminus(i,j,k)
 
       Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(i,jplus(i,j,k),k))
-      Flux_w = HALF * (Flux_gE(itmp,j,k) + Flux_gE(itmp,jplus(itmp,j,k),k))
+      Flux_w = HALF * (Flux_gE(iminus(i,j,k),j,k) + Flux_gE(iminus(i,j,k),jplus(iminus(i,j,k),j,k),k))
 
       Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(i,jplus(i,j,k),k))
       Flux_s = HALF * (Flux_gN(i,jminus(i,j,k),k) + Flux_gN(i,j,k))
 
       IF (DO_K) THEN
          Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,jplus(i,j,k),k))
-         Flux_b = HALF * (Flux_gT(i,j,ktmp) + Flux_gT(i,jplus(i,j,ktmp),ktmp))
+         Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + &
+                          Flux_gT(i,jplus(i,j,kminus(i,j,k)),kminus(i,j,k)))
       ENDIF
 
       RETURN
@@ -173,7 +168,7 @@
       USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
 
-      USE functions, only: im1, jp1, km1, funijk
+      USE functions, only: im1, jp1, km1
 
       use matrix, only: e, w, n, s, t, b
       USE param1, only: zero
@@ -182,41 +177,26 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-! diffusion through faces of given ijk v-momentum cell
+! diffusion through faces of given v-momentum cell
       DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
-! ijk index
+
       INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
+      INTEGER :: jc, jn
 !---------------------------------------------------------------------//
-! indices
-      INTEGER :: jp, im, km, jc
-      INTEGER :: ijke, ijkne, ijkw, ijknw
-      INTEGER :: itmp, jtmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
-
-      IM = IM1(I)
-      JP = JP1(J)
-      KM = KM1(K)
-
-      jtmp  = jnorth(i,j,k)
-      IJKNE = funijk(ieast(i,jtmp,k),jtmp,k)
+      jn = jnorth(i,j,k)
 
       IF (wall_at(i,j,k)) THEN
-         jc = jtmp
+         jc = jn
       ELSE
          jc = j
       ENDIF
-
-      IJKE = funijk(ieast(i,j,k),j,k)
-
-      itmp  = iwest(i,j,k)
-      IJKW  = funijk(itmp,j,k)
-      IJKNW = funijk(itmp,jnorth(itmp,j,k),k)
 
       C_AE = ODX
       C_AW = ODX
@@ -227,14 +207,17 @@
 
 ! East face (i+1/2, j+1/2, k)
       D_Fe = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(ieast(i,j,k),j,k)),&
-                   AVG_H(MU_G(i,jtmp,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*C_AE*AYZ
+                   AVG_H(MU_G(i,jn,k), &
+                         MU_G(ieast(i,jn,k),jn,k)))*C_AE*AYZ
 ! West face (i-1/2, j+1/2, k)
-      D_Fw = AVG_H(AVG_H(MU_G(itmp,j,k),MU_G(i,jc,k)),&
-                   AVG_H(MU_G(itmp,jnorth(itmp,j,k),k),MU_G(i,jtmp,k)))*C_AW*AYZ
+      D_Fw = AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k),MU_G(i,jc,k)),&
+                   AVG_H(MU_G(iwest(i,j,k),jnorth(iwest(i,j,k),j,k),k),&
+                         MU_G(i           ,jn,k)))*C_AW*AYZ
 
-! North face (i, j+1, k)
-      D_Fn = MU_G(i,jtmp,k)*C_AN*AXZ
-! South face (i, j, k)
+      ! North face (i, j+1, k)
+      D_Fn = MU_G(i,jn,k)*C_AN*AXZ
+
+      ! South face (i, j, k)
       D_Fs = MU_G(i,jc,k)*C_AS*AXZ
 
       D_FT = ZERO
@@ -243,12 +226,11 @@
 
 ! Top face (i, j+1/2, k+1/2)
          D_Ft = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(i,j,ktop(i,j,k))),&
-                      AVG_H(MU_G(i,jtmp,k),MU_G(i,jnorth(i,j,ktop(i,j,k)),ktop(i,j,k))))*C_AT*AXY
+                      AVG_H(MU_G(i,jn,k),MU_G(i,jnorth(i,j,ktop(i,j,k)),ktop(i,j,k))))*C_AT*AXY
 ! Bottom face (i, j+1/2, k-1/2)
          D_Fb = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(i,jc,k)),&
-                      AVG_H(MU_G(i,jnorth(i,j,kbot(i,j,k)),kbot(i,j,k)),MU_G(i,jtmp,k)))*C_AB*AXY
+                      AVG_H(MU_G(i,jnorth(i,j,kbot(i,j,k)),kbot(i,j,k)),MU_G(i,jn,k)))*C_AB*AXY
       ENDIF   ! end if (do_k)
-
 
       RETURN
 
@@ -281,11 +263,9 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_n
-
       USE geometry, only: do_k
-
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 

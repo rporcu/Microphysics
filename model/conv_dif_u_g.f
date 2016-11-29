@@ -117,7 +117,7 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-! fluxes through faces of given ijk u-momentum cell
+! fluxes through faces of given u-momentum cell
 
       DOUBLE PRECISION, INTENT(OUT) :: flux_e, flux_w
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
@@ -154,7 +154,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, wall_at
+      USE functions, only: wall_at
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: ieast, jnorth, jsouth, ktop, kbot
       USE functions, only: iminus, jminus, kminus
@@ -263,7 +263,6 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: funijk
       USE functions, only: flow_at_e
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
@@ -391,17 +390,12 @@
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE fldvar, only: u_g
 
-      USE functions, only: funijk
       USE functions, only: flow_at_e
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-
-      USE geometry, only: do_k
-
-      USE param1, only: one
-
-      use matrix, only: e, w, n, s, t, b
-
-      USE run, only: discretize
+      USE geometry , only: do_k
+      USE param1   , only: one
+      use matrix   , only: e, w, n, s, t, b
+      USE run      , only: discretize
 
       USE xsi, only: calc_xsi
       USE xsi_array, only: xsi_e, xsi_n, xsi_t

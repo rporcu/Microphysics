@@ -48,7 +48,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I, J, K, IJK, IMJK, IJMK, IJKM
+      INTEGER :: I, J, K
 ! Logical variable to set, if there is an error
       LOGICAL :: ABORT
 !-----------------------------------------------
@@ -71,12 +71,7 @@
       DO K = kstart2, kend2
       DO J = jstart2, jend2
       DO I = istart2, iend2
-         IJK = FUNIJK(I,J,K)
          IF (.NOT.wall_at(i,j,k)) THEN
-
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
 
 ! check gas phase fields
             IF(EP_G(I,J,K) == UNDEFINED) &
@@ -134,7 +129,6 @@
       DO K = kstart2, kend2
       DO J = jstart2, jend2
       DO I = istart2, iend2
-         IJK = FUNIJK(I,J,K)
 
          IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
 

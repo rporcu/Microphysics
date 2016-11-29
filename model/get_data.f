@@ -12,18 +12,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar
-      USE des_allocate
-      USE discretelement
-      USE error_manager
-      USE funits
-      USE gridmap
-      USE leqsol
-      USE param
-      USE param1
-      USE run
-      use desgrid, only: DESGRID_INIT
-      use mpi_init_des, only: DESMPI_INIT
+      USE des_allocate   , only: des_allocate_arrays
+      USE discretelement , only: discrete_element
+      USE error_manager  , only: init_error_manager
+      USE gridmap        , only: gridmap_init
+      USE run            , only: run_type, run_name
+      use desgrid        , only: desgrid_init
+      use mpi_init_des   , only: desmpi_init
       use stl_preproc_des, only: DES_STL_PREPROCESSING
 
       IMPLICIT NONE
@@ -32,7 +27,6 @@
 !-----------------------------------------------
 ! shift DX, DY and DZ values
       LOGICAL, PARAMETER :: SHIFT = .TRUE.
-
 
 ! This module call routines to initialize the namelist variables.
       CALL INIT_NAMELIST
@@ -56,7 +50,7 @@
       CALL CHECK_GEOMETRY_PREREQS
       CALL CHECK_DMP_PREREQS
 
-! Set up the physical domain indicies (cell index max/min values).
+! Set up the physical domain indices (cell index max/min values).
       CALL SET_MAX2
 
 ! Set constants

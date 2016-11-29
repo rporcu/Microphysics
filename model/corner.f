@@ -10,14 +10,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_CORNER_CELLS()
 
-      USE compar
-      USE functions
-      USE funits
-      USE geometry
-      use matrix, only: e, w, s, n, t, b
-      USE param
-      USE param1
-      USE physprop
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+      USE functions, only: fluid_at, cyclic_at, wall_at
+      USE param1   , only: max_ncorn
+      USE funits   , only: dmp_log, unit_log
+      USE geometry , only: do_k
+      use matrix   , only: e, w, s, n, t, b
 
       IMPLICIT NONE
 
@@ -26,7 +25,6 @@
 
 !
 !                      indices
-      INTEGER          IJK, IMJK, IJMK, IJKM, IPJK, IJPK, IJKP
       INTEGER          i, j, k
 !
 !                      number of faces adjacent to a fluid cell
@@ -37,7 +35,7 @@
 !
 !-----------------------------------------------
 !
-!                      IJK indices of corner cells
+!                      indices of corner cells
       INTEGER          IJK_CORN (MAX_NCORN)
 !
 !                      Number of corner cells
@@ -49,17 +47,7 @@
          do j = jstart3, jend3
            do i = istart3, iend3
 
-           ijk = funijk(i,j,k)
-
          IF (WALL_AT(i,j,k).AND..NOT.CYCLIC_AT(i,j,k)) THEN
-!
-!----------------------------------------------------------------
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJPK = FUNIJK(i,jplus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
-            IJKP = FUNIJK(i,j,kplus(i,j,k))
 !----------------------------------------------------------------
             NUM = 0
 !
@@ -204,8 +192,7 @@
             IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
 !
          DO L = 1, NCORN
-            IJK = IJK_CORN(L)
-            IF(DMP_LOG)WRITE (UNIT_LOG, 1100) IJK
+            IF(DMP_LOG)WRITE (UNIT_LOG, 1100) IJK_CORN(L)
          END DO
          IF(DMP_LOG)WRITE (UNIT_LOG, 1300)
       ENDIF

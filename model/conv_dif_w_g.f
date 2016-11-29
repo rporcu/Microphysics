@@ -106,7 +106,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, iminus, iplus, jminus, jplus, kminus, kplus
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE fldvar   , only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
@@ -114,11 +114,11 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-! fluxes through faces of given ijk u-momentum cell
+! fluxes through faces of given u-momentum cell
       DOUBLE PRECISION, INTENT(OUT) :: flux_e, flux_w
       DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
       DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
-! ijk index
+
       INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
@@ -156,7 +156,7 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: funijk, wall_at
+      USE functions, only: wall_at
       USE functions, only: ieast, iwest, jnorth, jsouth, ktop
       USE functions, only: iminus, jminus, kminus
 
@@ -172,7 +172,7 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-! diffusion through faces of given ijk w-momentum cell
+! diffusion through faces of given w-momentum cell
       DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb

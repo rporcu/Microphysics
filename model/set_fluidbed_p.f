@@ -14,24 +14,22 @@
 !-----------------------------------------------
       USE bc
       USE compar
-      USE constant
-      USE discretelement
-      USE eos, ONLY: EOSG
-      USE fldvar
-      USE functions
-      USE funits
+      USE constant , only: gravity_y
+      USE eos      , ONLY: EOSG
+      USE fldvar   , only: p_g, ep_g
+      USE fldvar   , only: mw_avg, ro_g0
+      USE functions, only: is_on_mype_owns, fluid_at
+      use funits   , only: dmp_log, unit_log
       USE geometry
-      USE ic
-      USE param
-      USE param1
-      USE physprop
-      USE scales
+      USE ic       , only: ic_p_g, ic_defined
+      USE param1   , only: undefined
+      USE scales   , only: scale_pressure
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! Local loop counter
       INTEGER :: L
 ! Gas pressure at the axial location j
@@ -70,7 +68,6 @@
 ! Bound Checking
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                  IJK = FUNIJK(I,J,K)
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -87,7 +84,6 @@
 ! Bound Checking
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                  IJK = FUNIJK(I,J,K)
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -104,7 +100,6 @@
 ! Bound Checking
                   IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                  IJK = FUNIJK(I,J,K)
                   IF (fluid_at(i,j,k)) P_G(I,J,K) = SCALE_PRESSURE(PJ)
                ENDDO
             ENDDO
@@ -131,7 +126,6 @@
             DO K = kstart3, kend3
             DO J = jstart3, jend3
             DO I = istart3, iend3
-               IJK = FUNIJK(i,j,k)
                IF (fluid_at(i,j,k)) P_G(I,J,K) = ZERO
             ENDDO
             ENDDO
@@ -162,7 +156,6 @@
             DO I = IMIN1, IMAX1
                IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-               IJK = FUNIJK(I,J,K)
                IF (fluid_at(i,j,k)) THEN
                   DAREA = DX*DZ
                   AREA = AREA + DAREA
@@ -187,7 +180,6 @@
             DO I = IMIN1, IMAX1
                IF(.NOT.IS_ON_MYPE_OWNS(I,J,K)) CYCLE
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-               IJK = FUNIJK(I,J,K)
                IF(fluid_at(i,j,k).AND.P_G(I,J,K)==UNDEFINED)P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)

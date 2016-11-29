@@ -50,7 +50,6 @@
 !---------------------------------------------------------------------//
       use fldvar, only: LAMBDA_G
 
-      use functions, only: FUNIJK
       use functions, only: FLOW_AT
       use fldvar, only: MU_G
       use compar, only: DEAD_CELL_AT
@@ -60,7 +59,7 @@
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Loop counters
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! Integer error flag.
       INTEGER :: IER
 !......................................................................!
@@ -75,8 +74,6 @@
       DO I = ISTART2, IEND2
 
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-
-         IJK = FUNIJK(I,J,K)
 
          IF(FLOW_AT(i,j,k)) THEN
 
@@ -125,7 +122,6 @@
       use toleranc, only: TMIN, TMAX, TOL_COM
       use fldvar, only: MU_G
 
-      use functions, only: FUNIJK
       use functions, only: WALL_AT
       use compar, only: DEAD_CELL_AT
 
@@ -133,7 +129,7 @@
 
 ! Local variables:
 !---------------------------------------------------------------------//
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! Integer error flag.
       INTEGER :: IER
 
@@ -146,7 +142,6 @@
       DO J = JSTART2, JEND2
       DO I = ISTART2, IEND2
          IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-         IJK = FUNIJK(I,J,K)
          IF (.NOT.WALL_AT(i,j,k)) THEN
 
 ! Gas viscosity must be non-negative.
