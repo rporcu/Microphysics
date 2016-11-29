@@ -10,7 +10,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(A_M, B_M)
+      SUBROUTINE CONV_DIF_W_G(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -19,30 +19,41 @@
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
-      use fldvar
-      IMPLICIT NONE
 
-! Dummy arguments
+      implicit none
+
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
-      DOUBLE PRECISION :: B_m&
+
+      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (A_M)
+         CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt)
       ELSE
-         CALL STORE_A_W_G1 (A_M)
+         CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
       ENDIF
 
-      RETURN
       END SUBROUTINE CONV_DIF_W_G
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -105,16 +116,28 @@
 !  bottom face.                                                        C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GCFLUX_TERMS(FLUX_E, FLUX_W, FLUX_N, &
-         FLUX_S, FLUX_T, FLUX_B, I, J, K)
+      SUBROUTINE GET_WCELL_GCFLUX_TERMS(&
+         FLUX_E, FLUX_W, FLUX_N, &
+         FLUX_S, FLUX_T, FLUX_B, &
+         flux_ge, flux_gn, flux_gt, i, j, k)
 
 ! Modules
 !---------------------------------------------------------------------//
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
+
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE fldvar   , only: flux_ge, flux_gn, flux_gt
 
       USE param1, only: half
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -155,15 +178,17 @@
 !  or bottom face.                                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GDIFF_TERMS(D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, I, J, K)
+      SUBROUTINE GET_WCELL_GDIFF_TERMS(&
+         D_FE, D_FW, D_FN, D_FS, &
+         D_FT, D_FB, MU_G, I, J, K)
 
 ! Modules
 !---------------------------------------------------------------------//
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+
       USE functions, only: wall_at
       USE functions, only: ieast, iwest, jnorth, jsouth, ktop
       USE functions, only: iminus, jminus, kminus
-
 
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
@@ -171,7 +196,7 @@
       USE functions, only: im1, jm1, kp1
 
       use matrix, only: e, w, n, s, t, b
-      use fldvar
+
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -180,6 +205,9 @@
       DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
       DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
       DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
+
+      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -259,7 +287,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(A_W_G)
+      SUBROUTINE STORE_A_W_G0(A_W_G, MU_G, flux_ge, flux_gn, flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -278,6 +306,16 @@
 ! Septadiagonal matrix A_U_g
       DOUBLE PRECISION, INTENT(INOUT) :: A_W_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -297,11 +335,13 @@
          IF (FLOW_AT_T(i,j,k)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-            CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, i, j, k)
+            CALL GET_WCELL_GCFLUX_TERMS(&
+               flux_e, flux_w, flux_n, &
+               flux_s, flux_t, flux_b, &
+               flux_ge, flux_gn, flux_gt, i, j, k)
 
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, i, j, k)
+               d_ft, d_fb, mu_g, i, j, k)
 
 ! East face (i+1/2, j, k+1/2)
             IF (Flux_e >= ZERO) THEN
@@ -381,12 +421,11 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(A_W_G)
+      SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE fldvar, only: u_g, v_g, w_g
 
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: flow_at_t
@@ -408,6 +447,23 @@
 ! Septadiagonal matrix A_W_g
       DOUBLE PRECISION, INTENT(INOUT) :: A_W_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -445,10 +501,12 @@
          IF (FLOW_AT_T(i,j,k)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-            CALL GET_WCELL_GCFLUX_TERMS(flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, i, j, k)
+            CALL GET_WCELL_GCFLUX_TERMS(&
+               flux_e, flux_w, flux_n, &
+               flux_s, flux_t, flux_b, &
+               flux_ge, flux_gn, flux_gt, i, j, k)
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, i, j, k)
+               d_ft, d_fb, mu_g, i, j, k)
 
 ! East face (i+1/2, j, k+1/2)
             A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
