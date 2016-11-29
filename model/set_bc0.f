@@ -543,8 +543,21 @@
       IJK_Pg_Owner = UNDEFINED_I
 
 ! Set the initial search region, a single cell.
-      lS1 = ll1 + (lu1-ll1)/2 + 1; lE1 = lS1
-      lS2 = ll2 + (lu2-ll2)/2 + 1; lE2 = lS2
+      if(ll1 == lu1) then
+         lS1 = ll1
+         lE1 = lu1
+      else
+         lS1 = ll1 + (lu1-ll1)/2 + 1
+         lE1 = lS1
+      endif
+
+      if(ll2 == lu2) then
+         lS2 = ll2
+         lE2 = lu2
+      else
+         lS2 = ll2 + (lu2-ll2)/2 + 1
+         lE2 = lS2
+      endif
 
       lpCnt = 1
       recheck = .TRUE.
