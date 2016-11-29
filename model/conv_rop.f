@@ -157,7 +157,6 @@
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
-      USE param, only: dimension_3
       USE param1, only: one
       USE xsi, only: calc_xsi
       USE xsi_array, only: xsi_e, xsi_n, xsi_t

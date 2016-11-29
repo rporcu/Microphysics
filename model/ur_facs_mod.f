@@ -20,7 +20,6 @@ MODULE ur_facs
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    SUBROUTINE UNDER_RELAX(VAR, A_M, B_M, AXIS, EQ)
 
-   use param, only: dimension_3
    use param1, only: one
    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 

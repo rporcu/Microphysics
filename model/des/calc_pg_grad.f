@@ -49,9 +49,7 @@
       implicit none
 
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, LC, I, J, K
-! Interpolation weight
-      DOUBLE PRECISION :: WEIGHT
+      INTEGER :: NP, IJK, I, J, K
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lPF(3)
 ! Loop bound for

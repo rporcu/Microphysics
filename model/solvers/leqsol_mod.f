@@ -110,7 +110,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend, nlayers_bicgs
+    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend
     USE geometry, ONLY: do_k
     USE param, ONLY: DIMENSION_3
       use compar, only: istart3, iend3

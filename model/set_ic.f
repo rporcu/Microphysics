@@ -12,7 +12,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart3,iend,jstart3,jend3,kstart3,kend3
+      USE compar, only: istart3,jstart3,jend3,kstart3,kend3
       USE ic
       USE scales, only: scale_pressure
       USE functions

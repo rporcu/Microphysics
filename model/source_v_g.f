@@ -219,8 +219,7 @@
 ! Boundary condition
       INTEGER :: L
 ! Indices
-      INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2, &
-                 IM, KM, IJMK
+      INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2
 ! Phase index
       INTEGER :: M
 !-----------------------------------------------

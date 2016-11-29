@@ -22,7 +22,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Loop counters: partciles, filter cells, phases
-      INTEGER NP, LC, M
+      INTEGER NP, M
 ! Fluid cell index
       INTEGER I,J,K,IJK
 ! Total Mth solids phase volume in IJK

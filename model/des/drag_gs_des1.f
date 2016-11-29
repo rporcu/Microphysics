@@ -18,16 +18,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_DES1
 
-! Flag: The fluid and discrete solids are explicitly coupled.
-      use discretelement, only: DES_EXPLICITLY_COUPLED
 ! Gas phase volume fraction
       use fldvar, only: EP_G
 ! Gas phase velocities
       use fldvar, only: U_G, V_G, W_G
 ! Size of particle arrays on this processor.
       use discretelement, only: MAX_PIP
-! Flag to use interpolation
-      use particle_filter, only: DES_INTERP_ON
 ! IJK of fluid cell containing particles center
       use discretelement, only: PIJK
 ! Drag force on each particle
@@ -40,8 +36,6 @@
       use discretelement, only: P_FORCE
 ! Particle volume.
       use discretelement, only: PVOL
-! Particle drag force
-      use discretelement, only: DRAG_FC
 ! Flag for 3D simulations.
       use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
@@ -60,9 +54,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, LC
-! Interpolation weight
-      DOUBLE PRECISION :: WEIGHT
+      INTEGER :: NP, IJK
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lEPg, VELFP(3), lPF(3)
 ! Drag force acting on each particle.
@@ -151,17 +143,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_GAS1
 
-! Flag: The fluid and discrete solids are explicitly coupled.
-      use discretelement, only: DES_EXPLICITLY_COUPLED
 ! Gas phase volume fraction
       use fldvar, only: EP_G
 ! Gas phase velocities
       use fldvar, only: U_G, V_G, W_G
-      use fldvar, only: U_GO, V_GO, W_GO
 ! Size of particle array on this process.
       use discretelement, only: MAX_PIP
-! Flag to use interpolation
-      use particle_filter, only: DES_INTERP_ON
 ! IJK of fluid cell containing particles center
       use discretelement, only: PIJK
 ! Drag force on each particle
@@ -174,8 +161,6 @@
       use discretelement, only: F_GDS
 ! Volume of scalar cell.
       use geometry, only: VOL
-! Flag for 3D simulatoins.
-      use geometry, only: DO_K
 
       use functions, only: IS_NONEXISTENT, IS_ENTERING, &
          IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
@@ -192,13 +177,11 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, LC, I, J, K
+      INTEGER :: NP, IJK, I, J, K
 ! Interpolation weight
       DOUBLE PRECISION :: WEIGHT
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lEPg, VELFP(3)
-! Loop bound for filter
-      INTEGER :: LP_BND
 ! Drag force (intermediate calculation)
       DOUBLE PRECISION :: lFORCE
 ! Drag sources for fluid (intermediate calculation)

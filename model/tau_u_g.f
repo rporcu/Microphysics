@@ -40,7 +40,6 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE param, only: dimension_3
       USE param1, only: zero, half
       USE fldvar, only: ep_g, u_g, v_g, w_g, w_g, lambda_g, mu_g
       USE functions

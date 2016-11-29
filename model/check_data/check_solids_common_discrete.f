@@ -221,8 +221,6 @@
       use particle_filter, only: DES_INTERP_MEAN_FIELDS
 ! Flag: Interplate variables for drag calculation.
       use particle_filter, only: DES_INTERP_ON
-! Runtime FLag: 3D simulation
-      use geometry, only: DO_K
 
       use param1, only: UNDEFINED
 

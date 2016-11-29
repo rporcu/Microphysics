@@ -61,8 +61,6 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K
-! index for boundary cell
-      INTEGER :: IJK
 ! index for a fluid cell adjacent to the boundary cell
       INTEGER :: FIJK
 ! local value for normal component of gas and solids velocity defined

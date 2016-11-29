@@ -17,11 +17,6 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION :: DXYZ_MIN, DG_DXYZ_MIN
-
-
-!......................................................................!
-
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("SET_FILTER_DES")
 
