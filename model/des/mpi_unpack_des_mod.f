@@ -267,6 +267,7 @@
       use des_allocate
       use functions, only: IS_NORMAL, IS_NONEXISTENT
       use functions, only: SET_ENTERING, SET_EXITING, SET_NORMAL
+      use functions, only: funijk
 
       implicit none
 
@@ -329,8 +330,13 @@
          dg_pijkprv(llocpar) = lprvijk
 ! 4) Radius
          call unpack_dbuf(lbuf,des_radius(llocpar),pface)
-! 5-9) Fluid cell I,J,K,IJK, and solids phase index
-         call unpack_dbuf(lbuf,pijk(llocpar,:),pface)
+! 5-9) Fluid cell I,J,K, and solids phase index
+         call unpack_dbuf(lbuf,pijk(llocpar,1),pface)
+         call unpack_dbuf(lbuf,pijk(llocpar,2),pface)
+         call unpack_dbuf(lbuf,pijk(llocpar,3),pface)
+         call unpack_dbuf(lbuf,pijk(llocpar,5),pface)
+         pijk(llocpar,4) = funijk(pijk(llocpar,1), pijk(llocpar,2),&
+            pijk(llocpar,3))
 ! 10) Entering particle flag.
          call unpack_dbuf(lbuf,tmp,pface)
          if (tmp) CALL SET_ENTERING(llocpar)

@@ -102,12 +102,12 @@
 
          WRITE (UNIT_OUT, 5050) (LL3,LL3=IFORM1,IFORM2)
          DO LL2 = JMAX2, 1, -1
-            IJK = funijk_io(IFORM1,LL2,1)
-            IJ2 = funijk_io(IFORM2,LL2,1)
+            IJK = funijk(IFORM1,LL2,1)
+            IJ2 = funijk(IFORM2,LL2,1)
 !efd
 !            WRITE (UNIT_OUT, 5100) LL2, (ARRAY(LL3),LL3=IJK,IJ2)
             WRITE (UNIT_OUT, 5100) LL2,  &
-                     (ARRAY(funijk_io(LL3,LL2,1)),LL3=IFORM1,IFORM2)
+                     (ARRAY(funijk(LL3,LL2,1)),LL3=IFORM1,IFORM2)
          END DO
       END DO
  5050 FORMAT(3X,'J',3X,'I=',3X,10(I3,9X))

@@ -8,9 +8,6 @@ MODULE functions
 ! Functions for generating IJK indices for indicated basis:
 !---------------------------------------------------------------------//
 ! INTEGER :: FUNIJK
-! INTEGER :: FUNIJK_PROC
-! INTEGER :: FUNIJK_GL
-! INTEGER :: FUNIJK_IO
 
 
 ! Logical functions to determine whether index is on my PE's domain or

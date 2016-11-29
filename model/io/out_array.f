@@ -54,13 +54,13 @@
 
       IF(CYCLIC_Z) then
         DO K = 2, KMAX1
-           IJK = FUNIJK_IO(1,1,K)
+           IJK = FUNIJK(1,1,K)
            WRITE (UNIT_OUT, 1100) MESSAGE, K
            CALL OUT_ARRAY_K (ARRAY1(IJK))
         END DO
       ELSE
         DO K = 1, KMAX2
-           IJK = FUNIJK_IO(1,1,K)
+           IJK = FUNIJK(1,1,K)
            WRITE (UNIT_OUT, 1100) MESSAGE, K
            CALL OUT_ARRAY_K (ARRAY1(IJK))
         END DO

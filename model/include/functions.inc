@@ -31,38 +31,6 @@
       funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
 
-! Function for generating the LOCAL 3-D array index IJK from the
-! the 1-D indices I, J, K and IPROC.
-      INTEGER FUNCTION FUNIJK_PROC(LI, LJ, LK, lproc)
-      USE compar
-      implicit none
-      INTEGER, INTENT(IN) :: LI, LJ, LK, lproc
-      FUNIJK_PROC = 1 + (li - istart3_all(lproc))+ &
-         (lj-jstart3_all(lproc))*(iend3_all(lproc)-istart3_all(lproc)+1) &
-         + (LK-kstart3_all(lproc))*(iend3_all(lproc)-istart3_all(lproc)+1)* &
-         (jend3_all(lproc)-jstart3_all(lproc)+1)
-      END FUNCTION FUNIJK_PROC
-
-! Function for generating the GLOBAL 3-D array index IJK from the
-! 1-D indices I, J, and K.
-      INTEGER FUNCTION FUNIJK_GL (LI, LJ, LK)
-      USE geometry
-      implicit none
-      INTEGER, INTENT(IN) :: LI, LJ, LK
-      FUNIJK_GL = 1 + (LJ - jmin3) + (LI-imin3)*(jmax3-jmin3+1) &
-         + (LK-kmin3)*(jmax3-jmin3+1)*(imax3-imin3+1)
-      END FUNCTION FUNIJK_GL
-
-! Function for generating the 3-D array index IJK from the 1-D indices
-! I, J, and K in IO format
-      INTEGER FUNCTION FUNIJK_IO (LI, LJ, LK)
-      USE geometry
-      implicit none
-      INTEGER, INTENT(IN) :: LI, LJ, LK
-      FUNIJK_IO = 1 + (LI - imin2) + (LJ-jmin2)*(imax2-imin2+1) &
-         + (LK-kmin2)*(jmax2-jmin2+1)*(imax2-imin2+1)
-      END FUNCTION FUNIJK_IO
-
 !----------------------------------------------------------------------!
 !  Function: IS_ON_myPE_OWNS                                           !
 !                                                                      !

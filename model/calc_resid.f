@@ -148,7 +148,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+            IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -352,7 +352,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+            IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -523,7 +523,7 @@
          do nproc=0,NumPEs-1
             if(nproc.eq.myPE) then
                MAX_RESID_L(nproc) = MAX_RESID
-               IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+               IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
             else
                MAX_RESID_L(nproc) = 0.0
                IJK_RESID_L(nproc) = 0
@@ -731,7 +731,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+            IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -936,7 +936,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+            IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0
@@ -1140,7 +1140,7 @@
       do nproc=0,NumPEs-1
          if(nproc.eq.myPE) then
             MAX_RESID_L(nproc) = MAX_RESID
-            IJK_RESID_L(nproc) = FUNIJK_GL(i_resid,j_resid,k_resid)
+            IJK_RESID_L(nproc) = FUNIJK(i_resid,j_resid,k_resid)
          else
             MAX_RESID_L(nproc) = 0.0
             IJK_RESID_L(nproc) = 0

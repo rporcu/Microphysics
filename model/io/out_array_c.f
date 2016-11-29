@@ -62,7 +62,7 @@
       call convert_to_io_c(array,array1c,ijkmax2)
 
       DO K = 1, KMAX2
-         IJK = FUNIJK_IO(1,1,K)
+         IJK = FUNIJK(1,1,K)
 
          WRITE (UNIT_OUT, 1100) MESSAGE, K
          CALL OUT_ARRAY_KC (ARRAY1C(IJK))

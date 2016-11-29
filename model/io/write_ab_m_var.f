@@ -79,11 +79,11 @@
 
       IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
-      IJK = FUNIJK_GL(IMAP_C(I),JMAP_C(J),KMAP_C(K))
+      IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
 
       if (myPE == PE_IO .AND. DMP_LOG)&
          WRITE (UNIT_LOG, '(I5, 3(I3), 9(1X,G9.2))') &
-         FUNIJK_IO(I,J,K), I, J, K,&
+         FUNIJK(I,J,K), I, J, K,&
          (A_M(i,j,k,L),L=-3,3), b_m(I,J,K), var(IJK)
 
       END DO

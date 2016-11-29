@@ -65,7 +65,7 @@
 
       if (myPE == PE_IO .AND. DMP_LOG) &
          WRITE (UNIT_LOG, '(I5, 3(I3), 8(1X,G9.2))') &
-         FUNIJK_IO(I,J,K), I, J, K,(A_M(i,j,k,L),L=-3,3), B_M(i,j,k)
+         FUNIJK(I,J,K), I, J, K,(A_M(i,j,k,L),L=-3,3), B_M(i,j,k)
 
       END DO
       END DO

@@ -961,10 +961,6 @@ CONTAINS
 !      double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
     double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
 !-----------------------------------------------
-! Local parameters
-!-----------------------------------------------
-    logical, parameter :: do_global_sum = .true.
-!-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
     DOUBLE PRECISION, allocatable, Dimension(:) :: r1_g, r2_g
@@ -972,7 +968,6 @@ CONTAINS
     integer :: i, j, k, ijk
 !-----------------------------------------------
 
-    if(do_global_sum) then
        prod = 0.0d0
 
           do k = kstart1, kend1
@@ -985,42 +980,6 @@ CONTAINS
           enddo
 
           ! call global_all_sum(prod, dot_product_par)
-
-    else
-       if(myPE.eq.root) then
-          allocate (r1_g(1:ijkmax3))
-          allocate (r2_g(1:ijkmax3))
-       else
-          allocate (r1_g(10))
-          allocate (r2_g(10))
-       endif
-       r1_g = r1
-       ! call gather(r1,r1_g)
-       r2_g = r2
-       ! call gather(r2,r2_g)
-
-       if(myPE.eq.root) then
-          prod = 0.0d0
-
-          do k = kmin1, kmax1
-             do i = imin1, imax1
-                do j = jmin1, jmax1
-                   ijk = funijk_gl (imap_c(i),jmap_c(j),kmap_c(k))
-!                     ijk = funijk_gl (i,j,k)
-                   prod = prod + r1_g(ijk)*r2_g(ijk)
-                enddo
-             enddo
-          enddo
-
-       endif
-       !call bcast( prod)
-
-       dot_product_par = prod
-
-       deallocate (r1_g)
-       deallocate (r2_g)
-
-    endif
 
   end function dot_product_par
 
@@ -1045,18 +1004,12 @@ CONTAINS
 !-----------------------------------------------
     double precision, intent(in), dimension(DIMENSION_3) :: r1,r2,r3,r4
 !-----------------------------------------------
-! Local parameters
-!-----------------------------------------------
-    logical, parameter :: do_global_sum = .true.
-!-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
     DOUBLE PRECISION, allocatable, Dimension(:,:) :: r_temp, rg_temp
     double precision, Dimension(2) :: prod, dot_product_par2
     integer :: i, j, k, ijk
 !-----------------------------------------------
-
-    if(do_global_sum) then
 
        prod(:) = 0.0d0
 
@@ -1074,44 +1027,6 @@ CONTAINS
        enddo
 
        ! call global_all_sum(prod, dot_product_par2)
-
-    else
-       allocate (r_temp(DIMENSION_3,4))
-       r_temp(:,1) = r1
-       r_temp(:,2) = r2
-       r_temp(:,3) = r3
-       r_temp(:,4) = r4
-
-       if(myPE.eq.root) then
-          allocate (rg_temp(1:ijkmax3,4))
-       else
-          allocate (rg_temp(10,4))
-       endif
-       rg_temp = r_temp
-       ! call gather(r_temp,rg_temp)
-
-       if(myPE.eq.root) then
-          prod = 0.0d0
-          do k = kmin1, kmax1
-             do i = imin1, imax1
-                do j = jmin1, jmax1
-                   IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                   ijk = funijk_gl (imap_c(i),jmap_c(j),kmap_c(k))
-!                     ijk = funijk_gl (i,j,k)
-                   prod(1) = prod(1) + rg_temp(ijk,1)*rg_temp(ijk,2)
-                   prod(2) = prod(2) + rg_temp(ijk,3)*rg_temp(ijk,4)
-                enddo
-             enddo
-          enddo
-       endif
-       !call bcast( prod)
-
-       dot_product_par2 = prod
-
-       deallocate (r_temp)
-       deallocate (rg_temp)
-
-    endif
 
   end function dot_product_par2
 

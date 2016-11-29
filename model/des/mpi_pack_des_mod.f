@@ -260,9 +260,6 @@
 ! 7) Fluid cell K index with cycle offset
             lk = pijk(lcurpar,3) + icycoffset(pface,3)
             call pack_dbuf(lbuf,lk,pface)
-! 8) Fluid cell IJK on destination process
-            call pack_dbuf(lbuf,funijk_proc(li,lj,lk,                  &
-               ineighproc(pface)),pface)
 ! 9) Particle solids phase index
             call pack_dbuf(lbuf,pijk(lcurpar,5),pface)
 ! 10) Entering particle flag.

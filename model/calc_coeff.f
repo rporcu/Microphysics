@@ -32,7 +32,7 @@
       INTEGER, intent(inout) :: IER
 !-----------------------------------------------
 
-      ! Calculate all physical properties, transport properties, 
+      ! Calculate all physical properties, transport properties,
       ! and exchange rates.
       CALL CALC_COEFF(IER, 2)
 
@@ -61,6 +61,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_COEFF(IER, pLevel)
 
+      use fldvar, only: ro_g, p_g, ep_g, rop_g, ro_g0
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DES_CONTINUUM_COUPLED
 
@@ -78,7 +79,7 @@
 !-----------------------------------------------------------------------
 
 ! Calculate physical properties: (density, specific heat, diameter)
-      CALL PHYSICAL_PROP(IER, pLevel)
+      CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0)
 
 ! Calculate interphase coeffs: (momentum and energy)
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED) &
