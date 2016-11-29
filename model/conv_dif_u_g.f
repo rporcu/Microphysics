@@ -1,3 +1,10 @@
+module u_g_conv_dif
+
+   private
+   public :: conv_dif_u_g
+
+   contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CONV_DIF_U_g                                            C
@@ -160,7 +167,7 @@
          Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(iplus(i,j,k),j,k))
          Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + Flux_gT(iplus(i,j,kminus(i,j,k)),j,kminus(i,j,k)))
       ENDIF
-  
+
       END SUBROUTINE GET_UCELL_GCFLUX_TERMS
 
 
@@ -543,3 +550,4 @@
 
       RETURN
       END SUBROUTINE STORE_A_U_G1
+end module u_g_conv_dif

@@ -1,3 +1,9 @@
+module w_g_conv_dif
+
+   private
+   public :: conv_dif_w_g
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CONV_DIF_W_g                                            C
@@ -543,3 +549,4 @@
 
       RETURN
       END SUBROUTINE STORE_A_W_G1
+end module w_g_conv_dif

@@ -8,6 +8,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOLVE_VEL_STAR(IER)
 
+      use u_g_conv_dif
+      use v_g_conv_dif
+      use w_g_conv_dif
+
       USE adjust_a  , only: adjust_a_g
       USE calc_d_mod, only: calc_d
       USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -15,9 +19,9 @@
       USE fldvar  , only: d_e, d_n, d_t, u_g, v_g, w_g
       USE fldvar  , only: flux_ge, flux_gn, flux_gt
       USE fldvar  , only: mu_g
-      USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc 
+      USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
       USE fun_avg , only: do_k
-      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm 
+      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE ur_facs , only: under_relax
       USE ps      , only: point_source
       USE residual, only: resid, den_resid, max_resid, ijk_resid, &
@@ -59,7 +63,7 @@
       CALL INIT_AB_M (A_M, B_M)
 
 ! calculate the convection-diffusion terms
-      CALL CONV_DIF_U_G (A_M, MU_G, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_U_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
 ! calculate the source terms for the gas and solids phase u-momentum
 ! equations
@@ -108,7 +112,7 @@
 ! ---------------------------------------------------------------->>>
       CALL INIT_AB_M (A_M, B_M)
 
-      CALL CONV_DIF_V_G (A_M, MU_G, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_V_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
       CALL SOURCE_V_G (A_M, B_M)
       IF(POINT_SOURCE) CALL POINT_SOURCE_V_G (A_M, B_M)
@@ -151,7 +155,7 @@
       IF (DO_K)THEN
          CALL INIT_AB_M (A_M, B_M)
 
-         CALL CONV_DIF_W_G (A_M, MU_G, flux_ge, flux_gn, flux_gt)
+         CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
          CALL SOURCE_W_G (A_M, B_M)
          IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)

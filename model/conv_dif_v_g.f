@@ -1,3 +1,9 @@
+module v_g_conv_dif
+
+   private
+   public :: conv_dif_v_g
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: CONV_DIF_V_g(A_m)                                 C
@@ -546,3 +552,4 @@
 
       RETURN
       END SUBROUTINE STORE_A_V_G1
+end module v_g_conv_dif
