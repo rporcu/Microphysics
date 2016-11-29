@@ -7,16 +7,16 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_FLUIDBED_P
+      SUBROUTINE SET_FLUIDBED_P(p_g, ep_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE compar
+      USE compar   , only: myPE
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE constant , only: gravity_y
       USE eos      , ONLY: EOSG
-      USE fldvar   , only: p_g, ep_g
       USE fldvar   , only: mw_avg, ro_g0
       USE functions, only: fluid_at
       use funits   , only: dmp_log, unit_log
@@ -24,7 +24,13 @@
       USE ic       , only: ic_p_g, ic_defined
       USE param1   , only: undefined
       USE scales   , only: scale_pressure
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

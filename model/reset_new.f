@@ -31,7 +31,4 @@
          enddo
       enddo
 
-      ! Recalculate all coefficients
-      CALL CALC_COEFF_ALL (0, ierr)
-
       end subroutine reset_new

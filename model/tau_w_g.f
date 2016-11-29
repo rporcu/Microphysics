@@ -35,13 +35,12 @@
 !  mu.grad(w)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_W_G(lTAU_W_G,trd_g)
+      SUBROUTINE CALC_TAU_W_G(lTAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero, half
-      USE fldvar, only: ep_g, u_g, v_g, w_g, w_g, lambda_g, mu_g
       USE functions
       USE toleranc, only: dil_ep_s
 
@@ -53,6 +52,19 @@
       DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: lTAU_w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables

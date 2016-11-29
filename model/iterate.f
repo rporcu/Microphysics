@@ -121,7 +121,8 @@
       IF (CALL_USR) CALL USR2
 
 ! Calculate coefficients, excluding density and reactions.
-      CALL CALC_COEFF(IER, 1)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 1)
+ 
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components

@@ -35,7 +35,7 @@
       CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
 
 ! Verify physical values for field variables.
-      CALL CHECK_PHYSICAL_BOUNDS
+      CALL CHECK_PHYSICAL_BOUNDS(mu_g) 
 
       RETURN
 
@@ -122,16 +122,19 @@
 !  specified variables.                                                !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_PHYSICAL_BOUNDS
+      SUBROUTINE CHECK_PHYSICAL_BOUNDS(mu_g)
 
 ! Global variables:
 !---------------------------------------------------------------------//
+      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use toleranc, only: TMIN, TMAX, TOL_COM
-      use fldvar, only: MU_G
 
       use functions, only: WALL_AT
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) ::     mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
 !---------------------------------------------------------------------//

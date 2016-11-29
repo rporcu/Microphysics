@@ -78,7 +78,7 @@
       IF (CALL_USR) CALL USR0
 
 ! Calculate all the coefficients once before entering the time loop
-      CALL CALC_COEFF(IER, 2)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 2)
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
@@ -127,10 +127,11 @@
       call update_old(  W_go,  W_g)
 
 ! Calculate coefficients
-      CALL CALC_COEFF_ALL (0, IER)
+      CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, 0)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
-      CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g)
+      CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
+                            ep_g,u_g,v_g,w_g,lambda_g,mu_g)
 
 ! Check rates and sums of mass fractions every NLOG time steps
       IF (NSTEP == NCHECK) THEN

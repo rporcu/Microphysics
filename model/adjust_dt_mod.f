@@ -134,6 +134,9 @@
             call reset_new(  V_g,  V_go)
             call reset_new(  W_g,  W_go)
 
+            ! Recalculate all coefficients
+            CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, 0)
+
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.
 

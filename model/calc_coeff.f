@@ -14,27 +14,35 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF_ALL(FLAG, IER)
+      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, FLAG)
 
 ! Global variables:
 !-----------------------------------------------------------------------
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+
       ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
 
       implicit none
 
-! Dummy arguments
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 !-----------------------------------------------------------------------
 ! FLAG = 0, overwrite the coeff arrays, (e.g. start of a time step)
 ! FLAG = 1, do not overwrite
       INTEGER, intent(in) :: FLAG
-! Error index
-      INTEGER, intent(inout) :: IER
 !-----------------------------------------------
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(IER, 2)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 2)
 
       IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT
 
@@ -59,24 +67,33 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF(IER, pLevel)
+      SUBROUTINE CALC_COEFF(ro_g, p_g, ep_g, rop_g, pLevel)
 
-      use fldvar, only: ro_g, p_g, ep_g, rop_g, ro_g0
+      use fldvar, only: ro_g0
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DES_CONTINUUM_COUPLED
 
       implicit none
 
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 ! Dummy arguments
 !-----------------------------------------------------------------------
-! Error index
-      INTEGER, intent(inout) :: IER
 ! Level to calculate physical properties.
 ! 0) Only density
 ! 1) Everything but density
 ! 2) All physical properties
       INTEGER, intent(in) :: pLevel
 !-----------------------------------------------------------------------
+      integer IER
 
 ! Calculate physical properties: (density, specific heat, diameter)
       CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0)
@@ -105,7 +122,8 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g)
+      SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
+                                  ep_g,u_g,v_g,w_g,lambda_g,mu_g)
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
@@ -121,12 +139,26 @@
       DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      CALL CALC_TRD_G(trd_g)
+      CALL CALC_TRD_G(trd_g,u_g,v_g,w_g)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      CALL CALC_TAU_U_G (TAU_U_G,trd_g)
-      CALL CALC_TAU_V_G (TAU_V_G,trd_g)
-      CALL CALC_TAU_W_G (TAU_W_G,trd_g)
+      CALL CALC_TAU_U_G (TAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+      CALL CALC_TAU_V_G (TAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+      CALL CALC_TAU_W_G (TAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+
 
       END SUBROUTINE CALC_TRD_AND_TAU

@@ -186,7 +186,7 @@
       CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0)
 
 ! Set the pressure field for a fluidized bed
-      IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P
+      IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P(p_g, ep_g)
 
 ! Initialize densities.
       IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g)
