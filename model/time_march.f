@@ -77,7 +77,7 @@
 
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(IER, 2)
-      IF(MU_g0 == UNDEFINED) CALL CALC_MU_G()
+      IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
@@ -115,8 +115,14 @@
          RETURN
       ENDIF
 
-! Update previous-time-step values of field variables
-      CALL UPDATE_OLD
+      ! Update previous-time-step values of field variables
+      call update_old( ep_go, ep_g)
+      call update_old(  p_go,  p_g)
+      call update_old( ro_go, ro_g)
+      call update_old(rop_go,rop_g)
+      call update_old(  U_go,  U_g)
+      call update_old(  V_go,  V_g)
+      call update_old(  W_go,  W_g)
 
 ! Calculate coefficients
       CALL CALC_COEFF_ALL (0, IER)

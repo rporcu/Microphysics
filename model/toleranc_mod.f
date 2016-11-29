@@ -102,33 +102,30 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      LOGICAL FUNCTION IS_SMALL (V, TOL)
+      LOGICAL FUNCTION IS_SMALL (V, tol)
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: fluid_at, funijk
-      use param, only: dimension_3
+      use functions, only: fluid_at
       IMPLICIT NONE
 
 ! Dummy arguments
 !--------------------------------------------------------------------//
 ! Tolerance value for small
-      DOUBLE PRECISION, INTENT(IN) :: TOL
+      DOUBLE PRECISION, INTENT(IN) :: tol
 ! Field variable array
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(DIMENSION_3) :: V
+      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !--------------------------------------------------------------------//
-      INTEGER :: i, j, k, ijk
+      INTEGER :: i, j, k
 
       IS_SMALL = .FALSE.
       do k = kstart3, kend3
         do j = jstart3, jend3
           do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
-
              if (fluid_at(i,j,k)) then
-               if (abs(V(ijk)) > TOL) return
+               if (abs(V(i,j,k)) > tol) return
              end if
           end do
         end do

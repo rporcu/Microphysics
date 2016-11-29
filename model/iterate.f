@@ -128,7 +128,7 @@
       CALL SOLVE_VEL_STAR(IER)
 
 ! Calculate densities.
-      CALL PHYSICAL_PROP(IER, 0)
+      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)
       IF (IER_MANAGER()) goto 1000
 
 ! Calculate the face values of densities.
@@ -142,7 +142,7 @@
       ENDIF
 
 ! Recalculate densities.
-      CALL PHYSICAL_PROP(IER, 0)
+      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)
       IF (IER_MANAGER()) goto 1000
 
 ! Update wall velocities:

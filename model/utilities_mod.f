@@ -161,7 +161,7 @@ CONTAINS
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK,I,J,K
+      INTEGER :: I,J,K
       LOGICAL :: ALL_IS_ERROR
 !-----------------------------------------------
 
@@ -172,8 +172,6 @@ CONTAINS
 LOOP_FLUID: DO K = kstart3, kend3
         DO J = jstart3, jend3
         DO I = istart3, iend3
-
-         IJK = FUNIJK(i,j,k)
 
          IF (fluid_at(i,j,k)) THEN
             IF(ABS(U_G(I,J,K)) > MAX_INLET_VEL .OR. &

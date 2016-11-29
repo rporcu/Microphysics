@@ -183,7 +183,7 @@
 
 ! Set boundary conditions
       CALL ZERO_NORM_VEL
-      CALL SET_BC0
+      CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0)
 
 ! Set the pressure field for a fluidized bed
       IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P
@@ -214,10 +214,6 @@
 ! Find the solution of the equations from TIME to TSTOP at
 ! intervals of DT
       CALL TIME_MARCH
-
-
-
-
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3

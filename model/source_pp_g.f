@@ -58,7 +58,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
 !-----------------------------------------------
 ! Indices
       integer :: i,j,k
-      INTEGER :: IJK, IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
 ! under relaxation factor for pressure
       DOUBLE PRECISION fac
 ! terms of bm expression
@@ -80,12 +79,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
            do j = jstart3, jend3
              do i = istart3, iend3
 
-         ijk = funijk(i,j,k)
-
-         IF (fluid_at(i,j,k)) THEN
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
+            IF (fluid_at(i,j,k)) THEN
 
             bma = (ROP_G(I,J,K)-ROP_GO(I,J,K))*VOL*ODT
             bme = A_M(I,J,K,E)*U_G(I,J,K)
@@ -113,7 +107,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
                   A_M(I,J,K,0) = -ONE
                   B_M(I,J,K) = ZERO
                ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
-                  WRITE (LINE, '(A,I6,A,I1,A,G12.5)') 'Error: At IJK = ', IJK, &
+                  WRITE (LINE, '(A,I3,x,I3,x,I3,A,I1,A,G12.5)') 'Error: At IJK = ', i,j,k, &
                      ' M = ', 0, ' A = 0 and b = ', B_M(I,J,K)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
                ENDIF
@@ -145,8 +139,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
             do j = jstart3, jend3
               do i = istart3, iend3
 
-               ijk = funijk(i,j,k)
-
                if (fluid_at(i,j,k)) THEN
                   A_M(I,J,K,0) = A_M(I,J,K,0) - &
                      fac*DROODP_G(RO_G(I,J,K),P_G(I,J,K))*&
@@ -167,14 +159,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
          do j = jstart3, jend3
            do i = istart3, iend3
 
-           ijk = funijk(i,j,k)
          IF (fluid_at(i,j,k)) THEN
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
-            IJPK = FUNIJK(i,jplus(i,j,k),k)
-            IJKM = FUNIJK(i,j,kminus(i,j,k))
-            IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
             if(p_flow_at(iminus(i,j,k),j,k)) A_m(I,J,K,W) = ZERO

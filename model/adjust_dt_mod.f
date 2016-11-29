@@ -26,7 +26,8 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: ZERO, ONE, UNDEFINED
-
+      use fldvar, only: ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, & 
+                         U_g,  U_go, V_g, V_go,  W_g,  W_go
 
 ! Module proceedures:
 !---------------------------------------------------------------------//
@@ -122,10 +123,16 @@
 
          ELSEIF (DT > DT_MIN) THEN
 
-               WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+            WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
+            CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
-            CALL RESET_NEW
+            call reset_new( ep_g, ep_go)
+            call reset_new(  p_g,  p_go)
+            call reset_new( ro_g, ro_go)
+            call reset_new(rop_g,rop_go)
+            call reset_new(  U_g,  U_go)
+            call reset_new(  V_g,  V_go)
+            call reset_new(  W_g,  W_go)
 
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.

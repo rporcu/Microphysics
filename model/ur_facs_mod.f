@@ -29,7 +29,7 @@ MODULE ur_facs
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Variable
-      DOUBLE PRECISION :: Var(DIMENSION_3)
+      DOUBLE PRECISION :: Var(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix
       DOUBLE PRECISION :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -44,7 +44,7 @@ MODULE ur_facs
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Loop index
-      INTEGER :: i, j, k, ijk
+      INTEGER :: i, j, k
 ! Functions of under-relaxation factor
       DOUBLE PRECISION :: f1, f2
 ! Center coefficient
@@ -60,13 +60,11 @@ MODULE ur_facs
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
-
             IF (fluid_at(i,j,k)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                ENDIF
             ENDIF
              end do
@@ -78,12 +76,11 @@ MODULE ur_facs
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
             IF (FLOW_AT_E(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                ENDIF
             ENDIF
              end do
@@ -95,12 +92,11 @@ MODULE ur_facs
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
             IF (FLOW_AT_N(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                ENDIF
             ENDIF
 
@@ -113,13 +109,12 @@ MODULE ur_facs
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
 
             IF (FLOW_AT_T(I,J,K)) THEN
                AP = A_M(I,J,K,0)
                IF (AP /= (-ONE)) THEN
                   A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(IJK)*F2
+                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                ENDIF
             ENDIF
 

@@ -33,7 +33,6 @@
 
       USE fun_avg, only: avg
       USE fun_avg, only: avg
-      USE functions, only: funijk
       USE functions, only: ip_at_e, sip_at_e, is_id_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax
@@ -71,10 +70,9 @@
 ! Local Variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K, IJK, IJKE, IPJK, IJKM, &
-                 IPJKM, IMJK, IJMK, IPJMK, IJPK, IJKP
+      INTEGER :: i,j,k
 ! Phase index
-      INTEGER :: M
+      INTEGER :: m
 ! Pressure at east cell
       DOUBLE PRECISION :: PgE
 ! Average volume fraction
@@ -97,18 +95,6 @@
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
-
-          IJK = FUNIJK(i,j,k)
-          IJKE = FUNIJK(ieast(i,j,k),j,k)
-          IMJK = FUNIJK(iminus(i,j,k),j,k)
-          IPJK = FUNIJK(iplus(i,j,k),j,k)
-          IJMK = FUNIJK(i,jminus(i,j,k),k)
-          IJPK = FUNIJK(i,jplus(i,j,k),k)
-          IJKM = FUNIJK(i,j,kminus(i,j,k))
-          IJKP = FUNIJK(i,j,kplus(i,j,k))
-
-          IPJKM = FUNIJK(IPLUS(I,J,kminus(i,j,k)),J,kminus(i,j,k))
-          IPJMK = FUNIJK(IPLUS(I,jminus(i,j,k),k),jminus(i,j,k),k)
 
           EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
@@ -209,21 +195,14 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       use matrix, only: e, w, s, n, t, b
-      USE scales
-      USE constant
-      USE fldvar
       USE fldvar
       USE run
-      USE toleranc
-      USE geometry
       USE bc
-      USE output
-      USE compar
-      USE fun_avg
-      USE functions, only: funijk, fs_wall_at, ns_wall_at
+      USE fun_avg  , only: do_k, jmax2, kmax2
+      USE fun_avg  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
+      USE fun_avg  , only: ody, odz
+      USE functions, only: fs_wall_at, ns_wall_at
       USE functions, only: is_on_mype_plus2layers
       USE functions, only: wall_at, fluid_at
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
@@ -232,6 +211,7 @@
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
+      use compar, only: dead_cell_at 
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -248,8 +228,7 @@
 ! Boundary condition
       INTEGER :: L
 ! Indices
-      INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2, IJK,&
-                  JM, KM, IMJK, IP, IPJK
+      INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2
 ! Phase index
       INTEGER :: M
 !-----------------------------------------------
@@ -274,7 +253,6 @@
             DO I1 = imin3, imax3
                IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
                IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-               IJK = FUNIJK(I1,J1,K1)
                IF (ns_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
@@ -307,7 +285,6 @@
             DO I1 = imin3, imax3
                IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
                IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-               IJK = FUNIJK(I1,J1,K1)
                IF (ns_wall_at(i1,j1,k1)) THEN
                   A_M(I1,J1,K1,E) = ZERO
                   A_M(I1,J1,K1,W) = ZERO
@@ -337,7 +314,6 @@
          DO I1 = imin3, imax3
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
             IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -366,7 +342,6 @@
          DO I1 = imin3, imax3
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
-            IJK = FUNIJK(I1,J1,K1)
             IF (ns_wall_at(i1,j1,k1)) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -410,7 +385,6 @@
                      DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -445,7 +419,6 @@
                      DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
@@ -480,10 +453,7 @@
                      DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                        IJK = FUNIJK(I,J,K)
                         IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
-                        JM = JM1(J)
-                        KM = KM1(K)
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -556,7 +526,6 @@
                         DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                           IJK = FUNIJK(I,J,K)
                            A_M(I,J,K,E) = ZERO
                            A_M(I,J,K,W) = ONE
                            A_M(I,J,K,N) = ZERO
@@ -587,7 +556,6 @@
                         DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                           IJK = FUNIJK(I,J,K)
                            A_M(I,J,K,E) = ZERO
                            A_M(I,J,K,W) = ONE
                            A_M(I,J,K,N) = ZERO
@@ -597,7 +565,6 @@
                            A_M(I,J,K,0) = -ONE
                            B_M(I,J,K) = ZERO
                            IM = IM1(I)
-                           IMJK = FUNIJK(iminus(i,j,k),j,k)
                            A_M(iminus(i,j,k),j,k,E) = ZERO
                            A_M(iminus(i,j,k),j,k,W) = ONE
                            A_M(iminus(i,j,k),j,k,N) = ZERO
@@ -621,9 +588,6 @@
                         DO I = I1, I2
                         IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
                         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-                           IJK = FUNIJK(I,J,K)
-                           IP = IP1(I)
-                           IPJK = FUNIJK(iplus(i,j,k),j,k)
                            A_M(iplus(i,j,k),j,k,E) = ONE
                            A_M(iplus(i,j,k),j,k,W) = ZERO
                            A_M(iplus(i,j,k),j,k,N) = ZERO
@@ -730,7 +694,7 @@
 ! Local Variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK, I, J, K
+      INTEGER :: I, J, K
       INTEGER :: PSV, M
       INTEGER :: lIE, lIW
 ! terms of bm expression
@@ -740,7 +704,7 @@
 ! Set reference phase to gas
       M = 0
 
-! Calculate the mass going into each IJK cell. This is done for each
+! Calculate the mass going into each (i,j,k) cell. This is done for each
 ! call in case the point source is time dependent.
       PS_LP: do PSV = 1, DIMENSION_PS
          if(.NOT.PS_DEFINED(PSV)) cycle PS_LP
@@ -761,7 +725,6 @@
             if(.NOT.IS_ON_myPE_plus2layers(I,J,K)) cycle
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
-            ijk = funijk(i,j,k)
             if(.NOT. fluid_at(i,j,k)) cycle
 
             pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))

@@ -198,39 +198,19 @@
       USE physprop
       USE funits
       USE compar
-      USE functions
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+      USE functions, only: wall_at, cyclic_at, fluid_at, is_on_myPE_plus2layers
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK, IMJK, IJMK, IJKM, IPJK, IJPK, IJKP
-      INTEGER :: I, J, K
-!
-      INTEGER, DIMENSION(:), allocatable :: FLAG_TEMP
-      INTEGER :: flag_size
+      INTEGER :: i,j,k
 !-----------------------------------------------
-
-
-! Allocate storage for temporary flag arrays
-      flag_size = ijkmax3
-      if (myPE.eq.root) then
-          flag_size = ijkmax3
-      endif
-      allocate( flag_temp(flag_size) )
-
 
       do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
-
-           ijk = funijk(i,j,k)
-           IMJK = funijk(iminus(i,j,k),j,k)
-           IJMK = funijk(i,jminus(i,j,k),k)
-           IJKM = funijk(i,j,kminus(i,j,k))
-           IPJK = funijk(iplus(i,j,k),j,k)
-           IJPK = funijk(i,jplus(i,j,k),k)
-           IJKP = funijk(i,j,kplus(i,j,k))
 
            IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
@@ -319,7 +299,7 @@
       ! call scatter( flag_t, flag_temp )
 
 ! deallocate storage of temporary flag arrays
-      deallocate( flag_temp )
+      ! deallocate( flag_temp )
       ! call send_recv(flag_t,1)
       ! call send_recv(flag_n,1)
       ! call send_recv(flag_e,1)

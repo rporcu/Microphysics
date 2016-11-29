@@ -26,16 +26,23 @@
 !  Local variables: None                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PHYSICAL_PROP(IER, LEVEL)
+      SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0)
 
       use compar
       use funits
       use geometry
       use param1
-      use fldvar
       use physprop
 
+      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+
       implicit none
+
+      double precision, intent(inout) ::  ro_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::   p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) :: ro_g0
 
 ! Dummy arguments
 !-----------------------------------------------------------------------
@@ -59,7 +66,7 @@
 ! Calculate density only. This is invoked several times within iterate,
 ! making it the most frequently called.
       if(LEVEL == 0) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg
+         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g)
 
 ! Calculate everything except density. This is called at the start of
 ! each iteration.
@@ -69,7 +76,7 @@
 ! the initialization (before starting the time march) and at the start
 ! of each step step thereafter.
       elseif(LEVEL == 2) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg
+         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g)
       endif
 
 
@@ -110,20 +117,14 @@
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PHYSICAL_PROP_ROg
-
+      SUBROUTINE PHYSICAL_PROP_ROg (ro_g, p_g, ep_g, rop_g)
 
 ! Global variables:
 !-----------------------------------------------------------------------
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-! Gas phase density (compressible).
-      use fldvar, only: RO_g
-! Gas phase pressure.
-      use fldvar, only: P_g
-! Gas phase volume fraction.
-      use fldvar, only: EP_g
-! Gas phase material density.
-      use fldvar, only: ROP_g
+
+      use fldvar, only: MW_AVG
+
 ! Maximum value for molecular weight (divided by one)
       use toleranc, only: OMW_MAX
 ! Run time flag for generating negative gas density log files
@@ -135,10 +136,20 @@
 
       implicit none
 
+      ! Gas phase density (compressible):  ro_g
+      ! Gas phase pressure              :   p_g
+      ! Gas phase volume fraction       :  ep_g
+      ! Gas phase material density      : rop_g
+
+      double precision, intent(inout) ::  ro_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::   p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::  ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
 ! Local Variables:
 !-----------------------------------------------------------------------
-! Loop indicies
-      INTEGER :: I,J,K,IJK   ! Computational cell
+! Loop indices
+      INTEGER :: I,J,K   ! Computational cell
 ! Flag to write log header
       LOGICAL :: wHeader
 !......................................................................!
@@ -149,19 +160,19 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-         IJK = FUNIJK(i,j,k)
-         IF(.NOT.WALL_AT(i,j,k)) THEN
+            IF(.NOT.WALL_AT(i,j,k)) THEN
 
-            RO_G(i,j,k) = EOSG(MW_AVG,P_G(I,J,K),293.15d0)
-            ROP_G(i,j,k) = RO_G(i,j,k)*EP_G(I,J,K)
+              RO_G(i,j,k) = EOSG(MW_AVG,P_G(I,J,K),293.15d0)
+              ROP_G(i,j,k) = RO_G(i,j,k)*EP_G(I,J,K)
 
-            IF(RO_G(I,J,K) < ZERO) THEN
-               Err_l(myPE) = 100
-               IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(i, j, k, wHeader)
+              IF(RO_G(I,J,K) < ZERO) THEN
+                 Err_l(myPE) = 100
+                 IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(i, j, k, wHeader)
+              ENDIF
             ENDIF
-         ENDIF
-      ENDDO
-      ENDDO
+
+          ENDDO
+        ENDDO
       ENDDO
 
 
@@ -223,7 +234,7 @@
          tHeader = .FALSE.
       endif
 
-      write(lUnit,1001) FUNIJK(i,j,k), i, j, k
+      write(lUnit,1001)  i, j, k
       write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(i,j,k)
       write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(i,j,k)
 
@@ -232,10 +243,10 @@
       RETURN
 
  1000 FORMAT(2X,'One or more cells have reported a negative gas',      &
-         ' density (RO_g(IJK)). If',/2x,'this is a persistent issue,', &
+         ' density (RO_g(i,j,k)). If',/2x,'this is a persistent issue,', &
          ' lower UR_FAC(1) in mfix.dat.')
 
- 1001 FORMAT(/4X,'IJK: ',I8,7X,'I: ',I4,'  J: ',I4,'  K: ',I4)
+ 1001 FORMAT(/4X,'I: ',I4,'  J: ',I4,'  K: ',I4)
 
       END SUBROUTINE ROgErr_LOG
 

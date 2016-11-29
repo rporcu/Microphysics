@@ -9,16 +9,26 @@
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0
+      SUBROUTINE SET_BC0(p_g, ep_g, u_g, v_g, w_g, ro_g0)
 
 ! Modules
 !--------------------------------------------------------------------//
-      use bc, only: bc_type, bc_defined
+      use bc    , only: bc_type, bc_defined
 
       use param, only: dimension_bc
       use param1, only: undefined_i
 
-      IMPLICIT NONE
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
+      implicit none
+
+      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(in   ) :: ro_g0
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -28,8 +38,7 @@
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
-      CALL SET_IJK_P_G
-
+      CALL SET_IJK_P_G(ro_g0)
 
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
@@ -41,18 +50,18 @@
             CASE ('PAR_SLIP_WALL')
             CASE ('P_OUTFLOW')
                CALL SET_BC0_INIT_BCDT_CALCS(L)
-               CALL SET_BC0_OUTFLOW(L)
+               CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
             CASE ('MASS_OUTFLOW')
                CALL SET_BC0_INIT_BCDT_CALCS(L)
-               CALL SET_BC0_INFLOW(L)
+               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
                CALL SET_BC0_INIT_BCDT_CALCS(L)
-               CALL SET_BC0_OUTFLOW(L)
+               CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
             CASE ('MASS_INFLOW')
                CALL SET_BC0_INIT_JET(L)
-               CALL SET_BC0_INFLOW(L)
+               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
             CASE ('P_INFLOW')
-               CALL SET_BC0_INFLOW(L)
+               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
             END SELECT
          ENDIF
       ENDDO
@@ -62,7 +71,6 @@
 
       RETURN
       END SUBROUTINE SET_BC0
-
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -80,7 +88,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_OUTFLOW(BCV)
+      SUBROUTINE SET_BC0_OUTFLOW(BCV,p_g,ep_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -92,17 +100,19 @@
 
       use constant, only: pi
 
-      use fldvar, only: p_g
-      use fldvar, only: ep_g
-
       use param1, only: undefined, zero
       use scales, only: scale_pressure
       use toleranc, only: tmin
 
       use functions, only: is_on_mype_plus2layers
       use compar, only: dead_cell_at
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use boundfunijk, only: bound_funijk
-      IMPLICIT NONE
+
+      implicit none
+
+      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Dummy arguments
 !--------------------------------------------------------------------//
@@ -130,7 +140,6 @@
       ENDDO   ! do j
       ENDDO   ! do k
 
-      RETURN
       END SUBROUTINE SET_BC0_OUTFLOW
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -194,7 +203,7 @@
 !  for the simulation.                                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_INFLOW(BCV)
+      SUBROUTINE SET_BC0_INFLOW(BCV,p_g,ep_g,u_g,v_g,w_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -208,12 +217,10 @@
 
       use constant, only: pi
 
-      use fldvar, only: u_g, v_g, w_g
-      use fldvar, only: p_g
-      use fldvar, only: ep_g
-
       use param1, only: zero
       use scales, only: scale_pressure
+
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: im1, jm1, km1
       use functions, only: is_on_mype_plus2layers
@@ -225,6 +232,12 @@
 !--------------------------------------------------------------------//
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
+
+      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -314,12 +327,10 @@
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_IJK_P_G
+      SUBROUTINE SET_IJK_P_G (RO_G0)
 
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_G
-! Specified constant gas density.
-      use fldvar, only: RO_G0
 
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
       use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
@@ -344,6 +355,9 @@
       use compar
 
       implicit none
+
+      ! Specified constant gas density.
+      double precision, intent(in) :: ro_g0
 !--------------------------------------------------------------------//
       INTEGER :: BCV
 

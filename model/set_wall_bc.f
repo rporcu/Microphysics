@@ -31,8 +31,6 @@
 !-----------------------------------------------
 ! Local index for boundary condition
       INTEGER :: L
-! indices
-      INTEGER :: IJK
 ! Starting & ending I index
       INTEGER :: I1, I2
 ! Starting & ending J index
@@ -188,7 +186,6 @@
       DOUBLE PRECISION :: SIGN0
 ! Local indices near wall cell
       INTEGER :: I, J, K
-      INTEGER :: IJK
       INTEGER :: I1, I2, J1, J2, K1, K2
 !-----------------------------------------------
 
@@ -210,7 +207,6 @@
       DO K = K1, K2
          DO J = J1, J2
             DO I = I1, I2
-               IJK = FUNIJK(I,J,K)
 
                IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 

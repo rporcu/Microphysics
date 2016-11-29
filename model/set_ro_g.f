@@ -17,7 +17,7 @@
       USE eos, only: EOSG
       USE fldvar
       USE param1   , only: UNDEFINED
-      USE functions, only: funijk, wall_at
+      USE functions, only: wall_at
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -30,8 +30,6 @@
          do k = kstart3, kend3
            do j = jstart3, jend3
              do i = istart3, iend3
-
-             ijk = funijk(i,j,k)
 
 ! set_bc0 will have already defined ro_g and rop_g in MI and PI
 ! boundary cells (redundant-remove in set_bc0?)
@@ -49,8 +47,6 @@
          do k = kstart3, kend3
            do j = jstart3, jend3
              do i = istart3, iend3
-
-             ijk = funijk(i,j,k)
 
             IF (.NOT.wall_at(i,j,k)) THEN
 ! assign ro_g and calculate rop_g in all fluid and flow boundary cells

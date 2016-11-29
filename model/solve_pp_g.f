@@ -19,15 +19,14 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE physprop
-      USE geometry
-      USE residual
-      USE leqsol
+      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE param1  , only: zero, one
+      USE fldvar  , only: pp_g
+      USE residual, only: resid_p, resid, num_resid
+      USE residual, only: ijk_resid, den_resid, max_resid
+      USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
       USE run
-      use matrix
+      use matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       use ps
 
       IMPLICIT NONE
@@ -127,14 +126,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax)
 
-      use compar
-      use constant
-      use geometry
-      use param1, only: small_number
-      use physprop
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use geometry, only: vol
+      use param1  , only: small_number
       use ps
       use run
-      use functions
+      use functions, only: fluid_at, dead_cell_at, is_on_myPE_plus2layers
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -151,7 +148,7 @@
 !-----------------------------------------------
 
 ! Indices
-      INTEGER :: IJK, I, J, K
+      INTEGER :: I, J, K
       INTEGER :: PSV
 
 ! terms of bm expression
@@ -170,7 +167,6 @@
             if(.NOT.IS_ON_myPE_plus2layers(I,J,K)) cycle
             IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
-            ijk = funijk(i,j,k)
             if(fluid_at(i,j,k)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 

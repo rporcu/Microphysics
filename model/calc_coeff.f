@@ -18,9 +18,7 @@
 
 ! Global variables:
 !-----------------------------------------------------------------------
-! Double precision: 1.0d0
-      use param1, only: ONE
-! Flag for explcit coupling between the fluid and particles.
+      ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
 
       implicit none
@@ -32,20 +30,14 @@
       INTEGER, intent(in) :: FLAG
 ! Error index
       INTEGER, intent(inout) :: IER
-
-! Local variables
 !-----------------------------------------------
 
-!-----------------------------------------------------------------------
-
-! Calculate all physical properties, transport properties, and exchange
-! rates.
+      ! Calculate all physical properties, transport properties, 
+      ! and exchange rates.
       CALL CALC_COEFF(IER, 2)
 
-      IF(DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT
+      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT
 
-
-      RETURN
       END SUBROUTINE CALC_COEFF_ALL
 
 
@@ -92,10 +84,7 @@
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED) &
          CALL CALC_DRAG_DES_2FLUID
 
-      RETURN
       END SUBROUTINE CALC_COEFF
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
