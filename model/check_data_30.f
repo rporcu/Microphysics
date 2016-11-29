@@ -81,8 +81,8 @@
          IF(FLOW_AT(i,j,k)) THEN
 
 ! Turbulent viscosity of fluid phase.
-            IF(MU_g(IJK) /= ZERO) CALL REPORT_ERROR                   &
-               (IER, I, J, K, MU_G(IJK), '/=', ZERO, 'MU_G')
+            IF(MU_g(I,J,K) /= ZERO) CALL REPORT_ERROR                   &
+               (IER, I, J, K, MU_G(I,J,K), '/=', ZERO, 'MU_G')
 
 ! Granular second coefficient of viscosity.
             IF(LAMBDA_G(i,j,k) /= ZERO) CALL REPORT_ERROR               &
@@ -150,8 +150,8 @@
          IF (.NOT.WALL_AT(i,j,k)) THEN
 
 ! Gas viscosity must be non-negative.
-            IF(MU_G(IJK) < ZERO) CALL REPORT_ERROR                     &
-               (IER, I, J, K, MU_G(IJK), '<', ZERO, 'MU_G')
+            IF(MU_G(I,J,K) < ZERO) CALL REPORT_ERROR                     &
+               (IER, I, J, K, MU_G(I,J,K), '<', ZERO, 'MU_G')
 
          ENDIF ! IF(.NOT.WALL_AT(i,j,k))
       ENDDO ! DO I = ISTART2, IEND2

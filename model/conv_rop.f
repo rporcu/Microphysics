@@ -51,7 +51,6 @@
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: do_k
-      USE param, only: dimension_3
       USE param1, only: zero
       IMPLICIT NONE
 

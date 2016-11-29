@@ -60,37 +60,37 @@
 
               select case (mod(icbc_flag(i,j,k),1000))
                 case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
- 
+
                 ib = min( iend3, max (istart3, i+1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
                 inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
                 if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
- 
+
                 ib = min( iend3, max (istart3, i-1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
                 inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
                 if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
- 
+
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j+1) )
                 kb = min( kend3, max (kstart3, k) )
                 inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
                 if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
- 
+
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j-1) )
                 kb = min( kend3, max (kstart3, k) )
                 inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
                 if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
- 
+
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k+1) )
                 inc = icbc_flag(ib,jb,kb) - mod(icbc_flag(ib,jb,kb),1000)
                 if (icbc_flag(ib,jb,kb) == icbc_no_s) icbc_flag(ib,jb,kb) = icbc_free+inc
- 
+
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k-1) )
@@ -137,7 +137,7 @@
                    FLAG(i,j,k) = 107
                 CASE DEFAULT
 
-              end select 
+              end select
 
               ! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
               flag_e(i,j,k) = UNDEFINED_I
@@ -161,9 +161,6 @@
 
 
       RETURN
- 1000 FORMAT(/1X,70('*')//' From: SET_FLAGS',/&
-         ' Message: ICBC_FLAG(',I3,') = ',&
-         A3,' is illegal',/1X,70('*')/)
 
       END SUBROUTINE SET_FLAGS
 

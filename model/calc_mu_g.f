@@ -43,13 +43,13 @@
 !         mu = 1.71*10-4 poise at T = 273K
          IF (fluid_at(i,j,k)) THEN
 
-            IF (MU_G0 == UNDEFINED) MU_G(IJK) = to_SI*1.7D-4 * &
+            IF (MU_G0 == UNDEFINED) MU_G(I,J,K) = to_SI*1.7D-4 * &
                (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
 
-            LAMBDA_G(i,j,k) = -F2O3*MU_G(IJK)
+            LAMBDA_G(i,j,k) = -F2O3*MU_G(I,J,K)
 
          ELSE
-            MU_G(IJK)  = ZERO
+            MU_G(I,J,K)  = ZERO
             LAMBDA_G(i,j,k) = ZERO
          ENDIF   ! end if (fluid_at(i,j,k))
 

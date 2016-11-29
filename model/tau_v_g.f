@@ -126,27 +126,27 @@
 ! part of 1/x d/dx(x.tau_xy) xdxdydz =>
 !         1/x d/dx (x.mu.du/dy) xdxdydz =>
 ! delta (x.mu.du/dy)Ayz |E-W : at (i+1/2 - i-1/2, j+1/2, k)
-               SSX = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKE)),&
-                           AVG_H(MU_G(IJKN),MU_G(IJKNE)))*&
+               SSX = AVG_H(AVG_H(MU_G(i,j,k),MU_G(ieast(i,j,k),j,k)),&
+                           AVG_H(MU_G(i,jnorth(i,j,k),k),MU_G(ieast(i,jtmp,k),jtmp,k)))*&
                      (U_G(I,JPlus(i,j,k),K)-U_G(I,J,K))*ODY*AYZ - &
-                     AVG_H(AVG_H(MU_G(IJKW),MU_G(IJK)),&
-                           AVG_H(MU_G(IJKNW),MU_G(IJKN)))*&
+                     AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k),MU_G(i,j,k)),&
+                           AVG_H(MU_G(itmp,jnorth(itmp,j,k),k),MU_G(i,jnorth(i,j,k),k)))*&
                      (U_G(IMinus(i,j,k),JPlus(i,j,k),K)-U_G(IMinus(i,j,k),J,K))*ODY*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dy) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at (i, j+1 - j-1, k)
-               SSY = MU_G(IJKN)*(V_G(I,JPlus(i,j,k),K)-V_G(I,J,K))*ODY*AXZ - &
-                     MU_G(IJK)*(V_G(I,J,K)-V_G(I,JMinus(i,j,k),K))*ODY*AXZ
+               SSY = MU_G(i,jnorth(i,j,k),k)*(V_G(I,JPlus(i,j,k),K)-V_G(I,J,K))*ODY*AXZ - &
+                     MU_G(i,j,k)*(V_G(I,J,K)-V_G(I,JMinus(i,j,k),K))*ODY*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dy) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at (i, j+1/2, k+1/2 - k-1/2)
-               SSZ = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKT)),&
-                           AVG_H(MU_G(IJKN),MU_G(IJKTN)))*&
+               SSZ = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,j,ktop(i,j,k))),&
+                           AVG_H(MU_G(i,jnorth(i,j,k),k),MU_G(i,jnorth(i,j,ktmp),ktmp)))*&
                      (W_G(I,JPlus(i,j,k),K)-W_G(I,J,K))*ODY*AXY - &
-                     AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
-                           AVG_H(MU_G(IJKBN),MU_G(IJKN)))*&
+                     AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(i,j,k)),&
+                           AVG_H(MU_G(i,jnorth(i,j,ktmp),ktmp),MU_G(i,jnorth(i,j,k),k)))*&
                      (W_G(I,JPlus(i,j,k),KMinus(i,j,k))-W_G(I,J,KMinus(i,j,k)))*ODY*AXY
 
 ! Add the terms

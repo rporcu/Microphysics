@@ -184,8 +184,8 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ip, jm, km
-      INTEGER :: ijkc, ijke, ijkn, ijkne, ijks, ijkse
+      INTEGER :: ip, jm, km, ic
+      INTEGER :: ijke, ijkn, ijkne, ijks, ijkse
       INTEGER :: ijkt, ijkte, ijkb, ijkbe
       INTEGER :: jtmp,ktmp
 ! length terms
@@ -199,9 +199,9 @@
       IJKE = FUNIJK(ieast(i,j,k),j,k)
 
       IF (wall_at(i,j,k))  THEN
-         IJKC = IJKE
+         IC = ieast(i,j,k)
       ELSE
-         IJKC = FUNIJK(i,j,k)
+         IC = i
       ENDIF
 
       jtmp = jnorth(i,j,k)
@@ -220,16 +220,16 @@
       C_AB = ODZ
 
 ! East face (i+1, j, k)
-      D_FE = MU_G(IJKE)*C_AE*AYZ
+      D_FE = MU_G(ieast(i,j,k),j,k)*C_AE*AYZ
 ! West face (i, j, k)
-      D_FW = MU_G(IJKC)*C_AW*AYZ
+      D_FW = MU_G(ic,j,k)*C_AW*AYZ
 
 ! North face (i+1/2, j+1/2, k)
-      D_FN = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKN)),&
-                   AVG_H(MU_G(IJKE),MU_G(IJKNE)))*C_AN*AXZ
+      D_FN = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,jtmp,k)),&
+                   AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*C_AN*AXZ
 ! South face (i+1/2, j-1/2, k)
-      D_FS = AVG_H(AVG_H(MU_G(IJKS),MU_G(IJKC)),&
-                   AVG_H(MU_G(IJKSE),MU_G(IJKE)))*C_AS*AXZ
+      D_FS = AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(IC,J,K)),&
+                   AVG_H(MU_G(ieast(i,jtmp,k),jtmp,k),MU_G(ieast(i,j,k),j,k)))*C_AS*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
@@ -244,11 +244,11 @@
          IJKBE = FUNIJK(ieast(i,j,ktmp),j,ktmp)
 
 ! Top face (i+1/2, j, k+1/2)
-         D_FT = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKT)),&
-                      AVG_H(MU_G(IJKE),MU_G(IJKTE)))*C_AT*AXY
+         D_FT = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,j,ktmp)),&
+                      AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktmp),j,ktmp)))*C_AT*AXY
 ! Bottom face (i+1/2, j, k-1/2)
-         D_FB = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJKC)),&
-                      AVG_H(MU_G(IJKBE),MU_G(IJKE)))*C_AB*AXY
+         D_FB = AVG_H(AVG_H(MU_G(i,j,ktmp),MU_G(IC,J,K)),&
+                      AVG_H(MU_G(ieast(i,j,ktmp),j,ktmp),MU_G(ieast(i,j,k),j,k)))*C_AB*AXY
       ENDIF
 
 

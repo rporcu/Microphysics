@@ -224,7 +224,7 @@
 ! Local variables
 !-----------------------------------------------
       INTEGER :: ICV
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 
       CALL INIT_ERR_MSG("SET_IC_FLAGS")
 
@@ -291,7 +291,7 @@
 ! Local variables
 !-----------------------------------------------
 ! loop/variable indices
-      INTEGER :: I , J , K , IJK
+      INTEGER :: I , J , K
 ! loop index
       INTEGER :: BCV
 

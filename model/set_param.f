@@ -17,7 +17,6 @@
       use geometry, only: IMAX3, JMAX3, KMAX3, IJKMAX3
 
 ! Rank specific decompositions.
-      use compar, only: IJKSIZE3_ALL
       USE compar, only: iStart3, iEnd3, iStart4, iEnd4
       USE compar, only: jStart3, jEnd3, jStart4, jEnd4
       USE compar, only: kStart3, kEnd3, kStart4, kEnd4

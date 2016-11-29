@@ -90,7 +90,7 @@
       ROg = RO_G(I,J,K)
       ROPg = RO_G(I,J,K) * EPg
 ! Laminar viscosity.
-      Mu = MU_G(IJK)
+      Mu = MU_G(I,J,K)
 ! Slip velocity and its magnitude
       VSLP = FLUID_VEL - PARTICLE_VEL
       VREL = SQRT(dot_product(VSLP, VSLP))

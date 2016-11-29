@@ -68,7 +68,7 @@
       Allocate( Pp_g(is3:ie3,js3:je3,ks3:ke3) )
 
 !physprop
-      Allocate( MU_g (DIMENSION_3) )
+      Allocate( MU_g(is3:ie3,js3:je3,ks3:ke3) )
 
 !visc_g
       Allocate( trD_g(is3:ie3,js3:je3,ks3:ke3))

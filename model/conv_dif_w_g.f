@@ -182,8 +182,8 @@
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: ijk, imjk, ijmk, ijkm
-      INTEGER :: kp, im, jm
-      INTEGER :: ijkc, ijkt, ijke, ijkte, ijkw, ijkwt
+      INTEGER :: kp, im, jm, kc
+      INTEGER :: ijkt, ijke, ijkte, ijkw, ijkwt
       INTEGER :: ijkn, ijktn, ijks, ijkst
       INTEGER :: itmp, jtmp, ktmp
 ! length terms
@@ -219,9 +219,9 @@
       IJKST = FUNIJK(i,jtmp,ktop(i,jtmp,k))
 
       IF (wall_at(i,j,k)) THEN
-         IJKC = IJKT
+         kc = ktop(i,j,k)
       ELSE
-         IJKC = IJK
+         kc = k
       ENDIF
 
       C_AE = ODX
@@ -232,23 +232,23 @@
       C_AB = ODZ
 
 ! East face (i+1/2, j, k+1/2)
-      D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&
-                   AVG_H(MU_G(IJKT),MU_G(IJKTE)))*C_AE*AYZ
+      D_Fe = AVG_H(AVG_H(MU_G(i,j,kc),MU_G(ieast(i,j,k),j,k)),&
+                   AVG_H(MU_G(i,j,ktmp),MU_G(ieast(i,j,ktmp),j,ktmp)))*C_AE*AYZ
 ! West face (i-1/2, j, k+1/2)
-      D_Fw = AVG_H(AVG_H(MU_G(IJKW),MU_G(IJKC)),&
-                   AVG_H(MU_G(IJKWT),MU_G(IJKT)))*C_AW*AYZ
+      D_Fw = AVG_H(AVG_H(MU_G(itmp,j,k),MU_G(i,j,kc)),&
+                   AVG_H(MU_G(itmp,j,ktop(itmp,j,k)),MU_G(i,j,ktmp)))*C_AW*AYZ
 
 ! North face (i, j+1/2, k+1/2)
-      D_Fn = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKN)),&
-                   AVG_H(MU_G(IJKT),MU_G(IJKTN)))*C_AN*AXZ
+      D_Fn = AVG_H(AVG_H(MU_G(i,j,kc),MU_G(i,jnorth(i,j,k),k)),&
+                   AVG_H(MU_G(i,j,ktmp),MU_G(i,jnorth(i,j,ktmp),ktmp)))*C_AN*AXZ
 ! South face (i, j-1/2, k+1/2)
-      D_Fs = AVG_H(AVG_H(MU_G(IJKS),MU_G(IJKC)),&
-                   AVG_H(MU_G(IJKST),MU_G(IJKT)))*C_AS*AXZ
+      D_Fs = AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(i,j,kc)),&
+                   AVG_H(MU_G(i,jtmp,ktop(i,jtmp,k)),MU_G(i,j,ktmp)))*C_AS*AXZ
 
 ! Top face (i, j, k+1)
-      D_Ft = MU_G(IJKT)*C_AT*AXY
+      D_Ft = MU_G(i,j,ktmp)*C_AT*AXY
 ! Bottom face (i, j, k)
-      D_Fb = MU_G(IJK)*C_AB*AXY
+      D_Fb = MU_G(i,j,k)*C_AB*AXY
 
       RETURN
 
@@ -297,8 +297,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, I, J, K
-      INTEGER :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Face mass flux
       DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
       DOUBLE PRECISION :: flux_t, flux_b
@@ -429,7 +428,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I,J,K, IJK, IPJK, IMJK, IJPK, IJMK, IJKP, IJKM
+      INTEGER :: I,J,K
 ! indicator for shear
       INTEGER :: incr
 ! Diffusion parameter

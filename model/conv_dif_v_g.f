@@ -192,11 +192,9 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ijk, imjk, ijmk, ijkm
-      INTEGER :: jp, im, km
-      INTEGER :: ijkc, ijkn, ijke, ijkne, ijkw, ijknw
-      INTEGER :: ijkt, ijktn, ijkb, ijkbn
-      INTEGER :: itmp, jtmp, ktmp
+      INTEGER :: jp, im, km, jc
+      INTEGER :: ijke, ijkne, ijkw, ijknw
+      INTEGER :: itmp, jtmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 !---------------------------------------------------------------------//
@@ -206,13 +204,12 @@
       KM = KM1(K)
 
       jtmp  = jnorth(i,j,k)
-      IJKN  = funijk(i,jtmp,k)
       IJKNE = funijk(ieast(i,jtmp,k),jtmp,k)
 
       IF (wall_at(i,j,k)) THEN
-         IJKC = IJKN
+         jc = jtmp
       ELSE
-         IJKC = funijk(i,j,k)
+         jc = j
       ENDIF
 
       IJKE = funijk(ieast(i,j,k),j,k)
@@ -229,35 +226,27 @@
       C_AB = ODZ
 
 ! East face (i+1/2, j+1/2, k)
-      D_Fe = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKE)),&
-                   AVG_H(MU_G(IJKN),MU_G(IJKNE)))*C_AE*AYZ
+      D_Fe = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(ieast(i,j,k),j,k)),&
+                   AVG_H(MU_G(i,jtmp,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*C_AE*AYZ
 ! West face (i-1/2, j+1/2, k)
-      D_Fw = AVG_H(AVG_H(MU_G(IJKW),MU_G(IJKC)),&
-                   AVG_H(MU_G(IJKNW),MU_G(IJKN)))*C_AW*AYZ
+      D_Fw = AVG_H(AVG_H(MU_G(itmp,j,k),MU_G(i,jc,k)),&
+                   AVG_H(MU_G(itmp,jnorth(itmp,j,k),k),MU_G(i,jtmp,k)))*C_AW*AYZ
 
 ! North face (i, j+1, k)
-      D_Fn = MU_G(IJKN)*C_AN*AXZ
+      D_Fn = MU_G(i,jtmp,k)*C_AN*AXZ
 ! South face (i, j, k)
-      D_Fs = MU_G(IJKC)*C_AS*AXZ
+      D_Fs = MU_G(i,jc,k)*C_AS*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
       IF (DO_K) THEN
 
-         ktmp  = ktop(i,j,k)
-         IJKT  = funijk(i,j,ktmp)
-         IJKTN = funijk(i,jnorth(i,j,ktmp),ktmp)
-
-         ktmp  = kbot(i,j,k)
-         IJKB  = funijk(i,j,ktmp)
-         IJKBN = funijk(i,jnorth(i,j,ktmp),ktmp)
-
 ! Top face (i, j+1/2, k+1/2)
-         D_Ft = AVG_H(AVG_H(MU_G(IJKC),MU_G(IJKT)),&
-                      AVG_H(MU_G(IJKN),MU_G(IJKTN)))*C_AT*AXY
+         D_Ft = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(i,j,ktop(i,j,k))),&
+                      AVG_H(MU_G(i,jtmp,k),MU_G(i,jnorth(i,j,ktop(i,j,k)),ktop(i,j,k))))*C_AT*AXY
 ! Bottom face (i, j+1/2, k-1/2)
-         D_Fb = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJKC)),&
-                      AVG_H(MU_G(IJKBN),MU_G(IJKN)))*C_AB*AXY
+         D_Fb = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(i,jc,k)),&
+                      AVG_H(MU_G(i,jnorth(i,j,kbot(i,j,k)),kbot(i,j,k)),MU_G(i,jtmp,k)))*C_AB*AXY
       ENDIF   ! end if (do_k)
 
 
@@ -311,8 +300,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IJK, I, J, K
-      INTEGER :: IMJK, IPJK, IJMK, IJPK, IJKM, IJKP
+      INTEGER :: I, J, K
 ! Face mass flux
       DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
       DOUBLE PRECISION :: flux_t, flux_b

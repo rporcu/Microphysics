@@ -188,7 +188,7 @@
       DOUBLE PRECISION :: SIGN0
 ! Local indices near wall cell
       INTEGER :: I, J, K
-      INTEGER :: IJK, IMJK, IJMK, IJKM, IPJK, IJPK, IJKP
+      INTEGER :: IJK
       INTEGER :: I1, I2, J1, J2, K1, K2
 !-----------------------------------------------
 

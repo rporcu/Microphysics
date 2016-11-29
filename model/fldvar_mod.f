@@ -32,7 +32,7 @@
       DOUBLE PRECISION, ALLOCATABLE ::  W_g(:,:,:), W_go(:,:,:)
 
 ! Gas viscosity
-      DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:)
+      DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:,:,:)
 ! Second coefficient of viscosity
       DOUBLE PRECISION, ALLOCATABLE ::  LAMBDA_G(:,:,:)
 ! trace of D_g at i, j, k

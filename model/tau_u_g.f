@@ -137,27 +137,27 @@
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
-               SSX = MU_G(IJKE)*(U_G(iplus(i,j,k),j,k)-U_G(I,J,K))*ODX*AYZ - &
-                  MU_G(IJK)*(U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX*AYZ
+               SSX = MU_G(ieast(i,j,k),j,k)*(U_G(iplus(i,j,k),j,k)-U_G(I,J,K))*ODX*AYZ - &
+                  MU_G(i,j,k)*(U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>
 ! delta (mu.dv/dx)Axz |N-S : at i+1/2, (j+1/2 - j-1/2), k
-               SSY = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKN)),&
-                           AVG_H(MU_G(IJKE),MU_G(IJKNE)))*&
+               SSY = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,jtmp,k)),&
+                           AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jtmp,k),jtmp,k)))*&
                         (V_G(iplus(i,j,k),j,k)-V_G(I,J,K))*ODX*AXZ - &
-                     AVG_H(AVG_H(MU_G(IJKS),MU_G(IJK)),&
-                           AVG_H(MU_G(IJKSE),MU_G(IJKE)))*&
+                     AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(i,j,k)),&
+                           AVG_H(MU_G(ieast(i,jtmp,k),jtmp,k),MU_G(ieast(i,j,k),j,k)))*&
                            (V_G(iplus(i,j,k),jminus(i,j,k),k)-&
                            V_G(i,jminus(i,j,k),k))*ODX*AXZ
 
 ! part of 1/x d/dz (tau_xz) xdxdydz =>
 !         1/x d/dz (mu.dw/dx) xdxdydz =>
 ! delta (mu.dw/dx)Axy |T-B : at i+1/2, j, (k+1/2 - k-1/2)
-               MU_GE = AVG_H(AVG_H(MU_G(IJK),MU_G(IJKT)),&
-                             AVG_H(MU_G(IJKE),MU_G(IJKTE)))
-               MU_GBE = AVG_H(AVG_H(MU_G(IJKB),MU_G(IJK)),&
-                              AVG_H(MU_G(IJKBE),MU_G(IJKE)))
+               MU_GE = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,j,ktmp)),&
+                             AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktmp),j,ktmp)))
+               MU_GBE = AVG_H(AVG_H(MU_G(i,j,ktmp),MU_G(i,j,k)),&
+                              AVG_H(MU_G(ieast(i,j,ktmp),j,ktmp),MU_G(ieast(i,j,k),j,k)))
                SSZ = MU_GE*(W_G(iplus(i,j,k),j,k)-W_G(I,J,K))*ODX*AXY - &
                   MU_GBE*(W_G(IPlus(i,j,k),J,KMinus(i,j,k))-&
                   W_G(I,J,KMinus(i,j,k)))*ODX*AXY
