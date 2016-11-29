@@ -128,7 +128,6 @@
          do lknode = lknode_start,lknode_end
          do linode = linode_start,linode_end
          do ljnode = ljnode_start,ljnode_end
-            IF(DEAD_CELL_AT(linode,ljnode,lknode)) CYCLE
             iprocsumindx(lproc) = iprocsumindx(lproc) + 1
          end do
          end do
@@ -175,7 +174,6 @@
          do lknode = lknode_start,lknode_end
          do linode = linode_start,linode_end
          do ljnode = ljnode_start,ljnode_end
-            IF(DEAD_CELL_AT(linode,ljnode,lknode)) CYCLE
             isendnodes(lcount)=funijk(linode,ljnode,lknode)
             iprocsumindx(lproc)=iprocsumindx(lproc)+1
             lcount = lcount+1

@@ -61,7 +61,6 @@
       DO I = Imin2, Imax2
       DO J = Jmin2, Jmax2
 
-      IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
       if (myPE == PE_IO .AND. DMP_LOG) &
          WRITE (UNIT_LOG, '(I5, 3(I3), 8(1X,G9.2))') &

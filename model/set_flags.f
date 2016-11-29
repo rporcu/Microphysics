@@ -199,7 +199,7 @@
       USE funits
       USE compar
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: wall_at, cyclic_at, fluid_at, is_on_myPE_plus2layers
+      USE functions, only: wall_at, cyclic_at, fluid_at
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -211,10 +211,6 @@
       do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
-
-           IF(.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-           IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
          IF (wall_at(i,j,k)) THEN

@@ -52,7 +52,6 @@
 
       use functions, only: FLOW_AT
       use fldvar, only: MU_G
-      use compar, only: DEAD_CELL_AT
 
       IMPLICIT NONE
 
@@ -73,7 +72,6 @@
       DO J = JSTART2, JEND2
       DO I = ISTART2, IEND2
 
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
          IF(FLOW_AT(i,j,k)) THEN
 
@@ -123,7 +121,6 @@
       use fldvar, only: MU_G
 
       use functions, only: WALL_AT
-      use compar, only: DEAD_CELL_AT
 
       IMPLICIT NONE
 
@@ -141,7 +138,6 @@
       DO K = KSTART2, KEND2
       DO J = JSTART2, JEND2
       DO I = ISTART2, IEND2
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
          IF (.NOT.WALL_AT(i,j,k)) THEN
 
 ! Gas viscosity must be non-negative.

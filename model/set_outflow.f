@@ -43,10 +43,8 @@
       use fldvar, only: rop_g
       use fldvar, only: u_g, v_g, w_g
 
-      use functions, only: is_on_mype_plus2layers
       use functions, only: funijk,fluid_at
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
-      use compar, only: dead_cell_at
 
       use param, only: dimension_m
       use param1, only: undefined, zero
@@ -72,10 +70,6 @@
       DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
-! Check if current i,j,k resides on this PE
-               IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF(DEAD_CELL_AT(I,J,K)) CYCLE
-
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
                IF (fluid_at(iminus(i,j,k),j,k)) THEN

@@ -56,8 +56,6 @@
             DO K = IC_K_B(L), IC_K_T(L)
             DO J = IC_J_S(L), IC_J_N(L)
             DO I = IC_I_W(L), IC_I_E(L)
-               IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                IJK = FUNIJK(I,J,K)
 
                IF (.NOT.WALL_AT(i,j,k)) THEN

@@ -69,19 +69,12 @@
          PS_VOLUME(PSV) = ZERO
 
          do k = PS_K_B(PSV), PS_K_T(PSV)
-         do j = PS_J_S(PSV), PS_J_N(PSV)
-         do i = PS_I_W(PSV), PS_I_E(PSV)
-
-            if(IS_ON_myPE_owns(I, J, K)) then
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-               ijk = funijk(i,j,k)
-
-               if(fluid_at(i,j,k)) &
-                  lData_dp(myPE) = lData_dp(myPE) + VOL
-            endif
-
-         enddo
-         enddo
+            do j = PS_J_S(PSV), PS_J_N(PSV)
+               do i = PS_I_W(PSV), PS_I_E(PSV)
+                  if(fluid_at(i,j,k)) &
+                     lData_dp(myPE) = lData_dp(myPE) + VOL
+               enddo
+            enddo
          enddo
 
 ! Each process (in DMP) only knows about the volume of the point source
@@ -219,19 +212,16 @@
       lc1 = 0
 
       do k = PS_K_B(lPSV), PS_K_T(lPSV)
-      do j = PS_J_S(lPSV), PS_J_N(lPSV)
-      do i = PS_I_W(lPSV), PS_I_E(lPSV)
+         do j = PS_J_S(lPSV), PS_J_N(lPSV)
+            do i = PS_I_W(lPSV), PS_I_E(lPSV)
 
-         lc1 = lc1 + 1
-         if(IS_ON_myPE_owns(I, J, K)) then
-         IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
-            if(fluid_at(i,j,k)) then
-               lFlags_i(lc1,1) = myPE
-               lFlags_i(lc1,2) = FLAG(i,j,k)
-            endif
-         endif
-      enddo
-      enddo
+               lc1 = lc1 + 1
+               if(fluid_at(i,j,k)) then
+                  lFlags_i(lc1,1) = myPE
+                  lFlags_i(lc1,2) = FLAG(i,j,k)
+               endif
+            enddo
+         enddo
       enddo
 
 ! Collect flag information on root.
@@ -284,7 +274,6 @@
          do k = PS_K_B(lPSV), PS_K_T(lPSV)
          do j = PS_J_S(lPSV), PS_J_N(lPSV)
          do i = PS_I_W(lPSV), PS_I_E(lPSV)
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
             lc1 = lc1 + 1
             write(*,"(4x,I8,5(3x,I4))") IJK, I, J, K,  gFlags_i(lc1,:)
          enddo

@@ -108,9 +108,7 @@
 
       use functions, only: FUNIJK
       use functions, only: fluid_at
-      use functions, only: IS_ON_myPE_plus2layers
 
-      use compar, only: DEAD_CELL_AT
 
 ! Indicies of cell to check
       INTEGER, INTENT(IN) :: lI, lJ, lK
@@ -119,8 +117,6 @@
 
       EXCLUDE_DEM_MI_CELL = .TRUE.
 
-      IF(.NOT.IS_ON_myPE_plus2layers(lI,lJ,lK)) RETURN
-      IF(DEAD_CELL_AT(lI,lJ,lK)) RETURN
       IJK = FUNIJK(lI,lJ,lK)
       IF(.NOT.fluid_at(li,lj,lk)) RETURN
 
@@ -129,4 +125,3 @@
       END FUNCTION EXCLUDE_DEM_MI_CELL
 
       END MODULE DES_BC
-

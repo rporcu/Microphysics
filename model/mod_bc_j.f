@@ -50,7 +50,7 @@
       K_B = BC_K_B(BCV)
 
 ! Establish the OWNER of the BC
-      OWNER = merge(myPE, 0, IS_ON_myPE_owns(I_W,J_S,K_B))
+      OWNER = myPE
       ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER)THEN
@@ -103,10 +103,6 @@
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO I = BC_I_W(BCV), BC_I_E(BCV)
-         IF(.NOT.IS_ON_myPE_plus2layers(I,J_FLUID,K)) CYCLE
-         IF(.NOT.IS_ON_myPE_plus2layers(I,J_WALL, K)) CYCLE
-         IF(DEAD_CELL_AT(I,J_FLUID,K)) CYCLE
-         IF(DEAD_CELL_AT(I,J_WALL, K)) CYCLE
 
           IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND. &
                     mod(ICBC_FLAG(i,j_fluid,k),1000)== icbc_fluid)) ERROR = .TRUE.
@@ -132,11 +128,6 @@
 
          DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO I = BC_I_W(BCV), BC_I_E(BCV)
-
-            IF(.NOT.IS_ON_myPE_plus2layers(I,J_FLUID,K)) CYCLE
-            IF(.NOT.IS_ON_myPE_plus2layers(I,J_WALL, K)) CYCLE
-            IF(DEAD_CELL_AT(I, J_FLUID,K)) CYCLE
-            IF(DEAD_CELL_AT(I, J_WALL, K)) CYCLE
 
             IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND.                    &
                       mod(ICBC_FLAG(i,j_fluid,k),1000)==icbc_fluid)) THEN

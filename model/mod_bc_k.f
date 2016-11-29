@@ -52,7 +52,7 @@
 
 
 ! Establish the OWNER of the BC
-      OWNER = merge(myPE, 0, IS_ON_myPE_owns(I_W, J_S, K_B))
+      OWNER = myPE
       ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
@@ -103,11 +103,6 @@
       DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Only check cells that you own and contain fluid.
-         IF(.NOT.IS_ON_myPE_plus2layers(I,J,K_FLUID)) CYCLE
-         IF(.NOT.IS_ON_myPE_plus2layers(I,J,K_WALL )) CYCLE
-         IF(DEAD_CELL_AT(I,J,K_FLUID)) CYCLE
-         IF(DEAD_CELL_AT(I,J,K_WALL )) CYCLE
-
          IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                       &
                    mod(ICBC_FLAG(i,j,k_fluid),1000)==icbc_fluid)) ERROR = .TRUE.
 
@@ -132,11 +127,6 @@
          DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Only check cells that you own and contain fluid.
-            IF(.NOT.IS_ON_myPE_plus2layers(I,J,K_FLUID)) CYCLE
-            IF(.NOT.IS_ON_myPE_plus2layers(I,J,K_WALL )) CYCLE
-            IF(DEAD_CELL_AT(I,J,K_FLUID)) CYCLE
-            IF(DEAD_CELL_AT(I,J,K_WALL )) CYCLE
-
             if (.not. (WALL_ICBC_FLAG(i,j,k_wall) .AND. &
                         mod(ICBC_FLAG(i,j,k_fluid),1000)==icbc_fluid) ) THEN
 

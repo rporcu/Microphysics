@@ -22,9 +22,7 @@
       use fldvar, only: u_g, v_g, w_g
       use fldvar, only: rop_g, ep_g
       use functions, only: fluid_at
-      use functions, only: is_on_mype_plus2layers
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      use compar, only: dead_cell_at
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -43,8 +41,6 @@
          DO J = BC_J_S(L), BC_J_N(L)
             DO I = BC_I_W(L), BC_I_E(L)
 ! Check if current i,j,k resides on this PE
-               IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-               IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&

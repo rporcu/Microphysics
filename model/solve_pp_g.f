@@ -131,7 +131,7 @@
       use param1  , only: small_number
       use ps
       use run
-      use functions, only: fluid_at, dead_cell_at, is_on_myPE_plus2layers
+      use functions, only: fluid_at
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -163,9 +163,6 @@
          do k = PS_K_B(PSV), PS_K_T(PSV)
          do j = PS_J_S(PSV), PS_J_N(PSV)
          do i = PS_I_W(PSV), PS_I_E(PSV)
-
-            if(.NOT.IS_ON_myPE_plus2layers(I,J,K)) cycle
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 
             if(fluid_at(i,j,k)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))

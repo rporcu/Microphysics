@@ -301,7 +301,6 @@
          CALL PIC_SEARCH(I, POS(1), XE, DIMENSION_I, IMIN2, IMAX2)
 
 ! Skip cells that return invalid IJKs.
-         IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
 ! Skip cells that are not part of the local fuild domain.
          IJK = FUNIJK(i,j,k)
@@ -401,7 +400,6 @@
       use geometry, only: VOL
 
       use functions
-      use compar, only: dead_cell_at
 
       IMPLICIT NONE
 
@@ -424,7 +422,6 @@
       DO I = IC_I_W(ICV), IC_I_E(ICV)
 
          IF(.NOT.IS_ON_MYPE_WOBND(I,J,K)) CYCLE
-         IF(DEAD_CELL_AT(I,J,K)) CYCLE
 
          IJK = FUNIJK(I,J,K)
          IF(fluid_at(i,j,k)) IC_VOL = IC_VOL + VOL

@@ -61,9 +61,8 @@ CONTAINS
       use bc, only: bc_defined, bc_type
       use bc, only: bc_plane
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
-      use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
-      use functions, only: is_on_mype_owns, iminus, jminus, kminus
+      use functions, only: iminus, jminus, kminus
       use param, only: dimension_bc
       use param1, only: zero, small_number
       use run, only: units
@@ -87,9 +86,6 @@ CONTAINS
          DO K = BC_K_B(L), BC_K_T(L)
          DO J = BC_J_S(L), BC_J_N(L)
          DO I = BC_I_W(L), BC_I_E(L)
-
-            IF (.NOT.IS_ON_myPE_OWNS(I,J,K)) CYCLE
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE
 
             SELECT CASE (BC_PLANE(L))
             CASE ('E'); maxVEL = max(maxVEL,abs(U_G(I,J,K)))

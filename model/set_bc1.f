@@ -72,9 +72,7 @@
 
       use param1, only: undefined
 
-      use functions, only: is_on_mype_plus2layers
       use functions, only: iminus, jminus, kminus
-      use compar, only: dead_cell_at
 
       IMPLICIT NONE
 ! Dummy arguments
@@ -105,8 +103,6 @@
          DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
          DO I = BC_I_W(BCV), BC_I_E(BCV)
-            IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
 ! Why is the velocity of the boundary cell not always set (in case of
 ! w, s, or b plane then velocity of the adjacent fluid cell is set)?
 ! It should not really matter for MI...
@@ -199,10 +195,8 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_volflow_g
       use bc, only: bc_vout_g
-      use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
       use functions, only: iminus, jminus, kminus
-      use functions, only: is_on_mype_plus2layers
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero, small_number
       use run, only: time, dt, tstop
@@ -281,8 +275,6 @@
          DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
          DO I = BC_I_W(BCV), BC_I_E(BCV)
-            IF (.NOT.IS_ON_myPE_plus2layers(I,J,K)) CYCLE
-            IF (DEAD_CELL_AT(I,J,K)) CYCLE  ! skip dead cells
             SELECT CASE (TRIM(BC_PLANE(BCV)))
             CASE ('W'); U_G(iminus(i,j,k),j,k) = BC_U_G(BCV)
             CASE ('E'); U_G(I,J,K) = BC_U_G(BCV)
