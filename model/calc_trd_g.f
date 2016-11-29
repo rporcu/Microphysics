@@ -19,16 +19,13 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_TRD_G(trd_g)
-!
-!     Include param.inc file to specify parameter values
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
+
       USE fldvar, only: u_g, v_g, w_g
-!     USE compar
-!     USE bc
-      USE functions
+      USE functions, only: ODX, ODY, ODZ, WALL_AT
+      USE functions, only: iminus, jminus, kminus
+      USE functions, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE functions, only: istart, iend, jstart, jend, kstart, kend
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s

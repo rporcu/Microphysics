@@ -963,7 +963,6 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    DOUBLE PRECISION, allocatable, Dimension(:) :: r1_g, r2_g
     double precision :: prod
     integer :: i, j, k, ijk
 !-----------------------------------------------
@@ -1006,7 +1005,6 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    DOUBLE PRECISION, allocatable, Dimension(:,:) :: r_temp, rg_temp
     double precision, Dimension(2) :: prod, dot_product_par2
     integer :: i, j, k, ijk
 !-----------------------------------------------
