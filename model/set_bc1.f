@@ -6,13 +6,28 @@
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1
+      SUBROUTINE SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_defined, bc_type
-      USE param, only: dimension_bc
-      IMPLICIT NONE
+      USE param , only: dimension_bc
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      
+      implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -26,17 +41,17 @@
 
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
-               CALL SET_OUTFLOW(L)
+               CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
                CALL SET_BC1_REPORT_OUTFLOW(L)
             CASE ('MASS_OUTFLOW')
-               CALL SET_OUTFLOW(L)
-               CALL SET_BC1_ADJUST_OUTFLOW(L)
+               CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
+               CALL SET_BC1_ADJUST_OUTFLOW(L,u_g,v_g,w_g)
             CASE ('MASS_INFLOW')
-               CALL SET_BC1_JET(L)
+               CALL SET_BC1_JET(L,u_g,v_g,w_g)
             CASE ('P_INFLOW')
-               CALL SET_OUTFLOW(L)
+               CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
-               CALL SET_OUTFLOW(L)
+               CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
                CALL SET_BC1_REPORT_OUTFLOW(L)
             END SELECT
          ENDIF   ! end if (bc_defined(l))
@@ -53,7 +68,7 @@
 !  Purpose: update transient jet conditions                            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_JET(BCV)
+      SUBROUTINE SET_BC1_JET(BCV,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -66,21 +81,27 @@
       use bc, only: bc_jet_gh, bc_dt_h
       use bc, only: bc_jet_gl, bc_dt_l
 
-      use fldvar, only: u_g, v_g, w_g
-
       use run, only: time, dt
 
       use param1, only: undefined
 
       use functions, only: is_on_mype_plus2layers
       use functions, only: iminus, jminus, kminus
-      use compar, only: dead_cell_at
+      use compar   , only: dead_cell_at
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -184,7 +205,7 @@
 !  flow rate based on average outflow rate                             C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV)
+      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -199,8 +220,8 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_volflow_g
       use bc, only: bc_vout_g
-      use compar, only: dead_cell_at
-      use fldvar, only: u_g, v_g, w_g
+      use compar   , only: dead_cell_at
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iminus, jminus, kminus
       use functions, only: is_on_mype_plus2layers
       use funits, only: dmp_log, unit_log
@@ -213,6 +234,12 @@
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
 
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices

@@ -32,7 +32,7 @@
 !  set_outflow_fluxes - convective fluxes are set in the boundary      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW(BCV)
+      SUBROUTINE SET_OUTFLOW(BCV,p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -40,13 +40,11 @@
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_i_w, bc_i_e
 
-      use fldvar, only: rop_g
-      use fldvar, only: u_g, v_g, w_g
-
       use functions, only: is_on_mype_plus2layers
       use functions, only: funijk,fluid_at
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
-      use compar, only: dead_cell_at
+      use compar   , only: dead_cell_at
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use param, only: dimension_m
       use param1, only: undefined, zero
@@ -56,6 +54,19 @@
 !---------------------------------------------------------------------//
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -82,7 +93,7 @@
                   FIJK = FUNIJK(iminus(i,j,k),j,k)
                   RVEL_G = U_G(iminus(i,j,k),j,k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
@@ -117,7 +128,7 @@
 ! domain
                   RVEL_G = -U_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iplus(i,j,k),j,k)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iplus(i,j,k),j,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
@@ -145,7 +156,7 @@
                   FIJK = FUNIJK(i,jminus(i,j,k),k)
                   RVEL_G = V_G(i,jminus(i,j,k),k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jminus(i,j,k),k)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jminus(i,j,k),k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
@@ -166,7 +177,7 @@
                   FIJK = FUNIJK(i,jplus(i,j,k),k)
                   RVEL_G = -V_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jplus(i,j,k),k)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jplus(i,j,k),k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
@@ -189,7 +200,7 @@
                   FIJK = FUNIJK(i,j,kminus(i,j,k))
                   RVEL_G = W_G(i,j,kminus(i,j,k))
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kminus(i,j,k))
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kminus(i,j,k),p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
@@ -210,7 +221,7 @@
                   FIJK = FUNIJK(i,j,kplus(i,j,k))
                   RVEL_G = -W_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kplus(i,j,k))
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kplus(i,j,k),p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
@@ -242,14 +253,14 @@
 !  to their value in the adjacent fluid cell.                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_MISC(BCV, I,J,K, FI,FJ,FK)
+      SUBROUTINE SET_OUTFLOW_MISC(BCV,I,J,K,FI,FJ,FK,p_g,ro_g)
 
 ! Global variables
 !---------------------------------------------------------------------//
       use bc, only: bc_type
-      use fldvar, only: p_g, ro_g
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fldvar, only: ro_g0, mw_avg
-      use eos, only: EOSG
+      use eos   , only: EOSG
 
 ! Global parameters
 !---------------------------------------------------------------------//
@@ -264,6 +275,11 @@
       INTEGER, INTENT(IN) :: I,J,K
 ! ijk index for adjacent fluid cell
       INTEGER, INTENT(IN) :: FI,FJ,FK
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 
       IF (BC_TYPE(BCV) /= 'P_OUTFLOW' .AND. &

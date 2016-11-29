@@ -54,22 +54,29 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      DOUBLE PRECISION FUNCTION MAX_VEL_INLET()
+      DOUBLE PRECISION FUNCTION MAX_VEL_INLET(u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_defined, bc_type
       use bc, only: bc_plane
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
-      use compar, only: dead_cell_at
-      use fldvar, only: u_g, v_g, w_g
+      use compar   , only: dead_cell_at
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: is_on_mype_owns, iminus, jminus, kminus
-      use param, only: dimension_bc
-      use param1, only: zero, small_number
-      use run, only: units
-      use toleranc, only: max_allowed_vel, max_inlet_vel, max_inlet_vel_fac
+      use param    , only: dimension_bc
+      use param1   , only: zero, small_number
+      use run      , only: units
+      use toleranc , only: max_allowed_vel, max_inlet_vel, max_inlet_vel_fac
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -139,17 +146,25 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND ()
+      LOGICAL FUNCTION CHECK_VEL_BOUND (u_g,v_g,w_g,ep_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE fldvar, only: u_g, v_g, w_g, ep_g
       USE toleranc, only: max_inlet_vel
       USE functions, only: fluid_at
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

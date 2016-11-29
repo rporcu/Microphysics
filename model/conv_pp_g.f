@@ -30,24 +30,19 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CONV_PP_G(A_M, B_M)
+      SUBROUTINE CONV_PP_G(A_M, B_M, rop_ge, rop_gn, rop_gt)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE param
-      USE param1
-      USE fldvar
-      USE run
-      use matrix, only: e, w, s, n, t, b
-      USE physprop
-      USE geometry
-      USE functions
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
-      IMPLICIT NONE
+      USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use matrix   , only: e, w, s, n, t, b
+      USE geometry , only: do_k, axy, ayz, axz
+      USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
+      USE functions, only: fluid_at
+
+      implicit none
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -57,13 +52,18 @@
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: IJK, IPJK, IJPK, IJKP
-      INTEGER :: IMJK, IJMK, IJKM
-      INTEGER ::  I, J, K
+      integer ::  i,j,k
 ! local value of A_m
       DOUBLE PRECISION :: am
 !-----------------------------------------------
@@ -73,11 +73,7 @@
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
-         IJK = FUNIJK(i,j,k)
          IF (fluid_at(i,j,k)) THEN
-            IPJK = FUNIJK(iplus(i,j,k),j,k)
-            IJPK = FUNIJK(i,jplus(i,j,k),k)
-            IJKP = FUNIJK(i,j,kplus(i,j,k))
 
 ! East face (i+1/2, j, k)
             AM = ROP_GE(I,J,K)*AYZ
@@ -97,14 +93,12 @@
             ENDIF
 
 ! West face (i-1/2, j, k)
-            IMJK = FUNIJK(iminus(i,j,k),j,k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
                AM = ROP_GE(iminus(i,j,k),j,k)*AYZ
                A_M(I,J,K,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
-            IJMK = FUNIJK(i,jminus(i,j,k),k)
             IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
                AM = ROP_GN(i,jminus(i,j,k),k)*AXZ
                A_M(I,J,K,S) = AM
@@ -112,7 +106,6 @@
 
 ! Bottom face (i, j, k-1/2)
             IF (DO_K) THEN
-               IJKM = FUNIJK(i,j,kminus(i,j,k))
                IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
                   AM = ROP_GT(i,j,kminus(i,j,k))*AXY
                   A_M(I,J,K,B) = AM

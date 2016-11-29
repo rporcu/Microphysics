@@ -112,11 +112,9 @@
       use bc, only: BC_VOLFLOW_g
       use eos, only: EOSG
       use error_manager
-      use param, only: DIMENSION_BC
-      use param1, only: UNDEFINED
-      use param1, only: ZERO
-      use fldvar, only: MW_AVG
-      use fldvar, only: RO_g0
+      use param , only: DIMENSION_BC
+      use param1, only: zero, undefined
+      use fldvar, only: MW_AVG, ro_g0
       use scales, only: P_REF
       use toleranc
 
@@ -261,17 +259,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE GAS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK, BCV)
 
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE run
       USE bc
-      USE scales
-      USE funits
-      USE compar
-      USE discretelement
+      USE compar, only: myPE
 
       use error_manager
       use toleranc
@@ -380,17 +369,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SOLIDS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK, BCV, M, SKIP_M)
 
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE run
       USE bc
-      USE scales
-      USE funits
-      USE compar
-      USE discretelement
+      USE funits, only: dmp_log, unit_log
+      USE compar, only: myPE
 
       use error_manager
       use toleranc

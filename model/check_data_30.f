@@ -7,18 +7,22 @@
 !           and EP_g >= EP_star. Set miscellaneous constants           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_DATA_30
+      SUBROUTINE CHECK_DATA_30(lambda_g,mu_g)
 
 ! Global variables: (common to sub-functions)
 !---------------------------------------------------------------------//
-      use compar, only: ISTART2, IEND2
-      use compar, only: JSTART2, JEND2
-      use compar, only: KSTART2, KEND2
-      use param1, only: ZERO, ONE
+      use compar, only: istart2,iend2, jstart2, jend2, kstart2, kend2
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use param1, only: zero, one
 
       use error_manager
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) ::     mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -28,7 +32,8 @@
 
 
 ! Check physical properties in inflow/outflow cells.
-      CALL CHECK_FLOW_CELL_PROPS
+      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
+
 ! Verify physical values for field variables.
       CALL CHECK_PHYSICAL_BOUNDS
 
@@ -44,17 +49,21 @@
 !  properties for specified variables.                                 !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_FLOW_CELL_PROPS
+      SUBROUTINE CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
 
 ! Global variables:
 !---------------------------------------------------------------------//
-      use fldvar, only: LAMBDA_G
 
       use functions, only: FLOW_AT
-      use fldvar, only: MU_G
-      use compar, only: DEAD_CELL_AT
+      use compar   , only: DEAD_CELL_AT
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
 !---------------------------------------------------------------------//

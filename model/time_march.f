@@ -28,8 +28,10 @@
       USE run
       USE time_cpu
       USE toleranc
-! use function MAX_VEL_INLET to compute max. velocity at inlet
+
+      ! use function MAX_VEL_INLET to compute max. velocity at inlet
       USE utilities, ONLY: MAX_VEL_INLET
+
       USE vtp
       use output, only: RES_DT
       use adjust_dt
@@ -97,7 +99,7 @@
       IF (CALL_USR) CALL USR1
 
 ! Set wall boundary conditions and transient flow b.c.'s
-      CALL SET_BC1
+      CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
       CALL OUTPUT_MANAGER(EXIT_SIGNAL, FINISH)
 
@@ -134,11 +136,11 @@
       IF (NSTEP == NCHECK) THEN
          IF (DNCHECK < 256) DNCHECK = DNCHECK*2
          NCHECK = NCHECK + DNCHECK
-         CALL CHECK_DATA_30
+         CALL CHECK_DATA_30(lambda_g,mu_g)
       ENDIF
 
 ! Check for maximum velocity at inlet to avoid convergence problems
-      MAX_INLET_VEL = 100.0d0*MAX_VEL_INLET()
+      MAX_INLET_VEL = 100.0d0*MAX_VEL_INLET(u_g,v_g,w_g)
 ! if no inlet velocity is specified, use an upper limit defined in
 ! toleranc_mod.f
       IF(MAX_INLET_VEL <= SMALL_NUMBER) THEN

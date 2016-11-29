@@ -22,28 +22,35 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CHECK_DATA_20
+      SUBROUTINE CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE toleranc
-      USE fldvar
-      USE run
-      USE geometry
-      USE constant
-      USE physprop
-      USE funits
-      USE compar
-      USE discretelement
-      USE functions
+      USE geometry , only: flag
+      USE param1   , only: one, undefined, small_number
+      USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE functions, only: wall_at, iminus, jminus, kminus
 
       use error_manager
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

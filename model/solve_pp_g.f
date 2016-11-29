@@ -21,7 +21,7 @@
 !-----------------------------------------------
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1  , only: zero, one
-      USE fldvar  , only: pp_g
+      USE fldvar  , only: pp_g, rop_ge, rop_gn, rop_gt
       USE residual, only: resid_p, resid, num_resid
       USE residual, only: ijk_resid, den_resid, max_resid
       USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
@@ -74,7 +74,7 @@
       CALL INIT_AB_M (A_M, B_M)
 
 ! Forming the sparse matrix equation.
-      CALL CONV_PP_G (A_M, B_M)
+      CALL CONV_PP_G (A_M, B_M, rop_ge, rop_gn, rop_gt)
       CALL SOURCE_PP_G (A_M, B_M, B_MMAX)
       IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX)
 

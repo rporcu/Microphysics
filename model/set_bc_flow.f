@@ -303,16 +303,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_BC_VEL_OUTFLOW(M_TOT, SKIP, BCV)
 
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE run
+      USE geometry, only: no_i, no_j, no_k
       USE bc
-      USE funits
-      USE compar
-      USE discretelement
 
       use error_manager
 

@@ -14,27 +14,39 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CORRECT_0()
+      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
 
-      USE param
-      USE param1
-      USE geometry
-      USE physprop
-      USE compar
-      USE functions, only: funijk, ieast, jnorth, ktop
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE geometry , only: do_k
+      USE functions, only: ieast, jnorth, ktop
       USE functions, only: fluidorp_flow_at
-
-      use fldvar
-      USE ur_facs
+      USE ur_facs  , only: ur_fac
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: d_t&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: I,J,K,IJK
+      INTEGER :: I,J,K
 !-----------------------------------------------
 
 ! Underrelax pressure correction.  Velocity corrections should not be
@@ -44,7 +56,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
 
-            IJK = FUNIJK(i,j,k)
             IF (FLUIDORP_FLOW_AT(i,j,k)) THEN
 
               P_G(I,J,K) = P_G(I,J,K) + UR_FAC(1)*PP_G(I,J,K)

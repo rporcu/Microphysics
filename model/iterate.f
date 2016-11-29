@@ -96,7 +96,7 @@
 ! solve_vel_star call.
       CALL CONV_ROP()
       CALL CALC_MFLUX ()
-      CALL SET_BC1
+      CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
@@ -138,7 +138,8 @@
 ! Solve fluid pressure correction equation
          CALL SOLVE_PP_G (NORMG, RESG, IER)
 ! Correct pressure, velocities, and density
-         CALL CORRECT_0 ()
+         CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
+
       ENDIF
 
 ! Recalculate densities.
@@ -149,11 +150,11 @@
 ! modified by sof to force wall functions so even when NSW or FSW are
 ! declared, default wall BC will still be treated as NSW and no wall
 ! functions will be used
-      CALL SET_WALL_BC ()
+      CALL SET_WALL_BC (u_g,v_g,w_g)
 
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX ()
-      CALL SET_BC1
+      CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration
@@ -163,7 +164,7 @@
 ! Check for convergence
       CALL ACCUM_RESID ! Accumulating residuals from all the processors
       RESG = RESID(RESID_P)
-      CALL CHECK_CONVERGENCE (NIT, 0.0d+0, MUSTIT)
+      CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT)
 
       IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
          CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux)

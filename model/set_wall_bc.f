@@ -7,7 +7,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_WALL_BC()
+      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g)
 
 !-----------------------------------------------
 ! Modules
@@ -21,6 +21,13 @@
       USE geometry, only: imax2, jmax2, kmax2
 
       implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -52,10 +59,10 @@
 
             SELECT CASE (TRIM(BC_TYPE(L)))
                CASE ('FREE_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g)
 
                CASE ('NO_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g)
 
                CASE ('PAR_SLIP_WALL')
 ! updating the boundary velocity may improve convergence
@@ -75,7 +82,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
 
@@ -87,7 +94,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
 
@@ -99,7 +106,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
 
@@ -111,7 +118,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
 
@@ -123,7 +130,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
 
@@ -135,7 +142,7 @@
             IF (.NOT.IS_ON_myPE_plus2layers(I1,J1,K1)) CYCLE
             IF (DEAD_CELL_AT(I1,J1,K1)) CYCLE  ! skip dead cells
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
          ENDDO
       ENDDO
       RETURN
@@ -152,14 +159,14 @@
 !           cell                                                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2)
+      SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, u_g, v_g, w_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
-      USE fldvar, only: u_g, v_g, w_g
+      USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: dead_cell_at, ns_wall_at, wall_at
       USE geometry , only: do_k
@@ -173,6 +180,13 @@
       INTEGER, INTENT(IN) :: JJ1, JJ2
 ! Starting and ending K index
       INTEGER, INTENT(IN) :: KK1, KK2
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
