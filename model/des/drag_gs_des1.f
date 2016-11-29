@@ -266,6 +266,10 @@
 
          lEPG = ZERO
          VELFP = ZERO
+! This avoids FP exceptions for some ghost particles.
+         I = PIJK(NP,1)
+         J = PIJK(NP,2)
+         K = PIJK(NP,3)
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
@@ -288,10 +292,6 @@
             VELFP(3) = WGC(IJK)
          ENDIF
 
-! This avoids FP exceptions for some ghost particles.
-         I = PIJK(NP,1)
-         J = PIJK(NP,2)
-         K = PIJK(NP,3)
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
