@@ -95,7 +95,7 @@
 ! Calculate the face values of densities and mass fluxes for the first
 ! solve_vel_star call.
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
-      CALL CALC_MFLUX ()
+      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
       CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Default/Generic Error message
@@ -154,7 +154,7 @@
       CALL SET_WALL_BC (u_g,v_g,w_g)
 
 ! Calculate the face values of mass fluxes
-      CALL CALC_MFLUX ()
+      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
       CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! User-defined linear equation solver parameters may be adjusted after

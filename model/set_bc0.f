@@ -105,7 +105,6 @@
       use toleranc, only: tmin
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use boundfunijk, only: bound_funijk
 
       implicit none
 
@@ -217,7 +216,6 @@
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: im1, jm1, km1
-      use boundfunijk, only: bound_funijk
       IMPLICIT NONE
 
 ! Dummy arguments

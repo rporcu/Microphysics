@@ -12,17 +12,8 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE geometry
-      USE ic
-      USE bc
-      USE physprop
-      USE funits
-      USE compar
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use ic
-      USE boundfunijk
       USE functions
       IMPLICIT NONE
 !-----------------------------------------------
