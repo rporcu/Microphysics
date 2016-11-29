@@ -94,7 +94,7 @@
 
 ! Calculate the face values of densities and mass fluxes for the first
 ! solve_vel_star call.
-      CALL CONV_ROP()
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX ()
       CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
 
@@ -132,7 +132,7 @@
       IF (IER_MANAGER()) goto 1000
 
 ! Calculate the face values of densities.
-      CALL CONV_ROP()
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
