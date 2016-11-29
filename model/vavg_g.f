@@ -28,7 +28,7 @@ CONTAINS
 !   M o d u l e s
 !-----------------------------------------------
          USE fldvar, ONLY: EP_G
-         USE functions, ONLY: IS_ON_myPE_wobnd, FUNIJK
+         USE functions, ONLY: IS_ON_myPE_wobnd
          USE functions, ONLY: IS_ON_myPE_wobnd, fluid_at
          USE param1, ONLY: ZERO
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -59,7 +59,6 @@ CONTAINS
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_at(i,j,k)) THEN
             SUM_VOL = SUM_VOL + VOL
@@ -81,7 +80,6 @@ CONTAINS
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, ONLY: is_on_mype_wobnd, fluid_at
-      USE functions, ONLY: funijk
       USE param1
 
       IMPLICIT NONE
@@ -109,7 +107,6 @@ CONTAINS
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
          IF(.NOT.IS_ON_myPE_wobnd(I,J,K)) CYCLE
          IF (fluid_at(i,j,k)) THEN
             SUM_G = SUM_G + Flux_g(I,J,K)

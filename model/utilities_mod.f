@@ -63,7 +63,7 @@ CONTAINS
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
       use compar, only: dead_cell_at
       use fldvar, only: u_g, v_g, w_g
-      use functions, only: funijk, is_on_mype_owns, iminus, jminus, kminus
+      use functions, only: is_on_mype_owns, iminus, jminus, kminus
       use param, only: dimension_bc
       use param1, only: zero, small_number
       use run, only: units
@@ -73,7 +73,7 @@ CONTAINS
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: L, I, J, K, IJK
+      INTEGER :: L, I, J, K
       DOUBLE PRECISION :: maxVEL
 !---------------------------------------------------------------------//
 
@@ -90,7 +90,6 @@ CONTAINS
 
             IF (.NOT.IS_ON_myPE_OWNS(I,J,K)) CYCLE
             IF (DEAD_CELL_AT(I,J,K)) CYCLE
-            IJK = FUNIJK(I,J,K)
 
             SELECT CASE (BC_PLANE(L))
             CASE ('E'); maxVEL = max(maxVEL,abs(U_G(I,J,K)))

@@ -45,7 +45,6 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE functions, only: funijk
       USE functions, only: fluid_at
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
@@ -153,7 +152,6 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE functions, only: funijk
       USE functions, only: fluid_at
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
@@ -173,9 +171,9 @@
 ! macroscopic density (rho_prime)
       DOUBLE PRECISION, INTENT(in) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: V(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: W(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
       DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
