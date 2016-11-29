@@ -167,7 +167,6 @@ set(SOURCES
   model/get_data.f
   model/get_ps.f
   model/ic_mod.f
-  model/init_fvars.f
   model/init_namelist.f
   model/io/funits_mod.f
   model/io/in_binary_512_mod.f

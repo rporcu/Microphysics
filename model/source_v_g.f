@@ -638,14 +638,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_V_G(A_M, B_M)
 
-      use compar
-      use constant
-      use geometry
-      use param1, only: small_number
-      use fldvar
+      use functions, only: fluid_at
+      use geometry, only: vol
+      use param1  , only: small_number
       use ps
-      use run
-      use functions
 
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3

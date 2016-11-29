@@ -15,7 +15,9 @@
       USE des_allocate   , only: des_allocate_arrays
       USE discretelement , only: discrete_element
       USE error_manager  , only: init_error_manager
+      USE fldvar         , only: ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g
       USE gridmap        , only: gridmap_init
+      USE param1         , only: undefined
       USE run            , only: run_type, run_name
       use desgrid        , only: desgrid_init
       use mpi_init_des   , only: desmpi_init
@@ -110,11 +112,15 @@
       CALL ALLOCATE_ARRAYS
       IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
 
-! Initialize arrays.
-      CALL INIT_FVARS
-      IF(DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
+      ! Initialize arrays.
+      IF(allocated(  EP_G)) EP_G = UNDEFINED
+      IF(allocated(  P_G))   P_G = UNDEFINED
+      IF(allocated( RO_G))  RO_G = UNDEFINED
+      IF(allocated(ROP_G)) ROP_G = UNDEFINED
+      IF(allocated(  U_G))   U_G = UNDEFINED
+      IF(allocated(  V_G))   V_G = UNDEFINED
+      IF(allocated(  W_G))   W_G = UNDEFINED
 
-
-      RETURN
+      IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
 
       END SUBROUTINE GET_DATA

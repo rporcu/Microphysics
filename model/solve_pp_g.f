@@ -14,14 +14,13 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOLVE_PP_G(NORMG, RESG, IER)
+      SUBROUTINE SOLVE_PP_G(pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1  , only: zero, one
-      USE fldvar  , only: pp_g, rop_ge, rop_gn, rop_gt
       USE residual, only: resid_p, resid, num_resid
       USE residual, only: ijk_resid, den_resid, max_resid
       USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
@@ -40,6 +39,16 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+
+      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
 ! normalized) or a user defined value given by norm_g.  If norm_g

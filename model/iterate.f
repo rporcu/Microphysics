@@ -136,7 +136,7 @@
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
-         CALL SOLVE_PP_G (NORMG, RESG, IER)
+         CALL SOLVE_PP_G (pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
 ! Correct pressure, velocities, and density
          CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
 

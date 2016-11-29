@@ -270,11 +270,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_WALL
 
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
       USE bc
       USE ic
       USE funits

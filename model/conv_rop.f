@@ -8,22 +8,38 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP()
+      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE fldvar, only: rop_g, u_g, v_g, w_g
-      USE fldvar, only: rop_ge, rop_gn, rop_gt
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE run, only: discretize
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
          CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT)
       ELSE
-         CALL CONV_ROP1 (DISCRETIZE(1), ROP_g, U_g, V_g, W_g, &
-                         ROP_gE, ROP_gN, ROP_gT)
+         CALL CONV_ROP1 (DISCRETIZE(1), &
+                         rop_g, u_g, v_g, w_g, &
+                         rop_ge, rop_gn, rop_gt)
       ENDIF
 
       RETURN
@@ -147,7 +163,9 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP1(DISC, ROP, U, V, W, ROP_E, ROP_N, ROP_T)
+      SUBROUTINE CONV_ROP1(DISC, &
+                           rop, u, v, w, &
+                           rop_e, rop_n, rop_t)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -168,15 +186,15 @@
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(in) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(in) :: rop(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: u(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: v(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: w(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_e(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_n(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_t(istart3:iend3,jstart3:jend3,kstart3:kend3)
 !
 ! Local variables
 !---------------------------------------------------------------------//
