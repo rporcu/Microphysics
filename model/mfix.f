@@ -173,7 +173,7 @@
       CALL GET_CORNER_CELLS()
 
 ! Set constant physical properties
-      CALL SET_CONSTPROP
+      CALL SET_CONSTPROP(ro_g,lambda_g,mu_g)
 
 ! Set initial conditions
       CALL SET_IC(ep_g, p_g, u_g, v_g, w_g)

@@ -32,7 +32,7 @@
 !  set_outflow_fluxes - convective fluxes are set in the boundary      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW(BCV,p_g,ro_g,rop_g,u_g,v_g,w_g)
+      SUBROUTINE SET_OUTFLOW(BCV,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -54,6 +54,8 @@
       INTEGER, INTENT(IN) :: BCV
 
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -88,7 +90,7 @@
                   RVEL_G = U_G(iminus(i,j,k),j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,I,J,K,FIJK,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -123,7 +125,7 @@
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, iplus(i,j,k),j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -151,7 +153,7 @@
                   RVEL_G = V_G(i,jminus(i,j,k),k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jminus(i,j,k),k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      V_G(I,J,K) = ROP_G(i,jminus(i,j,k),k)*V_G(i,jminus(i,j,k),k)/ROP_G(I,J,K)
@@ -172,7 +174,7 @@
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jplus(i,j,k),k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -195,7 +197,7 @@
                   RVEL_G = W_G(i,j,kminus(i,j,k))
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kminus(i,j,k),p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      W_G(I,J,K) = ROP_G(i,j,kminus(i,j,k))*W_G(i,j,kminus(i,j,k))/ROP_G(I,J,K)
@@ -216,7 +218,7 @@
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kplus(i,j,k),p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV, I,J,K, FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK,RVEL_G,RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -296,12 +298,12 @@
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV,I,J,K,FIJK,RVEL_G,RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Global variables
 !---------------------------------------------------------------------//
       use bc, only: bc_ep_g
-      use fldvar, only: rop_g, ro_g, ep_g
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: funijk
       use discretelement, only: discrete_element
       use discretelement, only: des_rop_s
@@ -313,6 +315,13 @@
       use param1, only: undefined, zero, one
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy arguments
 !---------------------------------------------------------------------//

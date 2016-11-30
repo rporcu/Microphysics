@@ -167,7 +167,7 @@
 
               IF(RO_G(I,J,K) < ZERO) THEN
                  Err_l(myPE) = 100
-                 IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(i, j, k, wHeader)
+                 IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(ro_g, p_g, i, j, k, wHeader)
               ENDIF
             ENDIF
 
@@ -191,14 +191,19 @@
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE ROgErr_LOG(i, j, k, tHeader)
+      SUBROUTINE ROgErr_LOG(ro_g, p_g, i, j, k, tHeader)
 
-! Simulation time
+      ! Simulation time
       use run, only: TIME
-! Gas phase density (compressible).
-      use fldvar, only: RO_g
-! Gas phase pressure.
-      use fldvar, only: P_g
+
+      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
+      implicit none
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER, intent(in) :: i, j, k
       LOGICAL, intent(inout) :: tHeader
