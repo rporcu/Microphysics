@@ -14,12 +14,6 @@
 ! Modules
 !-----------------------------------------------
 
-#ifdef MPI
-         use mpi
-#endif
-
-!-----------------------------------------------
-
 ! myPE - my processor id (it varies from 0 to nproc-1)
 ! numPEs - total number of nodes
       integer, parameter :: myPE = 0

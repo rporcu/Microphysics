@@ -11,15 +11,12 @@
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE funits
-      USE compar
-      USE functions
-      USE in_binary_512
+         USE geometry, only: cyclic_z, ijkmax2
+         USE functions, only: funijk
+         USE funits, only: unit_out
+         USE geometry, only: kmax1
+         USE geometry, only: kmax2
+         USE in_binary_512, only: convert_to_io_dp
 
       IMPLICIT NONE
 

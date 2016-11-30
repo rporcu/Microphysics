@@ -35,7 +35,7 @@
       CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
 
 ! Verify physical values for field variables.
-      CALL CHECK_PHYSICAL_BOUNDS(mu_g) 
+      CALL CHECK_PHYSICAL_BOUNDS(mu_g)
 
       RETURN
 
@@ -56,6 +56,7 @@
 
       use functions, only: flow_at
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE open_files_mod, only: open_pe_log, close_pe_log
 
       IMPLICIT NONE
 
@@ -126,10 +127,10 @@
 
 ! Global variables:
 !---------------------------------------------------------------------//
-      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use toleranc, only: TMIN, TMAX, TOL_COM
-
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: WALL_AT
+      use open_files_mod, only: open_pe_log, close_pe_log
+      use toleranc, only: TMIN, TMAX, TOL_COM
 
       IMPLICIT NONE
 
@@ -183,6 +184,8 @@
 !----------------------------------------------------------------------!
       SUBROUTINE REPORT_ERROR(pIER, pI, pJ, pK, VAL,  RELATION, BND, &
          VAR, LC1, LC2)
+
+      USE open_files_mod, only: open_pe_log, close_pe_log
 
       INTEGER, INTENT(INOUT) :: pIER
       INTEGER, INTENT(IN) :: pI, pJ, pK

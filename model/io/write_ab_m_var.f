@@ -15,18 +15,14 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_AB_M_VAR(A_M, B_M, VAR)
 
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-
-      USE geometry
-      USE compar
-      USE functions
-
-      use machine
-      use funits
+         USE compar, only: mype, pe_io
+         USE compar, only: istart3, jstart3, kstart3
+         USE compar, only: iend3, jend3, kend3
+         USE geometry, only: imin2, jmin2, kmin2
+         USE geometry, only: imax2, jmax2, kmax2
+         USE functions, only: funijk, imap_c, jmap_c, kmap_c
+         USE funits, only: dmp_log, unit_log
+         USE param, only: DIMENSION_3
 
       IMPLICIT NONE
 !-----------------------------------------------

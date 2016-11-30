@@ -127,6 +127,8 @@
       use ic, only: icbc_undef
       use functions
 
+      USE open_files_mod, only: open_pe_log
+
       IMPLICIT NONE
 
       LOGICAL :: ERROR = .FALSE.
@@ -346,6 +348,8 @@
       use functions    , only: cyclic_x, cyclic_y, cyclic_z, wall_icbc_flag
       use geometry     , only: flag, imax2, jmax2, kmax2
       use error_manager
+
+      USE open_files_mod, only: open_pe_log
 
       IMPLICIT NONE
 

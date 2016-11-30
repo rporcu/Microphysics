@@ -21,6 +21,8 @@
       use error_manager
       USE functions
 
+      USE open_files_mod, only: open_pe_log
+
       IMPLICIT NONE
 
 ! boundary condition index

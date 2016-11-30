@@ -39,6 +39,8 @@
       use functions, only: fluid_at
       use functions, only: FUNIJK
 
+      USE open_files_mod, only: open_pe_log
+
 ! Rank ID of current process
       use compar, only: myPE
 ! Global communication function to sum to all ranks.

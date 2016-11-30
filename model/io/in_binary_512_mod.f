@@ -22,6 +22,9 @@
 !
 MODULE IN_BINARY_512
 
+   use geometry, only: imax2, jmax2, kmax2
+   use functions, only: funijk
+
 CONTAINS
 
       SUBROUTINE IN_BIN_512(IUNIT, ARRAY, N, NEXT_REC)
@@ -31,7 +34,8 @@ CONTAINS
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE machine
+         use machine, only: nwords_dp
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -103,10 +107,6 @@ CONTAINS
 
       subroutine convert_from_io_dp(arr_io,arr_internal,n)
 
-      use geometry
-      USE compar
-      USE functions
-
       implicit none
 
       double precision   arr_io(*) , arr_internal(*)
@@ -126,10 +126,6 @@ CONTAINS
     end subroutine convert_from_io_dp
 
       subroutine convert_to_io_dp(arr_internal,arr_io,n)
-
-      use geometry
-      USE compar
-      USE functions
 
       implicit none
 

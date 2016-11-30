@@ -18,33 +18,24 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE WRITE_ERROR(NAME, LINE, LMAX)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE funits
-      USE param
-      USE param1
+
+      USE funits, only: unit_log, dmp_log
+
       IMPLICIT NONE
-!-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
+
 !                      Subroutine name
       CHARACTER(LEN=*)    Name
-!
+
 !                      Message
       CHARACTER(LEN=*)    LINE(*)
-!
+
 !                      Dimension of message array
       INTEGER          LMAX
-!
+
 !                      Index
       INTEGER          L
-!
+
 !-----------------------------------------------
-!
 
       IF(DMP_LOG)WRITE (UNIT_LOG, 1000) NAME
       DO L = 1, LMAX

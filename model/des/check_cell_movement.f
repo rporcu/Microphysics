@@ -87,6 +87,8 @@
       use geometry
       use compar
 
+      USE open_files_mod, only: open_pe_log
+
       IMPLICIT NONE
 
 ! Local Variables:

@@ -1,3 +1,9 @@
+MODULE OPEN_FILES_MOD
+
+      USE open_file_mod, only: open_file
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Module name: OPEN_FILES                                             !
@@ -8,11 +14,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE OPEN_FILES(RUN_NAME, RUN_TYPE)
 
-      USE machine
-      USE funits
-      USE compar
-
-      use error_manager
+      USE compar, only: mype, numPEs, pe_io
+      USE error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
+      USE funits, only: unit_out, unit_res
+      USE machine, only: open_n1
 
       IMPLICIT NONE
 
@@ -311,3 +316,5 @@
 
       RETURN
       END SUBROUTINE CLOSE_PE_LOG
+
+END MODULE OPEN_FILES_MOD

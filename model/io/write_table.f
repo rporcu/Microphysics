@@ -1,3 +1,10 @@
+MODULE WRITE_TABLE_MOD
+
+   USE param, only: dim_i, dim_j, dim_k
+   USE funits, only: unit_out
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: WRITE_TABLE (LEGEND, ARRAY, DIST_MIN, LSTART, LEND)    C
@@ -20,43 +27,37 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE WRITE_TABLE(LEGEND, ARRAY, DIST_MIN, LSTART, LEND)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
+      SUBROUTINE WRITE_TABLE(LEGEND, SCALAR, DIST_MIN, LSTART, LEND)
+
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE funits
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-!
+
 !                      Legend
       CHARACTER(LEN=*)    LEGEND(3)
-!
+
 !                      DX, DY, or DZ Array to be written
 
 
 !                      Starting array index
       INTEGER          LSTART
-!
+
 !                      Ending array index
       INTEGER          LEND
-!//EFD Nov/11, avoid use of (*)
-!//      DOUBLE PRECISION ARRAY(*)
-      DOUBLE PRECISION ARRAY((LSTART-1):(LEND+1))
-!
+
+      DOUBLE PRECISION SCALAR
+
 !                      Starting value of distance
       DOUBLE PRECISION DIST_MIN
-!
+
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
 !-----------------------------------------------
-!
+
 !                      Number of columns in the table.  When this is changed
 !                      remember to change the FORMAT statement also.
       INTEGER, PARAMETER :: NCOL = 5
@@ -91,7 +92,7 @@
       DO L = LSTART, LEND
          ARRAY1(L) = L
          ARRAY3(L) = DIST
-         IF (L < LEND) DIST = DIST + ARRAY(L+1)
+         IF (L < LEND) DIST = DIST + SCALAR
       END DO
       NROW = (LEND - LSTART + 1)/NCOL
 !
@@ -100,14 +101,14 @@
          L1 = L2 + 1
          L2 = L1 + NCOL - 1
          WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
-         WRITE (UNIT_OUT, 1020) LEGEND(2), (ARRAY(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
          WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
       END DO
       IF (NROW*NCOL < LEND - LSTART + 1) THEN
          L1 = L2 + 1
          L2 = LEND
          WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
-         WRITE (UNIT_OUT, 1020) LEGEND(2), (ARRAY(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
          WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
       ENDIF
       RETURN
@@ -116,3 +117,5 @@
  1020 FORMAT(7X,A3,2X,5(G12.5,1X))
  1030 FORMAT(7X,A3,2X,5(G12.5,1X),/)
       END SUBROUTINE WRITE_TABLE
+
+END MODULE WRITE_TABLE_MOD

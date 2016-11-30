@@ -8,17 +8,15 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_PHASE_INDEX
 
-      use param1, only: small_number
-
-      USE physprop, only: MMAX, D_P0, RO_s0
-
-      use discretelement, only: PIJK
       USE discretelement, only: DES_RADIUS, RO_SOL
       USE discretelement, only: MAX_PIP
-      USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
-      use mpi_funs_des, only: des_par_exchange
-
+      USE discretelement, only: PIJK
       USE error_manager
+      USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
+      USE mpi_funs_des, only: des_par_exchange
+      USE open_files_mod, only: open_pe_log
+      USE param1, only: small_number
+      USE physprop, only: MMAX, D_P0, RO_s0
 
       IMPLICIT NONE
 !-----------------------------------------------

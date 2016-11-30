@@ -8,11 +8,12 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-        use geometry
-        use compar
-        use run
-
-        use error_manager
+          use geometry, only: imax1, imin1, jmax1, jmin1, kmax1, kmin1
+          use compar, only: nodesi, nodesj, nodesk
+          use compar, only: isize_all, jsize_all, ksize_all
+          use compar, only: domain_size_adjusted, nlayers_bicgs
+          use compar, only: istart1_all, jstart1_all, kstart1_all, iend1_all, jend1_all, kend1_all
+          use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
 
         implicit none
 
@@ -93,23 +94,21 @@
       IF(.NOT.DOMAIN_SIZE_ADJUSTED) THEN
          INQUIRE(FILE='gridmap.dat',EXIST=PRESENT)
          IF(PRESENT) THEN
-            IF(MyPE == PE_IO) THEN
-               WRITE(*,*)'Reading gridmap from grimap.dat...'
-               OPEN(UNIT=777, FILE='gridmap.dat', STATUS='OLD')
+            WRITE(*,*)'Reading gridmap from grimap.dat...'
+            OPEN(UNIT=777, FILE='gridmap.dat', STATUS='OLD')
 
-               READ (777, *) NODESI,NODESJ,NODESK
-               DO IPROC = 0,NODESI-1
-                  READ(777,*) jPROC,Isize1_all(IPROC)
-               ENDDO
-               DO IPROC = 0,NODESJ-1
-                  READ(777,*) jPROC,Jsize1_all(IPROC)
-               ENDDO
-               DO IPROC = 0,NODESK-1
-                  READ(777,*) jPROC,Ksize1_all(IPROC)
-               ENDDO
+            READ (777, *) NODESI,NODESJ,NODESK
+            DO IPROC = 0,NODESI-1
+              READ(777,*) jPROC,Isize1_all(IPROC)
+            ENDDO
+            DO IPROC = 0,NODESJ-1
+              READ(777,*) jPROC,Jsize1_all(IPROC)
+            ENDDO
+            DO IPROC = 0,NODESK-1
+              READ(777,*) jPROC,Ksize1_all(IPROC)
+            ENDDO
 
-               CLOSE(777)
-            ENDIF
+            CLOSE(777)
             !CALL BCAST(ISIZE1_ALL)
             !CALL BCAST(JSIZE1_ALL)
             !CALL BCAST(KSIZE1_ALL)

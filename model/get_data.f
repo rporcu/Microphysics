@@ -13,15 +13,16 @@
 ! Modules
 !-----------------------------------------------
       USE des_allocate   , only: des_allocate_arrays
+      USE desgrid        , only: desgrid_init
       USE discretelement , only: discrete_element
       USE error_manager  , only: init_error_manager
       USE fldvar         , only: ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g
       USE gridmap        , only: gridmap_init
+      USE mpi_init_des   , only: desmpi_init
+      USE open_files_mod, only: open_files
       USE param1         , only: undefined
       USE run            , only: run_type, run_name
-      use desgrid        , only: desgrid_init
-      use mpi_init_des   , only: desmpi_init
-      use stl_preproc_des, only: DES_STL_PREPROCESSING
+      USE stl_preproc_des, only: DES_STL_PREPROCESSING
 
       IMPLICIT NONE
 !-----------------------------------------------

@@ -1,3 +1,7 @@
+MODULE OPEN_FILE_MOD
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OPEN_FILE                                              C
@@ -22,7 +26,7 @@
       SUBROUTINE OPEN_FILE(FILENAME, NB, IUNIT, EXT, FULL_NAME,        &
          OPEN_STAT, OPEN_ACCESS, OPEN_FORM, IRECL, IER)
 
-      use compar
+      use compar, only: mype, numpes
 
       IMPLICIT NONE
 
@@ -66,7 +70,7 @@
       IER = 0
 
 ! Conditions for indexing the RES files for distributed IO.
-      RES_IDX = (myPE .NE. PE_IO)
+      RES_IDX = .FALSE.
 
 ! Flag for indexing files.
       USE_IDX = .FALSE.
@@ -118,3 +122,4 @@
  1001 FORMAT(A,A4)
 
       END SUBROUTINE OPEN_FILE
+END MODULE OPEN_FILE_MOD
