@@ -16,15 +16,17 @@
       SUBROUTINE LEQ_BICGS(VNAME, VNO, VAR, A_M, B_m, cmethod, &
                            TOL, PC, ITMAX, IER)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE leqsol
-      USE funits
+         use compar, only: istart3, iend3
+         use compar, only: jstart3, jend3
+         use compar, only: kstart3, kend3
+         use compar, only: mype
+         use exit_mod, only: mfix_exit
+         use funits, only: unit_log, dmp_log
+         use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
+         use param, only: DIM_EQS
+         use param, only: dimension_3
+         use param1, only: zero
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -96,15 +98,21 @@
       SUBROUTINE LEQ_BICGS0(VNAME, VNO, VAR, A_M, B_m, cmethod, &
                             TOL, ITMAX, MATVEC, MSOLVE, IER )
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE leqsol
-      USE functions
+         use compar, only: istart2, iend2
+         use compar, only: istart3, iend3
+         use compar, only: jstart2, jend2
+         use compar, only: jstart3, jend3
+         use compar, only: kstart2, kend2
+         use compar, only: kstart3, kend3
+         use compar, only: mype, pe_io, numpes
+         use exit_mod, only: mfix_exit
+         use functions, only: funijk
+         use funits, only: unit_log, dmp_log
+         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
+         use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
+         use param, only: DIM_EQS
+         use param, only: dimension_3
+         use param1, only: zero, one, small_number
 
       IMPLICIT NONE
 !-----------------------------------------------

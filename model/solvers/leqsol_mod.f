@@ -1,7 +1,27 @@
 MODULE leqsol
 
-  use param, only: DIM_EQS
-  use exit_mod, only: mfix_exit
+   use compar, ONLY: istart, iend, jstart, jend, kstart, kend
+   use compar, only: iend, jend, kend
+   use compar, only: iend1, jend1, kend1
+   use compar, only: iend2, jend2, kend2
+   use compar, only: iend3, jend3, kend3
+   use compar, only: istart, jstart, kstart
+   use compar, only: istart1, jstart1, kstart1
+   use compar, only: istart2, jstart2, kstart2
+   use compar, only: istart3, iend3
+   use compar, only: jstart3, jend3
+   use compar, only: kstart3, kend3
+   use compar, only: mype
+   use error_manager, only: ival, flush_err_msg, err_msg
+   use exit_mod, only: mfix_exit
+   use functions, only: funijk, funijk_map_c, iplus, jplus, kplus, iminus, jminus, kminus
+   use funits, only: dmp_log, unit_log
+   use geometry, ONLY: do_k
+   use geometry, only: no_k
+   use geometry, only: no_k
+   use param, only: DIM_EQS
+   use param, only: dimension_3
+   use param1, only: zero
 
 ! Maximum number of outer iterations
   INTEGER :: MAX_NIT
@@ -55,8 +75,6 @@ CONTAINS
 !----------------------------------------------------------------------!
   SUBROUTINE REPORT_SOLVER_STATS(TNIT, STEPS)
 
-    use error_manager, only: ival, flush_err_msg, err_msg
-
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: TNIT, STEPS
@@ -108,15 +126,6 @@ CONTAINS
 
   SUBROUTINE LEQ_MATVEC(VNAME, VAR, A_M, Avar)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    USE compar, ONLY: istart, iend, jstart, jend, kstart, kend
-    USE geometry, ONLY: do_k
-    USE param, ONLY: DIMENSION_3
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -199,14 +208,6 @@ CONTAINS
 
   SUBROUTINE LEQ_MSOLVE(VNAME, B_m, A_M, Var, CMETHOD)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    USE param
-    USE param1
-    USE geometry
-    USE compar
-    USE functions
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -501,14 +502,6 @@ CONTAINS
 
   SUBROUTINE LEQ_MSOLVE0(VNAME, B_m, A_M, Var, CMETHOD)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    USE param
-    USE param1
-    USE geometry
-    USE compar
-    USE functions
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -563,14 +556,6 @@ CONTAINS
 
   SUBROUTINE LEQ_MSOLVE1(VNAME, B_m, A_M, Var, CMETHOD)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    USE param
-    USE param1
-    USE geometry
-    USE compar
-    USE functions
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -625,15 +610,6 @@ CONTAINS
 
       SUBROUTINE LEQ_ISWEEP(I, Vname, VAR, A_M, B_M)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE funits
-      USE functions
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -708,15 +684,6 @@ CONTAINS
 
       SUBROUTINE LEQ_IKSWEEP(I, K, Vname, VAR, A_M, B_M)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE funits
-      USE functions
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -792,15 +759,6 @@ CONTAINS
 
       SUBROUTINE LEQ_JKSWEEP(J, K, Vname, VAR, A_M, B_M)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE funits
-      USE compar
-      USE functions
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -875,15 +833,6 @@ CONTAINS
 
       SUBROUTINE LEQ_IJSWEEP(I, J, Vname, VAR, A_M, B_M)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE funits
-      USE compar
-      USE functions
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -949,12 +898,6 @@ CONTAINS
 
   double precision function dot_product_par(r1,r2)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    use geometry
-    use compar
-    use functions
     implicit none
 !-----------------------------------------------
 ! Dummy arguments
@@ -992,12 +935,6 @@ CONTAINS
 
   function dot_product_par2(r1,r2,r3,r4)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-    use geometry
-    use compar
-    use functions
     implicit none
 !-----------------------------------------------
 ! Dummy arguments
