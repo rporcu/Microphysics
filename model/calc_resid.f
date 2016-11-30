@@ -19,13 +19,15 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param, ONLY: DIMENSION_3
-      USE param1, ONLY: ZERO, ONE, UNDEFINED
+      use param, ONLY: DIMENSION_3
+      use param1, ONLY: ZERO, ONE, UNDEFINED
       use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-      IMPLICIT NONE
+      use geometry , only: do_k, ijkmax2
+      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use compar   , only: ijksize3_all
+      use run      , only: debug_resid
+
+      implicit none
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -211,21 +213,18 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       SUBROUTINE CALC_RESID_S(VAR, A_M, B_M, M, NUM, DEN, &
-         RESID, MAX_RESID, IJK_RESID, TOL)
+                              RESID, MAX_RESID, IJK_RESID, TOL)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-
-      USE fldvar
-      USE physprop
-      USE toleranc
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use compar  , only: ijksize3_all
+      use param   , only: dimension_3
+      use param1  , only: undefined, zero, one
+      use matrix  , only: e, w, s, n, t, b
+      use geometry, only: do_k, ijkmax2
+      use run     , only: debug_resid
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -423,13 +422,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-      IMPLICIT NONE
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use param1  , only: large_number, zero, one
+      use matrix  , only: e, w, s, n, t, b
+      use geometry, only: ijkmax2
+      use run     , only: debug_resid
+
+      implicit none
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -590,16 +589,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-      USE fldvar
-      USE physprop
-      USE toleranc
-      USE fun_avg
+      use param   , only: dimension_3
+      use param1  , only: large_number, small_number, zero, one
+      use matrix  , only: e, w, s, n, t, b
+      use geometry, only: do_k, ijkmax2
+      use compar  , only: ijksize3_all
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use run     , only: debug_resid
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -796,16 +792,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-      USE fldvar
-      USE physprop
-      USE toleranc
-      USE fun_avg
+      use param   , only: dimension_3
+      use param1  , only: large_number, small_number, zero, one
+      use matrix  , only: e, w, s, n, t, b
+      use geometry, only: do_k, ijkmax2
+      use compar  , only: ijksize3_all
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use run     , only: debug_resid
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -1004,16 +997,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      use matrix, only: e, w, s, n, t, b
-      USE geometry
-      USE compar
-      USE run
-      USE fldvar
-      USE physprop
-      USE toleranc
-      USE fun_avg
+      use param   , only: dimension_3
+      use param1  , only: large_number, small_number, zero, one
+      use matrix  , only: e, w, s, n, t, b
+      use geometry, only: do_k, ijkmax2
+      use compar  , only: ijksize3_all
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, numPEs
+      use run     , only: debug_resid
 
       IMPLICIT NONE
 !-----------------------------------------------

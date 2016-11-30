@@ -99,7 +99,7 @@
       IF (CALL_USR) CALL USR1
 
 ! Set wall boundary conditions and transient flow b.c.'s
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
       CALL OUTPUT_MANAGER(EXIT_SIGNAL, FINISH)
 

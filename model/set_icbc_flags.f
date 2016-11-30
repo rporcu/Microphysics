@@ -340,17 +340,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_FLOW
 
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE bc
-      USE ic
-      USE funits
-      USE compar
-      use functions
-
+      use bc
+      use ic
+      use compar       , only: nodesi, nodesj, nodesk
+      use functions    , only: cyclic_x, cyclic_y, cyclic_z, wall_icbc_flag
+      use geometry     , only: flag, imax2, jmax2, kmax2
       use error_manager
 
       IMPLICIT NONE

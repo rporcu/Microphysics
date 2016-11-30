@@ -32,7 +32,8 @@
 !  set_outflow_fluxes - convective fluxes are set in the boundary      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW(BCV,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
+      SUBROUTINE SET_OUTFLOW(BCV,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g, &
+                             flux_ge,flux_gn,flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -67,11 +68,18 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K
+      INTEGER :: ip,im,jp,jm,kp,km
 ! index for a fluid cell adjacent to the boundary cell
       INTEGER :: FIJK
 ! local value for normal component of gas and solids velocity defined
@@ -83,13 +91,21 @@
       DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
+
+               im = iminus(i,j,k)
+               ip = iplus(i,j,k)
+               jm = jminus(i,j,k)
+               jp = jplus(i,j,k)
+               km = kminus(i,j,k)
+               kp = kplus(i,j,k)
+
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
-               IF (fluid_at(iminus(i,j,k),j,k)) THEN
-                  FIJK = FUNIJK(iminus(i,j,k),j,k)
-                  RVEL_G = U_G(iminus(i,j,k),j,k)
+               IF (fluid_at(im,j,k)) THEN
+                  FIJK = FUNIJK(im,j,k)
+                  RVEL_G = U_G(im,j,k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iminus(i,j,k),j,k,p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, im,j,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
@@ -102,29 +118,32 @@
 !   is set and may differ from the value of the adjacent fluid cell.
 ! - For the solids phase this seems unnecessary..? Differences may arise
                   IF (ROP_G(I,J,K) > ZERO) THEN
-                    U_G(I,J,K) = ROP_G(iminus(i,j,k),j,k)*U_G(iminus(i,j,k),j,k)/ROP_G(I,J,K)
+                    U_G(I,J,K) = ROP_G(im,j,k)*U_G(im,j,k)/ROP_G(I,J,K)
                   ELSE
                      U_G(I,J,K) = ZERO
                   ENDIF
 
 ! the tangential components are not explicitly handled in the boundary
 ! condition routines of the corresponding momentum equation
-                  V_G(I,J,K) = V_G(iminus(i,j,k),j,k)
-                  W_G(I,J,K) = W_G(iminus(i,j,k),j,k)
+                  V_G(I,J,K) = V_G(im,j,k)
+                  W_G(I,J,K) = W_G(im,j,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, iminus(i,j,k),j,k)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K,im,j,k) 
+!                 Flux_gE(I,J,K) = Flux_gE(im,j,k)
+!                 Flux_gN(I,J,K) = Flux_gN(im,j,k)
+!                 Flux_gT(I,J,K) = Flux_gT(im,j,k)
                ENDIF
 
 
 ! Fluid cell at East
 ! --------------------------------------------------------------------//
-               IF (fluid_at(iplus(i,j,k),j,k)) THEN
-                  FIJK = FUNIJK(iplus(i,j,k),j,k)
+               IF (fluid_at(ip,j,k)) THEN
+                  FIJK = FUNIJK(ip,j,k)
 ! define normal component such that it is positive when exiting the
 ! domain
                   RVEL_G = -U_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, iplus(i,j,k),j,k,p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, ip,j,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
@@ -132,105 +151,119 @@
 ! momentum eqn) is kept. values for the velocity components in the off
 ! directions are modified (needed for PO or O boundaries but not MO or
 ! PI as velocities should be fully specified by this point)
+
                   IF (U_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
-                        U_G(I,J,K) = ROP_G(iplus(i,j,k),j,k)*U_G(iplus(i,j,k),j,k)/ROP_G(I,J,K)
+                        U_G(I,J,K) = ROP_G(ip,j,k)*U_G(ip,j,k)/ROP_G(I,J,K)
                      ELSE
                         U_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  V_G(I,J,K) = V_G(iplus(i,j,k),j,k)
-                  W_G(I,J,K) = W_G(iplus(i,j,k),j,k)
+                  V_G(I,J,K) = V_G(ip,j,k)
+                  W_G(I,J,K) = W_G(ip,j,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, iplus(i,j,k),j,k)
+                  Flux_gE(I,J,K) = Flux_gE(ip,j,k)
+                  Flux_gN(I,J,K) = Flux_gN(ip,j,k)
+                  Flux_gT(I,J,K) = Flux_gT(ip,j,k)
                ENDIF
 
 
 ! Fluid cell at South
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,jminus(i,j,k),k)) THEN
-                  FIJK = FUNIJK(i,jminus(i,j,k),k)
-                  RVEL_G = V_G(i,jminus(i,j,k),k)
+               IF (fluid_at(i,jm,k)) THEN
+                  FIJK = FUNIJK(i,jm,k)
+                  RVEL_G = V_G(i,jm,k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jminus(i,j,k),k,p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jm,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
-                     V_G(I,J,K) = ROP_G(i,jminus(i,j,k),k)*V_G(i,jminus(i,j,k),k)/ROP_G(I,J,K)
+                     V_G(I,J,K) = ROP_G(i,jm,k)*V_G(i,jm,k)/ROP_G(I,J,K)
                   ELSE
                      V_G(I,J,K) = ZERO
                   ENDIF
-                  U_G(I,J,K) = U_G(i,jminus(i,j,k),k)
-                  W_G(I,J,K) = W_G(i,jminus(i,j,k),k)
+                  U_G(I,J,K) = U_G(i,jm,k)
+                  W_G(I,J,K) = W_G(i,jm,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,jminus(i,j,k),k)
+                  CALL SET_OUTFLOW_FLUXES(I,J,K,i,jm,k) 
+!                 Flux_gE(I,J,K) = Flux_gE(i,jm,k)
+!                 Flux_gN(I,J,K) = Flux_gN(i,jm,k)
+!                 Flux_gT(I,J,K) = Flux_gT(i,jm,k)
                ENDIF
 
 
 ! Fluid cell at North
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,jplus(i,j,k),k)) THEN
-                  FIJK = FUNIJK(i,jplus(i,j,k),k)
+               IF (fluid_at(i,jp,k)) THEN
+                  FIJK = FUNIJK(i,jp,k)
                   RVEL_G = -V_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jplus(i,j,k),k,p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jp,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
-                        V_G(I,J,K) = ROP_G(i,jplus(i,j,k),k)*V_G(i,jplus(i,j,k),k)/ROP_G(I,J,K)
+                        V_G(I,J,K) = ROP_G(i,jp,k)*V_G(i,jp,k)/ROP_G(I,J,K)
                      ELSE
                         V_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  U_G(I,J,K) = U_G(i,jplus(i,j,k),k)
-                  W_G(I,J,K) = W_G(i,jplus(i,j,k),k)
+                  U_G(I,J,K) = U_G(i,jp,k)
+                  W_G(I,J,K) = W_G(i,jp,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K, i,jplus(i,j,k),k)
+                  Flux_gE(I,J,K) = Flux_gE(i,jp,k) 
+                  Flux_gN(I,J,K) = Flux_gN(i,jp,k) 
+                  Flux_gT(I,J,K) = Flux_gT(i,jp,k)
                ENDIF
 
 
 ! Fluid cell at Bottom
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,j,kminus(i,j,k))) THEN
-                  FIJK = FUNIJK(i,j,kminus(i,j,k))
-                  RVEL_G = W_G(i,j,kminus(i,j,k))
+               IF (fluid_at(i,j,km)) THEN
+                  FIJK = FUNIJK(i,j,km)
+                  RVEL_G = W_G(i,j,km)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kminus(i,j,k),p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,km,p_g,ro_g)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
-                     W_G(I,J,K) = ROP_G(i,j,kminus(i,j,k))*W_G(i,j,kminus(i,j,k))/ROP_G(I,J,K)
+                     W_G(I,J,K) = ROP_G(i,j,km)*W_G(i,j,km)/ROP_G(I,J,K)
                   ELSE
                      W_G(I,J,K) = ZERO
                   ENDIF
-                  U_G(I,J,K) = U_G(i,j,kminus(i,j,k))
-                  V_G(I,J,K) = V_G(i,j,kminus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K,i,j,kminus(i,j,k))
+                  U_G(I,J,K) = U_G(i,j,km)
+                  V_G(I,J,K) = V_G(i,j,km)
+
+                  Flux_gE(I,J,K) = Flux_gE(i,j,km)
+                  Flux_gN(I,J,K) = Flux_gN(i,j,km)
+                  Flux_gT(I,J,K) = Flux_gT(i,j,km)
                ENDIF
 
 
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,j,kplus(i,j,k))) THEN
-                  FIJK = FUNIJK(i,j,kplus(i,j,k))
+               IF (fluid_at(i,j,kp)) THEN
+                  FIJK = FUNIJK(i,j,kp)
                   RVEL_G = -W_G(I,J,K)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kplus(i,j,k),p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kp,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK,RVEL_G,RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
-                        W_G(I,J,K) = ROP_G(i,j,kplus(i,j,k))*W_G(i,j,kplus(i,j,k))/ROP_G(I,J,K)
+                        W_G(I,J,K) = ROP_G(i,j,kp)*W_G(i,j,kp)/ROP_G(I,J,K)
                      ELSE
                         W_G(I,J,K) = ZERO
                      ENDIF
                   ENDIF
-                  U_G(I,J,K) = U_G(i,j,kplus(i,j,k))
-                  V_G(I,J,K) = V_G(i,j,kplus(i,j,k))
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K,i,j,kplus(i,j,k))
+                  U_G(I,J,K) = U_G(i,j,kp)
+                  V_G(I,J,K) = V_G(i,j,kp)
+
+                  Flux_gE(I,J,K) = Flux_gE(i,j,kp)
+                  Flux_gN(I,J,K) = Flux_gN(i,j,kp)
+                  Flux_gT(I,J,K) = Flux_gT(i,j,kp)
                ENDIF
 
             ENDDO   ! end do (i=i1,i2)

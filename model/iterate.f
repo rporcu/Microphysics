@@ -133,7 +133,7 @@
 ! solve_vel_star call.
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
@@ -192,7 +192,7 @@
 
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration
@@ -205,7 +205,7 @@
       CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT)
 
       IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
-         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux)
+         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, flux_ge, flux_gn, flux_gt)
 
 
 !  If not converged continue iterations; else exit subroutine.
@@ -402,23 +402,26 @@
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      subroutine GoalSeekMassFlux(NIT, MUSTIT, OUTIT, delp_n, mdot_n)
+      subroutine GoalSeekMassFlux(NIT, MUSTIT, OUTIT, delp_n, mdot_n, flux_ge, flux_gn, flux_gt)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE compar
-      USE constant
-      USE geometry
-      USE fldvar, ONLY: flux_ge, flux_gn, flux_gt
-      USE run
-      USE time_cpu
+      USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
+      USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+      USE run     , only: automatic_restart
       USE utilities, ONLY: mfix_isnan
       USE vavg_mod, ONLY: vavg_flux_g
-      use compar
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
