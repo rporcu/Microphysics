@@ -1,3 +1,5 @@
+module source_w_g_module
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOURCE_W_g                                              C
@@ -20,14 +22,16 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_W_G(A_M, B_M)
+      SUBROUTINE SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+                            w_g, w_go, tau_w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
+      use compar, only: kmap
+      USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE constant, only: gravity_z
       USE bc, only: delp_z
-
-      USE fldvar, only: p_g, ep_g, ro_g, rop_g, rop_go, w_g, w_go
 
       USE fun_avg, only: avg, avg_h
       USE functions, only: ip_at_t
@@ -42,12 +46,8 @@
       USE param1, only: zero, one, half
       USE run, only: momentum_z_eq, odt
       USE scales, only: p_scale
-      USE fldvar, only: tau_w_g
       USE toleranc, only: dil_ep_s
-      use compar, only: kmap
-      use compar, only: istart2, iend2, istart3, iend3
-      use compar, only: jstart2, jend2, jstart3, jend3
-      use compar, only: kstart2, kend2, kstart3, kend3
+
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -57,6 +57,23 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
@@ -723,3 +740,4 @@
 
       RETURN
       END SUBROUTINE POINT_SOURCE_W_G
+end module source_w_g_module

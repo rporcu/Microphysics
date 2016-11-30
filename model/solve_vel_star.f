@@ -1,3 +1,5 @@
+module solve_vel_star_module
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOLVE_VEL_STAR                                          C
@@ -6,8 +8,12 @@
 !  Purpose: Solve starred velocity components                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOLVE_VEL_STAR(u_g,v_g,w_g,rop_g,ep_g,&
+      SUBROUTINE SOLVE_VEL_STAR(u_g,v_g,w_g,u_go,v_go,w_go,&
+                                p_g,ro_g,rop_g,rop_go,ep_g,&
+                                tau_u_g,tau_v_g,tau_w_g,&
                                 d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
+!     SUBROUTINE SOLVE_VEL_STAR(u_g,v_g,w_g,rop_g,ep_g,&
+!                               d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
 
       use u_g_conv_dif
       use v_g_conv_dif
@@ -26,6 +32,12 @@
                           resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
 
+!     USE fldvar  , only: tau_u_g,tau_v_g,tau_w_g,u_go,v_go,w_go,p_g,ro_g,rop_go
+
+      USE source_u_g_module
+      USE source_v_g_module
+      USE source_w_g_module
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -38,9 +50,27 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -87,9 +117,10 @@
 ! calculate the convection-diffusion terms
       CALL CONV_DIF_U_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
-! calculate the source terms for the gas and solids phase u-momentum
-! equations
-      CALL SOURCE_U_G (A_M, B_M)
+      ! Calculate the source terms for the gas and solids phase u-momentum eqs
+      CALL SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+                      u_g, u_go, tau_u_g)
+
       IF(POINT_SOURCE) CALL POINT_SOURCE_U_G (A_M, B_M)
 
 ! evaluate local variable vxf_gs
@@ -136,7 +167,8 @@
 
       CALL CONV_DIF_V_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
-      CALL SOURCE_V_G (A_M, B_M)
+      CALL SOURCE_V_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+                      v_g, v_go, tau_v_g)
       IF(POINT_SOURCE) CALL POINT_SOURCE_V_G (A_M, B_M)
 
       CALL VF_GS_Y
@@ -179,7 +211,8 @@
 
          CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
-         CALL SOURCE_W_G (A_M, B_M)
+         CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+                         w_g, w_go, tau_w_g)
          IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)
 
          CALL VF_GS_Z
@@ -227,5 +260,5 @@
       deallocate(V_gtmp)
       deallocate(W_gtmp)
 
-      RETURN
       END SUBROUTINE SOLVE_VEL_STAR
+end module solve_vel_star_module

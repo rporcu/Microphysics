@@ -27,6 +27,11 @@
       USE toleranc, only: norm_g
       USE vavg_mod, ONLY: vavg_g
 
+      USE solve_pp_module
+      USE solve_vel_star_module
+
+      use fldvar, only: tau_u_g, tau_v_g, tau_w_g, u_go, v_go, w_go
+
       use error_manager
 
       implicit none
@@ -133,8 +138,7 @@
          ENDIF   ! if/else(dt==undefined)
       ENDIF   ! if(full_log)
 
-! Calculate the face values of densities and mass fluxes for the first
-! solve_vel_star call.
+      ! Calculate the face values of densities and mass fluxes 
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
@@ -167,8 +171,13 @@
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components
-      call solve_vel_star(u_g,v_g,w_g,rop_g,ep_g,&
+!     call solve_vel_star(u_g,v_g,w_g,rop_g,ep_g,&
+!                         d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
+      call solve_vel_star(u_g,v_g,w_g,u_go,v_go,w_go,&
+                          p_g,ro_g,rop_g,rop_go,ep_g,&
+                          tau_u_g,tau_v_g,tau_w_g,&
                           d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
+
 
 ! Calculate densities.
       CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)
@@ -179,8 +188,8 @@
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
-         CALL SOLVE_PP_G (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, &
-                          pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
+         CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
+                          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, NORMG, RESG, IER)
 
 ! Correct pressure, velocities, and density
          CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)

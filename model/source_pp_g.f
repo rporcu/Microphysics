@@ -1,3 +1,7 @@
+module source_pp_module
+
+  contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOURCE_Pp_g                                             C
@@ -21,8 +25,8 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g)
+subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+                       rop_g, rop_go, ro_g, d_e, d_n, d_t)
 
 !-----------------------------------------------
 ! Modules
@@ -32,7 +36,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       USE eos, ONLY: DROODP_G
       USE geometry, ONLY: VOL
       use matrix, ONLY: E, W, N, S, T, B
-      USE fldvar, ONLY: D_E, D_N, D_T
       USE fld_const, ONLY: RO_G0
       USE run, ONLY: ODT, UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
@@ -69,6 +72,12 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local Variables
@@ -206,4 +215,6 @@ CONTAINS
 
       INCLUDE 'functions.inc'
 
-END SUBROUTINE SOURCE_PP_G
+end subroutine source_pp_g
+
+end module source_pp_module

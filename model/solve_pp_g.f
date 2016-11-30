@@ -1,3 +1,5 @@
+module solve_pp_module
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOLVE_Pp_g
@@ -15,7 +17,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
-                            rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
+                            rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, NORMG, RESG, IER)
 
 !-----------------------------------------------
 ! Modules
@@ -28,6 +30,8 @@
       USE run
       use matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       use ps
+
+      use source_pp_module
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -65,6 +69,12 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
@@ -101,8 +111,9 @@
 
 ! Forming the sparse matrix equation.
       CALL CONV_PP_G (A_M, B_M, rop_ge, rop_gn, rop_gt)
-      CALL SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g)
+
+      call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+                       rop_g, rop_go, ro_g, d_e, d_n, d_t)
 
       IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX)
 
@@ -205,5 +216,5 @@
 
       enddo PS_LP
 
-      RETURN
       END SUBROUTINE POINT_SOURCE_PP_G
+end module solve_pp_module

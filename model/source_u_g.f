@@ -1,3 +1,5 @@
+module source_u_g_module
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOURCE_U_g                                              C
@@ -20,15 +22,16 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_U_G(A_M, B_M)
+      SUBROUTINE SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+                            u_g, u_go, tau_u_g)
 
 ! Modules
 !---------------------------------------------------------------------//
+      use compar  , only: imap
+      USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
+      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE constant, only: gravity_x
-      USE bc, only: delp_x
-
-      USE fldvar, only: p_g, ep_g, ro_g, rop_g, rop_go, u_g, u_go
-      USE fldvar, only: tau_u_g
+      USE bc      , only: delp_x
 
       USE fun_avg, only: avg
       USE functions, only: ip_at_e
@@ -46,17 +49,28 @@
       USE run, only: odt
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
-      use compar, only: imap
-      use compar, only: istart2, iend2
-      use compar, only: jstart2, jend2
-      use compar, only: kstart2, kend2
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
+
       IMPLICIT NONE
 
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! Dummy arguments
-!---------------------------------------------------------------------//
+!--------o------------------------------------------------------------//
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -702,3 +716,4 @@
 
       RETURN
       END SUBROUTINE POINT_SOURCE_U_G
+end module source_u_g_module
