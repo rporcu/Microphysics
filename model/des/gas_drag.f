@@ -31,7 +31,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_at
+      use functions, only: flow_at_e
 ! IJK of cell to east.
       use functions, only: ieast
 ! IJK function for I,J,K that includes mapped indices.
@@ -84,29 +84,29 @@
 
          IJK = FUNIJK(i,j,k)
 
-            IF(.NOT.fluid_at(i,j,k)) CYCLE
+            IF(flow_at_e(i,j,k)) then
 
-            IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-            IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-            IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
+               IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
+               IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
+               IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-            IJMK = FUNIJK_MAP_C(I, J-1, K)
+               IJMK = FUNIJK_MAP_C(I, J-1, K)
 
-            tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IJMK))
-            tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,1) + DRAG_BM(IJMK,1))
+               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IJMK))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,1) + DRAG_BM(IJMK,1))
 
-            IF(DO_K) THEN
-               IJKM = FUNIJK_MAP_C(I, J, K-1)
-               IJMKM = FUNIJK_MAP_C(I, J-1, K-1)
-               tmp_A = tmp_A - AVG_FACTOR*                             &
-                  (DRAG_AM(IJKM) + DRAG_AM(IJMKM))
-               tmp_B = tmp_B - AVG_FACTOR*                             &
-                  (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
-            ENDIF
+               IF(DO_K) THEN
+                  IJKM = FUNIJK_MAP_C(I, J, K-1)
+                  IJMKM = FUNIJK_MAP_C(I, J-1, K-1)
+                  tmp_A = tmp_A - AVG_FACTOR*                             &
+                     (DRAG_AM(IJKM) + DRAG_AM(IJMKM))
+                  tmp_B = tmp_B - AVG_FACTOR*                             &
+                     (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
+               ENDIF
 
-            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
-            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
-
+               A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+               B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
+            endif
          ENDDO
          ENDDO
          ENDDO
@@ -118,7 +118,7 @@
         DO I = istart3, iend3
 
             IJK = FUNIJK(i,j,k)
-            IF(fluid_at(i,j,k)) THEN
+            IF(flow_at_e(i,j,k)) THEN
                IJKE = FUNIJK(ieast(i,j,k),j,k)
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKE))
@@ -170,7 +170,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_at
+      use functions, only: flow_at_n
 ! IJK of cell to north.
       use functions, only: jnorth
 ! IJK function for I,J,K that includes mapped indices.
@@ -219,31 +219,31 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.fluid_at(i,j,k)) CYCLE
+            IF(flow_at_n(i,j,k)) then
 
-            IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-            IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-            IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
+               IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
+               IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
+               IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-            IMJK = FUNIJK_MAP_C(I-1,J,K)
+               IMJK = FUNIJK_MAP_C(I-1,J,K)
 
-            tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK))
-            tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,2) + DRAG_BM(IMJK,2))
+               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,2) + DRAG_BM(IMJK,2))
 
-            IF(DO_K) THEN
+               IF(DO_K) THEN
 
-               IJKM = FUNIJK_MAP_C(I,J,K-1)
-               IMJKM = FUNIJK_MAP_C(I-1,J,K-1)
+                  IJKM = FUNIJK_MAP_C(I,J,K-1)
+                  IMJKM = FUNIJK_MAP_C(I-1,J,K-1)
 
-               tmp_A = tmp_A - AVG_FACTOR*                             &
-                  (DRAG_AM(IJKM) + DRAG_AM(IMJKM))
-               tmp_B = tmp_B - AVG_FACTOR*                             &
-                  (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
-            ENDIF
+                  tmp_A = tmp_A - AVG_FACTOR*                             &
+                     (DRAG_AM(IJKM) + DRAG_AM(IMJKM))
+                  tmp_B = tmp_B - AVG_FACTOR*                             &
+                     (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
+               ENDIF
 
-            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
-            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
-
+               A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+               B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
+            endif
          ENDDO
          ENDDO
          ENDDO
@@ -255,7 +255,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(fluid_at(i,j,k)) THEN
+            IF(flow_at_n(i,j,k)) THEN
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKN))
@@ -302,7 +302,7 @@
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
       USE functions, ONLY: funijk
-      use functions, only: fluid_at
+      use functions, only: flow_at_t
 ! IJK of cell to top.
       use functions, only: ktop
 ! IJK function for I,J,K that includes mapped indices.
@@ -352,25 +352,25 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(.NOT.fluid_at(i,j,k)) CYCLE
+            IF(flow_at_t(i,j,k)) then
 
-            IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-            IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-            IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
+               IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
+               IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
+               IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-            IMJK = FUNIJK_MAP_C(I-1,J,K)
-            IJMK = FUNIJK_MAP_C(I,J-1,K)
-            IMJMK = FUNIJK_MAP_C(I-1,J-1,K)
+               IMJK = FUNIJK_MAP_C(I-1,J,K)
+               IJMK = FUNIJK_MAP_C(I,J-1,K)
+               IMJMK = FUNIJK_MAP_C(I-1,J-1,K)
 
-            tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK) +        &
-               DRAG_AM(IJMK) + DRAG_AM(IMJMK))
+               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK) +        &
+                  DRAG_AM(IJMK) + DRAG_AM(IMJMK))
 
-            tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
-               DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
+                  DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
 
-            A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
-            B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
-
+               A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
+               B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
+            endif
          ENDDO
          ENDDO
          ENDDO
@@ -382,7 +382,7 @@
         DO I = istart3, iend3
 
          IJK = FUNIJK(i,j,k)
-            IF(fluid_at(i,j,k)) THEN
+            IF(flow_at_t(i,j,k)) THEN
                IJKT = FUNIJK(i,j,ktop(i,j,k))
 
                tmp_A = AVG(F_GDS(IJK), F_GDS(IJKT))
