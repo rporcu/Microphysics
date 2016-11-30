@@ -19,11 +19,10 @@
 
       SUBROUTINE CHECK_PLANE(X_CONSTANT, Y_CONSTANT, Z_CONSTANT, BC, NAME)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE funits
-      USE compar
+      USE compar, only: mype
+      USE exit_mod, only: mfix_exit
+      USE funits, only: dmp_log, unit_log
+
       IMPLICIT NONE
 
 !-----------------------------------------------
@@ -59,4 +58,3 @@
  1000 FORMAT(/70('*')//' From: CHECK_PLANE',/'Message: ',A,' No ',I3,&
          ' is not a plane',/70('*')/)
       END SUBROUTINE CHECK_PLANE
-

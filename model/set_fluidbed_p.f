@@ -13,17 +13,18 @@
 ! Modules
 !-----------------------------------------------
       USE bc
-      USE compar   , only: myPE
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar   , only: myPE
       USE constant , only: gravity_y
       USE eos      , ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
       USE functions, only: fluid_at
-      use funits   , only: dmp_log, unit_log
       USE geometry
       USE ic       , only: ic_p_g, ic_defined
       USE param1   , only: undefined
       USE scales   , only: scale_pressure
+      use exit_mod, only: mfix_exit
+      use funits   , only: dmp_log, unit_log
 
       IMPLICIT NONE
 

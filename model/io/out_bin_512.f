@@ -1,3 +1,6 @@
+MODULE OUT_BIN_512_MOD
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OUT_BIN_512                                            C
@@ -27,7 +30,7 @@
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE machine
+      USE machine, only: nwords_dp
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -96,3 +99,5 @@
 !
       RETURN
       END SUBROUTINE OUT_BIN_512
+
+END MODULE OUT_BIN_512_MOD

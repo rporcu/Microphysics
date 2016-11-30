@@ -37,6 +37,8 @@
       use output, only: RES_DT
       use adjust_dt
 
+      use iterate_mod, only: iterate
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

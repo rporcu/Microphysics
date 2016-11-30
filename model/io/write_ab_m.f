@@ -8,16 +8,14 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_AB_M(A_M, B_M, M)    ! pnicol
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
 
-      USE compar
-      USE functions
-      use machine
-      use funits
+      USE functions, only: funijk
+      USE compar, only: iend3, jend3, kend3
+      USE compar, only: istart3, jstart3, kstart3
+      USE compar, only: mype, pe_io
+      USE funits, only: dmp_log, unit_log
+      USE geometry, only: imax2, jmax2, kmax2
+      USE geometry, only: imin2, jmin2, kmin2
 
       IMPLICIT NONE
 

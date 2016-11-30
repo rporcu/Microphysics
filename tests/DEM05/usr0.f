@@ -17,6 +17,7 @@
       use discretelement, only: DES_VEL_NEW
       use constant, only: PI
       use compar, only: myPE, PE_IO
+      use exit_mod, only: mfix_exit
 
       IMPLICIT NONE
 

@@ -9,27 +9,9 @@
 
       SUBROUTINE WRITE_RES0
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE bc
-      USE compar
-      USE constant
-      USE funits
-      USE geometry
-      USE ic
-      USE in_binary_512i
-      USE leqsol
-      USE machine
-      USE output
-      USE param
-      USE param1
-      USE physprop
-      USE run
-      USE scales
-      USE toleranc
-      USE ur_facs
-      USE fldvar
+      USE funits, only: unit_res
+      USE machine, only: id_month, id_day, id_year, id_hour, id_minute, id_second
+      USE run, only: run_name
 
       IMPLICIT NONE
 !-----------------------------------------------

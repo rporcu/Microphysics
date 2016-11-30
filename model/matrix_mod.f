@@ -41,6 +41,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE lock_ambm
+         use exit_mod, only: mfix_exit
       IF(ambm_locked) THEN
          IF (DMP_LOG) WRITE(*,*) &
             'Error:  Multiple use of ambm (ambm_mod.f)'

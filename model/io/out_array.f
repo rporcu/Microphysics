@@ -1,3 +1,5 @@
+MODULE OUT_ARRAY_MOD
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OUT_ARRAY (ARRAY, MESSAGE)                             C
@@ -69,3 +71,4 @@
 
       RETURN
       END SUBROUTINE OUT_ARRAY
+END MODULE OUT_ARRAY_MOD

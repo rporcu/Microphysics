@@ -8,14 +8,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_OUT1
 
-      USE param
-      USE param1
-      USE physprop
-      USE fldvar
-      USE run
-      USE funits
-      USE compar
-      use geometry
+      USE compar, only: iend3, jend3, kend3
+      USE compar, only: istart3, jstart3, kstart3
+      USE compar, only: mype, pe_io
+      USE fldvar, only: ep_g, p_g, ro_g
+      USE funits, only: unit_out
+      USE out_array_mod, only: out_array
+      USE run, only: time, call_usr
 
       IMPLICIT NONE
 

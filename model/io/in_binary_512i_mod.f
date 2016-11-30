@@ -22,16 +22,14 @@
 !
 MODULE IN_BINARY_512I
 
+   USE machine, only: nwords_i
+   USE geometry, only: imax2, jmax2, kmax2
+   USE functions, only: funijk
+
 CONTAINS
 
       SUBROUTINE IN_BIN_512I(IUNIT, ARRAY, N, NEXT_REC)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE machine
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -102,10 +100,6 @@ CONTAINS
 
       subroutine convert_from_io_i(arr_io,arr_internal,n)
 
-      use geometry
-      use compar
-      use functions
-
       implicit none
 
       integer, intent(in) :: arr_io(:)
@@ -139,10 +133,6 @@ CONTAINS
 
       subroutine convert_to_io_i(arr_internal,arr_io,n)
 
-      use geometry
-      use compar
-      use functions
-
       implicit none
 
       integer   arr_io(*) , arr_internal(*)
@@ -163,10 +153,6 @@ CONTAINS
 
       subroutine convert_to_io_c(arr_internal,arr_io,n)
 
-      use geometry
-      use compar
-      use functions
-
       implicit none
 
       character(LEN=4)   arr_io(*) , arr_internal(*)
@@ -186,6 +172,3 @@ CONTAINS
     end subroutine convert_to_io_c
 
 END MODULE IN_BINARY_512I
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization

@@ -12,18 +12,19 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 
-      use output, only: RES_TIME, RES_DT
-      use output, only: OUT_TIME, OUT_DT
-      use output, only: USR_TIME, USR_DT
-      use output, only: VTP_TIME, VTP_DT
-      use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
-      use param, only: DIMENSION_USR
-      use run, only: TIME, DT, TSTOP
-      use time_cpu, only: CPU_IO
       use compar, only: myPE, PE_IO
       use discretelement, only: DISCRETE_ELEMENT
-      use param1, only: UNDEFINED
       use machine, only: wall_time
+      use output, only: OUT_TIME, OUT_DT
+      use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
+      use output, only: RES_TIME, RES_DT
+      use output, only: USR_TIME, USR_DT
+      use output, only: VTP_TIME, VTP_DT
+      use param, only: DIMENSION_USR
+      use param1, only: UNDEFINED
+      use run, only: TIME, DT, TSTOP
+      use time_cpu, only: CPU_IO
+      use write_res1_mod, only: write_res1
 
       IMPLICIT NONE
 
@@ -220,21 +221,18 @@
 !----------------------------------------------------------------------!
       SUBROUTINE FLUSH_NOTIFY_USER
 
-      use output, only: FULL_LOG
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
-
-      use time_cpu, only: TIME_START
-      use time_cpu, only: WALL_START
-
-      use output, only: NLOG
-
-      use run, only: TIME, NSTEP
-
       use discretelement, only: DISCRETE_ELEMENT, DES_CONTINUUM_COUPLED
       use discretelement, only: DTSOLID
-      use error_manager
+      use error_manager, only: err_msg, flush_err_msg, ival
+      use funits, only: DMP_LOG
+      use funits, only: UNIT_LOG
+      use iterate_mod, only: get_tunit
       use machine, only: wall_time
+      use output, only: FULL_LOG
+      use output, only: NLOG
+      use run, only: TIME, NSTEP
+      use time_cpu, only: TIME_START
+      use time_cpu, only: WALL_START
 
       DOUBLE PRECISION :: WALL_ELAP, WALL_LEFT, WALL_NOW
       CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT

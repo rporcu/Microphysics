@@ -15,6 +15,7 @@
       use usr
       use discretelement
       use constant
+      use exit_mod, only: mfix_exit
 
       IMPLICIT NONE
 

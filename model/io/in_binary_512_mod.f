@@ -146,6 +146,3 @@ CONTAINS
     end subroutine convert_to_io_dp
 
 END MODULE IN_BINARY_512
-
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization

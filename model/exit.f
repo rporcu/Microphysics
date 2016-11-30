@@ -1,3 +1,7 @@
+MODULE EXIT_MOD
+
+   CONTAINS
+
       SUBROUTINE MFIX_EXIT(myID)
 
 ! File unit for .OUT file
@@ -5,8 +9,8 @@
 ! File unit for .LOG files
       USE funits, only : UNIT_LOG
 
-      use compar
-      use funits
+      use compar, only: myPE, pe_io
+      use funits, only: dmp_log
 
       implicit none
 
@@ -85,3 +89,4 @@
 
       RETURN
       END SUBROUTINE CLOSE_FILE
+END MODULE EXIT_MOD
