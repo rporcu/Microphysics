@@ -155,13 +155,13 @@
 ! Advance the solution in time by iteratively solving the equations
       call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                   flux_ge,flux_gn,flux_gt,&
+                   flux_ge,flux_gn,flux_gt,mu_g,&
                    IER, NIT)
 
       DO WHILE (ADJUSTDT(IER,NIT))
          call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                      flux_ge,flux_gn,flux_gt,&
+                      flux_ge,flux_gn,flux_gt,mu_g,&
                       IER, NIT)
       ENDDO
 

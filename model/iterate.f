@@ -9,7 +9,7 @@
 
       SUBROUTINE ITERATE(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
                          rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                         flux_ge,flux_gn,flux_gt,&
+                         flux_ge,flux_gn,flux_gt,mu_g,&
                          IER, NIT)
 
       USE compar   , only: myPE, PE_IO
@@ -64,6 +64,8 @@
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Dummy arguments
@@ -163,7 +165,8 @@
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components
-      CALL SOLVE_VEL_STAR(IER)
+      call solve_vel_star(u_g,v_g,w_g,rop_g,ep_g,&
+                          d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
 
 ! Calculate densities.
       CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)

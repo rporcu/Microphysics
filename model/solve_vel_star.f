@@ -6,7 +6,8 @@
 !  Purpose: Solve starred velocity components                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOLVE_VEL_STAR(IER)
+      SUBROUTINE SOLVE_VEL_STAR(u_g,v_g,w_g,rop_g,ep_g,&
+                                d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
 
       use u_g_conv_dif
       use v_g_conv_dif
@@ -16,9 +17,6 @@
       USE calc_d_mod, only: calc_d
       USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE discretelement, only: des_continuum_coupled
-      USE fldvar  , only: d_e, d_n, d_t, u_g, v_g, w_g, rop_g, ep_g
-      USE fldvar  , only: flux_ge, flux_gn, flux_gt
-      USE fldvar  , only: mu_g
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
       USE fun_avg , only: do_k
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
@@ -34,6 +32,30 @@
 !-----------------------------------------------
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
