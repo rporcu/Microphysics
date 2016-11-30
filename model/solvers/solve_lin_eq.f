@@ -17,16 +17,18 @@
       SUBROUTINE SOLVE_LIN_EQ(VNAME, Vno, VAR, A_M, B_M, M, ITMAX,&
                               METHOD, SWEEP, TOL1, PC, IER)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE residual
-      USE toleranc
-      USE leqsol
+         use compar, only: istart3, iend3
+         use compar, only: jstart3, jend3
+         use compar, only: kstart3, kend3
+         use compar, only: mype
+         use exit_mod, only: mfix_exit
+         use funits, only: unit_log
+         use param, only: DIM_EQS
+         use param, only: dimension_3
+         use param1, only: zero
+         use residual, only: resid
+         use toleranc, only: tol_resid
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
