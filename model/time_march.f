@@ -152,11 +152,16 @@
       MAX_INLET_VEL = MAX_INLET_VEL * MAX_INLET_VEL_FAC
 
 ! Advance the solution in time by iteratively solving the equations
-      CALL ITERATE (IER, NIT)
-
+      call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
+                   rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
+                   flux_ge,flux_gn,flux_gt,&
+                   IER, NIT)
 
       DO WHILE (ADJUSTDT(IER,NIT))
-         CALL ITERATE (IER, NIT)
+         call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
+                      rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
+                      flux_ge,flux_gn,flux_gt,&
+                      IER, NIT)
       ENDDO
 
       IF(DT < DT_MIN) THEN

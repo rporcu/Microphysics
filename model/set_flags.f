@@ -176,17 +176,13 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE geometry
-      USE bc
-      USE physprop
-      USE funits
-      USE compar
+      USE param1   , only: undefined_i
+      USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag,no_k
+      USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: wall_at, cyclic_at, fluid_at
-      IMPLICIT NONE
+
+      implicit none
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

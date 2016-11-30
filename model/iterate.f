@@ -7,27 +7,64 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE ITERATE(IER, NIT)
+      SUBROUTINE ITERATE(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
+                         rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
+                         flux_ge,flux_gn,flux_gt,&
+                         IER, NIT)
 
-      USE compar
-      USE discretelement
-      USE fldvar
-      USE funits
-      USE geometry
-      USE leqsol
-      USE output
-      USE param
-      USE param1
-      USE physprop
-      USE residual
+      USE compar  , only: myPE, PE_IO
+      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE fldvar  , only: ro_g0
+      USE funits  , only: dmp_log, unit_log
+      USE geometry, only: cyclic, cyclic_x, cyclic_y, cyclic_z, vol
+      USE geometry, only: do_i, do_j, do_k
+      USE leqsol  , only: leq_adjust, max_nit
+      USE output  , only: full_log, nlog
+      USE param1  , only: small_number, undefined, zero, one
+      USE residual, only: resid, resid_p
       USE run
       USE time_cpu
-      USE toleranc
+      USE toleranc, only: norm_g
       USE vavg_mod, ONLY: vavg_g
 
       use error_manager
 
-      IMPLICIT NONE
+      implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
