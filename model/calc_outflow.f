@@ -8,7 +8,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_OUTFLOW(L)
+      SUBROUTINE CALC_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -18,17 +18,28 @@
       use bc, only: bc_i_w, bc_i_e
       use bc, only: bc_out_n
       use bc, only: bc_mout_g, bc_vout_g
+
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use geometry, only: dx, dy, dz
-      use fldvar, only: u_g, v_g, w_g
-      use fldvar, only: rop_g, ep_g
       use functions, only: fluid_at
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      IMPLICIT NONE
 
-! Dummy arguments
+      implicit none
+
 !--------------------------------------------------------------------//
-! Boundary condition number
+      ! Boundary condition number
       INTEGER, INTENT(IN) :: L
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !--------------------------------------------------------------------//

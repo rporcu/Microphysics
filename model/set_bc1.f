@@ -6,7 +6,7 @@
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
+      SUBROUTINE SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -17,6 +17,8 @@
       implicit none
 
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -42,17 +44,17 @@
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
-               CALL SET_BC1_REPORT_OUTFLOW(L)
+               CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
-               CALL SET_BC1_ADJUST_OUTFLOW(L,u_g,v_g,w_g)
+               CALL SET_BC1_ADJUST_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_INFLOW')
                CALL SET_BC1_JET(L,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ro_g,rop_g,u_g,v_g,w_g)
-               CALL SET_BC1_REPORT_OUTFLOW(L)
+               CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             END SELECT
          ENDIF   ! end if (bc_defined(l))
       ENDDO    ! end do loop (l=1,dimension_bc)
@@ -149,7 +151,7 @@
 !  Purpose: print out outflow conditions                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV)
+      SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -157,10 +159,23 @@
       use bc, only: bc_out_n
       use bc, only: bc_mout_g
       use bc, only: bc_vout_g
+
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero
       use run, only: time, dt, tstop
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -169,7 +184,7 @@
 
       IF (BC_DT_0(BCV) == UNDEFINED) RETURN
 
-      CALL CALC_OUTFLOW(BCV)
+      CALL CALC_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &
@@ -201,7 +216,7 @@
 !  flow rate based on average outflow rate                             C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV,u_g,v_g,w_g)
+      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -234,13 +249,17 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      CALL CALC_OUTFLOW(BCV)
+      CALL CALC_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &

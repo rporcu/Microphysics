@@ -133,7 +133,7 @@
 ! solve_vel_star call.
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
@@ -192,7 +192,7 @@
 
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g)
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration

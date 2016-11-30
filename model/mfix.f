@@ -192,7 +192,7 @@
       IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g)
 
 ! Initialize time dependent boundary conditions
-      CALL SET_BC1(p_g, ro_g, rop_g, u_g, v_g, w_g)
+      CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g)
 
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
