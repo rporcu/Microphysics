@@ -80,6 +80,8 @@
 ! indices
       INTEGER :: I, J, K
       INTEGER :: ip,im,jp,jm,kp,km
+! index for a fluid cell adjacent to the boundary cell
+      INTEGER :: FIJK
 ! local value for normal component of gas and solids velocity defined
 ! such that
       DOUBLE PRECISION :: RVEL_G, RVEL_S(DIMENSION_M)
@@ -100,10 +102,11 @@
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
                IF (fluid_at(im,j,k)) THEN
+                  FIJK = FUNIJK(im,j,k)
                   RVEL_G = U_G(im,j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, im,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,im,j,k,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -134,12 +137,13 @@
 ! Fluid cell at East
 ! --------------------------------------------------------------------//
                IF (fluid_at(ip,j,k)) THEN
+                  FIJK = FUNIJK(ip,j,k)
 ! define normal component such that it is positive when exiting the
 ! domain
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, ip,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, ip,j,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -166,10 +170,11 @@
 ! Fluid cell at South
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,jm,k)) THEN
+                  FIJK = FUNIJK(i,jm,k)
                   RVEL_G = V_G(i,jm,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jm,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,jm,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      V_G(I,J,K) = ROP_G(i,jm,k)*V_G(i,jm,k)/ROP_G(I,J,K)
@@ -188,10 +193,11 @@
 ! Fluid cell at North
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,jp,k)) THEN
+                  FIJK = FUNIJK(i,jp,k)
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jp,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -203,8 +209,8 @@
                   U_G(I,J,K) = U_G(i,jp,k)
                   W_G(I,J,K) = W_G(i,jp,k)
 
-                  Flux_gE(I,J,K) = Flux_gE(i,jp,k)
-                  Flux_gN(I,J,K) = Flux_gN(i,jp,k)
+                  Flux_gE(I,J,K) = Flux_gE(i,jp,k) 
+                  Flux_gN(I,J,K) = Flux_gN(i,jp,k) 
                   Flux_gT(I,J,K) = Flux_gT(i,jp,k)
                ENDIF
 
@@ -212,10 +218,11 @@
 ! Fluid cell at Bottom
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,j,km)) THEN
+                  FIJK = FUNIJK(i,j,km)
                   RVEL_G = W_G(i,j,km)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,km,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,i,j,km,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      W_G(I,J,K) = ROP_G(i,j,km)*W_G(i,j,km)/ROP_G(I,J,K)
@@ -235,10 +242,11 @@
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
                IF (fluid_at(i,j,kp)) THEN
+                  FIJK = FUNIJK(i,j,kp)
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kp,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, FIJK,RVEL_G,RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -321,7 +329,7 @@
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FI,FJ,FK,RVEL_G,RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -353,7 +361,7 @@
 ! ijk index for boundary cell
       INTEGER, INTENT(IN) :: I,J,K
 ! ijk index for adjacent fluid cell
-      INTEGER, INTENT(IN) :: FI,FJ,FK
+      INTEGER, INTENT(IN) :: FIJK
 ! the gas or solids velocity in the fluid cell adjacent to the boundary
 ! cell dot with the outward normal of that bc plane; defines the gas or
 ! solids velocity component normal to the bc plane as positive when it
@@ -391,9 +399,9 @@
 ! possible to actually calculate the bulk density in a flow boundary
 ! cell. Currently, however, such calculations are not strictly enforced.
 ! therefore use the bulk density of the adjacent fluid cell
-            DES_ROP_S(I,J,K,M) = DES_ROP_S(FI,FJ,FK  ,M)
-            SUM_ROPS = SUM_ROPS + DES_ROP_S(I,J,K,M)
-            EPS = DES_ROP_S(I,J,K,M)/RO_S0(M)
+            DES_ROP_S(IJK,M) = DES_ROP_S(FIJK,M)
+            SUM_ROPS = SUM_ROPS + DES_ROP_S(IJK,M)
+            EPS = DES_ROP_S(IJK,M)/RO_S0(M)
             SUM_EPS = SUM_EPS + EPS
          ENDDO
       ENDIF
@@ -409,3 +417,4 @@
 
       RETURN
       END SUBROUTINE SET_OUTFLOW_EP
+

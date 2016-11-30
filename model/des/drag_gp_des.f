@@ -127,7 +127,7 @@
          tSUM = ZERO
          DO lM = 1,MMAX
             IF(PHIS > ZERO) THEN
-               tSUM = tSUM + DES_ROP_S(I,J,K,lM) / &
+               tSUM = tSUM + DES_ROP_S(IJK,lM) / &
                   (PHIS*RO_S0(lM)*D_p0(lM))
              ELSE
                tSUM = tSUM + ONE/D_p0(lM)

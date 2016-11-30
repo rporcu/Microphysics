@@ -78,7 +78,7 @@
          SUM_EPS = ZERO
 ! Sum the DES solids volume fraction.
          DO M = 1, MMAX
-            SUM_EPS = SUM_EPS + DES_ROP_S(i,j,k,M)/RO_S0(M)
+            SUM_EPS = SUM_EPS + DES_ROP_S(IJK,M)/RO_S0(M)
          ENDDO
 ! Calculate the gas phase volume fraction and bulk density.
          EP_G(I,J,K) = ONE - SUM_EPS

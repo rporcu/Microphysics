@@ -167,7 +167,9 @@ CONTAINS
 
 ! Bulk density in a computational fluid cell / for communication with
 ! MFIX continuum
-      Allocate( DES_ROP_S(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX) )
+      ALLOCATE( DES_ROP_S(DIMENSION_3, MMAX) )
+
+
 
       CALL FINL_ERR_MSG
 

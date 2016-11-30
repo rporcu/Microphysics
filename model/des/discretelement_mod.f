@@ -331,7 +331,7 @@
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: P_FORCE
 
 ! Bulk density of particles in fluid cell
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S
 
 ! Granular temperature in a fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_THETA
