@@ -64,18 +64,23 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar
-      USE discretelement
-      USE fldvar
+
+      use fldvar  , only: ep_g , p_g , ro_g , rop_g , u_g , v_g , w_g
+      use fldvar  , only: ep_go, p_go, ro_go, rop_go, u_go, v_go, w_go
+      use fldvar  , only: d_e, d_n, d_t
+      use fldvar  , only: pp_g
+      use fldvar  , only: mu_g, lambda_g, trD_g, tau_u_g, tau_v_g, tau_w_g
+      use fldvar  , only: flux_ge, flux_gn, flux_gt
+      use fldvar  , only:  rop_ge,  rop_gn,  rop_gt
+
       USE fld_const, only: ro_g0
-      USE functions
-      USE funits
-      USE machine
-      USE output
-      USE param
-      USE param1
-      USE run
-      USE time_cpu
+      USE compar, only: myPE
+      use discretelement, only: discrete_element
+      USE funits , only: dmp_log, unit_log
+      USE param1 , only: undefined
+      USE machine, only: wall_time
+      USE run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
+      USE time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
 
       use error_manager
       use read_res1_mod, only: read_res1
@@ -106,7 +111,7 @@
 
 ! Read input data, check data, do computations for IC and BC locations
 ! and flows, and set geometry parameters such as X, X_E, DToDX, etc.
-      CALL GET_DATA
+      call get_data
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0

@@ -14,15 +14,14 @@ module allocate_mod
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      Use drag
-      Use fldvar
-      Use geometry
-      Use physprop
-      Use residual
-      Use run
-      Use xsi_array
+      Use fldvar  , only: ep_g , p_g , ro_g , rop_g , u_g , v_g , w_g
+      Use fldvar  , only: ep_go, p_go, ro_go, rop_go, u_go, v_go, w_go
+      Use fldvar  , only: d_e, d_n, d_t
+      Use fldvar  , only: pp_g
+      Use fldvar  , only: mu_g, lambda_g, trD_g, tau_u_g, tau_v_g, tau_w_g
+      Use fldvar  , only: flux_ge, flux_gn, flux_gt
+      Use fldvar  , only:  rop_ge,  rop_gn,  rop_gt
+      Use xsi_array,only: xsi_n, xsi_e, xsi_t
 
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
