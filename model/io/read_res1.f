@@ -19,16 +19,31 @@ MODULE READ_RES1_MOD
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE READ_RES1
+      SUBROUTINE READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
 
       USE funits, only: unit_res
       USE geometry, only: ijkmax2, ijkmax3
       USE compar, only: pe_io, mype
-      USE fldvar, only: ep_g, p_g, ro_g, u_g, v_g, w_g, rop_g
+      USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE param1, only: one
       USE run, only: dt, dt_fac, nstep, time
 
-      IMPLICIT NONE
+      implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
