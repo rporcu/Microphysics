@@ -77,13 +77,30 @@
       SUBROUTINE CREATE_DIR(PDIR)
 
       use compar, only: myPE, PE_IO
+      use iso_c_binding
 
       IMPLICIT NONE
+
+      interface
+         function mkdir(path,mode) bind(c,name="mkdir")
+            use iso_c_binding
+            integer(c_int) :: mkdir
+            character(kind=c_char,len=1) :: path(*)
+            integer(c_int16_t), value :: mode
+         end function mkdir
+
+         function rmdir(path,mode) bind(c,name="rmdir")
+            use iso_c_binding
+            integer(c_int) :: rmdir
+            character(kind=c_char,len=1) :: path(*)
+            integer(c_int16_t), value :: mode
+         end function rmdir
+      end interface
 
       CHARACTER(LEN=*), INTENT(IN) :: pDIR
 
       CHARACTER(LEN=256) :: CMD
-      INTEGER :: IOS
+      INTEGER :: IOS, I
       INTEGER, PARAMETER :: tUNIT = 9638
 
       IF(myPE /= PE_IO) RETURN
@@ -93,12 +110,12 @@
       IF(IOS == 0 )THEN
          write(*,*) 'The directory already exists.'
          close(tUNIT)
-         WRITE(CMD,"('rm ',A,'/tmp')")adjustl(trim(pDIR))
-         CALL EXECUTE_COMMAND_LINE(trim(CMD))
+         WRITE(CMD,"(A,'/tmp')")adjustl(trim(pDIR))
+         i = rmdir(CMD, int(o'777',c_int16_t))
       ELSE
          write(*,*) 'Creating the directory.'
          WRITE(CMD,"('mkdir ',A)")pDIR
-         CALL EXECUTE_COMMAND_LINE(trim(CMD))
+         i = mkdir(pDIR, int(o'777',c_int16_t))
       ENDIF
 
       RETURN

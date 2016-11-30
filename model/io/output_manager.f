@@ -397,12 +397,25 @@
       use compar, only: myPE, PE_IO
       use output, only: RES_BACKUPS
       use discretelement, only: DISCRETE_ELEMENT
+      USE iso_c_binding
 
       IMPLICIT NONE
 
-      CHARACTER(len=256) :: FNAME0, FNAME1
+      INTERFACE
+         FUNCTION rename(input,output) BIND(C,name="rename") RESULT(r)
+            USE iso_c_binding
+            CHARACTER(kind=c_char),INTENT(in) :: input(*)
+            CHARACTER(kind=c_char),INTENT(in) :: output(*)
+            INTEGER(c_int)        :: r
+         END FUNCTION rename
+      END INTERFACE
 
-      INTEGER :: LC
+      CHARACTER(len=256) :: FNAME0, FNAME1
+      CHARACTER :: CHAR
+
+      INTEGER :: LC, I, IERR, IREC
+      INTEGER, PARAMETER :: ISRC = 1234567
+      INTEGER, PARAMETER :: IDST = 12345678
 
       IF(myPE /= PE_IO) RETURN
 
@@ -410,53 +423,48 @@
       DO LC=RES_BACKUPS,2,-1
          CALL SET_FNAME(FNAME0,'.RES', LC-1)
          CALL SET_FNAME(FNAME1,'.RES', LC)
-         CALL SHIFT_RES(FNAME0, FNAME1, 'mv')
+            i = rename(FNAME0, FNAME1)
 
          IF(DISCRETE_ELEMENT) THEN
             CALL SET_FNAME(FNAME0,'_DES.RES', LC-1)
             CALL SET_FNAME(FNAME1,'_DES.RES', LC)
-            CALL SHIFT_RES(FNAME0, FNAME1, 'mv')
+            i = rename(FNAME0, FNAME1)
          ENDIF
       ENDDO
 
 ! Copy RES to RES1
       CALL SET_FNAME(FNAME0, '.RES')
       CALL SET_FNAME(FNAME1, '.RES' ,1)
-      CALL SHIFT_RES(FNAME0, FNAME1, 'cp')
+
+      OPEN(UNIT=ISRC, FILE=FNAME0, ACCESS='DIRECT', STATUS='OLD', ACTION='READ', IOSTAT=IERR, RECL=1)
+      OPEN(UNIT=IDST, FILE=FNAME1, ACCESS='DIRECT', STATUS='REPLACE', ACTION='WRITE', IOSTAT=IERR, RECL=1)
+      IREC = 1
+      DO
+         READ(UNIT=ISRC, REC=IREC, IOSTAT=IERR) CHAR
+         IF (IERR.NE.0) EXIT
+         WRITE(UNIT=IDST, REC=I) CHAR
+         IREC = IREC + 1
+      END DO
 
       IF(DISCRETE_ELEMENT) THEN
          CALL SET_FNAME(FNAME0, '_DES.RES')
          CALL SET_FNAME(FNAME1, '_DES.RES' ,1)
-         CALL SHIFT_RES(FNAME0, FNAME1, 'cp')
-      ENDIF
 
+         OPEN(UNIT=ISRC, FILE=FNAME0, ACCESS='DIRECT', STATUS='OLD', ACTION='READ', IOSTAT=IERR, RECL=1)
+         OPEN(UNIT=IDST, FILE=FNAME1, ACCESS='DIRECT', STATUS='REPLACE', ACTION='WRITE', IOSTAT=IERR, RECL=1)
+         IREC = 1
+         DO
+            READ(UNIT=ISRC, REC=IREC, IOSTAT=IERR) CHAR
+            IF (IERR.NE.0) EXIT
+            WRITE(UNIT=IDST, REC=I) CHAR
+            IREC = IREC + 1
+         END DO
+
+      ENDIF
 
       RETURN
 
       contains
-
-!----------------------------------------------------------------------!
-! Subroutine: SHIFT_RES                                                !
-! Purpose: Shift RES(LC-1) to RES(LC)                                  !
-!----------------------------------------------------------------------!
-      SUBROUTINE SHIFT_RES(pFN0, pFN1, ACT)
-
-      implicit none
-
-      CHARACTER(LEN=*), INTENT(IN) :: pFN0, pFN1, ACT
-      CHARACTER(len=1024) :: CMD
-      LOGICAL :: EXISTS
-
-      INQUIRE(FILE=trim(pFN0),EXIST=EXISTS)
-      IF(EXISTS) THEN
-         CMD=''; WRITE(CMD,1000)trim(ACT), trim(pFN0),trim(pFN1)
-         CALL EXECUTE_COMMAND_LINE(trim(CMD))
-      ENDIF
-
- 1000 FORMAT(A,1x,A,1X,A)
-
-      RETURN
-      END SUBROUTINE SHIFT_RES
 
 !----------------------------------------------------------------------!
 ! Subroutine: SET_FNAME                                                !
