@@ -128,10 +128,9 @@
                   V_G(I,J,K) = V_G(im,j,k)
                   W_G(I,J,K) = W_G(im,j,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K,im,j,k) 
-!                 Flux_gE(I,J,K) = Flux_gE(im,j,k)
-!                 Flux_gN(I,J,K) = Flux_gN(im,j,k)
-!                 Flux_gT(I,J,K) = Flux_gT(im,j,k)
+                  Flux_gE(I,J,K) = Flux_gE(im,j,k)
+                  Flux_gN(I,J,K) = Flux_gN(im,j,k)
+                  Flux_gT(I,J,K) = Flux_gT(im,j,k)
                ENDIF
 
 
@@ -185,10 +184,9 @@
                   U_G(I,J,K) = U_G(i,jm,k)
                   W_G(I,J,K) = W_G(i,jm,k)
 
-                  CALL SET_OUTFLOW_FLUXES(I,J,K,i,jm,k) 
-!                 Flux_gE(I,J,K) = Flux_gE(i,jm,k)
-!                 Flux_gN(I,J,K) = Flux_gN(i,jm,k)
-!                 Flux_gT(I,J,K) = Flux_gT(i,jm,k)
+                  Flux_gE(I,J,K) = Flux_gE(i,jm,k)
+                  Flux_gN(I,J,K) = Flux_gN(i,jm,k)
+                  Flux_gT(I,J,K) = Flux_gT(i,jm,k)
                ENDIF
 
 
@@ -420,39 +418,3 @@
       RETURN
       END SUBROUTINE SET_OUTFLOW_EP
 
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Purpose: Update convective fluxes....                               C
-!  Set the value of the convective fluxes in the specified boundary    C
-!  cell according to their value in the adjacent fluid cell.           C
-!                                                                      C
-!  Comment/concern:                                                    C
-!  Should these be assigned in the same method as the velocity? Note   C
-!  if bc_plane is W, S, B then the normal component of velocity may be C
-!  assigned a zero value as opposed to value of its neighboring fluid  C
-!  cell. This routine would seem to introduce some inconsistency       C
-!  between velocity and flux at boundary.                              C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SET_OUTFLOW_FLUXES(I,J,K,FI,FJ,FK)
-
-! Global variables
-!---------------------------------------------------------------------//
-      use fldvar, only: flux_ge, flux_gn, flux_gt
-
-! Dummy arguments
-!---------------------------------------------------------------------//
-! ijk index for boundary cell
-      INTEGER, INTENT(IN) :: I,J,K
-! ijk index for adjacent fluid cell
-      INTEGER, INTENT(IN) :: FI,FJ,FK
-!---------------------------------------------------------------------//
-
-      Flux_gE(I,J,K) = Flux_gE(FI,FJ,FK)
-      Flux_gN(I,J,K) = Flux_gN(FI,FJ,FK)
-      Flux_gT(I,J,K) = Flux_gT(FI,FJ,FK)
-
-      RETURN
-      END SUBROUTINE SET_OUTFLOW_FLUXES
