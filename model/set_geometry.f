@@ -30,6 +30,7 @@
 !---------------------------------------------------------------------//
       use error_manager
       use toleranc
+      use allocate_mod
 
       IMPLICIT NONE
 

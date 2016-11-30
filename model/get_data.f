@@ -24,6 +24,9 @@
       USE run            , only: run_type, run_name
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
 
+      use allocate_mod
+      use matrix, only: A_m, b_m
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
@@ -110,7 +113,7 @@
 !--------------------------  ARRAY ALLOCATION -----------------------!
 
 ! Allocate array storage.
-      CALL ALLOCATE_ARRAYS
+      CALL ALLOCATE_ARRAYS(A_m, B_m)
       IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
 
       ! Initialize arrays.

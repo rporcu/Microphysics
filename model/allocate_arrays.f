@@ -1,3 +1,5 @@
+module allocate_mod
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutinee: ALLOCATE_ARRAYS                                        C
@@ -7,15 +9,13 @@
 !  Reviewer:                                                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE ALLOCATE_ARRAYS
+      SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE param
       USE param1
-      use matrix
       Use drag
       Use fldvar
       Use geometry
@@ -24,11 +24,17 @@
       Use run
       Use xsi_array
 
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
+
       IMPLICIT NONE
 
 !-----------------------------------------------
 ! Variables
 !-----------------------------------------------
+      DOUBLE PRECISION, allocatable, intent(inOUT) :: A_m(:,:,:,:)
+      DOUBLE PRECISION, allocatable, intent(inOUT) :: B_m(:,:,:)
 
       integer :: is3, ie3
       integer :: js3, je3
@@ -38,7 +44,6 @@
       js3 = jstart3;   je3 = jend3
       ks3 = kstart3;   ke3 = kend3
 
-!ambm
       Allocate( A_m(is3:ie3,js3:je3,ks3:ke3, -3:3) )
       Allocate( B_m(is3:ie3,js3:je3,ks3:ke3) )
 
@@ -161,3 +166,4 @@
 
       RETURN
       END SUBROUTINE ALLOCATE_ARRAYS_GEOMETRY
+end module allocate_mod

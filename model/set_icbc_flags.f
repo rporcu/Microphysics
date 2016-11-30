@@ -47,9 +47,6 @@
       DO j = jstart3, jend3
       DO i = istart3, iend3
 
-
-         write(*,*)i,j,k
-
 ! Initialize the ICBC Flag
          if (run_type == 'NEW') then
             flag(i,j,k,0) = icbc_undef
