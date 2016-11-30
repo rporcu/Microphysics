@@ -116,7 +116,9 @@
       use desgrid, only: dg_xend, dg_yend, dg_zend
 
 ! direction wise spans of the domain and grid spacing in each direction
-      use geometry, only: xlength, ylength, zlength
+      use geometry, only: no_k, do_k, dz
+      use geometry, only: imin2, jmin2, kmin2
+      use geometry, only: imax2, jmax2, kmax2
 
       use stl_functions_des, only: CHECK_IF_PARTICLE_OVERLAPS_STL
       use run, only: solids_model
@@ -132,7 +134,6 @@
       use funits
       use compar
       use funits
-      use geometry
 
       IMPLICIT NONE
 

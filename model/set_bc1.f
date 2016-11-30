@@ -13,7 +13,7 @@
       use bc, only: bc_defined, bc_type
       USE param , only: dimension_bc
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      
+
       implicit none
 
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&

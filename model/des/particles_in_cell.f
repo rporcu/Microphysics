@@ -228,7 +228,7 @@
       USE error_manager
       USE desgrid, only: desgrid_pic
       USE geometry
-      use functions
+      USE functions, only: funijk
 
       IMPLICIT NONE
 !-----------------------------------------------

@@ -426,7 +426,10 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager
-      use geometry
+      use geometry, only: do_k
+      use geometry, only: imax2, jmax2, kmax2
+      use geometry, only: imin1, jmin1, kmin1
+      use geometry, only: imin2, kmin2
 
       implicit none
 !-----------------------------------------------
