@@ -131,14 +131,14 @@
 
        CASE ('RESTART_1')
 ! Read the time-dependent part of the restart file
-         CALL READ_RES1
+         CALL READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
          WRITE(ERR_MSG, 1010) TIME, NSTEP
          CALL FLUSH_ERR_MSG()
 
       CASE ('RESTART_2')
          TIME_SAVE = TIME
 
-         CALL READ_RES1
+         CALL READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
          TIME = TIME_SAVE
 
          WRITE(ERR_MSG, 1010) TIME, NSTEP
