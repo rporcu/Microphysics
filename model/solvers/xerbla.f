@@ -1,12 +1,13 @@
       SUBROUTINE XERBLA ( SRNAME, INFO )
-!     ..    Modules
-      USE compar
 
-!     ..    Scalar Arguments ..
+      USE compar, only: mype
+      USE exit_mod, only: mfix_exit
+
+
       INTEGER            INFO
       CHARACTER(LEN=6)        SRNAME
-!     ..
-!
+
+
 !  Purpose
 !  =======
 !
@@ -43,4 +44,3 @@
          ' had an illegal value' )
 !     End of XERBLA.
       END SUBROUTINE XERBLA
-

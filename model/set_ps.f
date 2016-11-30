@@ -10,11 +10,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_PS
 
+      use compar   , only: myPE, PE_IO, numPEs
+      use exit_mod, only: mfix_exit
+      use functions, only: fluid_at
+      use geometry , only: do_k, vol
       use param1, only: zero, small_number, undefined
       use ps
-      use compar   , only: myPE, PE_IO, numPEs
-      use geometry , only: do_k, vol
-      use functions, only: fluid_at
 
       implicit none
 
@@ -172,7 +173,7 @@
       use param1  , only: small_number
       use physprop, only: mmax
       use ps
-      use functions,only: fluid_at 
+      use functions,only: fluid_at
 
       implicit none
 

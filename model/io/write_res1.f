@@ -1,3 +1,15 @@
+MODULE WRITE_RES1_MOD
+
+      USE compar, only: mype, pe_io
+      USE param, only: dimension_3
+      USE fldvar, only: ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g
+      USE funits, only: unit_res
+      USE geometry, only: ijkmax2, ijkmax3
+      USE out_bin_512_mod, only: out_bin_512
+      USE in_binary_512, only: in_bin_512, convert_to_io_dp
+      USE run, only: dt, nstep, time
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: WRITE_RES1                                             C
@@ -7,19 +19,6 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_RES1
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE compar
-      USE fldvar
-      USE funits
-      USE geometry
-      USE output
-      USE param
-      USE param1
-      USE physprop
-      USE run
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -81,13 +80,6 @@
 
       subroutine gatherWriteRes(VAR, array2, array1, NEXT_REC)
 
-      USE geometry
-      USE funits
-      USE compar
-      USE param
-
-      USE in_binary_512
-
       IMPLICIT NONE
 
       double precision, dimension(ijkmax2) :: array1
@@ -108,3 +100,4 @@
 
 
       End subroutine gatherWriteRes
+END MODULE WRITE_RES1_MOD

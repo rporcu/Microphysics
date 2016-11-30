@@ -23,6 +23,7 @@
 ! Modules
 !-----------------------------------------------
       USE compar
+      USE exit_mod, only: mfix_exit
       USE constant
       USE discretelement
       USE drag

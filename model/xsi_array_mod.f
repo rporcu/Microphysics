@@ -12,6 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       MODULE xsi_array
+
       IMPLICIT NONE
 
 ! discretization factors xsi of dimension_3
@@ -24,7 +25,10 @@
 
 
       SUBROUTINE lock_xsi_array
+
       use compar, only: mype
+      use exit_mod, only: mfix_exit
+
       IMPLICIT NONE
       IF(xsi_array_locked) THEN
          Write(*,*)'Error:  Multiple use of xsi_array ',&

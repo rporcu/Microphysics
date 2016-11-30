@@ -14,6 +14,7 @@
 !-----------------------------------------------
       USE compar
       USE param
+      USE exit_mod, only: mfix_exit
       USE param1
 
       IMPLICIT NONE
@@ -88,6 +89,7 @@
 !   M o d u l e s
 !-----------------------------------------------
       USE compar
+      USE exit_mod, only: mfix_exit
       USE param
       USE param1
       USE utilities, ONLY: seek_end

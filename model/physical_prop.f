@@ -35,6 +35,7 @@
 
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE compar, only: myPE, PE_IO, numPEs
+      USE exit_mod, only: mfix_exit
 
       implicit none
 

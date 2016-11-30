@@ -1,3 +1,6 @@
+MODULE ITERATE_MOD
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: ITERATE                                                 C
@@ -167,7 +170,7 @@
 
 ! Calculate coefficients, excluding density and reactions.
       CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 1)
- 
+
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components
@@ -425,6 +428,7 @@
 !-----------------------------------------------
       USE bc
       USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
+      USE exit_mod, only: mfix_exit
       USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       USE run     , only: automatic_restart
       USE utilities, ONLY: mfix_isnan
@@ -521,3 +525,4 @@
       ' Message: Number of outer iterations exceeded ', I4,/1X,70('*')/)
 
       END SUBROUTINE GoalSeekMassFlux
+END MODULE ITERATE_MOD

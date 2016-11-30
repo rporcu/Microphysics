@@ -78,6 +78,8 @@
       USE time_cpu
 
       use error_manager
+      use read_res1_mod, only: read_res1
+      use write_res1_mod, only: write_res1
 
       IMPLICIT NONE
 !-----------------------------------------------

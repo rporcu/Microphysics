@@ -21,12 +21,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE OUT_BIN_R(IUNIT, ARRAY, IJKMAX2, NEXT_REC)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

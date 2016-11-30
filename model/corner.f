@@ -221,6 +221,7 @@
       USE param
       USE param1
       USE compar
+      USE exit_mod, only: mfix_exit
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

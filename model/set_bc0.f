@@ -340,6 +340,7 @@
 
       use compar
       use funits, only: UNIT_LOG
+      use exit_mod, only: mfix_exit
 
       implicit none
 

@@ -1,3 +1,5 @@
+MODULE READ_RES1_MOD
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: READ_RES1                                              C
@@ -18,21 +20,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE READ_RES1
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE geometry
-      USE physprop
-      USE run
-      USE funits
-      USE compar
-      USE in_binary_512
+
+      USE funits, only: unit_res
+      USE geometry, only: ijkmax2, ijkmax3
+      USE compar, only: pe_io, mype
+      USE fldvar, only: ep_g, p_g, ro_g, u_g, v_g, w_g, rop_g
+      USE param1, only: one
+      USE run, only: dt, dt_fac, nstep, time
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -120,12 +114,13 @@
 
       subroutine readScatterRes(VAR, array2, array1, init, NEXT_REC)
 
-      use param1, only: zero, undefined
-      use param, only: dimension_3
-      USE geometry
-      USE funits
-      USE compar
-      USE in_binary_512
+      USE compar, only: mype, pe_io
+      USE funits, only: unit_res
+      USE geometry, only: ijkmax2, ijkmax3
+      USE in_binary_512, only: convert_from_io_dp, in_bin_512
+      USE param, only: dimension_3
+      USE param1, only: zero, undefined
+
       IMPLICIT NONE
       double precision, dimension(ijkmax2) :: array1
       double precision, dimension(ijkmax3) :: array2
@@ -149,3 +144,4 @@
       ! call scatter(VAR, array2, PE_IO)
 
       End subroutine readScatterRes
+END MODULE READ_RES1_MOD

@@ -9,6 +9,8 @@
       use mpi_comm_des, only: DES_GATHER
       use mpi_comm_des, only: DESMPI_GATHERV
 
+      use out_bin_512_mod, only: out_bin_512
+
       IMPLICIT NONE
 
       PRIVATE

@@ -21,21 +21,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE OUT_ARRAY_C(ARRAY, MESSAGE)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE fldvar
-      USE physprop
-      USE funits
-      USE compar
-      USE functions
-      USE in_binary_512i
+
+      USE functions, only: funijk
+      USE funits, only: unit_out
+      USE geometry, only: kmax2, ijkmax2
+      USE in_binary_512i, only: convert_to_io_c
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
