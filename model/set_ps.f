@@ -10,14 +10,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_PS
 
-      use param
       use param1, only: zero, small_number, undefined
-      use run
-      use physprop
       use ps
-      use compar
-      use geometry
-      use functions
+      use compar   , only: myPE, PE_IO, numPEs
+      use geometry , only: do_k, vol
+      use functions, only: fluid_at
 
       implicit none
 
@@ -156,8 +153,6 @@
 
       END SUBROUTINE SET_PS
 
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: DEBUG_PS                                               C
@@ -172,21 +167,14 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DEBUG_PS(lPSV, lPS_SIZE)
 
-      use bc
-      use compar
-      use constant
-      use geometry
-      use ic
-      use param
-      use param1
-      use physprop
-      use run
-      use toleranc
-      use usr
+      use compar  , only: myPE, PE_IO
+      use geometry, only: do_k, flag
+      use param1  , only: small_number
+      use physprop, only: mmax
       use ps
-      use functions
+      use functions,only: fluid_at 
 
-      IMPLICIT NONE
+      implicit none
 
 ! Index of PS source to debug.
       INTEGER, intent(in) :: lPSV
