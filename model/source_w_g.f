@@ -30,7 +30,7 @@
       USE fldvar, only: p_g, ep_g, ro_g, rop_g, rop_go, w_g, w_go
 
       USE fun_avg, only: avg, avg_h
-      USE functions, only: ip_at_t, is_id_at_t
+      USE functions, only: ip_at_t
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax, wall_at

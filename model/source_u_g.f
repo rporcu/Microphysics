@@ -31,7 +31,7 @@
       USE fldvar, only: tau_u_g
 
       USE fun_avg, only: avg
-      USE functions, only: ip_at_e, is_id_at_e
+      USE functions, only: ip_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax
 

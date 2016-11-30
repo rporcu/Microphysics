@@ -66,12 +66,6 @@ MODULE functions
 ! surface boundaries (specific type of internal surface)
 ! LOGICAL :: ip_at_e, ip_at_n, ip_at_t
 
-! Logical functions concerning general internal surfaces
-! LOGICAL :: IS_AT_E, IS_AT_N, IS_AT_T
-! LOGICAL :: NO_IS_AT_E, NO_IS_AT_N, NO_IS_AT_T
-! Integer function to return internal surface ID
-! INTEGER :: IS_ID_AT_E, IS_ID_AT_N, IS_ID_AT_T
-
 
 ! Additional functions
 !---------------------------------------------------------------------//
