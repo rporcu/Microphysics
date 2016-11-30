@@ -23,12 +23,9 @@
 !-----------------------------------------------
 !     M o d u l e s
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE residual
-      USE run
+      USE param1, only: UNDEFINED, ZERO
+      USE residual, only: nresid, num_resid, resid_pack, den_resid, resid
+      USE run, only: debug_resid
       IMPLICIT NONE
 !-----------------------------------------------
 !     G l o b a l   P a r a m e t e r s

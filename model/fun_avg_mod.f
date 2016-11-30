@@ -1,7 +1,6 @@
 MODULE fun_avg
 
-  USE geometry
-  USE param1
+  USE geometry, only: do_k
 
 CONTAINS
 

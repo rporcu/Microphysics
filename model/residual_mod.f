@@ -1,8 +1,6 @@
       MODULE residual
 
-
-      Use param
-      Use param1
+      Use param, only: DIM_n
 
       INTEGER, PARAMETER :: MAX_RESID_INDEX = 8
 !

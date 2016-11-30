@@ -54,7 +54,7 @@ CONTAINS
 !----------------------------------------------------------------------!
   SUBROUTINE REPORT_SOLVER_STATS(TNIT, STEPS)
 
-    use error_manager
+    use error_manager, only: ival, flush_err_msg, err_msg
 
     IMPLICIT NONE
 

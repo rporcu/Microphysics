@@ -42,7 +42,7 @@
 
       ! logical function to identify a specified pressure inflow cell
       logical function p_flow_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer i,j,k
       P_FLOW_AT = flag(i,j,k,1) .EQ. 10 .OR. &
@@ -51,7 +51,7 @@
 
       ! logical function to identify a specified pressure outflow cell
       logical function p_outflow_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer i,j,k
       P_OUTFLOW_AT= flag(i,j,k,1) .EQ. 11
@@ -61,7 +61,7 @@
 ! or outflow cell or a fluid cell (simplified check)
 ! FLUID_AT or P_FLOW_AT (simplified check)
       logical function FLUIDorP_FLOW_AT(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       FLUIDorP_FLOW_AT = (flag(i,j,k,1) .LE. 11)
@@ -69,7 +69,7 @@
 
 ! logical function to identify a specified mass outflow cell
       logical function mass_outflow_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer i,j,k
       MASS_OUTFLOW_AT= flag(i,j,k,1) .EQ. 21
@@ -77,7 +77,7 @@
 
 ! logical function to identify a specified outflow cell
       logical function outflow_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer i,j,k
       OUTFLOW_AT  = flag(i,j,k,1) .EQ. 31
@@ -86,7 +86,7 @@
 ! logical function to identify any type of flow in/out at cell
 ! pressure inflow/outflow, mass inflow/outflow or outflow
       logical function flow_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer i,j,k
       FLOW_AT = flag(i,j,k,1) .GE. 10 .AND. &
@@ -95,7 +95,7 @@
 
 ! Logical function to identify default walls
       logical function wall_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       WALL_AT = flag(i,j,k,1) .GE. 100
@@ -103,7 +103,7 @@
 
 ! Logical function to identify a No-slip wall cell
       logical function ns_wall_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       NS_WALL_AT  = flag(i,j,k,1) .EQ. 100
@@ -119,15 +119,15 @@
 
 ! Logical function to identify a Partial-slip wall cell
       logical function ps_wall_at(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       ps_wall_at  = flag(i,j,k,1) .EQ. 102
       end function ps_wall_at
 
       LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
-      use geometry
-      use ic
+      use geometry, only: flag
+      use ic, only: icbc_no_s, icbc_free, icbc_pslip, icbc_cycl, icbc_cyclp
       implicit none
       integer, intent(in) :: i,j,k
       integer :: icbc
@@ -144,8 +144,8 @@
       END FUNCTION WALL_ICBC_FLAG
 
       LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
-      use geometry
-      use ic
+      use geometry, only: flag
+      use ic, only: icbc_cycl, icbc_cyclp
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: icbc
@@ -159,7 +159,7 @@
 ! Cyclic
 !---------------------------------------------------------------------//
       LOGICAL FUNCTION CYCLIC_AT(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       CYCLIC_AT = (FLAG(i,j,k,1) .EQ. 106 .OR. FLAG(i,j,k,1) .EQ. 107)
@@ -167,7 +167,7 @@
 
 ! logical function to identify cyclic condition at east boundary
       LOGICAL FUNCTION CYCLIC_AT_E(i,j,k)
-      USE geometry, only: flag
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       CYCLIC_AT_E   = FLAG(i,j,k,2) .EQ. 2000
@@ -175,7 +175,7 @@
 
 ! logical function to identify cyclic condition at north boundary
       LOGICAL FUNCTION CYCLIC_AT_N(i,j,k)
-      USE geometry, only: flag
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       CYCLIC_AT_N   = FLAG(i,j,k,3) .EQ. 2000
@@ -183,7 +183,7 @@
 
 ! logical function to identify cyclic condition at top boundary
       LOGICAL FUNCTION CYCLIC_AT_T(i,j,k)
-      USE geometry, only: flag
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       CYCLIC_AT_T   = FLAG(i,j,k,4) .EQ. 2000
@@ -194,7 +194,7 @@
 !---------------------------------------------------------------------//
 ! identify flow at east boundary
       LOGICAL FUNCTION FLOW_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       FLOW_AT_E   = FLAG(i,j,k,2) .GE. 2000 .AND.&
@@ -203,7 +203,7 @@
 
 ! identify specified flow north boundary
       LOGICAL FUNCTION FLOW_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       FLOW_AT_N   = FLAG(i,j,k,3) .GE. 2000 .AND.&
@@ -212,7 +212,7 @@
 
 ! identify specified flow top boundary
       LOGICAL FUNCTION FLOW_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER, INTENT(IN) :: i,j,k
       FLOW_AT_T   = FLAG(i,j,k,4) .GE. 2000 .AND.&
@@ -221,7 +221,7 @@
 
 ! identify const. pressure flow top boundary
       LOGICAL FUNCTION PFLOW_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       PFLOW_AT_E  = FLAG(i,j,k,2) .EQ. 2010 .OR.&
@@ -230,7 +230,7 @@
 
 ! identify const. pressure flow north boundary
       LOGICAL FUNCTION PFLOW_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       PFLOW_AT_N  = FLAG(i,j,k,3) .EQ. 2010 .OR.&
@@ -239,7 +239,7 @@
 
 ! identify const. pressure flow east boundary
       LOGICAL FUNCTION PFLOW_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       PFLOW_AT_T  = FLAG(i,j,k,4) .EQ. 2010 .OR.&
@@ -248,7 +248,7 @@
 
 ! identify specified flow east boundary
       LOGICAL FUNCTION MFLOW_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       MFLOW_AT_E  = FLAG(i,j,k,2) .EQ. 2020 .OR. &
@@ -258,7 +258,7 @@
 
 ! identify specified flow north boundary
       LOGICAL FUNCTION MFLOW_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       MFLOW_AT_N  = FLAG(i,j,k,3) .EQ. 2020 .OR. &
@@ -268,7 +268,7 @@
 
 ! identify specified flow top boundary
       LOGICAL FUNCTION MFLOW_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       MFLOW_AT_T  = FLAG(i,j,k,4) .EQ. 2020 .OR. &
@@ -282,7 +282,7 @@
 !---------------------------------------------------------------------//
 ! Logical function to identify IP (impermeable surface) East of the cell
       logical function ip_at_e(i,j,k)
-      use geometry
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       ip_at_e = flag(i,j,k,2) .LT. 1000
@@ -290,7 +290,7 @@
 
 ! Logical function to identify IP (impermeable surface) North of the cell
       logical function ip_at_n(i,j,k)
-      use geometry
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       ip_at_n = flag(i,j,k,3) .LT. 1000
@@ -298,7 +298,7 @@
 
 ! Logical function to identify IP (impermeable surface) Top of the cell
       logical function ip_at_t(i,j,k)
-      use geometry
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       ip_at_t = flag(i,j,k,4) .LT. 1000
@@ -309,7 +309,7 @@
 !---------------------------------------------------------------------//
 ! Internal surface ID for east face
       INTEGER FUNCTION IS_ID_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_ID_AT_E = FLAG(i,j,k,2) - 1000
@@ -317,7 +317,7 @@
 
 ! Internal surface ID for north face
       INTEGER FUNCTION IS_ID_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_ID_AT_N  = FLAG(i,j,k,3) - 1000
@@ -325,7 +325,7 @@
 
 ! Internal surface ID for top face
       INTEGER FUNCTION IS_ID_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_ID_AT_T  = FLAG(i,j,k,4) - 1000
@@ -333,7 +333,7 @@
 
 ! Logical function to identify IS at East of the cell
       LOGICAL FUNCTION IS_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_AT_E     = FLAG(i,j,k,2) .LT. 2000
@@ -341,7 +341,7 @@
 
 ! Logical function to identify IS at North of the cell
       LOGICAL FUNCTION IS_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_AT_N     = FLAG(i,j,k,3) .LT. 2000
@@ -349,7 +349,7 @@
 
 ! Logical function to identify IS at Top of the cell
       LOGICAL FUNCTION IS_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       IS_AT_T     = FLAG(i,j,k,4) .LT. 2000
@@ -357,7 +357,7 @@
 
 ! Logical function to identify No IS at East of the cell
       LOGICAL FUNCTION NO_IS_AT_E(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       NO_IS_AT_E  = FLAG(i,j,k,2) .GE. 2000
@@ -365,7 +365,7 @@
 
 ! Logical function to identify No IS at North of the cell
       LOGICAL FUNCTION NO_IS_AT_N(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       NO_IS_AT_N  = FLAG(i,j,k,3) .GE. 2000
@@ -373,7 +373,7 @@
 
 ! Logical function to identify No IS at Top of the cell
       LOGICAL FUNCTION NO_IS_AT_T(i,j,k)
-      USE geometry
+      use geometry, only: flag
       implicit none
       INTEGER i,j,k
       NO_IS_AT_T  = FLAG(i,j,k,4) .GE. 2000
