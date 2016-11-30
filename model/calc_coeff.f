@@ -69,8 +69,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_COEFF(ro_g, p_g, ep_g, rop_g, pLevel)
 
-      use fldvar, only: ro_g0
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      use fld_const, only: ro_g0
+      use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DES_CONTINUUM_COUPLED
 

@@ -17,7 +17,7 @@
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE constant , only: gravity_y
       USE eos      , ONLY: EOSG
-      USE fldvar   , only: mw_avg, ro_g0
+      USE fld_const, only: mw_avg, ro_g0
       USE functions, only: fluid_at
       use funits   , only: dmp_log, unit_log
       USE geometry

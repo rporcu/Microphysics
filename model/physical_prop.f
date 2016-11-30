@@ -121,9 +121,8 @@
 
 ! Global variables:
 !-----------------------------------------------------------------------
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
-      use fldvar, only: MW_AVG
+      USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      use fld_const, only: mw_avg
 
 ! Maximum value for molecular weight (divided by one)
       use toleranc, only: OMW_MAX

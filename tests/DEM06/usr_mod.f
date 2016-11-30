@@ -114,7 +114,7 @@
       double precision function Re(Vs)
 
       use physprop, only: D_p0
-      use fldvar, only: RO_G0, MU_g0
+      use fld_const, only: RO_G0, MU_g0
 
       implicit none
 
@@ -163,7 +163,7 @@
       function Fb( )
 
       use discretelement, only: GRAV
-      use fldvar, only: RO_g0
+      use fld_const, only: RO_g0
       use physprop, only: RO_s0
 
       implicit none
@@ -191,7 +191,7 @@
 
       use discretelement, only: GRAV
       use physprop, only: RO_s0, D_p0
-      use fldvar, only: RO_g0
+      use fld_const, only: RO_g0
 
       implicit none
 

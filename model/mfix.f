@@ -67,6 +67,7 @@
       USE compar
       USE discretelement
       USE fldvar
+      USE fld_const, only: ro_g0
       USE functions
       USE funits
       USE machine

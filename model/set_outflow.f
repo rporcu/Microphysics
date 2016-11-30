@@ -286,10 +286,10 @@
 
 ! Global variables
 !---------------------------------------------------------------------//
-      use bc, only: bc_type
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use fldvar, only: ro_g0, mw_avg
-      use eos   , only: EOSG
+      use bc       , only: bc_type
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use fld_const, only: ro_g0, mw_avg
+      use eos      , only: EOSG
 
 ! Global parameters
 !---------------------------------------------------------------------//
@@ -315,7 +315,7 @@
           BC_TYPE(BCV) /= 'P_INFLOW') P_G(I,J,K) = P_G(FI,FJ,FK)
 
       IF (RO_G0 == UNDEFINED) RO_G(I,J,K) = &
-         EOSG(MW_AVG,P_G(I,J,K),295.15d0)
+         EOSG(mw_avg,P_G(I,J,K),295.15d0)
 
 
       RETURN

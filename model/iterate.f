@@ -12,16 +12,16 @@
                          flux_ge,flux_gn,flux_gt,&
                          IER, NIT)
 
-      USE compar  , only: myPE, PE_IO
-      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE fldvar  , only: ro_g0
-      USE funits  , only: dmp_log, unit_log
-      USE geometry, only: cyclic, cyclic_x, cyclic_y, cyclic_z, vol
-      USE geometry, only: do_i, do_j, do_k
-      USE leqsol  , only: leq_adjust, max_nit
-      USE output  , only: full_log, nlog
-      USE param1  , only: small_number, undefined, zero, one
-      USE residual, only: resid, resid_p
+      USE compar   , only: myPE, PE_IO
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE fld_const, only: ro_g0
+      USE funits   , only: dmp_log, unit_log
+      USE geometry , only: cyclic, cyclic_x, cyclic_y, cyclic_z, vol
+      USE geometry , only: do_i, do_j, do_k
+      USE leqsol   , only: leq_adjust, max_nit
+      USE output   , only: full_log, nlog
+      USE param1   , only: small_number, undefined, zero, one
+      USE residual , only: resid, resid_p
       USE run
       USE time_cpu
       USE toleranc, only: norm_g

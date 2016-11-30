@@ -361,7 +361,7 @@
       use ic, only: IC_TYPE
 
 ! Specified constant gas density and viscosity.
-      use fldvar, only: RO_G0
+      use fld_const, only: ro_g0
 ! Flag: Do not solve in specified direction.
       use geometry, only: NO_I, NO_J, NO_K
 

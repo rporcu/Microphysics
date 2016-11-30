@@ -18,6 +18,7 @@
       USE compar
       USE discretelement
       USE drag
+      USE fld_const, only: ro_g0, mu_g0
       USE fldvar
       USE funits
       USE geometry

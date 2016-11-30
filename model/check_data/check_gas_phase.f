@@ -13,11 +13,11 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! User specified: Constant gas viscosity
-      use fldvar, only: MU_G0
+      use fld_const, only: mu_g0
 ! User specified: Constant gas density
-      use fldvar, only: RO_G0
+      use fld_const, only: ro_g0
 ! User specified: Constant gas mixture molecular weight
-      use fldvar, only: MW_AVG
+      use fld_const, only: mw_avg
 
 
 ! Global Parameters:

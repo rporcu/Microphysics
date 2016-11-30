@@ -78,7 +78,7 @@
       Use bc, only: delP_x
       Use bc, only: Uw => BC_Uw_g
       Use bc, only: BC_P_g, BC_TYPE
-      use fldvar, only: Mu_g0
+      use fld_const, only: Mu_g0
       Use geometry, only: HEIGHT => YLENGTH
       Use geometry, only: XLENGTH
       Use geometry, only: CYCLIC_X_PD

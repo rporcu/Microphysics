@@ -9,13 +9,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE fldvar
 
-! Specified constant gas density
-      DOUBLE PRECISION :: RO_g0
-! Specified constant gas viscosity
-      DOUBLE PRECISION :: MU_g0
-! Average molecular weight of gas
-      DOUBLE PRECISION :: MW_AVG
-
 ! Void fraction (current and previous time-step values)
       DOUBLE PRECISION, ALLOCATABLE ::  EP_g(:,:,:), EP_go(:,:,:)
 ! Gas pressure (current and previous time-step values)

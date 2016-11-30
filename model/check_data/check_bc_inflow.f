@@ -45,11 +45,11 @@
       use bc, only: bc_ep_g, bc_p_g
       use bc, only: bc_rop_s, bc_ep_s
       use bc, only: bc_massflow_g
-      use param, only: dim_m
-      use param1, only: undefined, one, zero
-      use fldvar, only: ro_g0
-      use physprop, only: ro_s0
-      use toleranc, only: compare
+      use param    , only: dim_m
+      use param1   , only: undefined, one, zero
+      use fld_const, only: ro_g0
+      use physprop , only: ro_s0
+      use toleranc , only: compare
       use error_manager
       IMPLICIT NONE
 
@@ -205,10 +205,10 @@
       use bc, only: bc_p_g, bc_rop_s
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
-      use geometry, only: no_i, no_j, no_k
-      use param, only: dim_m
-      use param1, only: undefined, zero
-      use fldvar, only: ro_g0
+      use geometry , only: no_i, no_j, no_k
+      use param    , only: dim_m
+      use param1   , only: undefined, zero
+      use fld_const, only: ro_g0
       use error_manager
       IMPLICIT NONE
 

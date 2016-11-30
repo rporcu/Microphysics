@@ -153,7 +153,7 @@
       use geometry, only: xLength
       use geometry, only: yLength
 
-      use fldvar, only: Mu_g0
+      use fld_const, only: Mu_g0
 
       double precision, intent(in) :: y
       double precision :: dPdX

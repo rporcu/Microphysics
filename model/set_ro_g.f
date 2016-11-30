@@ -14,7 +14,7 @@
 !-----------------------------------------------
       USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE eos      , only: EOSG
-      USE fldvar   , only: mw_avg, ro_g0
+      USE fld_const, only: mw_avg, ro_g0
       USE param1   , only: UNDEFINED
       USE functions, only: wall_at
 
@@ -40,7 +40,7 @@
 ! set_bc0 will have already defined ro_g and rop_g in MI and PI
 ! boundary cells (redundant-remove in set_bc0?)
              IF (.NOT.wall_at(i,j,k)) THEN
-               RO_G(i,j,k) = EOSG(MW_AVG,P_G(i,j,k),295.15d0)
+               RO_G(i,j,k) = EOSG(mw_avg,P_G(i,j,k),295.15d0)
                ROP_G(i,j,k) = EP_G(I,J,K)*RO_G(i,j,k)
             ENDIF
 

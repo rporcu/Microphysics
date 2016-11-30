@@ -157,6 +157,7 @@ set(SOURCES
   model/eos_mod.f
   model/error_manager_mod.f
   model/exit.f
+  model/fld_constants_mod.f
   model/fldvar_mod.f
   model/flow_to_vel.f
   model/fun_avg_mod.f

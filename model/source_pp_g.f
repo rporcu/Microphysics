@@ -33,7 +33,7 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
       USE geometry, ONLY: VOL
       use matrix, ONLY: E, W, N, S, T, B
       USE fldvar, ONLY: D_E, D_N, D_T
-      USE fldvar, ONLY: RO_G0
+      USE fld_const, ONLY: RO_G0
       USE run, ONLY: ODT, UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
       USE xsi_array, ONLY: LOCK_XSI_ARRAY, UNLOCK_XSI_ARRAY

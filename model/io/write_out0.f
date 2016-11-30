@@ -15,7 +15,7 @@
       USE compar
       USE constant
       USE discretelement
-      USE fldvar
+      USE fld_const
       USE funits
       USE geometry
       USE ic

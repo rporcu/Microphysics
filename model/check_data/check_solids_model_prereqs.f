@@ -29,7 +29,7 @@
 ! Number of phases specified by the user.
       use physprop, only: MMAX
 ! User specified constant gas density
-      use fldvar, only: RO_g0
+      use fld_const, only: ro_g0
 ! Print E-L data.
       use discretelement, only: PRINT_DES_DATA
 

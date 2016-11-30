@@ -16,10 +16,10 @@
 ! Modules
 !-----------------------------------------------
 
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use fldvar, only: ro_g0, mu_g0
+      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use fld_const, only: ro_g0, mu_g0
       use functions, only: wall_at, fluid_at, funijk
-      use param1, only: zero, half, one, undefined
+      use param1   , only: zero, half, one, undefined
 
       implicit none
 

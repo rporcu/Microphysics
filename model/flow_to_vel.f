@@ -112,10 +112,10 @@
       use bc, only: BC_VOLFLOW_g
       use eos, only: EOSG
       use error_manager
-      use param , only: DIMENSION_BC
-      use param1, only: zero, undefined
-      use fldvar, only: MW_AVG, ro_g0
-      use scales, only: P_REF
+      use param    , only: DIMENSION_BC
+      use param1   , only: zero, undefined
+      use fld_const, only: mw_avg, ro_g0
+      use scales   , only: P_REF
       use toleranc
 
       IMPLICIT NONE
@@ -139,7 +139,7 @@
 
 ! Well-defined compresible gas BC.
       ELSEIF(BC_P_G(BCV)/=UNDEFINED .AND. BC_T_G(BCV)/=UNDEFINED) THEN
-         MW = MW_AVG
+         MW = mw_avg
          VOLFLOW = BC_MASSFLOW_G(BCV) / &
             EOSG(MW,(BC_P_G(BCV)-P_REF),BC_T_G(BCV))
 

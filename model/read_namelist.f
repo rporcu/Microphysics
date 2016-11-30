@@ -14,7 +14,7 @@
       USE des_bc
       USE discretelement
       USE error_manager
-      USE fldvar
+      USE fld_const
       USE funits
       USE geometry
       USE ic

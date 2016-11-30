@@ -140,10 +140,10 @@
 
 ! Modules
 ! --------------------------------------------------------------------//
-      USE param1, only: UNDEFINED
-      USE param1, only: ZERO
-      use fldvar, only: RO_g0
-      use bc, only: BC_P_g
+      USE param1   , only: UNDEFINED
+      USE param1   , only: ZERO
+      use fld_const, only: RO_g0
+      use bc       , only: BC_P_g
       use error_manager
       IMPLICIT NONE
 
@@ -206,8 +206,9 @@
       use bc, only: bc_ep_g, bc_rop_s
       use bc, only: bc_p_g, bc_t_g
       use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use fldvar, only: ro_g0
-      use param1, only: undefined, zero
+
+      use fld_const, only: ro_g0
+      use param1   , only: undefined, zero
       use error_manager
       IMPLICIT NONE
 
