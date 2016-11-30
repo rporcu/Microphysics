@@ -226,7 +226,7 @@
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
 ! between Lagrangian and continuum representations
-                  DES_ROP_S(IJK2, M) = DES_ROP_S(IJK2, M) + DES_ROP_DENSITY*VOL
+                  DES_ROP_S(II,JJ,KK, M) = DES_ROP_S(II,JJ,KK, M) + DES_ROP_DENSITY*VOL
                ENDIF
             ENDDO  ! end do (ii=i1,i2)
             ENDDO  ! end do (jj=j1,j2)
@@ -246,10 +246,10 @@
          IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
          DO M = 1, MMAX
-            IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
+            IF(DES_ROP_S(LLI,LLJ,LLK, M).GT.ZERO) THEN
 
 ! Divide by scalar cell volume to obtain the bulk density
-               DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL
+               DES_ROP_S(LLI,LLJ,LLK, M) = DES_ROP_S(LLI,LLJ,LLK, M)/VOL
 
             ENDIF
          ENDDO   ! end loop over M=1,MMAX
@@ -274,7 +274,7 @@
 ! It is important to check fluid_at
             IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
-            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(IJK,1:MMAX))*VOL
+            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(LLI,LLJ,LLK,1:MMAX))*VOL
          ENDDO
          ENDDO
          ENDDO

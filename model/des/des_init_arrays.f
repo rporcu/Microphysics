@@ -28,7 +28,7 @@
 
       PINC(:) = 0
 
-      DES_ROP_S(:,:) = ZERO
+      DES_ROP_S(:,:,:,:) = ZERO
 
       P_FORCE(:,:) = ZERO
 
