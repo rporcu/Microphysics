@@ -28,13 +28,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0)
 
-      use compar
       use funits
       use geometry
       use param1
       use physprop
 
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      USE compar, only: myPE, PE_IO, numPEs
 
       implicit none
 

@@ -338,8 +338,8 @@
       use param1, only: UNDEFINED
       use param1, only: UNDEFINED_I
 
-      use funits
       use compar
+      use funits, only: UNIT_LOG
 
       implicit none
 
