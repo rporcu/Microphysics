@@ -151,22 +151,21 @@
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
          LEGEND(3) = 'X_E'
-         stop 123 ! FIXME: the type of DX DY DZ does not match the type of the ARRAY argument to WRITE_TABLE
-         ! CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, IMAX2)
+         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, IMAX2)
          WRITE (UNIT_OUT, 1212) IMAX
          WRITE (UNIT_OUT, 1213) XLENGTH
          WRITE (UNIT_OUT, 1220)
          LEGEND(1) = '  J'
          LEGEND(2) = ' DY'
          LEGEND(3) = 'Y_N'
-         ! CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, JMAX2)
+         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, JMAX2)
          WRITE (UNIT_OUT, 1221) JMAX
          WRITE (UNIT_OUT, 1222) YLENGTH
          WRITE (UNIT_OUT, 1230)
          LEGEND(1) = '  K'
          LEGEND(2) = ' DZ'
          LEGEND(3) = 'Z_T'
-         ! CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, KMAX2)
+         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, KMAX2)
          WRITE (UNIT_OUT, 1231) KMAX
          WRITE (UNIT_OUT, 1232) ZLENGTH
 
