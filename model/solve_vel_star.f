@@ -12,8 +12,6 @@ module solve_vel_star_module
                                 p_g,ro_g,rop_g,rop_go,ep_g,&
                                 tau_u_g,tau_v_g,tau_w_g,&
                                 d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
-!     SUBROUTINE SOLVE_VEL_STAR(u_g,v_g,w_g,rop_g,ep_g,&
-!                               d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
 
       use u_g_conv_dif
       use v_g_conv_dif
@@ -31,8 +29,6 @@ module solve_vel_star_module
       USE residual, only: resid, den_resid, max_resid, ijk_resid, &
                           resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
-
-!     USE fldvar  , only: tau_u_g,tau_v_g,tau_w_g,u_go,v_go,w_go,p_g,ro_g,rop_go
 
       USE source_u_g_module
       USE source_v_g_module
