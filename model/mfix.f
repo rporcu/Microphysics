@@ -211,12 +211,14 @@
       CPU_NLOG = CPU1
       TIME_NLOG = TIME - DT
 
-
-
-
 ! Find the solution of the equations from TIME to TSTOP at
 ! intervals of DT
-      CALL TIME_MARCH
+      call time_march(u_g,v_g,w_g,u_go,v_go,w_go,&
+                      p_g,p_go,pp_g,ep_g,ep_go,&
+                      ro_g,ro_go,rop_g,rop_go,&
+                      rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
+                      tau_u_g,tau_v_g,tau_w_g,&
+                      flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g)
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3

@@ -1,4 +1,5 @@
-MODULE ITERATE_MOD
+module iterate_mod
+
    CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -10,9 +11,11 @@ MODULE ITERATE_MOD
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE ITERATE(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
+      SUBROUTINE ITERATE(u_g,v_g,w_g,u_go,v_go,w_go,&
+                         p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                          rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                          flux_ge,flux_gn,flux_gt,mu_g,&
+                         tau_u_g, tau_v_g, tau_w_g, &
                          IER, NIT)
 
       USE compar   , only: myPE, PE_IO
@@ -33,8 +36,6 @@ MODULE ITERATE_MOD
       USE solve_pp_module
       USE solve_vel_star_module
 
-      use fldvar, only: tau_u_g, tau_v_g, tau_w_g, u_go, v_go, w_go
-
       use error_manager
 
       implicit none
@@ -44,6 +45,12 @@ MODULE ITERATE_MOD
       DOUBLE PRECISION, INTENT(INOUT) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -76,6 +83,12 @@ MODULE ITERATE_MOD
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Dummy arguments
@@ -525,4 +538,4 @@ MODULE ITERATE_MOD
       ' Message: Number of outer iterations exceeded ', I4,/1X,70('*')/)
 
       END SUBROUTINE GoalSeekMassFlux
-END MODULE ITERATE_MOD
+end module iterate_mod

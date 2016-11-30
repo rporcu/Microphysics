@@ -9,37 +9,103 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      SUBROUTINE TIME_MARCH
+      subroutine time_march(u_g,v_g,w_g,u_go,v_go,w_go,&
+                            p_g,p_go,pp_g,ep_g,ep_go,&
+                            ro_g,ro_go,rop_g,rop_go,&
+                            rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
+                            tau_u_g,tau_v_g,tau_w_g,&
+                            flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc
-      USE compar
-      USE discretelement
-      USE drag
-      USE fld_const, only: mu_g0
-      USE fldvar
-      USE funits
-      USE geometry
+      USE compar, only: myPE
+      USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      USE discretelement, only: des_continuum_coupled
+      USE error_manager, only: err_msg, flush_err_msg
+      USE fld_const, only: ro_g0, mu_g0
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
-      USE param
-      USE param1
-      USE physprop
-      USE run
+      USE param1, only: undefined, small_number, zero
+      USE run, only: automatic_restart, auto_restart, chk_batchq_end, dem_solids
+      USE run, only: automatic_restart, auto_restart, chk_batchq_end, call_usr
+      USE run, only: dem_solids
+      USE run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
       USE time_cpu
-      USE toleranc
+  
+      USE toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
 
-      ! use function MAX_VEL_INLET to compute max. velocity at inlet
+      ! Use function MAX_VEL_INLET to compute max. velocity at inlet
       USE utilities, ONLY: MAX_VEL_INLET
 
-      USE vtp
-      use output, only: RES_DT
-      use adjust_dt
+!     USE vtp
+      use output   , only: RES_DT
+      use adjust_dt, only: adjustdt
 
+      use exit_mod   , only: mfix_exit
       use iterate_mod, only: iterate
 
-      IMPLICIT NONE
+      implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -155,16 +221,18 @@
       MAX_INLET_VEL = MAX_INLET_VEL * MAX_INLET_VEL_FAC
 
 ! Advance the solution in time by iteratively solving the equations
-      call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
+      call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                    flux_ge,flux_gn,flux_gt,mu_g,&
+                   tau_u_g,tau_v_g,tau_w_g,&
                    IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, &
                          U_g,  U_go, V_g, V_go,  W_g,  W_go, IER,NIT))
-         call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
+         call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,&
+                      tau_u_g,tau_v_g,tau_w_g,&
                       IER, NIT)
       ENDDO
 
