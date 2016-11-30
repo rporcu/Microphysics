@@ -14,7 +14,6 @@
       USE constant
       USE des_bc
       USE discretelement
-      USE fldvar
       USE param
       USE param1
       USE physprop

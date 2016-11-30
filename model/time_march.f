@@ -18,7 +18,7 @@
       USE compar
       USE discretelement
       USE drag
-      USE fld_const, only: ro_g0, mu_g0
+      USE fld_const, only: mu_g0
       USE fldvar
       USE funits
       USE geometry
@@ -158,7 +158,8 @@
                    flux_ge,flux_gn,flux_gt,mu_g,&
                    IER, NIT)
 
-      DO WHILE (ADJUSTDT(IER,NIT))
+      DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, &
+                         U_g,  U_go, V_g, V_go,  W_g,  W_go, IER,NIT))
          call iterate(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,&

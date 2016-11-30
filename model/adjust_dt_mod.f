@@ -10,7 +10,8 @@
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      LOGICAL FUNCTION ADJUSTDT (IER, NIT)
+      LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, &
+                         U_g,  U_go, V_g, V_go,  W_g,  W_go, IER, NIT)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -23,11 +24,11 @@
 ! Current DT (1/DT) and direction of last change (+/-)
       use run, only: DT, oDT, DT_DIR
 
+      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: ZERO, ONE, UNDEFINED
-      use fldvar, only: ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, & 
-                         U_g,  U_go, V_g, V_go,  W_g,  W_go
 
 ! Module proceedures:
 !---------------------------------------------------------------------//
@@ -38,6 +39,34 @@
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
       INTEGER, INTENT(INOUT) :: IER
 ! Number of iterations for current time step

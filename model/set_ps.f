@@ -175,7 +175,6 @@
       use bc
       use compar
       use constant
-      use fldvar
       use geometry
       use ic
       use param

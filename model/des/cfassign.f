@@ -75,7 +75,6 @@
       USE param
       USE param1
       USE physprop
-      USE fldvar
       USE run
       USE geometry
       USE bc

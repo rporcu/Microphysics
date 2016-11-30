@@ -48,7 +48,6 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE fldvar
       USE geometry
       USE compar
       USE discretelement

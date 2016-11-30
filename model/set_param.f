@@ -37,7 +37,6 @@
 ! Axis decomposition
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3, DIMENSION_4
-      USE param, only: DIMENSION_3G, DIMENSION_3P
 
 ! MPI-Domain decompoint and rank flags.
       use compar, only: myPE
@@ -67,10 +66,6 @@
 
       DIMENSION_3 = (kEnd3-kStart3+1)*(jEnd3-jStart3+1)*(iEnd3-iStart3+1)
       DIMENSION_4 = (kEnd4-kStart4+1)*(jEnd4-jStart4+1)*(iEnd4-iStart4+1)
-
-      DIMENSION_3G = IJKMAX3            ! Global IJK array
-      DIMENSION_3P = DIMENSION_3
-
 
       RETURN
       END SUBROUTINE SET_PARAMETERS
