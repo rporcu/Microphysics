@@ -31,35 +31,6 @@
       funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
 
-
-!----------------------------------------------------------------------!
-!  Function: IS_ON_myPE_WOBND                                          !
-!                                                                      !
-!  Purpose: Returns TRUE if the I,J,K values point to a computational  !
-!  cell that is OWNED by the current process and not a exterior ghost  !
-!  cell.                                                               !
-!                                                                      !
-!  o This is a subset of IS_ON_myPE_OWNS.                              !
-!                                                                      !
-!  o Exterior ghost cells are those in cells surrounding the domain.   !
-!    These are cells created to fully define boundary conditions       !
-!    (e.g., I == 1 where X_E(1) == ZERO).                              !
-!                                                                      !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION IS_ON_myPE_wobnd (LI, LJ, LK)
-        USE compar
-        implicit none
-
-        INTEGER, INTENT(IN) :: LI, LJ, LK
-
-      IS_ON_MYPE_WOBND = &
-         LI >= ISTART1 .AND. LI <= IEND1 .AND. &
-         LJ >= JSTART1 .AND. LJ <= JEND1 .AND. &
-         LK >= KSTART1 .AND. LK <= KEND1
-
-      RETURN
-      END FUNCTION IS_ON_myPE_wobnd
-
 !---------------------------------------------------------------------//
       ! logical function to identify a fluid cell
       logical function fluid_at(i,j,k)
@@ -332,64 +303,6 @@
       integer, intent(in) :: i,j,k
       ip_at_t = flag(i,j,k,4) .LT. 1000
       end function ip_at_t
-
-! Logical function to identify SP or IP (semi or impermeable surface)
-! at east of the cell
-      LOGICAL FUNCTION SIP_AT_E(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SIP_AT_E    = (FLAG(i,j,k,2) .LT. 2000)
-      END FUNCTION SIP_AT_E
-
-! Logical function to identify SP or IP (semi or impermeable surface)
-! at north of the cell
-      LOGICAL FUNCTION SIP_AT_N(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SIP_AT_N    = (FLAG(i,j,k,3) .LT. 2000)
-      END FUNCTION SIP_AT_N
-
-! Logical function to identify SP or IP (semi or impermeable surface)
-! at top of the cell
-      LOGICAL FUNCTION SIP_AT_T(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SIP_AT_T    = (FLAG(i,j,k,4) .LT. 2000)
-      END FUNCTION SIP_AT_T
-
-! Logical function to identify SP (semi-permeable surface) at east
-! of cell
-      LOGICAL FUNCTION SP_AT_E(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SP_AT_E     = (FLAG(i,j,k,2) .LT. 2000) .AND. &
-         (FLAG(i,j,k,2) .GE. 1000)
-      END FUNCTION SP_AT_E
-
-! Logical function to identify SP (semi-permeable surface) at north
-! of cell
-      LOGICAL FUNCTION SP_AT_N(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SP_AT_N     = (FLAG(i,j,k,3) .LT. 2000) .AND. &
-         (FLAG(i,j,k,3) .GE. 1000)
-      END FUNCTION SP_AT_N
-
-! Logical function to identify SP (semi-permeable surface) at top
-! of cell
-      LOGICAL FUNCTION SP_AT_T(i,j,k)
-      USE geometry
-      implicit none
-      INTEGER i,j,k
-      SP_AT_T     = (FLAG(i,j,k,4) .LT. 2000) .AND. &
-         (FLAG(i,j,k,4) .GE. 1000)
-      END FUNCTION SP_AT_T
-
 
 ! Logical functions concerning general internal surfaces
 ! Integer functions to return internal surface ID

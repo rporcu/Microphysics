@@ -13,10 +13,8 @@ MODULE functions
 ! Logical functions to determine whether index is on my PE's domain or
 ! indicated subset:
 !---------------------------------------------------------------------//
-! LOGICAL :: IS_ON_myPE_owns
 ! LOGICAL :: IS_ON_myPE_plus1layer
 ! LOGICAL :: IS_ON_myPE_plus2layers
-! LOGICAL :: IS_ON_myPE_wobnd
 
 
 ! ieast, iwest, jsouth, jnorth, kbot, ktop:
@@ -67,8 +65,6 @@ MODULE functions
 ! Logical functions to identify different impermeable/semipermeable
 ! surface boundaries (specific type of internal surface)
 ! LOGICAL :: ip_at_e, ip_at_n, ip_at_t
-! LOGICAL :: SIP_AT_E, SIP_AT_N, SIP_AT_T
-! LOGICAL :: SP_AT_E, SP_AT_N, SP_AT_T
 
 ! Logical functions concerning general internal surfaces
 ! LOGICAL :: IS_AT_E, IS_AT_N, IS_AT_T

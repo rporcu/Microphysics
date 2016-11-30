@@ -123,7 +123,6 @@
       use des_allocate, only: PARTICLE_GROW
 
       use desgrid, only: IofPOS, JofPOS, KofPOS
-      use desgrid, only: dg_is_ON_myPE_OWNs
       use toleranc, only: compare
 
       use discretelement, only: max_pip, max_radius, xe, yn, zt
@@ -290,10 +289,6 @@
          pCOUNT(M) = pCOUNT(M) + 1
          tCOUNT = tCOUNT + 1
 
-! Keep only particles that belong to this process.
-         IF(.NOT.dg_is_ON_myPE_OWNs(IofPOS(POS(1)), &
-            JofPOS(POS(2)),KofPOS(POS(3)))) CYCLE
-
 ! Bin the parcel to the fuild grid.
          K=1
          IF(DO_K) CALL PIC_SEARCH(K, POS(3), ZT, DIMENSION_K, KMIN2, KMAX2)
@@ -420,8 +415,6 @@
       DO K = IC_K_B(ICV), IC_K_T(ICV)
       DO J = IC_J_S(ICV), IC_J_N(ICV)
       DO I = IC_I_W(ICV), IC_I_E(ICV)
-
-         IF(.NOT.IS_ON_MYPE_WOBND(I,J,K)) CYCLE
 
          IJK = FUNIJK(I,J,K)
          IF(fluid_at(i,j,k)) IC_VOL = IC_VOL + VOL

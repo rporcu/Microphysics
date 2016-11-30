@@ -21,7 +21,7 @@
 
       implicit none
 
-      INTEGER :: IJK, I, J, K
+      INTEGER :: I, J, K
 
       INTEGER PSV
 

@@ -86,7 +86,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (fluid_at(i,j,k)) THEN
             IJKW = FUNIJK(iwest(i,j,k),j,k)
             IJKE = FUNIJK(ieast(i,j,k),j,k)
@@ -134,7 +133,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
             IJK_RESID = IJK
             i_RESID = i
@@ -286,7 +284,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
 
          IF (fluid_at(i,j,k) .AND. ABS(VAR(IJK)) > TOL) THEN
 
@@ -335,7 +332,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-      IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK(IJK) > MAX_RESID) THEN
                IJK_RESID = IJK
                i_resid = i
@@ -473,7 +469,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (fluid_at(i,j,k)) THEN
 
 ! evaluating the residual at cell ijk:
@@ -655,8 +650,6 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-
 ! Skip walls where some values are undefined.
         IF(wall_at(i,j,k)) cycle
 
@@ -711,7 +704,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
-         IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
          IF (RESID_IJK( IJK ) > MAX_RESID) THEN
             IJK_RESID = IJK
             i_resid = i
@@ -858,8 +850,6 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-
 ! Skip walls where some values are undefined.
         IF(wall_at(i,j,k)) cycle
 
@@ -913,7 +903,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
             IJK = FUNIJK(i,j,k)
-            IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
               IF (RESID_IJK( IJK ) > MAX_RESID) THEN
                 IJK_RESID = IJK
                 i_resid = i
@@ -1063,8 +1052,6 @@
          IJK = FUNIJK(i,j,k)
         RESID_IJK(IJK) = ZERO
 
-        IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
-
 ! Skip walls where some values are undefined.
         IF(wall_at(i,j,k)) cycle
 
@@ -1117,7 +1104,6 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
             IJK = FUNIJK(i,j,k)
-            IF(.NOT.IS_ON_myPE_wobnd(i,j,k)) CYCLE
             IF (RESID_IJK( IJK ) > MAX_RESID) THEN
               IJK_RESID = IJK
               MAX_RESID = RESID_IJK( IJK_RESID )

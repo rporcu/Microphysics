@@ -978,7 +978,7 @@ CONTAINS
              enddo
           enddo
 
-          ! call global_all_sum(prod, dot_product_par)
+          dot_product_par = prod
 
   end function dot_product_par
 
@@ -1022,7 +1022,7 @@ CONTAINS
           enddo
        enddo
 
-       ! call global_all_sum(prod, dot_product_par2)
+       dot_product_par2 = prod
 
   end function dot_product_par2
 

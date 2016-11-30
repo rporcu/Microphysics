@@ -26,7 +26,6 @@
 
       use functions, only: fluid_at
       use functions, only: FUNIJK
-      use functions, only: IS_ON_myPE_wobnd
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -222,7 +221,7 @@
             DO II = I, I+1
 
                IJK2 = funijk_map_c(II, JJ, KK)
-               IF(fluid_at(II,JJ,KK).and.(IS_ON_myPE_wobnd(II, JJ, KK))) THEN
+               IF(fluid_at(II,JJ,KK)) THEN
 ! Since the data in the ghost cells is spurious anyway and overwritten during
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
@@ -272,11 +271,10 @@
          DO llI = istart3, iend3
             IJK = FUNIJK(lli,llj,llk)
 
+! It is important to check fluid_at
             IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
-! It is important to check both fluid_at and IS_ON_MYPE_WOBND.
-            IF(IS_ON_myPE_wobnd(llI,llJ,llK)) MASS_SOL2 = MASS_SOL2 +  &
-               sum(DES_ROP_S(IJK,1:MMAX))*VOL
+            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(IJK,1:MMAX))*VOL
          ENDDO
          ENDDO
          ENDDO

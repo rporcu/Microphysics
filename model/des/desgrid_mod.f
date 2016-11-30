@@ -376,24 +376,6 @@
 
 
 !''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''!
-!  Function: dg_is_ON_myPE_OWNS                                        !
-!                                                                      !
-!  Purpose: Determine if the current rank owns this cell based on the  !
-!  I, J, K values.                                                     !
-!......................................................................!
-      logical function dg_is_ON_myPE_OWNS(lI, lJ, lK)
-      implicit none
-      integer, intent(in) :: lI, lJ, lK
-
-      dg_is_ON_myPE_OWNS = (&
-         (dg_istart <= lI) .AND. (lI <= dg_iend) .AND. &
-         (dg_jstart <= lJ) .AND. (lJ <= dg_jend) .AND. &
-         (dg_kstart <= lK) .AND. (lK <= dg_kend))
-
-      end function
-
-
-!''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''!
 !  Function: dg_is_ON_myPE_plus1layers                                 !
 !                                                                      !
 !  Purpose: Determine if the current rank contains the current cell    !

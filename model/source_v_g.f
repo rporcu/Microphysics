@@ -29,7 +29,7 @@
       USE fldvar, only: tau_v_g
 
       USE fun_avg, only: avg
-      USE functions, only: ip_at_n, sip_at_n, is_id_at_n
+      USE functions, only: ip_at_n, is_id_at_n
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax, wall_at
