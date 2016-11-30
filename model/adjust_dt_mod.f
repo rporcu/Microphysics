@@ -149,9 +149,8 @@
 
       ENDIF
 
-! Update ONE/DT variable.
+      ! Update ONE/DT variable.
       ODT = ONE/DT
-
 
       RETURN
       END FUNCTION ADJUSTDT

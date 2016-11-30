@@ -14,7 +14,8 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOLVE_PP_G(pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
+      SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
+                            rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
 
 !-----------------------------------------------
 ! Modules
@@ -40,7 +41,23 @@
 ! Dummy arguments
 !-----------------------------------------------
 
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -84,7 +101,9 @@
 
 ! Forming the sparse matrix equation.
       CALL CONV_PP_G (A_M, B_M, rop_ge, rop_gn, rop_gt)
-      CALL SOURCE_PP_G (A_M, B_M, B_MMAX)
+      CALL SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+                       rop_g, rop_go, ro_g)
+
       IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX)
 
 ! Find average residual, maximum residual and location

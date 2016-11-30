@@ -7,7 +7,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE ITERATE(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,&
+      SUBROUTINE ITERATE(u_g,v_g,w_g,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                          rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                          flux_ge,flux_gn,flux_gt,mu_g,&
                          IER, NIT)
@@ -46,6 +46,8 @@
       DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -177,7 +179,9 @@
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
-         CALL SOLVE_PP_G (pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
+         CALL SOLVE_PP_G (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, &
+                          pp_g, rop_ge, rop_gn, rop_gt, NORMG, RESG, IER)
+
 ! Correct pressure, velocities, and density
          CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
 

@@ -21,7 +21,8 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
+SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+                       rop_g, rop_go, ro_g)
 
 !-----------------------------------------------
 ! Modules
@@ -29,7 +30,6 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
-      USE fldvar, ONLY: U_G, V_G, W_G,ROP_G, ROP_GO, RO_G, P_G, EP_G
       USE geometry, ONLY: VOL
       use matrix, ONLY: E, W, N, S, T, B
       USE fldvar, ONLY: D_E, D_N, D_T
@@ -52,6 +52,23 @@ SUBROUTINE SOURCE_PP_G(A_M, B_M, B_MMAX)
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! maximum term in b_m expression
       DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local Variables
