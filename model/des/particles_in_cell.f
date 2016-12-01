@@ -38,8 +38,6 @@
 
       use discretelement, only: DES_POS_NEW
       use functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
-! Size of local fluid arrays
-      use param, only: DIMENSION_3
 
       IMPLICIT NONE
 
@@ -54,7 +52,7 @@
 ! variables that count/store the number of particles in i, j, k cell
       INTEGER:: npic, pos
 ! The accumulated number of particles in each IJK.
-      INTEGER, ALLOCATABLE :: PARTICLE_COUNT(:)
+      INTEGER, ALLOCATABLE :: PARTICLE_COUNT(:,:,:)
 !......................................................................!
 
 
@@ -176,8 +174,8 @@
       ENDDO
       ENDDO
 
-      allocate( PARTICLE_COUNT(DIMENSION_3) )
-      PARTICLE_COUNT(:) = 1
+      allocate( PARTICLE_COUNT(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      PARTICLE_COUNT(:,:,:) = 1
       PC = 1
       DO L = 1, MAX_PIP
 ! exiting loop if reached max number of particles in processor
@@ -188,10 +186,13 @@
          PC = PC+1
 ! skipping ghost particles
          IF(IS_GHOST(L) .OR. IS_ENTERING_GHOST(L) .OR. IS_EXITING_GHOST(L)) CYCLE
+         I = PIJK(L,1)
+         J = PIJK(L,2)
+         K = PIJK(L,3)
          IJK = PIJK(L,4)
-         POS = PARTICLE_COUNT(IJK)
+         POS = PARTICLE_COUNT(I,J,K)
          PIC(IJK)%P(POS) = L
-         PARTICLE_COUNT(IJK) = PARTICLE_COUNT(IJK) + 1
+         PARTICLE_COUNT(I,J,K) = PARTICLE_COUNT(I,J,K) + 1
       ENDDO
 
       deallocate(PARTICLE_COUNT)
@@ -225,9 +226,11 @@
 ! Number of particles in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
-      USE error_manager
+      USE error_manager, only: init_err_msg, finl_err_msg
       USE desgrid, only: desgrid_pic
-      USE geometry
+      USE geometry, only: no_k
+      USE geometry, only: imin2, jmin2, kmin2
+      USE geometry, only: imax2, jmax2, kmax2
       USE functions, only: funijk
 
       IMPLICIT NONE
