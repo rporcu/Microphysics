@@ -443,8 +443,6 @@ module w_g_conv_dif
       USE run, only: discretize
 
       USE xsi, only: calc_xsi
-      USE xsi_array, only: xsi_e, xsi_n, xsi_t
-      USE xsi_array, only: lock_xsi_array, unlock_xsi_array
 
       IMPLICIT NONE
 
@@ -485,13 +483,16 @@ module w_g_conv_dif
 
 ! x, y, z directional velocity
       DOUBLE PRECISION, allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
+      DOUBLE PRECISION, allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 !---------------------------------------------------------------------//
-
-      call lock_xsi_array
 
       allocate(  U(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate(  V(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate( WW(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+
+      allocate(xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
       CALL GET_WCELL_GVTERMS(U, V, WW, u_g, v_g, w_g )
 
@@ -545,7 +546,7 @@ module w_g_conv_dif
       ENDDO
 
       deallocate( U, V, WW )
-      call unlock_xsi_array
+      deallocate( xsi_e, xsi_n, xsi_t)
 
       RETURN
       END SUBROUTINE STORE_A_W_G1

@@ -82,7 +82,6 @@
       USE des_allocate, only: des_allocate_arrays
       use allocate_mod
       use matrix, only: A_m, b_m
-      Use xsi_array,only: xsi_n, xsi_e, xsi_t
 
       IMPLICIT NONE
 
@@ -152,7 +151,7 @@
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
-         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,xsi_e,xsi_n,xsi_t)
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt)
 
       IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
       IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS

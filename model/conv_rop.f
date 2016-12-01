@@ -177,8 +177,6 @@
       USE geometry, only: do_k
       USE param1, only: one
       USE xsi, only: calc_xsi
-      USE xsi_array, only: xsi_e, xsi_n, xsi_t
-      USE xsi_array, only: lock_xsi_array, unlock_xsi_array
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -200,10 +198,14 @@
 !---------------------------------------------------------------------//
       INTEGER :: I,J,K
       Integer :: incr
+      DOUBLE PRECISION, allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 
 !---------------------------------------------------------------------//
 
-      call lock_xsi_array
+      allocate(xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+
 
 ! Calculate factors
       incr=0
@@ -253,7 +255,7 @@
       ENDDO
       ENDDO
 
-      call unlock_xsi_array
+      deallocate( xsi_e, xsi_n, xsi_t)
 
       RETURN
       END SUBROUTINE CONV_ROP1

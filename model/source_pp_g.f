@@ -39,7 +39,6 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       USE fld_const, ONLY: RO_G0
       USE run, ONLY: ODT, UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
-      USE xsi_array, ONLY: LOCK_XSI_ARRAY, UNLOCK_XSI_ARRAY
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -90,14 +89,8 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       DOUBLE PRECISION bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
       CHARACTER(LEN=80) :: LINE(1)
-! temporary use of global arrays:
-! xsi_array: convection weighting factors
-!      DOUBLE PRECISION XSI_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
-!      DOUBLE PRECISION XSI_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
-!      DOUBLE PRECISION XSI_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------
-      call lock_xsi_array
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
@@ -206,8 +199,6 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = ZERO
          A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -ONE
       ENDIF
-
-      call unlock_xsi_array
 
       RETURN
 

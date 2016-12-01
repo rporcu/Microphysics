@@ -12,7 +12,7 @@ module allocate_mod
       SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
-         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,xsi_e,xsi_n,xsi_t)
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt)
 
 !-----------------------------------------------
 ! Modules
@@ -57,9 +57,6 @@ module allocate_mod
       double precision, allocatable, intent(inout) :: rop_ge(:,:,:)
       double precision, allocatable, intent(inout) :: rop_gn(:,:,:)
       double precision, allocatable, intent(inout) :: rop_gt(:,:,:)
-      double precision, allocatable, intent(inout) :: xsi_e(:,:,:)
-      double precision, allocatable, intent(inout) :: xsi_n(:,:,:)
-      double precision, allocatable, intent(inout) :: xsi_t(:,:,:)
 
       integer :: is3, ie3
       integer :: js3, je3
@@ -112,10 +109,6 @@ module allocate_mod
       Allocate( TAU_U_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( TAU_V_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( TAU_W_g(is3:ie3,js3:je3,ks3:ke3))
-
-      Allocate( xsi_e(is3:ie3,js3:je3,ks3:ke3))
-      Allocate( xsi_n(is3:ie3,js3:je3,ks3:ke3))
-      Allocate( xsi_t(is3:ie3,js3:je3,ks3:ke3))
 
       Allocate( Flux_gE(is3:ie3,js3:je3,ks3:ke3))
       Allocate( Flux_gN(is3:ie3,js3:je3,ks3:ke3))

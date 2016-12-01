@@ -271,7 +271,6 @@ set(SOURCES
   model/utilities_mod.f
   model/vavg_g.f
   model/vf_gs.f
-  model/xsi_array_mod.f
   model/xsi_mod.f
   model/zero_norm_vel.f)
 
