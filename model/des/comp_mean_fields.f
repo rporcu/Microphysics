@@ -95,6 +95,9 @@ module comp_mean_fields_module
 
          VOL_WT = PVOL(NP)
 ! Fluid cell containing the particle
+         I = PIJK(NP,1)
+         J = PIJK(NP,2)
+         K = PIJK(NP,3)
          IJK = PIJK(NP,4)
 ! Particle phase for data binning.
          M = PIJK(NP,5)
