@@ -116,15 +116,6 @@
       CALL ALLOCATE_ARRAYS(A_m, B_m)
       IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
 
-      ! Initialize arrays.
-      IF(allocated(  EP_G)) EP_G = UNDEFINED
-      IF(allocated(  P_G))   P_G = UNDEFINED
-      IF(allocated( RO_G))  RO_G = UNDEFINED
-      IF(allocated(ROP_G)) ROP_G = UNDEFINED
-      IF(allocated(  U_G))   U_G = UNDEFINED
-      IF(allocated(  V_G))   V_G = UNDEFINED
-      IF(allocated(  W_G))   W_G = UNDEFINED
-
       IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
 
       END SUBROUTINE GET_DATA

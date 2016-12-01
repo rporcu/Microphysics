@@ -190,8 +190,6 @@ module iterate_module
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components
-!     call solve_vel_star(u_g,v_g,w_g,rop_g,ep_g,&
-!                         d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
       call solve_vel_star(u_g,v_g,w_g,u_go,v_go,w_go,&
                           p_g,ro_g,rop_g,rop_go,ep_g,&
                           tau_u_g,tau_v_g,tau_w_g,&

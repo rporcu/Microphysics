@@ -153,7 +153,7 @@
 ! This will be done after the cell re-indexing is done later in this file.
 ! This allows restarting independently of the re-indexing setting between
 ! the previous and current run.
-         CALL WRITE_RES1
+         CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
 
       CASE DEFAULT
          IF(DMP_LOG)WRITE (UNIT_LOG, *) &

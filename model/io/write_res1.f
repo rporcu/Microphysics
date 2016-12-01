@@ -1,14 +1,5 @@
 MODULE WRITE_RES1_MOD
 
-      USE compar, only: mype, pe_io
-      USE param, only: dimension_3
-      USE fldvar, only: ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g
-      USE funits, only: unit_res
-      USE geometry, only: ijkmax2, ijkmax3
-      USE out_bin_512_mod, only: out_bin_512
-      USE in_binary_512, only: in_bin_512, convert_to_io_dp
-      USE run, only: dt, nstep, time
-
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -18,9 +9,34 @@ MODULE WRITE_RES1_MOD
 !  Purpose: write out the time-dependent restart records               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_RES1
+      SUBROUTINE WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
+
+      use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar  , only: mype, pe_io
+      USE param  , only : dimension_3
+      USE funits  , only: unit_res
+      USE geometry, only: ijkmax2, ijkmax3
+      USE run, only     : dt, nstep, time
+      USE out_bin_512_mod, only: out_bin_512
+      USE in_binary_512, only: in_bin_512, convert_to_io_dp
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -57,30 +73,36 @@ MODULE WRITE_RES1_MOD
       ! call send_recv(V_g,2)
       ! call send_recv(W_g,2)
 
-      call gatherWriteRes (EP_g,array2, array1, NEXT_REC)
-      call gatherWriteRes (P_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (ep_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (p_g,array2, array1, NEXT_REC)
 
-      call gatherWriteRes (RO_g,array2, array1, NEXT_REC)
-      call gatherWriteRes (ROP_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (ro_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (rop_g,array2, array1, NEXT_REC)
 
-      call gatherWriteRes (U_g,array2, array1, NEXT_REC)
-      call gatherWriteRes (V_g,array2, array1, NEXT_REC)
-      call gatherWriteRes (W_g,array2, array1, NEXT_REC)
-
-!     Version 1.6
-!---------------------------------------------------------------------
+      call gatherWriteRes (u_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (v_g,array2, array1, NEXT_REC)
+      call gatherWriteRes (w_g,array2, array1, NEXT_REC)
 
       if(myPE.eq.PE_IO) FLUSH(UNIT_RES)
 
       deallocate (array1)
       deallocate (array2)
 
-      RETURN
-      END SUBROUTINE WRITE_RES1
+      end subroutine write_res1
+
+!---------------------------------------------------------------------
 
       subroutine gatherWriteRes(VAR, array2, array1, NEXT_REC)
 
-      IMPLICIT NONE
+      use param   , only: dimension_3
+      USE compar  , only: mype, pe_io
+      USE funits  , only: unit_res
+      USE geometry, only: ijkmax2, ijkmax3
+
+      USE out_bin_512_mod, only: out_bin_512
+      USE in_binary_512  , only: convert_to_io_dp
+
+      implicit none
 
       double precision, dimension(ijkmax2) :: array1
       double precision, dimension(ijkmax3) :: array2

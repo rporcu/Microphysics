@@ -1,3 +1,5 @@
+module output_manager_module
+  contains
 !----------------------------------------------------------------------!
 !                                                                      !
 !  Subroutine: OUTPUT_MANAGER                                          !
@@ -7,13 +9,14 @@
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE OUTPUT_MANAGER(EXIT_SIGNAL, FINISHED)
+      SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, EXIT_SIGNAL, FINISHED)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
 
       use compar, only: myPE, PE_IO
-      use fldvar, only: ep_g, p_g, ro_g
+      use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+
       use discretelement, only: DISCRETE_ELEMENT
       use machine, only: wall_time
       use output, only: OUT_TIME, OUT_DT
@@ -29,6 +32,20 @@
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -68,7 +85,7 @@
       IF(CHECK_TIME(RES_TIME) .OR. EXIT_SIGNAL) THEN
 
          RES_TIME = NEXT_TIME(RES_DT)
-         CALL WRITE_RES1
+         CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
          CALL NOTIFY_USER('.RES;')
 
          IF(DISCRETE_ELEMENT) THEN
@@ -512,3 +529,4 @@
       END SUBROUTINE SET_FNAME
 
       END SUBROUTINE BACKUP_RES
+end module output_manager_module

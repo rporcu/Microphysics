@@ -50,6 +50,7 @@ module time_march_module
       use des_time_march_module, only: des_time_march
       use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
       use set_bc1_module
+      use output_manager_module
 
       implicit none
 
@@ -178,7 +179,7 @@ module time_march_module
 ! Set wall boundary conditions and transient flow b.c.'s
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
-      CALL OUTPUT_MANAGER(EXIT_SIGNAL, FINISH)
+      CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, EXIT_SIGNAL, FINISH)
 
       IF (DT == UNDEFINED) THEN
          IF (FINISH) THEN

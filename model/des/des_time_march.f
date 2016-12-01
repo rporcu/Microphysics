@@ -26,6 +26,7 @@ module des_time_march_module
       use comp_mean_fields_module
       use calc_drag_des_module
       use calc_epg_des_module
+      use output_manager_module
 
       IMPLICIT NONE
 
@@ -85,7 +86,7 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(.FALSE., .FALSE.)
+         CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, .FALSE., .FALSE.)
       ENDIF   ! end if/else (des_continuum_coupled)
 
       NP = PIP - IGHOST_CNT
@@ -174,7 +175,7 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(.FALSE., .FALSE.)
+            CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, .FALSE., .FALSE.)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
          IF(CALL_USR) CALL USR2_DES

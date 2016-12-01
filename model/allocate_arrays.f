@@ -27,6 +27,8 @@ module allocate_mod
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
 
+      use param1, only: undefined
+
       IMPLICIT NONE
 
 !-----------------------------------------------
@@ -55,6 +57,15 @@ module allocate_mod
       Allocate( U_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( V_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( W_g (is3:ie3,js3:je3,ks3:ke3) )
+
+      ! Initialize arrays.
+      EP_G = UNDEFINED
+      P_G = UNDEFINED
+      RO_G = UNDEFINED
+      ROP_G = UNDEFINED
+      U_G = UNDEFINED
+      V_G = UNDEFINED
+      W_G = UNDEFINED
 
       Allocate( EP_go  (is3:ie3,js3:je3,ks3:ke3))
       Allocate( P_go   (is3:ie3,js3:je3,ks3:ke3))
