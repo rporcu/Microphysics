@@ -8,15 +8,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CFNEWVALUES
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE constant
-      USE des_bc
-      USE discretelement
-      USE param
-      USE param1
-      USE physprop
+      USE discretelement, only: des_acc_old, rot_acc_old, fc, tow, des_vel_new, des_pos_new, omega_new, ppos, do_nsearch, dtsolid
+      USE discretelement, only: max_pip, intg_euler, omoi, intg_adams_bashforth, grav, des_radius, pmass, neighbor_search_rad_ratio
+      USE param1, only: zero
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local Variables

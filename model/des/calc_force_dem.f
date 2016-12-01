@@ -11,11 +11,15 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_FORCE_DEM
 
-!---------------------------------------------------------------------//
-      USE calc_collision_wall
-      USE constant, ONLY: Pi
-      USE discretelement
-      USE run
+         USE calc_collision_wall, only: calc_dem_force_with_wall_stl
+         USE des_time_march_module, only: des_time_march
+         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
+         USE discretelement, only: des_pos_new, pft_neighbor, fc, tow, des_coll_model_enum, dtsolid
+         USE discretelement, only: kn, kt, max_pip, mew, hertzian, des_radius, neighbor_index, pijk
+         USE drag_gs_des0_module, only: drag_gs_des0
+         USE drag_gs_des1_module, only: drag_gs_des1
+         USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
+         USE param1, only: small_number, zero
 
       IMPLICIT NONE
 
@@ -209,8 +213,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE PRINT_EXCESS_OVERLAP
-
-      use error_manager
 
       IF(OVERLAP_N > flag_overlap*DES_RADIUS(LL) .OR.                  &
          OVERLAP_N > flag_overlap*DES_RADIUS(I)) THEN

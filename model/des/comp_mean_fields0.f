@@ -9,29 +9,22 @@ module comp_mean_fields0_module
 ! Modules
 !-----------------------------------------------
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      USE param
-      USE param1
-      USE constant
-      USE physprop
-      USE run
-      USE geometry
-      USE bc
-      USE compar
-      USE discretelement
-      USE drag
-      USE interpolation
-      use desmpi
-
-
-      use mpi_node_des, only: des_addnodevalues_mean_fields
-      use particle_filter, only: DES_REPORT_MASS_INTERP
-
-      use functions, only: fluid_at
-      use functions, only: FUNIJK
-
-      use calc_epg_des_module
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: iend1, jend1, kend1
+      USE compar, only: istart2, jstart2, kstart2
+      USE compar, only: mype, pe_io
+      USE discretelement, only: des_rop_s, des_rops_node, xe, yn, zt, interp_scheme
+      USE discretelement, only: pic, des_vel_node, des_pos_new, des_vel_new, dimn, pinc, pijk, pmass, pvol
+      USE calc_epg_des_module, only: calc_epg_des
+      USE interpolation, only: set_interpolation_scheme
+      USE functions, only: FUNIJK, funijk_map_c
+      USE functions, only: fluid_at
+      USE geometry, only: no_k, do_k, dz, vol_surr, vol
+      USE interpolation, only: set_interpolation_stencil
+      USE mpi_node_des, only: des_addnodevalues_mean_fields
+      USE param1, only: zero, one
+      USE particle_filter, only: DES_REPORT_MASS_INTERP
+      USE physprop, only: mmax, ro_s0
 
       IMPLICIT NONE
 

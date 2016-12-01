@@ -12,6 +12,18 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE CALC_COLLISION_WALL
 
+      USE discretelement, only: des_coll_model_enum, wall_collision_facet_id, collision_array_max
+      USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+      USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
+      USE discretelement, only: dimn, des_pos_new, wall_collision_pft, fc, tow, pijk, des_crossprdct
+      USE discretelement, only: kn_w, kt_w, mew_w, max_pip, dtsolid, dg_pijk, des_radius
+      USE error_manager, only: err_msg, flush_err_msg, init_err_msg
+      USE functions, only: is_normal
+      USE geometry, only: no_k
+      USE param1, only: small_number, zero
+      USE stl, only: facets_at_dg, vertex, norm_face
+      USE stl_functions_des, only: closestptpointtriangle
+
       PRIVATE
       PUBLIC :: CALC_DEM_FORCE_WITH_WALL_STL
 
@@ -27,17 +39,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL
 
-      USE run
-      USE param1
-      USE desgrid
-      USE discretelement
-      USE geometry
-      USE compar
-      USE constant
-      USE stl
-      USE stl_functions_des
-      USE functions
-      Implicit none
+      IMPLICIT NONE
 
       INTEGER :: LL
       INTEGER :: NF
@@ -270,8 +272,6 @@
 
       use stl_dbg_des, only: write_this_stl
 
-      use error_manager
-
       IMPLICIT NONE
 
       DOUBLE PRECISION :: GET_COLLISION(DIMN)
@@ -330,11 +330,7 @@
 !......................................................................!
       SUBROUTINE GROW_WALL_COLLISION(NEW_SIZE)
 
-      use discretelement
-
       use stl_dbg_des, only: write_this_stl
-
-      use error_manager
 
       IMPLICIT NONE
 
@@ -373,7 +369,6 @@
       SUBROUTINE UPDATE_COLLISION(PFT, LLL, FACET_ID,                  &
          WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT)
 
-      use error_manager
       implicit none
 
       DOUBLE PRECISION, INTENT(IN) :: PFT(DIMN)
@@ -404,8 +399,6 @@
 !  the collision is over (contact ended).                              !
 !......................................................................!
       SUBROUTINE REMOVE_COLLISION(LLL,FACET_ID,WALL_COLLISION_FACET_ID)
-
-      use error_manager
 
       IMPLICIT NONE
 

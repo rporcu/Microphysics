@@ -20,9 +20,13 @@
       use run, only: DEM_SOLIDS
 
       use functions, only: IS_NORMAL
-      use error_manager
-      use geometry
-      use compar
+
+      use error_manager, only: err_msg, ival, flush_err_msg, err_msg, init_err_msg
+      use geometry, only: do_k
+      use compar, only: mype
+      use compar, only: istart1, jstart1, kstart1
+      use compar, only: iend1, jend1, kend1
+      use exit_mod, only: mfix_exit
 
       IMPLICIT NONE
 
@@ -59,7 +63,8 @@
       IF(DEM_SOLIDS) CALL CHECK_CELL_MOVEMENT_DEM
 
       RETURN
-      END SUBROUTINE CHECK_CELL_MOVEMENT
+
+      CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -83,9 +88,6 @@
       use discretelement, only: DES_POS_NEW, DES_VEL_NEW
 
       use functions, only: IS_NORMAL
-      USE error_manager
-      use geometry
-      use compar
 
       USE open_files_mod, only: open_pe_log
 
@@ -148,3 +150,5 @@
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE CHECK_CELL_MOVEMENT_DEM
+
+      END SUBROUTINE CHECK_CELL_MOVEMENT

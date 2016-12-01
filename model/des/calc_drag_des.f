@@ -1,4 +1,15 @@
-module calc_drag_des_module 
+module calc_drag_des_module
+
+      use comp_mean_fields_module, only: comp_mean_fields
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      use discretelement, only: DES_CONTINUUM_COUPLED
+      use discretelement, only: DES_EXPLICITLY_COUPLED
+      use discretelement, only: DRAG_FC, FC, MAX_PIP
+      use drag_gs_des0_module, only: drag_gs_des0, drag_gs_gas0
+      use drag_gs_des1_module, only: drag_gs_des1, drag_gs_gas1
+      use functions, only: IS_NORMAL
+      use particle_filter, only: DES_INTERP_GARG
+      use particle_filter, only: DES_INTERP_SCHEME_ENUM
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -11,22 +22,6 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g)
-
-      use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      use discretelement, only: DES_CONTINUUM_COUPLED
-
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_GARG
-
-      use discretelement, only: DES_EXPLICITLY_COUPLED
-
-      use discretelement, only: DRAG_FC, FC, MAX_PIP
-      use functions, only: IS_NORMAL
-
-      use drag_gs_des0_module
-      use drag_gs_des1_module
-      use comp_mean_fields_module
 
       IMPLICIT NONE
 
@@ -81,15 +76,6 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g,u_g,v_g,w_g,ro_g,mu_g)
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      use discretelement, only: DES_CONTINUUM_COUPLED
-
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_GARG
-
-      use drag_gs_des0_module
-      use drag_gs_des1_module
 
       IMPLICIT NONE
 
@@ -131,12 +117,6 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(ep_g,u_g,v_g,w_g,ro_g,rop_g,mu_g)
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      use discretelement, only: DES_CONTINUUM_COUPLED
-
-      use drag_gs_des1_module
-      use comp_mean_fields_module
 
       IMPLICIT NONE
 
@@ -165,4 +145,4 @@ module calc_drag_des_module
 
       END SUBROUTINE CALC_DRAG_DES_EXPLICIT
 
-end module calc_drag_des_module 
+end module calc_drag_des_module

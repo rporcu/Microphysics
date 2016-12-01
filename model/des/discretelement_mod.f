@@ -11,8 +11,8 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
+      USE param, only: dim_m
+      USE param1, only: undefined, one, zero, half
       IMPLICIT NONE
 !-----------------------------------------------
 

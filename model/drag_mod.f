@@ -9,6 +9,8 @@
 
 MODULE drag
 
+      USE param1, only: one, half, zero, small_number, large_number
+
 ! Off diagonal friction coefficient in HYS drag relation
   DOUBLE PRECISION, DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
 
@@ -27,8 +29,7 @@ CONTAINS
 ! Dalla Valle (1948)
 !----------------------------------------------------------------->>>
   DOUBLE PRECISION FUNCTION C_DSXRE_DV(RE)
-    USE param
-    USE param1
+
     IMPLICIT NONE
     DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
 
@@ -39,8 +40,7 @@ CONTAINS
 ! Schiller and Naumann (1933)
 !----------------------------------------------------------------->>>
   DOUBLE PRECISION FUNCTION C_DS_SN(RE)
-    USE param
-    USE param1
+
     IMPLICIT NONE
     DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
 
@@ -55,8 +55,6 @@ CONTAINS
 ! Turton and Levenspiel (1986)
 !----------------------------------------------------------------->>>
       DOUBLE PRECISION FUNCTION C_DSXRE_TL(RE)
-      USE param
-      USE param1
       IMPLICIT NONE
       DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
 
@@ -84,8 +82,6 @@ CONTAINS
 ! Modules
 !-----------------------------------------------
       USE constant, only : drag_c1, drag_d1
-      USE param
-      USE param1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -173,8 +169,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -250,8 +244,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       USE constant, only : PI
       IMPLICIT NONE
 !-----------------------------------------------
@@ -332,8 +324,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -406,8 +396,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -532,8 +520,6 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

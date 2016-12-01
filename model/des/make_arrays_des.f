@@ -7,26 +7,23 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      USE calc_collision_wall
-      USE compar
+      USE generate_particles, only: GENERATE_PARTICLE_CONFIG
+      USE comp_mean_fields_module, only: comp_mean_fields
+      USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: iend1, jend1, kend1
+      USE compar, only: istart2, jstart2, kstart2
+      USE compar, only: numpes, mype
       USE constant, only: pi
-      USE GENERATE_PARTICLES, only: GENERATE_PARTICLE_CONFIG
-      USE desgrid
-      USE discretelement
-      USE error_manager
-      USE functions
-      USE funits
-      USE geometry
-      use mpi_funs_des, only: DES_PAR_EXCHANGE
-      USE param1
-      USE run
-      USE stl
-      USE stl_functions_des
-      use stl_preproc_des, only: add_facet
-
-      use comp_mean_fields_module
+      USE desgrid, only: desgrid_pic
+      USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
+      USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
+      USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
+      USE functions, only: funijk, ip1, jp1, kp1, fluid_at, is_exiting_ghost, is_nonexistent, is_entering_ghost, is_ghost
+      USE geometry, only: vol_surr, do_k, vol
+      USE mpi_funs_des, only: DES_PAR_EXCHANGE
+      USE param1, only: zero
+      USE run, only: run_type, time
+      USE stl_preproc_des, only: add_facet
 
       IMPLICIT NONE
 
