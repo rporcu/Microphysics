@@ -34,7 +34,7 @@ module time_march_module
       USE run, only: dem_solids
       USE run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
       USE time_cpu
-  
+
       USE toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
 
       ! Use function MAX_VEL_INLET to compute max. velocity at inlet
@@ -144,6 +144,7 @@ module time_march_module
       DNCHECK = 1
       CPU_IO  = ZERO
       NIT_TOTAL = 0
+      IER = 0
 
       CALL INIT_OUTPUT_VARS
 
