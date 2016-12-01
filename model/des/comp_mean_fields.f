@@ -1,4 +1,4 @@
-module comp_mean_fields_module 
+module comp_mean_fields_module
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -82,11 +82,11 @@ module comp_mean_fields_module
 ! Fluid cell index
       INTEGER :: I,J,K, IJK
 ! Total Mth solids phase volume in IJK
-      DOUBLE PRECISION :: SOLVOLINC(DIMENSION_3,MMAX)
+      DOUBLE PRECISION :: SOLVOLINC(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX)
 ! PVOL times statistical weight
       DOUBLE PRECISION :: VOL_WT
 
-      SOLVOLINC(:,:) = ZERO
+      SOLVOLINC(:,:,:,:) = ZERO
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
@@ -99,7 +99,7 @@ module comp_mean_fields_module
 ! Particle phase for data binning.
          M = PIJK(NP,5)
 ! Accumulate total solids volume (by phase)
-         SOLVOLINC(IJK,M) = SOLVOLINC(IJK,M) + VOL_WT
+         SOLVOLINC(I,J,K,M) = SOLVOLINC(I,J,K,M) + VOL_WT
 ! Accumulate total solids momenum-ish (by phase)
       ENDDO
 
@@ -118,7 +118,7 @@ module comp_mean_fields_module
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell
-            DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(IJK,M)/VOL
+            DES_ROP_S(IJK,M) = RO_S0(M)*SOLVOLINC(I,J,K,M)/VOL
 
          ENDDO   ! end loop over M=1,MMAX
 
@@ -132,4 +132,4 @@ module comp_mean_fields_module
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
 
-end module comp_mean_fields_module 
+end module comp_mean_fields_module

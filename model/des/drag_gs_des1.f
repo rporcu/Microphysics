@@ -1,5 +1,50 @@
 module drag_gs_des1_module
 
+! Global Variables:
+!---------------------------------------------------------------------//
+! Functions to average momentum to scalar cell center.
+      use fun_avg, only: AVG
+! Fluid grid loop bounds.
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+! Flag for 3D simulatoins.
+      use geometry, only: DO_K
+! Function to deterine if a cell contains fluid.
+      use functions, only: fluid_at
+      use functions, only: is_normal
+      use functions, only: funijk, iminus, jminus, kminus
+      use functions, only: IS_NONEXISTENT, IS_ENTERING, &
+         IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
+
+! Size of particle array on this process.
+      use discretelement, only: MAX_PIP
+! IJK of fluid cell containing particles center
+      use discretelement, only: PIJK
+! Drag force on each particle
+      use discretelement, only: F_GP
+! Particle velocity
+      use discretelement, only: DES_VEL_NEW
+! Contribution to gas momentum equation due to drag
+      use discretelement, only: DRAG_BM
+! Scalar cell center total drag force
+      use discretelement, only: F_GDS
+! Volume of scalar cell.
+      use geometry, only: VOL
+
+      use des_drag_gp_module, only: des_drag_gp
+
+! Global Parameters:
+!---------------------------------------------------------------------//
+! Double precision values.
+      use param1, only: ZERO, ONE
+
+! Total forces acting on particle
+      use discretelement, only: FC
+! Gas pressure force by fluid cell
+      use discretelement, only: P_FORCE
+! Particle volume.
+      use discretelement, only: PVOL
+
   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -21,37 +66,6 @@ module drag_gs_des1_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
-
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-! Size of particle arrays on this processor.
-      use discretelement, only: MAX_PIP
-! IJK of fluid cell containing particles center
-      use discretelement, only: PIJK
-! Drag force on each particle
-      use discretelement, only: F_GP
-! Particle velocity
-      use discretelement, only: DES_VEL_NEW
-! Total forces acting on particle
-      use discretelement, only: FC
-! Gas pressure force by fluid cell
-      use discretelement, only: P_FORCE
-! Particle volume.
-      use discretelement, only: PVOL
-! Flag for 3D simulations.
-      use geometry, only: DO_K
-! Function to deterine if a cell contains fluid.
-      use functions, only: fluid_at
-      use functions, only: is_normal
-
-      use des_drag_gp_module
-
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Size of local fluid arrays
-      use param, only: DIMENSION_3
-! Double precision values.
-      use param1, only: ZERO
 
       IMPLICIT NONE
 
@@ -79,15 +93,15 @@ module drag_gs_des1_module
 ! Loop bound for filter
       INTEGER :: LP_BND
 ! Cell-center gas velocities.
-      DOUBLE PRECISION, ALLOCATABLE :: UGC(:)
-      DOUBLE PRECISION, ALLOCATABLE :: VGC(:)
-      DOUBLE PRECISION, ALLOCATABLE :: WGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: UGC(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: VGC(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: WGC(:,:,:)
       integer :: i,j,k
 !......................................................................!
 
-      allocate( UGC(DIMENSION_3) )
-      allocate( VGC(DIMENSION_3) )
-      allocate( WGC(DIMENSION_3) )
+      allocate( UGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( VGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( WGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
 ! Loop bounds for interpolation.
       LP_BND = merge(27,9,DO_K)
@@ -113,9 +127,9 @@ module drag_gs_des1_module
 ! the particle's position.
          IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
-         VELFP(1) = UGC(IJK)
-         VELFP(2) = VGC(IJK)
-         VELFP(3) = WGC(IJK)
+         VELFP(1) = UGC(I,J,K)
+         VELFP(2) = VGC(I,J,K)
+         VELFP(3) = WGC(I,J,K)
          lPF = P_FORCE(:,IJK)
 
 ! For explicit coupling, use the drag coefficient calculated for the
@@ -160,36 +174,6 @@ module drag_gs_des1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
       SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
-
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-! Size of particle array on this process.
-      use discretelement, only: MAX_PIP
-! IJK of fluid cell containing particles center
-      use discretelement, only: PIJK
-! Drag force on each particle
-      use discretelement, only: F_GP
-! Particle velocity
-      use discretelement, only: DES_VEL_NEW
-! Contribution to gas momentum equation due to drag
-      use discretelement, only: DRAG_BM
-! Scalar cell center total drag force
-      use discretelement, only: F_GDS
-! Volume of scalar cell.
-      use geometry, only: VOL
-
-      use functions, only: IS_NONEXISTENT, IS_ENTERING, &
-         IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
-
-      use des_drag_gp_module
-
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Size of local fluid arrays
-      use param, only: DIMENSION_3
-! Double precision values.
-      use param1, only: ZERO, ONE
-
       IMPLICIT NONE
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
@@ -218,14 +202,14 @@ module drag_gs_des1_module
 ! Drag sources for fluid (intermediate calculation)
       DOUBLE PRECISION :: lDRAG_BM(3)
 ! Cell-center gas velocities.
-      DOUBLE PRECISION, ALLOCATABLE :: UGC(:)
-      DOUBLE PRECISION, ALLOCATABLE :: VGC(:)
-      DOUBLE PRECISION, ALLOCATABLE :: WGC(:)
+      DOUBLE PRECISION, ALLOCATABLE :: UGC(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: VGC(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE :: WGC(:,:,:)
 !......................................................................!
 
-      allocate( UGC(DIMENSION_3) )
-      allocate( VGC(DIMENSION_3) )
-      allocate( WGC(DIMENSION_3) )
+      allocate( UGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( VGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( WGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
 ! Initialize fluid cell values.
       F_GDS = ZERO
@@ -254,9 +238,9 @@ module drag_gs_des1_module
 ! particle's position.
          IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
-         VELFP(1) = UGC(IJK)
-         VELFP(2) = VGC(IJK)
-         VELFP(3) = WGC(IJK)
+         VELFP(1) = UGC(I,J,K)
+         VELFP(2) = VGC(I,J,K)
+         VELFP(3) = WGC(I,J,K)
 
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
@@ -299,64 +283,41 @@ module drag_gs_des1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_CELL_CENTER_GAS_VEL(lUg, lVg, lWg, Uc, Vc, Wc)
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! Functions to average momentum to scalar cell center.
-      use fun_avg, only: AVG
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-! Flag for 3D simulatoins.
-      use geometry, only: DO_K
-! Function to deterine if a cell contains fluid.
-      use functions, only: fluid_at
-      use functions, only: funijk, iminus, jminus, kminus
-
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Double precision parameters.
-      use param, only: DIMENSION_3
-      use param1, only: ZERO
-
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: lUg(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: lVg(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(IN) :: lWg(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(IN) :: lUg(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: lVg(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: lWg(istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(OUT) :: Uc(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: Vc(DIMENSION_3)
-      DOUBLE PRECISION, INTENT(OUT) :: Wc(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(OUT) :: Uc(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: Vc(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: Wc(istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Indices of adjacent cells
-      INTEGER :: i,j,k, IJK, IMJK, IJMK, IJKM
+      INTEGER :: i,j,k
 
 ! Calculate the cell center gas velocity components.
         DO K = kstart3, kend3
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
          IF(fluid_at(i,j,k)) THEN
-            IMJK = funijk(iminus(i,j,k),j,k)
-            Uc(IJK) = AVG(lUG(IMJK),lUG(IJK))
-
-            IJMK = funijk(i,jminus(i,j,k),k)
-            Vc(IJK) = AVG(lVg(IJMK),lVg(IJK))
+            Uc(I,J,K) = AVG(lUG(iminus(i,j,k),j,k),lUG(I,J,K))
+            Vc(I,J,K) = AVG(lVg(i,jminus(i,j,k),k),lVg(I,J,K))
 
             IF(DO_K) THEN
-               IJKM = funijk(i,j,kminus(i,j,k))
-               Wc(IJK) = AVG(lWg(IJKM),lWg(IJK))
+               Wc(I,J,K) = AVG(lWg(i,j,kminus(i,j,k)),lWg(I,J,K))
             ELSE
-               Wc(IJK) = ZERO
+               Wc(I,J,K) = ZERO
             ENDIF
          ELSE
-            Uc(IJK) = ZERO
-            Vc(IJK) = ZERO
-            Wc(IJK) = ZERO
+            Uc(I,J,K) = ZERO
+            Vc(I,J,K) = ZERO
+            Wc(I,J,K) = ZERO
          ENDIF
       ENDDO
       ENDDO
