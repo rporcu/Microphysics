@@ -26,7 +26,7 @@
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       implicit none
 
@@ -76,7 +76,7 @@
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
 
       implicit none

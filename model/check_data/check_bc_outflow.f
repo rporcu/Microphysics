@@ -16,7 +16,7 @@
       use physprop, only: ro_s0
       use run, only: solids_model
       use toleranc, only: compare
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
       IMPLICIT NONE
 
@@ -144,7 +144,7 @@
       USE param1   , only: ZERO
       use fld_const, only: RO_g0
       use bc       , only: BC_P_g
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -209,7 +209,7 @@
 
       use fld_const, only: ro_g0
       use param1   , only: undefined, zero
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
       IMPLICIT NONE
 
 ! Dummy arguments

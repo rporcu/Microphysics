@@ -11,7 +11,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       use param, only: dim_m
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -50,7 +50,7 @@
       use fld_const, only: ro_g0
       use physprop , only: ro_s0
       use toleranc , only: compare
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -209,7 +209,7 @@
       use param    , only: dim_m
       use param1   , only: undefined, zero
       use fld_const, only: ro_g0
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
       IMPLICIT NONE
 
 ! Dummy arguments

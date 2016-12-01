@@ -11,16 +11,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_INIT_ARRAYS
 
-      USE param
-      USE param1
-      USE discretelement
-      USE geometry
-      USE compar
-      USE physprop
-      USE des_bc
-      USE run
-      use desgrid
-      use desmpi
+      USE param1, only: zero
+      USE discretelement, only: des_rop_s, p_force, pinc, f_gds, vxf_gds, grav, drag_am, drag_bm, max_pip
 
       IMPLICIT NONE
 
@@ -57,13 +49,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_INIT_PARTICLE_ARRAYS(LB,UB)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use desgrid
-      use desmpi
-      use discretelement
-      use functions
+         use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
+         use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
+         use discretelement, only: f_gp, rot_acc_old, des_usr_var_size
+         use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
+         use functions, only: set_nonexistent
+         use param1, only: zero
 
       IMPLICIT NONE
 

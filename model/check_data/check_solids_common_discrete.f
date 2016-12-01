@@ -49,8 +49,9 @@
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
-      use geometry
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+      use geometry, only: cyclic_x, cyclic_y, cyclic_z
+      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
 
       implicit none
 
@@ -148,7 +149,7 @@
       USE discretelement, only: DES_CONTINUUM_COUPLED
       USE discretelement, only: MAX_RADIUS
 
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -224,7 +225,7 @@
 
       use param1, only: UNDEFINED
 
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
 

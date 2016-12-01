@@ -10,7 +10,7 @@
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival
 
       implicit none
 
@@ -52,7 +52,7 @@
 ! Parameter constatns.
       USE param1, only: ONE, ZERO, UNDEFINED
 
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
 
@@ -156,7 +156,7 @@
 ! Parameter constatns.
       USE param1, only: ZERO, HALF, ONE, UNDEFINED
 
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
 
@@ -410,7 +410,7 @@
 ! Maximum number of solids
       USE param, only: DIM_M
 
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
 

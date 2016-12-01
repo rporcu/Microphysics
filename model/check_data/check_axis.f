@@ -9,15 +9,8 @@
       SUBROUTINE CHECK_AXIS(NA, DIMEN, ALENGTH, DA, AXIS, &
          AXIS_INDEX, NO_IJK)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-!      USE funits
-
-      use error_manager
-
+      USE param1, only: undefined, undefined_i
+      USE error_manager, only: finl_err_msg, err_msg, ival, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 !-----------------------------------------------
