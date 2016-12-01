@@ -15,7 +15,6 @@
       use compar
       use physprop
       use des_bc
-      use sendrecvnode
       use param, only: DIMENSION_N_s
 
       use desmpi
@@ -35,6 +34,7 @@
 
       use particle_filter, only: DES_INTERP_GARG
 
+      use geometry, only: DO_K
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize
@@ -133,6 +133,8 @@
 ! Purpose          : sets the flags required for interprocessor communication
 !------------------------------------------------------------------------
       subroutine desmpi_setcomm()
+      use geometry, only: NO_K, DO_K
+      use geometry, only: xlength, ylength, zlength
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -362,9 +364,10 @@
 !------------------------------------------------------------------------
       subroutine des_scatter_particle
 
+      use geometry, only: NO_K, DO_K
       use mpi_comm_des, only: desmpi_scatterv
       use des_allocate, only: particle_grow
-
+      use functions, only: set_normal
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------

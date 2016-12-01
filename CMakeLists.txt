@@ -134,7 +134,6 @@ set(SOURCES
   model/des/read_particle_input.f
   model/des/read_res0_des.f
   model/des/read_res1_des_mod.f
-  model/des/sendrecvnode_mod.f
   model/des/set_bc_dem.f
   model/des/set_bc_dem_mi.f
   model/des/set_bc_dem_mo.f

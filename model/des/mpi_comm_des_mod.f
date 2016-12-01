@@ -23,8 +23,6 @@
       use compar
       use physprop
       use des_bc
-      use sendrecvnode
-
       use desmpi
 
 !-----------------------------------------------
@@ -230,6 +228,8 @@
 !                    parray - array to be writen
 !------------------------------------------------------------------------
       subroutine des_gather_d(parray)
+      use functions, only: is_nonexistent
+      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -263,6 +263,8 @@
 !                    parray - array to be writen
 !------------------------------------------------------------------------
       subroutine des_gather_l(parray)
+      use functions, only: is_nonexistent
+      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -304,6 +306,8 @@
 !                    and neighbour terms)
 !------------------------------------------------------------------------
       subroutine des_gather_i(parray,ploc2glb)
+      use functions, only: is_nonexistent
+      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------

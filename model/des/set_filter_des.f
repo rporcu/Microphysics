@@ -26,8 +26,6 @@
       CASE(DES_INTERP_GARG)
 ! Compute the volume of nodes needed in drag_fgs_des0.f
          CALL COMPUTE_VOLUME_OF_NODES
-! Setup MPI exchange arrys for nodes
-         ! CALL DES_SETNODEINDICES
       END SELECT
 
       CALL FINL_ERR_MSG

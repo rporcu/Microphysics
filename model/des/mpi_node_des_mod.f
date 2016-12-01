@@ -25,12 +25,9 @@
       use compar
       use physprop
       use des_bc
-      use sendrecvnode
       use param, only: DIMENSION_N_s
       use desmpi
 
-      use mpi_comm_des, only: desmpi_sendrecv_init
-      use mpi_comm_des, only: desmpi_sendrecv_wait
 
       contains
 
@@ -53,14 +50,6 @@
       integer :: li, lj, lk
       integer :: lm,lijkmin,lijkmax
 !-----------------------------------------------
-
-! fill the temporary buffer
-      DO LM = 1,MMAX
-         CALL DES_EXCHANGENODE(DES_ROPS_NODE(:,LM),PADD=.TRUE.)
-         DO LI =1,DIMN
-            CALL DES_EXCHANGENODE(DES_VEL_NODE(:,LI,LM),PADD=.TRUE.)
-         END DO
-      END DO
 
 ! adjust for periodic boundaries with no domain decomposition
       if (des_periodic_walls_x .and. nodesi.eq.1) then
@@ -129,11 +118,6 @@
       integer :: lijkmin,lijkmax
 !-----------------------------------------------
 
-! fill the temporary buffer
-      call des_exchangenode(drag_am, padd=.true.)
-      do li =1,dimn
-         call des_exchangenode(drag_bm(:,li), padd=.true.)
-      end do
 
 ! adjust for periodic boundaries with no domain decomposition
       if (des_periodic_walls_x .and. nodesi.eq.1) then
@@ -200,11 +184,6 @@
       integer :: li, lj, lk
       integer :: lm,lijkmin,lijkmax
 !-----------------------------------------------
-
-! fill the temporary buffer
-      do lm = 1,MMAX
-         call des_exchangenode(des_rops_node(:,lm),padd=.true.)
-      end do
 
 ! adjust for periodic boundaries with no domain decomposition
       if (des_periodic_walls_x .and. nodesi.eq.1) then
