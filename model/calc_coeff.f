@@ -1,3 +1,6 @@
+module calc_coeff_module
+
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      !
 !  Subroutine: CALC_COEFF_ALL                                          !
@@ -14,7 +17,7 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, FLAG)
+      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, FLAG)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -22,6 +25,7 @@
 
       ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
+      use calc_drag_des_module
 
       implicit none
 
@@ -29,9 +33,17 @@
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 !-----------------------------------------------------------------------
@@ -42,9 +54,9 @@
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 2)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 2)
 
-      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT
+      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(ep_g,u_g,v_g,w_g,ro_g,rop_g,mu_g)
 
       END SUBROUTINE CALC_COEFF_ALL
 
@@ -67,12 +79,14 @@
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF(ro_g, p_g, ep_g, rop_g, pLevel)
+      SUBROUTINE CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, pLevel)
 
       use fld_const, only: ro_g0
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DES_CONTINUUM_COUPLED
+
+      use calc_drag_des_module
 
       implicit none
 
@@ -83,6 +97,14 @@
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Dummy arguments
@@ -100,7 +122,7 @@
 
 ! Calculate interphase coeffs: (momentum and energy)
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED) &
-         CALL CALC_DRAG_DES_2FLUID
+         CALL CALC_DRAG_DES_2FLUID(ep_g,u_g,v_g,w_g,ro_g,mu_g)
 
       END SUBROUTINE CALC_COEFF
 
@@ -160,5 +182,6 @@
       CALL CALC_TAU_V_G (TAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
       CALL CALC_TAU_W_G (TAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
 
-
       END SUBROUTINE CALC_TRD_AND_TAU
+
+end module calc_coeff_module

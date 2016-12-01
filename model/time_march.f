@@ -1,3 +1,6 @@
+module time_march_module
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: TIME_MARCH                                              !
@@ -41,8 +44,12 @@
       use output   , only: RES_DT
       use adjust_dt, only: adjustdt
 
-      use exit_mod   , only: mfix_exit
-      use iterate_mod, only: iterate
+      use exit_mod      , only: mfix_exit
+      use iterate_module, only: iterate
+
+      use des_time_march_module, only: des_time_march
+      use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
+      use set_bc1_module
 
       implicit none
 
@@ -147,7 +154,7 @@
       IF (CALL_USR) CALL USR0
 
 ! Calculate all the coefficients once before entering the time loop
-      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 2)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 2)
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
@@ -196,7 +203,7 @@
       call update_old(  W_go,  W_g)
 
 ! Calculate coefficients
-      CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, 0)
+      CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 0)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -228,7 +235,7 @@
                    IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, &
-                         U_g,  U_go, V_g, V_go,  W_g,  W_go, IER,NIT))
+                         U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, IER,NIT))
          call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,&
@@ -263,7 +270,7 @@
 
 ! Other solids model implementations
       IF(DEM_SOLIDS) THEN
-         CALL DES_TIME_MARCH
+         call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g)
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
       ENDIF
 
@@ -287,3 +294,5 @@
       IF(SOLVER_STATISTICS) CALL REPORT_SOLVER_STATS(NIT_TOTAL, NSTEP)
 
       END SUBROUTINE TIME_MARCH
+
+end module time_march_module

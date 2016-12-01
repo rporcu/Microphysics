@@ -13,6 +13,7 @@
 !---------------------------------------------------------------------//
 
       use compar, only: myPE, PE_IO
+      use fldvar, only: ep_g, p_g, ro_g
       use discretelement, only: DISCRETE_ELEMENT
       use machine, only: wall_time
       use output, only: OUT_TIME, OUT_DT
@@ -80,7 +81,8 @@
 ! Write standard output, if needed
       IF(CHECK_TIME(OUT_TIME)) THEN
          OUT_TIME = NEXT_TIME(OUT_DT)
-         CALL WRITE_OUT1
+         CALL WRITE_OUT1(ep_g,p_g,ro_g)
+
          CALL NOTIFY_USER('.OUT;')
       ENDIF
 
@@ -226,7 +228,7 @@
       use error_manager, only: err_msg, flush_err_msg, ival
       use funits, only: DMP_LOG
       use funits, only: UNIT_LOG
-      use iterate_mod, only: get_tunit
+      use tunit_module, only: get_tunit
       use machine, only: wall_time
       use output, only: FULL_LOG
       use output, only: NLOG

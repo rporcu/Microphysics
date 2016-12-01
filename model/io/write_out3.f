@@ -9,7 +9,7 @@
       SUBROUTINE WRITE_OUT3(CPU, WALL, IO)
 
       use error_manager, only: err_msg, flush_err_msg, ival
-      use iterate_mod, only: get_tunit
+      use tunit_module, only: get_tunit
 
       IMPLICIT NONE
 

@@ -17,7 +17,7 @@
 
       use error_manager
 
-      use iterate_mod, only: get_tunit
+      use tunit_module, only: get_tunit
 
       IMPLICIT NONE
 

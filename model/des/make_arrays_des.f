@@ -5,7 +5,9 @@
 !  Purpose: DES - allocating DES arrays
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MAKE_ARRAYS_DES
+      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
       USE calc_collision_wall
       USE compar
@@ -24,7 +26,17 @@
       USE stl_functions_des
       use stl_preproc_des, only: add_facet
 
+      use comp_mean_fields_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -144,8 +156,7 @@
       CALL NEIGHBOUR
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS
-
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

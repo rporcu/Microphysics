@@ -166,6 +166,7 @@ set(SOURCES
   model/get_bc_area.f
   model/get_data.f
   model/get_ps.f
+  model/get_tunit.f
   model/ic_mod.f
   model/init_namelist.f
   model/io/funits_mod.f

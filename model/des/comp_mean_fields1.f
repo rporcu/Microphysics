@@ -1,3 +1,7 @@
+module comp_mean_fields1_module
+
+  contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
@@ -67,3 +71,5 @@
       ! calL SEND_RECV(DES_ROP_S,2)
 
       end SUBROUTINE COMP_MEAN_FIELDS1
+
+end module comp_mean_fields1_module

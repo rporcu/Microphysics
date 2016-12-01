@@ -36,7 +36,7 @@
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ROP_G&
+      DOUBLE PRECISION, INTENT(IN   ) :: ROP_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 

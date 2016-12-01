@@ -31,6 +31,7 @@ module solve_pp_module
       use matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       use ps
 
+      use conv_pp_g_module
       use source_pp_module
 
       IMPLICIT NONE
@@ -45,35 +46,35 @@ module solve_pp_module
 ! Dummy arguments
 !-----------------------------------------------
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+      DOUBLE PRECISION, INTENT(IN   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+      DOUBLE PRECISION, INTENT(IN  ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+      DOUBLE PRECISION, INTENT(IN  ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Normalization factor for gas pressure correction residual.
@@ -110,7 +111,7 @@ module solve_pp_module
       CALL INIT_AB_M (A_M, B_M)
 
 ! Forming the sparse matrix equation.
-      CALL CONV_PP_G (A_M, B_M, rop_ge, rop_gn, rop_gt)
+      CALL CONV_PP_G (A_M, rop_ge, rop_gn, rop_gt)
 
       call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t)

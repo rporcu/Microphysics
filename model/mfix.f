@@ -85,6 +85,9 @@
       use error_manager
       use read_res1_mod, only: read_res1
       use write_res1_mod, only: write_res1
+   
+      use time_march_module
+      use set_bc1_module
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -205,7 +208,7 @@
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
 
-      IF(DISCRETE_ELEMENT) CALL MAKE_ARRAYS_DES
+      IF(DISCRETE_ELEMENT) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
 
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM

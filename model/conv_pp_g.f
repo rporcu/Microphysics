@@ -1,3 +1,7 @@
+module conv_pp_g_module
+
+  contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CONV_Pp_g                                               C
@@ -30,7 +34,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CONV_PP_G(A_M, B_M, rop_ge, rop_gn, rop_gt)
+      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt)
 
 !-----------------------------------------------
 ! Modules
@@ -49,15 +53,12 @@
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
@@ -67,7 +68,6 @@
 ! local value of A_m
       DOUBLE PRECISION :: am
 !-----------------------------------------------
-
 
 ! Calculate convection fluxes through each of the faces
       DO K = kstart2, kend2
@@ -116,6 +116,6 @@
       ENDDO
       ENDDO
 
-
-      RETURN
       END SUBROUTINE CONV_PP_G
+
+end module conv_pp_g_module

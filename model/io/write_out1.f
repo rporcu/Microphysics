@@ -6,17 +6,23 @@
 !  Purpose: write out the field variables to standard output           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_OUT1
+      SUBROUTINE WRITE_OUT1(ep_g,p_g,ro_g)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
       USE compar, only: mype, pe_io
-      USE fldvar, only: ep_g, p_g, ro_g
       USE funits, only: unit_out
       USE out_array_mod, only: out_array
       USE run, only: time, call_usr
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       double precision, allocatable :: array1(:,:,:)
 

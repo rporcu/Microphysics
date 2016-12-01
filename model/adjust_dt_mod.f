@@ -11,7 +11,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, rop_go, &
-                         U_g,  U_go, V_g, V_go,  W_g,  W_go, IER, NIT)
+                                 U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g,IER, NIT)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -35,6 +35,8 @@
 ! Routine to break successive time step reductions.
       use error_manager
 
+      use calc_coeff_module, only: calc_coeff_all
+
       IMPLICIT NONE
 
 ! Dummy Arguments:
@@ -45,28 +47,31 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: p_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
       INTEGER, INTENT(INOUT) :: IER
 ! Number of iterations for current time step
@@ -164,7 +169,7 @@
             call reset_new(  W_g,  W_go)
 
             ! Recalculate all coefficients
-            CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, 0)
+            CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 0)
 
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.

@@ -1,3 +1,6 @@
+module des_drag_gp_module 
+
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: DES_DRAG_GP                                             C
@@ -17,26 +20,24 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg)
+      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar
+      USE compar  , only: myPE
+      use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
-      USE constant
-      USE discretelement
-      USE drag
-      USE fldvar
-      USE functions
-      USE geometry
-      USE param
-      USE param1
-      USE physprop
+      USE discretelement, only: pijk, pinc, pvol, des_radius, des_rop_s, f_gp
+      USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
+                        drag_koch_hill, drag_bvk
+      USE param1, only: one, zero
+      USE physprop, only: d_p0, ro_s0, mmax
       USE run
-      USE funits
+      USE funits  , only: dmp_log, unit_log
 
       IMPLICIT NONE
+
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -47,7 +48,12 @@
 ! fluid velocity interpolated to particle position
       DOUBLE PRECISION, INTENT(IN) :: FLUID_VEL(3)
 ! Gas phase volume fraction.
-      DOUBLE PREcISION, INTENT(IN) :: EPg
+      DOUBLE PRECISION, INTENT(IN) :: EPg
+
+      DOUBLE PRECISION, INTENT(IN) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------
 ! Local variables
@@ -170,6 +176,6 @@
 ! Calculate the drag coefficient (Model B coeff = Model A coeff/EP_g)
       F_gp(NP) = DgA * PVOL(NP)
 
-
-      RETURN
       END SUBROUTINE DES_DRAG_GP
+
+end module des_drag_gp_module 

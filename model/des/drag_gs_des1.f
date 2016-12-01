@@ -1,3 +1,7 @@
+module drag_gs_des1_module
+
+  contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CALC_GS_DES1                                            !
@@ -16,12 +20,10 @@
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_DES1
+      SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
 
-! Gas phase volume fraction
-      use fldvar, only: EP_G
-! Gas phase velocities
-      use fldvar, only: U_G, V_G, W_G
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+
 ! Size of particle arrays on this processor.
       use discretelement, only: MAX_PIP
 ! IJK of fluid cell containing particles center
@@ -42,6 +44,8 @@
       use functions, only: fluid_at
       use functions, only: is_normal
 
+      use des_drag_gp_module
+
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of local fluid arrays
@@ -50,6 +54,19 @@
       use param1, only: ZERO
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -105,7 +122,7 @@
 ! gas phase drag calculations.
 
 ! Calculate the drag coefficient.
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g)
 
 ! Calculate the gas-solids drag force on the particle
          D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
@@ -141,12 +158,11 @@
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_GAS1
 
-! Gas phase volume fraction
-      use fldvar, only: EP_G
-! Gas phase velocities
-      use fldvar, only: U_G, V_G, W_G
+      SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+
 ! Size of particle array on this process.
       use discretelement, only: MAX_PIP
 ! IJK of fluid cell containing particles center
@@ -165,6 +181,8 @@
       use functions, only: IS_NONEXISTENT, IS_ENTERING, &
          IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
 
+      use des_drag_gp_module
+
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Size of local fluid arrays
@@ -173,6 +191,19 @@
       use param1, only: ZERO, ONE
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -230,7 +261,7 @@
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g)
 
          lFORCE = F_GP(NP)
 
@@ -333,3 +364,5 @@
 
       RETURN
       END SUBROUTINE CALC_CELL_CENTER_GAS_VEL
+
+end module drag_gs_des1_module

@@ -26,7 +26,7 @@
 
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)

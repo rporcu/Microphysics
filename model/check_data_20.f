@@ -37,19 +37,19 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
@@ -171,7 +171,7 @@
       SUBROUTINE REPORT_ERROR(ABORT, pI, pJ, pK, VAR, LC1, LC2)
 
       LOGICAL, INTENT(INOUT) :: ABORT
-      INTEGER, INTENT(IN) :: pI, pJ, pK
+      INTEGER, INTENT(IN   ) :: pI, pJ, pK
       CHARACTER(LEN=*), INTENT(IN) :: VAR
       INTEGER, INTENT(IN), OPTIONAL :: LC1, LC2
       CHARACTER(LEN=32) :: VAR_FULL
@@ -206,7 +206,7 @@
       SUBROUTINE REPORT_UNPHYSICAL(ABORT, pI, pJ, pK, VAR, VALUE)
 
       LOGICAL, INTENT(INOUT) :: ABORT
-      INTEGER, INTENT(IN) :: pI, pJ, pK
+      INTEGER, INTENT(IN   ) :: pI, pJ, pK
       CHARACTER(LEN=*), INTENT(IN) :: VAR
       DOUBLE PRECISION, INTENT(IN) :: VALUE
 

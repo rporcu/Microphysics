@@ -16,7 +16,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_V_G(A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE CONV_DIF_V_G(A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -33,7 +33,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: MU_G&
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, INTENT(IN   ) :: u_g&
@@ -209,11 +209,11 @@ module v_g_conv_dif
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! diffusion through faces of given v-momentum cell
-      DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
-      DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
-      DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
+      DOUBLE PRECISION, INTENT(  OUT) :: d_fe, d_fw
+      DOUBLE PRECISION, INTENT(  OUT) :: d_fn, d_fs
+      DOUBLE PRECISION, INTENT(  OUT) :: d_ft, d_fb
 
-      DOUBLE PRECISION, INTENT( IN) :: MU_G&
+      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER, INTENT(IN) :: i, j, k
@@ -291,7 +291,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G0(A_V_G,MU_G,flux_ge,flux_gn,flux_gt)
+      SUBROUTINE STORE_A_V_G0(A_V_G,mu_g,flux_ge,flux_gn,flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -311,7 +311,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(INOUT) :: A_V_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: MU_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
       DOUBLE PRECISION, INTENT(IN   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -428,7 +428,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G1(A_V_G, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE STORE_A_V_G1(A_V_G, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -456,7 +456,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(INOUT) :: A_V_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: MU_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
       DOUBLE PRECISION, INTENT( in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)

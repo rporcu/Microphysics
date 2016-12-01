@@ -1,3 +1,6 @@
+module set_bc1_module
+
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_BC1                                                 C
@@ -13,6 +16,8 @@
       use bc, only: bc_defined, bc_type
       USE param , only: dimension_bc
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
+      use set_outflow_module
 
       implicit none
 
@@ -176,15 +181,15 @@
       use run, only: time, dt, tstop
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy arguments
@@ -259,9 +264,9 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Local variables
 !---------------------------------------------------------------------//
@@ -350,3 +355,5 @@
 
       RETURN
       END SUBROUTINE SET_BC1_ADJUST_OUTFLOW
+
+end module set_bc1_module

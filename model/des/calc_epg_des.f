@@ -1,3 +1,6 @@
+module calc_epg_des_module
+
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Subroutine: CALC_EPG_DES                                            !
 !  Author: R.Garg                                     Date: ??-???-??  !
@@ -11,7 +14,7 @@
 !  flag back to the caller and combining with other error checks.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_EPG_DES
+      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -29,29 +32,35 @@
       use discretelement, only: PINC
 ! List of particles in each cell.
       use discretelement, only: PIC
-! Gas phae volume fraction, density, and build density
-      use fldvar, only: EP_G, RO_G, ROP_G
 ! Volume of scalar grid cell.
       use geometry, only: VOL
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
 ! Flag: Fluid exists at indexed cell
       use functions, only: fluid_at
       use functions, only: FUNIJK
+
+      use param1   , only: one, zero
 
       USE open_files_mod, only: open_pe_log
 
 ! Rank ID of current process
       use compar, only: myPE
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+
 ! Global communication function to sum to all ranks.
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      USE param1, only: ZERO, ONE
-
       use error_manager
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -76,7 +85,7 @@
 ! Skip wall cells.
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 ! Initialize EP_g and the accumulator.
-         EP_G(I,J,K) = ONE
+         ep_g(I,J,K) = ONE
          SUM_EPS = ZERO
 ! Sum the DES solids volume fraction.
          DO M = 1, MMAX
@@ -153,3 +162,5 @@
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE CALC_EPG_DES
+
+end module calc_epg_des_module

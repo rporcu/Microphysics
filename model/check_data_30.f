@@ -19,9 +19,9 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) ::     mu_g&
+      DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
@@ -60,9 +60,9 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
@@ -134,7 +134,7 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) ::     mu_g&
+      DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:

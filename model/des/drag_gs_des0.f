@@ -1,3 +1,7 @@
+module drag_gs_des0_module
+
+  contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CALC_DES_DRAG_GS                                        C
@@ -11,26 +15,38 @@
 !       include the gas-solids drag force and gas pressure force       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_DES0
+      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE constant
-      USE physprop
-      USE fldvar
-      USE run
-      USE geometry
-      USE bc
-      USE compar
-      USE discretelement
-      USE drag
-      USE interpolation
+
+      use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, p_force, des_pos_new, des_vel_new, &
+                                f_gp, fc, interp_scheme
+      use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent,is_nonexistent,&
+                                is_entering_ghost,is_exiting_ghost,is_ghost
+      use geometry      , only: do_k, no_k, dz
+      use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use desmpi
-      USE functions
+
+      use des_drag_gp_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -93,7 +109,7 @@
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
          call set_interpolation_stencil(pcell,iw,ie,js,jn,kb,&
-              ktp,interp_scheme,dimn,ordernew = onew)
+                                        ktp,interp_scheme,dimn,ordernew = onew)
 
 ! Compute velocity at grid nodes and set the geometric stencil
          DO k = 1,merge(1, ONEW, NO_K)
@@ -144,7 +160,7 @@
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK))
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g)
 
 ! Calculate the gas-solids drag force on the particle
             D_FORCE(1:3) = F_GP(NP)*(VELFP-VEL_NEW)
@@ -178,28 +194,39 @@
 !       x, y and z momentum balances using F_GP.                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_GAS0
+      SUBROUTINE DRAG_GS_GAS0(ep_g,u_g,v_g,w_g,ro_g,mu_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param
-      USE param1
-      USE constant
-      USE physprop
-      USE fldvar
-      USE run
-      USE geometry
-      USE bc
-      USE compar
-      USE discretelement
-      USE drag
-      USE interpolation
-      use desmpi
-      USE functions
+      use compar        , only:  istart2, iend2, jstart2, jend2, kstart2, kend2
+      use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, p_force, des_pos_new, des_vel_new, &
+                                f_gp, interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
+      use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
+      use geometry, only: do_k, no_k, dz
+      use param1  , only: zero, one
+      use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1,&
+                                is_nonexistent,is_entering_ghost,is_exiting_ghost,is_ghost
       use mpi_node_des, only: des_addnodevalues
 
+      use des_drag_gp_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -333,7 +360,7 @@
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK))
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g)
 
 !-----------------------------------------------------------------<<<
 ! Calculate the corresponding gas solids drag force that is used in
@@ -497,3 +524,6 @@
         ENDIF
 
       END SUBROUTINE DRAG_INTERPOLATION
+
+end module drag_gs_des0_module
+

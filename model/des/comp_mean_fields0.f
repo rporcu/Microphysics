@@ -1,10 +1,16 @@
+module comp_mean_fields0_module
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS0
+      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+
       USE param
       USE param1
       USE constant
@@ -22,11 +28,20 @@
       use mpi_node_des, only: des_addnodevalues_mean_fields
       use particle_filter, only: DES_REPORT_MASS_INTERP
 
-
       use functions, only: fluid_at
       use functions, only: FUNIJK
 
+      use calc_epg_des_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -256,9 +271,7 @@
       ENDDO
       ENDDO
 
-
-      CALL CALC_EPG_DES
-
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
 
 ! turn on the below statements to check if the mass is conserved
 ! between discrete and continuum representations. Should be turned to
@@ -354,3 +367,5 @@
         ENDIF
 
       END SUBROUTINE DRAG_WEIGHTFACTOR
+
+end module comp_mean_fields0_module

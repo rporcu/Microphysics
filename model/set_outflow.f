@@ -1,3 +1,6 @@
+module set_outflow_module
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_OUTFLOW                                             C
@@ -105,7 +108,7 @@
                   FIJK = FUNIJK(im,j,k)
                   RVEL_G = U_G(im,j,k)
 
-                  CALL SET_OUTFLOW_MISC(BCV, I,J,K, im,j,k,p_g,ro_g)
+                  CALL SET_OUTFLOW_MISC(BCV,I,J,K,im,j,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FIJK,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
@@ -347,7 +350,7 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -418,3 +421,4 @@
       RETURN
       END SUBROUTINE SET_OUTFLOW_EP
 
+end module set_outflow_module

@@ -1,16 +1,4 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CALC_PG_GRAD                                            !
-!  Purpose: Calculate cell centered pressure force exerted on the      !
-!           particles in the cell by the gas/fluid phase               !
-!           Note that P_force is evaluated as -dp/dx                   !
-!                                                                      !
-!  Notes: This pressure force only needs to be calculated once during  !
-!         the DEM loop (at the beginning) since the gas/fluid phase    !
-!         is essentially static at that point (i.e., gas field is not  !
-!         updated during DEM loop                                      !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+
       SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI)
 
 ! Modules

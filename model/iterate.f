@@ -1,4 +1,4 @@
-module iterate_mod
+module iterate_module
 
    CONTAINS
 
@@ -35,8 +35,11 @@ module iterate_mod
 
       USE solve_pp_module
       USE solve_vel_star_module
+      USE calc_coeff_module
+      USE set_bc1_module
 
       use error_manager
+      use tunit_module
 
       implicit none
 
@@ -46,11 +49,11 @@ module iterate_mod
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -62,7 +65,7 @@ module iterate_mod
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -182,7 +185,7 @@ module iterate_mod
       IF (CALL_USR) CALL USR2
 
 ! Calculate coefficients, excluding density and reactions.
-      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, 1)
+      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 1)
 
       IF (IER_MANAGER()) goto 1000
 
@@ -390,42 +393,7 @@ module iterate_mod
       return
       END FUNCTION IER_MANAGER
 
-
-
       END SUBROUTINE ITERATE
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!  Purpose:
-!
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_TUNIT(TLEFT, TUNIT)
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-      DOUBLE PRECISION, INTENT(INOUT) :: TLEFT
-      CHARACTER(LEN=4) :: TUNIT
-!-----------------------------------------------
-
-      IF (TLEFT < 3600.0d0) THEN
-         TUNIT = 's'
-      ELSE
-         TLEFT = TLEFT/3600.0d0
-         TUNIT = 'h'
-         IF (TLEFT >= 24.) THEN
-            TLEFT = TLEFT/24.0d0
-            TUNIT = 'days'
-         ENDIF
-      ENDIF
-
-      RETURN
-      END SUBROUTINE GET_TUNIT
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !  Purpose:  In the following subroutine the mass flux across a periodic
@@ -538,4 +506,4 @@ module iterate_mod
       ' Message: Number of outer iterations exceeded ', I4,/1X,70('*')/)
 
       END SUBROUTINE GoalSeekMassFlux
-end module iterate_mod
+end module iterate_module

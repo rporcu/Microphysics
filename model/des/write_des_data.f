@@ -15,20 +15,6 @@
 
       SUBROUTINE WRITE_DES_DATA
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE fldvar
-      USE discretelement
-      USE run
-      USE geometry
-      USE physprop
-      USE des_bc
-
-      use error_manager
-
       IMPLICIT NONE
 
       CALL WRITE_DES_VTP

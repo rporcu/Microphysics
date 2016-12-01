@@ -1,3 +1,6 @@
+module des_time_march_module 
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !     Subroutine: DES_TIME_MARCH                                       !
@@ -6,7 +9,7 @@
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH
+      SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g)
 
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
@@ -19,7 +22,30 @@
       use run, only: NSTEP
       use run, only: TIME, TSTOP, DT
 
+      use drag_gs_des1_module
+      use comp_mean_fields_module
+      use calc_drag_des_module
+      use calc_epg_des_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 !------------------------------------------------
 ! Local variables
 !------------------------------------------------
@@ -79,9 +105,9 @@
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
          ENDIF
-         CALL CALC_PG_GRAD
+         CALL CALC_PG_GRAD(p_g)
       ENDIF
 
 
@@ -105,7 +131,7 @@
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -136,7 +162,7 @@
 ! Bin particles to fluid grid.
             CALL PARTICLES_IN_CELL
 ! Calculate mean fields (EPg).
-            CALL COMP_MEAN_FIELDS
+            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
          ENDIF
 
 ! Update time to reflect changes
@@ -160,7 +186,7 @@
 
       IF(CALL_USR) CALL USR3_DES
 
-!      CALL CALC_EPG_DES
+       CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN
@@ -191,5 +217,6 @@
 
       ENDIF
 
-      RETURN
       END SUBROUTINE DES_TIME_MARCH
+
+end module des_time_march_module 

@@ -11,7 +11,9 @@
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD
+      SUBROUTINE CALC_PG_GRAD(p_g)
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
 ! Particle volume.
       use discretelement, only: PVOL
@@ -30,7 +32,6 @@
 ! Domain length
       use geometry, only: XLENGTH, YLENGTH, ZLENGTH
 ! Gas phase pressure
-      use fldvar, only: P_G
 
       use discretelement, only: MAX_PIP, PIJK, DES_EXPLICITLY_COUPLED
 
@@ -47,6 +48,9 @@
       use param1, only: ZERO
 
       implicit none
+
+      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, IJK, I, J, K

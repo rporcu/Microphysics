@@ -1,3 +1,6 @@
+module comp_mean_fields_module 
+
+  contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: COMP_MEAN_FIELDS                                        !
@@ -7,14 +10,27 @@
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE COMP_MEAN_FIELDS
+      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use particle_filter, only: DES_INTERP_MEAN_FIELDS
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
       use particle_filter, only: DES_INTERP_NONE
       use particle_filter, only: DES_INTERP_GARG
 
+      use comp_mean_fields0_module
+      use comp_mean_fields1_module
+      use calc_epg_des_module
+
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !......................................................................!
 
@@ -22,15 +38,15 @@
       IF(DES_INTERP_MEAN_FIELDS) THEN
          SELECT CASE(DES_INTERP_SCHEME_ENUM)
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
-         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0
-         CASE DEFAULT; CALL COMP_MEAN_FIELDS1
+         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g)
+         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1
          END SELECT
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER
       ENDIF
 
 ! Calculate the gas phase volume fraction from DES_ROP_s.
-      CALL CALC_EPG_DES
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
 
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS
@@ -115,3 +131,5 @@
 
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
+
+end module comp_mean_fields_module 
