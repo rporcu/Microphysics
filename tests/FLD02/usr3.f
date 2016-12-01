@@ -8,19 +8,31 @@
 !  compares with the MFIX solution.                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
 
-      use fldvar, only: U_g
-      Use geometry, only: dy
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
 
-      Use geometry, only: imin1, jmin1, kmin1
-      Use geometry, only: imax1, jmax1, kmax1
+      use geometry, only: dy
+
+      use geometry, only: imin1, jmin1, kmin1
+      use geometry, only: imax1, jmax1, kmax1
 
       use functions, only: funijk
 
-      Use param1, only: zero, small_number, half
+      use param1, only: zero, small_number, half
 
       IMPLICIT NONE
+
+      double precision, intent(in) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! looping indices
       integer :: ijk, i, j, k
@@ -84,7 +96,7 @@
       Use geometry, only: CYCLIC_X_PD
       Use param1, only: zero, small_number, half
 
-      implicit none 
+      implicit none
 
       double precision, intent(in) :: y
       double precision :: dPdX

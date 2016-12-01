@@ -64,15 +64,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-
-      use fldvar  , only: ep_g , p_g , ro_g , rop_g , u_g , v_g , w_g
-      use fldvar  , only: ep_go, p_go, ro_go, rop_go, u_go, v_go, w_go
-      use fldvar  , only: d_e, d_n, d_t
-      use fldvar  , only: pp_g
-      use fldvar  , only: mu_g, lambda_g, trD_g, tau_u_g, tau_v_g, tau_w_g
-      use fldvar  , only: flux_ge, flux_gn, flux_gt
-      use fldvar  , only:  rop_ge,  rop_gn,  rop_gt
-
       USE fld_const, only: ro_g0
       USE compar, only: myPE
       use discretelement, only: discrete_element
@@ -85,11 +76,53 @@
       use error_manager
       use read_res1_mod, only: read_res1
       use write_res1_mod, only: write_res1
-   
+
       use time_march_module
       use set_bc1_module
+      USE des_allocate, only: des_allocate_arrays
+      use allocate_mod
+      use matrix, only: A_m, b_m
+      Use xsi_array,only: xsi_n, xsi_e, xsi_t
 
       IMPLICIT NONE
+
+! Fluid Variables
+!---------------------------------------------------------------------//
+! Void fraction
+      DOUBLE PRECISION, ALLOCATABLE ::  EP_g(:,:,:), EP_go(:,:,:)
+! Gas pressure
+      DOUBLE PRECISION, ALLOCATABLE ::  P_g(:,:,:), P_gO(:,:,:)
+! Gas density
+      DOUBLE PRECISION, ALLOCATABLE ::  RO_g(:,:,:), RO_go(:,:,:)
+! Macroscopic gas density
+      DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:,:,:), ROP_go(:,:,:)
+! x-component of gas velocity
+      DOUBLE PRECISION, ALLOCATABLE ::  U_g(:,:,:), U_go(:,:,:)
+! y-component of gas velocity
+      DOUBLE PRECISION, ALLOCATABLE ::  V_g(:,:,:), V_go(:,:,:)
+! z-component of gas velocity
+      DOUBLE PRECISION, ALLOCATABLE ::  W_g(:,:,:), W_go(:,:,:)
+! Gas viscosity
+      DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:,:,:)
+! Second coefficient of viscosity
+      DOUBLE PRECISION, ALLOCATABLE ::  LAMBDA_G(:,:,:)
+! trace of D_g at i, j, k
+      DOUBLE PRECISION, ALLOCATABLE ::  trD_g(:,:,:)
+! cross terms
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_U_g(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_V_g(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  TAU_W_g(:,:,:)
+! Gas mass fluxes at the east, north, and top faces
+      DOUBLE PRECISION, ALLOCATABLE ::  Flux_gE(:,:,:), Flux_gN(:,:,:), Flux_gT(:,:,:)
+! macroscopic gas density at east, north, and top faces
+      DOUBLE PRECISION, ALLOCATABLE ::  ROP_gE(:,:,:), ROP_gN(:,:,:), ROP_gT(:,:,:)
+! Pressure correction equation
+      DOUBLE PRECISION, ALLOCATABLE ::  Pp_g(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  d_e(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  d_n(:,:,:)
+      DOUBLE PRECISION, ALLOCATABLE ::  d_t(:,:,:)
+!---------------------------------------------------------------------//
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -102,7 +135,6 @@
 ! Temporary storage for DT
       DOUBLE PRECISION :: DT_tmp
 
-!-----------------------------------------------
 
 ! Invoke MPI initialization routines and get rank info.
       ! CALL PARALLEL_INIT
@@ -115,6 +147,15 @@
 ! Read input data, check data, do computations for IC and BC locations
 ! and flows, and set geometry parameters such as X, X_E, DToDX, etc.
       call get_data
+
+! Allocate array storage.
+      CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
+         ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
+         mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,xsi_e,xsi_n,xsi_t)
+
+      IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
+      IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
@@ -229,7 +270,7 @@
                       flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g)
 
 ! Call user-defined subroutine after time-loop.
-      IF (CALL_USR) CALL USR3
+      IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)
 
 ! Compute the CPU time and write it out in the .OUT file.
       CPUTIME_USED = 0.0d0

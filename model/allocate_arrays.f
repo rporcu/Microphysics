@@ -9,20 +9,14 @@ module allocate_mod
 !  Reviewer:                                                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m)
+      SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
+         ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
+         mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,xsi_e,xsi_n,xsi_t)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      Use fldvar  , only: ep_g , p_g , ro_g , rop_g , u_g , v_g , w_g
-      Use fldvar  , only: ep_go, p_go, ro_go, rop_go, u_go, v_go, w_go
-      Use fldvar  , only: d_e, d_n, d_t
-      Use fldvar  , only: pp_g
-      Use fldvar  , only: mu_g, lambda_g, trD_g, tau_u_g, tau_v_g, tau_w_g
-      Use fldvar  , only: flux_ge, flux_gn, flux_gt
-      Use fldvar  , only:  rop_ge,  rop_gn,  rop_gt
-      Use xsi_array,only: xsi_n, xsi_e, xsi_t
-
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
@@ -31,11 +25,41 @@ module allocate_mod
 
       IMPLICIT NONE
 
-!-----------------------------------------------
-! Variables
-!-----------------------------------------------
-      DOUBLE PRECISION, allocatable, intent(inOUT) :: A_m(:,:,:,:)
-      DOUBLE PRECISION, allocatable, intent(inOUT) :: B_m(:,:,:)
+      double precision, allocatable, intent(inout) :: A_m(:,:,:,:)
+      double precision, allocatable, intent(inout) :: B_m(:,:,:)
+      double precision, allocatable, intent(inout) :: ep_g(:,:,:)
+      double precision, allocatable, intent(inout) :: p_g(:,:,:)
+      double precision, allocatable, intent(inout) :: ro_g(:,:,:)
+      double precision, allocatable, intent(inout) :: rop_g(:,:,:)
+      double precision, allocatable, intent(inout) :: u_g(:,:,:)
+      double precision, allocatable, intent(inout) :: v_g(:,:,:)
+      double precision, allocatable, intent(inout) :: w_g(:,:,:)
+      double precision, allocatable, intent(inout) :: ep_go(:,:,:)
+      double precision, allocatable, intent(inout) :: p_go(:,:,:)
+      double precision, allocatable, intent(inout) :: ro_go(:,:,:)
+      double precision, allocatable, intent(inout) :: rop_go(:,:,:)
+      double precision, allocatable, intent(inout) :: u_go(:,:,:)
+      double precision, allocatable, intent(inout) :: v_go(:,:,:)
+      double precision, allocatable, intent(inout) :: w_go(:,:,:)
+      double precision, allocatable, intent(inout) :: d_e(:,:,:)
+      double precision, allocatable, intent(inout) :: d_n(:,:,:)
+      double precision, allocatable, intent(inout) :: d_t(:,:,:)
+      double precision, allocatable, intent(inout) :: pp_g(:,:,:)
+      double precision, allocatable, intent(inout) :: mu_g(:,:,:)
+      double precision, allocatable, intent(inout) :: lambda_g(:,:,:)
+      double precision, allocatable, intent(inout) :: trD_g(:,:,:)
+      double precision, allocatable, intent(inout) :: tau_u_g(:,:,:)
+      double precision, allocatable, intent(inout) :: tau_v_g(:,:,:)
+      double precision, allocatable, intent(inout) :: tau_w_g(:,:,:)
+      double precision, allocatable, intent(inout) :: flux_ge(:,:,:)
+      double precision, allocatable, intent(inout) :: flux_gn(:,:,:)
+      double precision, allocatable, intent(inout) :: flux_gt(:,:,:)
+      double precision, allocatable, intent(inout) :: rop_ge(:,:,:)
+      double precision, allocatable, intent(inout) :: rop_gn(:,:,:)
+      double precision, allocatable, intent(inout) :: rop_gt(:,:,:)
+      double precision, allocatable, intent(inout) :: xsi_e(:,:,:)
+      double precision, allocatable, intent(inout) :: xsi_n(:,:,:)
+      double precision, allocatable, intent(inout) :: xsi_t(:,:,:)
 
       integer :: is3, ie3
       integer :: js3, je3
@@ -48,7 +72,6 @@ module allocate_mod
       Allocate( A_m(is3:ie3,js3:je3,ks3:ke3, -3:3) )
       Allocate( B_m(is3:ie3,js3:je3,ks3:ke3) )
 
-!fldvar
       Allocate( EP_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( P_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( RO_g (is3:ie3,js3:je3,ks3:ke3) )
@@ -82,23 +105,18 @@ module allocate_mod
 
       Allocate( Pp_g(is3:ie3,js3:je3,ks3:ke3) )
 
-!physprop
       Allocate( MU_g(is3:ie3,js3:je3,ks3:ke3) )
 
-!visc_g
       Allocate( trD_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( LAMBDA_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( TAU_U_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( TAU_V_g(is3:ie3,js3:je3,ks3:ke3))
       Allocate( TAU_W_g(is3:ie3,js3:je3,ks3:ke3))
 
-!xsi_array
       Allocate( xsi_e(is3:ie3,js3:je3,ks3:ke3))
       Allocate( xsi_n(is3:ie3,js3:je3,ks3:ke3))
       Allocate( xsi_t(is3:ie3,js3:je3,ks3:ke3))
 
-
-!mflux
       Allocate( Flux_gE(is3:ie3,js3:je3,ks3:ke3))
       Allocate( Flux_gN(is3:ie3,js3:je3,ks3:ke3))
       Allocate( Flux_gT(is3:ie3,js3:je3,ks3:ke3))

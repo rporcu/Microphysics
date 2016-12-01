@@ -11,11 +11,22 @@
 !           all indices are undefined.                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
 
-      use fldvar, only: U_G, V_G
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
 
       IMPLICIT NONE
+
+      double precision, intent(in) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       double precision, parameter :: X(16) = (/&
           0.96880, 0.96090, 0.95310, 0.94530, &

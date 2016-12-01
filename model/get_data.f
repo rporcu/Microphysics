@@ -12,11 +12,9 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE des_allocate   , only: des_allocate_arrays
       USE desgrid        , only: desgrid_init
       USE discretelement , only: discrete_element
       USE error_manager  , only: init_error_manager
-      USE fldvar         , only: ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g
       USE gridmap        , only: gridmap_init
       USE mpi_init_des   , only: desmpi_init
       USE open_files_mod, only: open_files
@@ -24,8 +22,6 @@
       USE run            , only: run_type, run_name
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
 
-      use allocate_mod
-      use matrix, only: A_m, b_m
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -111,11 +107,5 @@
       ENDIF
 
 !--------------------------  ARRAY ALLOCATION -----------------------!
-
-! Allocate array storage.
-      CALL ALLOCATE_ARRAYS(A_m, B_m)
-      IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
-
-      IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
 
       END SUBROUTINE GET_DATA

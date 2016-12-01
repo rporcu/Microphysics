@@ -11,21 +11,31 @@
 !           all indices are undefined.                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
 
-      use fldvar, only: U_g, P_g
       use geometry, only: dx, dy
 
       use geometry, only: imin1, imax1, imax
       use geometry, only: jmin1, jmax1, jmax
       use geometry, only: kmin1, kmax1
 
-      use functions, only: funijk
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
 
       IMPLICIT NONE
 
+      double precision, intent(in) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! looping indices
-      integer :: ijk, i, j, k
+      integer :: i, j, k
 
 ! Calculated height of cell
       double precision  :: xt, yt

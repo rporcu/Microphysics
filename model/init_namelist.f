@@ -33,7 +33,6 @@
       USE ic
       USE bc
       USE ps
-      USE fldvar
       USE fld_const, only: ro_g0, mu_g0, mw_avg
       USE constant
       USE toleranc

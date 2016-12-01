@@ -23,24 +23,25 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
-      SUBROUTINE USR3
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
+
+      use compar, only: istart3, iend3
+      use compar, only: jstart3, jend3
+      use compar, only: kstart3, kend3
+
       Use usr
+
       IMPLICIT NONE
-!-----------------------------------------------
-!
-!  Include files defining common blocks here
-!
-!
-!  Define local variables here
-!
-!
-!  Include files defining statement functions here
-!
-!
-!  Insert user-defined code here
-!
+
+      double precision, intent(in) :: u_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: v_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: w_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(in) :: p_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+
       RETURN
       END SUBROUTINE USR3
