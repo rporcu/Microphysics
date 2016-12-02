@@ -382,7 +382,7 @@ module drag_gs_des0_module
                      cur_ijk = funijk_map_c(ii, jj, kk)
 
 ! Replacing the volume of cell to volume at the node
-                     vcell = des_vol_node(cur_ijk)
+                     vcell = des_vol_node(ii, jj, kk)
                      ovol = one/vcell
 
                      drag_am(ii, jj, kk) = drag_am(ii, jj, kk) + &

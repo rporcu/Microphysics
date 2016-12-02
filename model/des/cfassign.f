@@ -112,7 +112,7 @@
         DO Iraw = istart3, iend3
 
          IJK = FUNIJK(iraw,jraw,kraw)
-         des_vol_node(ijk) = zero
+         des_vol_node(iraw,jraw,kraw) = zero
 
 ! start at 1 (ghost cell) and go to last fluid cell. why start at a
 ! ghost cell and not a fluid cell?
@@ -176,7 +176,7 @@
 
 ! this will have non-zero values for non-fluid cells at the
 ! west/south/bottom borders but not for east/north/top borders?
-         des_vol_node(ijk) = avg_factor*(vol_ijk + vol_ipjk + &
+         des_vol_node(iraw,jraw,kraw) = avg_factor*(vol_ijk + vol_ipjk + &
                                          vol_ijpk + vol_ipjpk)
 
          IF (DO_K) THEN
@@ -214,7 +214,7 @@
                vol_ipjpkp = zero
             ENDIF
 
-            des_vol_node(ijk) = des_vol_node(ijk) + avg_factor*&
+            des_vol_node(iraw,jraw,kraw) = des_vol_node(iraw,jraw,kraw) + avg_factor*&
                (vol_ijkp + vol_ipjpkp + vol_ijpkp + vol_ipjkp)
 
          ENDIF

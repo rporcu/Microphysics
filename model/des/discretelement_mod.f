@@ -325,7 +325,7 @@
 !-----------------------------------------------------------------<<<
 
 ! Volume of each node. Used to obtain Eulerian fields
-      double precision, allocatable, dimension(:) :: des_vol_node
+      double precision, allocatable, dimension(:,:,:) :: des_vol_node
 
 ! Variable to track pressure force in computational fluid cell (ijk)
       DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: P_FORCE

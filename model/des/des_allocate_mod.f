@@ -150,7 +150,7 @@ CONTAINS
       ALLOCATE(P_FORCE(DIMN, istart3:iend3, jstart3:jend3, kstart3:kend3))
 
 ! Volume of nodes
-      ALLOCATE(DES_VOL_NODE(DIMENSION_3))
+      ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       ALLOCATE(F_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
       ALLOCATE(VXF_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
