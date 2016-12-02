@@ -13,7 +13,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE LEQ_BICGS(VNAME, VNO, VAR, A_M, B_m, cmethod, &
+      SUBROUTINE LEQ_BICGS(VNAME, VNO, Var, A_M, B_m, cmethod, &
                            TOL, PC, ITMAX, IER)
 
          use compar, only: istart3, iend3
@@ -24,7 +24,6 @@
          use funits, only: unit_log, dmp_log
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
          use param, only: DIM_EQS
-         use param, only: dimension_3
          use param1, only: zero
 
       IMPLICIT NONE
@@ -36,7 +35,8 @@
 ! variable number (not really used here; see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
+      DOUBLE PRECISION, INTENT(INOUT) :: Var&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -95,7 +95,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_BICGS0(VNAME, VNO, VAR, A_M, B_m, cmethod, &
+      SUBROUTINE LEQ_BICGS0(VNAME, VNO, Var, A_M, B_m, cmethod, &
                             TOL, ITMAX, MATVEC, MSOLVE, IER )
 
          use compar, only: istart2, iend2
@@ -106,12 +106,10 @@
          use compar, only: kstart3, kend3
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
-         use functions, only: funijk
          use funits, only: unit_log, dmp_log
-         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
+         use leqsol, only: icheck_bicgs, minimize_dotproducts
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
          use param, only: DIM_EQS
-         use param, only: dimension_3
          use param1, only: zero, one, small_number
 
       IMPLICIT NONE
@@ -123,13 +121,15 @@
 ! variable number (not really used here-see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
+      DOUBLE PRECISION, INTENT(INOUT) :: Var&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
       CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
@@ -155,7 +155,7 @@
 ! Local variables
 !-----------------------------------------------
 
-      DOUBLE PRECISION, DIMENSION(:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
+      DOUBLE PRECISION, DIMENSION(:,:,:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
 
       DOUBLE PRECISION, DIMENSION(0:ITMAX+1) :: &
                         alpha, beta, omega, rho
@@ -163,21 +163,19 @@
                           aijmax, oam
       DOUBLE PRECISION :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
       LOGICAL :: isconverged
-      INTEGER :: i, j, k, ijk, ii, jj, kk
+      INTEGER :: i, j, k,  ii, jj, kk
       INTEGER :: iter
       DOUBLE PRECISION, DIMENSION(2) :: TxS_TxT
 !-----------------------------------------------
 
-      allocate(R(DIMENSION_3))
-      allocate(Rtilde(DIMENSION_3))
-      allocate(P(DIMENSION_3))
-      allocate(Phat(DIMENSION_3))
-      allocate(Svec(DIMENSION_3))
-      allocate(Shat(DIMENSION_3))
-      allocate(Tvec(DIMENSION_3))
-      allocate(V(DIMENSION_3))
-
-      is_serial = numPEs.eq.1.and.is_serial
+      allocate(R(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(Rtilde(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(P(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(Phat(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(Svec(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(Shat(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(Tvec(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(V(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
 ! these scalars should not be necessary to initialize but done as failsafe
       rnorm = ZERO
@@ -194,14 +192,14 @@
 ! Adding all by Handan Liu
 ! zero out R, Rtilde, P, Phat, Svec, Shat, Tvec, V
 ! --------------------------------
-         R(:) = zero
-         Rtilde(:) = zero
-         P(:) = zero
-         Phat(:) = zero
-         Svec(:) = zero
-         Shat(:) = zero
-         Tvec(:) = zero
-         V(:) = zero
+         R(:,:,:) = zero
+         Rtilde(:,:,:) = zero
+         P(:,:,:) = zero
+         Phat(:,:,:) = zero
+         Svec(:,:,:) = zero
+         Shat(:,:,:) = zero
+         Tvec(:,:,:) = zero
+         V(:,:,:) = zero
 
       TOLMIN = EPSILON( one )
 
@@ -212,18 +210,16 @@
          do k = kstart2,kend2
             do i = istart2,iend2
                do j = jstart2,jend2
-                  IJK = funijk(i,j,k)
                   aijmax = maxval(abs(A_M(i,j,k,:)) )
                   OAM = one/aijmax
                   A_M(I,J,K,:) = A_M(I,J,K,:)*OAM
-                  B_M(I,J,K) = B_M(I,J,K)*OAM
+                  B_M(I,J,K  ) = B_M(I,J,K  )*OAM
                enddo
             enddo
          enddo
       endif
+
 ! ----------------------------------------------------------------<<<
-
-
 ! Compute initial residual (R = b-A*x) for Ax=b
 !    assume initial guess in Var
 !    rtilde = r
@@ -233,29 +229,20 @@
       do k = kstart3,kend3
          do i = istart3,iend3
             do j = jstart3,jend3
-               IJK = funijk(i,j,k)
-               R(IJK) = B_M(I,J,K) - R(IJK)
+               R(i,j,k) = B_M(i,j,k) - R(i,j,k)
             enddo
          enddo
       enddo
 
-      ! call send_recv(R,nlayers_bicgs)
-
-      if(is_serial) then
-         Rnorm0 = zero
-         Rnorm0 = dot_product(R,R)
-         Rnorm0 = sqrt( Rnorm0 )
-      else
-         Rnorm0 = sqrt( dot_product_par( R, R ) )
-      endif
+      Rnorm0 = sqrt( dot_product_par( R, R ) )
 
 ! determine an initial guess for the residual = residual + small random
 ! number (so it could be set to anything). note that since random_number
 ! is used to supply the guess, this line could potentially be the source
 ! of small differences between runs.  the random number is shifted below
 ! between -1 and 1 and then scaled by factor 1.0D-6*Rnorm0
-      call random_number(Rtilde(:))
-      Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
+      call random_number(Rtilde(:,:,:))
+      Rtilde(:,:,:) = R(:,:,:) + (2.0d0*Rtilde(:,:,:)-1.0d0)*1.0d-6*Rnorm0
 
       if (idebugl >= 1) then
          if(myPE.eq.0) print*,'leq_bicgs, initial: ', Vname,' resid ', Rnorm0
@@ -268,26 +255,19 @@
       iter = 1
       do i=1,itmax
 
-         if(is_serial) then
-            rho(i-1) = dot_product( Rtilde, R )
-         else
-            rho(i-1) = dot_product_par( Rtilde, R )
-         endif ! is_serial
-
-!         print*,'leq_bicgs, initial: ', Vname,' rho(i-1) ', rho(i-1)
+         rho(i-1) = dot_product_par( Rtilde, R )
 
          if (rho(i-1) .eq. zero) then
             if(i /= 1)then
 ! Method fails
 ! --------------------------------
-!               print*, 'leq_bicgs,',Vname,': rho(i-1) == 0 '
                ier = -2
             else
 ! Method converged.  residual is already zero
 ! --------------------------------
                ier = 0
             endif
-            ! call send_recv(var,2)
+
             deallocate(R)
             deallocate(Rtilde)
             deallocate(P)
@@ -300,12 +280,11 @@
          endif ! rho(i-1).eq.0
 
          if (i .eq. 1) then
-            P(:) = R(:)
+            P(:,:,:) = R(:,:,:)
          else
             beta(i-1) = ( rho(i-1)/rho(i-2) )*( alpha(i-1) / omega(i-1) )
-               P(:) = R(:) + beta(i-1)*( P(:) - omega(i-1)*V(:) )
+               P(:,:,:) = R(:,:,:) + beta(i-1)*( P(:,:,:) - omega(i-1)*V(:,:,:) )
          endif ! i.eq.1
-
 
 ! Solve A*Phat(:) = P(:)
 ! V(:) = A*Phat(:)
@@ -313,13 +292,7 @@
          call MSOLVE(Vname, P, A_m, Phat, CMETHOD) ! returns Phat
          call MATVEC(Vname, Phat, A_m, V)   ! returns V=A*Phat
 
-         if(is_serial) then
-            RtildexV = dot_product( Rtilde, V )
-         else
-            RtildexV = dot_product_par( Rtilde, V )
-         endif ! is_serial
-
-!         print*,'leq_bicgs, initial: ', Vname,' RtildexV ', RtildexV
+         RtildexV = dot_product_par( Rtilde, V )
 
 ! compute alpha
 ! --------------------------------
@@ -327,48 +300,34 @@
 
 ! compute Svec
 ! --------------------------------
-         Svec(:) = R(:) - alpha(i) * V(:)
+         Svec(:,:,:) = R(:,:,:) - alpha(i) * V(:,:,:)
 
 
 ! Check norm of Svec(:); if small enough:
 ! set X(:) = X(:) + alpha(i)*Phat(:) and stop
 ! --------------------------------
          if(.not.minimize_dotproducts) then
-            if(is_serial) then
-               Snorm = dot_product( Svec, Svec )
-               Snorm = sqrt( Snorm )
-            else
-               Snorm = sqrt( dot_product_par( Svec, Svec ) )
-            endif               ! is_serial
-!            print*,'leq_bicgs, initial: ', Vname,' Snorm ', real(Snorm)
 
-
+            Snorm = sqrt( dot_product_par( Svec, Svec ) )
             if (Snorm <= TOLMIN) then
-               Var(:) = Var(:) + alpha(i)*Phat(:)
+               Var(:,:,:) = Var(:,:,:) + alpha(i)*Phat(:,:,:)
 
 ! Recompute residual norm
 ! --------------------------------
                if (idebugl >= 1) then
+
                   call MATVEC(Vname, Var, A_m, R)   ! returns R=A*Var
-!                  Rnorm = sqrt( dot_product_par( Var, Var ) )
-!                  print*,'leq_bicgs, initial: ', Vname,' Vnorm ', Rnorm
 
                   do kk = kstart3,kend3
                      do jj = jstart3,jend3
                         do ii = istart3,iend3
-                           IJK = funijk(ii,jj,kk)
-                           R(IJK) = B_M(iI,jJ,kK) - R(IJK)
+                           R(ii,jj,kk) = B_M(ii,jj,kk) - R(ii,jj,kk)
                         enddo
                      enddo
                   enddo
 
-                  if(is_serial) then
-                     Rnorm =  dot_product( R, R )
-                     Rnorm = sqrt( Rnorm )
-                  else
-                     Rnorm = sqrt( dot_product_par( R, R ) )
-                  endif
-!                  print*,'leq_bicgs, initial: ', Vname,' Rnorm ', Rnorm
+                   Rnorm = sqrt( dot_product_par( R, R ) )
+
                endif            ! idebugl >= 1
                            isConverged = .TRUE.
                            EXIT
@@ -377,24 +336,19 @@
 
 
 
-! Solve A*Shat(:) = Svec(:)
-! Tvec(:) = A*Shat(:)
+! Solve A*Shat(:,:,:) = Svec(:,:,:)
+! Tvec(:) = A*Shat(:,:,:)
 ! --------------------------------
          call MSOLVE( Vname, Svec, A_m, Shat, CMETHOD)  ! returns Shat
          call MATVEC( Vname, Shat, A_m, Tvec )   ! returns Tvec=A*Shat
 
-         if(is_serial) then
-            TxS = dot_product( Tvec, Svec )
-            TxT = dot_product( Tvec, Tvec )
+         if(.not.minimize_dotproducts) then
+            TxS = dot_product_par( Tvec, Svec )
+            TxT = dot_product_par( Tvec, Tvec )
          else
-            if(.not.minimize_dotproducts) then
-               TxS = dot_product_par( Tvec, Svec )
-               TxT = dot_product_par( Tvec, Tvec )
-            else
-               TxS_TxT = dot_product_par2(Tvec, Svec, Tvec, Tvec )
-               TxS = TxS_TxT(1)
-               TxT = TxS_TxT(2)
-            endif
+            TxS_TxT = dot_product_par2(Tvec, Svec, Tvec, Tvec )
+            TxS = TxS_TxT(1)
+            TxT = TxS_TxT(2)
          endif
 
          IF(TxT.eq.Zero) TxT = SMALL_NUMBER
@@ -405,19 +359,15 @@
 
 ! compute new guess for Var
 ! --------------------------------
-            Var(:) = Var(:) +  &
-               alpha(i)*Phat(:) + omega(i)*Shat(:)
-               R(:) = Svec(:) - omega(i)*Tvec(:)
+            Var(:,:,:) = Var(:,:,:) +  &
+               alpha(i)*Phat(:,:,:) + omega(i)*Shat(:,:,:)
+               R(:,:,:) = Svec(:,:,:) - omega(i)*Tvec(:,:,:)
 
 
 ! --------------------------------
          if(.not.minimize_dotproducts.or.(mod(iter,icheck_bicgs).eq.0)) then
-            if(is_serial) then
-               Rnorm =  dot_product(R, R )
-               Rnorm = sqrt( Rnorm )
-            else
-               Rnorm = sqrt( dot_product_par(R, R) )
-            endif               ! is_serial
+
+            Rnorm = sqrt( dot_product_par(R, R) )
 
             if (idebugl.ge.1) then
                if (myPE.eq.PE_IO) then
@@ -453,18 +403,12 @@
          do kk = kstart3,kend3
             do jj = jstart3,jend3
                do ii = istart3,iend3
-                  IJK = funijk(ii,jj,kk)
-                  R(IJK) = R(IJK) - B_M(iI,jJ,kK)
+                  R(ii,jj,kk) = R(ii,jj,kk) - B_M(ii,jj,kk)
                enddo
             enddo
          enddo
 
-         if(is_serial) then
-            Rnorm = dot_product( R,R)
-            Rnorm = sqrt( Rnorm )
-         else
-            Rnorm = sqrt( dot_product_par( R,R) )
-         endif
+         Rnorm = sqrt( dot_product_par( R,R) )
 
          if(myPE.eq.0) print*,'leq_bicgs: final Rnorm ', Rnorm
 

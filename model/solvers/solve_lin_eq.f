@@ -14,17 +14,14 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOLVE_LIN_EQ(VNAME, Vno, VAR, A_M, B_M, M, ITMAX,&
+      SUBROUTINE SOLVE_LIN_EQ(VNAME, Vno, Var, A_M, B_M, M, ITMAX,&
                               METHOD, SWEEP, TOL1, PC, IER)
 
-         use compar, only: istart3, iend3
-         use compar, only: jstart3, jend3
-         use compar, only: kstart3, kend3
+         use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
          use compar, only: mype
          use exit_mod, only: mfix_exit
          use funits, only: unit_log
          use param, only: DIM_EQS
-         use param, only: dimension_3
          use param1, only: zero
          use residual, only: resid
          use toleranc, only: tol_resid
@@ -45,7 +42,8 @@
 !     5 = gas w-momentum
       INTEGER, INTENT(IN) :: Vno
 ! variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+      DOUBLE PRECISION, INTENT(INOUT) :: Var&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -111,7 +109,7 @@
       SELECT CASE (METHOD)
 
       CASE (2)
-            call leq_bicgs(VNAME, VNO, VAR, A_M, B_M,&
+            call leq_bicgs(VNAME, VNO, Var, A_M, B_M,&
                            SWEEP, TOL, PC, ITMAX, IER)
 
       CASE DEFAULT
