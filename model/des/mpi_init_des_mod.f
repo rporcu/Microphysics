@@ -358,7 +358,6 @@
 
       use mpi_comm_des, only: desmpi_scatterv
       use des_allocate, only: particle_grow
-      use functions, only: set_normal
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -443,7 +442,7 @@
          ro_sol(lcurpar) = dprocbuf(lbuf); lbuf = lbuf+1
          des_pos_new(lcurpar,1:rdimn) = dprocbuf(lbuf:lbuf+rdimn-1); lbuf = lbuf+rdimn
          des_vel_new(lcurpar,1:rdimn) = dprocbuf(lbuf:lbuf+rdimn-1); lbuf = lbuf+rdimn
-         call set_normal(lcurpar)
+         particle_state(lcurpar) = normal_particle
       enddo
       deallocate (dprocbuf,drootbuf)
 

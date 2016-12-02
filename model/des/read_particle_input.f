@@ -78,7 +78,7 @@
       IF (bdist_io) then
          read(lunit,*) pip
          DO lcurpar = 1,pip
-            call set_normal(lcurpar)
+            particle_state(lcurpar) = normal_particle
             read (lunit,*) (des_pos_new(lcurpar,k),k=1,RDMN),&
                des_radius(lcurpar), ro_sol(lcurpar),&
                (des_vel_new(lcurpar,k),k=1,RDMN)

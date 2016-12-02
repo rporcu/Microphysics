@@ -72,7 +72,7 @@
       double precision :: x0, y0, z0, xLen, yLen, zLen
 
       double precision :: lRad, lDp
-      double precision :: lPos(3), lVel(3), meanVel(3), vScale
+      double precision :: lPos(3), lVel(3), meanVel(3)
 
       integer :: lc1, fail
 
@@ -121,7 +121,7 @@
 
          pip = pip+1
          call particle_grow(pip)
-         call set_normal(pip)
+         particle_state(pip) = normal_particle
 
          call random_number(ru1)
          call random_number(ru2)

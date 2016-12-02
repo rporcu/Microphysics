@@ -67,7 +67,7 @@
 
 ! The particle is still inside the domain
                IF(DIST > DES_RADIUS(NP)) THEN
-                  CALL SET_NORMAL(NP)
+                  particle_state(NP) = normal_particle
 
 ! Check if the particle is crossing over the outlet plane.
                ELSEIF(DIST > ZERO) THEN
@@ -83,9 +83,9 @@
                         DES_VEL_NEW(NP,:) = DES_VEL_NEW(NP,:)*FREEZE(:)
 ! Set the flags for an exiting particle.
                         IF (NORMAL_GHOST==PARTICLE_STATE(NP)) THEN
-                           CALL SET_EXITING_GHOST(NP)
+                           PARTICLE_STATE(NP) = EXITING_GHOST
                         ELSE
-                           CALL SET_EXITING(NP)
+                           PARTICLE_STATE(NP) = EXITING_PARTICLE
                         ENDIF
                      ENDIF
 
@@ -99,9 +99,9 @@
                      DES_VEL_NEW(NP,3) = BC_W_s(BCV,M)
 ! Set the flags for an exiting particle.
                      IF (NORMAL_GHOST==PARTICLE_STATE(NP)) THEN
-                        CALL SET_EXITING_GHOST(NP)
+                        particle_state(NP) = EXITING_GHOST
                      ELSE
-                        CALL SET_EXITING(NP)
+                        particle_state(NP) = EXITING_PARTICLE
                      ENDIF
                   ENDIF
 
@@ -153,7 +153,7 @@
 !-----------------------------------------------
 
       iGLOBAL_ID(NP) = -1
-      CALL SET_NONEXISTENT(NP)
+      PARTICLE_STATE(NP) = NONEXISTENT
 
       DES_POS_NEW(NP,:) = ZERO
       DES_VEL_NEW(NP,:) = ZERO

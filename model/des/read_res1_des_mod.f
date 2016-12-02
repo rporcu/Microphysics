@@ -452,7 +452,6 @@
 
       use discretelement, only: DES_POS_NEW
       use discretelement, only: PIP
-      use functions, only: SET_NORMAL
 
       implicit none
 
@@ -504,7 +503,7 @@
          lBuf = (LC1-1)*lDIMN+1
          DES_POS_NEW(LC1,1:lDIMN) = dProcBuf(lBuf:lBuf+lDIMN-1)
          lBuf = lBuf + lDIMN
-         CALL SET_NORMAL(LC1)
+         PARTICLE_STATE(LC1) = NORMAL_PARTICLE
       ENDDO
 
       IF(allocated(dRootBuf)) deallocate(dRootBuf)

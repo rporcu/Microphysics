@@ -51,7 +51,6 @@
          use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
          use discretelement, only: rot_acc_old, des_usr_var_size
          use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
-         use functions, only: set_nonexistent
          use param1, only: zero
 
       IMPLICIT NONE
@@ -76,7 +75,7 @@
 
 ! Particle state flag
       DO II = LB, UB
-         call set_nonexistent(II)
+         particle_state(II) = nonexistent
       ENDDO
       NEIGHBOR_INDEX(:) = 0
 

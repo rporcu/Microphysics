@@ -52,7 +52,7 @@
          pip = pip + 1
 
          call particle_grow(pip)
-         call set_normal(pip)
+         particle_state(pip) = normal_particle
 
          des_pos_new(pip,:) = lPos*1.0d-2 + lOffset
          des_vel_new(pip,:) = lVel*1.0d-2

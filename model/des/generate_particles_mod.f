@@ -110,7 +110,7 @@
 
 ! to access random number generator subroutines
       use randomno
-      use functions, only: SET_NORMAL, fluid_at, FUNIJK
+      use functions, only: fluid_at, FUNIJK
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -126,7 +126,7 @@
       use desgrid, only: IofPOS, JofPOS, KofPOS
       use toleranc, only: compare
 
-      use discretelement, only: max_pip, max_radius, xe, yn, zt
+      use discretelement, only: max_pip, max_radius, xe, yn, zt, particle_state, normal_particle
       use error_manager
       use param, only: dim_m
       use param, only: dimension_i, dimension_j, dimension_k
@@ -296,7 +296,7 @@
          CALL PARTICLE_GROW(PIP)
          MAX_PIP = max(PIP,MAX_PIP)
 
-         CALL SET_NORMAL(PIP)
+         PARTICLE_STATE(PIP) = NORMAL_PARTICLE
 
          VEL(1) = IC_U_s(ICV,M)
          VEL(2) = IC_V_s(ICV,M)

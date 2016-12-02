@@ -305,11 +305,11 @@
 ! DEM particles are converted to ghost particles. This action does not
 ! change the number of particles.
             if (entering_particle==particle_state(lcurpar)) then
-               call set_entering_ghost(lcurpar)
+               particle_state(lcurpar) = entering_ghost
             elseif (exiting_particle==particle_state(lcurpar)) then
-               call set_exiting_ghost(lcurpar)
+               particle_state(lcurpar) = exiting_ghost
             else
-               call set_ghost(lcurpar)
+               particle_state(lcurpar) = normal_ghost
             endif
             ighost_cnt = ighost_cnt + 1
 

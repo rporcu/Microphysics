@@ -52,8 +52,8 @@
                END SELECT
 ! The particle is still inside the domain
                IF(DIST > DES_RADIUS(NP)) THEN
-                  IF(ENTERING_PARTICLE==PARTICLE_STATE(NP)) CALL SET_NORMAL(NP)
-                  IF(ENTERING_GHOST==PARTICLE_STATE(NP)) CALL SET_GHOST(NP)
+                  IF(ENTERING_PARTICLE==PARTICLE_STATE(NP)) PARTICLE_STATE(NP) = NORMAL_PARTICLE
+                  IF(ENTERING_GHOST==PARTICLE_STATE(NP)) PARTICLE_STATE(NP) = NORMAL_GHOST
                ENDIF
             ENDDO
          ENDDO
@@ -294,9 +294,9 @@
 
 ! The particle exists and is entering, not exiting nor a ghost particle
       IF (NORMAL_GHOST==PARTICLE_STATE(lNP)) THEN
-         CALL SET_ENTERING_GHOST(lNP)
+         PARTICLE_STATE(lNP) = ENTERING_GHOST
       ELSE
-         CALL SET_ENTERING(lNP)
+         PARTICLE_STATE(lNP) = ENTERING_PARTICLE
       ENDIF
 
 ! Set the initial position values based on mass inlet class

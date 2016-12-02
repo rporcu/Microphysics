@@ -90,7 +90,7 @@
 
          pip = pip+1
          call particle_grow(pip)
-         call set_normal(pip)
+         particle_state(pip) = normal_particle
 
          call random_number(ru1)
          call random_number(ru2)

@@ -24,7 +24,7 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, &
          des_pos_new, des_vel_new, fc, interp_scheme
-      use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent
+      use functions     , only: funijk, fluid_at,ip1,jp1,kp1
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use desmpi
 

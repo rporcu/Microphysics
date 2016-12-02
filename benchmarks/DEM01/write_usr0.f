@@ -100,9 +100,6 @@
       yLen = dg_yEnd - dg_yStart - D_p0(1)
       zLen = dg_zEnd - dg_zStart - D_p0(1)
 
-
- 5555 format('PE:',I2,1x,A,':',3(2x,es13.6))
-
       pip = 0
       fail = 0
       seed_lp: do while(pip < pCount)
@@ -130,7 +127,7 @@
 
          pip = pip+1
          call particle_grow(pip)
-         call set_normal(pip)
+         particle_state(pip) = normal_particle
 
          call random_number(ru1)
          call random_number(ru2)

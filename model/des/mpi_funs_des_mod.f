@@ -247,12 +247,11 @@
       use discretelement, only: dg_pic, pijk
 
       use discretelement, only: iGHOST_UPDATED
-      use functions, only: SET_NONEXISTENT
       use desmpi, only: iRECVINDICES
       use desmpi, only: iEXCHFLAG
 
       use param1, only: ZERO
-      use discretelement, only: dimn
+      use discretelement, only: dimn, nonexistent, particle_state
 
       implicit none
 
@@ -270,7 +269,7 @@
                if(ighost_updated(lcurpar)) cycle
                pip = pip - 1
                ighost_cnt = ighost_cnt-1
-               call set_nonexistent(lcurpar)
+               particle_state(lcurpar) = nonexistent
                fc(lcurpar,:) = 0.0
                des_pos_new(lcurpar,:)=0
                pijk(lcurpar,:) = -10

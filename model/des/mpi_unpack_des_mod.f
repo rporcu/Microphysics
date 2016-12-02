@@ -7,8 +7,6 @@
 !----------------------------------------------------------------------!
       MODULE MPI_UNPACK_DES
 
-         use functions, only: set_exiting_ghost
-
       PRIVATE
       PUBLIC :: DESMPI_UNPACK_PARCROSS, DESMPI_UNPACK_GHOSTPAR
 
@@ -73,8 +71,6 @@
 ! Dimension of particle spatial arrays.
       use discretelement, only: DIMN
 
-      use functions, only: set_ghost
-
       IMPLICIT NONE
 
 ! Dummy arguments:
@@ -138,7 +134,7 @@
             call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
 ! 9) Exiting particle flag
             call unpack_dbuf(lbuf,tmp,pface)
-            if (tmp) call set_exiting_ghost(llocpar)
+            if (tmp) particle_state(llocpar) = exiting_ghost
 
 
 ! Calculate the volume of the ghost particle.
@@ -172,7 +168,7 @@
                ispot = ispot + 1
             enddo
 ! Set the flags for the ghost particle and store the local variables.
-            call set_ghost(ispot)
+            particle_state(ispot) = normal_ghost
             iglobal_id(ispot)  = lparid
             dg_pijk(ispot) = lparijk
             dg_pijkprv(ispot) = lprvijk
@@ -188,7 +184,7 @@
             call unpack_dbuf(lbuf,omega_new(ispot,1:dimn),pface)
 !  9) Exiting particle flag
             call unpack_dbuf(lbuf,tmp,pface)
-            if (tmp) call set_exiting_ghost(ispot)
+            if (tmp) particle_state(ispot) = exiting_ghost
 ! 11) User varaible
             IF(DES_USR_VAR_SIZE > 0)&
                call unpack_dbuf(lbuf,des_usr_var(ispot,:),pface)
@@ -264,7 +260,6 @@
 ! Module Procedures:
 !---------------------------------------------------------------------//
       use des_allocate
-      use functions, only: SET_ENTERING, SET_EXITING, SET_NORMAL
       use functions, only: funijk
 
       implicit none
@@ -323,7 +318,7 @@
          'Proc: ', I9,/3x,'Global Particle ID: ',I12,/1x,72('*'))
 
 ! convert the local particle from ghost to existing and update its position
-         call set_normal(llocpar)
+         particle_state(llocpar) = normal_particle
          dg_pijk(llocpar) = lparijk
          dg_pijkprv(llocpar) = lprvijk
 ! 4) Radius
@@ -337,10 +332,10 @@
             pijk(llocpar,3))
 ! 10) Entering particle flag.
          call unpack_dbuf(lbuf,tmp,pface)
-         if (tmp) CALL SET_ENTERING(llocpar)
+         if (tmp) PARTICLE_STATE(llocpar) = ENTERING_PARTICLE
 ! 11) Exiting particle flag.
          call unpack_dbuf(lbuf,tmp,pface)
-         if (tmp) CALL SET_EXITING(llocpar)
+         if (tmp) PARTICLE_STATE(llocpar) = EXITING_PARTICLE
 ! 12) Density
          call unpack_dbuf(lbuf,ro_sol(llocpar),pface)
 ! 13) Volume
