@@ -38,9 +38,9 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 0.20  ! IMAX passed as argument 
+  XLENGTH = 0.20  ! IMAX passed as argument
   YLENGTH = 0.01  ! JMAX passed as argument
-  ZLENGTH = 1.00  NO_K = .T.
+  ZLENGTH = 1.00    KMAX = 1
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
@@ -56,17 +56,20 @@
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 
-  IC_X_w(1) =   0.00    ! (m)   
-  IC_X_e(1) =   0.20    ! (m)  
+  IC_X_w(1) =   0.00    ! (m)
+  IC_X_e(1) =   0.20    ! (m)
   IC_Y_s(1) =   0.00    ! (m)
-  IC_Y_n(1) =   0.01    ! (m)  
+  IC_Y_n(1) =   0.01    ! (m)
+  IC_Z_b(1) =   0.00    ! (m)
+  IC_Z_t(1) =   1.00    ! (m)
 
-  IC_EP_g(1) =  1.0   
+  IC_EP_g(1) =  1.0
 
   IC_P_g(1) = 101.325d3 ! (Pa)
 
   IC_U_g(1) =  10.0     ! (m/sec)
   IC_V_g(1) =   0.0     ! (m/sec)
+  IC_W_g(1) =   0.0     ! (m/sec)
 
 
 #_______________________________________________________________________
@@ -80,31 +83,35 @@
 
   DELP_X = 240.0
 
- 
-! Bottom wall: No-slip
+! Top and bottom walls are no-slip
 !---------------------------------------------------------------------//
-  BC_X_w(1) =   0.0 	
-  BC_X_e(1) =   0.2
-  BC_Y_s(1) =   0.0	
-  BC_Y_n(1) =   0.0
+  BC_X_w(1:2) =   0.00     0.00  ! (m)
+  BC_X_e(1:2) =   0.20     0.20  ! (m)
+  BC_Y_s(1:2) =   0.00     0.01  ! (m)
+  BC_Y_n(1:2) =   0.00     0.01  ! (m)
+  BC_Z_b(1:2) =   0.00     0.00  ! (m)
+  BC_Z_t(1:2) =   1.00     1.00  ! (m)
 
-  BC_Type(1) = 'NSW'
+  BC_Type(1:2) = 'NSW'    'NSW'
 
- 
-! Top wall: No-slip
+
+! Front and back walls are free-slip
 !---------------------------------------------------------------------//
-  BC_X_w(2)   = 0.0 	
-  BC_X_e(2)   = 0.2
-  BC_Y_s(2)   = 0.01	
-  BC_Y_n(2)   = 0.01
-  BC_Type(2)  = 'NSW'
+  BC_X_w(3:4) =   0.00    0.00  ! (m)
+  BC_X_e(3:4) =   0.20    0.20  ! (m)
+  BC_Y_s(3:4) =   0.00    0.00  ! (m)
+  BC_Y_n(3:4) =   0.01    0.01  ! (m)
+  BC_Z_b(3:4) =   0.00    1.00  ! (m)
+  BC_Z_t(3:4) =   0.00    1.00  ! (m)
+
+  BC_Type(3:4) = 'FSW'    'FSW'
 
 
 #_______________________________________________________________________
 # OUTPUT CONTROL SECTION
- 
+
   RES_DT =   1.0
 
-  FULL_LOG = .T.              
+  FULL_LOG = .T.
 
   RESID_STRING  = 'P0', 'U0', 'V0'

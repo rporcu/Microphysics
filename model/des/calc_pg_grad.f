@@ -21,8 +21,6 @@
       use discretelement, only: P_FORCE
 ! Particle drag force
       use discretelement, only: DRAG_FC
-! Flag for 3D simulatoins.
-      use geometry, only: DO_K
 ! Loop bounds for fluid grid
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flags for cyclic BC with pressure drop
@@ -81,9 +79,6 @@
       ENDDO
 
       IF(DES_EXPLICITLY_COUPLED) THEN
-
-! Loop bounds for interpolation.
-         LP_BND = merge(27,9,DO_K)
 
 ! Calculate the gas phase forces acting on each particle.
 

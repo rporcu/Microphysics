@@ -177,7 +177,7 @@
 ! Modules
 !-----------------------------------------------
       USE param1   , only: undefined_i
-      USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag,no_k
+      USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: wall_at, cyclic_at, fluid_at
@@ -210,10 +210,7 @@
 ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
-                     IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) &
-                           FLAG(iminus(i,j,k),j,k,2) = 2000
-                     ELSEIF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
+                     IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
                         IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) &
                            FLAG(iminus(i,j,k),j,k,2) = 2000
                      ENDIF
@@ -221,10 +218,7 @@
                ENDIF
                IF (J == JMAX2) THEN
                   IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3)) THEN
-                     IF (NO_K) THEN
-                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) &
-                           FLAG(i,jminus(i,j,k),k,3) = 2000
-                     ELSE IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
+                     IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
                         IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) &
                            FLAG(i,jminus(i,j,k),k,3) = 2000
                      ENDIF

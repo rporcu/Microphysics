@@ -14,7 +14,6 @@
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: fluid_at, funijk
       USE functions, only: iminus, jminus, kminus
-      USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
 
       implicit none
@@ -65,17 +64,15 @@
               Flux_N(i,jminus(i,j,k),k) = ROP_N(i,jminus(i,j,k),k)*AXZ*V(i,jminus(i,j,k),k)
             ENDIF
 
-            IF (DO_K) THEN
 
             ! Top face (i, j, k+1/2)
-               Flux_T(i,j,k) = ROP_T(i,j,k)*AXY*W(i,j,k)
+            Flux_T(i,j,k) = ROP_T(i,j,k)*AXY*W(i,j,k)
 
             ! Bottom face (i, j, k-1/2)
-               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) then
-                 Flux_T(i,j,kminus(i,j,k)) = ROP_T(i,j,kminus(i,j,k))*AXY*W(i,j,kminus(i,j,k))
-               ENDIF
+            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) then
+               Flux_T(i,j,kminus(i,j,k)) = ROP_T(i,j,kminus(i,j,k))*AXY*W(i,j,kminus(i,j,k))
+            ENDIF
 
-            ENDIF   ! end if do_k
          ENDIF   ! end if fluid_at
       ENDDO
       ENDDO

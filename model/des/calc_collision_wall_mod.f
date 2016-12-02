@@ -19,7 +19,6 @@
       USE discretelement, only: kn_w, kt_w, mew_w, max_pip, dtsolid, dg_pijk, des_radius
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE functions, only: is_normal
-      USE geometry, only: no_k
       USE param1, only: small_number, zero
       USE stl, only: facets_at_dg, vertex, norm_face
       USE stl_functions_des, only: closestptpointtriangle
@@ -71,7 +70,7 @@
 
 ! Skip this routine if the system is fully periodic.
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
-         (DES_PERIODIC_WALLS_Z .OR. NO_K)) RETURN
+         (DES_PERIODIC_WALLS_Z)) RETURN
 
       DO LL = 1, MAX_PIP
 

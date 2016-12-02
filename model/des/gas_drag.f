@@ -22,8 +22,6 @@
       use discretelement, only: DRAG_BM
 ! Volume of X-momentum cell
       use geometry, only: VOL
-! Flag to calculate Z direction
-      use geometry, only: DO_K
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -74,7 +72,7 @@
 ! Average the interpoalted drag force from the cell corners to the cell face.
       IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG)THEN
 
-         AVG_FACTOR = merge(0.25d0, 0.5d0, DO_K)
+         AVG_FACTOR = 0.25d0
 
         DO K = kstart3, kend3
         DO J = jstart3, jend3
@@ -91,12 +89,10 @@
                tmp_A = -AVG_FACTOR*(DRAG_AM(i,j,k) + DRAG_AM(I, J-1, K))
                tmp_B = -AVG_FACTOR*(DRAG_BM(i,j,k,1) + DRAG_BM(I, J-1, K,1))
 
-               IF(DO_K) THEN
-                  tmp_A = tmp_A - AVG_FACTOR*                             &
-                     (DRAG_AM(I, J, K-1) + DRAG_AM(I, J-1, K-1))
-                  tmp_B = tmp_B - AVG_FACTOR*                             &
-                     (DRAG_BM(I, J, K-1,1) + DRAG_BM(I, J-1, K-1,1))
-               ENDIF
+               tmp_A = tmp_A - AVG_FACTOR*                             &
+                  (DRAG_AM(I, J, K-1) + DRAG_AM(I, J-1, K-1))
+               tmp_B = tmp_B - AVG_FACTOR*                             &
+                  (DRAG_BM(I, J, K-1,1) + DRAG_BM(I, J-1, K-1,1))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
                B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
@@ -154,8 +150,6 @@
       use discretelement, only: DRAG_BM
 ! Volume of Y-momentum cell
       use geometry, only: VOL
-! Flag to calculate Z direction
-      use geometry, only: DO_K
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -203,7 +197,7 @@
 
       IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG)THEN
 
-         AVG_FACTOR = merge(0.25d0, 0.5d0, DO_K)
+         AVG_FACTOR = 0.25d0
 
         DO K = kstart3, kend3
         DO J = jstart3, jend3
@@ -219,13 +213,10 @@
                tmp_A = -AVG_FACTOR*(DRAG_AM(i,j,k) + DRAG_AM(I-1,J,K))
                tmp_B = -AVG_FACTOR*(DRAG_BM(i,j,k,2) + DRAG_BM(I-1,J,K,2))
 
-               IF(DO_K) THEN
-
-                  tmp_A = tmp_A - AVG_FACTOR*                             &
-                     (DRAG_AM(I,J,K-1) + DRAG_AM(I-1,J,K-1))
-                  tmp_B = tmp_B - AVG_FACTOR*                             &
-                     (DRAG_BM(I,J,K-1,2) + DRAG_BM(I-1,J,K-1,2))
-               ENDIF
+               tmp_A = tmp_A - AVG_FACTOR*                             &
+                  (DRAG_AM(I,J,K-1) + DRAG_AM(I-1,J,K-1))
+               tmp_B = tmp_B - AVG_FACTOR*                             &
+                  (DRAG_BM(I,J,K-1,2) + DRAG_BM(I-1,J,K-1,2))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
                B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL

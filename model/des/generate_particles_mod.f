@@ -116,7 +116,7 @@
       use desgrid, only: dg_xend, dg_yend, dg_zend
 
 ! direction wise spans of the domain and grid spacing in each direction
-      use geometry, only: no_k, do_k, dz
+      use geometry, only: dz
       use geometry, only: imin2, jmin2, kmin2
       use geometry, only: imax2, jmax2, kmax2
 
@@ -194,7 +194,6 @@
       IC_START(3)=IC_Z_B(ICV);   IC_END(3)=IC_Z_T(ICV)
 
       DOML = IC_END-IC_START
-      IF(NO_K) DOML(3)=DZ
 
 ! Volume of the IC region
       DOM_VOL = DOML(1)*DOML(2)*DOML(3)
@@ -217,19 +216,11 @@
 ! Attempt to seed particle throughout the IC region
       FIT_FAILED=.FALSE.
       IF(IC_DES_FIT_TO_REGION(ICV)) THEN
-         IF(NO_K) THEN
-            lDEL = (DOML(1)-ADJ_DIA)*(DOML(2)-ADJ_DIA)
-            lDEL = (lDEL/dble(tPARTS))**(1.0/2.0)
-            SEED_X = max(1,ceiling((DOML(1)-ADJ_DIA)/lDEL))
-            SEED_Y = max(1,ceiling((DOML(2)-ADJ_DIA)/lDEL))
-            SEED_Z = 1
-         ELSE
-            lDEL = (DOML(1)-ADJ_DIA)*(DOML(2)-ADJ_DIA)*(DOML(3)-ADJ_DIA)
-            lDEL = (lDEL/dble(tPARTS))**(1.0/3.0)
-            SEED_X = max(1,ceiling((DOML(1)-ADJ_DIA)/lDEL))
-            SEED_Y = max(1,ceiling((DOML(2)-ADJ_DIA)/lDEL))
-            SEED_Z = max(1,ceiling((DOML(3)-ADJ_DIA)/lDEL))
-         ENDIF
+         lDEL = (DOML(1)-ADJ_DIA)*(DOML(2)-ADJ_DIA)*(DOML(3)-ADJ_DIA)
+         lDEL = (lDEL/dble(tPARTS))**(1.0/3.0)
+         SEED_X = max(1,ceiling((DOML(1)-ADJ_DIA)/lDEL))
+         SEED_Y = max(1,ceiling((DOML(2)-ADJ_DIA)/lDEL))
+         SEED_Z = max(1,ceiling((DOML(3)-ADJ_DIA)/lDEL))
          FIT_FAILED=(dble(SEED_X*SEED_Y*SEED_Z) < tPARTS)
       ENDIF
 
@@ -242,11 +233,7 @@
 
       lDX = DOML(1)/dble(SEED_X)
       lDY = DOML(2)/dble(SEED_Y)
-      IF(DO_K) THEN
-         lDZ = DOML(3)/dble(SEED_Z)
-      ELSE
-         lDZ = 0.0d0
-      ENDIF
+      lDZ = DOML(3)/dble(SEED_Z)
 
       xINIT = IC_START(1)+HALF*lDX
       yINIT = IC_START(2)+HALF*lDY
@@ -263,10 +250,8 @@
 
       KK_LP: DO KK=1, SEED_Z
          POS(3) = ZINIT + (KK-1)*lDZ
-         IF(DO_K) THEN
-            IF(compare(POS(3),dg_zstart) .OR. compare(POS(3),dg_zend)) &
-               POS(3) = POS(3) + SMALL_NUMBER
-         ENDIF
+         IF(compare(POS(3),dg_zstart) .OR. compare(POS(3),dg_zend)) &
+            POS(3) = POS(3) + SMALL_NUMBER
 
       II_LP: DO II=1, SEED_X
          POS(1) = xINIT + (II-1)*lDX
@@ -292,7 +277,7 @@
 
 ! Bin the parcel to the fuild grid.
          K=1
-         IF(DO_K) CALL PIC_SEARCH(K, POS(3), ZT, DIMENSION_K, KMIN2, KMAX2)
+         CALL PIC_SEARCH(K, POS(3), ZT, DIMENSION_K, KMIN2, KMAX2)
          CALL PIC_SEARCH(J, POS(2), YN, DIMENSION_J, JMIN2, JMAX2)
          CALL PIC_SEARCH(I, POS(1), XE, DIMENSION_I, IMIN2, IMAX2)
 
@@ -316,8 +301,6 @@
          VEL(1) = IC_U_s(ICV,M)
          VEL(2) = IC_V_s(ICV,M)
          VEL(3) = IC_W_s(ICV,M)
-         IF(NO_K) VEL(3) = 0.0d0
-
 
          DES_POS_NEW(PIP,:) = POS(:)
          DES_VEL_NEW(PIP,:) = VEL(:)

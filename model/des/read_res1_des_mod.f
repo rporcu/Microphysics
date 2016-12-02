@@ -228,7 +228,6 @@
 
       use discretelement, only: PIP
       use discretelement, only: DES_POS_NEW
-      use geometry, only: NO_K
       use compar, only: numPEs
 
       USE in_binary_512
@@ -247,7 +246,7 @@
 
       CALL INIT_ERR_MSG("READ_PAR_POS")
 
-      lDIMN = merge(2,3,NO_K)
+      lDIMN = 3
 
 
 ! All process read positions for distributed IO restarts.
@@ -262,7 +261,7 @@
 
 ! Only the IO proccess reads positions.
       IF(myPE == PE_IO) THEN
-         DO LC1=1, merge(2,3,NO_K)
+         DO LC1=1, 3
             CALL IN_BIN_512(RDES_UNIT, dPAR_POS(:,LC1),                &
                pIN_COUNT, lNEXT_REC)
          ENDDO
@@ -315,7 +314,6 @@
       use geometry, only: IMIN1, IMAX1
       use geometry, only: JMIN1, JMAX1
       use geometry, only: KMIN1, KMAX1
-      use geometry, only: NO_K, DO_K
       use compar, only: numPEs
       use compar, only: ISTART1_ALL, IEND1_ALL
       use compar, only: JSTART1_ALL, JEND1_ALL
@@ -343,7 +341,7 @@
 ! Initialize the error flag.
       IER = 0
 
-      lDIMN = merge(2, 3, NO_K)
+      lDIMN = 3
 
 ! set the domain range for each processor
       DO lPROC= 0, NUMPEs-1
@@ -364,9 +362,9 @@
             lymin(lproc) = yn(jstart1_all(lproc)-2)
          IF(jend1_all(lproc).eq.jmax1)  &
             lymax(lproc) = yn(jend1_all(lproc)+1)
-         IF(kstart1_all(lproc).eq.kmin1 .AND. DO_K) &
+         IF(kstart1_all(lproc).eq.kmin1) &
             lzmin(lproc) = zt(kstart1_all(lproc)-2)
-         IF(kend1_all(lproc).eq.kmax1 .AND. DO_K) &
+         IF(kend1_all(lproc).eq.kmax1) &
             lzmax(lproc) = zt(kend1_all(lproc)+1)
       ENDDO
 
@@ -382,17 +380,11 @@
                   dPAR_POS(LC1,1) <  lxmax(lproc) .AND. &
                   dPAR_POS(LC1,2) >= lymin(lproc) .AND. &
                   dPAR_POS(LC1,2) <  lymax(lproc)) THEN
-                  IF(NO_K)THEN
+                  IF(dPAR_POS(LC1,3) >= lzmin(lproc) .AND. &
+                     dPAR_POS(LC1,3) <  lzmax(lproc)) THEN
                      lPAR_CNT(lPROC) = lPAR_CNT(lPROC) + 1
                      pRestartMap(LC1) = lproc
                      EXIT
-                  ELSE
-                     IF(dPAR_POS(LC1,3) >= lzmin(lproc) .AND. &
-                        dPAR_POS(LC1,3) <  lzmax(lproc)) THEN
-                        lPAR_CNT(lPROC) = lPAR_CNT(lPROC) + 1
-                        pRestartMap(LC1) = lproc
-                        EXIT
-                     ENDIF
                   ENDIF
                ENDIF
             ENDDO  ! Loop over processes
@@ -400,13 +392,8 @@
                IER(myPE) = -1
                WRITE(ERR_MSG,1000) trim(iVal(LC1))
                CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-               IF(NO_K) THEN
-                  WRITE(ERR_MSG,1001) dPAR_POS(LC1,1:2)
-                  CALL FLUSH_ERR_MSG(HEADER=.FALSE.)
-               ELSE
-                  WRITE(ERR_MSG,1002) dPAR_POS(LC1,1:3)
-                  CALL FLUSH_ERR_MSG(HEADER=.FALSE.)
-               ENDIF
+               WRITE(ERR_MSG,1002) dPAR_POS(LC1,1:3)
+               CALL FLUSH_ERR_MSG(HEADER=.FALSE.)
             ENDIF
          ENDDO  ! Loop over particles
       ENDIF
@@ -467,7 +454,6 @@
       use discretelement, only: DES_POS_NEW
       use discretelement, only: PIP
       use functions, only: SET_NORMAL
-      use geometry, only: NO_K
 
       implicit none
 
@@ -478,7 +464,7 @@
 ! Loop counters.
       INTEGER :: LC1, lPROC, lBuf
 
-      lDIMN = merge(2,3,NO_K)
+      lDIMN = 3
 
 ! Set up the recv count and allocate the local process buffer.
       iSCR_RECVCNT = PIP*lDIMN

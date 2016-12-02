@@ -30,7 +30,7 @@
       USE toleranc
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE utilities, ONLY: check_vel_bound
- 
+
       IMPLICIT NONE
 
       DOUBLE PRECISION, INTENT(IN   ) :: u_g&
@@ -82,7 +82,7 @@
 ! add momentum equation residuals
       SUM = SUM + RESID(RESID_U)
       SUM = SUM + RESID(RESID_V)
-      IF (DO_K) SUM = SUM + RESID(RESID_W)
+      SUM = SUM + RESID(RESID_W)
 
 
 ! find the variable with maximum residual

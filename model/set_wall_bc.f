@@ -156,7 +156,6 @@
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       USE functions, only: ns_wall_at, wall_at
-      USE geometry , only: do_k
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -261,31 +260,29 @@
                   ENDIF
 
 
-                  IF (DO_K) THEN
 ! Fluid cell at Bottom
-                     IF (.NOT.wall_at(i,j,kminus(i,j,k))) THEN
+                  IF (.NOT.wall_at(i,j,kminus(i,j,k))) THEN
 ! Wall cell at East
-                        IF (wall_at(iplus(i,j,k),j,k)) THEN
-                           U_G(I,J,K) = SIGN0*U_G(i,j,kminus(i,j,k))
-                        ENDIF
-! Wall cell at North
-                        IF (wall_at(i,jplus(i,j,k),k)) THEN
-                           V_G(I,J,K) = SIGN0*V_G(i,j,kminus(i,j,k))
-                        ENDIF
+                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                        U_G(I,J,K) = SIGN0*U_G(i,j,kminus(i,j,k))
                      ENDIF
+! Wall cell at North
+                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                        V_G(I,J,K) = SIGN0*V_G(i,j,kminus(i,j,k))
+                     ENDIF
+                  ENDIF
 
 ! Fluid cell at Top
-                     IF (.NOT.wall_at(i,j,kplus(i,j,k))) THEN
+                  IF (.NOT.wall_at(i,j,kplus(i,j,k))) THEN
 ! Wall cell at East
-                        IF (wall_at(iplus(i,j,k),j,k)) THEN
-                           U_G(I,J,K) = SIGN0*U_G(i,j,kplus(i,j,k))
-                        ENDIF
-! Wall cell at North
-                        IF (wall_at(i,jplus(i,j,k),k)) THEN
-                           V_G(I,J,K) = SIGN0*V_G(i,j,kplus(i,j,k))
-                        ENDIF
+                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                        U_G(I,J,K) = SIGN0*U_G(i,j,kplus(i,j,k))
                      ENDIF
-                  ENDIF   ! end if (do_k)
+! Wall cell at North
+                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                        V_G(I,J,K) = SIGN0*V_G(i,j,kplus(i,j,k))
+                     ENDIF
+                  ENDIF
 
                ENDIF   ! end if (wall_at(i,j,k))
             ENDDO   ! end do loop (i = i1, i2)

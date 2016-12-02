@@ -56,39 +56,33 @@
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
-         IF (DO_K) THEN
-            IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
-               IF (CYCLIC_Z_PD) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
-               ELSEIF (CYCLIC_Z) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cycl
-               ELSE
-                  FLAG(i,j,k,0) = 1000 + icbc_no_s
-               ENDIF
+         IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
+            IF (CYCLIC_Z_PD) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+            ELSEIF (CYCLIC_Z) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cycl
+            ELSE
+               FLAG(i,j,k,0) = 1000 + icbc_no_s
             ENDIF
          ENDIF
 
-         IF(DO_J)THEN
-            IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
-               IF (CYCLIC_Y_PD) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
-               ELSEIF (CYCLIC_Y) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cycl
-               ELSE
-                  FLAG(i,j,k,0) = 1000 + icbc_no_s
-               ENDIF
+         IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
+            IF (CYCLIC_Y_PD) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+            ELSEIF (CYCLIC_Y) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cycl
+            ELSE
+               FLAG(i,j,k,0) = 1000 + icbc_no_s
             ENDIF
          ENDIF
 
-         IF(DO_I)THEN
-            IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
-               IF (CYCLIC_X_PD) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cyclp
-               ELSEIF (CYCLIC_X) THEN
-                  FLAG(i,j,k,0) = 1000 + icbc_cycl
-               ELSE
-                  FLAG(i,j,k,0) = 1000 + icbc_no_s
-               ENDIF
+         IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
+            IF (CYCLIC_X_PD) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+            ELSEIF (CYCLIC_X) THEN
+               FLAG(i,j,k,0) = 1000 + icbc_cycl
+            ELSE
+               FLAG(i,j,k,0) = 1000 + icbc_no_s
             ENDIF
          ENDIF
 ! corner cells are wall cells

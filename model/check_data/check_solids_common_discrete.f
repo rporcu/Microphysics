@@ -143,7 +143,6 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE geometry, only: NO_I, NO_J
       USE geometry, only: ZLENGTH
 ! Flag: Use DES E-L model
       USE discretelement, only: DES_CONTINUUM_COUPLED
@@ -162,17 +161,6 @@
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
-
-
-! Check dimension. This is redundant with check_data_03.
-      IF(NO_I .OR. NO_J) THEN
-         WRITE(ERR_MSG, 1200)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 1200 FORMAT('Error 1200: Illegal geometry for DEM. 2D ',        &
-         'simulations are',/'restricted to the XY plane. Please ',     &
-         'correct the mfix.dat file.')
 
 
       IF(DES_CONTINUUM_COUPLED)THEN

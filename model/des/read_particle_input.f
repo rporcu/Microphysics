@@ -16,7 +16,6 @@
       use error_manager
       use functions
       use funits
-      use geometry, only: NO_K
       use mpi_init_des, only: des_scatter_particle
 
       implicit none
@@ -44,7 +43,7 @@
 
 
       IOS = 0
-      RDMN = merge(2,3,NO_K)
+      RDMN = 3
 
 ! Setup the file name based on distributed or serial IO.
       IF(bDIST_IO) THEN

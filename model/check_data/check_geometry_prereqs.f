@@ -14,15 +14,13 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Domain partitions in various directions.
-      use geometry, only: IMAX, NO_I
-      use geometry, only: JMAX, NO_J
-      use geometry, only: KMAX, NO_K, DZ, ZLENGTH
+      use geometry, only: IMAX
+      use geometry, only: JMAX
+      use geometry, only: KMAX, DZ, ZLENGTH
 
 ! Runtime flag specifying 2D simulations
-!      use geometry, only: NO_K
 
       use geometry, only: COORDINATES
-!      use geometry, only: COORDINATES
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -39,30 +37,13 @@
 
 ! Verify that the domain decomposition was specified.
       IF(IMAX == UNDEFINED_I .OR. JMAX == UNDEFINED_I .OR.             &
-         (.NOT.NO_K .AND. KMAX == UNDEFINED_I) ) THEN
+         KMAX == UNDEFINED_I ) THEN
          WRITE(ERR_MSG,1000)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1000 FORMAT('Error 1000: IMAX or JMAX or KMAX not specified in ',     &
           'mfix.dat')
-
-! If no variation in a direction is considered, the number of cells in
-! that direction should be 1
-      IF(NO_I) THEN
-         WRITE(ERR_MSG, 1100) 'I','I','east and west'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
-      IF(NO_J) THEN
-         WRITE(ERR_MSG, 1100) 'J','J','north and south'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 1100 FORMAT('Error 1100: Illegal geometry: NO_',A1,' is disabled. ',  &
-         'The same functionality',/'is achieved with one cell (',A1,   &
-         'MAX=1) and making the ',A,' walls',/'free-slip. Please ',    &
-         'correct the mfix.dat file.')
 
 
       SELECT CASE(trim(COORDINATES))
@@ -77,25 +58,6 @@
          'correct the ',/'mfix.dat file.')
 
       END SELECT
-
-
-      IF(NO_K) THEN
-         IF(KMAX == UNDEFINED_I) THEN
-            KMAX = 1
-         ELSEIF(KMAX /= 1) THEN
-            WRITE(ERR_MSG, 1110) 'KMAX','NO_K'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
- 1110 FORMAT('Error 1110: Illegal geometry: ',A,' must remain ',       &
-         'UNDEFINED_I or 1 when',/A,' is TRUE. Please correct the ',   &
-         'mfix.dat file.')
-
-         IF(ZLENGTH==UNDEFINED) THEN
-            ZLENGTH = ONE
-            DZ = ONE
-         ENDIF
-      ENDIF
 
       CALL FINL_ERR_MSG
 

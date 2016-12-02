@@ -23,7 +23,6 @@ module iterate_module
       USE fld_const, only: ro_g0
       USE funits   , only: dmp_log, unit_log
       USE geometry , only: cyclic, cyclic_x, cyclic_y, cyclic_z, vol
-      USE geometry , only: do_i, do_j, do_k
       USE leqsol   , only: leq_adjust, max_nit
       USE output   , only: full_log, nlog
       USE param1   , only: small_number, undefined, zero, one
@@ -157,7 +156,7 @@ module iterate_module
          ENDIF   ! if/else(dt==undefined)
       ENDIF   ! if(full_log)
 
-      ! Calculate the face values of densities and mass fluxes 
+      ! Calculate the face values of densities and mass fluxes
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
@@ -284,18 +283,12 @@ module iterate_module
       G12.5, ' Gas Flux=', G12.5)
 
             IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
-               IF (DO_I) THEN
-                 Vavg = VAVG_G(U_G, EP_G, VOL)
-                 IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
-               ENDIF
-               IF (DO_J) THEN
-                 Vavg = VAVG_G(V_G, EP_G, VOL)
-                 IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
-               ENDIF
-               IF (DO_K) THEN
-                 Vavg = VAVG_G(W_G, EP_G, VOL)
-                 IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
-               ENDIF
+               Vavg = VAVG_G(U_G, EP_G, VOL)
+               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
+               Vavg = VAVG_G(V_G, EP_G, VOL)
+               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
+               Vavg = VAVG_G(W_G, EP_G, VOL)
+               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
             ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
 
          ENDIF   ! end IF (MOD(NSTEP,NLOG) == 0)

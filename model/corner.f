@@ -15,7 +15,6 @@
       USE functions, only: fluid_at, cyclic_at, wall_at
       USE param1   , only: max_ncorn
       USE funits   , only: dmp_log, unit_log
-      USE geometry , only: do_k
       use matrix   , only: e, w, s, n, t, b
 
       IMPLICIT NONE
@@ -45,147 +44,117 @@
 !
       do k = kstart3, kend3
          do j = jstart3, jend3
-           do i = istart3, iend3
+            do i = istart3, iend3
 
-         IF (WALL_AT(i,j,k).AND..NOT.CYCLIC_AT(i,j,k)) THEN
+               IF (WALL_AT(i,j,k).AND..NOT.CYCLIC_AT(i,j,k)) THEN
 !----------------------------------------------------------------
-            NUM = 0
-!
-            IF (fluid_at(iminus(i,j,k),j,k)) then
-               NUM = NUM + 1
-               DIR(W) = .TRUE.
-            ELSE
-               DIR(W) = .FALSE.
-            ENDIF
-!
-            IF (fluid_at(iplus(i,j,k),j,k)) then
-               NUM = NUM + 1
-               DIR(E) = .TRUE.
-            ELSE
-               DIR(E) = .FALSE.
-            ENDIF
-!
-            IF (fluid_at(i,jminus(i,j,k),k)) then
-               NUM = NUM + 1
-               DIR(S) = .TRUE.
-            ELSE
-               DIR(S) = .FALSE.
-            ENDIF
-!
-            IF (fluid_at(i,jplus(i,j,k),k)) then
-               NUM = NUM + 1
-               DIR(N) = .TRUE.
-            ELSE
-               DIR(N) = .FALSE.
-            ENDIF
-!
-            IF (fluid_at(i,j,kminus(i,j,k))) then
-               NUM = NUM + 1
-               DIR(B) = .TRUE.
-            ELSE
-               DIR(B) = .FALSE.
-            ENDIF
-!
-            IF (fluid_at(i,j,kplus(i,j,k))) then
-               NUM = NUM + 1
-               DIR(T) = .TRUE.
-            ELSE
-               DIR(T) = .FALSE.
-            ENDIF
-!
-            IF (NUM > 1) THEN
-!
-!
-               NOTCORNER = .TRUE.
-!
+                  NUM = 0
+
+                  IF (fluid_at(iminus(i,j,k),j,k)) then
+                     NUM = NUM + 1
+                     DIR(W) = .TRUE.
+                  ELSE
+                     DIR(W) = .FALSE.
+                  ENDIF
+
+                  IF (fluid_at(iplus(i,j,k),j,k)) then
+                     NUM = NUM + 1
+                     DIR(E) = .TRUE.
+                  ELSE
+                     DIR(E) = .FALSE.
+                  ENDIF
+
+                  IF (fluid_at(i,jminus(i,j,k),k)) then
+                     NUM = NUM + 1
+                     DIR(S) = .TRUE.
+                  ELSE
+                     DIR(S) = .FALSE.
+                  ENDIF
+
+                  IF (fluid_at(i,jplus(i,j,k),k)) then
+                     NUM = NUM + 1
+                     DIR(N) = .TRUE.
+                  ELSE
+                     DIR(N) = .FALSE.
+                  ENDIF
+
+                  IF (fluid_at(i,j,kminus(i,j,k))) then
+                     NUM = NUM + 1
+                     DIR(B) = .TRUE.
+                  ELSE
+                     DIR(B) = .FALSE.
+                  ENDIF
+
+                  IF (fluid_at(i,j,kplus(i,j,k))) then
+                     NUM = NUM + 1
+                     DIR(T) = .TRUE.
+                  ELSE
+                     DIR(T) = .FALSE.
+                  ENDIF
+
+                  IF (NUM > 1) THEN
+
+                     NOTCORNER = .TRUE.
+
 !           check for single cell thick internal walls
-               IF (DIR(W) .AND. DIR(E) .OR. DIR(S) .AND. DIR(N) .OR. DIR(T)&
-                   .AND. DIR(B)) THEN
-!
-                  IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-               ENDIF
-!
+                     IF (DIR(W) .AND. DIR(E) .OR. DIR(S) .AND. DIR(N) .OR. DIR(T)&
+                        .AND. DIR(B)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+
 !           check for corner cells
-!
-               IF (DIR(E)) THEN
-!
+                     IF (DIR(E)) THEN
+                        IF (DIR(N)) THEN
+                           IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                        ENDIF
+                        IF (DIR(S)) THEN
+                           IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                        ENDIF
+                        IF (DIR(T)) THEN
+                           IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                        ENDIF
+                        IF (DIR(B)) THEN
+                           IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                        ENDIF
+                     ENDIF
+
+                  ENDIF
+
+                  IF (DIR(W)) THEN
+                     IF (DIR(N)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+                     IF (DIR(S)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+                     IF (DIR(T)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+                     IF (DIR(B)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+                  ENDIF
+
                   IF (DIR(N)) THEN
-                     IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     IF (DIR(T)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
+                     IF (DIR(B)) THEN
+                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
+                     ENDIF
                   ENDIF
-!
+
                   IF (DIR(S)) THEN
-                     IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                  ENDIF
-!
-                  IF (DO_K) THEN
                      IF (DIR(T)) THEN
                         IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
                      ENDIF
-!
                      IF (DIR(B)) THEN
                         IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
                      ENDIF
                   ENDIF
-!
                ENDIF
-!
-               IF (DIR(W)) THEN
-!
-                  IF (DIR(N)) THEN
-                     IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                  ENDIF
-!
-                  IF (DIR(S)) THEN
-                     IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                  ENDIF
-!
-                  IF (DO_K) THEN
-                     IF (DIR(T)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-!
-                     IF (DIR(B)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-                  ENDIF
-!
-               ENDIF
-!
-               IF (DIR(N)) THEN
-!
-!
-                  IF (DO_K) THEN
-                     IF (DIR(T)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-!
-                     IF (DIR(B)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-                  ENDIF
-!
-               ENDIF
-!
-               IF (DIR(S)) THEN
-!
-!
-                  IF (DO_K) THEN
-                     IF (DIR(T)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-!
-                     IF (DIR(B)) THEN
-                        IF (NOTCORNER) CALL ADDCORN (NOTCORNER, NCORN)
-                     ENDIF
-                  ENDIF
-!
-               ENDIF
-!
-            ENDIF
-!
-         ENDIF
-          end do
-        end do
+            end do
+         end do
       end do
 
       IF (NCORN > 0) THEN

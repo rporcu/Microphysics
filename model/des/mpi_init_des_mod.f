@@ -34,7 +34,6 @@
 
       use particle_filter, only: DES_INTERP_GARG
 
-      use geometry, only: DO_K
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize
@@ -72,13 +71,8 @@
       lfaces = dimn*2
       lmaxlen1 = dg_iend2-dg_istart2+1
       lmaxlen2 = dg_jend2-dg_jstart2+1
-      if (do_K) then
-         lmaxlen1 = max(lmaxlen1,dg_kend2 -dg_kstart2+1)
-         lmaxlen2 = max(lmaxlen2,dg_kend2 -dg_kstart2+1)
-      else
-         lmaxlen1 = max(lmaxlen1,lmaxlen2)
-         lmaxlen2 = 1
-      end if
+      lmaxlen1 = max(lmaxlen1,dg_kend2 -dg_kstart2+1)
+      lmaxlen2 = max(lmaxlen2,dg_kend2 -dg_kstart2+1)
 
 
 ! Note: 10 is added for buffer and is required for send and recv indices
@@ -133,7 +127,6 @@
 ! Purpose          : sets the flags required for interprocessor communication
 !------------------------------------------------------------------------
       subroutine desmpi_setcomm()
-      use geometry, only: NO_K, DO_K
       use geometry, only: xlength, ylength, zlength
 !-----------------------------------------------
       implicit none
@@ -239,7 +232,7 @@
          if(ljend1.eq.dg_jmax1) ljend1 = dg_jmax1+1
       ENDIF
 
-      IF(DO_K .AND. .NOT.DES_PERIODIC_WALLS_Z) THEN
+      IF(.NOT.DES_PERIODIC_WALLS_Z) THEN
          if(lkstart1.eq.dg_kmin1) lkstart1 = dg_kmin1-1
          if(lkend1.eq.dg_kmax1) lkend1 = dg_kmax1+1
       ENDIF
@@ -315,7 +308,6 @@
       irecvindices(1,lface) = lcount - 1
 
 ! for top and bottom
-      if (no_k) return
       lis = listart2
       lie = liend2
       ljs = ljstart2
@@ -364,7 +356,6 @@
 !------------------------------------------------------------------------
       subroutine des_scatter_particle
 
-      use geometry, only: NO_K
       use mpi_comm_des, only: desmpi_scatterv
       use des_allocate, only: particle_grow
       use functions, only: set_normal
@@ -379,7 +370,7 @@
 
       integer :: rdimn
 
-      rdimn = merge(2,3, NO_K)
+      rdimn = 3
 
 ! set the packet size for transfer
       lpacketsize = 2*rdimn + 2
@@ -389,43 +380,24 @@
       lpar_proc(:) =-1
       lproc_parcnt(:) = 0
       if(myPE.eq.pe_io) then
-         if (no_k) then
-            do lcurpar = 1,particles
-               do lproc= 0,numpes-1
-                  if (   dpar_pos(lcurpar,1).ge.xe(istart1_all(lproc)-1) &
-                   .and. dpar_pos(lcurpar,1).lt.xe(iend1_all(lproc))     &
-                   .and. dpar_pos(lcurpar,2).ge.yn(jstart1_all(lproc)-1) &
-                   .and. dpar_pos(lcurpar,2).lt.yn(jend1_all(lproc))) then
-                     lpar_proc(lcurpar) = lproc
-                     lproc_parcnt(lproc) = lproc_parcnt(lproc) + 1
-                     exit
-                  endif
-               enddo
-               if (lpar_proc(lcurpar).eq.-1) then
-                  WRITE(*,500) lcurpar
-                  ! call des_mpi_stop
-               endif
-            enddo
-         else
-            do lcurpar = 1,particles
-               do lproc= 0,numpes-1
-                  if (   dpar_pos(lcurpar,1).ge.xe(istart1_all(lproc)-1) &
-                   .and. dpar_pos(lcurpar,1).lt.xe(iend1_all(lproc))     &
-                   .and. dpar_pos(lcurpar,2).ge.yn(jstart1_all(lproc)-1) &
-                   .and. dpar_pos(lcurpar,2).lt.yn(jend1_all(lproc))     &
-                   .and. dpar_pos(lcurpar,3).ge.zt(kstart1_all(lproc)-1) &
-                   .and. dpar_pos(lcurpar,3).lt.zt(kend1_all(lproc))) then
-                     lpar_proc(lcurpar) = lproc
-                     lproc_parcnt(lproc) = lproc_parcnt(lproc) + 1
-                     exit
-                  end if
-               end do
-               if (lpar_proc(lcurpar).eq.-1) then
-                  WRITE(*,501) lcurpar
-                  ! call des_mpi_stop
-               endif
-            enddo
-         endif  ! if (no_k)
+         do lcurpar = 1,particles
+            do lproc= 0,numpes-1
+               if (   dpar_pos(lcurpar,1).ge.xe(istart1_all(lproc)-1) &
+                  .and. dpar_pos(lcurpar,1).lt.xe(iend1_all(lproc))     &
+                  .and. dpar_pos(lcurpar,2).ge.yn(jstart1_all(lproc)-1) &
+                  .and. dpar_pos(lcurpar,2).lt.yn(jend1_all(lproc))     &
+                  .and. dpar_pos(lcurpar,3).ge.zt(kstart1_all(lproc)-1) &
+                  .and. dpar_pos(lcurpar,3).lt.zt(kend1_all(lproc))) then
+                  lpar_proc(lcurpar) = lproc
+                  lproc_parcnt(lproc) = lproc_parcnt(lproc) + 1
+                  exit
+               end if
+            end do
+            if (lpar_proc(lcurpar).eq.-1) then
+               WRITE(*,501) lcurpar
+! call des_mpi_stop
+            endif
+         enddo
       endif ! if (my_pe.eq.pe_io)
       !!call bcast(lproc_parcnt(0:numpes-1),pe_io)
 

@@ -420,13 +420,12 @@
       use discretelement, only: DESGRIDSEARCH_JMAX
       use discretelement, only: DESGRIDSEARCH_KMAX
 ! Domain size specifed by the user.
-      use geometry, only: XLENGTH, YLENGTH, ZLENGTH, NO_K
+      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
       use discretelement, only: dg_pic
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager
-      use geometry, only: do_k
       use geometry, only: imax2, jmax2, kmax2
       use geometry, only: imin1, jmin1, kmin1
       use geometry, only: imin2, kmin2
@@ -473,12 +472,8 @@
 ! set grid size based on user input desgridsearch_<ijk>max
       ltempdx = xlength/desgridsearch_imax
       ltempdy = ylength/desgridsearch_jmax
+      ltempdz = zlength/desgridsearch_kmax
 
-      if(do_k) then
-         ltempdz = zlength/desgridsearch_kmax
-      else
-         ltempdz = 0
-      endif
       dg_ksize_all(:) = 1
 
       lijkproc = 0
@@ -487,7 +482,7 @@
             do liproc=0,nodesi-1
                dg_isize_all(liproc) = NINT((xe(iend1_all(lijkproc))-xe(istart1_all(lijkproc)-1))/ltempdx)
                dg_jsize_all(ljproc) = NINT((yn(jend1_all(lijkproc))-yn(jstart1_all(lijkproc)-1))/ltempdy)
-               if(do_k) dg_ksize_all(lkproc) = NINT((zt(kend1_all(lijkproc))-zt(kstart1_all(lijkproc)-1))/ltempdz)
+               dg_ksize_all(lkproc) = NINT((zt(kend1_all(lijkproc))-zt(kstart1_all(lijkproc)-1))/ltempdz)
                dg_istart1_all(lijkproc) = sum(dg_isize_all(0:liproc-1)) + 2
                dg_jstart1_all(lijkproc) = sum(dg_jsize_all(0:ljproc-1)) + 2
                dg_kstart1_all(lijkproc) = sum(dg_ksize_all(0:lkproc-1)) + 2
@@ -504,12 +499,6 @@
             end do
          end do
       end do
-      if(no_k) then
-         dg_kstart1_all(:) = 1
-         dg_kend1_all(:) = 1
-         dg_kstart2_all(:) = 1
-         dg_kend2_all(:) = 1
-      end if
 
 ! set indices for global block
       dg_imin2 = 1
@@ -520,17 +509,10 @@
       dg_jmin1 = 2
       dg_jmax1 = dg_jmin1+sum(dg_jsize_all(0:nodesj-1))-1
       dg_jmax2 = dg_jmax1+1
-      if (no_k) then
-         dg_kmin2 = 1
-         dg_kmin1 = 1
-         dg_kmax1 = 1
-         dg_kmax2 = 1
-      else
-         dg_kmin2 = 1
-         dg_kmin1 = 2
-         dg_kmax1 = dg_kmin1+sum(dg_ksize_all(0:nodesk-1))-1
-         dg_kmax2 = dg_kmax1+1
-      end if
+      dg_kmin2 = 1
+      dg_kmin1 = 2
+      dg_kmax1 = dg_kmin1+sum(dg_ksize_all(0:nodesk-1))-1
+      dg_kmax2 = dg_kmax1+1
 
 ! set offset indices for periodic boundaries
       lijkproc = mype
@@ -666,15 +648,9 @@
       dg_yend = yn(jend1)
       dg_dxinv = (dg_iend1-dg_istart1+1)/(dg_xend-dg_xstart)
       dg_dyinv = (dg_jend1-dg_jstart1+1)/(dg_yend-dg_ystart)
-      if(no_k) then
-         dg_zstart = 1
-         dg_zend = 1
-         dg_dzinv = 1
-      else
-         dg_zstart = zt(kstart2)
-         dg_zend = zt(kend1)
-         dg_dzinv = (dg_kend1-dg_kstart1+1)/(dg_zend-dg_zstart)
-      end if
+      dg_zstart = zt(kstart2)
+      dg_zend = zt(kend1)
+      dg_dzinv = (dg_kend1-dg_kstart1+1)/(dg_zend-dg_zstart)
 
 ! allocate the desgridsearch related variables
       allocate(dg_pic(dg_ijksize2))
@@ -700,7 +676,6 @@
       subroutine desgrid_pic(plocate)
 
       use discretelement
-      use geometry, only: no_k
 
       implicit none
 !-----------------------------------------------
@@ -728,11 +703,7 @@
             lparcount = lparcount + 1
             li = min(dg_iend2,max(dg_istart2,iofpos(des_pos_new(lcurpar,1))))
             lj = min(dg_jend2,max(dg_jstart2,jofpos(des_pos_new(lcurpar,2))))
-            if(no_k) then
-               lk = 1
-            else
-               lk = min(dg_kend2,max(dg_kstart2,kofpos(des_pos_new(lcurpar,3))))
-            end if
+            lk = min(dg_kend2,max(dg_kstart2,kofpos(des_pos_new(lcurpar,3))))
             dg_pijk(lcurpar) = dg_funijk(li,lj,lk)
             lijk = dg_pijk(lcurpar)
             lpic(lijk) = lpic(lijk) + 1
@@ -890,18 +861,13 @@
             ju_off = 0
          endif
 
-         if(NO_K)then
+         lcur_off = (lcurpar_pos(3)-dg_zstart)*dg_dzinv - &
+            floor((lcurpar_pos(3)-dg_zstart)*dg_dzinv)
+         if(lcur_off .ge. 0.5) then
             kl_off = 0
-            ku_off = 0
          else
-           lcur_off = (lcurpar_pos(3)-dg_zstart)*dg_dzinv - &
-              floor((lcurpar_pos(3)-dg_zstart)*dg_dzinv)
-           if(lcur_off .ge. 0.5) then
-              kl_off = 0
-           else
-              ku_off = 0
-           endif
-        endif
+            ku_off = 0
+         endif
 
          do lk = lkc-kl_off,lkc+ku_off
          do lj = ljc-jl_off,ljc+ju_off

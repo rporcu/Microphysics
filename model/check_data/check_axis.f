@@ -7,7 +7,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_AXIS(NA, DIMEN, ALENGTH, DA, AXIS, &
-         AXIS_INDEX, NO_IJK)
+         AXIS_INDEX)
 
       USE param1, only: undefined, undefined_i
       USE error_manager, only: finl_err_msg, err_msg, ival, flush_err_msg, init_err_msg, ivar
@@ -22,9 +22,6 @@
       INTEGER, INTENT(IN) :: DIMEN
 ! axis length (XLENGTH, YLENGTH, ZLENGTH)
       DOUBLE PRECISION, INTENT(INOUT) :: ALENGTH
-! flag that specifies whether variation along that axis is
-! considered (passed variable for NO_I, NO_J, or NO_K)
-      LOGICAL, INTENT(IN) :: NO_IJK
 ! axis checked ('X','Y','Z')
       CHARACTER, INTENT(IN) :: AXIS
 ! index associated with AXIS ('I','J','K')
@@ -78,7 +75,7 @@
 
 ! This must be a legacy check because the code shouldn't get here
 ! without exiting and DIMEN is calculated, not a hard-coded param.
-      IF (NA<0 .OR. .NOT.NO_IJK .AND. NA>DIMEN-2) THEN
+      IF (NA<0 .OR. NA>DIMEN-2) THEN
          WRITE(ERR_MSG, 1001) AXIS_INDEX//'MAX', trim(iVal(NA))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF

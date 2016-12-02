@@ -21,8 +21,6 @@
       use discretelement, only: PINC, PIC
 ! The East/North/Top face location of a given I/J/K index.
       use discretelement, only: XE, YN, ZT
-! Flag for 2D simulations.
-      use geometry, only: NO_K
 ! The Upper and Loper indices covered by the current process.
       use compar, only: ISTART3, IEND3
       use compar, only: JSTART3, JEND3
@@ -107,27 +105,23 @@
          ENDIF
 
 
-         IF(NO_K) THEN
-            K = 1
+         K = PIJK(L,3)
+         IF(K <= KSTART3 .OR. K >= KEND3) THEN
+            CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,                &
+               DIMENSION_K, KMIN2, KMAX2)
          ELSE
-            K = PIJK(L,3)
-            IF(K <= KSTART3 .OR. K >= KEND3) THEN
-               CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,                &
-                  DIMENSION_K, KMIN2, KMAX2)
+            IF((DES_POS_NEW(L,3) >= ZT(K-1)) .AND.                  &
+               (DES_POS_NEW(L,3) < ZT(K))) THEN
+               K = K
+            ELSEIF((DES_POS_NEW(L,3) >= ZT(K)) .AND.               &
+               (DES_POS_NEW(L,3) < ZT(K+1))) THEN
+               K = K+1
+            ELSEIF((DES_POS_NEW(L,3) >= ZT(K-2)) .AND.              &
+               (DES_POS_NEW(L,3) < ZT(K-1))) THEN
+               K = K-1
             ELSE
-               IF((DES_POS_NEW(L,3) >= ZT(K-1)) .AND.                  &
-                  (DES_POS_NEW(L,3) < ZT(K))) THEN
-                  K = K
-               ELSEIF((DES_POS_NEW(L,3) >= ZT(K)) .AND.               &
-                  (DES_POS_NEW(L,3) < ZT(K+1))) THEN
-                  K = K+1
-               ELSEIF((DES_POS_NEW(L,3) >= ZT(K-2)) .AND.              &
-                  (DES_POS_NEW(L,3) < ZT(K-1))) THEN
-                  K = K-1
-               ELSE
-                  CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,             &
-                     DIMENSION_K, KMIN2, KMAX2)
-               ENDIF
+               CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,             &
+                  DIMENSION_K, KMIN2, KMAX2)
             ENDIF
          ENDIF
 
@@ -228,7 +222,6 @@
 
       USE error_manager, only: init_err_msg, finl_err_msg
       USE desgrid, only: desgrid_pic
-      USE geometry, only: no_k
       USE geometry, only: imin2, jmin2, kmin2
       USE geometry, only: imax2, jmax2, kmax2
       USE functions, only: funijk
@@ -273,14 +266,9 @@
             DIMENSION_J, JMIN2, JMAX2)
          PIJK(L,2) = J
 
-         IF(NO_K) THEN
-            K=1
-            PIJK(L,3) = 1
-         ELSE
-            CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,                   &
-               DIMENSION_K, KMIN2, KMAX2)
-            PIJK(L,3) = K
-         ENDIF
+         CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,                   &
+            DIMENSION_K, KMIN2, KMAX2)
+         PIJK(L,3) = K
 
 ! Assigning PIJK(L,4) now that particles have been located on the fluid
          IJK = FUNIJK(I,J,K)

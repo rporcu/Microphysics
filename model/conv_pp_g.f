@@ -42,7 +42,7 @@ module conv_pp_g_module
       USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use matrix   , only: e, w, s, n, t, b
-      USE geometry , only: do_k, axy, ayz, axz
+      USE geometry , only: axy, ayz, axz
       USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
       USE functions, only: fluid_at
 
@@ -86,11 +86,9 @@ module conv_pp_g_module
             A_M(I,jplus(i,j,k),K,S) = AM
 
 ! Top face (i, j, k+1/2)
-            IF (DO_K) THEN
-               AM = ROP_GT(I,J,K)*AXY
-               A_M(I,J,K,T) = AM
-               A_M(I,J,kplus(i,j,k),B) = AM
-            ENDIF
+            AM = ROP_GT(I,J,K)*AXY
+            A_M(I,J,K,T) = AM
+            A_M(I,J,kplus(i,j,k),B) = AM
 
 ! West face (i-1/2, j, k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
@@ -105,11 +103,9 @@ module conv_pp_g_module
             ENDIF
 
 ! Bottom face (i, j, k-1/2)
-            IF (DO_K) THEN
-               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  AM = ROP_GT(i,j,kminus(i,j,k))*AXY
-                  A_M(I,J,K,B) = AM
-               ENDIF
+            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+               AM = ROP_GT(i,j,kminus(i,j,k))*AXY
+               A_M(I,J,K,B) = AM
             ENDIF
          ENDIF   ! end if (fluid_at(i,j,k))
       ENDDO

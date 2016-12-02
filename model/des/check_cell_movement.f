@@ -22,7 +22,6 @@
       use functions, only: IS_NORMAL
 
       use error_manager, only: err_msg, ival, flush_err_msg, err_msg, init_err_msg
-      use geometry, only: do_k
       use compar, only: mype
       use compar, only: istart1, jstart1, kstart1
       use compar, only: iend1, jend1, kend1
@@ -54,7 +53,7 @@
 
          IF(I > IEND1 .OR. I < ISTART1) IER = 1
          IF(J > JEND1 .OR. J < JSTART1) IER = 1
-         IF(DO_K .AND. (K > KEND1 .OR. K < KSTART1)) IER = 1
+         IF(K > KEND1 .OR. K < KSTART1) IER = 1
       ENDDO
 
       ! CALL GLOBAL_ALL_SUM(IER)
@@ -130,7 +129,7 @@
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
          ENDIF
 
-         IF (DO_K .AND. (K.GT.KEND1 .OR. K.LT.KSTART1)) THEN
+         IF (K.GT.KEND1 .OR. K.LT.KSTART1) THEN
             WRITE(ERR_MSG, 1101) trim(iVal(iGlobal_ID(L))),'K',        &
                trim(iVal(K)),'Z',DES_POS_NEW(L,3),'Z',DES_VEL_NEW(L,3)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)

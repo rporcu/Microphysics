@@ -101,11 +101,11 @@
       double precision :: vol_node_uncorr
 !-----------------------------------------------
 
-      avg_factor = merge(0.25d0, 0.125d0, NO_K)
+      avg_factor = 0.125d0
 
 ! compute the volume at the grid nodes
 ! grid nodes start from istart2 to iend1
-      vol_node_count = merge(4., 8., NO_K)
+      vol_node_count = 8.
 
         DO Kraw = kstart3, kend3
         DO Jraw = jstart3, jend3
@@ -179,45 +179,42 @@
          des_vol_node(iraw,jraw,kraw) = avg_factor*(vol_ijk + vol_ipjk + &
                                          vol_ijpk + vol_ipjpk)
 
-         IF (DO_K) THEN
-            KP     = kmap_c(kraw+1)
-            ijkp   = funijk(I, J, KP)
-            ipjkp  = funijk(IP,J, KP)
-            ijpkp  = funijk(I, JP,KP)
-            ipjpkp = funijk(IP,JP,KP)
+         KP     = kmap_c(kraw+1)
+         ijkp   = funijk(I, J, KP)
+         ipjkp  = funijk(IP,J, KP)
+         ijpkp  = funijk(I, JP,KP)
+         ipjpkp = funijk(IP,JP,KP)
 
-            vol_ijkp   = dx*dy*dz
-            vol_ipjkp  = dx*dy*dz
-            vol_ijpkp  = dx*dy*dz
-            vol_ipjpkp = dx*dy*dz
+         vol_ijkp   = dx*dy*dz
+         vol_ipjkp  = dx*dy*dz
+         vol_ijpkp  = dx*dy*dz
+         vol_ipjpkp = dx*dy*dz
 
-            vol_node_uncorr = avg_factor*(vol_node_uncorr + vol_ijkp + &
-               vol_ipjkp + vol_ijpkp + vol_ipjpkp)
+         vol_node_uncorr = avg_factor*(vol_node_uncorr + vol_ijkp + &
+            vol_ipjkp + vol_ijpkp + vol_ipjpkp)
 
-            IF(.NOT.fluid_at(i,j,kp)) THEN
-               vol_node_actual_count = vol_node_actual_count - 1
-               vol_ijkp   = zero
-            ENDIF
-
-            IF(.NOT.fluid_at(ip,j,kp)) THEN
-               vol_node_actual_count = vol_node_actual_count - 1
-               vol_ipjkp  = zero
-            ENDIF
-
-            IF(.NOT.fluid_at(i,jp,kp)) THEN
-               vol_node_actual_count = vol_node_actual_count - 1
-               vol_ijpkp  = zero
-            ENDIF
-
-            IF(.NOT.fluid_at(ip,jp,kp)) THEN
-               vol_node_actual_count = vol_node_actual_count - 1
-               vol_ipjpkp = zero
-            ENDIF
-
-            des_vol_node(iraw,jraw,kraw) = des_vol_node(iraw,jraw,kraw) + avg_factor*&
-               (vol_ijkp + vol_ipjpkp + vol_ijpkp + vol_ipjkp)
-
+         IF(.NOT.fluid_at(i,j,kp)) THEN
+            vol_node_actual_count = vol_node_actual_count - 1
+            vol_ijkp   = zero
          ENDIF
+
+         IF(.NOT.fluid_at(ip,j,kp)) THEN
+            vol_node_actual_count = vol_node_actual_count - 1
+            vol_ipjkp  = zero
+         ENDIF
+
+         IF(.NOT.fluid_at(i,jp,kp)) THEN
+            vol_node_actual_count = vol_node_actual_count - 1
+            vol_ijpkp  = zero
+         ENDIF
+
+         IF(.NOT.fluid_at(ip,jp,kp)) THEN
+            vol_node_actual_count = vol_node_actual_count - 1
+            vol_ipjpkp = zero
+         ENDIF
+
+         des_vol_node(iraw,jraw,kraw) = des_vol_node(iraw,jraw,kraw) + avg_factor*&
+            (vol_ijkp + vol_ipjpkp + vol_ijpkp + vol_ipjkp)
 
 
       ENDDO

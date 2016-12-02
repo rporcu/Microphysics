@@ -65,11 +65,6 @@
       ENDIF
 
 !  If there is no variation in the I direction set indices to 1
-      IF (NO_I) THEN
-         PS_I_W(PSV) = 1
-         PS_I_E(PSV) = 1
-      ENDIF
-!
       IF (PS_Y_S(PSV)/=UNDEFINED .AND. PS_Y_N(PSV)/=UNDEFINED) THEN
          CALL CALC_CELL(PS_Y_S(PSV), DY, JMAX, J_S)
          CALL CALC_CELL(PS_Y_N(PSV), DY, JMAX, J_N)
@@ -92,12 +87,6 @@
          IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) Y_CONSTANT = .FALSE.
       ENDIF
 
-! If there is no variation in the J direction set indices to 1
-      IF (NO_J) THEN
-         PS_J_S(PSV) = 1
-         PS_J_N(PSV) = 1
-      ENDIF
-
       IF (PS_Z_B(PSV)/=UNDEFINED .AND. PS_Z_T(PSV)/=UNDEFINED) THEN
          CALL CALC_CELL(PS_Z_B(PSV), DZ, KMAX, K_B)
          CALL CALC_CELL(PS_Z_T(PSV), DZ, KMAX, K_T)
@@ -118,12 +107,6 @@
          IF(PS_K_T(PSV) /= UNDEFINED_I)                                &
             CALL CALC_LOC(DZ, PS_K_T(PSV), PS_Z_T(PSV))
          IF (PS_Z_B(PSV) /= PS_Z_T(PSV)) Z_CONSTANT = .FALSE.
-      ENDIF
-
-!  If there is no variation in the K direction set indices to 1
-      IF (NO_K) THEN
-         PS_K_B(PSV) = 1
-         PS_K_T(PSV) = 1
       ENDIF
 
 ! CHECK FOR VALID VALUES

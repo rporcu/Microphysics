@@ -33,7 +33,7 @@
       VERSION = 1.1
 
 ! Set the output dimension.
-      lDIMN = merge(2,3,NO_K)
+      lDIMN = 3
 
       CALL INIT_WRITE_RES_DES(trim(RUN_NAME), VERSION, lNEXT_REC)
 
@@ -53,7 +53,7 @@
          CALL WRITE_RES_pARRAY(lNEXT_REC, DES_VEL_NEW(:,LC1))
       ENDDO
 
-      DO LC1 = 1, merge(1,3,NO_K)
+      DO LC1 = 1, 3
          CALL WRITE_RES_pARRAY(lNEXT_REC, OMEGA_NEW(:,LC1))
       ENDDO
 

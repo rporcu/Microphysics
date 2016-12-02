@@ -20,9 +20,9 @@
       use bc, only: BC_Y_n, BC_Y_s, BC_J_n, BC_J_s
       use bc, only: BC_Z_t, BC_Z_b, BC_K_t, BC_K_b
 ! User specified: System geometry
-      use geometry, only: NO_I, XLENGTH
-      use geometry, only: NO_J, YLENGTH
-      use geometry, only: NO_K, ZLENGTH
+      use geometry, only: XLENGTH
+      use geometry, only: YLENGTH
+      use geometry, only: ZLENGTH
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -110,57 +110,33 @@
          IF(BC_TYPE(BCV)(1:2) == 'CG') CYCLE
 
          IF(BC_X_W(BCV)==UNDEFINED .AND. BC_I_W(BCV)==UNDEFINED_I) THEN
-            IF(NO_I) THEN
-               BC_X_W(BCV) = ZERO
-            ELSE
-               WRITE(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(BC_X_E(BCV)==UNDEFINED .AND. BC_I_E(BCV)==UNDEFINED_I) THEN
-            IF(NO_I) THEN
-               BC_X_E(BCV) = XLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1101) BCV, 'BC_X_e and BC_I_e'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1101) BCV, 'BC_X_e and BC_I_e'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(BC_Y_S(BCV)==UNDEFINED .AND. BC_J_S(BCV)==UNDEFINED_I) THEN
-            IF(NO_J) THEN
-               BC_Y_S(BCV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1101) BCV, 'BC_Y_s and BC_J_s'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1101) BCV, 'BC_Y_s and BC_J_s'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(BC_Y_N(BCV)==UNDEFINED .AND. BC_J_N(BCV)==UNDEFINED_I) THEN
-            IF(NO_J) THEN
-               BC_Y_N(BCV) = YLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1101) BCV, 'BC_Y_n and BC_J_n'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1101) BCV, 'BC_Y_n and BC_J_n'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(BC_Z_B(BCV)==UNDEFINED .AND. BC_K_B(BCV)==UNDEFINED_I) THEN
-            IF(NO_K) THEN
-               BC_Z_B(BCV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1101) BCV, 'BC_Z_b and BC_K_b'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1101) BCV, 'BC_Z_b and BC_K_b'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(BC_Z_T(BCV)==UNDEFINED .AND. BC_K_T(BCV)==UNDEFINED_I) THEN
-            IF(NO_K) THEN
-               BC_Z_T(BCV) = ZLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1101) BCV, 'BC_Z_t and BC_K_t'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1101) BCV, 'BC_Z_t and BC_K_t'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
  1101 FORMAT('Error 1101: Boundary condition ',I3,' is ill-defined.',/ &
@@ -210,9 +186,9 @@
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: NO_I, XLENGTH, DX, IMAX, IMAX2
-      use geometry, only: NO_J, YLENGTH, DY, JMAX, JMAX2
-      use geometry, only: NO_K, ZLENGTH, DZ, KMAX, KMAX2
+      use geometry, only: XLENGTH, DX, IMAX, IMAX2
+      use geometry, only: YLENGTH, DY, JMAX, JMAX2
+      use geometry, only: ZLENGTH, DZ, KMAX, KMAX2
 ! Function to compare two values
       use toleranc, only: COMPARE
 
@@ -247,22 +223,17 @@
       IF(BC_X_W(BCV)/=UNDEFINED .AND. BC_X_E(BCV)/=UNDEFINED) THEN
 
 ! setting indices to 1 if there is no variation in the i (x) direction
-         IF (NO_I) THEN
-            I_W = 1
-            I_E = 1
-         ELSE
-            CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
-            I_W = I_W + 1
-            CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
+         CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
+         I_W = I_W + 1
+         CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
 ! BC along zy plane, checking if far west or far east of domain
-            IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
-               IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
-                  I_W = 1
-                  I_E = 1
-               ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
-                  I_W = IMAX2
-                  I_E = IMAX2
-               ENDIF
+         IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
+            IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
+               I_W = 1
+               I_E = 1
+            ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
+               I_W = IMAX2
+               I_E = IMAX2
             ENDIF
          ENDIF
 
@@ -280,22 +251,17 @@
 
       IF(BC_Y_S(BCV)/=UNDEFINED .AND. BC_Y_N(BCV)/=UNDEFINED) THEN
 ! setting indices to 1 if there is no variation in the j (y) direction
-         IF(NO_J) THEN
-            J_S = 1
-            J_N = 1
-         ELSE
-            CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
-            J_S = J_S + 1
-            CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
+         CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
+         J_S = J_S + 1
+         CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
 ! BC along xz plane, checking if far south or far north of domain
-            IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
-               IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
-                  J_S = 1
-                  J_N = 1
-               ELSE IF (COMPARE(BC_Y_S(BCV),YLENGTH)) THEN
-                  J_S = JMAX2
-                  J_N = JMAX2
-               ENDIF
+         IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
+            IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
+               J_S = 1
+               J_N = 1
+            ELSE IF (COMPARE(BC_Y_S(BCV),YLENGTH)) THEN
+               J_S = JMAX2
+               J_N = JMAX2
             ENDIF
          ENDIF
 ! checking/setting corresponding j indices according to specified y
@@ -311,22 +277,17 @@
 
       IF(BC_Z_B(BCV)/=UNDEFINED .AND. BC_Z_T(BCV)/=UNDEFINED) THEN
 ! setting indices to 1 if there is no variation in the k (z) direction
-         IF(NO_K)THEN
-            K_B = 1
-            K_T = 1
-         ELSE
-            CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
-            K_B = K_B + 1
-            CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
+         CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
+         K_B = K_B + 1
+         CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
 ! BC along xy plane, checking if far bottom or far top of domain
-            IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
-               IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
-                  K_B = 1
-                  K_T = 1
-               ELSEIF(COMPARE(BC_Z_B(BCV),ZLENGTH)) THEN
-                  K_B = KMAX2
-                  K_T = KMAX2
-               ENDIF
+         IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
+            IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
+               K_B = 1
+               K_T = 1
+            ELSEIF(COMPARE(BC_Z_B(BCV),ZLENGTH)) THEN
+               K_B = KMAX2
+               K_T = KMAX2
             ENDIF
          ENDIF
 ! checking/setting corresponding j indices according to specified y
@@ -391,9 +352,9 @@
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: NO_I, DX, IMAX, IMAX2
-      use geometry, only: NO_J, DY, JMAX, JMAX2
-      use geometry, only: NO_K, DZ, KMAX, KMAX2
+      use geometry, only: DX, IMAX, IMAX2
+      use geometry, only: DY, JMAX, JMAX2
+      use geometry, only: DZ, KMAX, KMAX2
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -453,12 +414,6 @@
          IF(BC_X_W(BCV) /= BC_X_E(BCV)) X_CONSTANT = .FALSE.
       ENDIF
 
-! If there is no variation in the I direction set indices to 1
-      IF(NO_I) THEN
-         BC_I_W(BCV) = 1
-         BC_I_E(BCV) = 1
-      ENDIF
-
       IF (BC_Y_S(BCV)/=UNDEFINED .AND. BC_Y_N(BCV)/=UNDEFINED) THEN
          CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
          CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
@@ -480,12 +435,6 @@
          IF (BC_Y_S(BCV) /= BC_Y_N(BCV)) Y_CONSTANT = .FALSE.
       ENDIF
 
-! If there is no variation in the J direction set indices to 1
-      IF(NO_J) THEN
-         BC_J_S(BCV) = 1
-         BC_J_N(BCV) = 1
-      ENDIF
-
       IF(BC_Z_B(BCV)/=UNDEFINED .AND. BC_Z_T(BCV)/=UNDEFINED) THEN
          CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
          CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
@@ -505,12 +454,6 @@
          IF(BC_K_T(BCV) /= UNDEFINED_I) &
             CALL CALC_LOC (DZ,BC_K_T(BCV),BC_Z_T(BCV))
          IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) Z_CONSTANT = .FALSE.
-      ENDIF
-
-! If there is no variation in the K direction set indices to 1
-      IF(NO_K) THEN
-         BC_K_B(BCV) = 1
-         BC_K_T(BCV) = 1
       ENDIF
 
 ! Check whether the boundary is a plane parallel to one of the three

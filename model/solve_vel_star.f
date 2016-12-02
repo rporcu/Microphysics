@@ -22,7 +22,6 @@ module solve_vel_star_module
       USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE discretelement, only: des_continuum_coupled
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
-      USE fun_avg , only: do_k
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE ur_facs , only: under_relax
       USE ps      , only: point_source
@@ -203,47 +202,45 @@ module solve_vel_star_module
 
 ! Calculate W_m_star and residuals
 ! ---------------------------------------------------------------->>>
-      IF (DO_K)THEN
-         CALL INIT_AB_M (A_M, B_M)
+      CALL INIT_AB_M (A_M, B_M)
 
-         CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
-         CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+      CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                          w_g, w_go, tau_w_g)
-         IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)
 
-         CALL VF_GS_Z
+      CALL VF_GS_Z
 
 ! calculate coefficients for the pressure correction equation
-         IF (MOMENTUM_Z_EQ(0)) THEN
-            CALL CALC_D(D_T, "Z", A_M, ep_g)
-         ENDIF
+      IF (MOMENTUM_Z_EQ(0)) THEN
+         CALL CALC_D(D_T, "Z", A_M, ep_g)
+      ENDIF
 
-         IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)
+      IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)
 
-         IF(DES_CONTINUUM_COUPLED) THEN
-            CALL GAS_DRAG_W(A_M, B_M, IER)
-         ENDIF
+      IF(DES_CONTINUUM_COUPLED) THEN
+         CALL GAS_DRAG_W(A_M, B_M, IER)
+      ENDIF
 
-         IF (MOMENTUM_Z_EQ(0)) THEN
+      IF (MOMENTUM_Z_EQ(0)) THEN
             ! Note we pass W first since that is the primary velocity component
-            CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, 0, &
-               NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
-               RESID(RESID_W), MAX_RESID(RESID_W), &
-               i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W))
-            CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
-         ENDIF
+         CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, 0, &
+            NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
+            RESID(RESID_W), MAX_RESID(RESID_W), &
+            i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W))
+         CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
+      ENDIF
 
 
-         IF (MOMENTUM_Z_EQ(0)) THEN
-            CALL ADJUST_LEQ (RESID(RESID_W), LEQ_IT(5), &
-               LEQ_METHOD(5), LEQI, LEQM)
-            CALL SOLVE_LIN_EQ ('W_g', 5, W_Gtmp, A_M, B_M, 0, LEQI,&
-               LEQM, LEQ_SWEEP(5), LEQ_TOL(5), LEQ_PC(5), IER)
-!            call out_array(w_g, 'w_g')
-         ENDIF
+      IF (MOMENTUM_Z_EQ(0)) THEN
+         CALL ADJUST_LEQ (RESID(RESID_W), LEQ_IT(5), &
+            LEQ_METHOD(5), LEQI, LEQM)
+         CALL SOLVE_LIN_EQ ('W_g', 5, W_Gtmp, A_M, B_M, 0, LEQI,&
+            LEQM, LEQ_SWEEP(5), LEQ_TOL(5), LEQ_PC(5), IER)
+!         call out_array(w_g, 'w_g')
+      ENDIF
 
-      ENDIF   ! end if (do_k)
 ! End W_m_star and residuals
 ! ----------------------------------------------------------------<<<
 

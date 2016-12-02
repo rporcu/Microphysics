@@ -33,7 +33,6 @@
 
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
 
-      USE geometry, only: do_k
       USE geometry, only: odx, ody, odz
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
@@ -88,7 +87,7 @@
            do i = istart3, iend3
              XSI_E(i,j,k) = XSI_func(U(i,j,k),ZERO)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),ZERO)
-             IF (DO_K) XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
            end do
          end do
        end do
@@ -127,21 +126,19 @@
              DWF = SUPERBEE(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-
-                PHI_C = PHI_C_OF(PHI(i,j,KU),PHI(i,j,KC),PHI(i,j,KD))
-                DWF = SUPERBEE(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+
+             PHI_C = PHI_C_OF(PHI(i,j,KU),PHI(i,j,KC),PHI(i,j,KD))
+             DWF = SUPERBEE(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -178,20 +175,18 @@
              DWF = SMART(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                DWF = SMART(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             DWF = SMART(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -231,21 +226,19 @@
 
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                CF = ABS(W(i,j,k))*DT*ODZ
-                DWF = ULTRA_QUICK(PHI_C,CF)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             CF = ABS(W(i,j,k))*DT*ODZ
+             DWF = ULTRA_QUICK(PHI_C,CF)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -293,25 +286,23 @@
              DWF = QUICKEST(PHI_C,CF,ODYC,ODYUC,ODY)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                   ODZC = ODZ
-                   ODZUC = ODZ
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                   ODZC = ODZ
-                   ODZUC = ODZ
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                CF = ABS(W(i,j,k))*DT*ODZ
-                DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+                ODZC = ODZ
+                ODZUC = ODZ
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
+                ODZC = ODZ
+                ODZUC = ODZ
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             CF = ABS(W(i,j,k))*DT*ODZ
+             DWF = QUICKEST(PHI_C,CF,ODZC,ODZUC,ODZ)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -349,20 +340,18 @@
              DWF = MUSCL(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                DWF = MUSCL(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             DWF = MUSCL(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -400,20 +389,18 @@
              DWF = VANLEER(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                DWF = VANLEER(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             DWF = VANLEER(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -451,21 +438,18 @@
              DWF = MINMOD(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                DWF = MINMOD(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             DWF = MINMOD(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do
@@ -502,20 +486,18 @@
              DWF = CENTRAL_SCHEME(PHI_C)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
-             IF (DO_K) THEN
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = ktop(i,j,k)
-                   KU = kbot(i,j,k)
-                ELSE
-                   KC = ktop(i,j,k)
-                   KD = K
-                   KU = ktop(i,j,ktop(i,j,k))
-                ENDIF
-                PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-                DWF = CENTRAL_SCHEME(PHI_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+             IF (W(i,j,k) >= ZERO) THEN
+                KC = K
+                KD = ktop(i,j,k)
+                KU = kbot(i,j,k)
+             ELSE
+                KC = ktop(i,j,k)
+                KD = K
+                KU = ktop(i,j,ktop(i,j,k))
              ENDIF
+             PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
+             DWF = CENTRAL_SCHEME(PHI_C)
+             XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do
           end do

@@ -19,7 +19,7 @@
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: funijk, ip1, jp1, kp1, fluid_at, is_exiting_ghost, is_nonexistent, is_entering_ghost, is_ghost
-      USE geometry, only: vol_surr, do_k, vol
+      USE geometry, only: vol_surr, vol
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
       USE param1, only: zero
       USE run, only: run_type, time
@@ -71,12 +71,10 @@
                if(fluid_at(i2,j1,k1)) count = count + 1
                if(fluid_at(i1,j2,k1)) count = count + 1
                if(fluid_at(i2,j2,k1)) count = count + 1
-               if(do_k) then
-                  if(fluid_at(i1,j1,k2)) count = count + 1
-                  if(fluid_at(i2,j1,k2)) count = count + 1
-                  if(fluid_at(i1,j2,k2)) count = count + 1
-                  if(fluid_at(i2,j2,k2)) count = count + 1
-               endif
+               if(fluid_at(i1,j1,k2)) count = count + 1
+               if(fluid_at(i2,j1,k2)) count = count + 1
+               if(fluid_at(i1,j2,k2)) count = count + 1
+               if(fluid_at(i2,j2,k2)) count = count + 1
                vol_surr(i,j,k) = dble(count) * vol
 
             ENDDO

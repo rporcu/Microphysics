@@ -64,7 +64,6 @@ set(SOURCES
   model/check_data/check_geometry.f
   model/check_data/check_geometry_prereqs.f
   model/check_data/check_ic_common_discrete.f
-  model/check_data/check_ic_dem.f
   model/check_data/check_initial_conditions.f
   model/check_data/check_numerics.f
   model/check_data/check_output_control.f
@@ -230,7 +229,6 @@ set(SOURCES
   model/set_ps.f
   model/set_ro_g.f
   model/set_wall_bc.f
-  model/shift_dxyz.f
   model/solve_pp_g.f
   model/solve_vel_star.f
   model/solvers/BLAS.f

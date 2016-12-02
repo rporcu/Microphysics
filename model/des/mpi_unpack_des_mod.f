@@ -486,7 +486,6 @@
       use discretelement, only: iGLOBAL_ID, dg_pic
       use desgrid, only: DG_IJKStart2, DG_IJKEnd2
       use desgrid, only: dg_Iof_LO, DG_Jof_LO, DG_Kof_LO
-      use geometry, only: NO_K
 
       use desgrid, only: dg_funijk
 
@@ -512,7 +511,7 @@
       lic = dg_iof_lo(pijk)
       ljc = dg_jof_lo(pijk)
       lkc = dg_kof_lo(pijk)
-      lkoffset = merge(0, 1, NO_K)
+      lkoffset = 1
       DO  lk = lkc-lkoffset,lkc+lkoffset
       DO  lj = ljc-1,ljc+1
       DO  li = lic-1,lic+1

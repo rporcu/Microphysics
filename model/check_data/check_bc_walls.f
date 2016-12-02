@@ -58,8 +58,6 @@
       use bc, only: BC_TYPE
 ! User-Input: gas velocity at wall BCs.
       use bc, only: BC_UW_G, BC_VW_G, BC_WW_G
-! Flag: Solve K-th direction (3D)
-      use geometry, only: DO_K
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -91,12 +89,8 @@
             WRITE(ERR_MSG,1000) trim(iVar('BC_Vw_g',BCV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ELSEIF(BC_WW_G(BCV) == UNDEFINED) THEN
-            IF(DO_K)THEN
-               WRITE(ERR_MSG,1000) trim(iVar('BC_Ww_g',BCV))
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ELSE
-               BC_WW_G(BCV) = ZERO
-            ENDIF
+            WRITE(ERR_MSG,1000) trim(iVar('BC_Ww_g',BCV))
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
       ENDIF
 

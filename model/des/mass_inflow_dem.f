@@ -232,7 +232,6 @@
       END SELECT
 
 ! Easier and cleaner to clear out the third component at the end.
-      IF(NO_K) lPOS(3) = ZERO
 
       lI = IofPOS(lPOS(1))
       lJ = JofPOS(lPOS(2))
@@ -241,7 +240,7 @@
       lOWNS = ((DG_ISTART <= lI) .AND. (lI <= DG_IEND) .AND.           &
          (DG_JSTART <= lJ) .AND. (lJ <= DG_JEND))
 
-      IF(DO_K) lOWNS = lOWNS .AND. (DG_KSTART<=lK) .AND. (lK<=DG_KEND)
+      lOWNS = lOWNS .AND. (DG_KSTART<=lK) .AND. (lK<=DG_KEND)
 
       RETURN
       END SUBROUTINE SEED_NEW_PARTICLE
@@ -326,11 +325,7 @@
 ! Calculate the DES grid cell indices.
       lI = min(DG_IEND2,max(DG_ISTART2,IOFPOS(DES_POS_NEW(lNP,1))))
       lJ = min(DG_JEND2,max(DG_JSTART2,JOFPOS(DES_POS_NEW(lNP,2))))
-      IF(NO_K) THEN
-         lK = 1
-      ELSE
-         lK = min(DG_KEND2,max(DG_KSTART2,KOFPOS(DES_POS_NEW(lNP,3))))
-      ENDIF
+      lK = min(DG_KEND2,max(DG_KSTART2,KOFPOS(DES_POS_NEW(lNP,3))))
 ! Store the triple
       DG_PIJK(lNP) = DG_FUNIJK(lI,lJ,lK)
 

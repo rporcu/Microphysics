@@ -7,8 +7,6 @@ module drag_gs_des1_module
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-! Flag for 3D simulatoins.
-      use geometry, only: DO_K
 ! Function to deterine if a cell contains fluid.
       use functions, only: fluid_at
       use functions, only: is_normal
@@ -102,9 +100,6 @@ module drag_gs_des1_module
       allocate( UGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate( VGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
       allocate( WGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-
-! Loop bounds for interpolation.
-      LP_BND = merge(27,9,DO_K)
 
 ! Calculate the cell center gas velocities.
       CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
@@ -308,12 +303,7 @@ module drag_gs_des1_module
          IF(fluid_at(i,j,k)) THEN
             Uc(I,J,K) = AVG(lUG(iminus(i,j,k),j,k),lUG(I,J,K))
             Vc(I,J,K) = AVG(lVg(i,jminus(i,j,k),k),lVg(I,J,K))
-
-            IF(DO_K) THEN
-               Wc(I,J,K) = AVG(lWg(i,j,kminus(i,j,k)),lWg(I,J,K))
-            ELSE
-               Wc(I,J,K) = ZERO
-            ENDIF
+            Wc(I,J,K) = AVG(lWg(i,j,kminus(i,j,k)),lWg(I,J,K))
          ELSE
             Uc(I,J,K) = ZERO
             Vc(I,J,K) = ZERO

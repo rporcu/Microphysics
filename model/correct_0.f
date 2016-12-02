@@ -17,7 +17,6 @@
       SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE geometry , only: do_k
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: fluidorp_flow_at
       USE ur_facs  , only: ur_fac
@@ -64,8 +63,8 @@
                  D_E(I,J,K)*(PP_G(ieast(i,j,k),j,k)-PP_G(I,J,K))
               V_G(I,J,K) = V_G(I,J,K) - &
                  D_N(I,J,K)*(PP_G(i,jnorth(i,j,k),k)-PP_G(I,J,K))
-              IF (DO_K) W_G(I,J,K) = W_G(I,J,K) - &
-                    D_T(I,J,K)*(PP_G(i,j,ktop(i,j,k)) - PP_G(I,J,K))
+              W_G(I,J,K) = W_G(I,J,K) - &
+                 D_T(I,J,K)*(PP_G(i,j,ktop(i,j,k)) - PP_G(I,J,K))
 
             ENDIF
 

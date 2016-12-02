@@ -208,7 +208,7 @@ module source_u_g_module
 !-----------------------------------------------
       use matrix, only: e, w, s, n, t, b
       USE bc
-      USE geometry  , only: do_k, jmax2, kmax2
+      USE geometry  , only: jmax2, kmax2
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: ody, odz
       USE functions, only: fs_wall_at, ns_wall_at
@@ -253,63 +253,61 @@ module source_u_g_module
 ! no penetration condition (see zero_norm_vel subroutine and code under
 ! the ip_at_e branch in the above source routine).
 ! ---------------------------------------------------------------->>>
-      IF (DO_K) THEN
 ! bottom xy plane
-         K1 = 1
-         DO J1 = jmin3,jmax3
-            DO I1 = imin3, imax3
-               IF (ns_wall_at(i1,j1,k1)) THEN
+      K1 = 1
+      DO J1 = jmin3,jmax3
+         DO I1 = imin3, imax3
+            IF (ns_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
-                  A_M(I1,J1,K1,E) = ZERO
-                  A_M(I1,J1,K1,W) = ZERO
-                  A_M(I1,J1,K1,N) = ZERO
-                  A_M(I1,J1,K1,S) = ZERO
-                  A_M(I1,J1,K1,T) = -ONE
-                  A_M(I1,J1,K1,B) = ZERO
-                  A_M(I1,J1,K1,0) = -ONE
-                  B_M(I1,J1,K1) = ZERO
-               ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+               A_M(I1,J1,K1,E) = ZERO
+               A_M(I1,J1,K1,W) = ZERO
+               A_M(I1,J1,K1,N) = ZERO
+               A_M(I1,J1,K1,S) = ZERO
+               A_M(I1,J1,K1,T) = -ONE
+               A_M(I1,J1,K1,B) = ZERO
+               A_M(I1,J1,K1,0) = -ONE
+               B_M(I1,J1,K1) = ZERO
+            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
-                  A_M(I1,J1,K1,E) = ZERO
-                  A_M(I1,J1,K1,W) = ZERO
-                  A_M(I1,J1,K1,N) = ZERO
-                  A_M(I1,J1,K1,S) = ZERO
-                  A_M(I1,J1,K1,T) = ONE
-                  A_M(I1,J1,K1,B) = ZERO
-                  A_M(I1,J1,K1,0) = -ONE
-                  B_M(I1,J1,K1) = ZERO
-               ENDIF
-            ENDDO
+               A_M(I1,J1,K1,E) = ZERO
+               A_M(I1,J1,K1,W) = ZERO
+               A_M(I1,J1,K1,N) = ZERO
+               A_M(I1,J1,K1,S) = ZERO
+               A_M(I1,J1,K1,T) = ONE
+               A_M(I1,J1,K1,B) = ZERO
+               A_M(I1,J1,K1,0) = -ONE
+               B_M(I1,J1,K1) = ZERO
+            ENDIF
          ENDDO
+      ENDDO
 
 ! top xy plane
-         K1 = KMAX2
-         DO J1 = jmin3,jmax3
-            DO I1 = imin3, imax3
-               IF (ns_wall_at(i1,j1,k1)) THEN
-                  A_M(I1,J1,K1,E) = ZERO
-                  A_M(I1,J1,K1,W) = ZERO
-                  A_M(I1,J1,K1,N) = ZERO
-                  A_M(I1,J1,K1,S) = ZERO
-                  A_M(I1,J1,K1,T) = ZERO
-                  A_M(I1,J1,K1,B) = -ONE
-                  A_M(I1,J1,K1,0) = -ONE
-                  B_M(I1,J1,K1) = ZERO
-               ELSEIF (fs_wall_at(i1,j1,k1)) THEN
-                  A_M(I1,J1,K1,E) = ZERO
-                  A_M(I1,J1,K1,W) = ZERO
-                  A_M(I1,J1,K1,N) = ZERO
-                  A_M(I1,J1,K1,S) = ZERO
-                  A_M(I1,J1,K1,T) = ZERO
-                  A_M(I1,J1,K1,B) = ONE
-                  A_M(I1,J1,K1,0) = -ONE
-                  B_M(I1,J1,K1) = ZERO
-               ENDIF
-            ENDDO
+      K1 = KMAX2
+      DO J1 = jmin3,jmax3
+         DO I1 = imin3, imax3
+            IF (ns_wall_at(i1,j1,k1)) THEN
+               A_M(I1,J1,K1,E) = ZERO
+               A_M(I1,J1,K1,W) = ZERO
+               A_M(I1,J1,K1,N) = ZERO
+               A_M(I1,J1,K1,S) = ZERO
+               A_M(I1,J1,K1,T) = ZERO
+               A_M(I1,J1,K1,B) = -ONE
+               A_M(I1,J1,K1,0) = -ONE
+               B_M(I1,J1,K1) = ZERO
+            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+               A_M(I1,J1,K1,E) = ZERO
+               A_M(I1,J1,K1,W) = ZERO
+               A_M(I1,J1,K1,N) = ZERO
+               A_M(I1,J1,K1,S) = ZERO
+               A_M(I1,J1,K1,T) = ZERO
+               A_M(I1,J1,K1,B) = ONE
+               A_M(I1,J1,K1,0) = -ONE
+               B_M(I1,J1,K1) = ZERO
+            ENDIF
          ENDDO
-      ENDIF   ! end if (do_k)
+      ENDDO
 
 ! south xz plane
       J1 = 1

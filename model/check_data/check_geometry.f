@@ -17,12 +17,9 @@
       use geometry, only: DY, YLENGTH
       use geometry, only: DZ, ZLENGTH
 
-      use geometry, only: NO_I, IMAX, IMAX3
-      use geometry, only: NO_J, JMAX, JMAX3
-      use geometry, only: NO_K, KMAX, KMAX3
-
-! Runtime flag specifying 2D simulations
-!      use geometry, only: NO_K
+      use geometry, only: IMAX, IMAX3
+      use geometry, only: JMAX, JMAX3
+      use geometry, only: KMAX, KMAX3
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -35,11 +32,9 @@
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_GEOMETRY")
 
-      CALL CHECK_AXIS(IMAX, IMAX3, XLENGTH, DX, 'X', 'I', NO_I)
-      CALL CHECK_AXIS(JMAX, JMAX3, YLENGTH, DY, 'Y', 'J', NO_J)
-      CALL CHECK_AXIS(KMAX, KMAX3, ZLENGTH, DZ, 'Z', 'K', NO_K)
-
-      IF(SHIFT) CALL SHIFT_DXYZ
+      CALL CHECK_AXIS(IMAX, IMAX3, XLENGTH, DX, 'X', 'I')
+      CALL CHECK_AXIS(JMAX, JMAX3, YLENGTH, DY, 'Y', 'J')
+      CALL CHECK_AXIS(KMAX, KMAX3, ZLENGTH, DZ, 'Z', 'K')
 
       CALL FINL_ERR_MSG
 
@@ -65,7 +60,7 @@
       use discretelement, only: DESGRIDSEARCH_JMAX
       use discretelement, only: DESGRIDSEARCH_KMAX
 ! Domain size specified by the user.
-      use geometry, only: XLENGTH, YLENGTH, ZLENGTH, NO_K
+      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
 ! Maximum particle size.
       use discretelement, only: MAX_RADIUS
 
@@ -116,9 +111,7 @@
       ENDIF
 
 ! Calculate and/or verify the grid in the Z-axial direction.
-      IF(NO_K) THEN
-         DESGRIDSEARCH_KMAX = 1
-      ELSEIF(DESGRIDSEARCH_KMAX == UNDEFINED_I) THEN
+      IF(DESGRIDSEARCH_KMAX == UNDEFINED_I) THEN
          DESGRIDSEARCH_KMAX = max(int(ZLENGTH/WIDTH), 1)
       ELSEIF((ZLENGTH/dble(DESGRIDSEARCH_KMAX)) < MAX_DIAM) THEN
          WRITE(ERR_MSG, 1100) 'Z', MAX_DIAM,                           &

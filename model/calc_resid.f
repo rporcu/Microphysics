@@ -146,7 +146,6 @@
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1  , only: large_number, small_number, zero, one
       use matrix  , only: e, w, s, n, t, b
-      use geometry, only: do_k
       use run     , only: debug_resid
 
       IMPLICIT NONE
@@ -229,9 +228,8 @@
               A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
               A_M(I,J,K,S)*vel(i,jminus(i,j,k),k))
 
-            IF (DO_K) &
-               NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
-                               A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
+             NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
+                A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
 
             ! Ignore momentum residual in stagnant regions.  Need an alternative
             ! criteria for residual scaling for such cases.

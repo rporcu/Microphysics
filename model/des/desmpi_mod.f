@@ -88,7 +88,6 @@
       use discretelement, only: MAX_PIP, PIP
       use functions, only: is_ghost, is_nonexistent, is_normal, is_entering_ghost, is_exiting_ghost
 
-      use geometry, only: NO_K
       use compar, only: myPE
 
       use desgrid, only: dg_funijk, iofpos, jofpos
@@ -124,7 +123,7 @@
          write(44,*) &
             "------------------------------------------------------"
       case (2)
-         ltordimn = merge(1,3,NO_K)
+         ltordimn = 3
          lpacketsize = 2*dimn + ltordimn+ 5
          do lface =1,dimn*2
             if (.not.iexchflag(lface))cycle
@@ -145,7 +144,7 @@
             end if
          end do
       case (3)
-         ltordimn = merge(1,3,NO_K)
+         ltordimn = 3
          lpacketsize = 2*dimn + ltordimn+ 5
          do lface =1,dimn*2
             if (.not.iexchflag(lface))cycle
@@ -187,7 +186,7 @@
                   is_exiting_ghost(lcurpar)),xpos,ypos,li,lj,dg_funijk(li,lj,1)
           end do
       case (5)
-         ltordimn = merge(1,3,NO_K)
+         ltordimn = 3
          lpacketsize = 9*dimn + ltordimn*4 + 13
          do lface =1,dimn*2
             if (.not.iexchflag(lface))cycle

@@ -71,7 +71,7 @@
          end do
          end do
       end if
-      if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
+      if (des_periodic_walls_z .and. nodesk.eq.1) then
          do li = istart2,iend2
          do lj = jstart2,jend2
             des_rops_node(li,lj,1,:)  = des_rops_node(li,lj,1,:)+des_rops_node(li,lj,kmax1,:)
@@ -132,7 +132,7 @@
          end do
          end do
       end if
-      if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
+      if (des_periodic_walls_z .and. nodesk.eq.1) then
          do li = istart2,iend2
          do lj = jstart2,jend2
             drag_am(li,lj,1) = drag_am(li,lj,1)+drag_am(li,lj,kmax1)
@@ -187,7 +187,7 @@
          end do
          end do
       end if
-      if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
+      if (des_periodic_walls_z .and. nodesk.eq.1) then
          do li = istart2,iend2
          do lj = jstart2,jend2
             des_rops_node(li,lj,1,:) = des_rops_node(li,lj,1,:)+des_rops_node(li,lj,kmax1,:)

@@ -696,13 +696,11 @@
       integer function km1(k)
 
       use compar, only: nodesk, kstart3
-      use geometry, only: no_k, kmin1, kmin2, kmax1, cyclic_z
+      use geometry, only: kmin1, kmin2, kmax1, cyclic_z
       implicit none
       integer, intent(in) :: k
 
-      if(no_k) then
-         km1 = kmax1
-      elseif(k==kmin2) then
+      if(k==kmin2) then
          km1 = kmin2
       elseif(cyclic_z .and. nodesk == 1 .and. k==kmin1 ) then
          km1 = kmax1
@@ -717,13 +715,11 @@
       integer function kp1(k)
 
       use compar, only: nodesk, kend3
-      use geometry, only: no_k, kmin1, kmax2, kmax1, cyclic_z
+      use geometry, only: kmin1, kmax2, kmax1, cyclic_z
       implicit none
       integer, intent(in) :: k
 
-      if(no_k)then
-         kp1 = kmin1
-      elseif(k==kmax2) then
+      if(k==kmax2) then
          kp1 = kmax2
       elseif(cyclic_z .and. nodesk == 1 .and. k==kmax1 ) then
          kp1 = kmin1

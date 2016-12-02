@@ -46,8 +46,6 @@
       use discretelement, only: iGHOST_UPDATED
       use desmpi, only: iSPOT
 
-      use geometry, only: NO_K
-
 ! Module procedures
 !---------------------------------------------------------------------//
       use mpi_pack_des, only: desmpi_pack_parcross
@@ -92,7 +90,7 @@
       end do
 
       ispot = 1
-      do linter = merge(2,3,NO_K),1,-1
+      do linter = 3,1,-1
          do lface = linter*2-1,linter*2
             if(.not.iexchflag(lface))cycle
             call desmpi_pack_parcross(lface)
@@ -126,7 +124,7 @@
 
       ighost_updated(:) = .false.
       ispot = 1
-      do linter = 1,merge(2,3,NO_K)
+      do linter = 1,3
          do lface = linter*2-1,linter*2
             if(.not.iexchflag(lface))cycle
             call desmpi_pack_ghostpar(lface)

@@ -62,7 +62,6 @@
 
 ! Check the initial conditions for the DEM model as well
       IF(DEM_SOLIDS) CALL CHECK_IC_COMMON_DISCRETE
-      IF(DEM_SOLIDS) CALL CHECK_IC_DEM
 
 ! Finalize the error manager.
       CALL FINL_ERR_MSG
@@ -93,9 +92,9 @@
       use ic, only: IC_Y_n, IC_Y_s, IC_J_n, IC_J_s
       use ic, only: IC_Z_t, IC_Z_b, IC_K_t, IC_K_b
 ! User specified: System geometry
-      use geometry, only: NO_I, IMAX, IMIN1, IMAX1, XLENGTH, DX
-      use geometry, only: NO_J, JMAX, JMIN1, JMAX1, YLENGTH, DY
-      use geometry, only: NO_K, KMAX, KMIN1, KMAX1, ZLENGTH, DZ
+      use geometry, only: IMAX, IMIN1, IMAX1, XLENGTH, DX
+      use geometry, only: JMAX, JMIN1, JMAX1, YLENGTH, DY
+      use geometry, only: KMAX, KMIN1, KMAX1, ZLENGTH, DZ
 ! Flag: New run or a restart.
       use run, only: RUN_TYPE
 
@@ -156,57 +155,33 @@
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
          IF (IC_X_W(ICV)==UNDEFINED .AND. IC_I_W(ICV)==UNDEFINED_I) THEN
-            IF (NO_I) THEN
-               IC_X_W(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_X_w and IC_I_w'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_X_w and IC_I_w'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF (IC_X_E(ICV)==UNDEFINED .AND. IC_I_E(ICV)==UNDEFINED_I) THEN
-            IF (NO_I) THEN
-               IC_X_E(ICV) = XLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_X_e and IC_I_e'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_X_e and IC_I_e'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF (IC_Y_S(ICV)==UNDEFINED .AND. IC_J_S(ICV)==UNDEFINED_I) THEN
-            IF (NO_J) THEN
-               IC_Y_S(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_Y_s and IC_J_s'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_Y_s and IC_J_s'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF (IC_Y_N(ICV)==UNDEFINED .AND. IC_J_N(ICV)==UNDEFINED_I) THEN
-            IF (NO_J) THEN
-               IC_Y_N(ICV) = YLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_Y_n and IC_J_n'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_Y_n and IC_J_n'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF (IC_Z_B(ICV)==UNDEFINED .AND. IC_K_B(ICV)==UNDEFINED_I) THEN
-            IF (NO_K) THEN
-               IC_Z_B(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_Z_b and IC_K_b'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_Z_b and IC_K_b'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF (IC_Z_T(ICV)==UNDEFINED .AND. IC_K_T(ICV)==UNDEFINED_I) THEN
-            IF (NO_K) THEN
-               IC_Z_T(ICV) = ZLENGTH
-            ELSE
-               WRITE(ERR_MSG, 1100) ICV, 'IC_Z_t and IC_K_t'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1100) ICV, 'IC_Z_t and IC_K_t'
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
       ENDDO   ! end loop over (icv = 1,dimension_ic)
@@ -222,14 +197,9 @@
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
          IF (IC_X_W(ICV)/=UNDEFINED .AND. IC_X_E(ICV)/=UNDEFINED) THEN
-            IF (NO_I) THEN
-               I_W = 1
-               I_E = 1
-            ELSE
-               CALL CALC_CELL (IC_X_W(ICV), DX, IMAX, I_W)
-               I_W = I_W + 1
-               CALL CALC_CELL (IC_X_E(ICV), DX, IMAX, I_E)
-            ENDIF
+            CALL CALC_CELL (IC_X_W(ICV), DX, IMAX, I_W)
+            I_W = I_W + 1
+            CALL CALC_CELL (IC_X_E(ICV), DX, IMAX, I_E)
             IF (IC_I_W(ICV)/=UNDEFINED_I .OR. IC_I_E(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_I_W(ICV), I_W, ICV, 'IC - west')
                CALL LOCATION_CHECK (IC_I_E(ICV), I_E, ICV, 'IC - east')
@@ -259,14 +229,9 @@
          ENDIF
 
          IF (IC_Y_S(ICV)/=UNDEFINED .AND. IC_Y_N(ICV)/=UNDEFINED) THEN
-            IF (NO_J) THEN
-               J_S = 1
-               J_N = 1
-            ELSE
-               CALL CALC_CELL (IC_Y_S(ICV), DY, JMAX, J_S)
-               J_S = J_S + 1
-               CALL CALC_CELL (IC_Y_N(ICV), DY, JMAX, J_N)
-            ENDIF
+            CALL CALC_CELL (IC_Y_S(ICV), DY, JMAX, J_S)
+            J_S = J_S + 1
+            CALL CALC_CELL (IC_Y_N(ICV), DY, JMAX, J_N)
             IF (IC_J_S(ICV)/=UNDEFINED_I .OR. IC_J_N(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_J_S(ICV), J_S, ICV, 'IC - south')
                CALL LOCATION_CHECK (IC_J_N(ICV), J_N, ICV, 'IC - north')
@@ -295,14 +260,9 @@
 
 
          IF (IC_Z_B(ICV)/=UNDEFINED .AND. IC_Z_T(ICV)/=UNDEFINED) THEN
-            IF (NO_K) THEN
-               K_B = 1
-               K_T = 1
-            ELSE
-               CALL CALC_CELL (IC_Z_B(ICV), DZ, KMAX, K_B)
-               K_B = K_B + 1
-               CALL CALC_CELL (IC_Z_T(ICV), DZ, KMAX, K_T)
-            ENDIF
+            CALL CALC_CELL (IC_Z_B(ICV), DZ, KMAX, K_B)
+            K_B = K_B + 1
+            CALL CALC_CELL (IC_Z_T(ICV), DZ, KMAX, K_T)
             IF (IC_K_B(ICV)/=UNDEFINED_I .OR. IC_K_T(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_K_B(ICV), K_B, ICV, 'IC - bottom')
                CALL LOCATION_CHECK (IC_K_T(ICV), K_T, ICV, 'IC - top')
@@ -362,8 +322,6 @@
 
 ! Specified constant gas density and viscosity.
       use fld_const, only: ro_g0
-! Flag: Do not solve in specified direction.
-      use geometry, only: NO_I, NO_J, NO_K
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -395,30 +353,18 @@
 ! Check that gas phase velocity components are initialized.
       IF(BASIC_IC) THEN
          IF(IC_U_G(ICV) == UNDEFINED) THEN
-            IF(NO_I) THEN
-               IC_U_G(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1000) trim(iVar('IC_U_g',ICV))
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1000) trim(iVar('IC_U_g',ICV))
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IC_V_G(ICV) == UNDEFINED) THEN
-            IF(NO_J) THEN
-               IC_V_G(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1000) trim(iVar('IC_V_g',ICV))
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
+            WRITE(ERR_MSG, 1000) trim(iVar('IC_V_g',ICV))
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IC_W_G(ICV) == UNDEFINED) THEN
-            IF (NO_K) THEN
-               IC_W_G(ICV) = ZERO
-            ELSE
-               WRITE(ERR_MSG, 1000) trim(iVar('IC_W_g',ICV))
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-           ENDIF
+            WRITE(ERR_MSG, 1000) trim(iVar('IC_W_g',ICV))
+            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
       ENDIF
 
@@ -479,8 +425,6 @@
 
 ! Number of solids phases.
       use physprop, only: MMAX
-! Flag: Do not solve in specified direction.
-      use geometry, only: NO_I, NO_J, NO_K
 
       use physprop, only: ro_s0
 
@@ -568,7 +512,7 @@
 ! check that solids phase m velocity components are initialized
          IF(BASIC_IC) THEN
             IF(IC_U_S(ICV,M) == UNDEFINED) THEN
-               IF (SKIP(M) .OR. NO_I) THEN
+               IF (SKIP(M)) THEN
                   IC_U_S(ICV,M) = ZERO
                ELSE
                   WRITE(ERR_MSG, 1000)trim(iVar('IC_U_s',ICV,M))
@@ -577,7 +521,7 @@
             ENDIF
 
             IF(IC_V_S(ICV,M) == UNDEFINED) THEN
-               IF(SKIP(M) .OR. NO_J) THEN
+               IF(SKIP(M)) THEN
                   IC_V_S(ICV,M) = ZERO
                ELSE
                   WRITE(ERR_MSG, 1000)trim(iVar('IC_V_s',ICV,M))
@@ -586,7 +530,7 @@
             ENDIF
 
             IF(IC_W_S(ICV,M) == UNDEFINED) THEN
-               IF(SKIP(M) .OR. NO_K) THEN
+               IF(SKIP(M)) THEN
                   IC_W_S(ICV,M) = ZERO
                ELSE
                   WRITE(ERR_MSG, 1000)trim(iVar('IC_W_s',ICV,M))

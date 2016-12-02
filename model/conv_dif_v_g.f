@@ -79,7 +79,6 @@ module v_g_conv_dif
 
       USE functions, only: jplus
       USE fun_avg, only: avg
-      USE geometry, only: do_k
 
       IMPLICIT NONE
 
@@ -110,7 +109,7 @@ module v_g_conv_dif
           DO I = istart3, iend3
             U(I,J,K) = AVG(U_G(I,J,K),U_G(i,jplus(i,j,k),k))
             V(I,J,K) = AVG(V_G(I,J,K),V_G(i,jplus(i,j,k),k))
-            IF (DO_K) WW(I,J,K) = AVG(W_G(I,J,K),W_G(i,jplus(i,j,k),k))
+            WW(I,J,K) = AVG(W_G(I,J,K),W_G(i,jplus(i,j,k),k))
           ENDDO
         ENDDO
       ENDDO
@@ -137,7 +136,6 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      USE geometry , only: do_k
 
       USE param1, only: half
       IMPLICIT NONE
@@ -162,16 +160,15 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
 
       Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(i,jplus(i,j,k),k))
-      Flux_w = HALF * (Flux_gE(iminus(i,j,k),j,k) + Flux_gE(iminus(i,j,k),jplus(iminus(i,j,k),j,k),k))
+      Flux_w = HALF * (Flux_gE(iminus(i,j,k),j,k) + &
+                       Flux_gE(iminus(i,j,k),jplus(iminus(i,j,k),j,k),k))
 
       Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(i,jplus(i,j,k),k))
       Flux_s = HALF * (Flux_gN(i,jminus(i,j,k),k) + Flux_gN(i,j,k))
 
-      IF (DO_K) THEN
-         Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,jplus(i,j,k),k))
-         Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + &
-                          Flux_gT(i,jplus(i,j,kminus(i,j,k)),kminus(i,j,k)))
-      ENDIF
+      Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,jplus(i,j,k),k))
+      Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + &
+                       Flux_gT(i,jplus(i,j,kminus(i,j,k)),kminus(i,j,k)))
 
       END SUBROUTINE GET_VCELL_GCFLUX_TERMS
 
@@ -197,7 +194,6 @@ module v_g_conv_dif
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
 
       USE geometry, only: odx, ody, odz
-      USE geometry, only: do_k
       USE geometry, only: ayz, axz, axy
 
       USE functions, only: im1, jp1, km1
@@ -221,9 +217,6 @@ module v_g_conv_dif
 ! Local variables
       INTEGER :: jc, jn
 !---------------------------------------------------------------------//
-! length terms
-      DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-!---------------------------------------------------------------------//
       jn = jnorth(i,j,k)
 
       IF (wall_at(i,j,k)) THEN
@@ -232,39 +225,30 @@ module v_g_conv_dif
          jc = j
       ENDIF
 
-      C_AE = ODX
-      C_AW = ODX
-      C_AN = ODY
-      C_AS = ODY
-      C_AT = ODZ
-      C_AB = ODZ
-
 ! East face (i+1/2, j+1/2, k)
       D_Fe = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(ieast(i,j,k),j,k)),&
                    AVG_H(MU_G(i,jn,k), &
-                         MU_G(ieast(i,jn,k),jn,k)))*C_AE*AYZ
+                         MU_G(ieast(i,jn,k),jn,k)))*ODX*AYZ
 ! West face (i-1/2, j+1/2, k)
       D_Fw = AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k),MU_G(i,jc,k)),&
                    AVG_H(MU_G(iwest(i,j,k),jnorth(iwest(i,j,k),j,k),k),&
-                         MU_G(i           ,jn,k)))*C_AW*AYZ
+                         MU_G(i           ,jn,k)))*ODX*AYZ
 
       ! North face (i, j+1, k)
-      D_Fn = MU_G(i,jn,k)*C_AN*AXZ
+      D_Fn = MU_G(i,jn,k)*ODY*AXZ
 
       ! South face (i, j, k)
-      D_Fs = MU_G(i,jc,k)*C_AS*AXZ
+      D_Fs = MU_G(i,jc,k)*ODY*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
-      IF (DO_K) THEN
 
 ! Top face (i, j+1/2, k+1/2)
-         D_Ft = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(i,j,ktop(i,j,k))),&
-                      AVG_H(MU_G(i,jn,k),MU_G(i,jnorth(i,j,ktop(i,j,k)),ktop(i,j,k))))*C_AT*AXY
+      D_Ft = AVG_H(AVG_H(MU_G(i,jc,k),MU_G(i,j,ktop(i,j,k))),&
+             AVG_H(MU_G(i,jn,k),MU_G(i,jnorth(i,j,ktop(i,j,k)),ktop(i,j,k))))*ODZ*AXY
 ! Bottom face (i, j+1/2, k-1/2)
-         D_Fb = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(i,jc,k)),&
-                      AVG_H(MU_G(i,jnorth(i,j,kbot(i,j,k)),kbot(i,j,k)),MU_G(i,jn,k)))*C_AB*AXY
-      ENDIF   ! end if (do_k)
+      D_Fb = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(i,jc,k)),&
+             AVG_H(MU_G(i,jnorth(i,j,kbot(i,j,k)),kbot(i,j,k)),MU_G(i,jn,k)))*ODZ*AXY
 
       RETURN
 
@@ -299,7 +283,6 @@ module v_g_conv_dif
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_n
-      USE geometry, only: do_k
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
@@ -382,25 +365,22 @@ module v_g_conv_dif
             ENDIF
 
 
-            IF (DO_K) THEN
-
 ! Top face (i, j+1/2, k+1/2)
-               IF (Flux_t >= ZERO) THEN
-                  A_V_G(I,J,K,T) = D_Ft
-                  A_V_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
-               ELSE
-                  A_V_G(I,J,K,T) = D_Ft - Flux_t
-                  A_V_G(i,j,kplus(i,j,k),B) = D_Ft
-               ENDIF
+            IF (Flux_t >= ZERO) THEN
+               A_V_G(I,J,K,T) = D_Ft
+               A_V_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
+            ELSE
+               A_V_G(I,J,K,T) = D_Ft - Flux_t
+               A_V_G(i,j,kplus(i,j,k),B) = D_Ft
+            ENDIF
 ! Bottom face (i, j+1/2, k-1/2)
-               IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
-                  IF (Flux_b >= ZERO) THEN
-                     A_V_G(I,J,K,B) = D_Fb + Flux_b
-                  ELSE
-                     A_V_G(I,J,K,B) = D_Fb
-                  ENDIF
+            IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
+               IF (Flux_b >= ZERO) THEN
+                  A_V_G(I,J,K,B) = D_Fb + Flux_b
+               ELSE
+                  A_V_G(I,J,K,B) = D_Fb
                ENDIF
-            ENDIF   ! end if (do_k)
+            ENDIF
 
          ENDIF   ! end if flow_at_n
       ENDDO
@@ -436,8 +416,6 @@ module v_g_conv_dif
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: flow_at_n
-
-      USE geometry, only: do_k
 
       USE param1, only: one
 
@@ -505,51 +483,49 @@ module v_g_conv_dif
         DO J = jstart3, jend3
           DO I = istart3, iend3
 
-         IF (FLOW_AT_N(i,j,k)) THEN
+             IF (FLOW_AT_N(i,j,k)) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-            CALL GET_VCELL_GCFLUX_TERMS(&
-               flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, &
-               flux_ge, flux_gn, flux_gt, i, j, k)
-            CALL GET_VCELL_GDIFF_TERMS(&
-               d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, mu_g, i, j, k)
+                CALL GET_VCELL_GCFLUX_TERMS(&
+                   flux_e, flux_w, flux_n, &
+                   flux_s, flux_t, flux_b, &
+                   flux_ge, flux_gn, flux_gt, i, j, k)
+                CALL GET_VCELL_GDIFF_TERMS(&
+                   d_fe, d_fw, d_fn, d_fs, &
+                   d_ft, d_fb, mu_g, i, j, k)
 
 ! East face (i+1/2, j+1/2, k)
-            A_V_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
-            A_V_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(i,j,k))*Flux_e
+                A_V_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
+                A_V_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(i,j,k))*Flux_e
 ! West face (i-1/2, j+1/2, k)
-            IF (.NOT.FLOW_AT_N(iminus(i,j,k),j,k)) THEN
-               A_V_G(I,J,K,W) = D_Fw + (ONE - XSI_E(iminus(i,j,k),j,k))*Flux_w
-            ENDIF
+                IF (.NOT.FLOW_AT_N(iminus(i,j,k),j,k)) THEN
+                   A_V_G(I,J,K,W) = D_Fw + (ONE - XSI_E(iminus(i,j,k),j,k))*Flux_w
+                ENDIF
 
 
 ! North face (i, j+1, k)
-            A_V_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
-            A_V_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(i,j,k))*Flux_n
+                A_V_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
+                A_V_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(i,j,k))*Flux_n
 ! South face (i, j, k)
-            IF (.NOT.FLOW_AT_N(i,jminus(i,j,k),k)) THEN
-               A_V_G(I,J,K,S) = D_Fs + (ONE - XSI_N(i,jminus(i,j,k),k))*Flux_s
-            ENDIF
+                IF (.NOT.FLOW_AT_N(i,jminus(i,j,k),k)) THEN
+                   A_V_G(I,J,K,S) = D_Fs + (ONE - XSI_N(i,jminus(i,j,k),k))*Flux_s
+                ENDIF
 
-            IF (DO_K) THEN
 ! Top face (i, j+1/2, k+1/2)
-               A_V_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
-               A_V_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(i,j,k))*Flux_t
+                A_V_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
+                A_V_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(i,j,k))*Flux_t
 ! Bottom face (i, j+1/2, k-1/2)
-               IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
-                  A_V_G(I,J,K,B) = D_Fb + (ONE - XSI_T(i,j,kminus(i,j,k)))*Flux_b
-               ENDIF
-            ENDIF   ! end if (do_k)
+                IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
+                   A_V_G(I,J,K,B) = D_Fb + (ONE - XSI_T(i,j,kminus(i,j,k)))*Flux_b
+                ENDIF
 
-         ENDIF   ! end if (flow_at_n)
-      ENDDO
-      ENDDO
-      ENDDO
+             ENDIF   ! end if (flow_at_n)
+          ENDDO
+       ENDDO
+    ENDDO
 
-      deallocate( U, V, WW )
-      deallocate( xsi_e, xsi_n, xsi_t)
+    deallocate( U, V, WW )
+    deallocate( xsi_e, xsi_n, xsi_t)
 
       RETURN
       END SUBROUTINE STORE_A_V_G1

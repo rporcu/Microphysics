@@ -514,12 +514,6 @@
       COORDINATES = UNDEFINED_C
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>(Do not use.)</description>
-!  <valid value=".FALSE." note="x (r) direction is considered."/>
-!  <valid value=".TRUE." note="x (r) direction is not considered."/>
-!     NO_I = .FALSE.
-!</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Number of cells in the x (r) direction.</description>
@@ -530,13 +524,6 @@
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the x (r) direction.</description>
       XLENGTH = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>(Do not use.)</description>
-!  <valid value=".FALSE. note="y-direction is considered."/>
-!  <valid value=".TRUE." note="y-direction is not considered."/>
-!     NO_J = .FALSE.
 !</keyword>
 
 
@@ -551,15 +538,6 @@
       YLENGTH = UNDEFINED
 !</keyword>
 
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>
-!    Flag to disable the third dimension (i.e., 2D simulation).
-!      o Z axis in Cartesian coordinate system
-!  </description>
-!  <valid value=".FALSE." note="3D simulation."/>
-!  <valid value=".TRUE."  note="2D simulation."/>
-      NO_K = .FALSE.
-!</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>Number of cells in the z-direction.</description>

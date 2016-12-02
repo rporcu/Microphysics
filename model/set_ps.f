@@ -13,7 +13,7 @@
       use compar   , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
       use functions, only: fluid_at
-      use geometry , only: do_k, vol
+      use geometry , only: vol
       use param1, only: zero, small_number, undefined
       use ps
 
@@ -48,8 +48,8 @@
 ! information is used to allocate some temp arrays.
 !---------------------------------------------------------------------//
          PS_SIZE = (PS_I_E(PSV) - PS_I_W(PSV) + 1) * &
-                   (PS_J_N(PSV) - PS_J_S(PSV) + 1)
-         if(DO_K) PS_SIZE = PS_SIZE * (PS_K_T(PSV) - PS_K_B(PSV) + 1)
+                   (PS_J_N(PSV) - PS_J_S(PSV) + 1) * &
+                   (PS_K_T(PSV) - PS_K_B(PSV) + 1)
 
          if(PS_SIZE < 1) then
              eMsg = ''; write(eMsg,"('Invalid PS size: ', I4)")PS_SIZE
@@ -132,8 +132,7 @@
       DOUBLE PRECISION, intent(inout) :: lU, lV, lW
 
 ! Normalize velocities:
-      VEL_MAG = lU**2 + lV**2
-      if(DO_K) VEL_MAG = VEL_MAG + lW**2
+      VEL_MAG = lU**2 + lV**2 + lW**2
 
       VEL_MAG = sqrt(VEL_MAG)
 
@@ -169,7 +168,7 @@
       SUBROUTINE DEBUG_PS(lPSV, lPS_SIZE)
 
       use compar  , only: myPE, PE_IO
-      use geometry, only: do_k, flag
+      use geometry, only:  flag
       use param1  , only: small_number
       use physprop, only: mmax
       use ps
@@ -222,7 +221,7 @@
             PS_X_w(lPSV), PS_X_e(lPSV), PS_I_w(lPSV), PS_I_e(lPSV)
          write(*,"( 5x,'Y:',2(2x,g12.5),' :: ',2(2x,I4))")&
             PS_Y_s(lPSV), PS_Y_n(lPSV), PS_J_s(lPSV), PS_J_n(lPSV)
-         if(DO_K)write(*,"( 5x,'Z:',2(2x,g12.5),' :: ',2(2x,I4))")&
+         write(*,"( 5x,'Z:',2(2x,g12.5),' :: ',2(2x,I4))")&
             PS_Z_b(lPSV), PS_Z_t(lPSV), PS_K_b(lPSV), PS_K_t(lPSV)
 
          write(*,"(/5x,'Volume: ',g12.5)") PS_VOLUME(lPSV)
@@ -235,7 +234,7 @@
             write(*,"(7x,'Normal:')")
             write(*,"(9x,'x-Axis: ',g12.5)")PS_U_g(lPSV)
             write(*,"(9x,'y-Axis: ',g12.5)")PS_V_g(lPSV)
-            if(DO_K) write(*,"(9x,'z-Axis: ',g12.5)")PS_W_g(lPSV)
+            write(*,"(9x,'z-Axis: ',g12.5)")PS_W_g(lPSV)
          else
             write(*,"(//5x,'No gas phase point source.')")
          endif
@@ -249,7 +248,7 @@
                write(*,"(7x,'Normal:')")
                write(*,"(9x,'x-Axis: ',g12.5)")PS_U_s(lPSV,M)
                write(*,"(9x,'y-Axis: ',g12.5)")PS_V_s(lPSV,M)
-               if(DO_K) write(*,"(9x,'z-Axis: ',g12.5)")PS_W_s(lPSV,M)
+               write(*,"(9x,'z-Axis: ',g12.5)")PS_W_s(lPSV,M)
             else
                write(*,"(//5x,'No solids phase ',I1,' point source.')") m
             endif

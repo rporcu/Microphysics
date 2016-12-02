@@ -20,7 +20,7 @@ module comp_mean_fields0_module
       USE interpolation, only: set_interpolation_scheme
       USE functions, only: FUNIJK, funijk_map_c
       USE functions, only: fluid_at
-      USE geometry, only: no_k, do_k, dz, vol_surr, vol
+      USE geometry, only: dz, vol_surr, vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero
@@ -84,10 +84,10 @@ module comp_mean_fields0_module
       MASS_SOL1_ALL = ZERO
       MASS_SOL2_ALL = ZERO
 ! avg_factor=0.25 (in 3D) or =0.5 (in 2D)
-      AVG_FACTOR = merge(0.5d0, 0.25D0, NO_K)
+      AVG_FACTOR = 0.25D0
 
 ! cartesian_grid related quantities
-      COUNT_NODES_INSIDE_MAX = merge(4, 8, NO_K)
+      COUNT_NODES_INSIDE_MAX =8
 
 
 ! Initialize entire arrays to zero
@@ -112,7 +112,7 @@ module comp_mean_fields0_module
 
          PCELL(1) = lli-1
          PCELL(2) = llj-1
-         PCELL(3) = merge(llk-1, 1, DO_K)
+         PCELL(3) = llk-1
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -121,7 +121,7 @@ module comp_mean_fields0_module
 
          COUNT_NODES_OUTSIDE = 0
 ! Computing/setting the geometric stencil
-         DO K=1, merge(1, ONEW, NO_K)
+         DO K=1, ONEW
          DO J=1, ONEW
          DO I=1, ONEW
 
@@ -132,7 +132,7 @@ module comp_mean_fields0_module
 
             GST_TMP(I,J,K,1) = XE(II)
             GST_TMP(I,J,K,2) = YN(JJ)
-            GST_TMP(I,J,K,3) = merge(DZ, ZT(KK), NO_K)
+            GST_TMP(I,J,K,3) = ZT(KK)
 
          ENDDO
          ENDDO
@@ -154,7 +154,7 @@ module comp_mean_fields0_module
 
             TEMP2 = RO_S0(M)*PVOL(NP)
 
-            DO K = 1, merge(1, ONEW, NO_K)
+            DO K = 1, ONEW
             DO J = 1, ONEW
             DO I = 1, ONEW
 ! shift loop index to new variables for manipulation
@@ -224,7 +224,7 @@ module comp_mean_fields0_module
             DES_ROP_DENSITY = DES_ROPS_NODE(i,j,k, M)/vol_surr(i,j,k)
             DES_VEL_DENSITY(:) = DES_VEL_NODE(i,j,k, :, M)/vol_surr(i,j,k)
 
-            DO KK = K, merge(K+1, K, DO_K)
+            DO KK = K, K+1
             DO JJ = J, J+1
             DO II = I, I+1
 
@@ -311,8 +311,6 @@ module comp_mean_fields0_module
 
       SUBROUTINE DRAG_WEIGHTFACTOR(GSTEN,DESPOS,WEIGHTFACTOR)
 
-      use geometry, only: NO_K
-
         IMPLICIT NONE
 
 !-----------------------------------------------
@@ -340,26 +338,18 @@ module comp_mean_fields0_module
         XXVAL(2)=ZETAA(1)
         YYVAL(2)=ZETAA(2)
 
-        IF(NO_K) THEN
+        DZZ = GSTEN(1,1,2,3) - GSTEN(1,1,1,3)
+        ZETAA(3) = DESPOS(3) - GSTEN(1,1,1,3)
+        ZETAA(3) = ZETAA(3)/DZZ
+        ZZVAL(1)=1-ZETAA(3)
+        ZZVAL(2)=ZETAA(3)
+        DO KK=1,2
            DO JJ=1,2
               DO II=1,2
-                 WEIGHTFACTOR(II,JJ,1) = XXVAL(II)*YYVAL(JJ)
+                 WEIGHTFACTOR(II,JJ,KK) = XXVAL(II)*YYVAL(JJ)*ZZVAL(KK)
               ENDDO
            ENDDO
-        ELSE
-           DZZ = GSTEN(1,1,2,3) - GSTEN(1,1,1,3)
-           ZETAA(3) = DESPOS(3) - GSTEN(1,1,1,3)
-           ZETAA(3) = ZETAA(3)/DZZ
-           ZZVAL(1)=1-ZETAA(3)
-           ZZVAL(2)=ZETAA(3)
-           DO KK=1,2
-              DO JJ=1,2
-                 DO II=1,2
-                    WEIGHTFACTOR(II,JJ,KK) = XXVAL(II)*YYVAL(JJ)*ZZVAL(KK)
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDIF
+        ENDDO
 
       END SUBROUTINE DRAG_WEIGHTFACTOR
 

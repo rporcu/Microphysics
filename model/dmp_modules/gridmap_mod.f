@@ -265,19 +265,13 @@
             jstart4_all(iproc) = jstart3_all(iproc)
          endif
 
-         if(no_k) then
-            kstart2_all(iproc) = kstart1_all(iproc)
-            kstart3_all(iproc) = kstart1_all(iproc)
-            kstart4_all(iproc) = kstart1_all(iproc)
+         kstart2_all(iproc) = max(kmin1-1,min(kmax1+1,kstart1_all(iproc)-1))
+         if(nodesk.ne.1) then
+            kstart3_all(iproc) = max(kmin1-2,min(kmax1+2,kstart2_all(iproc)-1))
+            kstart4_all(iproc) = max(kmin1-3,min(kmax1+3,kstart3_all(iproc)-1))
          else
-            kstart2_all(iproc) = max(kmin1-1,min(kmax1+1,kstart1_all(iproc)-1))
-            if(nodesk.ne.1) then
-               kstart3_all(iproc) = max(kmin1-2,min(kmax1+2,kstart2_all(iproc)-1))
-               kstart4_all(iproc) = max(kmin1-3,min(kmax1+3,kstart3_all(iproc)-1))
-            else
-               kstart3_all(iproc) =  kstart2_all(iproc)
-               kstart4_all(iproc) =  kstart3_all(iproc)
-            endif
+            kstart3_all(iproc) =  kstart2_all(iproc)
+            kstart4_all(iproc) =  kstart3_all(iproc)
          endif
 
          iend2_all(iproc) = max(imin1-1,min(imax1+1,iend1_all(iproc)+1))
@@ -298,19 +292,13 @@
             jend4_all(iproc) = jend3_all(iproc)
          endif
 
-         if(no_k) then
-            kend2_all(iproc) = kend1_all(iproc)
-            kend3_all(iproc) = kend1_all(iproc)
-            kend4_all(iproc) = kend1_all(iproc)
+         kend2_all(iproc) = max(kmin1-1,min(kmax1+1,kend1_all(iproc)+1))
+         if(nodesk.ne.1) then
+            kend3_all(iproc) = max(kmin1-2,min(kmax1+2,kend2_all(iproc)+1))
+            kend4_all(iproc) = max(kmin1-3,min(kmax1+3,kend3_all(iproc)+1))
          else
-            kend2_all(iproc) = max(kmin1-1,min(kmax1+1,kend1_all(iproc)+1))
-            if(nodesk.ne.1) then
-               kend3_all(iproc) = max(kmin1-2,min(kmax1+2,kend2_all(iproc)+1))
-               kend4_all(iproc) = max(kmin1-3,min(kmax1+3,kend3_all(iproc)+1))
-            else
-               kend3_all(iproc) = kend2_all(iproc)
-               kend4_all(iproc) = kend3_all(iproc)
-            endif
+            kend3_all(iproc) = kend2_all(iproc)
+            kend4_all(iproc) = kend3_all(iproc)
          endif
       enddo
 

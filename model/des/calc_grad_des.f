@@ -3,7 +3,6 @@
 ! Modules
 !-----------------------------------------------
 
-      use geometry, only: DO_K
       use geometry, only: oDX, oDY, oDZ
       USE geometry, only: IMIN1, JMIN1, KMIN1
       USE geometry, only: IMAX1, JMAX1, KMAX1
@@ -63,18 +62,16 @@
             DEL_PHI(2,I,J,K) = ZERO
          ENDIF
 
-         IF(DO_K) THEN
 
-            IF((K>KMIN1) .AND. (K<KMAX1)) THEN
-               DEL_PHI(3,I,J,K) = oDZ*(AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) -  &
-                  AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
-            ELSEIF(K == KMIN1) THEN
-               DEL_PHI(3,I,J,K) = 2.0d0*oDZ *                         &
-                  (AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) - PHI(I,J,K))
-            ELSEIF(K == KMAX1) THEN
-               DEL_PHI(3,I,J,K) = 2.0d0*oDZ *                         &
-                  (PHI(I,J,K) - AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
-            ENDIF
+         IF((K>KMIN1) .AND. (K<KMAX1)) THEN
+            DEL_PHI(3,I,J,K) = oDZ*(AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) -  &
+               AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
+         ELSEIF(K == KMIN1) THEN
+            DEL_PHI(3,I,J,K) = 2.0d0*oDZ *                         &
+               (AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) - PHI(I,J,K))
+         ELSEIF(K == KMAX1) THEN
+            DEL_PHI(3,I,J,K) = 2.0d0*oDZ *                         &
+               (PHI(I,J,K) - AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
          ENDIF
       ENDDO
       ENDDO

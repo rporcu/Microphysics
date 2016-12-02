@@ -23,7 +23,6 @@
 
       use param, only: DIM_M
       use param1, only: UNDEFINED
-      use geometry, only: NO_I, NO_J, NO_K
       use bc, only: BC_MASSFLOW_G
       use bc, only: BC_VOLFLOW_G
       use bc, only: BC_MASSFLOW_S
@@ -78,7 +77,7 @@
          ENDIF
       ENDDO
 
-      IF(CONVERTED .AND. (NO_I.OR.NO_J.OR.NO_K)) THEN
+      IF(CONVERTED ) THEN
          WRITE(ERR_MSG, 1100)
          CALL FLUSH_ERR_MSG
       ENDIF

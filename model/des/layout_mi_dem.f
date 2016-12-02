@@ -83,7 +83,6 @@
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
-      use geometry, only: DO_K
 
       use funits, only: DMP_LOG
 
@@ -161,7 +160,7 @@
       allocate( MESH_P(0:WMAX) )
 
 ! Calculate number of partitions in the second direction.
-      QLEN = merge(BC_Z_t(BCV) - BC_Z_b(BCV), MAX_DIA, DO_K)
+      QLEN = BC_Z_t(BCV) - BC_Z_b(BCV)
       HMAX = FLOOR(real(QLEN/MAX_DIA))
       allocate( MESH_H(HMAX) )
       allocate( MESH_Q(0:HMAX) )
@@ -197,20 +196,15 @@
       ENDDO
 
 ! Setup the second direction.
-      IF(DO_K) THEN
-         SHIFT = HALF*(QLEN - HMAX*WINDOW)
-         MESH_Q(0) = BC_Z_b(BCV) + SHIFT
-         if(dFlag) write(*,8005) 'Q',SHIFT, 'Q',MESH_Q(0)
-         DO LC=1,HMAX
-            MESH_Q(LC) = MESH_Q(0) + dble(LC-1)*WINDOW
-            SHIFT = MESH_Q(LC) + HALF*WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, MESH_H(LC))
-            IF(dFlag)WRITE(*,8006) LC, 'H', MESH_H(LC), 'Q', MESH_Q(LC)
-         ENDDO
-      ELSE
-         MESH_H(1) = 1
-         MESH_Q(1) = 0.0d0
-      ENDIF
+      SHIFT = HALF*(QLEN - HMAX*WINDOW)
+      MESH_Q(0) = BC_Z_b(BCV) + SHIFT
+      if(dFlag) write(*,8005) 'Q',SHIFT, 'Q',MESH_Q(0)
+      DO LC=1,HMAX
+         MESH_Q(LC) = MESH_Q(0) + dble(LC-1)*WINDOW
+         SHIFT = MESH_Q(LC) + HALF*WINDOW
+         CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, MESH_H(LC))
+         IF(dFlag)WRITE(*,8006) LC, 'H', MESH_H(LC), 'Q', MESH_Q(LC)
+      ENDDO
 
 ! Get the Jth index of the fluid cell
       CALL CALC_CELL_INTERSECT(BC_Y_s(BCV), DY, JMAX, J)
@@ -225,34 +219,20 @@
          K = MESH_H(H)
          FULL_MAP(W,H) = 0
 
+         CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
+         CALL CALC_CELL_INTERSECT(MESH_Q(H), DZ, KMAX, K)
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
 
-         IF(DO_K) THEN
+         SHIFT = MESH_P(W)+WINDOW
+         CALL CALC_CELL_INTERSECT(SHIFT, DX, IMAX, I)
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
 
-            CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
-            CALL CALC_CELL_INTERSECT(MESH_Q(H), DZ, KMAX, K)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         SHIFT = MESH_Q(H)+WINDOW
+         CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, K)
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
 
-            SHIFT = MESH_P(W)+WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DX, IMAX, I)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-            SHIFT = MESH_Q(H)+WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, K)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-            CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-         ELSE
-
-            K = MESH_H(1)
-            CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-            SHIFT = MESH_P(W)+WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DX, IMAX, I)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-         ENDIF
+         CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
 
          FULL_MAP(W,H) = myPE+1
       ENDDO
@@ -420,7 +400,6 @@
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
-      use geometry, only: DO_K
 
       use funits, only: DMP_LOG
 
@@ -497,7 +476,7 @@
       allocate( MESH_P(0:WMAX) )
 
 ! Calculate number of partitions in the second direction.
-      QLEN = merge(BC_Z_t(BCV) - BC_Z_b(BCV), MAX_DIA, DO_K)
+      QLEN = BC_Z_t(BCV) - BC_Z_b(BCV)
       HMAX = FLOOR(real(QLEN/MAX_DIA))
       allocate( MESH_H(HMAX) )
       allocate( MESH_Q(0:HMAX) )
@@ -533,20 +512,15 @@
       ENDDO
 
 ! Setup the second direction.
-      IF(DO_K) THEN
-         SHIFT = HALF*(QLEN - HMAX*WINDOW)
-         MESH_Q(0) = BC_Z_b(BCV) + SHIFT
-         if(dFlag) write(*,8005) 'Q',SHIFT, 'Q',MESH_Q(0)
-         DO LC=1,HMAX
-            MESH_Q(LC) = MESH_Q(0) + dble(LC-1)*WINDOW
-            SHIFT = MESH_Q(LC) + HALF*WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, MESH_H(LC))
-            IF(dFlag)WRITE(*,8006) LC, 'H', MESH_H(LC), 'Q', MESH_Q(LC)
-         ENDDO
-      ELSE
-         MESH_H(1) = 1
-         MESH_Q(1) = 0.0d0
-      ENDIF
+      SHIFT = HALF*(QLEN - HMAX*WINDOW)
+      MESH_Q(0) = BC_Z_b(BCV) + SHIFT
+      if(dFlag) write(*,8005) 'Q',SHIFT, 'Q',MESH_Q(0)
+      DO LC=1,HMAX
+         MESH_Q(LC) = MESH_Q(0) + dble(LC-1)*WINDOW
+         SHIFT = MESH_Q(LC) + HALF*WINDOW
+         CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, MESH_H(LC))
+         IF(dFlag)WRITE(*,8006) LC, 'H', MESH_H(LC), 'Q', MESH_Q(LC)
+      ENDDO
 
 ! Get the Jth index of the fluid cell
       CALL CALC_CELL_INTERSECT(BC_X_w(BCV), DX, IMAX, I)
@@ -560,9 +534,6 @@
          J = MESH_W(W)
          K = MESH_H(H)
          FULL_MAP(W,H) = 0
-
-
-         IF(DO_K) THEN
 
             CALL CALC_CELL_INTERSECT(MESH_P(W), DY, JMAX, J)
             CALL CALC_CELL_INTERSECT(MESH_Q(H), DZ, KMAX, K)
@@ -578,17 +549,6 @@
 
             CALL CALC_CELL_INTERSECT(MESH_P(W), DY, JMAX, J)
             IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-         ELSE
-
-            K = MESH_H(1)
-            CALL CALC_CELL_INTERSECT(MESH_P(W), DY, JMAX, J)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-
-            SHIFT = MESH_P(W)+WINDOW
-            CALL CALC_CELL_INTERSECT(SHIFT, DY, JMAX, J)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
-         ENDIF
 
          FULL_MAP(W,H) = myPE+1
       ENDDO

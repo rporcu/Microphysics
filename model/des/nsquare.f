@@ -14,7 +14,7 @@
       use discretelement
       use des_bc
       use des_allocate
-      use geometry, only: DO_K, xlength, ylength, zlength
+      use geometry, only: xlength, ylength, zlength
       use functions
 
       IMPLICIT NONE
@@ -82,16 +82,14 @@
                      YPOS(JJ) = DES_POS_NEW(LL,2) - YLENGTH
                   ENDIF
                ENDIF
-               IF(DO_K) THEN
-                  ZPOS(:) = DES_POS_NEW(LL,3)
-                  IF(DES_PERIODIC_WALLS_Z) THEN
-                     IF (DES_POS_NEW(L,3) + R_LM > ZLENGTH) THEN
-                        KK = 2
-                        ZPOS(KK) = DES_POS_NEW(LL,3) + ZLENGTH
-                     ELSEIF (DES_POS_NEW(L,3) - R_LM < ZERO) THEN
-                        KK = 2
-                        ZPOS(KK) = DES_POS_NEW(LL,3) - ZLENGTH
-                     ENDIF
+               ZPOS(:) = DES_POS_NEW(LL,3)
+               IF(DES_PERIODIC_WALLS_Z) THEN
+                  IF (DES_POS_NEW(L,3) + R_LM > ZLENGTH) THEN
+                     KK = 2
+                     ZPOS(KK) = DES_POS_NEW(LL,3) + ZLENGTH
+                  ELSEIF (DES_POS_NEW(L,3) - R_LM < ZERO) THEN
+                     KK = 2
+                     ZPOS(KK) = DES_POS_NEW(LL,3) - ZLENGTH
                   ENDIF
                ENDIF
 
@@ -102,18 +100,12 @@
                   DO J = 1,JJ
                      TMPPOS(1) = XPOS(I)
                      TMPPOS(2) = YPOS(J)
-                     IF (DO_K) THEN
-                        DO K = 1,KK
-                           TMPPOS(3) = ZPOS(K)
-                           DISTVEC(:) = TMPPOS(:) - DES_POS_NEW(L,:)
-                           DIST = dot_product(DISTVEC,DISTVEC)
-                           IF (DIST.LE.R_LM) EXIT OUTER
-                        ENDDO
-                     ELSE
+                     DO K = 1,KK
+                        TMPPOS(3) = ZPOS(K)
                         DISTVEC(:) = TMPPOS(:) - DES_POS_NEW(L,:)
                         DIST = dot_product(DISTVEC,DISTVEC)
                         IF (DIST.LE.R_LM) EXIT OUTER
-                     ENDIF
+                     ENDDO
                   ENDDO
                ENDDO OUTER
 

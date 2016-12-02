@@ -65,7 +65,6 @@
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
-      USE geometry, only: do_k
       USE param1, only: zero
       IMPLICIT NONE
 
@@ -126,22 +125,20 @@
             ENDIF
 
 
-            IF (DO_K) THEN
 ! Top face (i, j, k+1/2)
-               IF (W(i,j,k) >= ZERO) THEN
-                  ROP_T(i,j,k) = ROP(i,j,k)
-               ELSE
-                  ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
-               ENDIF
+            IF (W(i,j,k) >= ZERO) THEN
+               ROP_T(i,j,k) = ROP(i,j,k)
+            ELSE
+               ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
+            ENDIF
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
-                     ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
-                  ELSE
-                     ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,k)
-                  ENDIF
+            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+               IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
+                  ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
+               ELSE
+                  ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,k)
                ENDIF
-            ENDIF   ! end if do_k
+            ENDIF
 
          ENDIF   ! end if fluid_at
       ENDDO
@@ -174,7 +171,6 @@
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
-      USE geometry, only: do_k
       USE param1, only: one
       USE xsi, only: calc_xsi
       IMPLICIT NONE
@@ -219,36 +215,34 @@
 
 ! East face (i+1/2, j, k)
             ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
-                               XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
+               XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
 ! West face (i-1/2, j, k)
             IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
                ROP_E(iminus(i,j,k),j,k) = &
-                             ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(iwest(i,j,k),j,k) + &
-                                     XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
+                  ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(iwest(i,j,k),j,k) + &
+                  XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
             ENDIF
 
 
 ! North face (i, j+1/2, k)
             ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
-                               XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
+               XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
 ! South face (i, j-1/2, k)
             IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
-               ROP_N(i,jminus(i,j,k),k) = ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
-                                                  XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
+               ROP_N(i,jminus(i,j,k),k) = &
+                  ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
+                  XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
             ENDIF
 
-
-            IF (DO_K) THEN
-
 ! Top face (i, j, k+1/2)
-               ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
-                                    XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
+            ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
+               XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
 ! Bottom face (i, j, k-1/2)
-               IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
-                  ROP_T(i,j,kminus(i,j,k)) = ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
-                                                     XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
-               ENDIF
-            ENDIF   ! end if do_k
+            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+               ROP_T(i,j,kminus(i,j,k)) = &
+                  ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
+                  XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
+            ENDIF
 
          ENDIF   ! end if fluid_at
       ENDDO

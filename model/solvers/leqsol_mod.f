@@ -16,9 +16,6 @@ MODULE leqsol
    use exit_mod, only: mfix_exit
    use functions, only: funijk, funijk_map_c, iplus, jplus, kplus, iminus, jminus, kminus
    use funits, only: dmp_log, unit_log
-   use geometry, ONLY: do_k
-   use geometry, only: no_k
-   use geometry, only: no_k
    use param, only: DIM_EQS
    use param, only: dimension_3
    use param1, only: zero
@@ -146,37 +143,20 @@ CONTAINS
     INTEGER :: I, J, K, IJK
 !-----------------------------------------------
 
-      if (do_k) then
-         do k = kstart,kend
-            do i = istart,iend
-               do j = jstart,jend
-                  ijk = funijk(i,j,k)
-                  AVar(ijk) =  A_m(i,j,k,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
-                             + A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
-                             + A_m(i,j,k,-1) * Var(funijk(iminus(i,j,k),j,k))   &
-                             + A_m(i,j,k, 0) * Var(funijk(i,j,k)            )   &
-                             + A_m(i,j,k, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
-                             + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
-                             + A_m(i,j,k, 3) * Var(funijk(i,j,kplus(i,j,k)) )
-               enddo
-            enddo
-         enddo
-
-      else
-         k = 1
-         do i = istart,iend
-            do j = jstart,jend
-               ijk = funijk(i,j,k)
-               AVar(ijk) =  A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
+    do k = kstart,kend
+       do i = istart,iend
+          do j = jstart,jend
+             ijk = funijk(i,j,k)
+             AVar(ijk) =  A_m(i,j,k,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
+                          + A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
                           + A_m(i,j,k,-1) * Var(funijk(iminus(i,j,k),j,k))   &
                           + A_m(i,j,k, 0) * Var(funijk(i,j,k)            )   &
                           + A_m(i,j,k, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
-                          + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )
+                          + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
+                          + A_m(i,j,k, 3) * Var(funijk(i,j,kplus(i,j,k)) )
+               enddo
             enddo
          enddo
-
-      endif
-
 
        ! call send_recv(Avar,nlayers_bicgs)
     RETURN
@@ -273,206 +253,164 @@ CONTAINS
        DO_REDBLACK = (CH .EQ. 'R') .OR. (CH .EQ. 'r')
        DO_SENDRECV = (CH .EQ. 'S') .OR. (CH .EQ. 's')
 
-       IF (NO_K) THEN   ! two dimensional
-! 2D run no need to enable openmp parallel
-          IF ( DO_ISWEEP ) THEN
-             DO I=istart,iend,1
-                CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
-             ENDDO
-          ENDIF
-! ----------------------------------------------------------------<<<
-! Handan Liu added 2D RSRS sweep and parallelized this loop on Jan 22 2013:
-          IF (DO_REDBLACK) THEN
-             DO I=istart,iend,2
-                CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
-             ENDDO
-             DO I=istart+1,iend,2
-                CALL LEQ_ISWEEP( I, Vname, Var, A_m, B_m )
-             ENDDO
-          ENDIF
-! ---------------------------------------------------------------->>>
-       ELSE   ! three dimensional
-
 
 ! do_all true only for leq_pc='asas'
 ! ---------------------------------------------------------------->>>
-          IF(DO_ALL) THEN        ! redblack for all sweeps, not used by default
+       IF(DO_ALL) THEN        ! redblack for all sweeps, not used by default
 ! JK Loop
 ! --------------------------------
-             j1 = jstart
-             k1 = kstart
-             j2 = jend
-             k2 = kend
-             jsize = j2-j1+1
-             ksize = k2-k1+1
-             DO icase = 1, 2
-                DO JK=icase, ksize*jsize, 2
-                   if (mod(jk,jsize).ne.0) then
-                      k = int( jk/jsize ) + k1
-                   else
-                      k = int( jk/jsize ) + k1 -1
-                   endif
-                   j = (jk-1-(k-k1)*jsize) + j1 + mod(k,2)
-                   if(j.gt.j2) j=j-j2 + j1 -1
-                   CALL LEQ_JKSWEEP(J, K, Vname, Var, A_m, B_m)
-                ENDDO
-
+          j1 = jstart
+          k1 = kstart
+          j2 = jend
+          k2 = kend
+          jsize = j2-j1+1
+          ksize = k2-k1+1
+          DO icase = 1, 2
+             DO JK=icase, ksize*jsize, 2
+                if (mod(jk,jsize).ne.0) then
+                   k = int( jk/jsize ) + k1
+                else
+                   k = int( jk/jsize ) + k1 -1
+                endif
+                j = (jk-1-(k-k1)*jsize) + j1 + mod(k,2)
+                if(j.gt.j2) j=j-j2 + j1 -1
+                CALL LEQ_JKSWEEP(J, K, Vname, Var, A_m, B_m)
              ENDDO
-             ! call send_recv(var,nlayers_bicgs)
+
+          ENDDO
+          ! call send_recv(var,nlayers_bicgs)
 
 ! IJ Loop
 ! --------------------------------
-             i1 = istart
-             j1 = jstart
-             i2 = iend
-             j2 = jend
-             isize = i2-i1+1
-             jsize = j2-j1+1
-             DO icase = 1, 2
-                DO IJ=icase, jsize*isize, 2
-                   if (mod(ij,isize).ne.0) then
-                      j = int( ij/isize ) + j1
-                   else
-                      j = int( ij/isize ) + j1 -1
-                   endif
-                   i = (ij-1-(j-j1)*isize) + i1 + mod(j,2)
-                   if(i.gt.i2) i=i-i2 + i1 -1
-                   CALL LEQ_IJSWEEP(I, J, Vname, Var, A_m, B_m)
-                ENDDO
-
+          i1 = istart
+          j1 = jstart
+          i2 = iend
+          j2 = jend
+          isize = i2-i1+1
+          jsize = j2-j1+1
+          DO icase = 1, 2
+             DO IJ=icase, jsize*isize, 2
+                if (mod(ij,isize).ne.0) then
+                   j = int( ij/isize ) + j1
+                else
+                   j = int( ij/isize ) + j1 -1
+                endif
+                i = (ij-1-(j-j1)*isize) + i1 + mod(j,2)
+                if(i.gt.i2) i=i-i2 + i1 -1
+                CALL LEQ_IJSWEEP(I, J, Vname, Var, A_m, B_m)
              ENDDO
-             ! call send_recv(var,nlayers_bicgs)
+
+          ENDDO
+          ! call send_recv(var,nlayers_bicgs)
 
 ! IK Loop
 ! --------------------------------
-             i1 = istart
-             k1 = kstart
-             i2 = iend
-             k2 = kend
-             isize = i2-i1+1
-             ksize = k2-k1+1
+          i1 = istart
+          k1 = kstart
+          i2 = iend
+          k2 = kend
+          isize = i2-i1+1
+          ksize = k2-k1+1
 
-             DO icase = 1, 2
-                DO IK=icase, ksize*isize, 2
-                   if (mod(ik,isize).ne.0) then
-                      k = int( ik/isize ) + k1
-                   else
-                      k = int( ik/isize ) + k1 -1
-                   endif
-                   i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
-                   if(i.gt.i2) i=i-i2 + i1 -1
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                ENDDO
-
+          DO icase = 1, 2
+             DO IK=icase, ksize*isize, 2
+                if (mod(ik,isize).ne.0) then
+                   k = int( ik/isize ) + k1
+                else
+                   k = int( ik/isize ) + k1 -1
+                endif
+                i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
+                if(i.gt.i2) i=i-i2 + i1 -1
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
              ENDDO
-          ENDIF ! end DO_ALL
+
+          ENDDO
+       ENDIF ! end DO_ALL
 ! ----------------------------------------------------------------<<<
 
 ! do_redblack only true leq_pc='rsrs'
 ! ---------------------------------------------------------------->>>
-          IF(DO_REDBLACK) THEN
-!i1 = istart
-!k1 = kstart
-!i2 = iend
-!k2 = kend
-!isize = i2-i1+1
-!ksize = k2-k1+1
-!               DO icase = 1, 2
-!                  DO IK=icase, ksize*isize, 2
-!                     if (mod(ik,isize).ne.0) then
-!                        k = int( ik/isize ) + k1
-!                     else
-!                        k = int( ik/isize ) + k1 -1
-!                     endif
-!                     i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
-!                     if(i.gt.i2) i=i-i2 + i1 -1
-!                     CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-!                  ENDDO
-!               ENDDO
-!             ELSE
-! Handan Liu split above loop for OpenMP at May 22 2013, modified at July 17
-             DO k=kstart,kend
-                IF(mod(k,2).ne.0)THEN
-                   DO I=istart+1,iend,2
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
-                ELSE
-                   DO I=istart,iend,2
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
-                ENDIF
-             ENDDO
-             DO k=kstart,kend
-                IF(mod(k,2).ne.0)THEN
-                   DO I=istart,iend,2
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
-                ELSE
-                   DO I=istart+1,iend,2
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
-                ENDIF
-             ENDDO
+       IF(DO_REDBLACK) THEN
+          DO k=kstart,kend
+             IF(mod(k,2).ne.0)THEN
+                DO I=istart+1,iend,2
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                ENDDO
+             ELSE
+                DO I=istart,iend,2
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                ENDDO
+             ENDIF
+          ENDDO
+          DO k=kstart,kend
+             IF(mod(k,2).ne.0)THEN
+                DO I=istart,iend,2
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                ENDDO
+             ELSE
+                DO I=istart+1,iend,2
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                ENDDO
+             ENDIF
+          ENDDO
 
-          ENDIF       ! end if(do_redblack)
+       ENDIF       ! end if(do_redblack)
 ! ----------------------------------------------------------------<<<
 
 !  Not sure the purpose of us_ikloop
 !  The SMP directives below need review                        !Tingwen Jan 2012
-          IF(USE_IKLOOP) THEN
+       IF(USE_IKLOOP) THEN
 ! use_ikloop is currently hard-wired to false (so goto else branch)
 ! ---------------------------------------------------------------->>>
-             i1 = istart
-             k1 = kstart
-             i2 = iend
-             k2 = kend
-             isize = i2-i1+1
-             ksize = k2-k1+1
-             IF (DO_ISWEEP) THEN
-                DO IK=1, ksize*isize
-                   if (mod(ik,isize).ne.0) then
-                      k = int( ik/isize ) + k1
-                   else
-                      k = int( ik/isize ) + k1 -1
-                   endif
-                   i = (ik-1-(k-k1)*isize) + i1
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                ENDDO
-             ENDIF
-             IF (DO_KSWEEP) THEN
-                DO IK=1, ksize*isize
-                   if (mod(ik,ksize).ne.0) then
-                      i = int( ik/ksize ) + i1
-                   else
-                      i = int( ik/ksize ) + i1 -1
-                   endif
-                   k = (ik-1-(i-i1)*ksize) + k1
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                ENDDO
-             ENDIF
+          i1 = istart
+          k1 = kstart
+          i2 = iend
+          k2 = kend
+          isize = i2-i1+1
+          ksize = k2-k1+1
+          IF (DO_ISWEEP) THEN
+             DO IK=1, ksize*isize
+                if (mod(ik,isize).ne.0) then
+                   k = int( ik/isize ) + k1
+                else
+                   k = int( ik/isize ) + k1 -1
+                endif
+                i = (ik-1-(k-k1)*isize) + i1
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+             ENDDO
+          ENDIF
+          IF (DO_KSWEEP) THEN
+             DO IK=1, ksize*isize
+                if (mod(ik,ksize).ne.0) then
+                   i = int( ik/ksize ) + i1
+                else
+                   i = int( ik/ksize ) + i1 -1
+                endif
+                k = (ik-1-(i-i1)*ksize) + k1
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+             ENDDO
+          ENDIF
 ! ----------------------------------------------------------------<<<
-          ELSE   ! else branch of if(use_ikloop)
+       ELSE   ! else branch of if(use_ikloop)
 !  Not sure the purpose of us_ikloop
 !  The SMP directives below need review                        !Tingwen Jan 2012
 ! ---------------------------------------------------------------->>>
-             IF (DO_ISWEEP) THEN
-                DO K=kstart,kend
-                   DO I=istart,iend
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
-                ENDDO
-             ENDIF
-             IF (DO_KSWEEP) THEN
+          IF (DO_ISWEEP) THEN
+             DO K=kstart,kend
                 DO I=istart,iend
-                   DO K=kstart,kend
-                      CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
-                   ENDDO
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
-             ENDIF
-          ENDIF   ! end if/else (use(ikloop)
+             ENDDO
+          ENDIF
+          IF (DO_KSWEEP) THEN
+             DO I=istart,iend
+                DO K=kstart,kend
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                ENDDO
+             ENDDO
+          ENDIF
+       ENDIF   ! end if/else (use(ikloop)
 ! ----------------------------------------------------------------<<<
-
-       ENDIF   ! end if/else (do_k)
 
 
 ! this is called for all settings of leq_pc

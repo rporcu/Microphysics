@@ -26,7 +26,7 @@ module drag_gs_des0_module
                                 f_gp, fc, interp_scheme
       use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent,is_nonexistent,&
                                 is_entering_ghost,is_exiting_ghost,is_ghost
-      use geometry      , only: do_k, no_k, dz
+      use geometry      , only: dz
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use desmpi
 
@@ -83,7 +83,7 @@ module drag_gs_des0_module
 ! position.
 !----------------------------------------------------------------->>>
 ! avg_factor=0.25 (in 3D) or =0.5 (in 2D)
-      AVG_FACTOR = merge(0.50d0, 0.25d0, NO_K)
+      AVG_FACTOR = 0.25d0
 
 ! sets several quantities including interp_scheme, scheme, and
 ! order and allocates arrays necessary for interpolation
@@ -104,7 +104,7 @@ module drag_gs_des0_module
 ! set_interpolation_stencil
          pcell(1) = i-1
          pcell(2) = j-1
-         pcell(3) = merge(1, k-1, NO_K)
+         pcell(3) = k-1
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -112,7 +112,7 @@ module drag_gs_des0_module
                                         ktp,interp_scheme,dimn,ordernew = onew)
 
 ! Compute velocity at grid nodes and set the geometric stencil
-         DO k = 1,merge(1, ONEW, NO_K)
+         DO k = 1, ONEW
             DO j = 1,onew
                DO i = 1,onew
                   ii = iw + i-1
@@ -121,23 +121,19 @@ module drag_gs_des0_module
 
                   gst_tmp(i,j,k,1) = xe(ii)
                   gst_tmp(i,j,k,2) = yn(jj)
-                  gst_tmp(i,j,k,3) = merge(DZ, zt(kk), NO_K)
+                  gst_tmp(i,j,k,3) = zt(kk)
                   vst_tmp(i,j,k,1) = avg_factor*&
                      (u_g(ii,jj,kk)+u_g(ii,jp1(jj),kk))
                   vst_tmp(i,j,k,2) = avg_factor*&
                      (v_g(ii,jj,kk)+v_g(ip1(ii),jj,kk))
 
-                  if(DO_K) then
-                     vst_tmp(i,j,k,1) = vst_tmp(i,j,k,1) + avg_factor*&
-                        (u_g(ii,jj,kp1(kk)) + u_g(ii,jp1(jj),kp1(kk)))
-                     vst_tmp(i,j,k,2) = vst_tmp(i,j,k,2) + avg_factor*&
-                        (v_g(ii,jj,kp1(kk)) + v_g(ip1(ii),jj,kp1(kk)))
-                     vst_tmp(i,j,k,3) = avg_factor*(w_g(ii,jj,kk)+&
-                        w_g(ii,jp1(jj),kk)+w_g(ip1(ii),jj,kk)+&
-                        w_g(ip1(ii),jp1(jj),kk))
-                  else
-                     vst_tmp(i,j,k,3) = 0.d0
-                  ENDIF
+                  vst_tmp(i,j,k,1) = vst_tmp(i,j,k,1) + avg_factor*&
+                     (u_g(ii,jj,kp1(kk)) + u_g(ii,jp1(jj),kp1(kk)))
+                  vst_tmp(i,j,k,2) = vst_tmp(i,j,k,2) + avg_factor*&
+                     (v_g(ii,jj,kp1(kk)) + v_g(ip1(ii),jj,kp1(kk)))
+                  vst_tmp(i,j,k,3) = avg_factor*(w_g(ii,jj,kk)+&
+                     w_g(ii,jp1(jj),kk)+w_g(ip1(ii),jj,kk)+&
+                     w_g(ip1(ii),jp1(jj),kk))
                ENDDO
             ENDDO
          ENDDO
@@ -205,7 +201,7 @@ module drag_gs_des0_module
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
                                 f_gp, interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
-      use geometry, only: do_k, no_k, dz
+      use geometry, only: dz
       use param1  , only: zero, one
       use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1,&
                                 is_nonexistent,is_entering_ghost,is_exiting_ghost,is_ghost
@@ -279,7 +275,7 @@ module drag_gs_des0_module
       drag_bm = ZERO
 
 ! avg_factor=0.25 (in 3D) or =0.5 (in 2D)
-      AVG_FACTOR = merge(0.50d0, 0.25d0, NO_K)
+      AVG_FACTOR = 0.25d0
 
 ! sets several quantities including interp_scheme, scheme, and
 ! order and allocates arrays necessary for interpolation
@@ -300,7 +296,7 @@ module drag_gs_des0_module
 ! set_interpolation_stencil
          pcell(1) = i-1
          pcell(2) = j-1
-         pcell(3) = merge(1, k-1, NO_K)
+         pcell(3) = k-1
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
@@ -308,7 +304,7 @@ module drag_gs_des0_module
               ktp,interp_scheme,dimn,ordernew = onew)
 
 ! Compute velocity at grid nodes and set the geometric stencil
-         DO k = 1, merge(1, ONEW, NO_K)
+         DO k = 1, ONEW
             DO j = 1,onew
                DO i = 1,onew
                   ii = iw + i-1
@@ -316,29 +312,21 @@ module drag_gs_des0_module
                   kk = kb + k-1
                   GST_TMP(I,J,K,1) = XE(II)
                   GST_TMP(I,J,K,2) = YN(JJ)
-                  GST_TMP(I,J,K,3) = merge(DZ, ZT(KK), NO_K)
+                  GST_TMP(I,J,K,3) = ZT(KK)
                   VST_TMP(I,J,K,1) = AVG_FACTOR*&
                      (U_G(ii,jj,kk)+U_G(ii,jp1(jj),kk))
                   VST_TMP(I,J,K,2) = AVG_FACTOR*&
                      (V_G(ii,jj,kk)+V_G(ip1(ii),jj,kk))
 
-                  IF(DO_K) THEN
-                     IJPKP   = FUNIJK_MAP_C(II,JJ+1,KK+1)
-                     IPJKP   = FUNIJK_MAP_C(II+1,JJ,KK+1)
-                     IPJPKP  = FUNIJK_MAP_C(II+1,JJ+1,KK+1)
-                     IJKP    = FUNIJK_MAP_C(II,JJ,KK+1)
-                     VST_TMP(I,J,K,1) = VST_TMP(I,J,K,1) + AVG_FACTOR*&
-                        (U_G(Ii,jj,kp1(kk)) + U_G(ii,jp1(jj),kp1(kk)))
+                  VST_TMP(I,J,K,1) = VST_TMP(I,J,K,1) + AVG_FACTOR*&
+                     (U_G(Ii,jj,kp1(kk)) + U_G(ii,jp1(jj),kp1(kk)))
 
-                     VST_TMP(I,J,K,2) = VST_TMP(I,J,K,2) + AVG_FACTOR*&
-                        (V_G(ii,jj,kp1(kk)) + V_G(ip1(ii),jj,kp1(kk)))
+                  VST_TMP(I,J,K,2) = VST_TMP(I,J,K,2) + AVG_FACTOR*&
+                     (V_G(ii,jj,kp1(kk)) + V_G(ip1(ii),jj,kp1(kk)))
 
-                     VST_TMP(I,J,K,3) = AVG_FACTOR*(W_G(ii,jj,kk)+&
-                        W_G(ii,jp1(jj),kk)+W_G(IP1(ii),jj,kk)+&
-                        W_G(IP1(ii),JP1(jj),kK))
-                  ELSE
-                     VST_TMP(I,J,K,3) = 0.D0
-                  ENDIF
+                  VST_TMP(I,J,K,3) = AVG_FACTOR*(W_G(ii,jj,kk)+&
+                     W_G(ii,jp1(jj),kk)+W_G(IP1(ii),jj,kk)+&
+                     W_G(IP1(ii),JP1(jj),kK))
                ENDDO
             ENDDO
          ENDDO
@@ -369,7 +357,7 @@ module drag_gs_des0_module
             focus = .false.
             M = pijk(np,5)
 
-            DO k = 1, merge(1, ONEW, NO_K)
+            DO k = 1, ONEW
                DO j = 1, onew
                   DO i = 1, onew
 ! shift loop index to new variables for manipulation
@@ -413,44 +401,25 @@ module drag_gs_des0_module
 ! in the pressure correction equation
 !----------------------------------------------------------------->>>
 ! avg_factor=0.125 (in 3D) or =0.25 (in 2D)
-      AVG_FACTOR = merge(0.25d0, 0.125D0, NO_K)
+      AVG_FACTOR = 0.125D0
 
-      DO llK = kstart3, kend3
-      DO llJ = jstart3, jend3
-      DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
 
-         IF (fluid_at(lli,llj,llk)) THEN
+               if(fluid_at(i,j,k)) then
+                  if (i.lt.istart2 .or. i.gt.iend2) cycle
+                  if (j.lt.jstart2 .or. j.gt.jend2) cycle
+                  if (k.lt.kstart2 .or. k.gt.kend2) cycle
 
-            i = lli
-            j = llj
-            k = llk
-            if (i.lt.istart2 .or. i.gt.iend2) cycle
-            if (j.lt.jstart2 .or. j.gt.jend2) cycle
-            if (k.lt.kstart2 .or. k.gt.kend2) cycle
-            imjk = funijk_map_c(i-1,j,k)
-            ijmk = funijk_map_c(i,j-1,k)
-            imjmk = funijk_map_c(i-1,j-1,k)
-
-            f_gds(lli,llj,llk) = avg_factor*&
-               (drag_am(lli,llj,llk)   + drag_am(i,j-1,k) +&
-                drag_am(i-1,j-1,k) + drag_am(i-1,j,k))
-
-            IF(DO_K) THEN
-               ijkm = funijk_map_c(i,j,k-1)
-               imjkm = funijk_map_c(i-1,j,k-1)
-               ijmkm = funijk_map_c(i,j-1,k-1)
-               imjmkm = funijk_map_c(i-1,j-1,k-1)
-               f_gds(lli,llj,llk) = f_gds(lli,llj,llk) + avg_factor*&
-                  (drag_am(i,j,k-1) + drag_am(i,j-1,k-1) +&
-                  drag_am(i-1,j-1,k-1)+drag_am(i-1,j,k-1) )
-            ENDIF   ! end if
-         ELSE   ! else branch of if (fluid_at(lli,llj,llk))
-            F_GDS(LLI,LLJ,LLK) = ZERO
-         ENDIF   ! end if/else (fluid_at(lli,llj,llk))
-
-      ENDDO
-      ENDDO
+                  f_gds(i,j,k) = avg_factor*(&
+                     drag_am(i,j,k)      + drag_am(i,j-1,k)   + &
+                     drag_am(i-1,j-1,k)  + drag_am(i-1,j,k) + &
+                     drag_am(i,j,k-1)    + drag_am(i,j-1,k-1) + &
+                     drag_am(i-1,j-1,k-1)+ drag_am(i-1,j,k-1))
+               endif
+            ENDDO
+         ENDDO
       ENDDO
 
       RETURN
@@ -466,8 +435,6 @@ module drag_gs_des0_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 
       SUBROUTINE DRAG_INTERPOLATION(GSTEN,VSTEN,DESPOS,VELFP,WEIGHTFACTOR)
-
-      use geometry, only: NO_K
 
         IMPLICIT NONE
 
@@ -500,28 +467,19 @@ module drag_gs_des0_module
 
         VELFP(:) = 0.D0
 
-        IF(NO_K) THEN
+        DZZ = GSTEN(1,1,2,3) - GSTEN(1,1,1,3)
+        ZETAA(3) = DESPOS(3) - GSTEN(1,1,1,3)
+        ZETAA(3) = ZETAA(3)/DZZ
+        ZZVAL(1)=1-ZETAA(3)
+        ZZVAL(2)=ZETAA(3)
+        DO KK=1,2
            DO JJ=1,2
               DO II=1,2
-                 WEIGHTFACTOR(II,JJ,1) = XXVAL(II)*YYVAL(JJ)
-                 VELFP(1:2) = VELFP(1:2) + VSTEN(II,JJ,1,1:2)*WEIGHTFACTOR(II,JJ,1)
+                 WEIGHTFACTOR(II,JJ,KK) = XXVAL(II)*YYVAL(JJ)*ZZVAL(KK)
+                 VELFP(1:3) = VELFP(1:3) + VSTEN(II,JJ,KK,1:3)*WEIGHTFACTOR(II,JJ,KK)
               ENDDO
            ENDDO
-        ELSE
-           DZZ = GSTEN(1,1,2,3) - GSTEN(1,1,1,3)
-           ZETAA(3) = DESPOS(3) - GSTEN(1,1,1,3)
-           ZETAA(3) = ZETAA(3)/DZZ
-           ZZVAL(1)=1-ZETAA(3)
-           ZZVAL(2)=ZETAA(3)
-           DO KK=1,2
-              DO JJ=1,2
-                 DO II=1,2
-                    WEIGHTFACTOR(II,JJ,KK) = XXVAL(II)*YYVAL(JJ)*ZZVAL(KK)
-                    VELFP(1:3) = VELFP(1:3) + VSTEN(II,JJ,KK,1:3)*WEIGHTFACTOR(II,JJ,KK)
-                 ENDDO
-              ENDDO
-           ENDDO
-        ENDIF
+        ENDDO
 
       END SUBROUTINE DRAG_INTERPOLATION
 

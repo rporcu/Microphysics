@@ -39,7 +39,7 @@
   COORDINATES   = 'CARTESIAN'
 
   XLENGTH = 1.00     IMAX =  3
-  ZLENGTH = 1.00     NO_K = .T.
+  ZLENGTH = 1.00     KMAX =  1
 
   YLENGTH = 0.01   ! JMAX passed as argument
 
@@ -61,6 +61,8 @@
   IC_X_e(1) =   1.00  ! (m)
   IC_Y_s(1) =   0.00  ! (m)
   IC_Y_n(1) =   0.01  ! (m)
+  IC_Z_b(1) =   0.00  ! (m)
+  IC_Z_t(1) =   1.00  ! (m)
 
   IC_EP_g(1) =  1.00
 
@@ -68,10 +70,18 @@
 
   IC_U_g(1) =   0.00  ! (m/sec)
   IC_V_g(1) =   0.00  ! (m/sec)
+  IC_W_g(1) =   0.00  ! (m/sec)
 
 #_______________________________________________________________________
 # BOUNDARY CONDITIONS SECTION
 
+! The east and west boundaries are set a runtime as cyclic with a
+! specified pressure drop (DELP_X)
+!---------------------------------------------------------------------//
+  CYCLIC_X_PD = .TRUE.
+! DELP_X = [-3.0, 3.0]  -passed as argument-
+
+  CYCLIC_Z = .T.
 
 ! The north was has a constant velocity of 10.0 m/s, and is set using
 ! a partial slip wall (PSW):  dU/dn + hw(U-Uw) = 0 where Uw = 10.0 m/s
@@ -81,30 +91,38 @@
   BC_X_e(1) =   1.00  ! (m)
   BC_Y_s(1) =   0.01  ! (m)
   BC_Y_n(1) =   0.01  ! (m)
+  BC_Z_b(1) =   0.00  ! (m)
+  BC_Z_t(1) =   1.00  ! (m)
 
   BC_TYPE(1)  = 'PSW'
 
   BC_Uw_g(1) = 10.00   ! (m/sec)
   BC_Vw_g(1) =  0.00   ! (m/sec)
+  BC_Ww_g(1) =  0.00   ! (m/sec)
 
 
-! The south wal is a stational no-slip wall (NSW).
+! The south wal is no-slip.
 !---------------------------------------------------------------------//
   BC_X_w(2) =   0.00  ! (m)
   BC_X_e(2) =   1.00  ! (m)
   BC_Y_s(2) =   0.00  ! (m)
   BC_Y_n(2) =   0.00  ! (m)
+  BC_Z_b(2) =   0.00  ! (m)
+  BC_Z_t(2) =   1.00  ! (m)
 
   BC_TYPE(2) =  'NSW'
 
 
-! The east and west boundareis are set a runtime as cyclic with a
-! specified pressure drop (DELP_X)
+! Front and back walls are free-slip
 !---------------------------------------------------------------------//
-  CYCLIC_X_PD = .TRUE.
-! DELP_X = [-3.0, 3.0]  -passed as argument-
+  BC_X_w(3:4) =   0.00    0.00  ! (m)
+  BC_X_e(3:4) =   1.00    1.00  ! (m)
+  BC_Y_s(3:4) =   0.00    0.00  ! (m)
+  BC_Y_n(3:4) =   0.01    0.01  ! (m)
+  BC_Z_b(3:4) =   0.00    1.00  ! (m)
+  BC_Z_t(3:4) =   0.00    1.00  ! (m)
 
-
+  BC_Type(3:4) = 'FSW'    'FSW'
 
 #_______________________________________________________________________
 # OUTPUT CONTROL SECTION
@@ -117,4 +135,3 @@
 
 #_______________________________________________________________________
 # DMP SETUP
-

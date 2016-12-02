@@ -114,10 +114,6 @@
       USE param1, only: ZERO
       USE param1, only: UNDEFINED
 
-      use geometry, only: NO_I
-      use geometry, only: NO_J
-      use geometry, only: NO_K
-
       use bc
 
       use error_manager
@@ -138,36 +134,24 @@
 
 ! Check that gas phase velocities are defined.
       IF(BC_U_G(BCV) == UNDEFINED) THEN
-         IF(NO_I) THEN
-            BC_U_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       IF (BC_V_G(BCV) == UNDEFINED) THEN
-         IF (NO_J) THEN
-            BC_V_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       IF(BC_W_G(BCV) == UNDEFINED) THEN
-         IF (NO_K) THEN
-            BC_W_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check that solids phase velocities are defined.
       DO M = 1, M_TOT
          IF(BC_U_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_I) THEN
+            IF(SKIP(M)) THEN
                BC_U_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_U_s',BCV,M))
@@ -176,7 +160,7 @@
          ENDIF
 
          IF(BC_V_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_J) THEN
+            IF(SKIP(M)) THEN
                BC_V_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_V_s',BCV,M))
@@ -185,7 +169,7 @@
          ENDIF
 
          IF(BC_W_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_K) THEN
+            IF(SKIP(M)) THEN
                BC_W_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_W_s',BCV,M))
@@ -303,7 +287,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_BC_VEL_OUTFLOW(M_TOT, SKIP, BCV)
 
-      USE geometry, only: no_i, no_j, no_k
       USE bc
 
       use error_manager
@@ -322,36 +305,24 @@
 
 ! Check that gas phase velocities are defined.
       IF(BC_U_G(BCV) == UNDEFINED) THEN
-         IF(NO_I) THEN
-            BC_U_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       IF (BC_V_G(BCV) == UNDEFINED) THEN
-         IF (NO_J) THEN
-            BC_V_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       IF(BC_W_G(BCV) == UNDEFINED) THEN
-         IF (NO_K) THEN
-            BC_W_G(BCV) = ZERO
-         ELSE
-            WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check that solids phase velocities are defined.
       DO M = 1, M_TOT
          IF(BC_U_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_I) THEN
+            IF(SKIP(M)) THEN
                BC_U_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_U_s',BCV,M))
@@ -360,7 +331,7 @@
          ENDIF
 
          IF(BC_V_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_J) THEN
+            IF(SKIP(M)) THEN
                BC_V_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_V_s',BCV,M))
@@ -369,7 +340,7 @@
          ENDIF
 
          IF(BC_W_S(BCV,M) == UNDEFINED) THEN
-            IF(SKIP(M) .OR. NO_K) THEN
+            IF(SKIP(M)) THEN
                BC_W_S(BCV,M) = ZERO
             ELSE
                WRITE(ERR_MSG,1000) trim(iVar('BC_W_s',BCV,M))

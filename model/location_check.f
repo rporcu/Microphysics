@@ -11,9 +11,6 @@
 
 ! Global variables:
 !---------------------------------------------------------------------//
-! Runtime flags stating direction is not solved.
-      USE geometry, only: NO_I, NO_J, NO_K
-
 ! Module procedure for error message management.
       use error_manager
 
@@ -37,9 +34,9 @@
       IF(CELL_SPECIFIED == CELL_CALCULATED) RETURN
 
 
-      IF(NO_K .AND. (MESSAGE(6:6)=='b' .OR. MESSAGE(6:6)=='t')) RETURN
-      IF(NO_J .AND. (MESSAGE(6:6)=='s' .OR. MESSAGE(6:6)=='n')) RETURN
-      IF(NO_I .AND. (MESSAGE(6:6)=='w' .OR. MESSAGE(6:6)=='e')) RETURN
+      IF(MESSAGE(6:6)=='b' .OR. MESSAGE(6:6)=='t') RETURN
+      IF(MESSAGE(6:6)=='s' .OR. MESSAGE(6:6)=='n') RETURN
+      IF(MESSAGE(6:6)=='w' .OR. MESSAGE(6:6)=='e') RETURN
 
       CALL INIT_ERR_MSG('LOCATION_CHECK')
 

@@ -65,7 +65,7 @@
 ! is already defined in all initial condition regions (otherwise this
 ! section would be skipped)
 ! ---------------------------------------------------------------->>>
-      IF (DO_I .AND. DELP_X/=UNDEFINED) THEN
+      IF (DELP_X/=UNDEFINED) THEN
          DPODX = DELP_X/XLENGTH
          PJ = PJ - DPODX*DX
          DO I = IMAX1, IMIN1, -1
@@ -79,7 +79,7 @@
          ENDDO
       ENDIF
 
-      IF (DO_J .AND. DELP_Y/=UNDEFINED) THEN
+      IF (DELP_Y/=UNDEFINED) THEN
          DPODY = DELP_Y/YLENGTH
          PJ = PJ - DPODY*DY
          DO J = JMAX1, JMIN1, -1
@@ -93,7 +93,7 @@
          ENDDO
       ENDIF
 
-      IF (DO_K .AND. DELP_Z/=UNDEFINED) THEN
+      IF (DELP_Z/=UNDEFINED) THEN
          DPODZ = DELP_Z/ZLENGTH
          PJ = PJ - DPODZ*DZ
          DO K = KMAX1, KMIN1, -1

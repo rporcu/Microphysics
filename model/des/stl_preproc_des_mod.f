@@ -94,7 +94,7 @@
 
       use stl, only: FACETS_AT_DG
 
-      use geometry, only: XLENGTH, YLENGTH, ZLENGTH, DO_K
+      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
       use stl, only: N_FACETS_DES
       use stl, only: VERTEX
 
@@ -150,11 +150,9 @@
 
          K1 = DG_KEND2
          K2 = DG_KSTART2
-         IF(DO_K) THEN
-            IF(Z2>=-TOL_STL .AND. Z1<=ZLENGTH+TOL_STL) THEN
-               K1 = max(kofpos(Z1)-1, dg_kstart2)
-               K2 = min(kofpos(Z2)+1, dg_kend2)
-            ENDIF
+         IF(Z2>=-TOL_STL .AND. Z1<=ZLENGTH+TOL_STL) THEN
+            K1 = max(kofpos(Z1)-1, dg_kstart2)
+            K2 = min(kofpos(Z2)+1, dg_kend2)
          ENDIF
 
          DO KK=K1,K2
@@ -185,8 +183,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE ADD_FACET_FOR_DES(I,J,K,IJK,N)
-
-      use geometry, only: DO_K
 
       use desgrid, only: dg_dxinv, dg_xstart, dg_istart1
       use desgrid, only: dg_dyinv, dg_ystart, dg_jstart1
@@ -229,14 +225,8 @@
 
       CENTER(2) = dg_ystart + (dble(J-dg_jstart1)+HALF)*lDY
       HALFSIZE(2) = HALF*lDY + BUFFER
-
-      IF(DO_K)THEN
-         CENTER(3) = dg_zstart + (dble(K-dg_kstart1)+HALF)*lDZ
-         HALFSIZE(3) = HALF*lDZ + BUFFER
-      ELSE
-         CENTER(3) = HALF*lDZ
-         HALFSIZE(3) = HALF*lDZ
-      ENDIF
+      CENTER(3) = dg_zstart + (dble(K-dg_kstart1)+HALF)*lDZ
+      HALFSIZE(3) = HALF*lDZ + BUFFER
 
       CALL TRI_BOX_OVERLAP(CENTER, HALFSIZE, VERTEX(:,:,N), OVERLAP)
 
@@ -346,7 +336,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine CONVERT_BC_WALLS_TO_STL
 
-      use geometry, only: ZLENGTH, DO_K
+      use geometry, only: ZLENGTH
 
       use bc, only: BC_DEFINED, BC_TYPE
       use bc, only: BC_I_w, BC_I_e
@@ -379,11 +369,7 @@
 
             lXw = XE(BC_I_w(BCV)-1); lXe = XE(BC_I_e(BCV))
             lYs = YN(BC_J_s(BCV)-1); lYn = YN(BC_J_n(BCV))
-            IF(DO_K) THEN
-               lZb = ZT(BC_K_b(BCV)-1); lZt = ZT(BC_K_t(BCV))
-            ELSE
-               lZb = ZERO; lZt = ZLENGTH
-            ENDIF
+            lZb = ZT(BC_K_b(BCV)-1); lZt = ZT(BC_K_t(BCV))
             CALL GENERATE_STL_BOX(lXw, lXe, lYs, lYn, lZb, lZt)
          ENDIF
       ENDDO
@@ -404,7 +390,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine CONVERT_DEFAULT_WALLS_TO_STL
 
-      USE geometry, only: DO_K
       USE geometry, only: XLENGTH, YLENGTH, ZLENGTH
       use stl, only: VERTEX, NORM_FACE
       use stl, only: N_FACETS_DES
@@ -453,7 +438,7 @@
       ENDIF
 
 ! Bottom Face
-      IF(.NOT.DES_PERIODIC_WALLS_Z .AND. DO_K) THEN
+      IF(.NOT.DES_PERIODIC_WALLS_Z) THEN
          N_FACETS_DES = N_FACETS_DES+1
          VERTEX(1,:,N_FACETS_DES) = (/ZERO, ZERO, ZERO/)
          VERTEX(2,:,N_FACETS_DES) = (/2*XLENGTH, ZERO, ZERO/)
@@ -492,8 +477,6 @@
       use stl, only: VERTEX, NORM_FACE
       use stl, only: N_FACETS_DES
 
-      use geometry, only: DO_K
-
       use param1, only: ZERO, ONE
 
       IMPLICIT NONE
@@ -507,13 +490,11 @@
       VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
       NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
 
-      IF(DO_K)THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-         VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-         NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
-      ENDIF
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
+      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
+      NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
 
 ! East Face
       N_FACETS_DES = N_FACETS_DES+1
@@ -522,13 +503,11 @@
       VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
       NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
 
-      IF(DO_K) THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(3,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-         VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
-         NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
-      ENDIF
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
+      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
+      NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
 
 ! South Face
       N_FACETS_DES = N_FACETS_DES+1
@@ -537,13 +516,11 @@
       VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
       NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
 
-      IF(DO_K) THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-         VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
-      ENDIF
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
+      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
 
 ! North Face
       N_FACETS_DES = N_FACETS_DES+1
@@ -552,41 +529,37 @@
       VERTEX(1,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
       NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
 
-      IF(DO_K) THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-         VERTEX(1,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
-      ENDIF
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
+      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
 
 ! Bottom Face
-      IF(DO_K)THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-         VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
+      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
 
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-         VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
+      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
 
 ! Top Face
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-         VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
+      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
 
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-         VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-         VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
-      ENDIF
+      N_FACETS_DES = N_FACETS_DES+1
+      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
+      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
+      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
+      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
 
       RETURN
       END SUBROUTINE GENERATE_STL_BOX

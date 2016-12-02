@@ -16,19 +16,6 @@
 ! Coordinates: CARTESIAN
       CHARACTER(LEN=16)     COORDINATES
 
-! Indicates whether x or r direction is not considered
-      LOGICAL :: NO_I
-! Indicates whether x or r direction is considered
-      LOGICAL :: DO_I
-! Indicates whether y direction is not considered
-      LOGICAL :: NO_J
-! Indicates whether y direction is considered
-      LOGICAL :: DO_J
-! Indicates whether z or theta direction is not considered
-      LOGICAL :: NO_K
-! Indicates whether z or theta direction is considered
-      LOGICAL :: DO_K
-
 ! Reactor length in the x or r direction
       DOUBLE PRECISION :: XLENGTH
 ! Reactor length in the y direction
