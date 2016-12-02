@@ -33,7 +33,7 @@ MODULE CALC_D_MOD
 
       use fun_avg, only: AVG
       use geometry, only: AYZ, AXZ, AXY
-      use param1, only: ZERO, SMALL_NUMBER, ONE
+      use param1, only: ZERO, SMALL_NUMBER
       use functions, only: ip_at_e, ip_at_n, ip_at_t
       use functions, only: ieast, jnorth, ktop
       use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
@@ -69,7 +69,7 @@ MODULE CALC_D_MOD
 
          TMPdp = -A_M(I,J,K,0)
 
-         IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(FUNIJK(i,j,k))
+         IF(DES_CONTINUUM_COUPLED) TMPdp = TMPdp + VxF_gds(i,j,k)
 
          IF(abs(TMPdp) > SMALL_NUMBER) THEN
 

@@ -258,7 +258,7 @@ module drag_gs_des1_module
          DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
          DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
 
-         F_GDS(IJK) = F_GDS(IJK) + lFORCE*WEIGHT
+         F_GDS(i,j,k) = F_GDS(i,j,k) + lFORCE*WEIGHT
 
       ENDDO
 

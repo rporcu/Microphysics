@@ -284,7 +284,7 @@
 !-----------------------------------------------------------------<<<
 
 ! drag coefficient between gas phase and discrete particle 'phases'
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: F_GDS
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: F_GDS
 
 ! the following should probably be local to the subroutine
 ! solve_vel_star they are only needed when invoking the non-interpolated
@@ -292,7 +292,7 @@
 ! in the gas-phase momentum balances, in the routine to determine
 ! coefficients for the pressure correction equation and in the partial
 ! elimination algorithm
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VXF_GDS
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: VXF_GDS
 
 ! the coefficient add to gas momentum A matrix
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DRAG_AM

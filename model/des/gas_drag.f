@@ -121,7 +121,7 @@
             IF(flow_at_e(i,j,k)) THEN
                IJKE = FUNIJK(ieast(i,j,k),j,k)
 
-               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKE))
+               tmp_A = AVG(F_GDS(i,j,k), F_GDS(ieast(i,j,k),j,k))
                tmp_B = AVG(DRAG_BM(IJK,1), DRAG_BM(IJKE,1))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
@@ -258,7 +258,7 @@
             IF(flow_at_n(i,j,k)) THEN
                IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
-               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKN))
+               tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,jnorth(i,j,k),k))
                tmp_B = AVG(DRAG_BM(IJK,2), DRAG_BM(IJKN,2))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
@@ -385,7 +385,7 @@
             IF(flow_at_t(i,j,k)) THEN
                IJKT = FUNIJK(i,j,ktop(i,j,k))
 
-               tmp_A = AVG(F_GDS(IJK), F_GDS(IJKT))
+               tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,j,ktop(i,j,k)))
                tmp_B = AVG(DRAG_BM(IJK,3), DRAG_BM(IJKT,3))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A

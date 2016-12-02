@@ -432,7 +432,7 @@ module drag_gs_des0_module
             ijmk = funijk_map_c(i,j-1,k)
             imjmk = funijk_map_c(i-1,j-1,k)
 
-            f_gds(ijk) = avg_factor*&
+            f_gds(lli,llj,llk) = avg_factor*&
                (drag_am(ijk)   + drag_am(ijmk) +&
                 drag_am(imjmk) + drag_am(imjk))
 
@@ -441,12 +441,12 @@ module drag_gs_des0_module
                imjkm = funijk_map_c(i-1,j,k-1)
                ijmkm = funijk_map_c(i,j-1,k-1)
                imjmkm = funijk_map_c(i-1,j-1,k-1)
-               f_gds(ijk) = f_gds(ijk) + avg_factor*&
+               f_gds(lli,llj,llk) = f_gds(lli,llj,llk) + avg_factor*&
                   (drag_am(ijkm) + drag_am(ijmkm) +&
                   drag_am(imjmkm)+drag_am(imjkm) )
             ENDIF   ! end if
          ELSE   ! else branch of if (fluid_at(lli,llj,llk))
-            F_GDS(IJK) = ZERO
+            F_GDS(LLI,LLJ,LLK) = ZERO
          ENDIF   ! end if/else (fluid_at(lli,llj,llk))
 
       ENDDO

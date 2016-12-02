@@ -152,8 +152,8 @@ CONTAINS
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(DIMENSION_3))
 
-      ALLOCATE(F_GDS(DIMENSION_3))
-      ALLOCATE(VXF_GDS(DIMENSION_3))
+      ALLOCATE(F_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      ALLOCATE(VXF_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       SELECT CASE(DES_INTERP_SCHEME_ENUM)
       CASE(DES_INTERP_GARG)

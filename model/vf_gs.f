@@ -21,7 +21,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: i,j,k, IJK, IJKE
+      INTEGER :: i,j,k
 
 ! Calculate the combined effect for all discrete solids.
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
@@ -29,13 +29,11 @@
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
             IF(ip_at_e(i,j,k)) THEN
-               VXF_GDS(IJK) = ZERO
+               VXF_GDS(i,j,k) = ZERO
             ELSE
-               IJKE = FUNIJK(ieast(i,j,k),j,k)
-               VXF_GDS(IJK) = VOL *                             &
-                  AVG(F_GDS(IJK),F_GDS(IJKE))
+               VXF_GDS(i,j,k) = VOL *                             &
+                  AVG(F_GDS(i,j,k),F_GDS(ieast(i,j,k),j,k))
             ENDIF
              end do
            end do
@@ -68,7 +66,7 @@
 ! Local Variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: i,j,k, IJK, IJKN
+      INTEGER :: i,j,k
 !-----------------------------------------------
 
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
@@ -76,13 +74,11 @@
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
             IF(ip_at_n(i,j,k)) THEN
-               VXF_GDS(IJK) = ZERO
+               VXF_GDS(i,j,k) = ZERO
             ELSE
-               IJKN = FUNIJK(i,jnorth(i,j,k),k)
-               VXF_GDS(IJK) = VOL *                             &
-                  AVG(F_GDS(IJK),F_GDS(IJKN))
+               VXF_GDS(i,j,k) = VOL *                             &
+                  AVG(F_GDS(i,j,k),F_GDS(i,jnorth(i,j,k),k))
             ENDIF
              end do
            end do
@@ -115,7 +111,7 @@
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: i, j, k, IJK, IJKT
+      INTEGER :: i, j, k
 !-----------------------------------------------
 
       IF(DISCRETE_ELEMENT .AND. .NOT.DES_ONEWAY_COUPLED) THEN
@@ -123,13 +119,10 @@
            do j = jstart3, jend3
              do i = istart3, iend3
 
-             ijk = funijk(i,j,k)
-
             IF (ip_at_t(i,j,k)) THEN
-               VXF_GDS(IJK) = ZERO
+               VXF_GDS(I,J,K) = ZERO
             ELSE
-               IJKT = FUNIJK(i,j,ktop(i,j,k))
-               VXF_GDS(IJK) = VOL*AVG(F_GDS(IJK),F_GDS(IJKT))
+               VXF_GDS(I,J,K) = VOL*AVG(F_GDS(I,J,K),F_GDS(i,j,ktop(i,j,k)))
             ENDIF
              end do
            end do
