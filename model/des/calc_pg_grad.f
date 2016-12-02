@@ -52,10 +52,6 @@
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
-! Interpolated gas phase quanties.
-      DOUBLE PRECISION :: lPF(3)
-! Loop bound for
-      INTEGER :: LP_BND
 ! mean pressure gradient for the case of periodic boundaries
       DOUBLE PRECISION :: cPG(3)
 !......................................................................!

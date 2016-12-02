@@ -13,7 +13,6 @@ MODULE WRITE_RES1_MOD
 
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar  , only: mype, pe_io
-      USE param  , only : dimension_3
       USE funits  , only: unit_res
       USE geometry, only: ijkmax2, ijkmax3
       USE run, only     : dt, nstep, time

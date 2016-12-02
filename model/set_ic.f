@@ -12,10 +12,11 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart3,jstart3,jend3,kstart3,kend3
+      USE compar, only: istart3,jstart3,iend3,jend3,kstart3,kend3
       USE ic
       USE scales, only: scale_pressure
       USE functions
+      USE param1, only: undefined
       IMPLICIT NONE
 
       double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)

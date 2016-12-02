@@ -14,7 +14,10 @@
 !-----------------------------------------------
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use ic
-      USE functions
+      use geometry, only: flag, ijkmax3
+      use compar, only: iend3
+      use compar
+      use param1, only: undefined_i
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

@@ -163,8 +163,27 @@
 !----------------------------------------------------------------------!
         SUBROUTINE GRIDMAP_INIT
 
-        use functions
+        use functions, only: funijk
         use toleranc
+        use compar, only: ijksize3_all, ijkstart3_all, ijkend3_all
+        use compar, only: ijksize4_all, ijkstart4_all, ijkend4_all
+        use compar, only: isize_all, istart_all, iend_all
+        use compar, only: jsize_all, jstart_all, jend_all
+        use compar, only: ksize_all, kstart_all, kend_all
+        use compar, only: istart2_all, iend2_all
+        use compar, only: jstart2_all, jend2_all
+        use compar, only: kstart2_all, kend2_all
+        use compar, only: istart3_all, iend3_all
+        use compar, only: jstart3_all, jend3_all
+        use compar, only: kstart3_all, kend3_all
+        use compar, only: istart4_all, iend4_all
+        use compar, only: jstart4_all, jend4_all
+        use compar, only: kstart4_all, kend4_all
+        use compar, only: imap, jmap, kmap
+        use compar, only: imap_c, jmap_c, kmap_c
+        use compar, only: imap_c, jmap_c, kmap_c
+        use compar
+        use geometry
 
         implicit none
 

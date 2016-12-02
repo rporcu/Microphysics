@@ -507,7 +507,8 @@
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use functions
+      use functions, only: fluid_at
+      use compar, only: numpes, mype
       implicit none
 
 ! Dummy arguments

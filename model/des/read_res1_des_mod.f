@@ -400,7 +400,6 @@
 
  1000 FORMAT('Error 1000: Unable to locate particle inside domain:',/&
          3x,'Particle Number:',A)
- 1001 FORMAT(3x,'X POS: ',g12.5,/3x,'Y POS: ',g12.5)
  1002 FORMAT(3x,'X POS: ',g12.5,/3x,'Y POS: ',g12.5,/3x,'Z POS: ',g12.5)
 
 ! Send out the error flag and exit if needed.

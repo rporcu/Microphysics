@@ -20,7 +20,7 @@ module comp_mean_fields0_module
       USE interpolation, only: set_interpolation_scheme
       USE functions, only: FUNIJK, funijk_map_c
       USE functions, only: fluid_at
-      USE geometry, only: dz, vol_surr, vol
+      USE geometry, only: vol_surr, vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero

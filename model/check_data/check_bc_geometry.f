@@ -19,10 +19,6 @@
       use bc, only: BC_X_e, BC_X_w, BC_I_e, BC_I_w
       use bc, only: BC_Y_n, BC_Y_s, BC_J_n, BC_J_s
       use bc, only: BC_Z_t, BC_Z_b, BC_K_t, BC_K_b
-! User specified: System geometry
-      use geometry, only: XLENGTH
-      use geometry, only: YLENGTH
-      use geometry, only: ZLENGTH
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

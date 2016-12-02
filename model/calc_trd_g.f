@@ -20,10 +20,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g)
 
-      USE functions, only: ODX, ODY, ODZ, WALL_AT
-      USE functions, only: iminus, jminus, kminus
-      USE functions, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: istart, iend, jstart, jend, kstart, kend
+      USE geometry, only: ODX, ODY, ODZ
+      USE functions, only: iminus, jminus, kminus, WALL_AT
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar, only: istart, iend, jstart, jend, kstart, kend
 
       IMPLICIT NONE
 

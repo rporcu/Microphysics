@@ -447,9 +447,6 @@
       enddo
       deallocate (dprocbuf,drootbuf)
 
- 500  FORMAT(/2X,'From: DES_SCATTER_PARTICLE: (0)',/2X,&
-         'ERROR: Unable to locate the particle (no. ',I10,&
-         ') inside the domain')
  501  FORMAT(/2X,'From: DES_SCATTER_PARTICLE: (1)',/2X,&
          'ERROR: Unable to locate the particle (no. ',I10,&
          ') inside the domain')

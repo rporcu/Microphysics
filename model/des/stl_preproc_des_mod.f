@@ -336,8 +336,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine CONVERT_BC_WALLS_TO_STL
 
-      use geometry, only: ZLENGTH
-
       use bc, only: BC_DEFINED, BC_TYPE
       use bc, only: BC_I_w, BC_I_e
       use bc, only: BC_J_s, BC_J_n

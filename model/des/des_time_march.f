@@ -16,6 +16,7 @@ module des_time_march_module
       use discretelement
       use error_manager
       use functions
+      use compar, only: numpes
       use machine
       use mpi_funs_des, only: DES_PAR_EXCHANGE
       use run, only: CALL_USR

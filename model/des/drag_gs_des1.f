@@ -87,7 +87,6 @@ module drag_gs_des1_module
 ! Drag force acting on each particle.
       DOUBLE PRECISION :: D_FORCE(3), f_gp
 ! Loop bound for filter
-      INTEGER :: LP_BND
       integer :: i,j,k
 !......................................................................!
 

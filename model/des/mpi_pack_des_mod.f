@@ -198,6 +198,7 @@
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize
 
+      use discretelement, only: dg_pic
       use functions
 
       implicit none

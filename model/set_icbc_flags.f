@@ -34,9 +34,17 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE INIT_ICBC_FLAG
 
-      use param1, only: zero
-      use ic
+      use compar
       use functions
+      use geometry, only: imax2, jmax2, kmax2
+      use geometry, only: imin2, jmin2, kmin2
+      use geometry, only: imax3, jmax3, kmax3
+      use geometry, only: imin3, jmin3, kmin3
+      use geometry    , only: cyclic_x, cyclic_y, cyclic_z
+      use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use geometry    , only: flag
+      use ic
+      use param1, only: zero
       use run, only: run_type
 
       implicit none
@@ -113,12 +121,15 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_ICBC_FLAG
 
-      use run, only: RUN_TYPE
+      use compar, only: iend2, jend2, kend2
+      use compar, only: istart2, jstart2, kstart2
+      use compar, only: numpes, mype
       use error_manager
+      ! use functions
+      use geometry, only: flag
       use ic, only: icbc_undef
-      use functions
-
-      USE open_files_mod, only: open_pe_log
+      use open_files_mod, only: open_pe_log
+      use run, only: RUN_TYPE
 
       IMPLICIT NONE
 
@@ -211,6 +222,7 @@
 
       use error_manager
       use functions
+      use geometry, only : flag
 
       IMPLICIT NONE
 
@@ -271,6 +283,7 @@
       USE functions
 
       use error_manager
+      use geometry, only : flag
 
       IMPLICIT NONE
 
@@ -334,11 +347,12 @@
       SUBROUTINE SET_BC_FLAGS_FLOW
 
       use bc
-      use ic
       use compar       , only: nodesi, nodesj, nodesk
-      use functions    , only: cyclic_x, cyclic_y, cyclic_z, wall_icbc_flag
-      use geometry     , only: flag, imax2, jmax2, kmax2
       use error_manager
+      use functions    , only: wall_icbc_flag
+      use geometry     , only: flag, imax2, jmax2, kmax2
+      use geometry    , only: cyclic_x, cyclic_y, cyclic_z
+      use ic
 
       USE open_files_mod, only: open_pe_log
 

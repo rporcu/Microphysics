@@ -1,9 +1,7 @@
 MODULE functions
 
-  USE compar
-  USE discretelement
-  USE geometry
-  USE param1
+  USE compar, only: funijk_map_c
+  USE geometry, only: imax1, jmax1, kmax1
 
 ! Functions for generating IJK indices for indicated basis:
 !---------------------------------------------------------------------//

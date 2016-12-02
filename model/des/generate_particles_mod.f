@@ -116,7 +116,6 @@
       use desgrid, only: dg_xend, dg_yend, dg_zend
 
 ! direction wise spans of the domain and grid spacing in each direction
-      use geometry, only: dz
       use geometry, only: imin2, jmin2, kmin2
       use geometry, only: imax2, jmax2, kmax2
 

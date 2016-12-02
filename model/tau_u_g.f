@@ -43,6 +43,7 @@
       USE param1, only: zero, half
       USE functions
       USE toleranc, only: dil_ep_s
+      USE geometry, only: axy, axz, ayz, odx
       IMPLICIT NONE
 
 ! Dummy arguments

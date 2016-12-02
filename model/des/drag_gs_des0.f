@@ -26,7 +26,6 @@ module drag_gs_des0_module
          des_pos_new, des_vel_new, fc, interp_scheme
       use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent,is_nonexistent,&
                                 is_entering_ghost,is_exiting_ghost,is_ghost
-      use geometry      , only: dz
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use desmpi
 
@@ -204,7 +203,6 @@ module drag_gs_des0_module
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
                                 interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
-      use geometry, only: dz
       use param1  , only: zero, one
       use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1,&
                                 is_nonexistent,is_entering_ghost,is_exiting_ghost,is_ghost
@@ -234,9 +232,6 @@ module drag_gs_des0_module
 ! general i, j, k indices
       INTEGER :: I, J, K, IJK, cur_ijk
       INTEGER :: II, JJ, KK
-      INTEGER :: IJKP, IMJK, IJMK, IJKM,&
-                 IPJKP, IJPKP, IPJPKP, &
-                 IMJMK, IMJKM, IJMKM, IMJMKM
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
       INTEGER :: IW, IE, JS, JN, KB, KTP
