@@ -39,7 +39,7 @@
 
             DO LS= 1,DG_PIC(IJK)%ISIZE
                NP = DG_PIC(IJK)%P(LS)
-               IF(IS_EXITING(NP) .or. IS_EXITING_GHOST(NP)) CYCLE
+               IF(EXITING_PARTICLE==PARTICLE_STATE(NP) .or. EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
                SELECT CASE (BC_PLANE(BCV))
                CASE('N'); DIST = DES_POS_NEW(NP,2) - YN(BC_J_s(BCV))
                CASE('S'); DIST = YN(BC_J_s(BCV)-1) - DES_POS_NEW(NP,2)
@@ -52,8 +52,8 @@
                END SELECT
 ! The particle is still inside the domain
                IF(DIST > DES_RADIUS(NP)) THEN
-                  IF(IS_ENTERING(NP)) CALL SET_NORMAL(NP)
-                  IF(IS_ENTERING_GHOST(NP)) CALL SET_GHOST(NP)
+                  IF(ENTERING_PARTICLE==PARTICLE_STATE(NP)) CALL SET_NORMAL(NP)
+                  IF(ENTERING_GHOST==PARTICLE_STATE(NP)) CALL SET_GHOST(NP)
                ENDIF
             ENDDO
          ENDDO
@@ -87,7 +87,7 @@
 
 ! Find the first free space in the particle existance array.
             NP_LP: DO NP = LS, MAX_PIP
-               IF(IS_NONEXISTENT(NP)) THEN
+               IF(NONEXISTENT==PARTICLE_STATE(NP)) THEN
                   LS = NP
                   EXIT NP_LP
                ENDIF
@@ -293,7 +293,7 @@
       BC_M = lM
 
 ! The particle exists and is entering, not exiting nor a ghost particle
-      IF (IS_GHOST(lNP)) THEN
+      IF (NORMAL_GHOST==PARTICLE_STATE(lNP)) THEN
          CALL SET_ENTERING_GHOST(lNP)
       ELSE
          CALL SET_ENTERING(lNP)

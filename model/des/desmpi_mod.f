@@ -86,7 +86,7 @@
       use discretelement, only: DO_NSEARCH
       use discretelement, only: iGHOST_CNT
       use discretelement, only: MAX_PIP, PIP
-      use functions, only: is_ghost, is_nonexistent, is_normal, is_entering_ghost, is_exiting_ghost
+      use discretelement, only: entering_ghost, exiting_ghost, normal_ghost, nonexistent, particle_state
 
       use compar, only: myPE
 
@@ -176,14 +176,14 @@
           lparcount = 1
           do lcurpar=1,max_pip
              if (lparcount.gt.pip) exit
-             if (is_nonexistent(lcurpar))cycle
+             if (nonexistent==particle_state(lcurpar))cycle
              lparcount=lparcount + 1
              xpos = des_pos_new(lcurpar,1)
              ypos = des_pos_new(lcurpar,2)
              li=iofpos(xpos);lj=jofpos(ypos)
-             write(44,*)(is_ghost(lcurpar).or. &
-                  is_entering_ghost(lcurpar).or. &
-                  is_exiting_ghost(lcurpar)),xpos,ypos,li,lj,dg_funijk(li,lj,1)
+             write(44,*)(normal_ghost==particle_state(lcurpar).or. &
+                  entering_ghost==particle_state(lcurpar).or. &
+                  exiting_ghost==particle_state(lcurpar)),xpos,ypos,li,lj,dg_funijk(li,lj,1)
           end do
       case (5)
          ltordimn = 3
@@ -266,14 +266,16 @@
          write(44,*) "-----------------------------------------------"
       case (7)
          write(44,*) "-----------------------------------------------"
-         write(44,*) "pip and max_pip" , pip, max_pip,.not.is_nonexistent(1)
+         write(44,*) "pip and max_pip" , pip, max_pip,.not.nonexistent==particle_state(1)
          write(44,*) s_time
          lparcnt = 1
          do lcurpar =1,max_pip
             if(lparcnt.gt.pip) exit
-            if(is_nonexistent(lcurpar)) cycle
+            if(nonexistent==particle_state(lcurpar)) cycle
             lparcnt = lparcnt+1
-            if(is_ghost(lcurpar).or.is_entering_ghost(lcurpar).or.is_exiting_ghost(lcurpar)) cycle
+            if(normal_ghost==particle_state(lcurpar) &
+               .or.entering_ghost==particle_state(lcurpar) &
+               .or.exiting_ghost==particle_state(lcurpar)) cycle
             write(44,*) "Info for particle", iglobal_id(lcurpar)
             write(44,*) "position new ", des_pos_new(lcurpar,:)
          end do

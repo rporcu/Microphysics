@@ -90,8 +90,10 @@ module comp_mean_fields_module
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
-         IF(IS_NONEXISTENT(NP)) CYCLE
-         IF(IS_GHOST(NP) .or. IS_ENTERING_GHOST(NP) .or. IS_EXITING_GHOST(NP)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(NP) .or. &
+            ENTERING_GHOST==PARTICLE_STATE(NP) .or. &
+            EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
          VOL_WT = PVOL(NP)
 ! Fluid cell containing the particle

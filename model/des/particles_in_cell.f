@@ -1,17 +1,20 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Subroutine: PARTICLES_IN_CELL                                       !
-!                                                                      !
-!  Purpose:                                                            !
-!     - For each particle find the computational fluid cell            !
-!       containing the particle center.                                !
-!     - Calculate the bulk density in each computational fluid         !
-!       cell.                                                          !
-!     - Calculate the volume average solids velocity in each           !
-!       computational fluid cell.                                      !
-!     - For parallel processing indices are altered                    !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE PARTICLES_IN_CELL
+MODULE PARTICLES_IN_CELL_MODULE
+
+      use discretelement, only: PIJK, PINC
+      USE discretelement, only: DES_POS_NEW
+      USE discretelement, only: MAX_PIP
+      USE discretelement, only: XE, YN, ZT
+      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost, particle_state
+      use mpi_funs_des, only: des_par_exchange
+
+! Number of particles in the I/J/K direction
+      use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
+
+      USE error_manager, only: init_err_msg, finl_err_msg
+      USE desgrid, only: desgrid_pic
+      USE geometry, only: imin2, jmin2, kmin2
+      USE geometry, only: imax2, jmax2, kmax2
+      USE functions, only: funijk
 
 ! The number of particles on the current process.
       use discretelement, only: PIP, MAX_PIP
@@ -35,7 +38,23 @@
       use functions, only: FUNIJK
 
       use discretelement, only: DES_POS_NEW
-      use functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
+
+CONTAINS
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!  Subroutine: PARTICLES_IN_CELL                                       !
+!                                                                      !
+!  Purpose:                                                            !
+!     - For each particle find the computational fluid cell            !
+!       containing the particle center.                                !
+!     - Calculate the bulk density in each computational fluid         !
+!       cell.                                                          !
+!     - Calculate the volume average solids velocity in each           !
+!       computational fluid cell.                                      !
+!     - For parallel processing indices are altered                    !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE PARTICLES_IN_CELL
 
       IMPLICIT NONE
 
@@ -62,7 +81,7 @@
 !-----------------------------------------------------------------------
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
-         IF(IS_NONEXISTENT(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
 
          I = PIJK(L,1)
          IF(I <= ISTART3 .OR. I >= IEND3) THEN
@@ -135,8 +154,8 @@
          PIJK(L,4) = IJK
 
 ! Increment the number of particles in cell IJK
-         IF(.NOT.IS_GHOST(L) .AND. .NOT.IS_ENTERING_GHOST(L) .AND. &
-            .NOT.IS_EXITING_GHOST(L)) PINC(i,j,k) = PINC(i,j,k) + 1
+         IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
+            .NOT.EXITING_GHOST==PARTICLE_STATE(L)) PINC(i,j,k) = PINC(i,j,k) + 1
 
       ENDDO
 
@@ -175,11 +194,11 @@
 ! exiting loop if reached max number of particles in processor
          IF(PC.GT.PIP) exit
 ! skipping indices with no particles (non-existent particles)
-         IF(IS_NONEXISTENT(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
 ! incrementing particle account when particle exists
          PC = PC+1
 ! skipping ghost particles
-         IF(IS_GHOST(L) .OR. IS_ENTERING_GHOST(L) .OR. IS_EXITING_GHOST(L)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
          I = PIJK(L,1)
          J = PIJK(L,2)
          K = PIJK(L,3)
@@ -210,22 +229,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE INIT_PARTICLES_IN_CELL
 
-      use discretelement, only: PIJK, PINC
-      USE discretelement, only: DES_POS_NEW
-      USE discretelement, only: MAX_PIP
-      USE discretelement, only: XE, YN, ZT
-      USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
-      use mpi_funs_des, only: des_par_exchange
-
-! Number of particles in the I/J/K direction
-      use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
-
-      USE error_manager, only: init_err_msg, finl_err_msg
-      USE desgrid, only: desgrid_pic
-      USE geometry, only: imin2, jmin2, kmin2
-      USE geometry, only: imax2, jmax2, kmax2
-      USE functions, only: funijk
-
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local Variables
@@ -253,7 +256,7 @@
 ! ---------------------------------------------------------------->>>
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
-         IF(IS_NONEXISTENT(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
 
 ! Use a brute force technique to determine the particle locations in
 ! the Eulerian fluid grid.
@@ -275,7 +278,9 @@
          PIJK(L,4) = IJK
 
 ! Enumerate the number of 'real' particles in the ghost cell.
-         IF(.NOT.IS_GHOST(L) .AND. .NOT.IS_ENTERING_GHOST(L) .AND. .NOT.IS_EXITING_GHOST(L)) PINC(i,j,k) = PINC(i,j,k) + 1
+         IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. &
+            .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
+            .NOT.EXITING_GHOST==PARTICLE_STATE(L)) PINC(i,j,k) = PINC(i,j,k) + 1
       ENDDO
 
 ! Bin the particles to the DES grid.
@@ -321,3 +326,4 @@
 
       RETURN
       END SUBROUTINE PIC_SEARCH
+END MODULE PARTICLES_IN_CELL_MODULE

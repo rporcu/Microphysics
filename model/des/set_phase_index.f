@@ -12,7 +12,7 @@
       USE discretelement, only: MAX_PIP
       USE discretelement, only: PIJK
       USE error_manager
-      USE functions, only: IS_NONEXISTENT, IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
+      USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost, particle_state
       USE mpi_funs_des, only: des_par_exchange
       USE open_files_mod, only: open_pe_log
       USE param1, only: small_number
@@ -41,8 +41,8 @@
 ! solids phase index of particle.
 ! ---------------------------------------------------------------->>>
       DO L = 1, MAX_PIP
-         IF(IS_NONEXISTENT(L)) CYCLE
-         IF(IS_GHOST(L) .OR. IS_ENTERING_GHOST(L) .OR. IS_EXITING_GHOST(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
 
 ! Determining the solids phase of each particle by matching the diameter
 ! and density to those specified in the data file.
@@ -76,8 +76,8 @@
 
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
-         IF(IS_NONEXISTENT(L)) CYCLE
-         IF(IS_GHOST(L) .OR. IS_ENTERING_GHOST(L) .OR. IS_EXITING_GHOST(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
 
 ! Flag as an error if no match is found.
          IF(PIJK(L,5).EQ.0) THEN

@@ -18,10 +18,10 @@
       USE discretelement, only: dimn, des_pos_new, wall_collision_pft, fc, tow, pijk, des_crossprdct
       USE discretelement, only: kn_w, kt_w, mew_w, max_pip, dtsolid, dg_pijk, des_radius
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
-      USE functions, only: is_normal
       USE param1, only: small_number, zero
       USE stl, only: facets_at_dg, vertex, norm_face
       USE stl_functions_des, only: closestptpointtriangle
+      use discretelement, only: normal_particle, particle_state
 
       PRIVATE
       PUBLIC :: CALC_DEM_FORCE_WITH_WALL_STL
@@ -77,7 +77,7 @@
 ! skipping non-existent particles or ghost particles
 ! make sure the particle is not classified as a new 'entering' particle
 ! or is already marked as a potential exiting particle
-         IF(.NOT.IS_NORMAL(LL)) CYCLE
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(LL)) CYCLE
 
          CELL_ID = DG_PIJK(LL)
 

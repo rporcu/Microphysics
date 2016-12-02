@@ -698,7 +698,7 @@
          dg_pijkprv(:)= dg_pijk(:)
          do lcurpar = 1,max_pip
             if(lparcount.gt.pip) exit
-            if(is_nonexistent(lcurpar)) cycle
+            if(nonexistent==particle_state(lcurpar)) cycle
 
             lparcount = lparcount + 1
             li = min(dg_iend2,max(dg_istart2,iofpos(des_pos_new(lcurpar,1))))
@@ -711,7 +711,7 @@
       else
          do lcurpar = 1,max_pip
             if(lparcount.gt.pip) exit
-            if(is_nonexistent(lcurpar)) cycle
+            if(nonexistent==particle_state(lcurpar)) cycle
             lparcount = lparcount + 1
             lijk = dg_pijk(lcurpar)
             lpic(lijk) = lpic(lijk) + 1
@@ -743,7 +743,7 @@
 
       do lcurpar = 1, max_pip
          if(lparcount.gt.pip) exit
-         if(is_nonexistent(lcurpar)) cycle
+         if(nonexistent==particle_state(lcurpar)) cycle
          lparcount = lparcount + 1
          lijk = dg_pijk(lcurpar)
          dg_pic(lijk)%p(lindx(lijk)) = lcurpar
@@ -753,7 +753,7 @@
 
       do lcurpar = 1, max_pip
          if(lparcount.gt.pip) cycle
-         if(is_nonexistent(lcurpar)) cycle
+         if(nonexistent==particle_state(lcurpar)) cycle
          lijk = dg_pijk(lcurpar)
 
          lijk_count = lindx(lijk)
@@ -827,10 +827,10 @@
             endif
 !$  endif
 
-            if (is_nonexistent(lcurpar) .or.is_entering(lcurpar) &
-                 .or. is_entering_ghost(lcurpar) &
-                 .or. is_ghost(lcurpar) &
-                 .or. is_exiting_ghost(lcurpar)) cycle
+            if (nonexistent==particle_state(lcurpar) .or.entering_particle==particle_state(lcurpar) &
+                 .or. entering_ghost==particle_state(lcurpar) &
+                 .or. normal_ghost==particle_state(lcurpar) &
+                 .or. exiting_ghost==particle_state(lcurpar)) cycle
          lijk = dg_pijk(lcurpar)
          lic = dg_iof_lo(lijk)
          ljc = dg_jof_lo(lijk)
@@ -881,8 +881,8 @@
 ! Only skip real particles otherwise collisions with ghost, entering,
 ! and exiting particles are missed.
                if (lneigh .eq. lcurpar) cycle
-               if (lneigh < lcurpar .and.is_normal(lneigh)) cycle
-               if (is_nonexistent(lneigh)) THEN
+               if (lneigh < lcurpar .and.normal_particle==particle_state(lneigh)) cycle
+               if (nonexistent==particle_state(lneigh)) THEN
                   cycle
                endif
 

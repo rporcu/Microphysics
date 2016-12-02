@@ -606,8 +606,6 @@
       use discretelement, only: iGLOBAL_ID
       use discretelement, only: PIP
       use discretelement, only: NEIGH_MAX, NEIGH_NUM
-      use functions, only: IS_GHOST, IS_ENTERING_GHOST, IS_EXITING_GHOST
-
 
       implicit none
 
@@ -644,8 +642,8 @@
 
          lGLOBAL_OWNER = 0
          DO LC1=1, PIP
-            IF(.NOT.IS_GHOST(LC1) .AND. .NOT.IS_ENTERING_GHOST(LC1) &
-               .AND. .NOT.IS_EXITING_GHOST(LC1)) &
+            IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(LC1) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(LC1) &
+               .AND. .NOT.EXITING_GHOST==PARTICLE_STATE(LC1)) &
                lGLOBAL_OWNER(iGLOBAL_ID(LC1)) = myPE + 1
          ENDDO
 

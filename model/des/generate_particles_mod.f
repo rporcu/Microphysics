@@ -133,6 +133,7 @@
       use funits
       use compar
       use funits
+      use particles_in_cell_module, only: pic_search
 
       IMPLICIT NONE
 

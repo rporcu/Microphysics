@@ -7,7 +7,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
 
-      USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: iend1, jend1, kend1
@@ -18,12 +17,15 @@
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
-      USE functions, only: funijk, ip1, jp1, kp1, fluid_at, is_exiting_ghost, is_nonexistent, is_entering_ghost, is_ghost
+      USE functions, only: funijk, ip1, jp1, kp1, fluid_at
+      USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE geometry, only: vol_surr, vol
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
       USE param1, only: zero
+      USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
       USE run, only: run_type, time
       USE stl_preproc_des, only: add_facet
+      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
 
       IMPLICIT NONE
 
@@ -131,8 +133,8 @@
 ! have been identified
       DO L = 1, MAX_PIP
 ! Skip 'empty' locations when populating the particle property arrays.
-         IF(IS_NONEXISTENT(L)) CYCLE
-         IF(IS_GHOST(L) .OR. IS_ENTERING_GHOST(L) .OR. IS_EXITING_GHOST(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
          PVOL(L) = (4.0D0/3.0D0)*PI*DES_RADIUS(L)**3
          PMASS(L) = PVOL(L)*RO_SOL(L)
          OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI

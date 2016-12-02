@@ -19,13 +19,13 @@
 ! Run time flag indicating DEM or PIC solids.
       use run, only: DEM_SOLIDS
 
-      use functions, only: IS_NORMAL
-
-      use error_manager, only: err_msg, ival, flush_err_msg, err_msg, init_err_msg
       use compar, only: mype
       use compar, only: istart1, jstart1, kstart1
       use compar, only: iend1, jend1, kend1
       use exit_mod, only: mfix_exit
+
+      use discretelement, only: normal_particle, particle_state
+      use error_manager, only: err_msg, flush_err_msg, ival, init_err_msg
 
       IMPLICIT NONE
 
@@ -44,9 +44,9 @@
 !.......................................................................
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
-         IF(.NOT.IS_NORMAL(L)) CYCLE
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(L)) CYCLE
 
-! assigning local aliases for particle i, j, k fluid grid indices
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(L)) CYCLE
          I = PIJK(L,1)
          J = PIJK(L,2)
          K = PIJK(L,3)
@@ -86,11 +86,7 @@
 ! Particle positions and velocities
       use discretelement, only: DES_POS_NEW, DES_VEL_NEW
 
-      use functions, only: IS_NORMAL
-
       USE open_files_mod, only: open_pe_log
-
-      IMPLICIT NONE
 
 ! Local Variables:
 !----------------------------------------------------------------------!
@@ -110,11 +106,11 @@
 
       DO L = 1, MAX_PIP
 ! skipping particles that do not exist
-         IF(.NOT.IS_NORMAL(L)) CYCLE
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(L)) CYCLE
 
 ! assigning local aliases for particle i, j, k fluid grid indices
          I = PIJK(L,1)
-         J = PIJK(L,2)
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(L)) CYCLE
          K = PIJK(L,3)
 
          IF (I.GT.IEND1 .OR. I.LT.ISTART1) THEN

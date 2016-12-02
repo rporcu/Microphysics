@@ -10,6 +10,7 @@
       use mpi_comm_des, only: DESMPI_GATHERV
 
       use out_bin_512_mod, only: out_bin_512
+      use discretelement, only: nonexistent, particle_state
 
       IMPLICIT NONE
 
@@ -96,7 +97,6 @@
 
       use discretelement, only: PIP, iGHOST_CNT
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
-      use functions, only: is_nonexistent
 
       CHARACTER(len=*), INTENT(IN)  :: BASE
       DOUBLE PRECISION, INTENT(IN) :: lVERSION
@@ -167,7 +167,7 @@
             IF (LC1.eq.NEIGHBOR_INDEX(part)) THEN
                part = part + 1
             ENDIF
-            IF(.NOT.IS_NONEXISTENT(part) .AND. .NOT.IS_NONEXISTENT(NEIGHBORS(LC1))) THEN
+            IF(.NOT.NONEXISTENT==PARTICLE_STATE(part) .AND. .NOT.NONEXISTENT==PARTICLE_STATE(NEIGHBORS(LC1))) THEN
                cPROCCNT = cPROCCNT +1
             ENDIF
 
@@ -368,7 +368,6 @@
       use desmpi, only: iProcBuf
       use discretelement, only: MAX_PIP, PIP
       use discretelement, only: iGLOBAL_ID
-      use functions, only: is_nonexistent
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       INTEGER(KIND=1), INTENT(IN) :: INPUT_B(:)
@@ -398,14 +397,14 @@
          IF(lLOC2GLB) THEN
             DO LC2 = 1, MAX_PIP
                IF(LC1 > PIP) EXIT
-               IF(IS_NONEXISTENT(LC1)) CYCLE
+               IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
                iProcBuf(LC1) = iGLOBAL_ID(INPUT_I(LC2))
                LC1 = LC1 + 1
             ENDDO
          ELSE
             DO LC2 = 1, MAX_PIP
                IF(LC1 > PIP) EXIT
-               IF(IS_NONEXISTENT(LC1)) CYCLE
+               IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
                iProcBuf(LC1) = INPUT_I(LC2)
                LC1 = LC1 + 1
             ENDDO
@@ -435,7 +434,6 @@
       use desmpi, only: iProcBuf
       use discretelement, only: MAX_PIP, PIP
       use discretelement, only: iGLOBAL_ID
-      use functions, only: is_nonexistent
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       INTEGER, INTENT(IN) :: INPUT_I(:)
@@ -461,14 +459,14 @@
          IF(lLOC2GLB) THEN
             DO LC2 = 1, MAX_PIP
                IF(LC1 > PIP) EXIT
-               IF(IS_NONEXISTENT(LC1)) CYCLE
+               IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
                iProcBuf(LC1) = iGLOBAL_ID(INPUT_I(LC2))
                LC1 = LC1 + 1
             ENDDO
          ELSE
             DO LC2 = 1, MAX_PIP
                IF(LC1 > PIP) EXIT
-               IF(IS_NONEXISTENT(LC1)) CYCLE
+               IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
                iProcBuf(LC1) = INPUT_I(LC2)
                LC1 = LC1 + 1
             ENDDO
@@ -495,7 +493,6 @@
       SUBROUTINE WRITE_RES_PARRAY_1D(lNEXT_REC, INPUT_D)
 
       use discretelement, only: MAX_PIP, PIP
-      use functions, only: is_nonexistent
 
       IMPLICIT NONE
 
@@ -517,7 +514,7 @@
          LC1 = 1
          DO LC2 = 1, MAX_PIP
             IF(LC1 > PIP) EXIT
-            IF(IS_NONEXISTENT(LC1)) CYCLE
+            IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
             dProcBuf(LC1) = INPUT_D(LC2)
             LC1 = LC1 + 1
          ENDDO
@@ -543,7 +540,6 @@
 
       use desmpi, only: iProcBuf
       use discretelement, only: MAX_PIP, PIP
-      use functions, only: is_nonexistent
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       LOGICAL, INTENT(IN) :: INPUT_L(:)
@@ -562,7 +558,7 @@
          LC1 = 1
          DO LC2 = 1, MAX_PIP
             IF(LC1 > PIP) EXIT
-            IF(IS_NONEXISTENT(LC1)) CYCLE
+            IF(NONEXISTENT==PARTICLE_STATE(LC1)) CYCLE
             iProcBuf(LC1) = merge(1,0,INPUT_L(LC2))
             LC1 = LC1 + 1
          ENDDO
@@ -588,7 +584,6 @@
 
       use desmpi, only: iProcBuf
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
-      USE functions, only: is_nonexistent
       use discretelement, only: iGlobal_ID
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
@@ -617,7 +612,7 @@
          IF (LC1.eq.NEIGHBOR_INDEX(part)) THEN
             part = part + 1
          ENDIF
-         IF(.NOT.IS_NONEXISTENT(part) .AND. .NOT.IS_NONEXISTENT(NEIGHBORS(LC1))) THEN
+         IF(.NOT.NONEXISTENT==PARTICLE_STATE(part) .AND. .NOT.NONEXISTENT==PARTICLE_STATE(NEIGHBORS(LC1))) THEN
             IF(lLOC2GLB) THEN
                iProcBuf(LC2) = iGLOBAL_ID(INPUT_I(LC1))
             ELSE
@@ -652,7 +647,6 @@
       use desmpi, only: dPROCBUF ! Local process buffer
       use desmpi, only: dROOTBUF ! Root process buffer
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
-      USE functions, only: is_nonexistent
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       DOUBLE PRECISION, INTENT(IN) :: INPUT_D(:)
@@ -674,7 +668,7 @@
          IF (LC1.eq.NEIGHBOR_INDEX(part)) THEN
             part = part + 1
          ENDIF
-         IF(.NOT.IS_NONEXISTENT(part) .AND. .NOT.IS_NONEXISTENT(NEIGHBORS(LC1))) THEN
+         IF(.NOT.NONEXISTENT==PARTICLE_STATE(part) .AND. .NOT.NONEXISTENT==PARTICLE_STATE(NEIGHBORS(LC1))) THEN
             dProcBuf(LC2) = INPUT_D(LC1)
             LC2 = LC2 + 1
          ENDIF
@@ -705,7 +699,6 @@
 
       use desmpi, only: iProcBuf
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
-      use functions, only: is_nonexistent
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       LOGICAL, INTENT(IN) :: INPUT_L(:)
@@ -728,7 +721,7 @@
          IF (LC1.eq.NEIGHBOR_INDEX(part)) THEN
             part = part + 1
          ENDIF
-         IF(.NOT.IS_NONEXISTENT(part) .AND. .NOT.IS_NONEXISTENT(NEIGHBORS(LC1))) THEN
+         IF(.NOT.NONEXISTENT==PARTICLE_STATE(part) .AND. .NOT.NONEXISTENT==PARTICLE_STATE(NEIGHBORS(LC1))) THEN
             iProcBuf(LC2) = merge(1,0,INPUT_L(LC1))
             LC2 = LC2 + 1
          ENDIF

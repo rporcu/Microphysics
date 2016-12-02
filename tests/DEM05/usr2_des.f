@@ -23,8 +23,6 @@
       Use discretelement, only: DES_POS_NEW
       Use discretelement, only: OMEGA_NEW
 
-      use functions, only: is_normal
-
       IMPLICIT NONE
 
       INTEGER :: LL

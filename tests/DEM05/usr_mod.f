@@ -37,7 +37,7 @@
       use discretelement, only: iGlobal_ID
       use discretelement, only: MAX_PIP
 
-      use functions, only: IS_NORMAL
+      use discretelement, only: NORMAL_PARTICLE, PARTICLE_STATE
 
       double precision, intent(in) :: pDATA(:)
       double precision, intent(out) :: pTMP(62)
@@ -48,7 +48,7 @@
 ! Map local proc data to global array
       lTMP = 0.0d0
       do np=1,max_pip
-         if(is_normal(np) .and. iGlobal_ID(np) <=62) &
+         if(normal_particle==particle_state(np) .and. iGlobal_ID(np) <=62) &
             lTMP(np) = pDATA(np)
       enddo
 

@@ -16,6 +16,7 @@
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
          USE discretelement, only: des_pos_new, pft_neighbor, fc, tow, des_coll_model_enum, dtsolid
          USE discretelement, only: kn, kt, max_pip, mew, hertzian, des_radius, neighbor_index, pijk
+         USE discretelement, only: particle_state, nonexistent
          USE drag_gs_des0_module, only: drag_gs_des0
          USE drag_gs_des1_module, only: drag_gs_des1
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
@@ -73,7 +74,7 @@
 !---------------------------------------------------------------------//
 
       DO LL = 1, MAX_PIP
-         IF(IS_NONEXISTENT(LL)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(LL)) CYCLE
          pos = DES_POS_NEW(LL,:)
          rad = DES_RADIUS(LL)
 
@@ -83,7 +84,7 @@
 
          DO CC = CC_START, CC_END-1
             I  = NEIGHBORS(CC)
-            IF(IS_NONEXISTENT(I)) CYCLE
+            IF(NONEXISTENT==PARTICLE_STATE(I)) CYCLE
 
             R_LM = rad + DES_RADIUS(I)
             DIST(:) = DES_POS_NEW(I,:) - POS(:)

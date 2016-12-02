@@ -35,7 +35,7 @@ module comp_mean_fields1_module
       SOLVOLINC(:,:,:,:) = ZERO
 ! Calculate the gas phase forces acting on each particle.
       do NP=1,MAX_PIP
-         IF(.NOT.IS_NORMAL(NP) .and. .NOT.IS_GHOST(NP)) CYCLE
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP) .and. .NOT.NORMAL_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Particle phase for data binning.
          M = PIJK(NP,5)

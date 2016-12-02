@@ -14,6 +14,8 @@
       SUBROUTINE CALC_PG_GRAD(p_g, gradPg)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost, particle_state
+      use discretelement, only: nonexistent
 
 ! Particle volume.
       use discretelement, only: PVOL
@@ -33,10 +35,6 @@
 
       use functions, only: funijk
       use functions, only: fluid_at
-
-      use functions, only: IS_NONEXISTENT
-      use functions, only: IS_ENTERING, IS_ENTERING_GHOST
-      use functions, only: IS_EXITING, IS_EXITING_GHOST
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -79,9 +77,9 @@
 ! Calculate the gas phase forces acting on each particle.
          DO NP=1,MAX_PIP
 
-            IF(IS_NONEXISTENT(NP) .or.                              &
-               IS_ENTERING(NP) .or. IS_ENTERING_GHOST(NP) .or.      &
-               IS_EXITING(NP)  .or. IS_EXITING_GHOST(NP)) CYCLE
+            IF(NONEXISTENT==PARTICLE_STATE(NP) .or.                              &
+               ENTERING_PARTICLE==PARTICLE_STATE(NP) .or. ENTERING_GHOST==PARTICLE_STATE(NP) .or.      &
+               EXITING_PARTICLE==PARTICLE_STATE(NP)  .or. EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
             i = PIJK(NP,1)
             j = PIJK(NP,2)

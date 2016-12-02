@@ -49,9 +49,12 @@
 
                NP = DG_PIC(IJK)%P(LP)
 
-               IF(IS_NONEXISTENT(NP)) CYCLE
-               IF(IS_ANY_GHOST(NP)) CYCLE
-               IF(IS_ENTERING(NP)) CYCLE
+               IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
+               if ((PARTICLE_STATE(NP)==NORMAL_GHOST) .OR. &
+                  (PARTICLE_STATE(NP)==ENTERING_GHOST) .OR. &
+                  (PARTICLE_STATE(NP)==EXITING_GHOST)) CYCLE
+
+               IF(ENTERING_PARTICLE==PARTICLE_STATE(NP)) CYCLE
 
                SELECT CASE (BC_PLANE(BCV))
                CASE('S'); DIST = YN(BC_J_s(BCV)-1) - DES_POS_NEW(NP,2)
@@ -79,7 +82,7 @@
                      IF(DES_VEL_NEW(NP,IDX)*SGN > 0.0d0) THEN
                         DES_VEL_NEW(NP,:) = DES_VEL_NEW(NP,:)*FREEZE(:)
 ! Set the flags for an exiting particle.
-                        IF (IS_GHOST(NP)) THEN
+                        IF (NORMAL_GHOST==PARTICLE_STATE(NP)) THEN
                            CALL SET_EXITING_GHOST(NP)
                         ELSE
                            CALL SET_EXITING(NP)
@@ -95,7 +98,7 @@
                      DES_VEL_NEW(NP,2) = BC_V_s(BCV,M)
                      DES_VEL_NEW(NP,3) = BC_W_s(BCV,M)
 ! Set the flags for an exiting particle.
-                     IF (IS_GHOST(NP)) THEN
+                     IF (NORMAL_GHOST==PARTICLE_STATE(NP)) THEN
                         CALL SET_EXITING_GHOST(NP)
                      ELSE
                         CALL SET_EXITING(NP)

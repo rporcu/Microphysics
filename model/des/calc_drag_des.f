@@ -5,11 +5,12 @@ module calc_drag_des_module
       use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DRAG_FC, FC, MAX_PIP
+      use discretelement, only: NORMAL_PARTICLE, PARTICLE_STATE
       use drag_gs_des0_module, only: drag_gs_des0, drag_gs_gas0
       use drag_gs_des1_module, only: drag_gs_des1, drag_gs_gas1
-      use functions, only: IS_NORMAL
       use particle_filter, only: DES_INTERP_GARG
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
+      use particles_in_cell_module, only: particles_in_cell
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -47,7 +48,7 @@ module calc_drag_des_module
 
          IF(DES_CONTINUUM_COUPLED) THEN
             DO II = 1, MAX_PIP
-               IF(IS_NORMAL(II)) &
+               IF(NORMAL_PARTICLE==PARTICLE_STATE(II)) &
                   FC(II,:) = FC(II,:) + DRAG_FC(II,:)
             ENDDO
          ENDIF

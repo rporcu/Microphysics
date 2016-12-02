@@ -7,6 +7,8 @@
 !----------------------------------------------------------------------!
       MODULE MPI_UNPACK_DES
 
+         use functions, only: set_exiting_ghost
+
       PRIVATE
       PUBLIC :: DESMPI_UNPACK_PARCROSS, DESMPI_UNPACK_GHOSTPAR
 
@@ -71,9 +73,6 @@
 ! Dimension of particle spatial arrays.
       use discretelement, only: DIMN
 
-      use functions, only: is_nonexistent
-      use functions, only: is_normal,  set_normal
-      use functions, only: is_exiting, set_exiting, set_exiting_ghost
       use functions, only: set_ghost
 
       IMPLICIT NONE
@@ -169,7 +168,7 @@
 !  3) DES grid IJK - Previous
             call unpack_dbuf(lbuf,lprvijk,pface)
 ! Locate the first open space in the particle array.
-            do while(.not.is_nonexistent(ispot))
+            do while(.not.nonexistent==particle_state(ispot))
                ispot = ispot + 1
             enddo
 ! Set the flags for the ghost particle and store the local variables.
@@ -265,7 +264,6 @@
 ! Module Procedures:
 !---------------------------------------------------------------------//
       use des_allocate
-      use functions, only: IS_NORMAL, IS_NONEXISTENT
       use functions, only: SET_ENTERING, SET_EXITING, SET_NORMAL
       use functions, only: funijk
 

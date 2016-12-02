@@ -33,7 +33,7 @@
       use run, only: time
       use discretelement, only: max_pip, particles
       use discretelement, only: des_vel_new
-      use functions, only: is_normal
+      use discretelement, only: normal_particle, particle_state
 
       implicit none
 
@@ -47,7 +47,7 @@
       lc2 = 0
       gTemp = 0.0d0
       do lc1=1, max_pip
-         if(is_normal(lc1)) then
+         if(normal_particle==particle_state(lc1)) then
             gTemp = gTemp + dot_product &
                (des_vel_new(lc1,:),des_vel_new(lc1,:))
             lc2 = lc2 + 1

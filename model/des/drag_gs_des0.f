@@ -24,12 +24,12 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, &
          des_pos_new, des_vel_new, fc, interp_scheme
-      use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent,is_nonexistent,&
-                                is_entering_ghost,is_exiting_ghost,is_ghost
+      use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use desmpi
 
       use des_drag_gp_module
+      use discretelement
 
       IMPLICIT NONE
 
@@ -144,8 +144,8 @@ module drag_gs_des0_module
          DO nindx = 1,PINC(lli,llj,llk)
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
-            if(is_nonexistent(np)) cycle
-            if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
+            if(nonexistent==particle_state(np)) cycle
+            if(normal_ghost==particle_state(np).or.entering_ghost==particle_state(np).or.exiting_ghost==particle_state(np)) cycle
 
             desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
@@ -204,11 +204,11 @@ module drag_gs_des0_module
                                 interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
-      use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1,&
-                                is_nonexistent,is_entering_ghost,is_exiting_ghost,is_ghost
+      use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module
+      use discretelement
 
       IMPLICIT NONE
 
@@ -334,8 +334,8 @@ module drag_gs_des0_module
          DO nindx = 1,PINC(lli,llj,llk)
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
-            if(is_nonexistent(np)) cycle
-            if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
+            if(nonexistent==particle_state(np)) cycle
+            if(normal_ghost==particle_state(np).or.entering_ghost==particle_state(np).or.exiting_ghost==particle_state(np)) cycle
             desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
 !

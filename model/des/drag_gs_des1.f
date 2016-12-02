@@ -9,10 +9,7 @@ module drag_gs_des1_module
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Function to deterine if a cell contains fluid.
       use functions, only: fluid_at
-      use functions, only: is_normal
       use functions, only: funijk, iminus, jminus, kminus
-      use functions, only: IS_NONEXISTENT, IS_ENTERING, &
-         IS_ENTERING_GHOST, IS_EXITING, IS_EXITING_GHOST
 
 ! Size of particle array on this process.
       use discretelement, only: MAX_PIP
@@ -38,6 +35,7 @@ module drag_gs_des1_module
       use discretelement, only: FC
 ! Particle volume.
       use discretelement, only: PVOL
+      use discretelement
 
   contains
 
@@ -92,7 +90,7 @@ module drag_gs_des1_module
 
 ! Calculate the gas phase forces acting on each particle.
       DO NP=1,MAX_PIP
-         IF(.NOT.IS_NORMAL(NP)) CYCLE
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP)) CYCLE
 ! Avoid drag calculations in cells without fluid (cut-cell)
          i = pijk(np,1)
          j = pijk(np,2)
@@ -183,12 +181,12 @@ module drag_gs_des1_module
 ! Calculate the gas phase forces acting on each particle.
 
       DO NP=1,MAX_PIP
-         IF(IS_NONEXISTENT(NP)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
 
 ! The drag force is not calculated on entering or exiting particles
 ! as their velocities are fixed and may exist in 'non fluid' cells.
-         IF(IS_ENTERING(NP) .OR. IS_EXITING(NP) .OR. &
-            IS_ENTERING_GHOST(NP) .OR. IS_EXITING_GHOST(NP)) CYCLE
+         IF(ENTERING_PARTICLE==PARTICLE_STATE(NP) .OR. EXITING_PARTICLE==PARTICLE_STATE(NP) .OR. &
+            ENTERING_GHOST==PARTICLE_STATE(NP) .OR. EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO

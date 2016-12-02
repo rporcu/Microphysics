@@ -10,6 +10,8 @@
 
       USE discretelement, only: des_acc_old, rot_acc_old, fc, tow, des_vel_new, des_pos_new, omega_new, ppos, do_nsearch, dtsolid
       USE discretelement, only: max_pip, intg_euler, omoi, intg_adams_bashforth, grav, des_radius, pmass, neighbor_search_rad_ratio
+      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_particle, exiting_ghost, particle_state
+      USE discretelement, only: normal_ghost
       USE param1, only: zero
 
       IMPLICIT NONE
@@ -27,23 +29,23 @@
 ! Adams-Bashforth defaults to Euler for the first time step.
       IF(FIRST_PASS .AND. INTG_ADAMS_BASHFORTH) THEN
          DO L =1, MAX_PIP
-            IF(IS_NONEXISTENT(L)) CYCLE                       ! Only real particles
-            IF(IS_ENTERING(L).or.IS_ENTERING_GHOST(L)) CYCLE  ! Only non-entering
-            IF(IS_GHOST(L)) CYCLE                             ! Skip ghost particles
+            IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE                       ! Only real particles
+            IF(ENTERING_PARTICLE==PARTICLE_STATE(L).or.ENTERING_GHOST==PARTICLE_STATE(L)) CYCLE  ! Only non-entering
+            IF(NORMAL_GHOST==PARTICLE_STATE(L)) CYCLE                             ! Skip ghost particles
             DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
             ROT_ACC_OLD(L,:) = TOW(L,:)
          ENDDO
       ENDIF
       DO L = 1, MAX_PIP
 ! only process particles that exist
-         IF(IS_NONEXISTENT(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
 ! skip ghost particles
-         IF(IS_GHOST(L).or.IS_ENTERING_GHOST(L).or.IS_EXITING_GHOST(L)) CYCLE
+         IF(NORMAL_GHOST==PARTICLE_STATE(L).or.ENTERING_GHOST==PARTICLE_STATE(L).or.EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
 
 ! If a particle is classified as new, then forces are ignored.
 ! Classification from new to existing is performed in routine
 ! des_check_new_particle.f
-         IF(.NOT.IS_ENTERING(L) .AND. .NOT.IS_ENTERING_GHOST(L))THEN
+         IF(.NOT.ENTERING_PARTICLE==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L))THEN
             FC(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
          ELSE
             FC(L,:) = ZERO

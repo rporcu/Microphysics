@@ -1,5 +1,7 @@
 module des_time_march_module
 
+   use particles_in_cell_module, only: particles_in_cell
+
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

@@ -24,6 +24,7 @@
       use physprop
       use des_bc
       use desmpi
+      use discretelement, only: nonexistent,particle_state, normal_ghost, entering_ghost, exiting_ghost
 
 !-----------------------------------------------
 
@@ -228,8 +229,7 @@
 !                    parray - array to be writen
 !------------------------------------------------------------------------
       subroutine des_gather_d(parray)
-      use functions, only: is_nonexistent
-      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
+         use discretelement
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -247,9 +247,11 @@
       lcount = 0
       do lcurpar = 1, max_pip
          if (lparcount.gt.pip) exit
-         if (is_nonexistent(lcurpar)) cycle
+         if (nonexistent==particle_state(lcurpar)) cycle
          lparcount = lparcount +1
-         if(is_ghost(lcurpar) .or. is_entering_ghost(lcurpar) .or. is_exiting_ghost(lcurpar)) cycle
+         if(normal_ghost==particle_state(lcurpar) .or. &
+            entering_ghost==particle_state(lcurpar) .or. &
+            exiting_ghost==particle_state(lcurpar)) cycle
          lcount = lcount + 1
          dprocbuf(lcount) = parray(lcurpar)
       end do
@@ -263,8 +265,6 @@
 !                    parray - array to be writen
 !------------------------------------------------------------------------
       subroutine des_gather_l(parray)
-      use functions, only: is_nonexistent
-      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -282,9 +282,11 @@
       lcount = 0
       do lcurpar = 1, max_pip
          if (lparcount.gt.pip) exit
-         if (is_nonexistent(lcurpar)) cycle
+         if (nonexistent==particle_state(lcurpar)) cycle
          lparcount = lparcount +1
-         if(is_ghost(lcurpar) .or. is_entering_ghost(lcurpar) .or. is_exiting_ghost(lcurpar)) cycle
+         if(normal_ghost==particle_state(lcurpar) .or. &
+            entering_ghost==particle_state(lcurpar) .or. &
+            exiting_ghost==particle_state(lcurpar)) cycle
          lcount = lcount + 1
          if(parray(lcurpar)) then
             iprocbuf(lcount) = 1
@@ -306,8 +308,6 @@
 !                    and neighbour terms)
 !------------------------------------------------------------------------
       subroutine des_gather_i(parray,ploc2glb)
-      use functions, only: is_nonexistent
-      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -333,9 +333,11 @@
       if (lloc2glb) then
          do lcurpar = 1, max_pip
             if (lparcount.gt.pip) exit
-            if (is_nonexistent(lcurpar)) cycle
+            if (nonexistent==particle_state(lcurpar)) cycle
             lparcount = lparcount +1
-            if(is_ghost(lcurpar) .or. is_entering_ghost(lcurpar) .or. is_exiting_ghost(lcurpar)) cycle
+            if(normal_ghost==particle_state(lcurpar) .or. &
+               entering_ghost==particle_state(lcurpar) .or. &
+               exiting_ghost==particle_state(lcurpar)) cycle
             lcount = lcount + 1
             if(parray(lcurpar).gt.0) then
                iprocbuf(lcount) = iglobal_id(parray(lcurpar))
@@ -346,9 +348,11 @@
       else
          do lcurpar = 1, max_pip
             if (lparcount.gt.pip) exit
-            if (is_nonexistent(lcurpar)) cycle
+            if (nonexistent==particle_state(lcurpar)) cycle
             lparcount = lparcount +1
-            if(is_ghost(lcurpar) .or. is_entering_ghost(lcurpar) .or. is_exiting_ghost(lcurpar)) cycle
+            if(normal_ghost==particle_state(lcurpar) .or. &
+               entering_ghost==particle_state(lcurpar) .or. &
+               exiting_ghost==particle_state(lcurpar)) cycle
             lcount = lcount + 1
             iprocbuf(lcount) = parray(lcurpar)
          end do

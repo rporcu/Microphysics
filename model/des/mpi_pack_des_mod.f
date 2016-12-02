@@ -7,6 +7,8 @@
 !----------------------------------------------------------------------!
       MODULE MPI_PACK_DES
 
+         use discretelement
+
       PRIVATE
       PUBLIC :: DESMPI_PACK_PARCROSS, DESMPI_PACK_GHOSTPAR
 
@@ -72,8 +74,6 @@
       use constant, only: PI
 ! Dimension of particle spatial arrays.
       use discretelement, only: DIMN
-      use functions, only: is_exiting
-      use functions, only: is_ghost, is_entering_ghost, is_exiting_ghost
 
       IMPLICIT NONE
 
@@ -98,9 +98,9 @@
 
 ! Do not send particle data for a ghost particle whose owner has not yet
 ! updated the particle's data on this processor.
-            if((is_ghost(lcurpar) .or. &
-                is_entering_ghost(lcurpar) .or. &
-                is_exiting_ghost(lcurpar)) .and. &
+            if((normal_ghost==particle_state(lcurpar) .or. &
+                entering_ghost==particle_state(lcurpar) .or. &
+                exiting_ghost==particle_state(lcurpar)) .and. &
                 .not.ighost_updated(lcurpar)) cycle
 
 ! 1) Global ID
@@ -123,7 +123,8 @@
 ! 8) Rotational Velocity
             call pack_dbuf(lbuf,omega_new(lcurpar,:),pface)
 ! 9) Exiting particle flag
-            call pack_dbuf(lbuf,merge(1,0,is_exiting(lcurpar).or.is_exiting_ghost(lcurpar)),pface)
+            call pack_dbuf(lbuf,merge(1,0,exiting_particle==particle_state(lcurpar).or. &
+               exiting_ghost==particle_state(lcurpar)),pface)
 ! 11) User Variable
             IF(DES_USR_VAR_SIZE > 0) &
                call pack_dbuf(lbuf,des_usr_var(lcurpar,:),pface)
@@ -235,9 +236,9 @@
             lcurpar = dg_pic(lijk)%p(lpicloc)
 
 ! if ghost particle then cycle
-            if(is_ghost(lcurpar) .or. &
-               is_entering_ghost(lcurpar) .or. &
-               is_exiting_ghost(lcurpar)) cycle
+            if(normal_ghost==particle_state(lcurpar) .or. &
+               entering_ghost==particle_state(lcurpar) .or. &
+               exiting_ghost==particle_state(lcurpar)) cycle
 
             going_to_send(lcurpar) = .true.
             lbuf = lparcnt*iParticlePacketSize + ibufoffset
@@ -264,9 +265,9 @@
 ! 9) Particle solids phase index
             call pack_dbuf(lbuf,pijk(lcurpar,5),pface)
 ! 10) Entering particle flag.
-            call pack_dbuf(lbuf, is_entering(lcurpar).or.is_entering_ghost(lcurpar), pface)
+            call pack_dbuf(lbuf, entering_particle==particle_state(lcurpar).or.entering_ghost==particle_state(lcurpar), pface)
 ! 11) Exiting particle flag.
-            call pack_dbuf(lbuf, is_exiting(lcurpar).or.is_exiting_ghost(lcurpar), pface)
+            call pack_dbuf(lbuf, exiting_particle==particle_state(lcurpar).or.exiting_ghost==particle_state(lcurpar), pface)
 ! 12) Density
             call pack_dbuf(lbuf,ro_sol(lcurpar),pface)
 ! 13) Volume
@@ -303,9 +304,9 @@
 
 ! DEM particles are converted to ghost particles. This action does not
 ! change the number of particles.
-            if (is_entering(lcurpar)) then
+            if (entering_particle==particle_state(lcurpar)) then
                call set_entering_ghost(lcurpar)
-            elseif (is_exiting(lcurpar)) then
+            elseif (exiting_particle==particle_state(lcurpar)) then
                call set_exiting_ghost(lcurpar)
             else
                call set_ghost(lcurpar)
@@ -340,8 +341,8 @@
 ! Do not send pairing data if the pair no longer exists or if the
 ! particle is exiting as it may be locatable during unpacking.
           lneigh = neighbors(lcurpar)
-          if(is_nonexistent(lneigh)) cycle
-          if(is_exiting(lneigh)) cycle
+          if(nonexistent==particle_state(lneigh)) cycle
+          if(exiting_particle==particle_state(lneigh)) cycle
 
 ! 34) Global ID of particle being packed.
           call pack_dbuf(lbuf,iglobal_id(lcurpar),pface)
