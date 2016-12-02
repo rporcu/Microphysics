@@ -35,12 +35,6 @@
 ! of time needed for next injection
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DEM_MI_TIME
 
-! Logical that can be flagged in the mfix.dat file to force the inlet
-! to operate with an ordered boundary condition.  This may be useful
-! during long simulations or if the inlet appears to be taking a long
-! time to randomly place particles.
-      LOGICAL :: FORCE_ORD_BC
-
 ! Particle injection factor; how many solid time steps (dtsolid) pass
 ! before the next injection of a particle. if pi_count is greater than
 ! 1, then pi_factor is set to 1 (i.e. multiple particles enter every

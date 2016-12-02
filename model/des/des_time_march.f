@@ -1,4 +1,4 @@
-module des_time_march_module 
+module des_time_march_module
 
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -65,6 +65,11 @@ module des_time_march_module
 
 ! Numbers to calculate wall time spent in DEM calculations.
       DOUBLE PRECISION :: TMP_WALL
+! Pressure gradient
+      DOUBLE PRECISION, allocatable :: gradPg(:,:,:,:)
+!.......................................................................!
+
+      allocate (gradPg(istart3:iend3, jstart3:jend3, kstart3:kend3,3) )
 
 ! In case of restarts assign S_TIME from MFIX TIME
       S_TIME = TIME
@@ -106,9 +111,9 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg)
          ENDIF
-         CALL CALC_PG_GRAD(p_g)
+         CALL CALC_PG_GRAD(p_g, gradPg)
       ENDIF
 
 
@@ -132,7 +137,7 @@ module des_time_march_module
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -199,6 +204,8 @@ module des_time_march_module
          TMP_DTS = ZERO
       ENDIF
 
+      deallocate(gradPg)
+
       IF(.NOT.DES_CONTINUUM_COUPLED)THEN
          WRITE(ERR_MSG,"('<---------- END DES_TIME_MARCH ----------')")
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
@@ -220,4 +227,4 @@ module des_time_march_module
 
       END SUBROUTINE DES_TIME_MARCH
 
-end module des_time_march_module 
+end module des_time_march_module

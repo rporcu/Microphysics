@@ -3,7 +3,7 @@
 !  Subroutine: CALC_PG_GRAD                                            !
 !  Purpose: Calculate cell centered pressure force exerted on the      !
 !           particles in the cell by the gas/fluid phase               !
-!           Note that P_force is evaluated as -dp/dx                   !
+!           Note that gradPg is evaluated as -dp/dx                    !
 !                                                                      !
 !  Notes: This pressure force only needs to be calculated once during  !
 !         the DEM loop (at the beginning) since the gas/fluid phase    !
@@ -11,14 +11,12 @@
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g)
+      SUBROUTINE CALC_PG_GRAD(p_g, gradPg)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
 ! Particle volume.
       use discretelement, only: PVOL
-! Gas pressure force by fluid cell
-      use discretelement, only: P_FORCE
 ! Particle drag force
       use discretelement, only: DRAG_FC
 ! Loop bounds for fluid grid
@@ -47,8 +45,10 @@
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      DOUBLE PRECISION, INTENT(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(out  ) :: gradPg&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
@@ -61,7 +61,7 @@
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(P_G, P_FORCE)
+      CALL CALC_GRAD_DES(P_G, gradPg)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
@@ -72,7 +72,7 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         P_FORCE(:,I,J,K) = cPG - P_FORCE(:,I,J,K)
+         gradPg(I,J,K,:) = cPG - gradPg(I,J,K,:)
 
       ENDDO
       ENDDO
@@ -81,7 +81,6 @@
       IF(DES_EXPLICITLY_COUPLED) THEN
 
 ! Calculate the gas phase forces acting on each particle.
-
          DO NP=1,MAX_PIP
 
             IF(IS_NONEXISTENT(NP) .or.                              &
@@ -93,10 +92,8 @@
             k = PIJK(NP,3)
             if (.NOT.fluid_at(i,j,k)) CYCLE
 
-             lPF = P_FORCE(:,i,j,k)
-
 ! Include gas pressure and gas-solids drag
-            DRAG_FC(NP,:) = DRAG_FC(NP,:) + lPF*PVOL(NP)
+            DRAG_FC(NP,:) = DRAG_FC(NP,:) + gradPg(i,j,k,:)*PVOL(NP)
 
          ENDDO
       ENDIF

@@ -12,7 +12,7 @@
       SUBROUTINE DES_INIT_ARRAYS
 
       USE param1, only: zero
-      USE discretelement, only: des_rop_s, p_force, pinc, f_gds, vxf_gds, grav, drag_am, drag_bm, max_pip
+      USE discretelement, only: des_rop_s, pinc, f_gds, vxf_gds, grav, drag_am, drag_bm, max_pip
 
       IMPLICIT NONE
 
@@ -21,8 +21,6 @@
       PINC(:,:,:) = 0
 
       DES_ROP_S(:,:,:,:) = ZERO
-
-      P_FORCE(:,:,:,:) = ZERO
 
       IF(allocated(DRAG_AM)) DRAG_AM = ZERO
       IF(allocated(DRAG_BM)) DRAG_BM = ZERO
@@ -51,7 +49,7 @@
 
          use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
          use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
-         use discretelement, only: f_gp, rot_acc_old, des_usr_var_size
+         use discretelement, only: rot_acc_old, des_usr_var_size
          use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
          use functions, only: set_nonexistent
          use param1, only: zero
@@ -103,7 +101,6 @@
          DES_USR_VAR(LB:UB,:) = ZERO
 
 ! Particle center drag coefficient and explicit drag force
-      F_GP(LB:UB) = ZERO
       DRAG_FC(LB:UB,:) = ZERO
 
 ! Higher order time integration variables.

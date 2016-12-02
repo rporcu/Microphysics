@@ -20,11 +20,5 @@
 ! Additional properties for Hertzian model:
         DES_COLL_MODEL, EW_YOUNG, VW_POISSON, E_YOUNG, V_POISSON,&
 
-! DES flow boundary condition information: J.Musser
-        FORCE_ORD_BC, &
-
 ! DES output control information
-        PRINT_DES_DATA,  &
-
-! Flag to turn on/off optimizing the list of facets at each des grid cell
-         MINIMIZE_DES_FACET_LIST
+        PRINT_DES_DATA

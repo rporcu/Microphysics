@@ -21,7 +21,7 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
 
       IMPLICIT NONE
 
@@ -37,6 +37,8 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
       INTEGER :: II
 
@@ -55,8 +57,10 @@ module calc_drag_des_module
 ! Calculate gas-solids drag force on particle
          IF(DES_CONTINUUM_COUPLED) THEN
             SELECT CASE(DES_INTERP_SCHEME_ENUM)
-            CASE(DES_INTERP_GARG) ; CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g)
-            CASE DEFAULT          ; CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+            CASE(DES_INTERP_GARG)
+               CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
+            CASE DEFAULT
+               CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
             END SELECT
          ENDIF
 

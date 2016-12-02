@@ -15,15 +15,15 @@ module drag_gs_des0_module
 !       include the gas-solids drag force and gas pressure force       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
 
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, p_force, des_pos_new, des_vel_new, &
-                                f_gp, fc, interp_scheme
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, &
+         des_pos_new, des_vel_new, fc, interp_scheme
       use functions     , only: funijk, fluid_at,ip1,jp1,kp1,set_nonexistent,is_nonexistent,&
                                 is_entering_ghost,is_exiting_ghost,is_ghost
       use geometry      , only: dz
@@ -46,6 +46,8 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 !-----------------------------------------------
 ! Local variables
@@ -75,7 +77,8 @@ module drag_gs_des0_module
           DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
           DOUBLE PRECISION :: velfp(3), desposnew(3)
           DOUBLE PRECISION :: D_FORCE(3)
-          DOUBLE PRECISION, DIMENSION(3) :: VEL_NEW
+          DOUBLE PRECISION :: VEL_NEW(3)
+          DOUBLE PRECISION :: f_gp
 
 ! INTERPOLATED fluid-solids drag (the rest of this routine):
 ! Calculate the gas solids drag coefficient using the particle
@@ -156,17 +159,17 @@ module drag_gs_des0_module
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g)
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g,f_gp)
 
 ! Calculate the gas-solids drag force on the particle
-            D_FORCE(1:3) = F_GP(NP)*(VELFP-VEL_NEW)
+            D_FORCE(1:3) = F_GP*(VELFP-VEL_NEW)
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
             FC(NP,:) = FC(NP,:) + D_FORCE(:3)
 
-! P_force is evaluated as -dp/dx
-            FC(NP,:) = FC(NP,:) + P_FORCE(:,lli,llj,llk)*PVOL(NP)
+! gradPg is evaluated as -dp/dx
+            FC(NP,:) = FC(NP,:) + gradPg(lli,llj,llk,:)*PVOL(NP)
          ENDDO       ! end do (nindx = 1,pinc)
 
       ENDDO
@@ -199,7 +202,7 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
-                                f_gp, interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
+                                interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use geometry, only: dz
       use param1  , only: zero, one
@@ -259,7 +262,8 @@ module drag_gs_des0_module
       DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp,vst_tmp
       DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
       DOUBLE PRECISION :: velfp(3), desposnew(3)
-      DOUBLE PRECISION, DIMENSION(3) :: VEL_NEW
+      DOUBLE PRECISION :: VEL_NEW(3)
+      DOUBLE PRECISION :: f_gp
 
 !-----------------------------------------------
 
@@ -348,7 +352,7 @@ module drag_gs_des0_module
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g)
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g, f_gp)
 
 !-----------------------------------------------------------------<<<
 ! Calculate the corresponding gas solids drag force that is used in
@@ -374,11 +378,11 @@ module drag_gs_des0_module
                      ovol = one/vcell
 
                      drag_am(ii, jj, kk) = drag_am(ii, jj, kk) + &
-                        f_gp(np)*weight_ft(i,j,k)*ovol
+                        f_gp*weight_ft(i,j,k)*ovol
 
                      drag_bm(ii, jj, kk,1:3) = &
                         drag_bm(ii, jj, kk,1:3) + &
-                        f_gp(np) * vel_new(1:3) * &
+                        f_gp * vel_new(1:3) * &
                         weight_ft(i,j,k)*ovol
                   ENDDO
                ENDDO

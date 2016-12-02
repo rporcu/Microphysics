@@ -310,11 +310,6 @@
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
       DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE ::  DES_ROPS_NODE
 
-! the gas-particle drag coefficient
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: f_gp
-                        !(PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: wtderivp
-
 ! quantities are set in subroutine set_interpolation_scheme
 ! order = order of the interpolation method, ob2l = (order+1)/2,
 ! ob2r = order/2
@@ -327,17 +322,8 @@
 ! Volume of each node. Used to obtain Eulerian fields
       double precision, allocatable, dimension(:,:,:) :: des_vol_node
 
-! Variable to track pressure force in computational fluid cell (ijk)
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: P_FORCE
-
 ! Bulk density of particles in fluid cell
       DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
-
-! Granular temperature in a fluid cell
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_THETA
-
-! Flag to turn on/off optimizing the list of facets at each des grid cell
-      LOGICAL :: MINIMIZE_DES_FACET_LIST
 
       LOGICAL :: DES_EXPLICITLY_COUPLED
 

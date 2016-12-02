@@ -508,23 +508,9 @@
 
 
 
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Flag to turn on/off optimizing the list of facets at each des grid cell
-!  </description>
-!  <dependent keyword="USE_STL" value=".TRUE."/>
-      MINIMIZE_DES_FACET_LIST =.TRUE.
-!</keyword>
-
-
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
 !                            UNSUPPORTED KEYWORDS                      !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
-
-! Logical to force the inlet to operate with an ordered boundary
-! condition. This may be useful during long simulations or if the
-! inlet appears to be taking a long time to randomly place particles.
-      FORCE_ORD_BC = .FALSE.
 
 
 ! These need to be inialized to 0, but they are not part of the namelist

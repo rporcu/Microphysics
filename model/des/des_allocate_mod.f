@@ -139,14 +139,9 @@ CONTAINS
 
       ALLOCATE(DRAG_AM(istart3:iend3, jstart3:jend3, kstart3:kend3))
       ALLOCATE(DRAG_BM(istart3:iend3, jstart3:jend3, kstart3:kend3, DIMN))
-      ALLOCATE(F_gp(MAX_PIP ))
-      F_gp(1:MAX_PIP)  = ZERO
 
 ! Explicit drag force acting on a particle.
       Allocate(DRAG_FC (MAX_PIP,DIMN) )
-
-! force due to gas-pressure gradient
-      ALLOCATE(P_FORCE(DIMN, istart3:iend3, jstart3:jend3, kstart3:kend3))
 
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))
@@ -317,7 +312,6 @@ CONTAINS
            call logical_grow(ighost_updated,MAX_PIP)
            call real_grow2_reverse(FC,MAX_PIP)
            call real_grow2_reverse(TOW,MAX_PIP)
-           call real_grow(F_GP,MAX_PIP)
            call integer_grow2(WALL_COLLISION_FACET_ID,MAX_PIP)
            call real_grow3(WALL_COLLISION_PFT,MAX_PIP)
            call real_grow2_reverse(DRAG_FC,MAX_PIP)

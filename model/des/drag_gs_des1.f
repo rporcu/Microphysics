@@ -18,8 +18,6 @@ module drag_gs_des1_module
       use discretelement, only: MAX_PIP
 ! IJK of fluid cell containing particles center
       use discretelement, only: PIJK
-! Drag force on each particle
-      use discretelement, only: F_GP
 ! Particle velocity
       use discretelement, only: DES_VEL_NEW
 ! Contribution to gas momentum equation due to drag
@@ -38,8 +36,6 @@ module drag_gs_des1_module
 
 ! Total forces acting on particle
       use discretelement, only: FC
-! Gas pressure force by fluid cell
-      use discretelement, only: P_FORCE
 ! Particle volume.
       use discretelement, only: PVOL
 
@@ -63,7 +59,7 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
+      SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg)
 
       IMPLICIT NONE
 
@@ -79,33 +75,23 @@ module drag_gs_des1_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, IJK
 ! Interpolated gas phase quanties.
-      DOUBLE PRECISION :: lEPg, VELFP(3), lPF(3)
+      DOUBLE PRECISION :: lEPg, VELFP(3)
 ! Drag force acting on each particle.
-      DOUBLE PRECISION :: D_FORCE(3)
+      DOUBLE PRECISION :: D_FORCE(3), f_gp
 ! Loop bound for filter
       INTEGER :: LP_BND
-! Cell-center gas velocities.
-      DOUBLE PRECISION, ALLOCATABLE :: UGC(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: VGC(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: WGC(:,:,:)
       integer :: i,j,k
 !......................................................................!
 
-      allocate( UGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate( VGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate( WGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-
-! Calculate the cell center gas velocities.
-      CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
-
 ! Calculate the gas phase forces acting on each particle.
-
       DO NP=1,MAX_PIP
          IF(.NOT.IS_NORMAL(NP)) CYCLE
 ! Avoid drag calculations in cells without fluid (cut-cell)
@@ -116,36 +102,29 @@ module drag_gs_des1_module
 
          lEPG = ZERO
          VELFP = ZERO
-         lPF = ZERO
 
 ! Calculate the gas volume fraction, velocity, and pressure force at
 ! the particle's position.
          IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
-         VELFP(1) = UGC(I,J,K)
-         VELFP(2) = VGC(I,J,K)
-         VELFP(3) = WGC(I,J,K)
-         lPF = P_FORCE(:,I,J,K)
+         VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
+         VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
+         VELFP(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(I,J,K))
 
 ! For explicit coupling, use the drag coefficient calculated for the
 ! gas phase drag calculations.
 
 ! Calculate the drag coefficient.
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp)
 
 ! Calculate the gas-solids drag force on the particle
-         D_FORCE = F_GP(NP)*(VELFP - DES_VEL_NEW(NP,:))
+         D_FORCE = F_GP*(VELFP - DES_VEL_NEW(NP,:))
 
 ! Update the contact forces (FC) on the particle to include gas
 ! pressure and gas-solids drag
-         FC(NP,:) = FC(NP,:) + D_FORCE(:)
-
-         FC(NP,:) = FC(NP,:) + lPF*PVOL(NP)
-
+         FC(NP,:) = FC(NP,:) + D_FORCE(:) + PVOL(NP)*gradPg(I,J,K,:)
 
       ENDDO
-
-      deallocate( UGC, VGC, WGC )
 
       RETURN
       END SUBROUTINE DRAG_GS_DES1
@@ -193,25 +172,14 @@ module drag_gs_des1_module
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lEPg, VELFP(3)
 ! Drag force (intermediate calculation)
-      DOUBLE PRECISION :: lFORCE
+      DOUBLE PRECISION :: f_gp
 ! Drag sources for fluid (intermediate calculation)
       DOUBLE PRECISION :: lDRAG_BM(3)
-! Cell-center gas velocities.
-      DOUBLE PRECISION, ALLOCATABLE :: UGC(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: VGC(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: WGC(:,:,:)
 !......................................................................!
-
-      allocate( UGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate( VGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate( WGC(istart3:iend3, jstart3:jend3, kstart3:kend3) )
 
 ! Initialize fluid cell values.
       F_GDS = ZERO
       DRAG_BM = ZERO
-
-! Calculate the cell center gas velocities.
-      CALL CALC_CELL_CENTER_GAS_VEL(U_G, V_G, W_G, UGC, VGC, WGC)
 
 ! Calculate the gas phase forces acting on each particle.
 
@@ -220,7 +188,8 @@ module drag_gs_des1_module
 
 ! The drag force is not calculated on entering or exiting particles
 ! as their velocities are fixed and may exist in 'non fluid' cells.
-        IF(IS_ENTERING(NP) .OR. IS_EXITING(NP) .OR. IS_ENTERING_GHOST(NP) .OR. IS_EXITING_GHOST(NP)) CYCLE
+         IF(IS_ENTERING(NP) .OR. IS_EXITING(NP) .OR. &
+            IS_ENTERING_GHOST(NP) .OR. IS_EXITING_GHOST(NP)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO
@@ -233,18 +202,16 @@ module drag_gs_des1_module
 ! particle's position.
          IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
-         VELFP(1) = UGC(I,J,K)
-         VELFP(2) = VGC(I,J,K)
-         VELFP(3) = WGC(I,J,K)
+         VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
+         VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
+         VELFP(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(I,J,K))
 
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp)
 
-         lFORCE = F_GP(NP)
-
-         lDRAG_BM = lFORCE*DES_VEL_NEW(NP,:)
+         lDRAG_BM = f_gp*DES_VEL_NEW(NP,:)
 
          IJK = PIJK(NP,4)
          WEIGHT = ONE/VOL
@@ -253,7 +220,7 @@ module drag_gs_des1_module
          DRAG_BM(I,J,K,2) = DRAG_BM(I,J,K,2) + lDRAG_BM(2)*WEIGHT
          DRAG_BM(I,J,K,3) = DRAG_BM(I,J,K,3) + lDRAG_BM(3)*WEIGHT
 
-         F_GDS(i,j,k) = F_GDS(i,j,k) + lFORCE*WEIGHT
+         F_GDS(i,j,k) = F_GDS(i,j,k) + f_gp*WEIGHT
 
       ENDDO
 
@@ -261,59 +228,6 @@ module drag_gs_des1_module
       ! CALL SEND_RECV(F_GDS, 2)
       ! CALL SEND_RECV(DRAG_BM, 2)
 
-      deallocate( UGC, VGC, WGC )
-
       RETURN
       END SUBROUTINE DRAG_GS_GAS1
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CALC_CELL_CENTER_GAS_VEL                                !
-!  Author: J.Musser                                   Date: 07-NOV-14  !
-!                                                                      !
-!  Purpose: Calculate the scalar cell center gas velocity. This code   !
-!  is common to the DEM and GAS calls for non-interpolated drag        !
-!  routines.                                                           !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_CELL_CENTER_GAS_VEL(lUg, lVg, lWg, Uc, Vc, Wc)
-
-      IMPLICIT NONE
-
-! Dummy arguments
-!---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: lUg(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: lVg(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: lWg(istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      DOUBLE PRECISION, INTENT(OUT) :: Uc(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: Vc(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: Wc(istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-! Local variables:
-!---------------------------------------------------------------------//
-! Indices of adjacent cells
-      INTEGER :: i,j,k
-
-! Calculate the cell center gas velocity components.
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
-
-         IF(fluid_at(i,j,k)) THEN
-            Uc(I,J,K) = AVG(lUG(iminus(i,j,k),j,k),lUG(I,J,K))
-            Vc(I,J,K) = AVG(lVg(i,jminus(i,j,k),k),lVg(I,J,K))
-            Wc(I,J,K) = AVG(lWg(i,j,kminus(i,j,k)),lWg(I,J,K))
-         ELSE
-            Uc(I,J,K) = ZERO
-            Vc(I,J,K) = ZERO
-            Wc(I,J,K) = ZERO
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
-
-      RETURN
-      END SUBROUTINE CALC_CELL_CENTER_GAS_VEL
-
 end module drag_gs_des1_module
