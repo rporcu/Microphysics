@@ -74,8 +74,7 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-         P_FORCE(:,IJK) = cPG - P_FORCE(:,IJK)
+         P_FORCE(:,I,J,K) = cPG - P_FORCE(:,I,J,K)
 
       ENDDO
       ENDDO
@@ -99,7 +98,7 @@
             k = PIJK(NP,3)
             if (.NOT.fluid_at(i,j,k)) CYCLE
 
-             lPF = P_FORCE(:,PIJK(NP,4))
+             lPF = P_FORCE(:,i,j,k)
 
 ! Include gas pressure and gas-solids drag
             DRAG_FC(NP,:) = DRAG_FC(NP,:) + lPF*PVOL(NP)

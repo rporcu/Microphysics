@@ -143,7 +143,7 @@ module comp_mean_fields0_module
 
 ! looping through particles in the cell
          DO NINDX=1, PINC(IJK)
-            NP = PIC(IJK)%P(NINDX)
+            NP = PIC(lli,llj,llk)%P(NINDX)
 
             call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
 

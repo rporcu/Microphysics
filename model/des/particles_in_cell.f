@@ -162,13 +162,13 @@
 ! checking all cells (including ghost cells); updating entering/exiting
 ! particle regions
          NPIC =  PINC(IJK)
-         IF (ASSOCIATED(PIC(IJK)%p)) THEN
-            IF (NPIC.NE.SIZE(PIC(IJK)%p)) THEN
-               DEALLOCATE(PIC(IJK)%p)
-               IF (NPIC.GT.0) ALLOCATE(PIC(IJK)%p(NPIC))
+         IF (ASSOCIATED(PIC(I,J,K)%p)) THEN
+            IF (NPIC.NE.SIZE(PIC(I,J,K)%p)) THEN
+               DEALLOCATE(PIC(I,J,K)%p)
+               IF (NPIC.GT.0) ALLOCATE(PIC(I,J,K)%p(NPIC))
             ENDIF
          ELSE
-            IF (NPIC.GT.0) ALLOCATE(PIC(IJK)%p(NPIC))
+            IF (NPIC.GT.0) ALLOCATE(PIC(I,J,K)%p(NPIC))
          ENDIF
       ENDDO
       ENDDO
@@ -191,7 +191,7 @@
          K = PIJK(L,3)
          IJK = PIJK(L,4)
          POS = PARTICLE_COUNT(I,J,K)
-         PIC(IJK)%P(POS) = L
+         PIC(I,J,K)%P(POS) = L
          PARTICLE_COUNT(I,J,K) = PARTICLE_COUNT(I,J,K) + 1
       ENDDO
 

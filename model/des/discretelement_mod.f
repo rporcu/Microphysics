@@ -273,7 +273,7 @@
 
 ! in order to facilitate the parallel processing the PIC is defined
 ! as single array IJK
-      TYPE(iap1), DIMENSION(:), ALLOCATABLE:: pic  ! (DIMENSION_3)
+      TYPE(iap1), DIMENSION(:,:,:), ALLOCATABLE:: pic
 
 ! Store the number of particles in a computational fluid cell
       INTEGER, DIMENSION(:), ALLOCATABLE :: PINC  ! (DIMENSION_3)
@@ -328,7 +328,7 @@
       double precision, allocatable, dimension(:) :: des_vol_node
 
 ! Variable to track pressure force in computational fluid cell (ijk)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: P_FORCE
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: P_FORCE
 
 ! Bulk density of particles in fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S

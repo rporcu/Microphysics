@@ -144,7 +144,7 @@ module drag_gs_des0_module
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
          DO nindx = 1,PINC(IJK)
-            NP = PIC(ijk)%p(nindx)
+            NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
@@ -170,7 +170,7 @@ module drag_gs_des0_module
             FC(NP,:) = FC(NP,:) + D_FORCE(:3)
 
 ! P_force is evaluated as -dp/dx
-            FC(NP,:) = FC(NP,:) + P_FORCE(:,IJK)*PVOL(NP)
+            FC(NP,:) = FC(NP,:) + P_FORCE(:,lli,llj,llk)*PVOL(NP)
          ENDDO       ! end do (nindx = 1,pinc(ijk))
 
       ENDDO
@@ -202,7 +202,7 @@ module drag_gs_des0_module
       use compar        , only:  istart2, iend2, jstart2, jend2, kstart2, kend2
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, p_force, des_pos_new, des_vel_new, &
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
                                 f_gp, interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use geometry, only: do_k, no_k, dz
@@ -345,7 +345,7 @@ module drag_gs_des0_module
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
          DO nindx = 1,PINC(IJK)
-            NP = PIC(ijk)%p(nindx)
+            NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
@@ -526,4 +526,3 @@ module drag_gs_des0_module
       END SUBROUTINE DRAG_INTERPOLATION
 
 end module drag_gs_des0_module
-

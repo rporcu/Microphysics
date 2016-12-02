@@ -130,7 +130,7 @@ module drag_gs_des1_module
          VELFP(1) = UGC(I,J,K)
          VELFP(2) = VGC(I,J,K)
          VELFP(3) = WGC(I,J,K)
-         lPF = P_FORCE(:,IJK)
+         lPF = P_FORCE(:,I,J,K)
 
 ! For explicit coupling, use the drag coefficient calculated for the
 ! gas phase drag calculations.

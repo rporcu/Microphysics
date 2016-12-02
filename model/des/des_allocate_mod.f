@@ -9,6 +9,21 @@
 
 MODULE DES_ALLOCATE
 
+      USE compar, only: iend3, jend3, kend3
+      USE compar, only: istart3, jstart3, kstart3
+      USE compar, only: numpes
+      USE des_bc, only: numfrac_limit
+      USE des_bc, only: pi_factor, pi_count, dem_mi_time, dem_mi, dem_bc_poly_layout, dem_bcmi_ijkstart, dem_bcmi_ijkend, dem_bcmi
+      USE discretelement
+      USE error_manager, only: err_msg, ival, flush_err_msg, finl_err_msg, init_err_msg
+      USE param, only: dimension_3
+      USE param1, only: undefined_i
+      USE particle_filter, only: DES_INTERP_DPVM
+      USE particle_filter, only: DES_INTERP_GARG
+      USE particle_filter, only: DES_INTERP_GAUSS
+      USE particle_filter, only: DES_INTERP_SCHEME_ENUM
+      USE physprop, only: mmax
+
   PUBLIC:: DES_ALLOCATE_ARRAYS, ADD_PAIR, PARTICLE_GROW, ALLOCATE_DEM_MI
 
 CONTAINS
@@ -21,41 +36,18 @@ CONTAINS
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DES_ALLOCATE_ARRAYS
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE constant
-      USE discretelement
-      Use geometry
-      Use compar
-      Use physprop
-      Use des_bc
-      use funits
-      USE functions
-
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_GARG
-      use particle_filter, only: DES_INTERP_DPVM
-      use particle_filter, only: DES_INTERP_GAUSS
-
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager
-
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: IJK
+      INTEGER :: I, J, K
 !-----------------------------------------------
 
       CALL INIT_ERR_MSG("DES_ALLOCATE_ARRAYS")
 
 ! For parallel processing the array size required should be either
-! specified by the user or could be determined from total particles
+! specified by the USEr or could be determined from total particles
 ! with some factor.
       MAX_PIP = merge(0, PARTICLES/numPEs, PARTICLES==UNDEFINED_I)
       MAX_PIP = MAX(MAX_PIP,4)
@@ -130,9 +122,13 @@ CONTAINS
 
 ! Variable that stores the particle in cell information (ID) on the
 ! computational fluid grid defined by imax, jmax and kmax in mfix.dat
-      ALLOCATE(PIC(DIMENSION_3))
-      DO IJK=1,DIMENSION_3
-        NULLIFY(pic(ijk)%p)
+      ALLOCATE(PIC(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
+               NULLIFY(pic(i,j,k)%p)
+            ENDDO
+         ENDDO
       ENDDO
 
 ! Particles in a computational fluid cell (for volume fraction)
@@ -151,7 +147,7 @@ CONTAINS
       Allocate(DRAG_FC (MAX_PIP,DIMN) )
 
 ! force due to gas-pressure gradient
-      ALLOCATE(P_FORCE(DIMN, DIMENSION_3))
+      ALLOCATE(P_FORCE(DIMN, istart3:iend3, jstart3:jend3, kstart3:kend3))
 
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(DIMENSION_3))
@@ -190,11 +186,6 @@ CONTAINS
 
       SUBROUTINE ALLOCATE_DEM_MI
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE des_bc
-      USE discretelement
       IMPLICIT NONE
 !-----------------------------------------------
 
@@ -240,7 +231,6 @@ CONTAINS
 !                                                                      !
 !``````````````````````````````````````````````````````````````````````!
       INTEGER FUNCTION add_pair(ii,jj)
-      USE discretelement
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ii,jj
 
@@ -264,8 +254,6 @@ CONTAINS
 ! assumption to the previous array size is made as needed for restarts.!
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE NEIGHBOR_GROW(new_neigh_max)
-        USE discretelement
-        USE geometry
         IMPLICIT NONE
 
         integer, intent(in) :: new_neigh_max
@@ -307,10 +295,6 @@ CONTAINS
 ! assumption to the previous array size is made as needed for restarts.!
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE PARTICLE_GROW(new_max_pip)
-
-        USE discretelement
-        USE particle_filter
-        USE run
 
         IMPLICIT NONE
 

@@ -135,7 +135,7 @@ module calc_epg_des_module
             WRITE(ERR_MSG,1102)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
             DO LC=1,PINC(IJK)
-               M=PIC(IJK)%P(LC)
+               M=PIC(I,J,K)%P(LC)
                WRITE(ERR_MSG,1103) iGlobal_ID(M), trim(iVal(           &
                   DES_POS_NEW(M,1))), trim(iVal(DES_POS_NEW(M,2))),    &
                   trim(iVal(DES_POS_NEW(M,3)))
