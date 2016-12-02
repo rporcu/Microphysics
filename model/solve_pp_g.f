@@ -25,7 +25,7 @@ module solve_pp_module
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1  , only: zero, one
       USE residual, only: resid_p, resid, num_resid
-      USE residual, only: ijk_resid, den_resid, max_resid
+      USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
       USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
       USE run
       use matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
@@ -125,16 +125,13 @@ module solve_pp_module
 ! and use this to form normalization factor
         CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P), &
          DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
-         IJK_RESID(RESID_P))
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
          NORMGloc = RESID(RESID_P)/DEN
       ENDIF
       CALL CALC_RESID_PP (B_M, NORMGloc, NUM_RESID(RESID_P),  &
          DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
-         IJK_RESID(RESID_P))
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
       RESG = RESID(RESID_P)
-
-!      write(*,*) resid(resid_p), max_resid(resid_p), &
-!         ijk_resid(resid_p)
 
 ! Solve P_g_prime equation
        LEQI = LEQ_IT(1)

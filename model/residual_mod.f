@@ -2,31 +2,31 @@
 
       Use param, only: DIM_n
 
-      INTEGER, PARAMETER :: MAX_RESID_INDEX = 8
+      integer, parameter :: MAX_RESID_INDEX = 8
 !
-      INTEGER, PARAMETER :: NRESID = 8 + DIM_N
+      integer, parameter :: NRESID = 8 + DIM_N
 
-      INTEGER, PARAMETER :: RESID_p  =  1 ! Pressure
-      INTEGER, PARAMETER :: RESID_ro =  2 ! Density, volume fraction
-      INTEGER, PARAMETER :: RESID_u  =  3 ! U-velocity
-      INTEGER, PARAMETER :: RESID_v  =  4 ! V-velocity
-      INTEGER, PARAMETER :: RESID_w  =  5 ! W-velocity
-      INTEGER, PARAMETER :: RESID_t  =  6 ! Temperature
-      INTEGER, PARAMETER :: RESID_th =  7 ! Granular temperature
-      INTEGER, PARAMETER :: RESID_sc =  8 ! User-defined scalar
-      INTEGER, PARAMETER :: RESID_ke =  9 ! K-epsilon equations
-      INTEGER, PARAMETER :: RESID_x  = 10 ! Mass fraction
+      integer, parameter :: RESID_p  =  1 ! Pressure
+      integer, parameter :: RESID_ro =  2 ! Density, volume fraction
+      integer, parameter :: RESID_u  =  3 ! U-velocity
+      integer, parameter :: RESID_v  =  4 ! V-velocity
+      integer, parameter :: RESID_w  =  5 ! W-velocity
+      integer, parameter :: RESID_t  =  6 ! Temperature
+      integer, parameter :: RESID_th =  7 ! Granular temperature
+      integer, parameter :: RESID_sc =  8 ! User-defined scalar
+      integer, parameter :: RESID_ke =  9 ! K-epsilon equations
+      integer, parameter :: RESID_x  = 10 ! Mass fraction
 
 ! Group residuals by equation
-      INTEGER, PARAMETER :: HYDRO_GRP   = 1     !hydrodynamics
-      INTEGER, PARAMETER :: THETA_GRP   = 2     !Granular Energy
-      INTEGER, PARAMETER :: ENERGY_GRP  = 3     !Energy
-      INTEGER, PARAMETER :: SCALAR_GRP  = 5     !Scalars
-      INTEGER, PARAMETER :: KE_GRP      = 6     !K-Epsilon
+      integer, parameter :: HYDRO_GRP   = 1     !hydrodynamics
+      integer, parameter :: THETA_GRP   = 2     !Granular Energy
+      integer, parameter :: ENERGY_GRP  = 3     !Energy
+      integer, parameter :: SCALAR_GRP  = 5     !Scalars
+      integer, parameter :: KE_GRP      = 6     !K-Epsilon
 
 ! Prefix of Residuals string
-      INTEGER, PARAMETER :: NPREFIX  = 10
-      CHARACTER, PARAMETER, DIMENSION(NPREFIX) :: RESID_PREFIX = &
+      integer, parameter :: NPREFIX  = 10
+      CHARACTER, parameter, DIMENSION(NPREFIX) :: RESID_PREFIX = &
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
 ! Average residual
@@ -40,8 +40,10 @@
 ! Residual Packing for Global Operations
       DOUBLE PRECISION :: RESID_PACK(2*NRESID)
 
-! IJK location of maximum residual
-      INTEGER :: IJK_RESID(NRESID)
+! (i,j,k) location of maximum residual
+      integer :: i_resid(nresid)
+      integer :: j_resid(nresid)
+      integer :: k_resid(nresid)
 
 ! sum of residuals every 5 iterations
       DOUBLE PRECISION :: SUM5_RESID
@@ -55,7 +57,7 @@
       CHARACTER(LEN=8) :: RESID_GRP_STRING(6)
 
 ! Indices of residuals to be printed out
-      INTEGER :: RESID_INDEX(MAX_RESID_INDEX, 2)
+      integer :: RESID_INDEX(MAX_RESID_INDEX, 2)
 
 ! For checking the over-all fluid mass balance
       DOUBLE PRECISION :: accum_resid_g

@@ -26,7 +26,7 @@ module solve_vel_star_module
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE ur_facs , only: under_relax
       USE ps      , only: point_source
-      USE residual, only: resid, den_resid, max_resid, ijk_resid, &
+      USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid,&
                           resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
 
@@ -100,8 +100,8 @@ module solve_vel_star_module
 
       call lock_ambm        ! locks arrys a_m and b_m
 
-! Store the velocities so that the order of solving the momentum
-! equations does not matter
+     ! Store the velocities so that the order of solving the momentum
+     ! equations does not matter
      U_gtmp = U_g
      V_gtmp = V_g
      W_gtmp = W_g
@@ -136,12 +136,11 @@ module solve_vel_star_module
          CALL GAS_DRAG_U(A_M, B_M, IER)
       ENDIF
 
-
       IF (MOMENTUM_X_EQ(0)) THEN
-         CALL CALC_RESID_U (U_G, V_G, W_G, A_M, B_M, 0, &
-            NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
-            RESID(RESID_U), MAX_RESID(RESID_U), &
-            IJK_RESID(RESID_U))
+         CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, 0, &
+                              NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
+                              RESID(RESID_U), MAX_RESID(RESID_U), &
+                              i_resid(RESID_U),j_resid(RESID_U),k_resid(RESID_U))
          CALL UNDER_RELAX (U_G, A_M, B_M, 'U', 3)
       ENDIF
 
@@ -182,10 +181,12 @@ module solve_vel_star_module
 
 
       IF (MOMENTUM_Y_EQ(0)) THEN
-         CALL CALC_RESID_V (U_G, V_G, W_G, A_M, B_M, 0, &
-            NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
-            RESID(RESID_V), MAX_RESID(RESID_V), &
-            IJK_RESID(RESID_V))
+         ! Note we pass V first since that is the primary velocity component
+         !   The order of the other two components doesn't matter
+         CALL CALC_RESID_VEL (V_G, W_G, U_G, A_M, B_M, 0, &
+                              NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
+                              RESID(RESID_V), MAX_RESID(RESID_V), &
+                              i_resid(RESID_V),j_resid(RESID_V),k_resid(RESID_V))
          CALL UNDER_RELAX (V_G, A_M, B_M, 'V', 4)
       ENDIF
 
@@ -225,10 +226,11 @@ module solve_vel_star_module
          ENDIF
 
          IF (MOMENTUM_Z_EQ(0)) THEN
-            CALL CALC_RESID_W (U_G, V_G, W_G, A_M, B_M, 0, &
+            ! Note we pass W first since that is the primary velocity component
+            CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, 0, &
                NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
                RESID(RESID_W), MAX_RESID(RESID_W), &
-               IJK_RESID(RESID_W))
+               i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W))
             CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
          ENDIF
 
