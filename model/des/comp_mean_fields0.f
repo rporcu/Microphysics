@@ -11,6 +11,7 @@ module comp_mean_fields0_module
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: iend1, jend1, kend1
+      USE compar, only: imap_c, jmap_c, kmap_c
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: mype, pe_io
       USE discretelement, only: des_rop_s, des_rops_node, xe, yn, zt, interp_scheme
@@ -165,10 +166,10 @@ module comp_mean_fields0_module
 
                TEMP1 = WEIGHT_FT(I,J,K)*TEMP2
 
-               DES_ROPS_NODE(CUR_IJK,M) = DES_ROPS_NODE(CUR_IJK,M) +   &
+               DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) = DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) +   &
                   TEMP1
 
-               DES_VEL_NODE(CUR_IJK,:,M) = DES_VEL_NODE(CUR_IJK,:,M) + &
+               DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) = DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) + &
                   TEMP1*DES_VEL_NEW(NP,:)
             ENDDO
             ENDDO
@@ -220,8 +221,8 @@ module comp_mean_fields0_module
 ! looping over stencil points (NODE VALUES)
          DO M = 1, MMAX
 
-            DES_ROP_DENSITY = DES_ROPS_NODE(IJK, M)/vol_surr(i,j,k)
-            DES_VEL_DENSITY(:) = DES_VEL_NODE(IJK, :, M)/vol_surr(i,j,k)
+            DES_ROP_DENSITY = DES_ROPS_NODE(i,j,k, M)/vol_surr(i,j,k)
+            DES_VEL_DENSITY(:) = DES_VEL_NODE(i,j,k, :, M)/vol_surr(i,j,k)
 
             DO KK = K, merge(K+1, K, DO_K)
             DO JJ = J, J+1
@@ -233,7 +234,8 @@ module comp_mean_fields0_module
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
 ! between Lagrangian and continuum representations
-                  DES_ROP_S(IJK2, M) = DES_ROP_S(IJK2, M) + DES_ROP_DENSITY*VOL
+                  DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) = &
+                            DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) + DES_ROP_DENSITY*VOL
                ENDIF
             ENDDO  ! end do (ii=i1,i2)
             ENDDO  ! end do (jj=j1,j2)
@@ -253,10 +255,10 @@ module comp_mean_fields0_module
          IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
          DO M = 1, MMAX
-            IF(DES_ROP_S(IJK, M).GT.ZERO) THEN
+            IF(DES_ROP_S(lli,llj,llk, M).GT.ZERO) THEN
 
 ! Divide by scalar cell volume to obtain the bulk density
-               DES_ROP_S(IJK, M) = DES_ROP_S(IJK, M)/VOL
+               DES_ROP_S(lli,llj,llk, M) = DES_ROP_S(lli,llj,llk, M)/VOL
 
             ENDIF
          ENDDO   ! end loop over M=1,MMAX
@@ -279,7 +281,7 @@ module comp_mean_fields0_module
 ! It is important to check fluid_at
             IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
-            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(IJK,1:MMAX))*VOL
+            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(lli,llj,llk,1:MMAX))*VOL
          ENDDO
          ENDDO
          ENDDO

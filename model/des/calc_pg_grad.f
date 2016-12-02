@@ -53,7 +53,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, I, J, K
+      INTEGER :: NP, I, J, K
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lPF(3)
 ! Loop bound for

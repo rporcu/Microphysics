@@ -364,7 +364,7 @@
 !------------------------------------------------------------------------
       subroutine des_scatter_particle
 
-      use geometry, only: NO_K, DO_K
+      use geometry, only: NO_K
       use mpi_comm_des, only: desmpi_scatterv
       use des_allocate, only: particle_grow
       use functions, only: set_normal

@@ -1,4 +1,4 @@
-module des_drag_gp_module 
+module des_drag_gp_module
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -28,7 +28,7 @@ module des_drag_gp_module
       USE compar  , only: myPE
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
-      USE discretelement, only: pijk, pinc, pvol, des_radius, des_rop_s, f_gp
+      USE discretelement, only: pijk, pvol, des_radius, des_rop_s, f_gp
       USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
                         drag_koch_hill, drag_bvk
       USE param1, only: one, zero
@@ -134,7 +134,7 @@ module des_drag_gp_module
          tSUM = ZERO
          DO lM = 1,MMAX
             IF(PHIS > ZERO) THEN
-               tSUM = tSUM + DES_ROP_S(IJK,lM) / &
+               tSUM = tSUM + DES_ROP_S(i,j,k,lM) / &
                   (PHIS*RO_S0(lM)*D_p0(lM))
              ELSE
                tSUM = tSUM + ONE/D_p0(lM)
@@ -178,4 +178,4 @@ module des_drag_gp_module
 
       END SUBROUTINE DES_DRAG_GP
 
-end module des_drag_gp_module 
+end module des_drag_gp_module

@@ -48,43 +48,36 @@
 ! local variables
 !-----------------------------------------------
       integer :: li, lj, lk
-      integer :: lm,lijkmin,lijkmax
 !-----------------------------------------------
 
 ! adjust for periodic boundaries with no domain decomposition
       if (des_periodic_walls_x .and. nodesi.eq.1) then
          do lk = kstart2,kend2
          do lj = jstart2,jend2
-            lijkmin = funijk(1,lj,lk)
-            lijkmax = funijk(imax1,lj,lk)
-            des_rops_node(lijkmin,:)  = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_vel_node(lijkmin,:,:) = des_vel_node(lijkmin,:,:)+des_vel_node(lijkmax,:,:)
-            des_rops_node(lijkmax,:)  = des_rops_node(lijkmin,:)
-            des_vel_node(lijkmax,:,:) = des_vel_node(lijkmin,:,:)
+            des_rops_node(1,lj,lk,:)  = des_rops_node(1,lj,lk,:)+des_rops_node(imax1,lj,lk,:)
+            des_vel_node(1,lj,lk,:,:) = des_vel_node(1,lj,lk,:,:)+des_vel_node(imax1,lj,lk,:,:)
+            des_rops_node(imax1,lj,lk,:)  = des_rops_node(1,lj,lk,:)
+            des_vel_node(imax1,lj,lk,:,:) = des_vel_node(1,lj,lk,:,:)
          end do
          end do
       end if
       if (des_periodic_walls_y .and. nodesj.eq.1) then
          do lk = kstart2,kend2
          do li = istart2,iend2
-            lijkmin = funijk(li,1,lk)
-            lijkmax = funijk(li,jmax1,lk)
-            des_rops_node(lijkmin,:)  = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_vel_node(lijkmin,:,:) = des_vel_node(lijkmin,:,:)+des_vel_node(lijkmax,:,:)
-            des_rops_node(lijkmax,:)  = des_rops_node(lijkmin,:)
-            des_vel_node(lijkmax,:,:) = des_vel_node(lijkmin,:,:)
+            des_rops_node(li,1,lk,:)  = des_rops_node(li,1,lk,:)+des_rops_node(li,jmax1,lk,:)
+            des_vel_node(li,1,lk,:,:) = des_vel_node(li,1,lk,:,:)+des_vel_node(li,jmax1,lk,:,:)
+            des_rops_node(li,jmax1,lk,:)  = des_rops_node(li,1,lk,:)
+            des_vel_node(li,jmax1,lk,:,:) = des_vel_node(li,1,lk,:,:)
          end do
          end do
       end if
       if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
          do li = istart2,iend2
          do lj = jstart2,jend2
-            lijkmin = funijk(li,lj,1)
-            lijkmax = funijk(li,lj,kmax1)
-            des_rops_node(lijkmin,:)  = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_vel_node(lijkmin,:,:) = des_vel_node(lijkmin,:,:)+des_vel_node(lijkmax,:,:)
-            des_rops_node(lijkmax,:)  = des_rops_node(lijkmin,:)
-            des_vel_node(lijkmax,:,:) = des_vel_node(lijkmin,:,:)
+            des_rops_node(li,lj,1,:)  = des_rops_node(li,lj,1,:)+des_rops_node(li,lj,kmax1,:)
+            des_vel_node(li,lj,1,:,:) = des_vel_node(li,lj,1,:,:)+des_vel_node(li,lj,kmax1,:,:)
+            des_rops_node(li,lj,kmax1,:)  = des_rops_node(li,lj,1,:)
+            des_vel_node(li,lj,kmax1,:,:) = des_vel_node(li,lj,1,:,:)
          end do
          end do
       end if
@@ -115,7 +108,6 @@
 ! local variables
 !-----------------------------------------------
       integer :: li, lj, lk
-      integer :: lijkmin,lijkmax
 !-----------------------------------------------
 
 
@@ -123,8 +115,6 @@
       if (des_periodic_walls_x .and. nodesi.eq.1) then
          do lk = kstart2,kend2
          do lj = jstart2,jend2
-            lijkmin = funijk(1,lj,lk)
-            lijkmax = funijk(imax1,lj,lk)
             drag_am(1,lj,lk) = drag_am(1,lj,lk)+drag_am(imax1,lj,lk)
             drag_bm(1,lj,lk,:) = drag_bm(1,lj,lk,:)+drag_bm(imax1,lj,lk,:)
             drag_am(imax1,lj,lk) = drag_am(1,lj,lk)
@@ -135,8 +125,6 @@
       if (des_periodic_walls_y .and. nodesj.eq.1) then
          do lk = kstart2,kend2
          do li = istart2,iend2
-            lijkmin = funijk(li,1,lk)
-            lijkmax = funijk(li,jmax1,lk)
             drag_am(li,1,lk) = drag_am(li,1,lk)+drag_am(li,jmax1,lk)
             drag_bm(li,1,lk,:) = drag_bm(li,1,lk,:)+drag_bm(li,jmax1,lk,:)
             drag_am(li,jmax1,lk) = drag_am(li,1,lk)
@@ -147,8 +135,6 @@
       if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
          do li = istart2,iend2
          do lj = jstart2,jend2
-            lijkmin = funijk(li,lj,1)
-            lijkmax = funijk(li,lj,kmax1)
             drag_am(li,lj,1) = drag_am(li,lj,1)+drag_am(li,lj,kmax1)
             drag_bm(li,lj,1,:) = drag_bm(li,lj,1,:)+drag_bm(li,lj,kmax1,:)
             drag_am(li,lj,kmax1) = drag_am(li,lj,1)
@@ -182,37 +168,30 @@
 ! local variables
 !-----------------------------------------------
       integer :: li, lj, lk
-      integer :: lm,lijkmin,lijkmax
 !-----------------------------------------------
 
 ! adjust for periodic boundaries with no domain decomposition
       if (des_periodic_walls_x .and. nodesi.eq.1) then
          do lk = kstart2,kend2
          do lj = jstart2,jend2
-            lijkmin = funijk(1,lj,lk)
-            lijkmax = funijk(imax1,lj,lk)
-            des_rops_node(lijkmin,:) = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_rops_node(lijkmax,:) = des_rops_node(lijkmin,:)
+            des_rops_node(1,lj,lk,:) = des_rops_node(1,lj,lk,:)+des_rops_node(imax1,lj,lk,:)
+            des_rops_node(imax1,lj,lk,:) = des_rops_node(1,lj,lk,:)
          end do
          end do
       end if
       if (des_periodic_walls_y .and. nodesj.eq.1) then
          do lk = kstart2,kend2
          do li = istart2,iend2
-            lijkmin = funijk(li,1,lk)
-            lijkmax = funijk(li,jmax1,lk)
-            des_rops_node(lijkmin,:) = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_rops_node(lijkmax,:) = des_rops_node(lijkmin,:)
+            des_rops_node(li,1,lk,:) = des_rops_node(li,1,lk,:)+des_rops_node(li,jmax1,lk,:)
+            des_rops_node(li,jmax1,lk,:) = des_rops_node(li,1,lk,:)
          end do
          end do
       end if
       if (des_periodic_walls_z .and. nodesk.eq.1 .and. do_K) then
          do li = istart2,iend2
          do lj = jstart2,jend2
-            lijkmin = funijk(li,lj,1)
-            lijkmax = funijk(li,lj,kmax1)
-            des_rops_node(lijkmin,:) = des_rops_node(lijkmin,:)+des_rops_node(lijkmax,:)
-            des_rops_node(lijkmax,:) = des_rops_node(lijkmin,:)
+            des_rops_node(li,lj,1,:) = des_rops_node(li,lj,1,:)+des_rops_node(li,lj,kmax1,:)
+            des_rops_node(li,lj,kmax1,:) = des_rops_node(li,lj,1,:)
          end do
          end do
       end if

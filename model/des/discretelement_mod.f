@@ -304,11 +304,11 @@
 
 ! An intermediate array used in calculation of mean solids velocity
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
-      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE ::DES_VEL_NODE
+      DOUBLE PRECISION, DIMENSION(:,:,:,:,:), ALLOCATABLE ::DES_VEL_NODE
 
 ! An intermediate array used in calculation of solids volume fraction
 ! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE ::  DES_ROPS_NODE
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE ::  DES_ROPS_NODE
 
 ! the gas-particle drag coefficient
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: f_gp
@@ -331,7 +331,7 @@
       DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: P_FORCE
 
 ! Bulk density of particles in fluid cell
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
 
 ! Granular temperature in a fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_THETA

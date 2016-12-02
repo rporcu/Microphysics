@@ -26,7 +26,7 @@ module time_march_module
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE discretelement, only: des_continuum_coupled
       USE error_manager, only: err_msg, flush_err_msg
-      USE fld_const, only: ro_g0, mu_g0
+      USE fld_const, only: mu_g0
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
       USE param1, only: undefined, small_number, zero
       USE run, only: automatic_restart, auto_restart, chk_batchq_end, dem_solids
