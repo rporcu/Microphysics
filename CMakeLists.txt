@@ -290,13 +290,13 @@ enable_testing()
 set(TESTS
   tests/FLD01
   tests/FLD02
-  tests/DEM06
-  tests/DEM07
   tests/DEM01
   tests/DEM02
   tests/DEM03
   tests/DEM04
   tests/DEM05
+  tests/DEM06
+  tests/DEM07
   benchmarks/DEM01
   benchmarks/DEM02
   benchmarks/DEM03

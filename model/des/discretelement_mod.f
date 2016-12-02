@@ -273,10 +273,10 @@
 
 ! in order to facilitate the parallel processing the PIC is defined
 ! as single array IJK
-      TYPE(iap1), DIMENSION(:), ALLOCATABLE:: pic  ! (DIMENSION_3)
+      TYPE(iap1), DIMENSION(:,:,:), ALLOCATABLE:: pic
 
 ! Store the number of particles in a computational fluid cell
-      INTEGER, DIMENSION(:), ALLOCATABLE :: PINC  ! (DIMENSION_3)
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: PINC
 
 ! For each particle track its i, j, k & ijk location on the fluid grid
 ! and solids phase no.:
@@ -284,7 +284,7 @@
 !-----------------------------------------------------------------<<<
 
 ! drag coefficient between gas phase and discrete particle 'phases'
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: F_GDS
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: F_GDS
 
 ! the following should probably be local to the subroutine
 ! solve_vel_star they are only needed when invoking the non-interpolated
@@ -292,7 +292,7 @@
 ! in the gas-phase momentum balances, in the routine to determine
 ! coefficients for the pressure correction equation and in the partial
 ! elimination algorithm
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: VXF_GDS
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: VXF_GDS
 
 ! the coefficient add to gas momentum A matrix
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DRAG_AM
@@ -328,7 +328,7 @@
       double precision, allocatable, dimension(:) :: des_vol_node
 
 ! Variable to track pressure force in computational fluid cell (ijk)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: P_FORCE
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: P_FORCE
 
 ! Bulk density of particles in fluid cell
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ROP_S

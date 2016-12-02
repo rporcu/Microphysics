@@ -73,14 +73,15 @@
       USE run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
       USE time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
 
-      use error_manager
+      use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
+      use exit_mod, only: mfix_exit
       use read_res1_mod, only: read_res1
       use write_res1_mod, only: write_res1
 
-      use time_march_module
-      use set_bc1_module
+      use time_march_module, only: time_march
+      use set_bc1_module, only: set_bc1
       USE des_allocate, only: des_allocate_arrays
-      use allocate_mod
+      use allocate_mod, only: allocate_arrays
       use matrix, only: A_m, b_m
 
       IMPLICIT NONE

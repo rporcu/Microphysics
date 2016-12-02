@@ -93,7 +93,7 @@ module drag_gs_des0_module
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         if(.not.fluid_at(lli,llj,llk) .or. pinc(ijk).eq.0) cycle
+         if(.not.fluid_at(lli,llj,llk) .or. pinc(lli,llj,llk).eq.0) cycle
          i = lli
          j = llj
          k = llk
@@ -143,8 +143,8 @@ module drag_gs_des0_module
          ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
-         DO nindx = 1,PINC(IJK)
-            NP = PIC(ijk)%p(nindx)
+         DO nindx = 1,PINC(lli,llj,llk)
+            NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
@@ -170,8 +170,8 @@ module drag_gs_des0_module
             FC(NP,:) = FC(NP,:) + D_FORCE(:3)
 
 ! P_force is evaluated as -dp/dx
-            FC(NP,:) = FC(NP,:) + P_FORCE(:,IJK)*PVOL(NP)
-         ENDDO       ! end do (nindx = 1,pinc(ijk))
+            FC(NP,:) = FC(NP,:) + P_FORCE(:,lli,llj,llk)*PVOL(NP)
+         ENDDO       ! end do (nindx = 1,pinc)
 
       ENDDO
       ENDDO
@@ -202,7 +202,7 @@ module drag_gs_des0_module
       use compar        , only:  istart2, iend2, jstart2, jend2, kstart2, kend2
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, p_force, des_pos_new, des_vel_new, &
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
                                 f_gp, interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use geometry, only: do_k, no_k, dz
@@ -289,7 +289,7 @@ module drag_gs_des0_module
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(IJK)==0) cycle
+         IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(lli,llj,llk)==0) cycle
          i = lli
          j = llj
          k = llk
@@ -344,8 +344,8 @@ module drag_gs_des0_module
          ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
-         DO nindx = 1,PINC(IJK)
-            NP = PIC(ijk)%p(nindx)
+         DO nindx = 1,PINC(lli,llj,llk)
+            NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
             if(is_ghost(np).or.is_entering_ghost(np).or.is_exiting_ghost(np)) cycle
@@ -395,7 +395,7 @@ module drag_gs_des0_module
                   ENDDO
                ENDDO
             ENDDO
-         ENDDO   ! end do (nindx = 1,pinc(ijk))
+         ENDDO   ! end do (nindx = 1,pinc)
 
       ENDDO
       ENDDO
@@ -432,7 +432,7 @@ module drag_gs_des0_module
             ijmk = funijk_map_c(i,j-1,k)
             imjmk = funijk_map_c(i-1,j-1,k)
 
-            f_gds(ijk) = avg_factor*&
+            f_gds(lli,llj,llk) = avg_factor*&
                (drag_am(ijk)   + drag_am(ijmk) +&
                 drag_am(imjmk) + drag_am(imjk))
 
@@ -441,12 +441,12 @@ module drag_gs_des0_module
                imjkm = funijk_map_c(i-1,j,k-1)
                ijmkm = funijk_map_c(i,j-1,k-1)
                imjmkm = funijk_map_c(i-1,j-1,k-1)
-               f_gds(ijk) = f_gds(ijk) + avg_factor*&
+               f_gds(lli,llj,llk) = f_gds(lli,llj,llk) + avg_factor*&
                   (drag_am(ijkm) + drag_am(ijmkm) +&
                   drag_am(imjmkm)+drag_am(imjkm) )
             ENDIF   ! end if
          ELSE   ! else branch of if (fluid_at(lli,llj,llk))
-            F_GDS(IJK) = ZERO
+            F_GDS(LLI,LLJ,LLK) = ZERO
          ENDIF   ! end if/else (fluid_at(lli,llj,llk))
 
       ENDDO
@@ -526,4 +526,3 @@ module drag_gs_des0_module
       END SUBROUTINE DRAG_INTERPOLATION
 
 end module drag_gs_des0_module
-

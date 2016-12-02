@@ -18,11 +18,11 @@
 
 !-----------------------------------------------
 
-      PINC(:) = 0
+      PINC(:,:,:) = 0
 
       DES_ROP_S(:,:) = ZERO
 
-      P_FORCE(:,:) = ZERO
+      P_FORCE(:,:,:,:) = ZERO
 
       IF(allocated(DRAG_AM)) DRAG_AM = ZERO
       IF(allocated(DRAG_BM)) DRAG_BM = ZERO

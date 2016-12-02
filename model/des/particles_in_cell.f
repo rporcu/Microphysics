@@ -57,7 +57,7 @@
 
 
 ! following quantities are reset every call to particles_in_cell
-      PINC(:) = 0
+      PINC(:,:,:) = 0
 
 
 ! Use an incremental approach to determine the new particle location.
@@ -142,7 +142,7 @@
 
 ! Increment the number of particles in cell IJK
          IF(.NOT.IS_GHOST(L) .AND. .NOT.IS_ENTERING_GHOST(L) .AND. &
-            .NOT.IS_EXITING_GHOST(L)) PINC(IJK) = PINC(IJK) + 1
+            .NOT.IS_EXITING_GHOST(L)) PINC(i,j,k) = PINC(i,j,k) + 1
 
       ENDDO
 
@@ -161,14 +161,14 @@
 
 ! checking all cells (including ghost cells); updating entering/exiting
 ! particle regions
-         NPIC =  PINC(IJK)
-         IF (ASSOCIATED(PIC(IJK)%p)) THEN
-            IF (NPIC.NE.SIZE(PIC(IJK)%p)) THEN
-               DEALLOCATE(PIC(IJK)%p)
-               IF (NPIC.GT.0) ALLOCATE(PIC(IJK)%p(NPIC))
+         NPIC =  PINC(i,j,k)
+         IF (ASSOCIATED(PIC(I,J,K)%p)) THEN
+            IF (NPIC.NE.SIZE(PIC(I,J,K)%p)) THEN
+               DEALLOCATE(PIC(I,J,K)%p)
+               IF (NPIC.GT.0) ALLOCATE(PIC(I,J,K)%p(NPIC))
             ENDIF
          ELSE
-            IF (NPIC.GT.0) ALLOCATE(PIC(IJK)%p(NPIC))
+            IF (NPIC.GT.0) ALLOCATE(PIC(I,J,K)%p(NPIC))
          ENDIF
       ENDDO
       ENDDO
@@ -191,7 +191,7 @@
          K = PIJK(L,3)
          IJK = PIJK(L,4)
          POS = PARTICLE_COUNT(I,J,K)
-         PIC(IJK)%P(POS) = L
+         PIC(I,J,K)%P(POS) = L
          PARTICLE_COUNT(I,J,K) = PARTICLE_COUNT(I,J,K) + 1
       ENDDO
 
@@ -245,7 +245,7 @@
       CALL INIT_ERR_MSG("INIT_PARTICLES_IN_CELL")
 
 ! following quantities are reset every call to particles_in_cell
-      PINC(:) = 0
+      PINC(:,:,:) = 0
 
 ! Bin the particles to the DES grid.
       CALL DESGRID_PIC(.TRUE.)
@@ -287,7 +287,7 @@
          PIJK(L,4) = IJK
 
 ! Enumerate the number of 'real' particles in the ghost cell.
-         IF(.NOT.IS_GHOST(L) .AND. .NOT.IS_ENTERING_GHOST(L) .AND. .NOT.IS_EXITING_GHOST(L)) PINC(IJK) = PINC(IJK) + 1
+         IF(.NOT.IS_GHOST(L) .AND. .NOT.IS_ENTERING_GHOST(L) .AND. .NOT.IS_EXITING_GHOST(L)) PINC(i,j,k) = PINC(i,j,k) + 1
       ENDDO
 
 ! Bin the particles to the DES grid.

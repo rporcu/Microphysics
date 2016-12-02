@@ -22,7 +22,7 @@ module comp_mean_fields0_module
       USE geometry, only: no_k, do_k, dz, vol_surr, vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
-      USE param1, only: zero, one
+      USE param1, only: zero
       USE particle_filter, only: DES_REPORT_MASS_INTERP
       USE physprop, only: mmax, ro_s0
 
@@ -107,7 +107,7 @@ module comp_mean_fields0_module
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
          IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
-         IF( PINC(IJK) == 0) CYCLE
+         IF( PINC(lli,llj,llk) == 0) CYCLE
 
          PCELL(1) = lli-1
          PCELL(2) = llj-1
@@ -142,8 +142,8 @@ module comp_mean_fields0_module
 !----------------------------------------------------------------->>>
 
 ! looping through particles in the cell
-         DO NINDX=1, PINC(IJK)
-            NP = PIC(IJK)%P(NINDX)
+         DO NINDX=1, PINC(lli,llj,llk)
+            NP = PIC(lli,llj,llk)%P(NINDX)
 
             call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
 
