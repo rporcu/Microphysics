@@ -132,7 +132,7 @@ CONTAINS
       ENDDO
 
 ! Particles in a computational fluid cell (for volume fraction)
-      Allocate(  PINC (DIMENSION_3) )
+      Allocate(  PINC (istart3:iend3, jstart3:jend3, kstart3:kend3))
 
 ! For each particle track its i,j,k location on computational fluid grid
 ! defined by imax, jmax and kmax in mfix.dat and phase no.

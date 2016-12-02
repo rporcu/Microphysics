@@ -276,7 +276,7 @@
       TYPE(iap1), DIMENSION(:,:,:), ALLOCATABLE:: pic
 
 ! Store the number of particles in a computational fluid cell
-      INTEGER, DIMENSION(:), ALLOCATABLE :: PINC  ! (DIMENSION_3)
+      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: PINC
 
 ! For each particle track its i, j, k & ijk location on the fluid grid
 ! and solids phase no.:

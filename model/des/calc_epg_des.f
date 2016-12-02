@@ -51,7 +51,7 @@ module calc_epg_des_module
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: ival, flush_err_msg, err_msg, init_err_msg, mfix_exit
 
       IMPLICIT NONE
 
@@ -129,12 +129,12 @@ module calc_epg_des_module
 
             WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&
                trim(iVal(J)), trim(iVal(K)),EP_G(I,J,K), &
-               trim(iVal(PINC(IJK))), VOL
+               trim(iVal(PINC(I,J,K))), VOL
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
             WRITE(ERR_MSG,1102)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            DO LC=1,PINC(IJK)
+            DO LC=1,PINC(I,J,K)
                M=PIC(I,J,K)%P(LC)
                WRITE(ERR_MSG,1103) iGlobal_ID(M), trim(iVal(           &
                   DES_POS_NEW(M,1))), trim(iVal(DES_POS_NEW(M,2))),    &

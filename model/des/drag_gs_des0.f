@@ -93,7 +93,7 @@ module drag_gs_des0_module
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         if(.not.fluid_at(lli,llj,llk) .or. pinc(ijk).eq.0) cycle
+         if(.not.fluid_at(lli,llj,llk) .or. pinc(lli,llj,llk).eq.0) cycle
          i = lli
          j = llj
          k = llk
@@ -143,7 +143,7 @@ module drag_gs_des0_module
          ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
-         DO nindx = 1,PINC(IJK)
+         DO nindx = 1,PINC(lli,llj,llk)
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
@@ -171,7 +171,7 @@ module drag_gs_des0_module
 
 ! P_force is evaluated as -dp/dx
             FC(NP,:) = FC(NP,:) + P_FORCE(:,lli,llj,llk)*PVOL(NP)
-         ENDDO       ! end do (nindx = 1,pinc(ijk))
+         ENDDO       ! end do (nindx = 1,pinc)
 
       ENDDO
       ENDDO
@@ -289,7 +289,7 @@ module drag_gs_des0_module
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
       IJK = FUNIJK(lli,llj,llk)
-         IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(IJK)==0) cycle
+         IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(lli,llj,llk)==0) cycle
          i = lli
          j = llj
          k = llk
@@ -344,7 +344,7 @@ module drag_gs_des0_module
          ENDDO
 ! loop through particles in the cell
 ! interpolate the fluid velocity (VELFP) to the particle's position.
-         DO nindx = 1,PINC(IJK)
+         DO nindx = 1,PINC(lli,llj,llk)
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(is_nonexistent(np)) cycle
@@ -395,7 +395,7 @@ module drag_gs_des0_module
                   ENDDO
                ENDDO
             ENDDO
-         ENDDO   ! end do (nindx = 1,pinc(ijk))
+         ENDDO   ! end do (nindx = 1,pinc)
 
       ENDDO
       ENDDO
