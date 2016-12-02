@@ -16,13 +16,10 @@
       SUBROUTINE WRITE_AB_M_VAR(A_M, B_M, VAR)
 
          USE compar, only: mype, pe_io
-         USE compar, only: istart3, jstart3, kstart3
-         USE compar, only: iend3, jend3, kend3
+         USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
          USE geometry, only: imin2, jmin2, kmin2
          USE geometry, only: imax2, jmax2, kmax2
-         USE functions, only: funijk, imap_c, jmap_c, kmap_c
          USE funits, only: dmp_log, unit_log
-         USE param, only: DIMENSION_3
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -35,9 +32,6 @@
 !                      Local index
       INTEGER          L
 !
-!                      cell index
-      INTEGER          IJK
-!
 !                      Septadiagonal matrix A_m
       DOUBLE PRECISION :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
@@ -47,7 +41,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !                      Source vector
-      DOUBLE PRECISION var(DIMENSION_3)
+      DOUBLE PRECISION var&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------
 !
@@ -66,20 +61,13 @@
            '  n         t        Source     Variable'
       end if
 
-
-
-
       DO K = Kmin2, Kmax2
       DO I = Imin2, Imax2
       DO J = Jmin2, Jmax2
 
-
-      IJK = FUNIJK(IMAP_C(I),JMAP_C(J),KMAP_C(K))
-
       if (myPE == PE_IO .AND. DMP_LOG)&
-         WRITE (UNIT_LOG, '(I5, 3(I3), 9(1X,G9.2))') &
-         FUNIJK(I,J,K), I, J, K,&
-         (A_M(i,j,k,L),L=-3,3), b_m(I,J,K), var(IJK)
+         WRITE (UNIT_LOG, '(3(I3), 9(1X,G9.2))') &
+            i,j,k, (A_M(i,j,k,L),L=-3,3), b_m(i,j,k), var(i,j,k)
 
       END DO
       END DO
