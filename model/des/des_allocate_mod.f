@@ -138,8 +138,8 @@ CONTAINS
 ! defined by imax, jmax and kmax in mfix.dat and phase no.
       Allocate(  PIJK (MAX_PIP,5) )
 
-      ALLOCATE(DRAG_AM(DIMENSION_3))
-      ALLOCATE(DRAG_BM(DIMENSION_3, DIMN))
+      ALLOCATE(DRAG_AM(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      ALLOCATE(DRAG_BM(istart3:iend3, jstart3:jend3, kstart3:kend3, DIMN))
       ALLOCATE(F_gp(MAX_PIP ))
       F_gp(1:MAX_PIP)  = ZERO
 

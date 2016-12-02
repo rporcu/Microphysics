@@ -34,8 +34,6 @@
       use functions, only: flow_at_e
 ! IJK of cell to east.
       use functions, only: ieast
-! IJK function for I,J,K that includes mapped indices.
-      use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's east face.
       use fun_avg, only: AVG
 ! Domain index bounds.
@@ -59,7 +57,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK, IJMK, IJKM, IJMKM, IJKE
+      INTEGER :: I, J, K, IJK
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION :: tmp_A, tmp_B
 ! Averaging factor
@@ -90,18 +88,14 @@
                IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
                IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-               IJMK = FUNIJK_MAP_C(I, J-1, K)
-
-               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IJMK))
-               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,1) + DRAG_BM(IJMK,1))
+               tmp_A = -AVG_FACTOR*(DRAG_AM(i,j,k) + DRAG_AM(I, J-1, K))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(i,j,k,1) + DRAG_BM(I, J-1, K,1))
 
                IF(DO_K) THEN
-                  IJKM = FUNIJK_MAP_C(I, J, K-1)
-                  IJMKM = FUNIJK_MAP_C(I, J-1, K-1)
                   tmp_A = tmp_A - AVG_FACTOR*                             &
-                     (DRAG_AM(IJKM) + DRAG_AM(IJMKM))
+                     (DRAG_AM(I, J, K-1) + DRAG_AM(I, J-1, K-1))
                   tmp_B = tmp_B - AVG_FACTOR*                             &
-                     (DRAG_BM(IJKM,1) + DRAG_BM(IJMKM,1))
+                     (DRAG_BM(I, J, K-1,1) + DRAG_BM(I, J-1, K-1,1))
                ENDIF
 
                A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
@@ -119,10 +113,9 @@
 
             IJK = FUNIJK(i,j,k)
             IF(flow_at_e(i,j,k)) THEN
-               IJKE = FUNIJK(ieast(i,j,k),j,k)
 
                tmp_A = AVG(F_GDS(i,j,k), F_GDS(ieast(i,j,k),j,k))
-               tmp_B = AVG(DRAG_BM(IJK,1), DRAG_BM(IJKE,1))
+               tmp_B = AVG(DRAG_BM(i,j,k,1), DRAG_BM(ieast(i,j,k),j,k,1))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
                B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B
@@ -173,8 +166,6 @@
       use functions, only: flow_at_n
 ! IJK of cell to north.
       use functions, only: jnorth
-! IJK function for I,J,K that includes mapped indices.
-      use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
       use fun_avg, only: AVG
 ! Domain index bounds.
@@ -197,7 +188,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK, IMJK, IJKM, IMJKM, IJKN
+      INTEGER :: I, J, K, IJK
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION tmp_A, tmp_B
 ! Averaging factor
@@ -225,20 +216,15 @@
                IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
                IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-               IMJK = FUNIJK_MAP_C(I-1,J,K)
-
-               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK))
-               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,2) + DRAG_BM(IMJK,2))
+               tmp_A = -AVG_FACTOR*(DRAG_AM(i,j,k) + DRAG_AM(I-1,J,K))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(i,j,k,2) + DRAG_BM(I-1,J,K,2))
 
                IF(DO_K) THEN
 
-                  IJKM = FUNIJK_MAP_C(I,J,K-1)
-                  IMJKM = FUNIJK_MAP_C(I-1,J,K-1)
-
                   tmp_A = tmp_A - AVG_FACTOR*                             &
-                     (DRAG_AM(IJKM) + DRAG_AM(IMJKM))
+                     (DRAG_AM(I,J,K-1) + DRAG_AM(I-1,J,K-1))
                   tmp_B = tmp_B - AVG_FACTOR*                             &
-                     (DRAG_BM(IJKM,2) + DRAG_BM(IMJKM,2))
+                     (DRAG_BM(I,J,K-1,2) + DRAG_BM(I-1,J,K-1,2))
                ENDIF
 
                A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
@@ -256,10 +242,9 @@
 
          IJK = FUNIJK(i,j,k)
             IF(flow_at_n(i,j,k)) THEN
-               IJKN = FUNIJK(i,jnorth(i,j,k),k)
 
                tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,jnorth(i,j,k),k))
-               tmp_B = AVG(DRAG_BM(IJK,2), DRAG_BM(IJKN,2))
+               tmp_B = AVG(DRAG_BM(i,j,k,2), DRAG_BM(i,jnorth(i,j,k),k,2))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
                B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B
@@ -305,8 +290,6 @@
       use functions, only: flow_at_t
 ! IJK of cell to top.
       use functions, only: ktop
-! IJK function for I,J,K that includes mapped indices.
-      use compar, only: FUNIJK_MAP_C
 ! Function for averaging to a scalar cell's north face.
       use fun_avg, only: AVG
 ! Domain index bounds.
@@ -329,7 +312,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK, IMJK, IJMK, IMJMK, IJKT
+      INTEGER :: I, J, K, IJK
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION tmp_A, tmp_B
 ! Averaging factor
@@ -358,15 +341,11 @@
                IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
                IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
 
-               IMJK = FUNIJK_MAP_C(I-1,J,K)
-               IJMK = FUNIJK_MAP_C(I,J-1,K)
-               IMJMK = FUNIJK_MAP_C(I-1,J-1,K)
+               tmp_A = -AVG_FACTOR*(DRAG_AM(i,j,k) + DRAG_AM(I-1,J,K) +        &
+                  DRAG_AM(I,J-1,K) + DRAG_AM(I-1,J-1,K))
 
-               tmp_A = -AVG_FACTOR*(DRAG_AM(IJK) + DRAG_AM(IMJK) +        &
-                  DRAG_AM(IJMK) + DRAG_AM(IMJMK))
-
-               tmp_B = -AVG_FACTOR*(DRAG_BM(IJK,3) + DRAG_BM(IMJK,3) +    &
-                  DRAG_BM(IJMK,3) + DRAG_BM(IMJMK,3))
+               tmp_B = -AVG_FACTOR*(DRAG_BM(i,j,k,3) + DRAG_BM(I-1,J,K,3) +    &
+                  DRAG_BM(I,J-1,K,3) + DRAG_BM(I-1,J-1,K,3))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) + tmp_A*VOL
                B_M(I,J,K) = B_M(I,J,K) + tmp_B*VOL
@@ -383,10 +362,8 @@
 
          IJK = FUNIJK(i,j,k)
             IF(flow_at_t(i,j,k)) THEN
-               IJKT = FUNIJK(i,j,ktop(i,j,k))
-
                tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,j,ktop(i,j,k)))
-               tmp_B = AVG(DRAG_BM(IJK,3), DRAG_BM(IJKT,3))
+               tmp_B = AVG(DRAG_BM(i,j,k,3), DRAG_BM(i,j,ktop(i,j,k),3))
 
                A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * tmp_A
                B_M(I,J,K) = B_M(I,J,K) - VOL * tmp_B

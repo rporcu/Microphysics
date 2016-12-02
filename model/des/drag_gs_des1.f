@@ -254,9 +254,9 @@ module drag_gs_des1_module
          IJK = PIJK(NP,4)
          WEIGHT = ONE/VOL
 
-         DRAG_BM(IJK,1) = DRAG_BM(IJK,1) + lDRAG_BM(1)*WEIGHT
-         DRAG_BM(IJK,2) = DRAG_BM(IJK,2) + lDRAG_BM(2)*WEIGHT
-         DRAG_BM(IJK,3) = DRAG_BM(IJK,3) + lDRAG_BM(3)*WEIGHT
+         DRAG_BM(I,J,K,1) = DRAG_BM(I,J,K,1) + lDRAG_BM(1)*WEIGHT
+         DRAG_BM(I,J,K,2) = DRAG_BM(I,J,K,2) + lDRAG_BM(2)*WEIGHT
+         DRAG_BM(I,J,K,3) = DRAG_BM(I,J,K,3) + lDRAG_BM(3)*WEIGHT
 
          F_GDS(i,j,k) = F_GDS(i,j,k) + lFORCE*WEIGHT
 

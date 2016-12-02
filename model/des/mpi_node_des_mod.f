@@ -125,10 +125,10 @@
          do lj = jstart2,jend2
             lijkmin = funijk(1,lj,lk)
             lijkmax = funijk(imax1,lj,lk)
-            drag_am(lijkmin) = drag_am(lijkmin)+drag_am(lijkmax)
-            drag_bm(lijkmin,:) = drag_bm(lijkmin,:)+drag_bm(lijkmax,:)
-            drag_am(lijkmax) = drag_am(lijkmin)
-            drag_bm(lijkmax,:) = drag_bm(lijkmin,:)
+            drag_am(1,lj,lk) = drag_am(1,lj,lk)+drag_am(imax1,lj,lk)
+            drag_bm(1,lj,lk,:) = drag_bm(1,lj,lk,:)+drag_bm(imax1,lj,lk,:)
+            drag_am(imax1,lj,lk) = drag_am(1,lj,lk)
+            drag_bm(imax1,lj,lk,:) = drag_bm(1,lj,lk,:)
          end do
          end do
       end if
@@ -137,10 +137,10 @@
          do li = istart2,iend2
             lijkmin = funijk(li,1,lk)
             lijkmax = funijk(li,jmax1,lk)
-            drag_am(lijkmin) = drag_am(lijkmin)+drag_am(lijkmax)
-            drag_bm(lijkmin,:) = drag_bm(lijkmin,:)+drag_bm(lijkmax,:)
-            drag_am(lijkmax) = drag_am(lijkmin)
-            drag_bm(lijkmax,:) = drag_bm(lijkmin,:)
+            drag_am(li,1,lk) = drag_am(li,1,lk)+drag_am(li,jmax1,lk)
+            drag_bm(li,1,lk,:) = drag_bm(li,1,lk,:)+drag_bm(li,jmax1,lk,:)
+            drag_am(li,jmax1,lk) = drag_am(li,1,lk)
+            drag_bm(li,jmax1,lk,:) = drag_bm(li,1,lk,:)
          end do
          end do
       end if
@@ -149,10 +149,10 @@
          do lj = jstart2,jend2
             lijkmin = funijk(li,lj,1)
             lijkmax = funijk(li,lj,kmax1)
-            drag_am(lijkmin) = drag_am(lijkmin)+drag_am(lijkmax)
-            drag_bm(lijkmin,:) = drag_bm(lijkmin,:)+drag_bm(lijkmax,:)
-            drag_am(lijkmax) = drag_am(lijkmin)
-            drag_bm(lijkmax,:) = drag_bm(lijkmin,:)
+            drag_am(li,lj,1) = drag_am(li,lj,1)+drag_am(li,lj,kmax1)
+            drag_bm(li,lj,1,:) = drag_bm(li,lj,1,:)+drag_bm(li,lj,kmax1,:)
+            drag_am(li,lj,kmax1) = drag_am(li,lj,1)
+            drag_bm(li,lj,kmax1,:) = drag_bm(li,lj,1,:)
          end do
          end do
       end if

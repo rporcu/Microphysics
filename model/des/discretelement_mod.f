@@ -295,9 +295,9 @@
       DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: VXF_GDS
 
 ! the coefficient add to gas momentum A matrix
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DRAG_AM
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: DRAG_AM
 ! the coefficient add to gas momentum B matrix
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_BM
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DRAG_BM
 
 ! Explicitly calculated fluid-particle drag force.
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)

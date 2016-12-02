@@ -385,11 +385,11 @@ module drag_gs_des0_module
                      vcell = des_vol_node(cur_ijk)
                      ovol = one/vcell
 
-                     drag_am(cur_ijk) = drag_am(cur_ijk) + &
+                     drag_am(ii, jj, kk) = drag_am(ii, jj, kk) + &
                         f_gp(np)*weight_ft(i,j,k)*ovol
 
-                     drag_bm(cur_ijk,1:3) = &
-                        drag_bm(cur_ijk,1:3) + &
+                     drag_bm(ii, jj, kk,1:3) = &
+                        drag_bm(ii, jj, kk,1:3) + &
                         f_gp(np) * vel_new(1:3) * &
                         weight_ft(i,j,k)*ovol
                   ENDDO
@@ -433,8 +433,8 @@ module drag_gs_des0_module
             imjmk = funijk_map_c(i-1,j-1,k)
 
             f_gds(lli,llj,llk) = avg_factor*&
-               (drag_am(ijk)   + drag_am(ijmk) +&
-                drag_am(imjmk) + drag_am(imjk))
+               (drag_am(lli,llj,llk)   + drag_am(i,j-1,k) +&
+                drag_am(i-1,j-1,k) + drag_am(i-1,j,k))
 
             IF(DO_K) THEN
                ijkm = funijk_map_c(i,j,k-1)
@@ -442,8 +442,8 @@ module drag_gs_des0_module
                ijmkm = funijk_map_c(i,j-1,k-1)
                imjmkm = funijk_map_c(i-1,j-1,k-1)
                f_gds(lli,llj,llk) = f_gds(lli,llj,llk) + avg_factor*&
-                  (drag_am(ijkm) + drag_am(ijmkm) +&
-                  drag_am(imjmkm)+drag_am(imjkm) )
+                  (drag_am(i,j,k-1) + drag_am(i,j-1,k-1) +&
+                  drag_am(i-1,j-1,k-1)+drag_am(i-1,j,k-1) )
             ENDIF   ! end if
          ELSE   ! else branch of if (fluid_at(lli,llj,llk))
             F_GDS(LLI,LLJ,LLK) = ZERO
