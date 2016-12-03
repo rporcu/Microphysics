@@ -147,7 +147,6 @@ CONTAINS
       ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       ALLOCATE(F_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
-      ALLOCATE(VXF_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       SELECT CASE(DES_INTERP_SCHEME_ENUM)
       CASE(DES_INTERP_GARG)
