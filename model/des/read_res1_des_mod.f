@@ -1,13 +1,17 @@
       MODULE READ_RES1_DES
 
-      use run, only: bDist_IO
       use compar, only: PE_IO
       use compar, only: myPE
-      use des_allocate
-      use desmpi
-      use error_manager
+      use des_allocate, only: neighbor_grow, particle_grow
+      use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts
+      use discretelement, only: entering_ghost, particle_state, exiting_ghost, normal_particle, normal_ghost
+      use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg, ival
+      use exit_mod, only: mfix_exit
+      use in_binary_512, only: in_bin_512
+      use in_binary_512i, only: in_bin_512i
       use mpi_comm_des, only: DESMPI_GATHERV
       use mpi_comm_des, only: DESMPI_SCATTERV
+      use run, only: bDist_IO
 
       IMPLICIT NONE
 
@@ -229,8 +233,6 @@
       use discretelement, only: PIP
       use discretelement, only: DES_POS_NEW
       use compar, only: numPEs
-
-      USE in_binary_512
 
       implicit none
 
@@ -525,7 +527,6 @@
       use compar, only: numPEs
 
       use mpi_init_des, only: DES_RESTART_GHOST
-      use in_binary_512i
 
       implicit none
 
@@ -885,8 +886,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1I(lNEXT_REC, INPUT_I)
 
-      USE in_binary_512i
-
       IMPLICIT NONE
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
@@ -938,8 +937,6 @@
 ! Purpose: Write scalar integers to RES file.                          !
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1D(lNEXT_REC, INPUT_D)
-
-      USE in_binary_512
 
       IMPLICIT NONE
 
@@ -999,8 +996,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_DES_1L(lNEXT_REC, INPUT_L)
 
-      USE in_binary_512i
-
       IMPLICIT NONE
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
@@ -1047,7 +1042,6 @@
       use desmpi, only: iProcBuf
 
       use compar, only: numPEs
-      USE in_binary_512i
 
       IMPLICIT NONE
 
@@ -1122,7 +1116,6 @@
       use desmpi, only: iProcBuf
 
       use compar, only: numPEs
-      USE in_binary_512i
 
       IMPLICIT NONE
 
@@ -1191,7 +1184,6 @@
       use desmpi, only: dRootBuf
       use desmpi, only: dProcBuf
       use compar, only: numPEs
-      USE in_binary_512
 
       IMPLICIT NONE
 
@@ -1257,7 +1249,6 @@
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
       use compar, only: numPEs
-      USE in_binary_512i
 
       IMPLICIT NONE
 
@@ -1335,7 +1326,6 @@
       use desmpi, only: iProcBuf
       use compar, only: numPEs
       use discretelement, only: NEIGH_NUM
-      USE in_binary_512i
 
       IMPLICIT NONE
 
@@ -1401,7 +1391,6 @@
       use discretelement, only: NEIGH_NUM
       use desmpi, only: dRootBuf
       use desmpi, only: dProcBuf
-      USE in_binary_512
 
       IMPLICIT NONE
 
@@ -1468,7 +1457,6 @@
       use discretelement, only: NEIGH_NUM
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
-      USE in_binary_512i
 
       IMPLICIT NONE
 

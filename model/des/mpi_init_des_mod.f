@@ -7,17 +7,27 @@
 !----------------------------------------------------------------------!
       module mpi_init_des
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use discretelement
-      use desgrid
-      use compar
-      use constant
-      use des_bc
+      use compar, only: iend1_all, jend1_all, kend1_all
+      use compar, only: istart1_all, jstart1_all, kstart1_all
+      use compar, only: mype, pe_io, numpes
+      use compar, only: nodesi, nodesj, nodesk
+      use desgrid, only: desgrid_pic, iofproc, jofproc, kofproc, procijk, dg_funijk
+      use desgrid, only: dg_iend, dg_jend, dg_kend
+      use desgrid, only: dg_iend1, dg_jend1, dg_kend1
+      use desgrid, only: dg_iend2, dg_jend2, dg_kend2
+      use desgrid, only: dg_imax1, dg_jmax1, dg_kmax1
+      use desgrid, only: dg_imin1, dg_jmin1, dg_kmin1
+      use desgrid, only: dg_istart, dg_jstart, dg_kstart
+      use desgrid, only: dg_istart1, dg_jstart1, dg_kstart1
+      use desgrid, only: dg_istart2, dg_jstart2, dg_kstart2
+      use desmpi, only: dcycl_offset, ispot, imaxbuf, dpar_rad, dpar_vel, dpar_den
+      use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts, ineighproc
+      use desmpi, only: drecvbuf, dsendbuf, isendcnt, isendindices, irecvindices, isendreq, irecvreq, iexchflag, igathercnts
+      use discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
+      use discretelement, only: particle_state, normal_particle, do_nsearch, do_old, des_explicitly_coupled, des_radius, ro_sol
+      use discretelement, only: particles, des_pos_new, des_vel_new, dimn, ighost_updated, pip, max_pip, xe, yn, zt
+      use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
       use param, only: DIMENSION_N_s
-
-      use desmpi
 
       contains
 
@@ -39,7 +49,6 @@
       use desmpi, only: iPairPacketSize
       use discretelement, only: DES_USR_VAR_SIZE
 
-      use error_manager
 
 !-----------------------------------------------
       implicit none

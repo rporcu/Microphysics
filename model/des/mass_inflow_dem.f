@@ -1,20 +1,39 @@
+MODULE MASS_INFLOW_DEM_MODULE
+
+      use bc, only: bc_i_w, bc_j_s, bc_k_b
+      use bc, only: bc_plane
+      use bc, only: bc_u_g, bc_v_g, bc_w_g
+      use bc, only: bc_u_s, bc_v_s, bc_w_s
+      use constant, only: PI
+      use des_allocate, only: particle_grow
+      use des_bc, only: dem_bc_poly_layout, dem_bcmi_map, dem_bcmi_ijk, dem_bcmi_ijkstart, dem_mi_time, dem_bcmi_ijkend
+      use des_bc, only: dem_mi, dem_bcmi, numfrac_limit, pi_count, pi_factor
+      use desgrid, only: dg_funijk
+      use desgrid, only: dg_iend, dg_jend, dg_kend
+      use desgrid, only: dg_iend2, dg_jend2, dg_kend2
+      use desgrid, only: dg_istart, dg_jstart, dg_kstart
+      use desgrid, only: dg_istart2, dg_jstart2, dg_kstart2
+      use desgrid, only: iofpos, jofpos, kofpos
+      use discretelement, only: des_explicitly_coupled, pvol, dg_pijk, xe, yn, zt
+      use discretelement, only: des_pos_new, ppos, omega_new, pijk, max_pip, dtsolid, imax_global_id, pmass
+      use discretelement, only: dg_pic, particle_state, s_time, pip, normal_particle, des_radius, des_vel_new, drag_fc, ro_sol
+      use discretelement, only: entering_particle, entering_ghost, normal_ghost, exiting_particle, exiting_ghost, nonexistent
+      use discretelement, only: omoi, des_pos_new, ppos, omega_new, pijk, iglobal_id
+      use functions, only: funijk
+      use param1, only: half, zero
+      use constant, only: d_p0, ro_s0
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: DES_MASS_INLET                                          !
 !  Author: J.Musser                                   Date: 13-Jul-09  !
 !                                                                      !
 !  Purpose:  This routine fills in the necessary information for new   !
-!  particles entereing the system.                                     !
+!  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MASS_INFLOW_DEM
-
-      use bc
-      use des_allocate
-      use des_bc
-      use discretelement
-      use functions
-
 
       implicit none
 
@@ -127,18 +146,6 @@
       SUBROUTINE SEED_NEW_PARTICLE(lBCV, lBCV_I, lRAND, lM, lPOS,      &
          lIJKP, lOWNS)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE compar
-      USE bc
-      USE des_bc
-      USE desgrid
-      USE discretelement
-      USE funits
-      USE geometry
-      USE param1
-      USE constant
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -256,20 +263,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_NEW_PARTICLE_PROPS(lBCV, lM, lNP, lPOS, lIJKP)
 
-      USE compar
-      USE bc
-      USE des_bc
-      USE discretelement
-      USE funits
-      USE geometry
-      USE param1
-      USE constant
-
-      use constant, only: PI
-
-      use desgrid
-      use functions
-
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -340,3 +333,5 @@
 
       RETURN
       END SUBROUTINE SET_NEW_PARTICLE_PROPS
+
+END MODULE MASS_INFLOW_DEM_MODULE

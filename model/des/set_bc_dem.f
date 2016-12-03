@@ -11,19 +11,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_DEM
 
-      USE constant
-      USE des_bc
-      USE discretelement
-      USE funits
-      USE geometry
-      USE param
-      USE param1
-      USE constant
-      USE run
-
-      use bc
-
-      use error_manager
+      USE des_bc, only: dem_bcmo, dem_mio, dem_bcmi
+      USE discretelement, only: particles
+      USE error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
+      USE layout_mi_dem_module, only: layout_mi_dem
+      USE param1, only: undefined_i
+      USE set_bc_dem_mi_module, only: set_bc_dem_mi
 
       IMPLICIT NONE
 

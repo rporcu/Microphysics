@@ -15,15 +15,10 @@
 !------------------------------------------------------------------------
       module mpi_comm_des
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use discretelement
-      use desgrid
-      use compar
-      use constant
-      use des_bc
-      use desmpi
+      use compar, only: pe_io, mype, numpes
+      use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts, ineighproc
+      use desmpi, only: drecvbuf, dsendbuf, isendcnt
+      use discretelement, only: max_pip, pip, iglobal_id, s_time, vtp_findex, ighost_cnt
       use discretelement, only: nonexistent,particle_state, normal_ghost, entering_ghost, exiting_ghost
 
 !-----------------------------------------------
@@ -229,7 +224,6 @@
 !                    parray - array to be writen
 !------------------------------------------------------------------------
       subroutine des_gather_d(parray)
-         use discretelement
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------

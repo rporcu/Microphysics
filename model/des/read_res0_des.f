@@ -6,18 +6,14 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE READ_RES0_DES
 
-      use compar
-      use des_allocate
-      use des_bc
-      use desmpi
-      use discretelement
-      use error_manager
-      use machine
-      use param1
-      use read_res1_des
-      use run
+      use des_allocate, only: allocate_dem_mi
+      use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
+      use discretelement, only: des_vel_new, omega_new, des_radius, dtsolid, iglobal_id
+      use discretelement, only: particle_state, ro_sol, tecplot_findex, des_usr_var_size, vtp_findex, des_usr_var
+      use error_manager, only: err_msg, flush_err_msg
       use mpi_init_des, only: DES_RESTART_GHOST
-      use geometry
+      use read_res1_des, only: init_read_res_des, finl_read_res_des, read_par_pos, read_res_des, read_res_parray
+      use run, only: run_name, run_type, time
 
       implicit none
 

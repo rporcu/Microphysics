@@ -37,7 +37,6 @@
       use discretelement, only: DES_POS_NEW, DES_VEL_NEW, DES_USR_VAR
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
       use discretelement, only: DES_RADIUS
-      use param, only: DIMENSION_N_S
 
       use error_manager
 

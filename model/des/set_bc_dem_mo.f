@@ -18,8 +18,7 @@
 
       use funits, only: DMP_LOG
 
-      use error_manager
-      use functions
+      use error_manager, only: init_err_msg, finl_err_msg
 
       use desgrid, only: DG_FUNIJK
       use desgrid, only: IofPOS, JofPOS, KofPOS

@@ -1,5 +1,20 @@
 module comp_mean_fields_module
 
+   use calc_epg_des_module, only: calc_epg_des
+   use comp_mean_fields0_module, only: comp_mean_fields0
+   use comp_mean_fields1_module, only: comp_mean_fields1
+   use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+   use discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
+   use discretelement, only: max_pip, pijk, pvol, des_rop_s
+   use functions, only: funijk, fluid_at
+   use geometry, only: vol
+   use param1, only: zero
+   use particle_filter, only: DES_INTERP_GARG
+   use particle_filter, only: DES_INTERP_MEAN_FIELDS
+   use particle_filter, only: DES_INTERP_NONE
+   use particle_filter, only: DES_INTERP_SCHEME_ENUM
+   use constant, only:MMAX, RO_S0
+
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -11,17 +26,6 @@ module comp_mean_fields_module
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
-
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      use particle_filter, only: DES_INTERP_MEAN_FIELDS
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_NONE
-      use particle_filter, only: DES_INTERP_GARG
-
-      use comp_mean_fields0_module
-      use comp_mean_fields1_module
-      use calc_epg_des_module
 
       IMPLICIT NONE
 
@@ -58,19 +62,6 @@ module comp_mean_fields_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE discretelement
-      use desgrid
-      use desmpi
-      USE functions
-      use constant, only:MMAX, RO_S0
 
       IMPLICIT NONE
 

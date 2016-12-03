@@ -17,20 +17,17 @@
 !------------------------------------------------------------------------
       module mpi_node_des
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use discretelement
-      use desgrid
-      use compar
-      use constant
-      use des_bc
+      use compar, only: iend2, jend2, kend2
+      use compar, only: iend3, jend3, kend3
+      use compar, only: istart2, jstart2, kstart2
+      use compar, only: istart3, jstart3, kstart3
+      use compar, only: nodesi, nodesj, nodesk
+      use desgrid, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
+      use discretelement, only: des_rops_node, des_vel_node
+      use functions, only: imax1, jmax1, kmax1
       use param, only: DIMENSION_N_s
-      use desmpi
-
 
       contains
-
 
 !------------------------------------------------------------------------
 ! Subroutine       : des_addnodevalues_mean_fields
@@ -41,7 +38,6 @@
 !------------------------------------------------------------------------
       subroutine des_addnodevalues_mean_fields()
 
-      use functions
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -101,7 +97,6 @@
 !------------------------------------------------------------------------
       subroutine des_addnodevalues(drag_am, drag_bm)
 
-      use functions
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
@@ -166,7 +161,6 @@
 !------------------------------------------------------------------------
       subroutine des_addnodevalues2()
 
-      use functions
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------

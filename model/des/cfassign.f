@@ -1,3 +1,16 @@
+MODULE CFASSIGN_MODULE
+
+   use compar, only: imap_c, jmap_c, kmap_c
+   use compar, only: istart1,iend1,jstart1,jend1,kstart1,kend1
+   use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+   use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+   use des_allocate, only: des_vol_node
+   use functions, only: funijk, fluid_at
+   use geometry, only: dx, dy, dz
+   use param1, only: zero
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 ! subroutine: compute_volume_of_nodes                                      C
 ! Author: Rahul Garg                                                       C
@@ -19,18 +32,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE compute_volume_of_nodes
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE constant
-      USE run
-      USE geometry
-      USE bc
-      USE compar
-      USE discretelement
-      USE functions
       implicit none
 !-----------------------------------------------
 ! Local Variables
@@ -174,3 +175,5 @@
       RETURN
       RETURN
       END SUBROUTINE compute_volume_of_nodes
+
+END MODULE CFASSIGN_MODULE

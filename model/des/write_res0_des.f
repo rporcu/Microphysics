@@ -9,15 +9,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^c
       subroutine WRITE_RES0_DES
 
-      use param1
-      use compar
-      use discretelement
-      use run
-      use des_bc
+      use discretelement, only: des_pos_new, des_vel_new, omega_new, des_usr_var, des_radius, des_usr_var_size, dtsolid, iglobal_id
+      use discretelement, only: particle_state, ro_sol, tecplot_findex, vtp_findex
+      use run, only: run_name
+      use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
 
-      use error_manager
-      use write_res1_des
-      use geometry
+      use write_res1_des, only: init_write_res_des, write_res_des, write_res_parray, finl_write_res_des
 
       implicit none
 !-----------------------------------------------

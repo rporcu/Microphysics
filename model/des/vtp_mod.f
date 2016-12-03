@@ -1,8 +1,9 @@
       MODULE vtp
 
-      use desmpi
-      use mpi_comm_des
-      use error_manager
+      use desmpi, only: dprocbuf, drootbuf, iprocbuf, irootbuf, idispls, igathercnts, igath_sendcnt
+      use mpi_comm_des, only: numpes, mype, pe_io, s_time, vtp_findex, des_gather
+      use mpi_comm_des, only: ighost_cnt, pip
+      use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
       IMPLICIT NONE
 

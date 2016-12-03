@@ -14,6 +14,7 @@
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
+      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
@@ -25,7 +26,6 @@
       USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
       USE run, only: run_type, time
       USE stl_preproc_des, only: add_facet
-      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
 
       IMPLICIT NONE
 

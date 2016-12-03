@@ -1,18 +1,27 @@
+MODULE MASS_OUTFLOW_DEM_MODULE
+
+      USE bc, only: bc_u_s, bc_v_s, bc_w_s
+      USE bc, only: bc_i_w, bc_j_s, bc_k_b
+      USE bc, only: bc_type, bc_plane
+      USE des_bc, only: dem_bcmo, dem_bcmo_map, dem_bcmo_ijk, dem_bcmo_ijkstart, dem_bcmo_ijkend
+      USE discretelement, only: des_vel_new, des_pos_new, dg_pic, ppos, tow, pip, iglobal_id, des_radius, pijk, pmass, ro_sol, omoi
+      USE discretelement, only: omega_new, fc, wall_collision_facet_id, wall_collision_pft, dg_pic, des_vel_new, pvol
+      USE discretelement, only: particle_state, nonexistent, entering_ghost, exiting_ghost, exiting_particle, entering_particle
+      USE discretelement, only: xe, yn, zt
+      USE discretelement, only: normal_ghost, normal_particle
+      USE param1, only: zero
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: MASS_OUTFLOW_DEM                                        !
 !  Author: J.Musser                                   Date: 13-Jul-09  !
 !                                                                      !
 !  Purpose:  This routine fills in the necessary information for new   !
-!  particles entereing the system.                                     !
+!  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MASS_OUTFLOW_DEM(FORCE_NSEARCH)
-
-      use discretelement
-      use des_bc
-      use bc
-      use functions
 
       implicit none
 
@@ -134,16 +143,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DELETE_PARTICLE(NP)
 
-      USE compar
-      USE constant
-      USE des_bc
-      USE discretelement
-      USE funits
-      USE geometry
-      USE param1
-      USE constant
-      USE functions
-
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: NP
@@ -176,3 +175,5 @@
 
       RETURN
       END SUBROUTINE DELETE_PARTICLE
+
+END MODULE MASS_OUTFLOW_DEM_MODULE

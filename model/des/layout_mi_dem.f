@@ -1,3 +1,10 @@
+MODULE layout_mi_dem_module
+
+      use compar, only: mype
+      use error_manager, only: init_err_msg, flush_err_msg, finl_err_msg, err_msg
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_DEM                                              !
@@ -13,8 +20,6 @@
 
       use bc, only: BC_PLANE
       USE run, only: RUN_TYPE
-
-      use error_manager
 
       IMPLICIT NONE
 
@@ -94,8 +99,6 @@
 !---------------------------------------------------------------------//
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
-
-      use error_manager
 
       IMPLICIT NONE
 
@@ -412,8 +415,6 @@
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
 
-      use error_manager
-
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -729,8 +730,6 @@
       use des_bc, only: EXCLUDE_DEM_MI_CELL
       use stl_functions_des, only: TRI_BOX_OVERLAP
 
-      use error_manager
-
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -1023,14 +1022,6 @@
       use bc, only: BC_PLANE
       use des_bc, only: DEM_MI
 
-      use compar
-      use geometry
-
-! Module procedures
-!---------------------------------------------------------------------//
-      use error_manager
-      use functions
-
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -1081,3 +1072,4 @@
 
       RETURN
       END SUBROUTINE SET_DEM_MI_OWNER
+END MODULE layout_mi_dem_module

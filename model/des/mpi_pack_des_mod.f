@@ -7,7 +7,8 @@
 !----------------------------------------------------------------------!
       MODULE MPI_PACK_DES
 
-         use discretelement
+         use discretelement, only: particle_state, entering_ghost, exiting_ghost, entering_particle, exiting_particle, nonexistent
+         use discretelement, only: normal_ghost
 
       PRIVATE
       PUBLIC :: DESMPI_PACK_PARCROSS, DESMPI_PACK_GHOSTPAR
@@ -200,7 +201,6 @@
       use desmpi, only: iPairPacketSize
 
       use discretelement, only: dg_pic
-      use functions
 
       implicit none
 

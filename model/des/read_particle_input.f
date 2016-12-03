@@ -6,17 +6,14 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE READ_PAR_INPUT
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE discretelement
-      use run
-      use compar
-      use desmpi
-      use error_manager
-      use functions
-      use funits
+      use compar, only: myPE, pe_io
+      use desmpi, only: dpar_pos, dpar_vel, dpar_rad, dpar_den
+      use discretelement, only: particle_state, normal_particle,  pip, particles, des_pos_new, des_radius, ro_sol, des_vel_new
+      use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
+      use exit_mod, only: mfix_exit
+      use funits, only: dmp_log, unit_log
       use mpi_init_des, only: des_scatter_particle
+      use run, only: bdist_io
 
       implicit none
 !-----------------------------------------------

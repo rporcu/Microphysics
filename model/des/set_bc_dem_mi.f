@@ -1,3 +1,20 @@
+MODULE SET_BC_DEM_MI_MODULE
+
+      USE bc, only: bc_rop_s, bc_plane, bc_ep_s, bc_area
+      USE bc, only: bc_u_s, bc_v_s, bc_w_s
+      USE constant, only: pi
+      USE des_allocate, only: pi_count, pi_factor, allocate_dem_mi
+      USE des_bc, only: dem_mi, dem_mi_time, dem_bc_poly_layout, dem_bcmi, numfrac_limit, dem_bcmi_map
+      USE discretelement, only: dtsolid
+      USE error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
+      USE funits, only: dmp_log
+      USE layout_mi_dem_module, only: layout_mi_dem
+      USE param1, only: small_number, undefined, zero
+      USE constant, only: mmax, dim_m, d_p0
+      USE run, only: run_type, time, solids_model
+      USE toleranc, only: compare
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_DEM_MI                                           !
@@ -7,24 +24,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_DEM_MI
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE bc
-      USE compar
-      USE constant
-      USE des_allocate
-      USE des_bc
-      USE discretelement
-      USE error_manager
-      USE funits
-      USE geometry
-      USE param
-      USE param1
-      USE constant
-      USE run
-      USE toleranc
 
       IMPLICIT NONE
 
@@ -327,7 +326,6 @@
 
       use funits, only: DMP_LOG
 
-      use error_manager
       use desgrid, only: dg_IMIN1, dg_IMAX1
       use desgrid, only: dg_JMIN1, dg_JMAX1
       use desgrid, only: dg_KMIN1, dg_KMAX1
@@ -493,3 +491,4 @@
 
       RETURN
       END SUBROUTINE SET_DEM_BCMI_IJK
+END MODULE SET_BC_DEM_MI_MODULE

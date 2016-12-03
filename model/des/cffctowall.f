@@ -12,8 +12,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param1
-      USE discretelement
+      USE discretelement, only: fc, tow, des_crossprdct, des_radius
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

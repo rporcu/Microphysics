@@ -33,7 +33,8 @@ module des_drag_gp_module
                         drag_koch_hill, drag_bvk
       USE param1, only: one, zero
       USE constant, only: d_p0, ro_s0, mmax
-      USE run
+      USE run, only: syam_obrien, gidaspow, gidaspow_blend, wen_yu_pcf, bvk, drag_type_enum, drag_type
+      USE run, only: wen_yu, koch_hill, user_drag, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
       USE funits  , only: dmp_log, unit_log
 
       IMPLICIT NONE

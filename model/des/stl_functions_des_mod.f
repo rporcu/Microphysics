@@ -430,15 +430,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_IF_PARTICLE_OVERLAPS_STL(POS, fI, fJ, fK, REMOVE)
 
-      USE compar
-      USE constant
-      USE desgrid
+      USE desgrid, only: dg_funijk, dg_is_on_mype_plus1layers
       USE discretelement, ONLY: dimn, xe, yn, zt, max_radius
-      USE functions
-      USE geometry
-      USE param1
-      USE run
-      USE stl
+      USE desgrid, only: iofpos, jofpos, kofpos
+      USE stl, only: facets_at_dg, vertex, norm_face
+      USE param1, only: zero
 
       Implicit none
 

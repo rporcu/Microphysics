@@ -11,11 +11,12 @@
 
       SUBROUTINE NSQUARE
 
-      use discretelement
-      use des_bc
-      use des_allocate
+      use des_allocate, only: add_pair
+      use discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
+      use discretelement, only: des_pos_new, des_periodic_walls, factor_rlm, pip, max_pip, neighbor_index, des_radius
+      use discretelement, only: particle_state, nonexistent
       use geometry, only: xlength, ylength, zlength
-      use functions
+      use param1, only: zero
 
       IMPLICIT NONE
 

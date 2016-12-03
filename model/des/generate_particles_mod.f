@@ -1,5 +1,10 @@
       MODULE GENERATE_PARTICLES
 
+! Use the error manager for posting error messages.
+!---------------------------------------------------------------------//
+      use error_manager, only: err_msg, flush_err_msg, finl_err_msg, init_err_msg
+      use functions, only: funijk, fluid_at
+
         INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_COUNT
 
       CONTAINS
@@ -28,10 +33,6 @@
       use param, only: DIMENSION_IC
 ! IC Region gas volume fraction.
       use ic, only: IC_EP_G
-
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager
 
       IMPLICIT NONE
 
@@ -109,7 +110,7 @@
       use param1, only: SMALL_NUMBER, LARGE_NUMBER
 
 ! to access random number generator subroutines
-      use randomno
+      ! use randomno
       use functions, only: fluid_at, FUNIJK
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
@@ -127,12 +128,8 @@
       use toleranc, only: compare
 
       use discretelement, only: max_pip, max_radius, xe, yn, zt, particle_state, normal_particle
-      use error_manager
       use param, only: dim_m
       use param, only: dimension_i, dimension_j, dimension_k
-      use funits
-      use compar
-      use funits
       use particles_in_cell_module, only: pic_search
 
       IMPLICIT NONE
@@ -377,8 +374,6 @@
 
 ! Volume of computational cells.
       use geometry, only: VOL
-
-      use functions
 
       IMPLICIT NONE
 

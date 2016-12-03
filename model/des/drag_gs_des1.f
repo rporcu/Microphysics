@@ -31,7 +31,8 @@ module drag_gs_des1_module
       use discretelement, only: FC
 ! Particle volume.
       use discretelement, only: PVOL
-      use discretelement
+      use discretelement, only: entering_particle, entering_ghost, particle_state, exiting_particle
+      use discretelement, only: nonexistent, exiting_ghost, normal_particle
 
   contains
 

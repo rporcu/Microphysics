@@ -14,12 +14,10 @@
 
       SUBROUTINE NEIGHBOUR
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param1
-      USE discretelement
-      use desgrid
+      USE discretelement, only: ppos, neighbor_index_old, pft_neighbor_old, neighbor_index, do_nsearch, max_pip, neighbors_old
+      USE discretelement, only: des_pos_new, pft_neighbor, neighbors
+      USE desgrid, only: desgrid_neigh_build
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

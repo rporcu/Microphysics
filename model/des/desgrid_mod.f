@@ -12,6 +12,33 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       MODULE DESGRID
 
+      use compar, only: iend1, jend1, kend1
+      use compar, only: iend1_all, jend1_all, kend1_all
+      use compar, only: iend2, jend2, kend2
+      use compar, only: istart1_all, jstart1_all, kstart1_all
+      use compar, only: istart2, jstart2, kstart2
+      use compar, only: nodesi, nodesj, nodesk, numpes, mype
+      ! use constant
+      use des_allocate, only: add_pair
+      use discretelement, only: DESGRIDSEARCH_IMAX
+      use discretelement, only: DESGRIDSEARCH_JMAX
+      use discretelement, only: DESGRIDSEARCH_KMAX
+      use discretelement, only: DES_PERIODIC_WALLS_X
+      use discretelement, only: DES_PERIODIC_WALLS_Y
+      use discretelement, only: DES_PERIODIC_WALLS_Z
+      use discretelement, only: DIMN, dg_pijkprv, dg_pijk, factor_RLM, max_pip, max_isize, pip
+      use discretelement, only: XE, YN, ZT, neighbor_index, des_radius, des_pos_new
+      use discretelement, only: dg_pic
+      use discretelement, only: entering_ghost, normal_ghost, normal_particle
+      use discretelement, only: particle_state, nonexistent, exiting_ghost, entering_particle
+      use error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
+      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
+      use geometry, only: imax2, jmax2, kmax2
+      use geometry, only: imin1, jmin1, kmin1
+      use geometry, only: imin2, kmin2
+
+      implicit none
+
 ! variables related to global block structure
 !---------------------------------------------------------------------//
       integer  :: dg_imin1, dg_imax1, &
@@ -85,7 +112,6 @@
 !  I, J, K indicies.                                                   !
 !......................................................................!
       integer function procijk(fi,fj,fk)
-      use compar, only: nodesi, nodesj
       implicit none
       integer fi,fj,fk
       procijk =fi+fj*nodesi+fk*nodesi*nodesj
@@ -98,7 +124,6 @@
 !  Purpose: Return the I index of the current rank given an IJK value. !
 !......................................................................!
       integer function iofproc(fijk)
-      use compar, only: nodesi, nodesj
       implicit none
       integer fijk
       iofproc = mod(mod(fijk,nodesi*nodesj),nodesi)
@@ -111,7 +136,6 @@
 !  Purpose: Return the J index of the current rank given an IJK value. !
 !......................................................................!
       integer function jofproc(fijk)
-      use compar, only: nodesi, nodesj
       implicit none
       integer fijk
       jofproc = mod(fijk - iofproc(fijk),nodesi*nodesj)/nodesi
@@ -124,7 +148,6 @@
 !  Purpose: Return the K index of the current rank given an IJK value. !
 !......................................................................!
       integer function kofproc(fijk)
-      use compar, only: nodesi, nodesj
       implicit none
       integer fijk
       kofproc = (fijk - iofproc(fijk) - jofproc(fijk)*nodesi) / &
@@ -404,32 +427,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine desgrid_init()
 
-      use funits
-      use compar
-      use discretelement, only: DES_PERIODIC_WALLS_X
-      use discretelement, only: DES_PERIODIC_WALLS_Y
-      use discretelement, only: DES_PERIODIC_WALLS_Z
-      use discretelement, only: DIMN
-      use discretelement, only: XE, YN, ZT
-      use constant
-
-! Global Variables:
-!---------------------------------------------------------------------//
-! Domain partition for DEM background mesh.
-      use discretelement, only: DESGRIDSEARCH_IMAX
-      use discretelement, only: DESGRIDSEARCH_JMAX
-      use discretelement, only: DESGRIDSEARCH_KMAX
-! Domain size specifed by the user.
-      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
-      use discretelement, only: dg_pic
-
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager
-      use geometry, only: imax2, jmax2, kmax2
-      use geometry, only: imin1, jmin1, kmin1
-      use geometry, only: imin2, kmin2
-
       implicit none
 !-----------------------------------------------
 ! Local varibles
@@ -675,8 +672,6 @@
 !------------------------------------------------------------------------
       subroutine desgrid_pic(plocate)
 
-      use discretelement
-
       implicit none
 !-----------------------------------------------
 ! Dummy arguments
@@ -782,17 +777,6 @@
 !                    currently active in the system
 !------------------------------------------------------------------------
       subroutine desgrid_neigh_build ()
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use compar
-      use constant
-      use des_allocate, only: add_pair
-      use discretelement
-      use funits
-      use geometry
-      use param1
 
       implicit none
 !-----------------------------------------------
@@ -920,13 +904,6 @@
 !------------------------------------------------------------------------
       subroutine des_dbggrid()
 
-      use param1
-      use funits
-      use geometry
-      use compar
-      use discretelement
-      use constant
-
       implicit none
 !-----------------------------------------------
 ! Local variables
@@ -999,8 +976,6 @@
       write(44,*) "dg_c3_lo/gl: ",dg_c3_lo, dg_c3_gl
       write(44,*) "   "
       write(44,*) "-------------------------------------------------"
-
-
 
       close(44)
       end subroutine des_dbggrid

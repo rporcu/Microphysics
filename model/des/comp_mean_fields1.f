@@ -7,18 +7,14 @@ module comp_mean_fields1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS1
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE compar
-      USE discretelement
-      use desgrid
-      use desmpi
-      USE functions
-      use constant, only:MMAX, RO_S0
+      USE compar, only: iend3, jend3, kend3
+      USE compar, only: istart3, jstart3, kstart3
+      USE discretelement, only: max_pip, pijk, pvol, des_rop_s
+      USE discretelement, only: normal_particle, normal_particle, particle_state, normal_ghost
+      USE functions, only: fluid_at, funijk
+      USE geometry, only: vol
+      USE param1, only: zero
+      USE constant, only:MMAX, RO_S0
 
       IMPLICIT NONE
 !-----------------------------------------------

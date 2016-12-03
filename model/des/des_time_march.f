@@ -1,6 +1,7 @@
 module des_time_march_module
 
    use particles_in_cell_module, only: particles_in_cell
+   use mass_outflow_dem_module, only: mass_outflow_dem
 
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -13,23 +14,27 @@ module des_time_march_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g)
 
+      use calc_drag_des_module, only: calc_drag_des
+      use calc_epg_des_module, only: calc_epg_des
+      use comp_mean_fields_module, only: comp_mean_fields
+      use compar, only: iend3, jend3, kend3
+      use compar, only: istart3, jstart3, kstart3
+      use compar, only: numpes
+      use des_allocate, only: particle_grow
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
-      use discretelement
-      use error_manager
-      use functions
-      use compar, only: numpes
-      use machine
+      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
+      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
+      use drag_gs_des1_module, only: drag_gs_des1
+      use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
+      use machine, only:  wall_time
+      use mass_inflow_dem_module, only: mass_inflow_dem
       use mpi_funs_des, only: DES_PAR_EXCHANGE
+      use output_manager_module, only: output_manager
+      use param1, only: zero
       use run, only: CALL_USR
       use run, only: NSTEP
       use run, only: TIME, TSTOP, DT
-
-      use drag_gs_des1_module
-      use comp_mean_fields_module
-      use calc_drag_des_module
-      use calc_epg_des_module
-      use output_manager_module
 
       IMPLICIT NONE
 

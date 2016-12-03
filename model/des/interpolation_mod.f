@@ -10,8 +10,18 @@
 
 MODULE interpolation
 
-  USE constant
-  USE discretelement
+  USE constant, only: pi
+  USE discretelement, only: dimn, pijk, interp_scheme, scheme, ob2r, ob2l, order, des_pos_new
+  USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z, xe, yn, zt
+  USE functions, only: funijk
+  USE geometry, only: imax, jmax, kmax
+  USE geometry, only: imax1, jmax1, kmax1
+  USE geometry, only: imax2, jmax2, kmax2
+  USE geometry, only: imin1, jmin1, kmin1
+  USE geometry, only: imin2, jmin2, kmin2
+  USE param1, only: zero, half, one
+  use geometry, only: xlength, ylength, zlength
+
   IMPLICIT NONE
 
   PRIVATE
@@ -129,7 +139,7 @@ MODULE interpolation
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
        !USE discretelement, ONLY : order,ob2l,ob2r, des_periodic_walls_x,y,z
 
-    USE geometry
+      USE geometry, only: dx, dy, dz
 
     IMPLICIT NONE
 !-----------------------------------------------
@@ -263,9 +273,7 @@ MODULE interpolation
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_INTERPOLATION_STENCIL_CC(NP, PC, IW, JS, KB, FOCUS)
 
-      USE discretelement
-      USE geometry
-      USE param1
+      USE geometry, only: dx, dy, dz
 
       IMPLICIT NONE
 
@@ -374,12 +382,7 @@ MODULE interpolation
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE INTERPOLATE_CC(NP, INTP_IJK, INTP_WEIGHTS, FOCUS)
 
-      USE compar
-      USE discretelement
-      USE geometry
-      USE param
-      USE param1
-      USE functions
+      USE geometry, only: dx, dy, dz
 
       IMPLICIT NONE
 
@@ -555,7 +558,6 @@ MODULE interpolation
   SUBROUTINE set_interpolation_pstencil(pc, ib,ie,jb,je,kb,ke, isch&
        &,dimprob, ordernew)
        !USE discretelement, ONLY : order,ob2l,ob2r,  intx_per, inty_per, intz_per
-    USE geometry
 
     IMPLICIT NONE
     INTEGER, DIMENSION(3), INTENT(in):: pc
@@ -2304,7 +2306,6 @@ MODULE interpolation
   SUBROUTINE set_interpolation_scheme(choice)
 
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      USE param
     IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

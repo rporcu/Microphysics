@@ -21,10 +21,14 @@
 
       SUBROUTINE DES_INIT_NAMELIST
 
-      USE param1
-      USE discretelement
-      USE des_bc
-      USE particle_filter
+      USE discretelement, only: des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, e_young, v_poisson
+      USE discretelement, only: des_continuum_coupled, des_coll_model, des_etat_w_fac, des_intg_method
+      USE discretelement, only: desgridsearch_imax, desgridsearch_jmax, desgridsearch_kmax
+      USE discretelement, only: des_etat_fac, des_explicitly_coupled, des_oneway_coupled, ew_young, factor_rlm
+      USE discretelement, only: gener_part_config, kn, kn_w, dim_m, kt_fac, kt_w_fac, mew, mew_w, neighbor_search_n
+      USE discretelement, only: neighbor_search_rad_ratio, particles, print_des_data, des_usr_var_size, vw_poisson, vtp_findex
+      USE param1, only: undefined_i, undefined
+      USE particle_filter, only: des_interp_mean_fields, des_interp_on, des_interp_scheme, des_interp_width, des_report_mass_interp
 
       IMPLICIT NONE
 !-----------------------------------------------

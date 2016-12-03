@@ -8,12 +8,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_FILTER_DES
 
-! Runtime Flag: Invoke gas/solids coupled simulation.
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_NONE
+      use cfassign_module, only: compute_volume_of_nodes
+      use error_manager, only: init_err_msg, finl_err_msg
       use particle_filter, only: DES_INTERP_GARG
-
-      use error_manager
+      use particle_filter, only: DES_INTERP_NONE
+      use particle_filter, only: DES_INTERP_SCHEME_ENUM
 
       IMPLICIT NONE
 

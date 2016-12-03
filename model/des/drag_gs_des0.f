@@ -26,10 +26,9 @@ module drag_gs_des0_module
          des_pos_new, des_vel_new, fc, interp_scheme
       use functions     , only: funijk, fluid_at,ip1,jp1,kp1
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
-      use desmpi
 
-      use des_drag_gp_module
-      use discretelement
+      use des_drag_gp_module, only: des_drag_gp
+      use discretelement, only: particle_state, entering_ghost, exiting_ghost, nonexistent, normal_ghost
 
       IMPLICIT NONE
 

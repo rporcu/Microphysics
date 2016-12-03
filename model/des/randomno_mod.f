@@ -9,8 +9,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
     MODULE randomno
 
-    USE constant
-
     IMPLICIT NONE
 
     PRIVATE
@@ -158,4 +156,3 @@
 
 
     END MODULE randomno
-
