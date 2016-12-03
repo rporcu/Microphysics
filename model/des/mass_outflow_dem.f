@@ -141,7 +141,7 @@
       USE funits
       USE geometry
       USE param1
-      USE physprop
+      USE constant
       USE functions
 
       IMPLICIT NONE

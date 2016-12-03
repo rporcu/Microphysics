@@ -13,7 +13,6 @@
 ! Modules
 !-----------------------------------------------
       USE desgrid        , only: desgrid_init
-      USE discretelement , only: discrete_element
       USE error_manager  , only: init_error_manager
       USE gridmap        , only: gridmap_init
       USE mpi_init_des   , only: desmpi_init
@@ -21,6 +20,7 @@
       USE param1         , only: undefined
       USE run            , only: run_type, run_name
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
+      use run, only: dem_solids
 
 
       IMPLICIT NONE
@@ -74,11 +74,11 @@
 
 ! Basic geometry checks.
       CALL CHECK_GEOMETRY(SHIFT)
-      IF(DISCRETE_ELEMENT) CALL CHECK_GEOMETRY_DES
+      IF(DEM_SOLIDS) CALL CHECK_GEOMETRY_DES
 
 ! Set grid spacing variables.
       CALL SET_GEOMETRY
-      IF(DISCRETE_ELEMENT) CALL SET_GEOMETRY_DES
+      IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES
 
       CALL CHECK_INITIAL_CONDITIONS
       CALL CHECK_BOUNDARY_CONDITIONS
@@ -100,7 +100,7 @@
 ! Set the flags for identifying computational cells
       CALL SET_FLAGS
 
-      IF(DISCRETE_ELEMENT) THEN
+      IF(DEM_SOLIDS) THEN
          CALL DESGRID_INIT
          CALL DESMPI_INIT
          CALL DES_STL_PREPROCESSING

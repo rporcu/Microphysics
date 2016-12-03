@@ -91,7 +91,7 @@
 ! Angular velocity
       use discretelement, only: OMEGA_NEW, PIJK
 ! solid phase diameters and densities.
-      use physprop, only: D_p0, RO_s0, MMAX
+      use constant, only: D_p0, RO_s0, MMAX
 ! IC Region solids volume fraction.
       use ic, only: IC_EP_S
 

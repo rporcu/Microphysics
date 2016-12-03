@@ -66,7 +66,7 @@
 !-----------------------------------------------
       USE fld_const, only: ro_g0
       USE compar, only: myPE
-      use discretelement, only: discrete_element
+
       USE funits , only: dmp_log, unit_log
       USE param1 , only: undefined
       USE machine, only: wall_time
@@ -162,8 +162,8 @@
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
-      IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
-      IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
+      IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
+      IF (DEM_SOLIDS) CALL DES_INIT_ARRAYS
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
@@ -257,7 +257,7 @@
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
 
-      IF(DISCRETE_ELEMENT) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
+      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
 
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM

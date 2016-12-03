@@ -61,7 +61,7 @@
       use des_allocate
       use discretelement
       use functions
-      use physprop
+      use constant
 
       IMPLICIT NONE
 

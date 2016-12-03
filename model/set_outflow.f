@@ -331,9 +331,9 @@ module set_outflow_module
       use bc, only: bc_ep_g
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: funijk
-      use discretelement, only: discrete_element
       use discretelement, only: des_rop_s
-      use physprop, only: mmax, ro_s0
+      use constant, only: mmax, ro_s0
+      use run, only: dem_solids
 
 ! Global parameters
 !---------------------------------------------------------------------//
@@ -388,7 +388,7 @@ module set_outflow_module
 ! this section must be skipped until after the initial setup of the
 ! discrete element portion of the simulation (set_bc1 is called once
 ! before the initial setup).
-      IF (DISCRETE_ELEMENT .AND. ALLOCATED(DES_ROP_S)) THEN
+      IF (DEM_SOLIDS .AND. ALLOCATED(DES_ROP_S)) THEN
          DO M = 1, MMAX
 ! unlike in the two fluid model, in the discrete element model it is
 ! possible to actually calculate the bulk density in a flow boundary

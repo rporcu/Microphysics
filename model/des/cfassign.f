@@ -74,7 +74,7 @@
 !-----------------------------------------------
       USE param
       USE param1
-      USE physprop
+      USE constant
       USE run
       USE geometry
       USE bc

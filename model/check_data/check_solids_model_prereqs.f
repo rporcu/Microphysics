@@ -21,13 +21,13 @@
       use run, only: PIC_SOLIDS, PIC_COUNT
 
 ! Flag: Use DES E-L model
-      use discretelement, only: DISCRETE_ELEMENT
+
 ! Flag: gas/solids E-L simulation, otherwise granular flow.
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Flag: Fluid affects particles, but particles do not impact fluid.
       use discretelement, only: DES_ONEWAY_COUPLED
 ! Number of phases specified by the user.
-      use physprop, only: MMAX
+      use constant, only: MMAX
 ! User specified constant gas density
       use fld_const, only: ro_g0
 ! Print E-L data.
@@ -40,7 +40,8 @@
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+      use error_manager, only: finl_err_msg, flush_err_msg, &
+         init_err_msg, ivar, ival, err_msg
 
       implicit none
 
@@ -56,26 +57,14 @@
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_MODEL_PREREQS")
 
-! Moved this here but will need to discuss if this is best route
-! going forward
-      ERR_MMAX = .FALSE.
-      IF (MMAX < 0) ERR_MMAX = .TRUE.
-
-! Check MMAX
-      IF (ERR_MMAX) THEN
-         WRITE(ERR_MSG, 1000) iVal(DIM_M)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
- 1000 FORMAT('Error 1000: MMAX out of range. Min: 0, Max: ',A)
-
 ! Loop over the phases to see what was specified.
-      DO M=1, MMAX
+      DO M=1, DIM_M
          SOLIDS_MODEL(M) = trim(adjustl(SOLIDS_MODEL(M)))
          SELECT CASE(SOLIDS_MODEL(M))
          CASE ('TFM'); TFM_COUNT = TFM_COUNT + 1
          CASE ('DEM'); DEM_COUNT = DEM_COUNT + 1
          CASE ('PIC'); PIC_COUNT = PIC_COUNT + 1
-
+         CASE ('---')
          CASE DEFAULT
             WRITE(ERR_MSG,1001) iVar('SOLIDS_MODEL',M), SOLIDS_MODEL(M)
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -86,7 +75,7 @@
       ENDDO
 
 ! Clear out the unused phases.
-      SOLIDS_MODEL((MMAX)+1:DIM_M) = '---'
+      MMAX =  TFM_COUNT + DEM_COUNT + PIC_COUNT
 
 ! Set the runtime flags:
       TFM_SOLIDS = (TFM_COUNT > 0)
@@ -107,14 +96,12 @@
  1003 FORMAT('Error 1003: PIC solids are not supported in this&
          & version of MFIX.',/'Please correct the mfix.dat file.')
 
-! Set the DEM runtime flag.
-      DISCRETE_ELEMENT = DEM_SOLIDS
 ! Set flag for coupled simulations
-      DES_CONTINUUM_COUPLED = .NOT.(RO_g0 == 0.0d0)
+      DES_CONTINUUM_COUPLED = dem_solids .and. (RO_g0 /= 0.0d0)
 
 ! Overwrite user settings if no Lagrangian solids
-      IF(.NOT.DISCRETE_ELEMENT) THEN
-         DES_CONTINUUM_COUPLED = .FALSE.   ! This keyword might get removed.
+      IF(.NOT.DEM_SOLIDS) THEN
+         DES_CONTINUUM_COUPLED = .FALSE.
          PRINT_DES_DATA = .FALSE.
          DES_ONEWAY_COUPLED = .FALSE.
       ENDIF

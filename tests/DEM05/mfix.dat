@@ -60,7 +60,7 @@
 
 ! SOLIDS SECTION
 !---------------------------------------------------------------------//
-  MMAX = 2
+
 
   PARTICLES = 93      ! Number of particles
 

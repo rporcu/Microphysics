@@ -56,7 +56,7 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-  MMAX = 2
+
 
   PARTICLES = 2                ! Number of partiles
 

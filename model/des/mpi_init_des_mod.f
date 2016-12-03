@@ -13,7 +13,7 @@
       use discretelement
       use desgrid
       use compar
-      use physprop
+      use constant
       use des_bc
       use param, only: DIMENSION_N_s
 

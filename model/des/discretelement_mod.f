@@ -102,7 +102,6 @@
 !-----------------------------------------------------------------<<<
 
 ! DES - Continuum
-      LOGICAL DISCRETE_ELEMENT
       LOGICAL DES_CONTINUUM_COUPLED
 
 ! DES -

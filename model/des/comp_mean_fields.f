@@ -70,7 +70,7 @@ module comp_mean_fields_module
       use desgrid
       use desmpi
       USE functions
-      use physprop, only:MMAX, RO_S0
+      use constant, only:MMAX, RO_S0
 
       IMPLICIT NONE
 

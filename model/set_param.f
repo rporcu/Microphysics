@@ -11,7 +11,7 @@
 ! Global Varialbes:
 !---------------------------------------------------------------------//
 ! Number of solids
-      use physprop, only: MMAX
+      use constant, only: MMAX
 
 ! Domain indices.
       use geometry, only: IMAX3, JMAX3, KMAX3, IJKMAX3

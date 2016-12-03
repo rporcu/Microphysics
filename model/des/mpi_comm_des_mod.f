@@ -21,7 +21,7 @@
       use discretelement
       use desgrid
       use compar
-      use physprop
+      use constant
       use des_bc
       use desmpi
       use discretelement, only: nonexistent,particle_state, normal_ghost, entering_ghost, exiting_ghost

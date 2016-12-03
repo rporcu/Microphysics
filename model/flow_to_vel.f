@@ -194,7 +194,7 @@
       USE bc, only: BC_MASSFLOW_s
       USE bc, only: BC_VOLFLOW_s
       USE param1, only: UNDEFINED, ZERO
-      USE physprop, only: RO_s0
+      USE constant, only: RO_s0
       use error_manager
       use toleranc
 

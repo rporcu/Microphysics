@@ -75,7 +75,7 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
-  MMAX = 1
+
 
 !  PARTICLES = 2560   ! Number of particles
 

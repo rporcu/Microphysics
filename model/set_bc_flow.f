@@ -17,7 +17,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Total number of solids.
-      use physprop, only: MMAX
+      use constant, only: MMAX
 ! Flag: BC dimensions or Type is specified
       use bc, only: BC_DEFINED
 ! Use specified BC type

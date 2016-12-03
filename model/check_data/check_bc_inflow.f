@@ -48,7 +48,7 @@
       use param    , only: dim_m
       use param1   , only: undefined, one, zero
       use fld_const, only: ro_g0
-      use physprop , only: ro_s0
+      use constant , only: ro_s0
       use toleranc , only: compare
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
       IMPLICIT NONE

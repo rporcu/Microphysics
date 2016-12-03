@@ -68,7 +68,7 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
-  MMAX = 1
+
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle

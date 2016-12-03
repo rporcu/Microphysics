@@ -21,7 +21,7 @@ MODULE DES_ALLOCATE
       USE particle_filter, only: DES_INTERP_GARG
       USE particle_filter, only: DES_INTERP_GAUSS
       USE particle_filter, only: DES_INTERP_SCHEME_ENUM
-      USE physprop, only: mmax
+      USE constant, only: mmax
 
   PUBLIC:: DES_ALLOCATE_ARRAYS, ADD_PAIR, PARTICLE_GROW, ALLOCATE_DEM_MI
 

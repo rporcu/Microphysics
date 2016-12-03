@@ -204,7 +204,6 @@ set(SOURCES
   model/parse_line.f
   model/parse_resid_string.f
   model/physical_prop.f
-  model/physprop_mod.f
   model/ps_mod.f
   model/read_namelist.f
   model/remove_comment.f

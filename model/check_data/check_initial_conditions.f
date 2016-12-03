@@ -424,9 +424,9 @@
       use ic, only: IC_TYPE
 
 ! Number of solids phases.
-      use physprop, only: MMAX
+      use constant, only: MMAX
 
-      use physprop, only: ro_s0
+      use constant, only: ro_s0
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

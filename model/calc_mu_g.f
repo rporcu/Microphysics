@@ -9,7 +9,6 @@
       SUBROUTINE CALC_MU_G(lambda_g,mu_g,mu_g0)
 
       USE param1   , only: zero, undefined
-      USE constant , only: to_si
       USE functions, only: fluid_at
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -40,7 +39,7 @@
 
          IF (fluid_at(i,j,k)) THEN
 
-            IF (mu_g0 == UNDEFINED) MU_G(I,J,K) = to_SI*1.7D-4 * &
+            IF (mu_g0 == UNDEFINED) MU_G(I,J,K) = 1.7D-5 * &
                (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
 
             LAMBDA_G(i,j,k) = -F2O3*MU_G(I,J,K)

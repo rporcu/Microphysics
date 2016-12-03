@@ -4,7 +4,7 @@
 !                                                                      !
 !  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      NAMELIST / SOLIDS_PHASE_LOCKED / SOLIDS_MODEL, MMAX
+      NAMELIST / SOLIDS_PHASE_LOCKED / SOLIDS_MODEL
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Namelist: SOLIDS_PHASE_UNLOCKED                                     !

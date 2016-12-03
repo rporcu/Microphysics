@@ -32,7 +32,7 @@ module des_drag_gp_module
       USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
                         drag_koch_hill, drag_bvk
       USE param1, only: one, zero
-      USE physprop, only: d_p0, ro_s0, mmax
+      USE constant, only: d_p0, ro_s0, mmax
       USE run
       USE funits  , only: dmp_log, unit_log
 

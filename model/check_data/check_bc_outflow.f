@@ -13,7 +13,7 @@
 ! --------------------------------------------------------------------//
       use bc, only: bc_ep_g, bc_rop_s
       use param1, only: one, undefined, zero
-      use physprop, only: ro_s0
+      use constant, only: ro_s0
       use run, only: solids_model
       use toleranc, only: compare
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival

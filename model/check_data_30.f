@@ -2,9 +2,7 @@
 !  Module name: CHECK_DATA_30                                          !
 !  Author: M. Syamlal                                 Date: 27-OCT-92  !
 !                                                                      !
-!  Purpose: Check whether the sum of reaction rates is zero and the    !
-!  sum of mass fractions is 1.0 and EP_g >= EP_Star.                   !
-!           and EP_g >= EP_star. Set miscellaneous constants           !
+!  Purpose: Set miscellaneous constants                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_DATA_30(lambda_g,mu_g)

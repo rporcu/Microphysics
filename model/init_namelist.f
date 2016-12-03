@@ -28,7 +28,7 @@
       USE param1
       USE run
       USE output
-      USE physprop
+      USE constant
       USE geometry
       USE ic
       USE bc
@@ -700,12 +700,6 @@
 !  <arg index="1" id="Phase" min="1" max="DIM_M"/>
 !  <valid value='DEM' note='Discrete Element Model' />
       SOLIDS_MODEL(:DIM_M) = '---'
-!</keyword>
-
-!<keyword category="Solids Phase" required="false"
-!  tfm="true" dem="true" pic="true">
-!  <description>Number of solids phases.</description>
-      MMAX = 1
 !</keyword>
 
 !<keyword category="Solids Phase" required="false"

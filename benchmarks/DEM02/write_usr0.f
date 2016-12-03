@@ -29,7 +29,7 @@
       use des_allocate
       use discretelement
       use functions
-      use physprop
+      use constant
       use compar, only: mype, pe_io
 
       IMPLICIT NONE

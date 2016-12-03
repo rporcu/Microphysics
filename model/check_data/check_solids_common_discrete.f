@@ -16,9 +16,9 @@
 ! Runtime Flag: Store DES_*_OLD arrays.
       USE discretelement, only: DO_OLD
 ! Number of solids phases.
-      USE physprop, only: MMAX
+      USE constant, only: MMAX
 ! TFM solids phase diameters and densities. (DEM default)
-      USE physprop, only: D_p0
+      USE constant, only: D_p0
 
 ! User specified integration method.
       USE discretelement, only: DES_INTG_METHOD
@@ -33,7 +33,7 @@
       USE discretelement, only: DES_PERIODIC_WALLS_Z
 
 ! Subroutine access.
-      use physprop, only: MMAX
+      use constant, only: MMAX
 
       USE run, only: MOMENTUM_X_EQ
       USE run, only: MOMENTUM_Y_EQ

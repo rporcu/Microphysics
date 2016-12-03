@@ -127,7 +127,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of discrete solids phases
-      USE physprop, only: D_P0, RO_s0
+      USE constant, only: D_P0, RO_s0
 ! Particle and wall normal and tangential spring constants
       USE discretelement, only: KN, KN_W
       USE discretelement, only: KT, KT_W
@@ -151,7 +151,7 @@
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
       use run, only: DT
-      use physprop, only: MMAX
+      use constant, only: MMAX
 
 ! Parameter constatns.
       USE param1, only: ZERO, HALF, ONE, UNDEFINED
@@ -377,7 +377,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of discrete solids phases, diameters and densities
-      use physprop, only: MMAX, D_P0, RO_s0
+      use constant, only: MMAX, D_P0, RO_s0
 ! User defined coefficients of restitution: Normal and Tangential
       USE discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
       USE discretelement, only: DES_ET_INPUT, DES_ET_WALL_INPUT

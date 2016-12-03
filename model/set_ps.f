@@ -170,7 +170,7 @@
       use compar  , only: myPE, PE_IO
       use geometry, only:  flag
       use param1  , only: small_number
-      use physprop, only: mmax
+      use constant, only: mmax
       use ps
       use functions,only: fluid_at
 
@@ -238,21 +238,6 @@
          else
             write(*,"(//5x,'No gas phase point source.')")
          endif
-
-
-         do m=1,mmax
-            if(PS_MASSFLOW_S(lPSV,M) > small_number) then
-               write(*,"(//5x,'Point Source Solids Phase ',I1,':')")M
-               write(*,"(7x,'Mass Flow Rate: ',g12.5)")PS_MASSFLOW_S(lPSV,M)
-               write(*,"(7x,'Velocity Magnitude: ',g12.5)") PS_VEL_MAG_s(lPSV,M)
-               write(*,"(7x,'Normal:')")
-               write(*,"(9x,'x-Axis: ',g12.5)")PS_U_s(lPSV,M)
-               write(*,"(9x,'y-Axis: ',g12.5)")PS_V_s(lPSV,M)
-               write(*,"(9x,'z-Axis: ',g12.5)")PS_W_s(lPSV,M)
-            else
-               write(*,"(//5x,'No solids phase ',I1,' point source.')") m
-            endif
-         enddo
 
          write(*,"(//5x,'Point Source Cells:')")
          write(*,"(9x,'IJK',3(6x,A1),3x,'OWNS',3x,'FLAG')") 'I','J','K'

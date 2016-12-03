@@ -23,7 +23,7 @@
       USE param
       USE param1
       USE particle_filter
-      USE physprop
+      USE constant
       USE ps
       USE residual
       USE run

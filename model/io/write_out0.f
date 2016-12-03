@@ -37,7 +37,7 @@
       USE param, only: dimension_c, dimension_ic, dimension_bc
       USE param1, only: half, undefined, zero
       USE particle_filter, only: des_interp_mean_fields, des_interp_on
-      USE physprop, only: mmax, ro_s0, d_p0
+      USE constant, only: mmax, ro_s0, d_p0
       USE run, only: description, id_version, call_usr, dem_solids, dt_fac, dt, dt_min, dt_max, run_name, run_type, tstop, time
       USE run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
       USE run, only: units, discretize, solids_model

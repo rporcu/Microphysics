@@ -20,9 +20,9 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Number of continuum solids phases.
-      use physprop, only: MMAX
+      use constant, only: MMAX
 ! User specified: Initial solids diameter.
-      use physprop, only: D_P0
+      use constant, only: D_P0
 
 
 ! Global Parameters:
@@ -186,7 +186,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! User specified: constant solids density
-      use physprop, only: RO_s0
+      use constant, only: RO_s0
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

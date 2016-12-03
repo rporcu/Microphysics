@@ -25,7 +25,7 @@ module calc_epg_des_module
 ! Particle positions
       use discretelement, only: DES_POS_NEW
 ! Number of continuum solids phases
-      use physprop, only: MMAX, RO_S0
+      use constant, only: MMAX, RO_S0
 ! Discrete particle material and bulk densities
       use discretelement, only: DES_ROP_s
 ! Number of particles in indexed fluid cell

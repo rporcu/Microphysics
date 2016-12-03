@@ -25,7 +25,7 @@ module comp_mean_fields0_module
       USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero
       USE particle_filter, only: DES_REPORT_MASS_INTERP
-      USE physprop, only: mmax, ro_s0
+      USE constant, only: mmax, ro_s0
 
       IMPLICIT NONE
 

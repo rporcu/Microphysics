@@ -40,7 +40,7 @@
 
 
 #_______________________________________________________________________
-# GEOMETRY SECTION 
+# GEOMETRY SECTION
 
   COORDINATES = 'CARTESIAN'
 
@@ -61,7 +61,7 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-  MMAX = 1
+
 
   PARTICLES = 2400             ! Number of partiles.
 
@@ -96,7 +96,7 @@
   IC_Y_n(1)   =   90.0
 
   IC_EP_g(1)  =    1.0
- 
+
   IC_U_g(1)   =    0.0
   IC_V_g(1)   =  280.0
 

@@ -16,7 +16,7 @@
       USE mpi_funs_des, only: des_par_exchange
       USE open_files_mod, only: open_pe_log
       USE param1, only: small_number
-      USE physprop, only: MMAX, D_P0, RO_s0
+      USE constant, only: MMAX, D_P0, RO_s0
 
       IMPLICIT NONE
 !-----------------------------------------------

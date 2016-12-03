@@ -24,7 +24,7 @@
       USE geometry
       USE param
       USE param1
-      USE physprop
+      USE constant
       USE residual
       USE run
       USE toleranc
@@ -72,9 +72,6 @@
 
 ! add pressure correction residual
       SUM = RESID(RESID_P)
-
-! add solids correction residual
-      IF(MMAX > 0) SUM = SUM + RESID(RESID_P)
 
 ! add continuity equation residuals
       SUM = SUM + RESID(RESID_RO)

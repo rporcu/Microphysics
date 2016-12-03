@@ -17,7 +17,6 @@ module output_manager_module
       use compar, only: myPE, PE_IO
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use discretelement, only: DISCRETE_ELEMENT
       use machine, only: wall_time
       use output, only: OUT_TIME, OUT_DT
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
@@ -27,6 +26,7 @@ module output_manager_module
       use param, only: DIMENSION_USR
       use param1, only: UNDEFINED
       use run, only: TIME, DT, TSTOP
+      use run, only: dem_solids
       use time_cpu, only: CPU_IO
       use write_res1_mod, only: write_res1
 
@@ -88,7 +88,7 @@ module output_manager_module
          CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
          CALL NOTIFY_USER('.RES;')
 
-         IF(DISCRETE_ELEMENT) THEN
+         IF(DEM_SOLIDS) THEN
             CALL WRITE_RES0_DES
             CALL NOTIFY_USER('DES.RES;')
          ENDIF
@@ -115,7 +115,7 @@ module output_manager_module
       ENDDO
       IF(IDX /=0) CALL FLUSH_LIST
 
-      IF(DISCRETE_ELEMENT) THEN
+      IF(DEM_SOLIDS) THEN
          IF(CHECK_TIME(VTP_TIME)) THEN
             VTP_TIME = NEXT_TIME(VTP_DT)
             CALL WRITE_DES_DATA
@@ -240,7 +240,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
       SUBROUTINE FLUSH_NOTIFY_USER
 
-      use discretelement, only: DISCRETE_ELEMENT, DES_CONTINUUM_COUPLED
+      use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DTSOLID
       use error_manager, only: err_msg, flush_err_msg, ival
       use funits, only: DMP_LOG
@@ -272,7 +272,7 @@ module output_manager_module
 ! Write the elapsed time and estimated remaining time
       IF(MOD(NSTEP,NLOG) == 0) THEN
 
-         IF(DISCRETE_ELEMENT .AND. .NOT.DES_CONTINUUM_COUPLED) THEN
+         IF(DEM_SOLIDS .AND. .NOT.DES_CONTINUUM_COUPLED) THEN
             TNITs = CEILING(real((TSTOP-TIME)/DTSOLID))
             WRITE(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(TNITs))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
@@ -413,7 +413,7 @@ module output_manager_module
 
       use compar, only: myPE, PE_IO
       use output, only: RES_BACKUPS
-      use discretelement, only: DISCRETE_ELEMENT
+      use run, only: DEM_SOLIDS
       USE iso_c_binding
 
       IMPLICIT NONE
@@ -442,7 +442,7 @@ module output_manager_module
          CALL SET_FNAME(FNAME1,'.RES', LC)
             i = rename(FNAME0, FNAME1)
 
-         IF(DISCRETE_ELEMENT) THEN
+         IF(DEM_SOLIDS) THEN
             CALL SET_FNAME(FNAME0,'_DES.RES', LC-1)
             CALL SET_FNAME(FNAME1,'_DES.RES', LC)
             i = rename(FNAME0, FNAME1)
@@ -463,7 +463,7 @@ module output_manager_module
          IREC = IREC + 1
       END DO
 
-      IF(DISCRETE_ELEMENT) THEN
+      IF(DEM_SOLIDS) THEN
          CALL SET_FNAME(FNAME0, '_DES.RES')
          CALL SET_FNAME(FNAME1, '_DES.RES' ,1)
 

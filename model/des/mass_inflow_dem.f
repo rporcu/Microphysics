@@ -138,7 +138,7 @@
       USE funits
       USE geometry
       USE param1
-      USE physprop
+      USE constant
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -263,7 +263,7 @@
       USE funits
       USE geometry
       USE param1
-      USE physprop
+      USE constant
 
       use constant, only: PI
 

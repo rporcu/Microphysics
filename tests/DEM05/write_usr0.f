@@ -33,7 +33,7 @@
       use run, only: DESCRIPTION
       use discretelement, only: DES_INTG_METHOD
       use discretelement
-      use physprop, only: MMAX
+      use constant, only: MMAX
 
       use param1, only: UNDEFINED
 
@@ -110,7 +110,7 @@
  1458 FORMAT(13X,'-Wall',3x,' = ',T27,g12.5,3x,g12.5)
 
 
-      WRITE(fUNIT, 1200) 
+      WRITE(fUNIT, 1200)
 
 
  1000 FORMAT(2/,25x,A)
