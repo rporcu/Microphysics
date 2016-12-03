@@ -17,10 +17,6 @@ module drag_gs_des1_module
       use discretelement, only: PIJK
 ! Particle velocity
       use discretelement, only: DES_VEL_NEW
-! Contribution to gas momentum equation due to drag
-      use discretelement, only: DRAG_BM
-! Scalar cell center total drag force
-      use discretelement, only: F_GDS
 ! Volume of scalar cell.
       use geometry, only: VOL
 
@@ -143,8 +139,9 @@ module drag_gs_des1_module
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+         f_gds, drag_am, drag_bm)
 
-      SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g)
       IMPLICIT NONE
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
@@ -159,6 +156,12 @@ module drag_gs_des1_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -185,8 +188,10 @@ module drag_gs_des1_module
 
 ! The drag force is not calculated on entering or exiting particles
 ! as their velocities are fixed and may exist in 'non fluid' cells.
-         IF(ENTERING_PARTICLE==PARTICLE_STATE(NP) .OR. EXITING_PARTICLE==PARTICLE_STATE(NP) .OR. &
-            ENTERING_GHOST==PARTICLE_STATE(NP) .OR. EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
+         IF(ENTERING_PARTICLE==PARTICLE_STATE(NP) .OR. &
+            EXITING_PARTICLE==PARTICLE_STATE(NP) .OR. &
+            ENTERING_GHOST==PARTICLE_STATE(NP) .OR. &
+            EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO

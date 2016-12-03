@@ -12,7 +12,7 @@
       SUBROUTINE DES_INIT_ARRAYS
 
       USE param1, only: zero
-      USE discretelement, only: des_rop_s, pinc, f_gds, grav, drag_am, drag_bm, max_pip
+      USE discretelement, only: des_rop_s, pinc, grav, max_pip
 
       IMPLICIT NONE
 
@@ -21,11 +21,6 @@
       PINC(:,:,:) = 0
 
       DES_ROP_S(:,:,:,:) = ZERO
-
-      IF(allocated(DRAG_AM)) DRAG_AM = ZERO
-      IF(allocated(DRAG_BM)) DRAG_BM = ZERO
-
-      F_GDS = ZERO
 
       GRAV(:) = ZERO
 

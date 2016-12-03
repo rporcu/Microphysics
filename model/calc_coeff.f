@@ -17,7 +17,8 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, FLAG)
+     SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+        mu_g, f_gds, drag_am, drag_bm)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -29,7 +30,7 @@ module calc_coeff_module
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
@@ -43,20 +44,24 @@ module calc_coeff_module
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 !-----------------------------------------------------------------------
-! FLAG = 0, overwrite the coeff arrays, (e.g. start of a time step)
-! FLAG = 1, do not overwrite
-      INTEGER, intent(in) :: FLAG
-!-----------------------------------------------
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 2)
+      CALL CALC_COEFF(2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
+         f_gds, drag_am, drag_bm)
 
-      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(ep_g,u_g,v_g,w_g,ro_g,rop_g,mu_g)
+      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(ep_g, &
+         u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_am, drag_bm)
 
       END SUBROUTINE CALC_COEFF_ALL
 
@@ -79,7 +84,8 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, pLevel)
+      SUBROUTINE CALC_COEFF(pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
+         w_g, mu_g, f_gds, drag_am, drag_bm)
 
       use fld_const, only: ro_g0
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -90,23 +96,6 @@ module calc_coeff_module
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
 ! Dummy arguments
 !-----------------------------------------------------------------------
 ! Level to calculate physical properties.
@@ -114,6 +103,29 @@ module calc_coeff_module
 ! 1) Everything but density
 ! 2) All physical properties
       INTEGER, intent(in) :: pLevel
+      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+
 !-----------------------------------------------------------------------
       integer IER
 
@@ -121,8 +133,9 @@ module calc_coeff_module
       CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0)
 
 ! Calculate interphase coeffs: (momentum and energy)
-      IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED) &
-         CALL CALC_DRAG_DES_2FLUID(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+      IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &
+         CALL CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+            f_gds, drag_am, drag_bm)
 
       END SUBROUTINE CALC_COEFF
 
@@ -145,7 +158,7 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
-                                  ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+         ep_g,u_g,v_g,w_g,lambda_g,mu_g)
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 

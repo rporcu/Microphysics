@@ -8,7 +8,7 @@
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(A_M, B_M, IER)
+      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, IER)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -16,10 +16,6 @@
       use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Coefficient at cell corners added to the gas momentum A matix.
-      use discretelement, only: DRAG_AM, F_GDS
-! Coefficient at cell corners added to gas momentum B vector.
-      use discretelement, only: DRAG_BM
 ! Volume of X-momentum cell
       use geometry, only: VOL
 
@@ -48,6 +44,12 @@
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -135,7 +137,7 @@
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(A_M, B_M, IER)
+      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_am, drag_bm, IER)
 
 
 ! Global Variables:
@@ -144,10 +146,6 @@
       use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Coefficient at cell corners added to the gas momentum A matix.
-      use discretelement, only: DRAG_AM, F_GDS
-! Coefficient at cell corners added to gas momentum B vector.
-      use discretelement, only: DRAG_BM
 ! Volume of Y-momentum cell
       use geometry, only: VOL
 
@@ -173,9 +171,14 @@
 !---------------------------------------------------------------------//
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 
@@ -257,7 +260,7 @@
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(A_M, B_M, IER)
+      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_am, drag_bm, IER)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -265,10 +268,6 @@
       use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Coefficient at cell corners added to the gas momentum A matix.
-      use discretelement, only: DRAG_AM, F_GDS
-! Coefficient at cell corners added to gas momentum B vector.
-      use discretelement, only: DRAG_BM
 ! Volume of Z-momentum cell
       use geometry, only: VOL
 
@@ -291,12 +290,16 @@
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
       DOUBLE PRECISION, INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 ! Error index
       INTEGER, INTENT(INOUT) :: IER
 

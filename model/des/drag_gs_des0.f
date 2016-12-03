@@ -144,8 +144,10 @@ module drag_gs_des0_module
          DO nindx = 1,PINC(lli,llj,llk)
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
-            if(nonexistent==particle_state(np)) cycle
-            if(normal_ghost==particle_state(np).or.entering_ghost==particle_state(np).or.exiting_ghost==particle_state(np)) cycle
+            if(nonexistent==particle_state(np) .or. &
+               normal_ghost==particle_state(np) .or. &
+               entering_ghost==particle_state(np) .or. &
+               exiting_ghost==particle_state(np)) cycle
 
             desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
@@ -192,7 +194,8 @@ module drag_gs_des0_module
 !       x, y and z momentum balances using F_GP.                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_GAS0(ep_g,u_g,v_g,w_g,ro_g,mu_g)
+      SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g,&
+         f_gds, drag_am, drag_bm)
 
 !-----------------------------------------------
 ! Modules
@@ -201,15 +204,15 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
-                                interp_scheme, drag_am, drag_bm, f_gds, pijk, des_vol_node
+                                interp_scheme, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module
-      use discretelement
-
+      use discretelement, only: particle_state, nonexistent, &
+         normal_ghost, entering_ghost, exiting_ghost
       IMPLICIT NONE
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
@@ -224,6 +227,12 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -335,7 +344,9 @@ module drag_gs_des0_module
             NP = PIC(lli,llj,llk)%p(nindx)
 ! skipping indices that do not represent particles and ghost particles
             if(nonexistent==particle_state(np)) cycle
-            if(normal_ghost==particle_state(np).or.entering_ghost==particle_state(np).or.exiting_ghost==particle_state(np)) cycle
+            if(normal_ghost==particle_state(np) .or. &
+               entering_ghost==particle_state(np) .or. &
+               exiting_ghost==particle_state(np)) cycle
             desposnew(:) = des_pos_new(np,:)
             call DRAG_INTERPOLATION(gst_tmp,vst_tmp,desposnew,velfp,weight_ft)
 !
@@ -394,7 +405,7 @@ module drag_gs_des0_module
 ! at the junction. drag_am are drag_bm are altered by the
 ! routine when periodic boundaries are invoked. so both
 ! quantities are needed at the time of this call.
-      call des_addnodevalues
+      call des_addnodevalues(drag_am, drag_bm)
 !-----------------------------------------------------------------<<<
 ! Calculate/update the cell centered drag coefficient F_GDS for use
 ! in the pressure correction equation

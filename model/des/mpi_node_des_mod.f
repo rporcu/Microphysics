@@ -99,12 +99,17 @@
 !
 ! Parameters       : None
 !------------------------------------------------------------------------
-      subroutine des_addnodevalues()
+      subroutine des_addnodevalues(drag_am, drag_bm)
 
       use functions
 !-----------------------------------------------
       implicit none
 !-----------------------------------------------
+      DOUBLE PRECISION, INTENT(INOUT) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+
 ! local variables
 !-----------------------------------------------
       integer :: li, lj, lk

@@ -137,16 +137,11 @@ CONTAINS
 ! defined by imax, jmax and kmax in mfix.dat and phase no.
       Allocate(  PIJK (MAX_PIP,5) )
 
-      ALLOCATE(DRAG_AM(istart3:iend3, jstart3:jend3, kstart3:kend3))
-      ALLOCATE(DRAG_BM(istart3:iend3, jstart3:jend3, kstart3:kend3, DIMN))
-
 ! Explicit drag force acting on a particle.
       Allocate(DRAG_FC (MAX_PIP,DIMN) )
 
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))
-
-      ALLOCATE(F_GDS(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
       SELECT CASE(DES_INTERP_SCHEME_ENUM)
       CASE(DES_INTERP_GARG)

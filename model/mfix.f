@@ -121,6 +121,14 @@
       DOUBLE PRECISION, ALLOCATABLE ::  d_e(:,:,:)
       DOUBLE PRECISION, ALLOCATABLE ::  d_n(:,:,:)
       DOUBLE PRECISION, ALLOCATABLE ::  d_t(:,:,:)
+
+! drag coefficient between gas phase and discrete particles
+      DOUBLE PRECISION, ALLOCATABLE :: f_gds(:,:,:)
+! the coefficient add to gas momentum A matrix
+      DOUBLE PRECISION, ALLOCATABLE :: drag_am(:,:,:)
+! the coefficient add to gas momentum B matrix
+      DOUBLE PRECISION, ALLOCATABLE :: drag_bm(:,:,:,:)
+
 !---------------------------------------------------------------------//
 
 !-----------------------------------------------
@@ -152,7 +160,7 @@
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
-         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt)
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
       IF(DISCRETE_ELEMENT) CALL DES_ALLOCATE_ARRAYS
       IF (DISCRETE_ELEMENT) CALL DES_INIT_ARRAYS
@@ -262,12 +270,13 @@
 
 ! Find the solution of the equations from TIME to TSTOP at
 ! intervals of DT
-      call time_march(u_g,v_g,w_g,u_go,v_go,w_go,&
-                      p_g,p_go,pp_g,ep_g,ep_go,&
-                      ro_g,ro_go,rop_g,rop_go,&
-                      rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                      tau_u_g,tau_v_g,tau_w_g,&
-                      flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g)
+      call time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
+         p_g, p_go, pp_g, ep_g, ep_go, &
+         ro_g, ro_go, rop_g, rop_go, &
+         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
+         tau_u_g, tau_v_g, tau_w_g,&
+         flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
+         f_gds, drag_am, drag_bm)
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)

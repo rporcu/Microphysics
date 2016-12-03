@@ -10,11 +10,11 @@ module iterate_module
 !  Purpose: This module controls the iterations for solving equations  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE ITERATE(u_g,v_g,w_g,u_go,v_go,w_go,&
-                         p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
-                         rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                         flux_ge,flux_gn,flux_gt,mu_g,&
+      SUBROUTINE ITERATE(u_g, v_g, w_g, u_go, v_go, w_go,&
+                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
+                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
+                         flux_ge, flux_gn, flux_gt, mu_g,&
+                         f_gds, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
                          IER, NIT)
 
@@ -92,6 +92,12 @@ module iterate_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -184,15 +190,16 @@ module iterate_module
       IF (CALL_USR) CALL USR2
 
 ! Calculate coefficients, excluding density and reactions.
-      CALL CALC_COEFF(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, 1)
-
+      CALL CALC_COEFF(1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
+         f_gds, drag_am, drag_bm)
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components
       call solve_vel_star(u_g,v_g,w_g,u_go,v_go,w_go,&
                           p_g,ro_g,rop_g,rop_go,ep_g,&
                           tau_u_g,tau_v_g,tau_w_g,&
-                          d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,IER)
+                          d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,&
+                          f_gds, drag_am, drag_bm, IER)
 
 
 ! Calculate densities.

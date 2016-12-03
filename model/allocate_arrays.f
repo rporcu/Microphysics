@@ -12,7 +12,7 @@ module allocate_mod
       SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
-         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt)
+         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,f_gds, drag_am, drag_bm)
 
 !-----------------------------------------------
 ! Modules
@@ -57,6 +57,9 @@ module allocate_mod
       double precision, allocatable, intent(inout) :: rop_ge(:,:,:)
       double precision, allocatable, intent(inout) :: rop_gn(:,:,:)
       double precision, allocatable, intent(inout) :: rop_gt(:,:,:)
+      double precision, allocatable, intent(inout) :: f_gds(:,:,:)
+      double precision, allocatable, intent(inout) :: drag_am(:,:,:)
+      double precision, allocatable, intent(inout) :: drag_bm(:,:,:,:)
 
       integer :: is3, ie3
       integer :: js3, je3
@@ -117,6 +120,14 @@ module allocate_mod
       Allocate( ROP_gE(is3:ie3,js3:je3,ks3:ke3))
       Allocate( ROP_gN(is3:ie3,js3:je3,ks3:ke3))
       Allocate( ROP_gT(is3:ie3,js3:je3,ks3:ke3))
+
+      Allocate( DRAG_AM (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( F_GDS   (is3:ie3,js3:je3,ks3:ke3))
+      Allocate( DRAG_BM (is3:ie3,js3:je3,ks3:ke3, 3))
+
+      DRAG_AM = 0.0d0
+      F_GDS   = 0.0d0
+      DRAG_BM = 0.0d0
 
       RETURN
       END SUBROUTINE ALLOCATE_ARRAYS

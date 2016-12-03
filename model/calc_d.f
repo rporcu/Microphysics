@@ -1,3 +1,7 @@
+MODULE CALC_D_MOD
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CALC_d_n                                                !
@@ -7,11 +11,7 @@
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-MODULE CALC_D_MOD
-
-   CONTAINS
-
-      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g)
+      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g,f_gds)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -20,8 +20,6 @@ MODULE CALC_D_MOD
       use discretelement, only: DES_ONEWAY_COUPLED
 ! Pressure scale factor
       use scales, only: P_SCALE
-
-      use discretelement, only: F_GDS
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -45,11 +43,11 @@ MODULE CALC_D_MOD
       DOUBLE PRECISION, INTENT(OUT) :: d(:,:,:)
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
-! Septadiagonal matrix A_M
       DOUBLE PRECISION, INTENT(IN):: A_M&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-
       DOUBLE PRECISION, INTENT(IN):: ep_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables:
