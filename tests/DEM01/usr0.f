@@ -15,6 +15,7 @@
       use usr
       use discretelement
       use exit_mod, only: mfix_exit
+      use constant, only: gravity
 
       IMPLICIT NONE
 
@@ -33,7 +34,7 @@
 
       lRad  = des_radius(1)
       h0    = des_pos_new(1,2)
-      lGrav = -grav(2)
+      lGrav = -gravity(2)
 
 ! Calculate the start time of particle/wall collision.
       time_c =  dsqrt(2.0d0*(h0 - lRad)/lGrav)

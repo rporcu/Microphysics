@@ -30,7 +30,7 @@ module source_u_g_module
       use compar  , only: imap
       USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE constant, only: gravity_x
+      USE constant, only: gravity
       USE bc      , only: delp_x
 
       USE fun_avg, only: avg
@@ -158,7 +158,7 @@ module source_u_g_module
             V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT
 
 ! Body force
-            VBF = ROGA*GRAVITY_X
+            VBF = ROGA*GRAVITY(1)
 
             ltau_u_g = tau_u_g(i,j,k)
 

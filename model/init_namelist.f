@@ -261,35 +261,11 @@
 !</keyword>
 
 !<keyword category="Physical Parameters" required="false">
-!  <description>Gravitational acceleration. [980.7 in CGS]</description>
-      GRAVITY = UNDEFINED
+!  <description>Gravity vector. [0.0, 9.80, 0.0] m/s^2 </description>
+      GRAVITY(1) =  0.00000d0
+      GRAVITY(2) = -9.80665d0
+      GRAVITY(3) =  0.00000d0
 !</keyword>
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>
-!    X-component of gravitational acceleration vector. By default, the
-!    gravity force acts in the negative y-direction.
-!  </description>
-      GRAVITY_X = ZERO
-!</keyword>
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>
-!    Y-component of gravitational acceleration vector. By default, the
-!    gravity force acts in the negative y-direction.
-!  </description>
-      GRAVITY_Y = ZERO
-!</keyword>
-
-!<keyword category="Physical Parameters" required="false">
-!  <description>
-!    Z-component of gravitational acceleration vector. By default, the
-!    gravity force acts in the negative y-direction.
-!  </description>
-      GRAVITY_Z = ZERO
-!</keyword>
-
-
 
 
 

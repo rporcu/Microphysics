@@ -20,7 +20,7 @@
       DOUBLE PRECISION :: drag_c1, drag_d1
 
 ! Gravitational acceleration
-      DOUBLE PRECISION :: GRAVITY, GRAVITY_X, GRAVITY_Y, GRAVITY_Z
+      DOUBLE PRECISION :: GRAVITY(3)
 
 ! Universal gas constant; (Pa.m3/kmol.K)
       DOUBLE PRECISION, parameter :: GAS_CONST = 8314.56D0

@@ -53,6 +53,7 @@
       Use run
       Use usr
       use toleranc, only: COMPARE
+      use constant, only: gravity
 
       IMPLICIT NONE
 
@@ -86,7 +87,7 @@
 
 ! Calculate the non-dimensional end slip times
          ANL_ND = 2.0d0/7.0d0
-         DEM_ND = abs(MEW*grav(2)/u0) * lTime
+         DEM_ND = abs(MEW*gravity(2)/u0) * lTime
 
          Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 

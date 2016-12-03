@@ -130,7 +130,7 @@
 !  Physical and numerical parameters
 !
       WRITE (UNIT_OUT, 1150)
-      WRITE (UNIT_OUT, 1157) P_REF, P_SCALE, GRAVITY
+      WRITE (UNIT_OUT, 1157) P_REF, P_SCALE, GRAVITY(2)
       WRITE (UNIT_OUT, 1158)
       WRITE (UNIT_OUT, 1159) (UR_FAC(L),LEQ_IT(L),&
                           LEQ_METHOD_NAME(LEQ_METHOD(L)),&

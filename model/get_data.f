@@ -55,9 +55,6 @@
 ! Set up the physical domain indices (cell index max/min values).
       CALL SET_MAX2
 
-! Set constants
-      CALL SET_CONSTANTS
-
 ! Partition the domain and set indices
       CALL GRIDMAP_INIT
 

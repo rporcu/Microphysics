@@ -17,4 +17,4 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / PHYSICAL_PARAM_UNLOCKED /&
 
-      GRAVITY, GRAVITY_X, GRAVITY_Y, GRAVITY_Z
+      GRAVITY

@@ -9,10 +9,11 @@
       SUBROUTINE CFNEWVALUES
 
       USE discretelement, only: des_acc_old, rot_acc_old, fc, tow, des_vel_new, des_pos_new, omega_new, ppos, do_nsearch, dtsolid
-      USE discretelement, only: max_pip, intg_euler, omoi, intg_adams_bashforth, grav, des_radius, pmass, neighbor_search_rad_ratio
+      USE discretelement, only: max_pip, intg_euler, omoi, intg_adams_bashforth, des_radius, pmass, neighbor_search_rad_ratio
       USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_particle, exiting_ghost, particle_state
       USE discretelement, only: normal_ghost
       USE param1, only: zero
+      use constant, only: gravity
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -32,7 +33,7 @@
             IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE                       ! Only real particles
             IF(ENTERING_PARTICLE==PARTICLE_STATE(L).or.ENTERING_GHOST==PARTICLE_STATE(L)) CYCLE  ! Only non-entering
             IF(NORMAL_GHOST==PARTICLE_STATE(L)) CYCLE                             ! Skip ghost particles
-            DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
+            DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
             ROT_ACC_OLD(L,:) = TOW(L,:)
          ENDDO
       ENDIF
@@ -46,7 +47,7 @@
 ! Classification from new to existing is performed in routine
 ! des_check_new_particle.f
          IF(.NOT.ENTERING_PARTICLE==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L))THEN
-            FC(L,:) = FC(L,:)/PMASS(L) + GRAV(:)
+            FC(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
          ELSE
             FC(L,:) = ZERO
             TOW(L,:) = ZERO

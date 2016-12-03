@@ -162,7 +162,7 @@
 !......................................................................!
       function Fb( )
 
-      use discretelement, only: GRAV
+      use constant, only: GRAVITY
       use fld_const, only: RO_g0
       use constant, only: RO_s0
 
@@ -170,7 +170,7 @@
 
       double precision, dimension(3) :: Fb
 
-      Fb(:) = GRAV(:) * (RO_s0(1)-RO_g0)/RO_s0(1)
+      Fb(:) = GRAVITY(:) * (RO_s0(1)-RO_g0)/RO_s0(1)
 
       return
       end function Fb
@@ -189,7 +189,6 @@
 !......................................................................!
       function Fd(Vp)
 
-      use discretelement, only: GRAV
       use constant, only: RO_s0, D_p0
       use fld_const, only: RO_g0
 

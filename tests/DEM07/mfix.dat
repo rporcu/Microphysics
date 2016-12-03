@@ -29,7 +29,7 @@
 
   DRAG_TYPE = 'BVK'
 
-  GRAVITY = 0.0d0
+  GRAVITY(1:3) = 3*0.0
 
   DES_INTERP_ON = .T.
 

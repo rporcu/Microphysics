@@ -30,7 +30,7 @@ module source_v_g_module
       USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      USE constant, only: gravity_y
+      USE constant, only: gravity
       USE bc, only: delp_y
 
       USE fun_avg, only: avg
@@ -154,7 +154,7 @@ module source_v_g_module
             V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k))*ODT
 
 ! Body force
-            VBF = ROGA*GRAVITY_Y
+            VBF = ROGA*GRAVITY(2)
 
 ! if jackson, implement jackson form of governing equations (ep_g dot
 ! del tau_g): multiply by void fraction otherwise by 1

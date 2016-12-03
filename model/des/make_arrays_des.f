@@ -49,9 +49,6 @@
 ! Check interpolation input.
       CALL SET_FILTER_DES
 
-! cfassign and des_init_bc called before reading the particle info
-      CALL CFASSIGN
-
       vol_surr(:,:,:) = ZERO
 
       ! Initialize vol_surr array

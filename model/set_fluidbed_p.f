@@ -15,7 +15,7 @@
       USE bc
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar   , only: myPE
-      USE constant , only: gravity_y
+      USE constant , only: gravity
       USE eos      , ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
       USE functions, only: fluid_at
@@ -159,10 +159,10 @@
                   DAREA = DX*DZ
                   AREA = AREA + DAREA
                   IF (RO_G0 == UNDEFINED) THEN
-                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(I,J,K)*EOSG(&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY(2)*EP_G(I,J,K)*EOSG(&
                         MW_AVG,PJ,295.15d0)*DAREA
                   ELSE
-                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY_Y*EP_G(I,J,K)*RO_G0&
+                     BED_WEIGHT = BED_WEIGHT - DY*GRAVITY(2)*EP_G(I,J,K)*RO_G0&
                         *DAREA
                   ENDIF
                ENDIF  ! end if (fluid_at(i,j,k))

@@ -31,7 +31,7 @@ module source_w_g_module
       use compar, only: kmap
       USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE constant, only: gravity_z
+      USE constant, only: gravity
       USE bc, only: delp_z
 
       USE fun_avg, only: avg, avg_h
@@ -159,7 +159,7 @@ module source_w_g_module
             V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,j,ktop(i,j,k)))*ODT
 
 ! Body force
-            VBF = ROPGA*GRAVITY_Z
+            VBF = ROPGA*GRAVITY(3)
 
 
             ltau_w_g = tau_w_g(i,j,k)

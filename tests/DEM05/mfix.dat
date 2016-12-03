@@ -32,7 +32,7 @@
   MOMENTUM_Z_EQ(0:2) = .F. .F. .F.
 
 ! No gravity
-  GRAVITY = 0.0
+  GRAVITY(1:3) = 3*0.0
 
 ! Invoke UDFs
   CALL_USR = .TRUE.

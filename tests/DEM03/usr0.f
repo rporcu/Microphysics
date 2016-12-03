@@ -30,8 +30,8 @@
       gX1 = des_vel_new(2,2)
 
 ! Body forces. (Gravity)
-      F1b = -GRAVITY
-      F2b = -GRAVITY
+      F1b = GRAVITY(2)
+      F2b = GRAVITY(2)
 
       return
       END SUBROUTINE USR0

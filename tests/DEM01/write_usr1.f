@@ -54,6 +54,7 @@
       Use run
       Use usr
       use compar
+      use constant, only: gravity
 
       IMPLICIT NONE
 
@@ -88,7 +89,7 @@
       OPEN(UNIT=uVEL,FILE='POST_VEL.dat',POSITION="APPEND",STATUS='OLD')
 
 ! Set local variables.
-      lGrav = -grav(2)
+      lGrav = -gravity(2)
       lRad  = des_radius(1)
       lStage = 0
 

@@ -12,7 +12,7 @@
       SUBROUTINE DES_INIT_ARRAYS
 
       USE param1, only: zero
-      USE discretelement, only: des_rop_s, pinc, grav, max_pip
+      USE discretelement, only: des_rop_s, pinc, max_pip
 
       IMPLICIT NONE
 
@@ -21,8 +21,6 @@
       PINC(:,:,:) = 0
 
       DES_ROP_S(:,:,:,:) = ZERO
-
-      GRAV(:) = ZERO
 
       CALL DES_INIT_PARTICLE_ARRAYS(1,MAX_PIP)
 
