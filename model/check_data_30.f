@@ -5,7 +5,7 @@
 !  Purpose: Set miscellaneous constants                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_DATA_30(lambda_g,mu_g)
+      SUBROUTINE CHECK_DATA_30(lambda_g,mu_g,flag)
 
 ! Global variables: (common to sub-functions)
 !---------------------------------------------------------------------//
@@ -21,6 +21,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -30,7 +32,7 @@
 
 
 ! Check physical properties in inflow/outflow cells.
-      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
+      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g,flag)
 
 ! Verify physical values for field variables.
       CALL CHECK_PHYSICAL_BOUNDS(mu_g)
@@ -47,7 +49,7 @@
 !  properties for specified variables.                                 !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_FLOW_CELL_PROPS(lambda_g,mu_g)
+      SUBROUTINE CHECK_FLOW_CELL_PROPS(lambda_g,mu_g,flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
@@ -62,6 +64,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -80,8 +84,7 @@
       DO J = JSTART2, JEND2
       DO I = ISTART2, IEND2
 
-
-         IF(FLOW_AT(i,j,k)) THEN
+         if(flag(i,j,k,1) >= 10 .and. flag(i,j,k,1) <= 31) then
 
 ! Turbulent viscosity of fluid phase.
             IF(MU_g(I,J,K) /= ZERO) CALL REPORT_ERROR                   &

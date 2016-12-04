@@ -15,9 +15,9 @@ module solve_pp_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
-                            rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, NORMG, RESG, IER)
+      SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
+         ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, flag, NORMG, &
+         RESG, IER)
 
 !-----------------------------------------------
 ! Modules
@@ -76,6 +76,8 @@ module solve_pp_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN  ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
@@ -114,7 +116,7 @@ module solve_pp_module
       CALL CONV_PP_G (A_M, rop_ge, rop_gn, rop_gt)
 
       call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g, d_e, d_n, d_t)
+         rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
       IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX)
 

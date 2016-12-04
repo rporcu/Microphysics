@@ -36,12 +36,7 @@ MODULE functions
 !---------------------------------------------------------------------//
 ! logical function to identify various fluid/flow cells
 ! LOGICAL :: fluid_at
-! LOGICAL :: P_FLOW_AT
-! LOGICAL :: P_OUTFLOW_AT
-! LOGICAL :: MASS_OUTFLOW_AT
-! LOGICAL :: OUTFLOW_AT
 ! LOGICAL :: FLOW_AT
-! LOGICAL :: FLUIDorP_FLOW_AT
 
 ! logical function to identify various wall cells
 ! LOGICAL :: wall_at
@@ -56,7 +51,6 @@ MODULE functions
 
 ! logical function to identify different flow at boundaries
 ! LOGICAL :: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T
-! LOGICAL :: PFLOW_AT_E, PFLOW_AT_N, PFLOW_AT_T
 ! LOGICAL :: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
 
 ! Logical functions to identify different impermeable/semipermeable

@@ -83,7 +83,7 @@
       USE des_allocate, only: des_allocate_arrays
       use allocate_mod, only: allocate_arrays
       use matrix, only: A_m, b_m
-
+      use geometry, only: flag
       IMPLICIT NONE
 
 ! Fluid Variables
@@ -276,7 +276,7 @@
          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
          tau_u_g, tau_v_g, tau_w_g,&
          flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-         f_gds, drag_am, drag_bm)
+         f_gds, drag_am, drag_bm, flag)
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)

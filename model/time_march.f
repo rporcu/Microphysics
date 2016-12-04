@@ -18,7 +18,7 @@ module time_march_module
          rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
          tau_u_g,tau_v_g,tau_w_g,&
          flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g,&
-         f_gds, drag_am, drag_bm)
+         f_gds, drag_am, drag_bm,flag)
 
 !-----------------------------------------------
 ! Modules
@@ -121,6 +121,8 @@ module time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 
 !-----------------------------------------------
@@ -139,13 +141,6 @@ module time_march_module
 
 ! Flag to save results and cleanly exit.
       LOGICAL :: EXIT_SIGNAL = .FALSE.
-
-! C Function
-      INTERFACE
-         SUBROUTINE CHECK_SOCKETS() BIND ( C )
-           use, INTRINSIC :: iso_c_binding
-         END SUBROUTINE CHECK_SOCKETS
-      END INTERFACE
 
 !-----------------------------------------------
 
@@ -226,7 +221,7 @@ module time_march_module
       IF (NSTEP == NCHECK) THEN
          IF (DNCHECK < 256) DNCHECK = DNCHECK*2
          NCHECK = NCHECK + DNCHECK
-         CALL CHECK_DATA_30(lambda_g,mu_g)
+         CALL CHECK_DATA_30(lambda_g,mu_g,flag)
       ENDIF
 
 ! Check for maximum velocity at inlet to avoid convergence problems
@@ -245,7 +240,7 @@ module time_march_module
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                    flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                    tau_u_g,tau_v_g,tau_w_g,&
-                   IER, NIT)
+                   flag, IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, &
          rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
@@ -255,7 +250,7 @@ module time_march_module
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                       tau_u_g,tau_v_g,tau_w_g,&
-                      IER, NIT)
+                      flag, IER, NIT)
       ENDDO
 
       IF(DT < DT_MIN) THEN

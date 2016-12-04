@@ -26,7 +26,7 @@ module source_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
 subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g, d_e, d_n, d_t)
+                       rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -78,6 +78,8 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -180,13 +182,20 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
 
          IF (fluid_at(i,j,k)) THEN
 
-! Cutting the neighbor link between fluid cell and adjacent p_flow_at cell
-            if(p_flow_at(iminus(i,j,k),j,k)) A_m(I,J,K,W) = ZERO
-            if(p_flow_at(iplus(i,j,k),j,k))  A_m(I,J,K,E) = ZERO
-            if(p_flow_at(i,jminus(i,j,k),k)) A_m(I,J,K,S) = ZERO
-            if(p_flow_at(i,jplus(i,j,k),k))  A_m(I,J,K,N) = ZERO
-            if(p_flow_at(i,j,kminus(i,j,k))) A_m(I,J,K,B) = ZERO
-            if(p_flow_at(i,j,kplus(i,j,k)))  A_m(I,J,K,T) = ZERO
+! Cut the neighbor link between fluid cell and adjacent pressure flow cell
+            if(flag(iminus(i,j,k),j,k,1) == 10 .OR. &
+               flag(iminus(i,j,k),j,k,1) == 11) A_m(I,J,K,W) = ZERO
+            if(flag(iplus(i,j,k),j,k ,1) == 10 .OR. &
+               flag(iplus(i,j,k),j,k ,1) == 11) A_m(I,J,K,E) = ZERO
+            if(flag(i,jminus(i,j,k),k,1) == 10 .OR. &
+               flag(i,jminus(i,j,k),k,1) == 11) A_m(I,J,K,S) = ZERO
+            if(flag(i,jplus(i,j,k),k ,1) == 10 .OR. &
+               flag(i,jplus(i,j,k),k ,1) == 11) A_m(I,J,K,N) = ZERO
+            if(flag(i,j,kminus(i,j,k),1) == 10 .OR. &
+               flag(i,j,kminus(i,j,k),1) == 11) A_m(I,J,K,B) = ZERO
+            if(flag(i,j,kplus(i,j,k) ,1) == 10 .OR. &
+               flag(i,j,kplus(i,j,k) ,1) == 11) A_m(I,J,K,T) = ZERO
+
          ENDIF
           end do
         end do

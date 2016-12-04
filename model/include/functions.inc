@@ -40,49 +40,6 @@
          fluid_at = (flag(i,j,k,1).eq.1)
       end function fluid_at
 
-      ! logical function to identify a specified pressure inflow cell
-      logical function p_flow_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer i,j,k
-      P_FLOW_AT = flag(i,j,k,1) .EQ. 10 .OR. &
-                  flag(i,j,k,1) .EQ. 11
-      END FUNCTION P_FLOW_AT
-
-      ! logical function to identify a specified pressure outflow cell
-      logical function p_outflow_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer i,j,k
-      P_OUTFLOW_AT= flag(i,j,k,1) .EQ. 11
-      END FUNCTION P_OUTFLOW_AT
-
-! logical function to identify either a specified pressure inflow
-! or outflow cell or a fluid cell (simplified check)
-! FLUID_AT or P_FLOW_AT (simplified check)
-      logical function FLUIDorP_FLOW_AT(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer, intent(in) :: i,j,k
-      FLUIDorP_FLOW_AT = (flag(i,j,k,1) .LE. 11)
-      end function FLUIDorP_FLOW_AT
-
-! logical function to identify a specified mass outflow cell
-      logical function mass_outflow_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer i,j,k
-      MASS_OUTFLOW_AT= flag(i,j,k,1) .EQ. 21
-      END FUNCTION MASS_OUTFLOW_AT
-
-! logical function to identify a specified outflow cell
-      logical function outflow_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer i,j,k
-      OUTFLOW_AT  = flag(i,j,k,1) .EQ. 31
-      END FUNCTION OUTFLOW_AT
-
 ! logical function to identify any type of flow in/out at cell
 ! pressure inflow/outflow, mass inflow/outflow or outflow
       logical function flow_at(i,j,k)
@@ -219,33 +176,6 @@
                     FLAG(i,j,k,4) .LE. 2011
       END FUNCTION FLOW_AT_T
 
-! identify const. pressure flow top boundary
-      LOGICAL FUNCTION PFLOW_AT_E(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      PFLOW_AT_E  = FLAG(i,j,k,2) .EQ. 2010 .OR.&
-                    FLAG(i,j,k,2) .EQ. 2011
-      END FUNCTION PFLOW_AT_E
-
-! identify const. pressure flow north boundary
-      LOGICAL FUNCTION PFLOW_AT_N(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      PFLOW_AT_N  = FLAG(i,j,k,3) .EQ. 2010 .OR.&
-                    FLAG(i,j,k,3) .EQ. 2011
-      END FUNCTION PFLOW_AT_N
-
-! identify const. pressure flow east boundary
-      LOGICAL FUNCTION PFLOW_AT_T(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      PFLOW_AT_T  = FLAG(i,j,k,4) .EQ. 2010 .OR.&
-                    FLAG(i,j,k,4) .EQ. 2011
-      END FUNCTION PFLOW_AT_T
-
 ! identify specified flow east boundary
       LOGICAL FUNCTION MFLOW_AT_E(i,j,k)
       use geometry, only: flag
@@ -320,10 +250,11 @@
       integer function iminus(i,j,k)
       use compar, only: istart3
       use geometry, only  : imin1,imax1,cyclic_x
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (i.eq.imin1 .and.  flag(i,j,k,1) > 1) then
          iminus = i
       else
          iminus = max(istart3, i-1)
@@ -339,10 +270,11 @@
       integer function iplus(i,j,k)
       use compar, only: iend3
       use geometry, only  : imin1,imax1,cyclic_x
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (i.eq.imax1 .and. flag(i,j,k,1) > 1) then
          iplus = i
       else
          iplus = min(iend3, i+1)
@@ -357,10 +289,11 @@
       integer function jminus(i,j,k)
       use compar, only: jstart3
       use geometry, only  : jmin1,jmax1,cyclic_y
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (j.eq.jmin1 .and. flag(i,j,k,1) > 1) then
          jminus = j
       else
          jminus = max(jstart3, j-1)
@@ -375,10 +308,11 @@
       integer function jplus(i,j,k)
       use compar, only: jend3
       use geometry, only  : jmin1,jmax1,cyclic_y
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (j.eq.jmax1 .and. flag(i,j,k,1) > 1) then
          jplus = j
       else
          jplus = min(jend3, j+1)
@@ -394,10 +328,11 @@
 
       use compar, only: kstart3
       use geometry, only  : kmin1,kmax1,cyclic_z
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmin1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (k.eq.kmin1 .and. flag(i,j,k,1) > 1) then
          kminus = k
       else
          kminus = max(kstart3, k-1)
@@ -412,11 +347,12 @@
       integer function kplus(i,j,k)
 
       use compar, only: kend3
-      use geometry, only  : kmin1,kmax1,cyclic_z
+      use geometry, only: kmin1,kmax1,cyclic_z
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmax1 .and. (wall_at(i,j,k) .or. flow_at(i,j,k)) ) then
+      if (k.eq.kmax1 .and. flag(i,j,k,1) > 1) then
          kplus = k
       else
          kplus = min(kend3, k+1)

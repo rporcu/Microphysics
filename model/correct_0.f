@@ -14,11 +14,10 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)
+      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, jnorth, ktop
-      USE functions, only: fluidorp_flow_at
       USE ur_facs  , only: ur_fac
 
       IMPLICIT NONE
@@ -39,6 +38,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 
 !-----------------------------------------------
@@ -55,7 +56,7 @@
         DO J = jstart3, jend3
           DO I = istart3, iend3
 
-            IF (FLUIDORP_FLOW_AT(i,j,k)) THEN
+            if(flag(i,j,k,1) <= 11) then
 
               P_G(I,J,K) = P_G(I,J,K) + UR_FAC(1)*PP_G(I,J,K)
 
