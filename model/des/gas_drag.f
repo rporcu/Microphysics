@@ -24,7 +24,6 @@
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
-      USE functions, ONLY: funijk
       use functions, only: flow_at_e
 ! IJK of cell to east.
       use functions, only: ieast
@@ -80,8 +79,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
-
             IF(flow_at_e(i,j,k)) then
 
                IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
@@ -109,7 +106,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-            IJK = FUNIJK(i,j,k)
             IF(flow_at_e(i,j,k)) THEN
 
                tmp_A = AVG(F_GDS(i,j,k), F_GDS(ieast(i,j,k),j,k))
@@ -154,7 +150,6 @@
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
-      USE functions, ONLY: funijk
       use functions, only: flow_at_n
 ! IJK of cell to north.
       use functions, only: jnorth
@@ -206,7 +201,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
             IF(flow_at_n(i,j,k)) then
 
                IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
@@ -234,7 +228,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
             IF(flow_at_n(i,j,k)) THEN
 
                tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,jnorth(i,j,k),k))
@@ -276,7 +269,6 @@
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag: Fluid exists at indexed cell
-      USE functions, ONLY: funijk
       use functions, only: flow_at_t
 ! IJK of cell to top.
       use functions, only: ktop
@@ -328,7 +320,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
             IF(flow_at_t(i,j,k)) then
 
                IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
@@ -354,7 +345,6 @@
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
             IF(flow_at_t(i,j,k)) THEN
                tmp_A = AVG(F_GDS(I,J,K), F_GDS(i,j,ktop(i,j,k)))
                tmp_B = AVG(DRAG_BM(i,j,k,3), DRAG_BM(i,j,ktop(i,j,k),3))

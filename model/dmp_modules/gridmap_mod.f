@@ -10,8 +10,7 @@
 !-----------------------------------------------
           use geometry, only: imax1, imin1, jmax1, jmin1, kmax1, kmin1
           use compar, only: nodesi, nodesj, nodesk
-          use compar, only: isize_all, jsize_all, ksize_all
-          use compar, only: domain_size_adjusted, nlayers_bicgs
+          use compar, only: nlayers_bicgs
           use compar, only: istart1_all, jstart1_all, kstart1_all, iend1_all, jend1_all, kend1_all
           use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
 
@@ -63,63 +62,24 @@
          CALL FLUSH_ERR_MSG
       ENDIF
 
-! Get Domain size from ADJUST_IJK_SIZE Subroutine
-      IF(DOMAIN_SIZE_ADJUSTED) THEN
-         isize1_all = isize_all
-         jsize1_all = jsize_all
-         ksize1_all = ksize_all
-      ELSE
 ! Determine the size in i direction and add the remainder sequentially
-         isize = (imax1-imin1+1)/nodesi
-         isize1_all(0:nodesi-1) = isize
-         iremain = (imax1-imin1+1) - nodesi*isize
-         IF (iremain.ge.1) isize1_all( 0:(iremain-1) ) = isize + 1
+      isize = (imax1-imin1+1)/nodesi
+      isize1_all(0:nodesi-1) = isize
+      iremain = (imax1-imin1+1) - nodesi*isize
+      IF (iremain.ge.1) isize1_all( 0:(iremain-1) ) = isize + 1
 
 ! Determine the size in j direction and add the remainder sequentially
-         jsize = (jmax1-jmin1+1)/nodesj
-         jsize1_all(0:nodesj-1) = jsize
-         jremain = (jmax1-jmin1+1) - nodesj*jsize
-         IF (jremain.ge.1) jsize1_all( 0:(jremain-1) ) = jsize + 1
+      jsize = (jmax1-jmin1+1)/nodesj
+      jsize1_all(0:nodesj-1) = jsize
+      jremain = (jmax1-jmin1+1) - nodesj*jsize
+      IF (jremain.ge.1) jsize1_all( 0:(jremain-1) ) = jsize + 1
 
 ! Determine the size in k direction and add the remainder sequentially
-         ksize = (kmax1-kmin1+1)/nodesk
-         ksize1_all(0:nodesk-1) = ksize
-         kremain = (kmax1-kmin1+1) - nodesk*ksize
-         IF (kremain.ge.1) ksize1_all( 0:(kremain-1) ) = ksize + 1
-      ENDIF
+      ksize = (kmax1-kmin1+1)/nodesk
+      ksize1_all(0:nodesk-1) = ksize
+      kremain = (kmax1-kmin1+1) - nodesk*ksize
+      IF (kremain.ge.1) ksize1_all( 0:(kremain-1) ) = ksize + 1
 
-
-! Get Domain size from gridmap.dat
-! This works only in the j-direction   <-------------------------
-      IF(.NOT.DOMAIN_SIZE_ADJUSTED) THEN
-         INQUIRE(FILE='gridmap.dat',EXIST=PRESENT)
-         IF(PRESENT) THEN
-            WRITE(*,*)'Reading gridmap from grimap.dat...'
-            OPEN(UNIT=777, FILE='gridmap.dat', STATUS='OLD')
-
-            READ (777, *) NODESI,NODESJ,NODESK
-            DO IPROC = 0,NODESI-1
-              READ(777,*) jPROC,Isize1_all(IPROC)
-            ENDDO
-            DO IPROC = 0,NODESJ-1
-              READ(777,*) jPROC,Jsize1_all(IPROC)
-            ENDDO
-            DO IPROC = 0,NODESK-1
-              READ(777,*) jPROC,Ksize1_all(IPROC)
-            ENDDO
-
-            CLOSE(777)
-            !CALL BCAST(ISIZE1_ALL)
-            !CALL BCAST(JSIZE1_ALL)
-            !CALL BCAST(KSIZE1_ALL)
-            allocate( ISIZE_ALL(0:NODESI-1))
-            allocate( JSIZE_ALL(0:NODESJ-1))
-            allocate( KSIZE_ALL(0:NODESK-1))
-            isize_all = isize1_all
-            jsize_all = jsize1_all
-            ksize_all = ksize1_all
-         ENDIF
-      ENDIF
 
 ! The following is general for 1-d or 2-d or 3-d decompostion
 ! Determining  istart, jstart and kstart for all the processors
@@ -166,19 +126,15 @@
         use functions, only: funijk
         use toleranc
         use compar, only: ijksize3_all, ijkstart3_all, ijkend3_all
-        use compar, only: ijksize4_all, ijkstart4_all, ijkend4_all
-        use compar, only: isize_all, istart_all, iend_all
-        use compar, only: jsize_all, jstart_all, jend_all
-        use compar, only: ksize_all, kstart_all, kend_all
+        use compar, only: istart_all, iend_all
+        use compar, only: jstart_all, jend_all
+        use compar, only: kstart_all, kend_all
         use compar, only: istart2_all, iend2_all
         use compar, only: jstart2_all, jend2_all
         use compar, only: kstart2_all, kend2_all
         use compar, only: istart3_all, iend3_all
         use compar, only: jstart3_all, jend3_all
         use compar, only: kstart3_all, kend3_all
-        use compar, only: istart4_all, iend4_all
-        use compar, only: jstart4_all, jend4_all
-        use compar, only: kstart4_all, kend4_all
         use compar, only: imap, jmap, kmap
         use compar, only: imap_c, jmap_c, kmap_c
         use compar, only: imap_c, jmap_c, kmap_c
@@ -212,10 +168,6 @@
       IF(.NOT.ALLOCATED(ijkstart3_all))  allocate( ijkstart3_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(ijkend3_all))    allocate( ijkend3_all(0:numPEs-1) )
 
-      IF(.NOT.ALLOCATED(ijksize4_all))   allocate( ijksize4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(ijkstart4_all))  allocate( ijkstart4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(ijkend4_all))    allocate( ijkend4_all(0:numPEs-1) )
-
       IF(.NOT.ALLOCATED(istart_all))     allocate( istart_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(jstart_all))     allocate( jstart_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(kstart_all))     allocate( kstart_all(0:numPEs-1) )
@@ -231,10 +183,6 @@
       IF(.NOT.ALLOCATED(istart3_all))    allocate( istart3_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(jstart3_all))    allocate( jstart3_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(kstart3_all))    allocate( kstart3_all(0:numPEs-1) )
-
-      IF(.NOT.ALLOCATED(istart4_all))    allocate( istart4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(jstart4_all))    allocate( jstart4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(kstart4_all))    allocate( kstart4_all(0:numPEs-1) )
 
       IF(.NOT.ALLOCATED(iend_all))       allocate( iend_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(jend_all))       allocate( jend_all(0:numPEs-1) )
@@ -252,10 +200,6 @@
       IF(.NOT.ALLOCATED(jend3_all))      allocate( jend3_all(0:numPEs-1) )
       IF(.NOT.ALLOCATED(kend3_all))      allocate( kend3_all(0:numPEs-1) )
 
-      IF(.NOT.ALLOCATED(iend4_all))      allocate( iend4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(jend4_all))      allocate( jend4_all(0:numPEs-1) )
-      IF(.NOT.ALLOCATED(kend4_all))      allocate( kend4_all(0:numPEs-1) )
-
       IF(.NOT.ALLOCATED(displs))         allocate( displs(0:numPEs-1) )
 
 
@@ -269,67 +213,46 @@
          istart2_all(iproc) = max(imin1-1,min(imax1+1,istart1_all(iproc)-1))
          if(nodesi.ne.1) then
             istart3_all(iproc) = max(imin1-2,min(imax1+2,istart2_all(iproc)-1))
-            istart4_all(iproc) = max(imin1-3,min(imax1+3,istart3_all(iproc)-1))
          else
             istart3_all(iproc) = istart2_all(iproc)
-            istart4_all(iproc) = istart3_all(iproc)
          endif
 
          jstart2_all(iproc) = max(jmin1-1,min(jmax1+1,jstart1_all(iproc)-1))
          if(nodesj.ne.1) then
             jstart3_all(iproc) = max(jmin1-2,min(jmax1+2,jstart2_all(iproc)-1))
-            jstart4_all(iproc) = max(jmin1-3,min(jmax1+3,jstart3_all(iproc)-1))
          else
             jstart3_all(iproc) = jstart2_all(iproc)
-            jstart4_all(iproc) = jstart3_all(iproc)
          endif
 
          kstart2_all(iproc) = max(kmin1-1,min(kmax1+1,kstart1_all(iproc)-1))
          if(nodesk.ne.1) then
             kstart3_all(iproc) = max(kmin1-2,min(kmax1+2,kstart2_all(iproc)-1))
-            kstart4_all(iproc) = max(kmin1-3,min(kmax1+3,kstart3_all(iproc)-1))
          else
             kstart3_all(iproc) =  kstart2_all(iproc)
-            kstart4_all(iproc) =  kstart3_all(iproc)
          endif
 
          iend2_all(iproc) = max(imin1-1,min(imax1+1,iend1_all(iproc)+1))
          if(nodesi.ne.1) then
             iend3_all(iproc) = max(imin1-2,min(imax1+2,iend2_all(iproc)+1))
-            iend4_all(iproc) = max(imin1-3,min(imax1+3,iend3_all(iproc)+1))
          else
             iend3_all(iproc) = iend2_all(iproc)
-            iend4_all(iproc) = iend3_all(iproc)
          endif
 
          jend2_all(iproc) = max(jmin1-1,min(jmax1+1,jend1_all(iproc)+1))
          if(nodesj.ne.1) then
             jend3_all(iproc) = max(jmin1-2,min(jmax1+2,jend2_all(iproc)+1))
-            jend4_all(iproc) = max(jmin1-3,min(jmax1+3,jend3_all(iproc)+1))
          else
             jend3_all(iproc) = jend2_all(iproc)
-            jend4_all(iproc) = jend3_all(iproc)
          endif
 
          kend2_all(iproc) = max(kmin1-1,min(kmax1+1,kend1_all(iproc)+1))
          if(nodesk.ne.1) then
             kend3_all(iproc) = max(kmin1-2,min(kmax1+2,kend2_all(iproc)+1))
-            kend4_all(iproc) = max(kmin1-3,min(kmax1+3,kend3_all(iproc)+1))
          else
             kend3_all(iproc) = kend2_all(iproc)
-            kend4_all(iproc) = kend3_all(iproc)
          endif
       enddo
 
-! for higher order methods
-      do iproc=0,numPEs-1
-         istart4_all(iproc) = istart3_all(iproc)
-         jstart4_all(iproc) = jstart3_all(iproc)
-         kstart4_all(iproc) = kstart3_all(iproc)
-         iend4_all(iproc)   = iend3_all(iproc)
-         jend4_all(iproc)   = jend3_all(iproc)
-         kend4_all(iproc)   = kend3_all(iproc)
-      enddo
 
       do iproc=0,numPEs-1
          ijkstart3_all(iproc) = 1
@@ -338,16 +261,10 @@
            + (kend3_all(iproc)-kstart3_all(iproc))*(jend3_all(iproc)-jstart3_all(iproc)+1)* &
              (iend3_all(iproc)-istart3_all(iproc)+1)
 
-         ijkstart4_all(iproc) = 1
-         ijkend4_all(iproc) =  1 + (iend4_all(iproc) - istart4_all(iproc)) &
-            + (jend4_all(iproc)-jstart4_all(iproc))*(iend4_all(iproc)-istart4_all(iproc)+1) &
-            + (kend4_all(iproc)-kstart4_all(iproc))*(jend4_all(iproc)-jstart4_all(iproc)+1)* &
-              (iend4_all(iproc)-istart4_all(iproc)+1)
       enddo
 
       do iproc=0,numPEs-1
          ijksize3_all(iproc) = ijkend3_all(iproc) - ijkstart3_all(iproc) + 1
-         ijksize4_all(iproc) = ijkend4_all(iproc) - ijkstart4_all(iproc) + 1
       enddo
 
       displs(0) = 0
@@ -360,10 +277,6 @@
       ijkstart3 = ijkstart3_all(myPE)
       ijkend3   = ijkend3_all(myPE)
       ijksize3  = ijksize3_all(myPE)
-
-      ijkstart4 = ijkstart4_all(myPE)
-      ijkend4   = ijkend4_all(myPE)
-      ijksize4  = ijksize4_all(myPE)
 
       istart1   = istart1_all(myPE)
       iend1     = iend1_all(myPE)
@@ -386,26 +299,6 @@
       kstart3   = kstart3_all(myPE)
       kend3     = kend3_all(myPE)
 
-      istart4   = istart4_all(myPE)
-      iend4     = iend4_all(myPE)
-      jstart4   = jstart4_all(myPE)
-      jend4     = jend4_all(myPE)
-      kstart4   = kstart4_all(myPE)
-      kend4     = kend4_all(myPE)
-
-      IF(.not.allocated(NCPP_UNIFORM)) allocate( NCPP_UNIFORM(0:NumPEs-1))
-
-      IF(.NOT.NCPP_UNIFORM_BACKED_UP) THEN
-         NCPP_UNIFORM(MyPE) = ijksize3_all(MyPE)
-      ENDIF
-      NCPP_UNIFORM_BACKED_UP = .TRUE.
-
-      IF(SHORT_GRIDMAP_INIT) THEN
-!        do iproc=0,numPEs-1
-!           NCPP_UNIFORM(iproc) = ijksize3_all(iproc)
-!        enddo
-         RETURN
-      ENDIF
 
 ! Setup mapping to take care of cyclic boundary conditions
 ! ---------------------------------------------------------------->>>
@@ -549,38 +442,6 @@
         c1 = (iend3_all(myPE)-istart3_all(myPE)+1)
         c2 = (iend3_all(myPE)-istart3_all(myPE)+1)* (jend3_all(myPE)-jstart3_all(myPE)+1)
         c0 =  c0  - c1*jstart3_all(myPE) - c2*kstart3_all(myPE)
-
-!   Initialize Array mapping (I,J,K) to IJK
-        INCREMENT_ARRAYS_ALLOCATED = .FALSE.
-
-! These arrays could already be allocated in post_mfix
-! when interpolating old data to new grid
-
-        if(allocated(IJK_ARRAY_OF)) deallocate(IJK_ARRAY_OF)
-        if(allocated(FUNIJK_MAP_C)) deallocate(FUNIJK_MAP_C)
-
-        ! Must extend range such that neighbors (IM,JP etc...) stay in bound
-        allocate(IJK_ARRAY_OF(istart3-1:iend3+1,jstart3-1:jend3+1,kstart3-1:kend3+1))
-        allocate(FUNIJK_MAP_C(istart3-1:iend3+1,jstart3-1:jend3+1,kstart3-1:kend3+1))
-
-
-! Save IJK value of (I,J,K) cell in an array
-! IJK_ARRAY_OF(I,J,K) will replace the use of FUNIJK(I,J,K)
-        DO ii = istart3,iend3
-           DO jj = jstart3,jend3
-              DO kk = kstart3,kend3
-                 IJK_ARRAY_OF(ii,jj,kk)=FUNIJK(ii,jj,kk)
-              ENDDO
-           ENDDO
-        ENDDO
-
-        DO ii = istart3,iend3
-           DO jj = jstart3,jend3
-              DO kk = kstart3,kend3
-                 FUNIJK_MAP_C(ii,jj,kk)=IJK_ARRAY_OF(IMAP_C(ii),JMAP_C(jj),KMAP_C(kk))
-              ENDDO
-           ENDDO
-        ENDDO
 
 
 ! Call to sendrecv_init to set all the communication pattern

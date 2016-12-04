@@ -48,9 +48,9 @@
 ! avoid unphysical strain rates in fluid cells adjacent to the flow
 ! boundary
 ! ---------------------------------------------------------------->>>
-      DO i = istart4, iend4
-         DO j = jstart4, jend4
-            DO k = kstart4, kend4
+      DO i = istart3, iend3
+         DO j = jstart3, jend3
+            DO k = kstart3, kend3
 
               select case (mod(flag(i,j,k,0),1000))
                 case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)

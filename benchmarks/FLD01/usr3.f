@@ -7,8 +7,6 @@
 !  Purpose: This routine is called after the time loop ends and is     C
 !           user-definable.  The user may insert code in this routine  C
 !           or call appropriate user defined subroutines.              C
-!           This routine is not called from an IJK loop, hence         C
-!           all indices are undefined.                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR3(u_g, v_g, w_g, p_g)
@@ -66,7 +64,6 @@
       SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, pGhia, pVar)
 
       use geometry, only: dx, dy
-      use functions, only: FUNIJK
       use compar, only: myPE, PE_IO
 
       double precision, intent(in) :: pX(:), pY(:)

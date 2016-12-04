@@ -24,7 +24,7 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, &
          des_pos_new, des_vel_new, fc, interp_scheme
-      use functions     , only: funijk, fluid_at,ip1,jp1,kp1
+      use functions     , only: fluid_at,ip1,jp1,kp1
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
       use des_drag_gp_module, only: des_drag_gp
@@ -93,7 +93,6 @@ module drag_gs_des0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
          if(.not.fluid_at(lli,llj,llk) .or. pinc(lli,llj,llk).eq.0) cycle
          i = lli
          j = llj
@@ -206,7 +205,7 @@ module drag_gs_des0_module
                                 interp_scheme, pijk, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
-      use functions     , only: funijk,funijk_map_c,fluid_at,ip1,jp1,kp1
+      use functions     , only: fluid_at,ip1,jp1,kp1
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module
@@ -291,7 +290,6 @@ module drag_gs_des0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
          IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(lli,llj,llk)==0) cycle
          i = lli
          j = llj
@@ -376,7 +374,6 @@ module drag_gs_des0_module
 ! The interpolation is done using node. so one should use consistent
 ! numbering system. in the current version imap_c is used instead of
 ! iplus or iminus
-                     cur_ijk = funijk_map_c(ii, jj, kk)
 
 ! Replacing the volume of cell to volume at the node
                      vcell = des_vol_node(ii, jj, kk)

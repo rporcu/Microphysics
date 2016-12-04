@@ -44,7 +44,7 @@ module set_outflow_module
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_i_w, bc_i_e
 
-      use functions, only: fluid_at, funijk
+      use functions, only: fluid_at
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -293,9 +293,9 @@ module set_outflow_module
 !---------------------------------------------------------------------//
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
-! ijk index for boundary cell
+! i,j,k index for boundary cell
       INTEGER, INTENT(IN) :: I,J,K
-! ijk index for adjacent fluid cell
+! i,j,k index for adjacent fluid cell
       INTEGER, INTENT(IN) :: FI,FJ,FK
 
       DOUBLE PRECISION, INTENT(INOUT) :: p_g&
@@ -330,7 +330,6 @@ module set_outflow_module
 !---------------------------------------------------------------------//
       use bc, only: bc_ep_g
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: funijk
       use discretelement, only: des_rop_s
       use constant, only: mmax, ro_s0
       use run, only: dem_solids
@@ -353,9 +352,9 @@ module set_outflow_module
 !---------------------------------------------------------------------//
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
-! ijk index for boundary cell
+! i,j,k index for boundary cell
       INTEGER, INTENT(IN) :: I,J,K
-! ijk index for adjacent fluid cell
+! i,j,k index for adjacent fluid cell
       INTEGER, INTENT(IN) :: FI,FJ,FK
 ! the gas or solids velocity in the fluid cell adjacent to the boundary
 ! cell dot with the outward normal of that bc plane; defines the gas or
@@ -370,7 +369,7 @@ module set_outflow_module
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: M, IJK
+      INTEGER :: M
 ! solids volume fraction
       DOUBLE PRECISION :: EPs
 ! sum of solids phases volume fractions
@@ -378,8 +377,6 @@ module set_outflow_module
 ! sum of solids phases bulk densities
       DOUBLE PRECISION :: SUM_ROPS
 !---------------------------------------------------------------------//
-
-      IJK = FUNIJK(I,J,K)
 
 ! initializing summation quantities
       SUM_ROPS = ZERO

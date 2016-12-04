@@ -14,7 +14,7 @@ MODULE leqsol
    use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
-   use functions, only: funijk, funijk_map_c, iplus, jplus, kplus, iminus, jminus, kminus
+   use functions, only: funijk, iplus, jplus, kplus, iminus, jminus, kminus
    use funits, only: dmp_log, unit_log
    use param, only: DIM_EQS
    use param, only: dimension_3
@@ -836,6 +836,7 @@ CONTAINS
 
   double precision function dot_product_par(r1,r2)
 
+   use compar, only: imap_c, jmap_c, kmap_c
     implicit none
 !-----------------------------------------------
 ! Dummy arguments
@@ -854,7 +855,7 @@ CONTAINS
           do k = kstart1, kend1
              do i = istart1, iend1
                 do j = jstart1, jend1
-                   ijk = funijk_map_c (i,j,k)
+                   ijk = FUNIJK(IMAP_C(i),JMAP_C(j),KMAP_C(k))
                    prod = prod + r1(ijk)*r2(ijk)
                 enddo
              enddo
@@ -873,6 +874,7 @@ CONTAINS
 
   function dot_product_par2(r1,r2,r3,r4)
 
+   use compar, only: imap_c, jmap_c, kmap_c
     implicit none
 !-----------------------------------------------
 ! Dummy arguments
@@ -891,7 +893,7 @@ CONTAINS
           do i = istart1, iend1
              do j = jstart1, jend1
 
-                ijk = funijk_map_c (i,j,k)
+                ijk = FUNIJK(IMAP_C(i),JMAP_C(j),KMAP_C(k))
                 prod(1) = prod(1) + r1(ijk)*r2(ijk)
                 prod(2) = prod(2) + r3(ijk)*r4(ijk)
              enddo

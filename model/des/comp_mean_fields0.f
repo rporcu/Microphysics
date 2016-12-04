@@ -18,7 +18,6 @@ module comp_mean_fields0_module
       USE discretelement, only: pic, des_vel_node, des_pos_new, des_vel_new, dimn, pinc, pijk, pmass, pvol
       USE calc_epg_des_module, only: calc_epg_des
       USE interpolation, only: set_interpolation_scheme
-      USE functions, only: FUNIJK, funijk_map_c
       USE functions, only: fluid_at
       USE geometry, only: vol_surr, vol
       USE interpolation, only: set_interpolation_stencil
@@ -101,84 +100,77 @@ module comp_mean_fields0_module
       CALL SET_INTERPOLATION_SCHEME(2)
 
       DO llK = kstart3, kend3
-      DO llJ = jstart3, jend3
-      DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
+         DO llJ = jstart3, jend3
+            DO llI = istart3, iend3
 
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
-         IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
-         IF( PINC(lli,llj,llk) == 0) CYCLE
+               IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
+               IF( PINC(lli,llj,llk) == 0) CYCLE
 
-         PCELL(1) = lli-1
-         PCELL(2) = llj-1
-         PCELL(3) = llk-1
+               PCELL(1) = lli-1
+               PCELL(2) = llj-1
+               PCELL(3) = llk-1
 
 ! setup the stencil based on the order of interpolation and factoring in
 ! whether the system has any periodic boundaries. sets onew to order.
-         CALL SET_INTERPOLATION_STENCIL(PCELL, IW, IE, JS, JN, KB, KTP,&
-            INTERP_SCHEME, DIMN, ORDERNEW=ONEW)
+               CALL SET_INTERPOLATION_STENCIL(PCELL, IW, IE, JS, JN, KB, KTP,&
+                  INTERP_SCHEME, DIMN, ORDERNEW=ONEW)
 
-         COUNT_NODES_OUTSIDE = 0
+               COUNT_NODES_OUTSIDE = 0
 ! Computing/setting the geometric stencil
-         DO K=1, ONEW
-         DO J=1, ONEW
-         DO I=1, ONEW
+               DO K=1, ONEW
+                  DO J=1, ONEW
+                     DO I=1, ONEW
 
-            II = IW + I-1
-            JJ = JS + J-1
-            KK = KB + K-1
-            CUR_IJK = funijk_map_c(II,JJ,KK)
+                        GST_TMP(I,J,K,1) = XE(IW + I-1)
+                        GST_TMP(I,J,K,2) = YN(JS + J-1)
+                        GST_TMP(I,J,K,3) = ZT(KB + K-1)
 
-            GST_TMP(I,J,K,1) = XE(II)
-            GST_TMP(I,J,K,2) = YN(JJ)
-            GST_TMP(I,J,K,3) = ZT(KK)
-
-         ENDDO
-         ENDDO
-         ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO
 
 
 ! Calculate des_rops_node so des_rop_s, and in turn, ep_g can be updated
 !----------------------------------------------------------------->>>
 
 ! looping through particles in the cell
-         DO NINDX=1, PINC(lli,llj,llk)
-            NP = PIC(lli,llj,llk)%P(NINDX)
+               DO NINDX=1, PINC(lli,llj,llk)
+                  NP = PIC(lli,llj,llk)%P(NINDX)
 
-            call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
+                  call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
 
-            M = PIJK(NP,5)
+                  M = PIJK(NP,5)
 
-            MASS_SOL1 = MASS_SOL1 + PMASS(NP)
+                  MASS_SOL1 = MASS_SOL1 + PMASS(NP)
 
-            TEMP2 = RO_S0(M)*PVOL(NP)
+                  TEMP2 = RO_S0(M)*PVOL(NP)
 
-            DO K = 1, ONEW
-            DO J = 1, ONEW
-            DO I = 1, ONEW
+                  DO K = 1, ONEW
+                     DO J = 1, ONEW
+                        DO I = 1, ONEW
 ! shift loop index to new variables for manipulation
-               II = IW + I-1
-               JJ = JS + J-1
-               KK = KB + K-1
+                           II = IW + I-1
+                           JJ = JS + J-1
+                           KK = KB + K-1
 
-               CUR_IJK = FUNIJK_MAP_C(II,JJ,KK)
+                           TEMP1 = WEIGHT_FT(I,J,K)*TEMP2
 
-               TEMP1 = WEIGHT_FT(I,J,K)*TEMP2
+                           DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) = &
+                              DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) + TEMP1
 
-               DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) = DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) +   &
-                  TEMP1
-
-               DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) = DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) + &
-                  TEMP1*DES_VEL_NEW(NP,:)
-            ENDDO
-            ENDDO
-            ENDDO
-         ENDDO   ! end do (nindx=1,pinc(ijk))
+                           DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) = &
+                              DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) + &
+                              TEMP1*DES_VEL_NEW(NP,:)
+                        ENDDO
+                     ENDDO
+                  ENDDO
+               ENDDO   ! end do (nindx=1,pinc(ijk))
 !-----------------------------------------------------------------<<<
 
-      ENDDO
-      ENDDO
+            ENDDO
+         ENDDO
       ENDDO
 
 
@@ -215,8 +207,7 @@ module comp_mean_fields0_module
       DO K = KSTART2, KEND1
       DO J = JSTART2, JEND1
       DO I = ISTART2, IEND1
-         IJK = funijk(I,J,K)
-         if (vol_surr(i,j,k).eq.ZERO) CYCLE ! no fluid_at any of the stencil points have
+         if (vol_surr(i,j,k).eq.ZERO) CYCLE
 
 ! looping over stencil points (NODE VALUES)
          DO M = 1, MMAX
@@ -228,14 +219,14 @@ module comp_mean_fields0_module
             DO JJ = J, J+1
             DO II = I, I+1
 
-               IJK2 = funijk_map_c(II, JJ, KK)
                IF(fluid_at(II,JJ,KK)) THEN
 ! Since the data in the ghost cells is spurious anyway and overwritten during
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
 ! between Lagrangian and continuum representations
                   DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) = &
-                            DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) + DES_ROP_DENSITY*VOL
+                     DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) + &
+                     DES_ROP_DENSITY*VOL
                ENDIF
             ENDDO  ! end do (ii=i1,i2)
             ENDDO  ! end do (jj=j1,j2)
@@ -251,7 +242,6 @@ module comp_mean_fields0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-      IJK = FUNIJK(lli,llj,llk)
          IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
 
          DO M = 1, MMAX
@@ -276,7 +266,6 @@ module comp_mean_fields0_module
       DO llK = kstart3, kend3
         DO llJ = jstart3, jend3
          DO llI = istart3, iend3
-            IJK = FUNIJK(lli,llj,llk)
 
 ! It is important to check fluid_at
             IF(.NOT.fluid_at(lli,llj,llk)) CYCLE

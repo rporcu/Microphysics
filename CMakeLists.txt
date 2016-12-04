@@ -172,7 +172,6 @@ set(SOURCES
   model/io/open_file.f
   model/io/open_files.f
   model/io/out_array.f
-  model/io/out_array_c.f
   model/io/out_array_k.f
   model/io/out_array_kc.f
   model/io/out_bin_512.f

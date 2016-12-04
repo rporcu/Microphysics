@@ -18,7 +18,7 @@
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fld_const, only: ro_g0, mu_g0
-      use functions, only: wall_at, fluid_at, funijk
+      use functions, only: wall_at, fluid_at
       use param1   , only: zero, half, one, undefined
 
       implicit none
@@ -33,8 +33,8 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      integer :: i,j,k,ijk
-!-----------------------------------------------
+      integer :: i,j,k
+!--------------------
 
 ! First, initialize certain transport coefficients, physical
 ! properties, and other variable types everywhere in the
@@ -49,8 +49,6 @@
       do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
-
-           ijk = funijk(i,j,k)
 
            IF (.NOT.WALL_AT(i,j,k)) THEN
 ! Fluid and inflow/outflow cells: FLAG < 100

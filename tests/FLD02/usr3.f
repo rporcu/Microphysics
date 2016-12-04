@@ -19,8 +19,6 @@
       use geometry, only: imin1, jmin1, kmin1
       use geometry, only: imax1, jmax1, kmax1
 
-      use functions, only: funijk
-
       use param1, only: zero, small_number, half
 
       IMPLICIT NONE
@@ -35,7 +33,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! looping indices
-      integer :: ijk, i, j, k
+      integer :: i, j, k
 ! temporary variable
       double precision  :: TMPdp
 ! Calculated height of cell center

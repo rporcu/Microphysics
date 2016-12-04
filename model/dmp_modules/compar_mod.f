@@ -34,8 +34,7 @@
 
 ! root represents the 'root' processor. For now it is defaulted to
 ! zero
-      integer :: root
-      data root /0/
+      integer :: root=0
 
 ! nlayers_bicgs - Number of layers for send_recv in bicgs
       integer :: nlayers_bicgs = 1
@@ -85,15 +84,6 @@
 
       integer :: istart, iend, jstart, jend, kstart, kend
 
-! Variables used for fourth order methods
-      integer, allocatable,dimension(:) ::  &
-                ijkstart4_all,ijkend4_all, ijksize4_all,&
-                istart4_all, jstart4_all, kstart4_all, &
-                iend4_all, jend4_all, kend4_all
-      integer :: &
-                istart4, jstart4, kstart4, &
-                iend4, jend4, kend4, &
-                ijkstart4,ijkend4,ijksize4
 
 ! declaration for storing filebasename, e.g. mfix00000.dat
       CHARACTER(len=5) :: fbname
@@ -101,50 +91,6 @@
 
 ! Funijk coefficients
       integer :: c0, c1, c2
-
-
-!       Integer Array of IJK values at each (I,J,K) cell
-
-        integer, allocatable, dimension(:,:,:) :: IJK_ARRAY_OF,FUNIJK_MAP_C
-
-!        integer, allocatable, dimension(:,:,:) :: funijk
-
-!       Flag to know if above neighbor arrays have been allocated
-
-        LOGICAL :: INCREMENT_ARRAYS_ALLOCATED
-
-!       Number of Ghost Cells
-
-        INTEGER :: NGC_EAST
-        INTEGER :: NGC_WEST
-        INTEGER :: NGC_NORTH
-        INTEGER :: NGC_SOUTH
-        INTEGER :: NGC_TOP
-        INTEGER :: NGC_BOTTOM
-
-!       List of Ghost Cells
-
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_EAST
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_WEST
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_NORTH
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_SOUTH
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_TOP
-        INTEGER, ALLOCATABLE, DIMENSION(:) ::  LGC_BOTTOM
-
-!       Domain size of each processor
-
-        INTEGER, ALLOCATABLE, DIMENSION(:) :: ISIZE_ALL,JSIZE_ALL,KSIZE_ALL
-
-        LOGICAL :: DOMAIN_SIZE_ADJUSTED = .FALSE.
-
-        INTEGER, ALLOCATABLE, DIMENSION(:) :: NCPP_UNIFORM
-
-        LOGICAL :: NCPP_UNIFORM_BACKED_UP = .FALSE.
-
-        integer, allocatable,dimension(:) ::  new_ijksize3_all
-
-!       Flag to exit gridmap_init after domain size is assigned
-        LOGICAL :: SHORT_GRIDMAP_INIT = .FALSE.
 
 
       END MODULE compar
