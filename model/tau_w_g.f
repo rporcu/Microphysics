@@ -41,7 +41,6 @@
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero, half
-      USE functions
       USE toleranc, only: dil_ep_s
       USE geometry, only: axy, axz, ayz, odz, dy, dz
 
@@ -157,6 +156,6 @@
 
     CONTAINS
 
-      INCLUDE 'fun_avg.inc'
+      INCLUDE 'functions.inc'
 
     END SUBROUTINE CALC_TAU_W_G

@@ -34,7 +34,7 @@ module source_w_g_module
       USE constant, only: gravity
       USE bc, only: delp_z
 
-      USE fun_avg, only: avg, avg_h
+      USE functions, only: avg, avg_h
       USE functions, only: ip_at_t
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop

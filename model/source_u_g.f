@@ -33,7 +33,7 @@ module source_u_g_module
       USE constant, only: gravity
       USE bc      , only: delp_x
 
-      USE fun_avg, only: avg
+      USE functions, only: avg
       USE functions, only: ip_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax

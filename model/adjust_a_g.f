@@ -13,7 +13,7 @@
 
       subroutine adjust_a_g(axis, A_M, B_M, ROP_G)
 
-         USE fun_avg, only: avg
+         USE functions, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number

@@ -78,7 +78,7 @@ module v_g_conv_dif
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE functions, only: jplus
-      USE fun_avg, only: avg
+      USE functions, only: avg
 
       IMPLICIT NONE
 
@@ -189,14 +189,13 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: wall_at
-      USE functions, only: iminus, jminus, kminus
-      USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
+      ! USE functions, only: wall_at
+      ! USE functions, only: iminus, jminus, kminus
+      ! USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
+      ! USE functions, only: im1, jp1, km1
 
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
-
-      USE functions, only: im1, jp1, km1
 
       use matrix, only: e, w, n, s, t, b
       USE param1, only: zero
@@ -254,7 +253,7 @@ module v_g_conv_dif
 
     CONTAINS
 
-      INCLUDE 'fun_avg.inc'
+      INCLUDE 'functions.inc'
 
     END SUBROUTINE GET_VCELL_GDIFF_TERMS
 

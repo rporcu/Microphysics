@@ -10,7 +10,7 @@
 
       use functions, only: fluid_at
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      use fun_avg, only: AVG
+      use functions, only: AVG
 
       USE param1, only: ZERO
 

@@ -157,7 +157,6 @@ set(SOURCES
   model/exit.f
   model/fld_constants_mod.f
   model/flow_to_vel.f
-  model/fun_avg_mod.f
   model/functions_mod.f
   model/geometry_mod.f
   model/get_bc_area.f

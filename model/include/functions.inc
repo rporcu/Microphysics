@@ -237,15 +237,6 @@
 ! Misc
 !---------------------------------------------------------------------//
 
-! Function that returns the maximum of zero or input
-      DOUBLE PRECISION FUNCTION ZMAX(XXX)
-      USE param1, only: zero
-      implicit none
-      DOUBLE PRECISION XXX
-      ZMAX       = MAX(XXX, ZERO)
-      END FUNCTION ZMAX
-
-      ! ************************************************
 
       integer function iminus(i,j,k)
       use compar, only: istart3
@@ -260,7 +251,8 @@
          iminus = max(istart3, i-1)
       end if
 
-      if (cyclic_x .and. (iminus < imin1) .and. .not.wall_at(i,j,k)) iminus = imax1
+      if (cyclic_x .and. (iminus < imin1) .and. &
+         flag(i,j,k,1)<100) iminus = imax1
 
       end function iminus
 
@@ -280,7 +272,8 @@
          iplus = min(iend3, i+1)
       end if
 
-      if (cyclic_x .and. (iplus > imax1) .and. .not.wall_at(i,j,k)) iplus = imin1
+      if (cyclic_x .and. (iplus > imax1) .and. &
+         flag(i,j,k,1)<100) iplus = imin1
 
       end function iplus
 
@@ -299,7 +292,8 @@
          jminus = max(jstart3, j-1)
       end if
 
-      if (cyclic_y .and. (jminus < jmin1) .and. .not.wall_at(i,j,k)) jminus = jmax1
+      if (cyclic_y .and. (jminus < jmin1) .and. &
+         flag(i,j,k,1)<100) jminus = jmax1
 
       end function jminus
 
@@ -318,7 +312,8 @@
          jplus = min(jend3, j+1)
       end if
 
-      if (cyclic_y .and. (jplus > jmax1) .and. .not.wall_at(i,j,k)) jplus = jmin1
+      if (cyclic_y .and. (jplus > jmax1) .and. &
+         flag(i,j,k,1)<100) jplus = jmin1
 
       end function jplus
 
@@ -338,7 +333,8 @@
          kminus = max(kstart3, k-1)
       end if
 
-      if (cyclic_z .and. (kminus < kmin1) .and. .not.wall_at(i,j,k)) kminus = kmax1
+      if (cyclic_z .and. (kminus < kmin1) .and. &
+         flag(i,j,k,1)<100) kminus = kmax1
 
       end function kminus
 
@@ -358,7 +354,8 @@
          kplus = min(kend3, k+1)
       end if
 
-      if (cyclic_z .and. (kplus > kmax1) .and. .not.wall_at(i,j,k)) kplus = kmin1
+      if (cyclic_z .and. (kplus > kmax1) .and. &
+         flag(i,j,k,1)<100) kplus = kmin1
 
       end function kplus
 
@@ -571,3 +568,29 @@
       endif
 
       end function kp1
+
+! Misc
+!---------------------------------------------------------------------//
+
+! Function that returns the maximum of zero or input
+      DOUBLE PRECISION FUNCTION ZMAX(XXX)
+      USE param1, only: zero
+      implicit none
+      DOUBLE PRECISION XXX
+      ZMAX       = MAX(XXX, ZERO)
+      END FUNCTION ZMAX
+
+! Arithmetic average
+      DOUBLE PRECISION FUNCTION AVG(XXXm, XXXp)
+      IMPLICIT NONE
+      DOUBLE PRECISION, INTENT(IN) ::XXXp, XXXm
+      AVG = 0.5d0 *(XXXm + XXXp)
+      END FUNCTION AVG
+
+! Harmonic average
+      DOUBLE PRECISION FUNCTION AVG_H(XXXm, XXXp)
+      USE param1, only: SMALL_NUMBER
+      IMPLICIT NONE
+      DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
+      AVG_H = XXXm * XXXp / MAX(SMALL_NUMBER, 0.5d0*(XXXm + XXXp) )
+      END FUNCTION AVG_H

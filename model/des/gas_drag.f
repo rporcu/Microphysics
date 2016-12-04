@@ -28,7 +28,7 @@
 ! IJK of cell to east.
       use functions, only: ieast
 ! Function for averaging to a scalar cell's east face.
-      use fun_avg, only: AVG
+      use functions, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2
@@ -154,7 +154,7 @@
 ! IJK of cell to north.
       use functions, only: jnorth
 ! Function for averaging to a scalar cell's north face.
-      use fun_avg, only: AVG
+      use functions, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2
@@ -273,7 +273,7 @@
 ! IJK of cell to top.
       use functions, only: ktop
 ! Function for averaging to a scalar cell's north face.
-      use fun_avg, only: AVG
+      use functions, only: AVG
 ! Domain index bounds.
       use compar, only: ISTART2, JSTART2, KSTART2
       use compar, only: IEND2, JEND2, KEND2

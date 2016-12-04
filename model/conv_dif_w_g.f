@@ -73,7 +73,7 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE fun_avg, only: avg
+      USE functions, only: avg
       USE functions, only: kplus
 
       IMPLICIT NONE
@@ -192,14 +192,13 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: wall_at
-      USE functions, only: ieast, iwest, jnorth, jsouth, ktop
-      USE functions, only: iminus, jminus, kminus
+      ! USE functions, only: wall_at
+      ! USE functions, only: ieast, iwest, jnorth, jsouth, ktop
+      ! USE functions, only: iminus, jminus, kminus
+      ! USE functions, only: im1, jm1, kp1
 
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
-
-      USE functions, only: im1, jm1, kp1
 
       use matrix, only: e, w, n, s, t, b
 
@@ -272,7 +271,7 @@ module w_g_conv_dif
 
     CONTAINS
 
-      INCLUDE 'fun_avg.inc'
+      INCLUDE 'functions.inc'
 
     END SUBROUTINE GET_WCELL_GDIFF_TERMS
 

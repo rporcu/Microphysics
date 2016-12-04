@@ -3,7 +3,7 @@ module drag_gs_des1_module
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Functions to average momentum to scalar cell center.
-      use fun_avg, only: AVG
+      use functions, only: AVG
 ! Fluid grid loop bounds.
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3

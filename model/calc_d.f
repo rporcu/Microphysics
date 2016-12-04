@@ -28,7 +28,7 @@ MODULE CALC_D_MOD
       use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
-      use fun_avg, only: AVG
+      use functions, only: AVG
       use geometry, only: AYZ, AXZ, AXY, VOL
       use param1, only: ZERO, SMALL_NUMBER
       use functions, only: ip_at_e, ip_at_n, ip_at_t

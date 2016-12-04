@@ -33,7 +33,7 @@ module source_v_g_module
       USE constant, only: gravity
       USE bc, only: delp_y
 
-      USE fun_avg, only: avg
+      USE functions, only: avg
       USE functions, only: ip_at_n
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
