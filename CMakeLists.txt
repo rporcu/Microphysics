@@ -48,7 +48,6 @@ set(SOURCES
   model/calc_mflux.f
   model/calc_mu_g.f
   model/calc_outflow.f
-  model/calc_resid.f
   model/calc_trd_g.f
   model/check_bqend.f
   model/check_convergence.f

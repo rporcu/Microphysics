@@ -183,7 +183,7 @@
       USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: wall_at, cyclic_at, fluid_at
+      USE functions, only: cyclic_at, fluid_at
 
       implicit none
 !-----------------------------------------------
@@ -198,7 +198,7 @@
            do i = istart3, iend3
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
-         IF (wall_at(i,j,k)) THEN
+         IF (flag(i,j,k,1)>=100) THEN
 ! ---------------------------------------------------------------->>>
 ! the default is equivalent to an impermeable surface and these cells
 ! will be treated as such in the momentum routines
@@ -214,7 +214,7 @@
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(iminus(i,j,k),j,k)) &
+                        IF(flag(iminus(i,j,k),j,k,1) <100) &
                            FLAG(iminus(i,j,k),j,k,2) = 2000
                      ENDIF
                   ENDIF
@@ -222,7 +222,7 @@
                IF (J == JMAX2) THEN
                   IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3)) THEN
                      IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(.NOT.WALL_AT(i,jminus(i,j,k),k)) &
+                        IF(flag(i,jminus(i,j,k),k,1)<100) &
                            FLAG(i,jminus(i,j,k),k,3) = 2000
                      ENDIF
                   ENDIF
@@ -230,7 +230,7 @@
                IF (K == KMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3) .AND. &
-                        .NOT.WALL_AT(i,j,kminus(i,j,k))) &
+                        flag(i,j,kminus(i,j,k),1)<100) &
                         FLAG(i,j,kminus(i,j,k),4) = 2000
                   ENDIF
                ENDIF
@@ -241,27 +241,27 @@
          ELSEIF (fluid_at(i,j,k)) THEN
 ! ---------------------------------------------------------------->>>
 
-            IF ( .NOT.WALL_AT(iminus(i,j,k),j,k) .AND. &
+            IF ( flag(iminus(i,j,k),j,k,1) < 100 .AND. &
                FLAG(iminus(i,j,k),j,k,2)==UNDEFINED_I) &
                FLAG(iminus(i,j,k),j,k,2) = 2000 + FLAG(iminus(i,j,k),j,k,1)
 
-            IF ( .NOT.WALL_AT(iplus(i,j,k),j,k) .AND. &
+            IF ( flag(iplus(i,j,k),j,k,1) < 100 .AND. &
                FLAG(i,j,k,2)==UNDEFINED_I) &
                FLAG(i,j,k,2) = 2000 + FLAG(iplus(i,j,k),j,k,1)
 
-            IF ( .NOT.WALL_AT(i,jminus(i,j,k),k) .AND. &
+            IF ( flag(i,jminus(i,j,k),k,1) < 100 .AND. &
                FLAG(i,jminus(i,j,k),k,3)==UNDEFINED_I) &
                FLAG(i,jminus(i,j,k),k,3) = 2000 + FLAG(i,jminus(i,j,k),k,1)
 
-            IF ( .NOT.WALL_AT(i,jplus(i,j,k),k) .AND. &
+            IF ( flag(i,jplus(i,j,k),k,1) < 100 .AND. &
                FLAG(i,j,k,3)==UNDEFINED_I) &
                FLAG(i,j,k,3) = 2000 + FLAG(i,jplus(i,j,k),k,1)
 
-            IF ( .NOT.WALL_AT(i,j,kminus(i,j,k)) .AND. &
+            IF ( flag(i,j,kminus(i,j,k),1) < 100 .AND. &
                FLAG(i,j,kminus(i,j,k),4)==UNDEFINED_I) &
                FLAG(i,j,kminus(i,j,k),4) = 2000 + FLAG(i,j,kminus(i,j,k),1)
 
-            IF ( .NOT.WALL_AT(i,j,kplus(i,j,k)) .AND. &
+            IF ( flag(i,j,kplus(i,j,k),1) < 100 .AND. &
                FLAG(i,j,k,4)==UNDEFINED_I) &
                FLAG(i,j,k,4) = 2000 + FLAG(i,j,kplus(i,j,k),1)
 

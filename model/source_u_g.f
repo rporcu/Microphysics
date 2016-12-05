@@ -211,7 +211,7 @@ module source_u_g_module
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
-      USE functions, only: wall_at, fluid_at
+      USE functions, only: fluid_at
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: jmax2, kmax2
       USE geometry  , only: ody, odz
@@ -384,7 +384,7 @@ module source_u_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -416,7 +416,7 @@ module source_u_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -448,7 +448,7 @@ module source_u_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO

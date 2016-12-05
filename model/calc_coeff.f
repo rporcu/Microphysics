@@ -157,7 +157,7 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
-         ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+         ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
@@ -185,9 +185,11 @@ module calc_coeff_module
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      CALL CALC_TRD_G(trd_g,u_g,v_g,w_g)
+      CALL CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
       CALL CALC_TAU_U_G (TAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)

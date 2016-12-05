@@ -214,7 +214,7 @@ module time_march_module
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
-                            ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+         ep_g,u_g,v_g,w_g,lambda_g,mu_g, flag)
 
 ! Check rates and sums of mass fractions every NLOG time steps
       IF (NSTEP == NCHECK) THEN

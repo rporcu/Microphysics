@@ -5,17 +5,19 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR_PHYSICAL_PROP_ROg
+      SUBROUTINE USR_PHYSICAL_PROP_ROg(flag)
 
 ! Fluid grid loop bounds.
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 ! Function to identify wall cells
-      use functions, only: wall_at
       use functions, only: funijk
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       implicit none
+
+      integer, intent(in   ) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -44,7 +46,7 @@
           DO I = istart3, iend3
          IJK = FUNIJK(i,j,k)
 
-         if (wall_at(i,j,k)) cycle
+         if (flag(i,j,k,1) >= 100) cycle
 
 ! Calculate the fluid density and bulk density
 !         RO_G(IJK) =

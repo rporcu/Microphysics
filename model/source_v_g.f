@@ -43,7 +43,7 @@ module source_v_g_module
       USE functions, only: ip_at_n
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
-      USE functions, only: zmax, wall_at
+      USE functions, only: zmax
       USE geometry, only: jmax1, cyclic_y_pd
       USE geometry, only: vol, axz
 
@@ -212,7 +212,7 @@ module source_v_g_module
 
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: jminus, jplus, jm1
-      USE functions, only: wall_at, fluid_at
+      USE functions, only: fluid_at
       USE geometry  , only: imax2, kmax2
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: odx, odz
@@ -384,7 +384,7 @@ module source_v_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -416,7 +416,7 @@ module source_v_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -448,7 +448,7 @@ module source_v_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO

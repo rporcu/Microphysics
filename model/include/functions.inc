@@ -40,24 +40,6 @@
          fluid_at = (flag(i,j,k,1).eq.1)
       end function fluid_at
 
-! logical function to identify any type of flow in/out at cell
-! pressure inflow/outflow, mass inflow/outflow or outflow
-      logical function flow_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer i,j,k
-      FLOW_AT = flag(i,j,k,1) .GE. 10 .AND. &
-         flag(i,j,k,1) .LE. 31
-      END FUNCTION FLOW_AT
-
-! Logical function to identify default walls
-      logical function wall_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      WALL_AT = flag(i,j,k,1) .GE. 100
-      END FUNCTION WALL_AT
-
 !---------------------------------------------------------------------//
       LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
       use geometry, only: flag
@@ -317,11 +299,12 @@
       ! ************************************************
 
       integer function ieast(i,j,k)
+      use geometry, only: flag
 
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (wall_at(iplus(i,j,k),j,k)) then
+      if (flag(iplus(i,j,k),j,k,1)>=100) then
          ieast = i
       else
          ieast = iplus(i,j,k)
@@ -333,10 +316,11 @@
 
       integer function iwest(i,j,k)
 
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (wall_at(iminus(i,j,k),j,k)) then
+      if (flag(iminus(i,j,k),j,k,1) >= 100) then
          iwest = i
       else
          iwest = iminus(i,j,k)
@@ -348,10 +332,11 @@
 
       integer function jnorth(i,j,k)
 
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (wall_at(i,jplus(i,j,k),k)) then
+      if (flag(i,jplus(i,j,k),k,1) >= 100) then
          jnorth = j
       else
          jnorth = jplus(i,j,k)
@@ -363,10 +348,11 @@
 
       integer function jsouth(i,j,k)
 
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (wall_at(i,jminus(i,j,k),k)) then
+      if (flag(i,jminus(i,j,k),k,1) >= 100) then
          jsouth = j
       else
          jsouth = jminus(i,j,k)
@@ -378,13 +364,14 @@
 
       integer function ktop(i,j,k)
 
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: kp
 
       kp = kplus(i,j,k)
 
-      if (wall_at(i,j,kp)) then
+      if (flag(i,j,kp,1)>=100) then
          ktop = k
       else
          ktop = kp
@@ -396,13 +383,14 @@
 
       integer function kbot(i,j,k)
 
+      use geometry, only: flag
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: km
 
       km = kminus(i,j,k)
 
-      if (wall_at(i,j,km)) then
+      if (flag(i,j,km,1)>=100) then
          kbot = k
       else
          kbot = km

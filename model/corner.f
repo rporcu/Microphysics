@@ -8,16 +8,19 @@
 !           is allowed to such cells to avoid ambiguity.               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_CORNER_CELLS()
+      SUBROUTINE GET_CORNER_CELLS(flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: fluid_at, cyclic_at, wall_at
+      USE functions, only: fluid_at, cyclic_at
       USE param1   , only: max_ncorn
       USE funits   , only: dmp_log, unit_log
       use matrix   , only: e, w, s, n, t, b
 
       IMPLICIT NONE
+
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 !                      Loop index
       INTEGER          L
@@ -46,7 +49,7 @@
          do j = jstart3, jend3
             do i = istart3, iend3
 
-               IF (WALL_AT(i,j,k).AND..NOT.CYCLIC_AT(i,j,k)) THEN
+               IF (flag(i,j,k,1)>=100.AND..NOT.CYCLIC_AT(i,j,k)) THEN
 !----------------------------------------------------------------
                   NUM = 0
 

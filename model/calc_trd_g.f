@@ -18,10 +18,10 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g)
+      SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
 
       USE geometry, only: ODX, ODY, ODZ
-      USE functions, only: iminus, jminus, kminus, WALL_AT
+      USE functions, only: iminus, jminus, kminus
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: istart, iend, jstart, jend, kstart, kend
 
@@ -38,6 +38,8 @@
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -53,7 +55,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-            IF (.NOT.WALL_AT(i,j,k)) THEN
+            IF (flag(i,j,k,1)<100) THEN
 
               TRD_G(i,j,k) = &
                  (U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX + &

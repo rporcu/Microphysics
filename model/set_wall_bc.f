@@ -158,7 +158,6 @@
       USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      USE functions, only: wall_at
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -213,78 +212,78 @@
                   SIGN0 = ONE
                ENDIF
 
-               IF (wall_at(i,j,k)) THEN
+               IF (flag(i,j,k,1) >= 100) THEN
 
 ! Fluid cell at West
-                  IF (.NOT.wall_at(iminus(i,j,k),j,k)) THEN
+                  IF (flag(iminus(i,j,k),j,k,1) < 100) THEN
 ! Wall cell at North
-                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                     IF (flag(i,jplus(i,j,k),k,1) >= 100) THEN
                         V_G(I,J,K) = SIGN0*V_G(iminus(i,j,k),j,k)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_at(i,j,kplus(i,j,k))) THEN
+                     IF (flag(i,j,kplus(i,j,k),1)>=100) THEN
                         W_G(I,J,K) = SIGN0*W_G(iminus(i,j,k),j,k)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at East
-                  IF (.NOT.wall_at(iplus(i,j,k),j,k)) THEN
+                  IF (flag(iplus(i,j,k),j,k,1)<100) THEN
 ! Wall cell at North
-                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                     IF (flag(i,jplus(i,j,k),k,1)>=100) THEN
                         V_G(I,J,K) = SIGN0*V_G(iplus(i,j,k),j,k)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_at(i,j,kplus(i,j,k))) THEN
+                     IF (flag(i,j,kplus(i,j,k),1)>=100) THEN
                         W_G(I,J,K) = SIGN0*W_G(iplus(i,j,k),j,k)
                      ENDIF
                   ENDIF
 
 
 ! Fluid cell at South
-                  IF (.NOT.wall_at(i,jminus(i,j,k),k)) THEN
+                  IF (flag(i,jminus(i,j,k),k,1)<100) THEN
 ! Wall cell at East
-                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                     IF (flag(iplus(i,j,k),j,k,1)>=100) THEN
                         U_G(I,J,K) = SIGN0*U_G(i,jminus(i,j,k),k)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_at(i,j,kplus(i,j,k))) THEN
+                     IF (flag(i,j,kplus(i,j,k),1)>=100) THEN
                         W_G(I,J,K) = SIGN0*W_G(i,jminus(i,j,k),k)
                      ENDIF
                   ENDIF
 
 ! Fluid cell at North
-                  IF (.NOT.wall_at(i,jplus(i,j,k),k)) THEN
+                  IF (flag(i,jplus(i,j,k),k,1)<100) THEN
 ! Wall cell at East
-                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                     IF (flag(iplus(i,j,k),j,k,1)>=100) THEN
                         U_G(I,J,K) = SIGN0*U_G(i,jplus(i,j,k),k)
                      ENDIF
 ! Wall cell at Top
-                     IF (wall_at(i,j,kplus(i,j,k))) THEN
+                     IF (flag(i,j,kplus(i,j,k),1)>=100) THEN
                         W_G(I,J,K) = SIGN0*W_G(i,jplus(i,j,k),k)
                      ENDIF
                   ENDIF
 
 
 ! Fluid cell at Bottom
-                  IF (.NOT.wall_at(i,j,kminus(i,j,k))) THEN
+                  IF (flag(i,j,kminus(i,j,k),1)<100) THEN
 ! Wall cell at East
-                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                     IF (flag(iplus(i,j,k),j,k,1)>=100) THEN
                         U_G(I,J,K) = SIGN0*U_G(i,j,kminus(i,j,k))
                      ENDIF
 ! Wall cell at North
-                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                     IF (flag(i,jplus(i,j,k),k,1)>=100) THEN
                         V_G(I,J,K) = SIGN0*V_G(i,j,kminus(i,j,k))
                      ENDIF
                   ENDIF
 
 ! Fluid cell at Top
-                  IF (.NOT.wall_at(i,j,kplus(i,j,k))) THEN
+                  IF (flag(i,j,kplus(i,j,k),1)<100) THEN
 ! Wall cell at East
-                     IF (wall_at(iplus(i,j,k),j,k)) THEN
+                     IF (flag(iplus(i,j,k),j,k,1)>=100) THEN
                         U_G(I,J,K) = SIGN0*U_G(i,j,kplus(i,j,k))
                      ENDIF
 ! Wall cell at North
-                     IF (wall_at(i,jplus(i,j,k),k)) THEN
+                     IF (flag(i,jplus(i,j,k),k,1)>=100) THEN
                         V_G(I,J,K) = SIGN0*V_G(i,j,kplus(i,j,k))
                      ENDIF
                   ENDIF

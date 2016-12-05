@@ -7,7 +7,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      SUBROUTINE SET_IC(ep_g, p_g, u_g, v_g, w_g)
+      SUBROUTINE SET_IC(ep_g, p_g, u_g, v_g, w_g, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -19,11 +19,18 @@
       USE param1, only: undefined
       IMPLICIT NONE
 
-      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  p_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  u_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  v_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  w_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer, intent(in) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 !-----------------------------------------------
 ! Local variables
@@ -58,7 +65,7 @@
             DO J = IC_J_S(L), IC_J_N(L)
             DO I = IC_I_W(L), IC_I_E(L)
 
-               IF (.NOT.WALL_AT(i,j,k)) THEN
+               IF (flag(i,j,k,1)<100) THEN
                   IF (EPGX /= UNDEFINED) EP_G(I,J,K) = EPGX
 
                   IF (IC_TYPE(L) == 'PATCH') THEN

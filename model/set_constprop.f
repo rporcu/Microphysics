@@ -11,14 +11,14 @@
 !       overly strict check)                                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_CONSTPROP(ro_g,lambda_g,mu_g)
+      SUBROUTINE SET_CONSTPROP(ro_g,lambda_g,mu_g,flag)
 
 ! Modules
 !-----------------------------------------------
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fld_const, only: ro_g0, mu_g0
-      use functions, only: wall_at, fluid_at
+      use functions, only: fluid_at
       use param1   , only: zero, half, one, undefined
 
       implicit none
@@ -29,6 +29,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      integer, intent(in   ) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -50,7 +52,7 @@
          do j = jstart3, jend3
            do i = istart3, iend3
 
-           IF (.NOT.WALL_AT(i,j,k)) THEN
+           IF (flag(i,j,k,1)<100) THEN
 ! Fluid and inflow/outflow cells: FLAG < 100
             IF (RO_G0 /= UNDEFINED) RO_G(I,J,K) = RO_G0
            ENDIF

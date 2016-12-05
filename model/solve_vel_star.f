@@ -25,14 +25,14 @@ module solve_vel_star_module
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE ur_facs , only: under_relax
       USE ps      , only: point_source
-      USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid,&
-                          resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
 
       USE source_u_g_module, only: source_u_g, point_source_u_g
       USE source_v_g_module, only: source_v_g, point_source_v_g
       USE source_w_g_module, only: source_w_g, point_source_w_g
-
+      use residual, only: CALC_RESID_VEL
+      USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid,&
+                          resid_u, resid_v, resid_w, num_resid
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -118,7 +118,7 @@ module solve_vel_star_module
       CALL INIT_AB_M (A_M, B_M)
 
 ! calculate the convection-diffusion terms
-      CALL CONV_DIF_U_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_U_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
 
       ! Calculate the source terms for the gas and solids phase u-momentum eqs
       CALL SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
@@ -142,9 +142,9 @@ module solve_vel_star_module
 
       IF (MOMENTUM_X_EQ(0)) THEN
          CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, 0, &
-                              NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
-                              RESID(RESID_U), MAX_RESID(RESID_U), &
-                              i_resid(RESID_U),j_resid(RESID_U),k_resid(RESID_U))
+            NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
+            RESID(RESID_U), MAX_RESID(RESID_U), &
+            i_resid(RESID_U),j_resid(RESID_U),k_resid(RESID_U), flag)
          CALL UNDER_RELAX (U_G, A_M, B_M, 'U', 3)
       ENDIF
 
@@ -164,7 +164,7 @@ module solve_vel_star_module
 ! ---------------------------------------------------------------->>>
       CALL INIT_AB_M (A_M, B_M)
 
-      CALL CONV_DIF_V_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_V_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
 
       CALL SOURCE_V_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                       v_g, v_go, tau_v_g, flag)
@@ -184,9 +184,9 @@ module solve_vel_star_module
          ! Note we pass V first since that is the primary velocity component
          !   The order of the other two components doesn't matter
          CALL CALC_RESID_VEL (V_G, W_G, U_G, A_M, B_M, 0, &
-                              NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
-                              RESID(RESID_V), MAX_RESID(RESID_V), &
-                              i_resid(RESID_V),j_resid(RESID_V),k_resid(RESID_V))
+            NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
+            RESID(RESID_V), MAX_RESID(RESID_V), &
+            i_resid(RESID_V),j_resid(RESID_V),k_resid(RESID_V), flag)
          CALL UNDER_RELAX (V_G, A_M, B_M, 'V', 4)
       ENDIF
 
@@ -205,7 +205,7 @@ module solve_vel_star_module
 ! ---------------------------------------------------------------->>>
       CALL INIT_AB_M (A_M, B_M)
 
-      CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
 
       CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                          w_g, w_go, tau_w_g, flag)
@@ -226,7 +226,7 @@ module solve_vel_star_module
          CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, 0, &
             NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
             RESID(RESID_W), MAX_RESID(RESID_W), &
-            i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W))
+            i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W),flag)
          CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
       ENDIF
 

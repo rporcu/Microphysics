@@ -26,7 +26,7 @@
 !  Local variables: None                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0)
+      SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
 
       use funits, only: unit_log
       use param1, only: undefined, zero
@@ -37,11 +37,17 @@
 
       implicit none
 
-      double precision, intent(inout) ::  ro_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::   p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  ro_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::   p_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  ep_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(in   ) :: ro_g0
+      integer, intent(in   ) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 ! Dummy arguments
 !-----------------------------------------------------------------------
@@ -65,7 +71,7 @@
 ! Calculate density only. This is invoked several times within iterate,
 ! making it the most frequently called.
       if(LEVEL == 0) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g)
+         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
 
 ! Calculate everything except density. This is called at the start of
 ! each iteration.
@@ -75,7 +81,7 @@
 ! the initialization (before starting the time march) and at the start
 ! of each step step thereafter.
       elseif(LEVEL == 2) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g)
+         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
       endif
 
 
@@ -116,7 +122,7 @@
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PHYSICAL_PROP_ROg (ro_g, p_g, ep_g, rop_g)
+      SUBROUTINE PHYSICAL_PROP_ROg (ro_g, p_g, ep_g, rop_g, flag)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -130,7 +136,6 @@
 ! Equation of State - GAS
       use eos, only: EOSG
 
-      use functions, only: wall_at
 
       implicit none
 
@@ -139,10 +144,16 @@
       ! Gas phase volume fraction       :  ep_g
       ! Gas phase material density      : rop_g
 
-      double precision, intent(inout) ::  ro_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::   p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::  ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) ::  ro_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::   p_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(in   ) ::  ep_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer, intent(in   ) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 ! Local Variables:
 !-----------------------------------------------------------------------
@@ -158,7 +169,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-            IF(.NOT.WALL_AT(i,j,k)) THEN
+            IF(flag(i,j,k,1)<100) THEN
 
               RO_G(i,j,k) = EOSG(MW_AVG,P_G(I,J,K),293.15d0)
               ROP_G(i,j,k) = RO_G(i,j,k)*EP_G(I,J,K)

@@ -32,10 +32,10 @@
 
 
 ! Check physical properties in inflow/outflow cells.
-      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g,flag)
+      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g, flag)
 
 ! Verify physical values for field variables.
-      CALL CHECK_PHYSICAL_BOUNDS(mu_g)
+      CALL CHECK_PHYSICAL_BOUNDS(mu_g, flag)
 
       RETURN
 
@@ -54,7 +54,6 @@
 ! Global variables:
 !---------------------------------------------------------------------//
 
-      use functions, only: flow_at
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE open_files_mod, only: open_pe_log, close_pe_log
 
@@ -124,12 +123,11 @@
 !  specified variables.                                                !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_PHYSICAL_BOUNDS(mu_g)
+      SUBROUTINE CHECK_PHYSICAL_BOUNDS(mu_g, flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: WALL_AT
       use open_files_mod, only: open_pe_log, close_pe_log
       use toleranc, only: TMIN, TMAX, TOL_COM
 
@@ -137,6 +135,8 @@
 
       DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) ::     flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -152,13 +152,13 @@
       DO K = KSTART2, KEND2
       DO J = JSTART2, JEND2
       DO I = ISTART2, IEND2
-         IF (.NOT.WALL_AT(i,j,k)) THEN
+         IF (flag(i,j,k,1)<100) THEN
 
 ! Gas viscosity must be non-negative.
             IF(MU_G(I,J,K) < ZERO) CALL REPORT_ERROR                     &
                (IER, I, J, K, MU_G(I,J,K), '<', ZERO, 'MU_G')
 
-         ENDIF ! IF(.NOT.WALL_AT(i,j,k))
+         ENDIF ! IF(flag(i,j,k,1)<100)
       ENDDO ! DO I = ISTART2, IEND2
       ENDDO ! DO J = JSTART2, JEND2
       ENDDO ! DO K = KSTART2, KEND2

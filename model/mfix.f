@@ -230,32 +230,32 @@
       CALL SET_GEOMETRY1
 
 ! Find corner cells and set their face areas to zero
-      CALL GET_CORNER_CELLS()
+      CALL GET_CORNER_CELLS(flag)
 
 ! Set constant physical properties
       CALL SET_CONSTPROP(ro_g,lambda_g,mu_g)
 
 ! Set initial conditions
-      CALL SET_IC(ep_g, p_g, u_g, v_g, w_g)
+      CALL SET_IC(ep_g, p_g, u_g, v_g, w_g, flag)
 
 ! Set point sources.
       CALL SET_PS
 
 ! Set boundary conditions
-      CALL ZERO_NORM_VEL(u_g,v_g,w_g)
+      CALL ZERO_NORM_VEL(u_g,v_g,w_g, flag)
       CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0)
 
 ! Set the pressure field for a fluidized bed
       IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P(p_g, ep_g)
 
 ! Initialize densities.
-      IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g)
+      IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g,flag)
 
 ! Initialize time dependent boundary conditions
       CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
 ! Check the field variable data and report errors.
-      CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
+      CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
 

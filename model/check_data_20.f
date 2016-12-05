@@ -22,16 +22,15 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g)
+      SUBROUTINE CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g, flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE geometry , only: flag
       USE param1   , only: one, undefined, small_number
       USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: wall_at, iminus, jminus, kminus
+      USE functions, only: iminus, jminus, kminus
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
@@ -51,6 +50,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -78,7 +79,7 @@
       DO K = kstart2, kend2
       DO J = jstart2, jend2
       DO I = istart2, iend2
-         IF (.NOT.wall_at(i,j,k)) THEN
+         IF (flag(i,j,k,1)<100) THEN
 
 ! check gas phase fields
             IF(EP_G(I,J,K) == UNDEFINED) &
@@ -115,7 +116,7 @@
             IF(W_G(i,j,kminus(i,j,k)) == UNDEFINED) &
                CALL REPORT_ERROR(ABORT, I, J, K-1, 'W_G')
 
-         ENDIF  ! IF (.NOT.WALL_AT(i,j,k)) THEN
+         ENDIF  ! IF (flag(i,j,k,1)<100) THEN
       ENDDO  ! end do I = istart2, iend2
       ENDDO  ! end do J = jstart2, jend2
       ENDDO  ! end do K = kstart2, kend2

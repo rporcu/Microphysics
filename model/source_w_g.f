@@ -43,7 +43,7 @@ module source_w_g_module
       USE functions, only: ip_at_t
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
-      USE functions, only: zmax, wall_at
+      USE functions, only: zmax
       USE geometry, only: kmax1, cyclic_z_pd
       USE geometry, only: vol, axy
 
@@ -217,7 +217,7 @@ module source_w_g_module
       USE geometry , only: odx, ody
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
-      USE functions, only: fluid_at, wall_at
+      USE functions, only: fluid_at
       USE functions, only: im1, jm1
 
       use compar, only: istart3, iend3
@@ -400,7 +400,7 @@ module source_w_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  !skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  !skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -432,7 +432,7 @@ module source_w_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  !skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  !skip redefined cells
                         A_M(I,J,K,E) = ZERO
                         A_M(I,J,K,W) = ZERO
                         A_M(I,J,K,N) = ZERO
@@ -464,7 +464,7 @@ module source_w_g_module
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (.NOT.wall_at(i,j,k)) CYCLE  ! skip redefined cells
+                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
                         IM = IM1(I)
                         JM = JM1(J)
                         A_M(I,J,K,E) = ZERO

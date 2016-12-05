@@ -16,7 +16,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_V_G(A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE CONV_DIF_V_G(A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -50,15 +50,17 @@ module v_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_Y_EQ(0)) RETURN
 
 ! DO NOT USE DEFERRED CORRECTION TO SOLVE V_G
       IF (DISCRETIZE(4) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_V_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt)
+         CALL STORE_A_V_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt,flag)
       ELSE
-         CALL STORE_A_V_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+         CALL STORE_A_V_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
       ENDIF
 
       RETURN
@@ -183,7 +185,7 @@ module v_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K)
+         D_FT, D_FB, MU_G, I, J, K,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -210,6 +212,8 @@ module v_g_conv_dif
 
       DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -218,7 +222,7 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       jn = jnorth(i,j,k)
 
-      IF (wall_at(i,j,k)) THEN
+      IF (flag(i,j,k,1)>=100) THEN
          jc = jn
       ELSE
          jc = j
@@ -274,7 +278,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G0(A_V_G,mu_g,flux_ge,flux_gn,flux_gt)
+      SUBROUTINE STORE_A_V_G0(A_V_G,mu_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -301,6 +305,8 @@ module v_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEgER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -326,7 +332,7 @@ module v_g_conv_dif
                flux_s, flux_t, flux_b, &
                flux_ge, flux_gn, flux_gt, i, j, k)
             CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, mu_g, i, j, k)
+               d_ft, d_fb, mu_g, i, j, k, flag)
 
 ! East face (i+1/2, j+1/2, k)
             IF (Flux_e >= ZERO) THEN
@@ -407,7 +413,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G1(A_V_G, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE STORE_A_V_G1(A_V_G, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -445,6 +451,8 @@ module v_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -491,7 +499,7 @@ module v_g_conv_dif
                    flux_ge, flux_gn, flux_gt, i, j, k)
                 CALL GET_VCELL_GDIFF_TERMS(&
                    d_fe, d_fw, d_fn, d_fs, &
-                   d_ft, d_fb, mu_g, i, j, k)
+                   d_ft, d_fb, mu_g, i, j, k,flag)
 
 ! East face (i+1/2, j+1/2, k)
                 A_V_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e

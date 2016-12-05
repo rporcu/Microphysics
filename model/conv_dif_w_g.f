@@ -16,7 +16,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+      SUBROUTINE CONV_DIF_W_G(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -49,14 +49,16 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt)
+         CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt, flag)
       ELSE
-         CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+         CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,flag)
       ENDIF
 
       END SUBROUTINE CONV_DIF_W_G
@@ -186,7 +188,7 @@ module w_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K)
+         D_FT, D_FB, MU_G, I, J, K, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -213,6 +215,8 @@ module w_g_conv_dif
 
       DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -235,7 +239,7 @@ module w_g_conv_dif
 
       jtmp  = jsouth(i,j,k)
 
-      IF (wall_at(i,j,k)) THEN
+      IF (flag(i,j,k,1)>=100) THEN
          kc = ktop(i,j,k)
       ELSE
          kc = k
@@ -292,7 +296,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(A_W_G, MU_G, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE STORE_A_W_G0(A_W_G, MU_G, flux_ge, flux_gn, flux_gt,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -321,6 +325,8 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -346,7 +352,7 @@ module w_g_conv_dif
                flux_ge, flux_gn, flux_gt, i, j, k)
 
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, mu_g, i, j, k)
+               d_ft, d_fb, mu_g, i, j, k, flag)
 
 ! East face (i+1/2, j, k+1/2)
             IF (Flux_e >= ZERO) THEN
@@ -426,7 +432,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
+      SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -467,6 +473,8 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -512,7 +520,7 @@ module w_g_conv_dif
                flux_s, flux_t, flux_b, &
                flux_ge, flux_gn, flux_gt, i, j, k)
             CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, mu_g, i, j, k)
+               d_ft, d_fb, mu_g, i, j, k, flag)
 
 ! East face (i+1/2, j, k+1/2)
             A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
