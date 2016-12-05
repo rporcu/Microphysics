@@ -40,14 +40,12 @@ MODULE functions
 
 ! logical function to identify various wall cells
 ! LOGICAL :: wall_at
-! LOGICAL :: ns_wall_at, fs_wall_at, ps_wall_at
 ! LOGICAL :: DEFAULT_WALL_AT
 ! LOGICAL :: WALL_ICBC_FLAG
 
 ! Logical function to identify a cyclic cell and different
 ! cyclic flow boundaries
 ! LOGICAL :: CYCLIC_AT
-! LOGICAL :: CYCLIC_AT_E, CYCLIC_AT_N, CYCLIC_AT_T
 
 ! logical function to identify different flow at boundaries
 ! LOGICAL :: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T

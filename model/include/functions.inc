@@ -58,30 +58,7 @@
       WALL_AT = flag(i,j,k,1) .GE. 100
       END FUNCTION WALL_AT
 
-! Logical function to identify a No-slip wall cell
-      logical function ns_wall_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      NS_WALL_AT  = flag(i,j,k,1) .EQ. 100
-      end function ns_wall_at
-
-! Logical function to identify a Free-slip wall cell
-      logical function fs_wall_at(i,j,k)
-         use geometry, only: flag
-         implicit none
-         integer, intent(in) :: i,j,k
-         fs_wall_at = (flag(i,j,k,1).eq.101)
-      end function fs_wall_at
-
-! Logical function to identify a Partial-slip wall cell
-      logical function ps_wall_at(i,j,k)
-      use geometry, only: flag
-      implicit none
-      integer, intent(in) :: i,j,k
-      ps_wall_at  = flag(i,j,k,1) .EQ. 102
-      end function ps_wall_at
-
+!---------------------------------------------------------------------//
       LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
       use geometry, only: flag
       use ic, only: icbc_no_s, icbc_free, icbc_pslip, icbc_cycl, icbc_cyclp
@@ -106,6 +83,7 @@
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: icbc
+
       icbc = mod(flag(i,j,k,0),1000)
 
       DEFAULT_WALL_AT = (ICBC .NE. icbc_cycl  .and. &
@@ -122,29 +100,6 @@
       CYCLIC_AT = (FLAG(i,j,k,1) .EQ. 106 .OR. FLAG(i,j,k,1) .EQ. 107)
       END FUNCTION CYCLIC_AT
 
-! logical function to identify cyclic condition at east boundary
-      LOGICAL FUNCTION CYCLIC_AT_E(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      CYCLIC_AT_E   = FLAG(i,j,k,2) .EQ. 2000
-      END FUNCTION CYCLIC_AT_E
-
-! logical function to identify cyclic condition at north boundary
-      LOGICAL FUNCTION CYCLIC_AT_N(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      CYCLIC_AT_N   = FLAG(i,j,k,3) .EQ. 2000
-      END FUNCTION CYCLIC_AT_N
-
-! logical function to identify cyclic condition at top boundary
-      LOGICAL FUNCTION CYCLIC_AT_T(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      CYCLIC_AT_T   = FLAG(i,j,k,4) .EQ. 2000
-      END FUNCTION CYCLIC_AT_T
 
 
 ! Flow boundaries

@@ -11,7 +11,7 @@ module solve_vel_star_module
       SUBROUTINE SOLVE_VEL_STAR(u_g, v_g, w_g, u_go, v_go, w_go,    &
          p_g, ro_g, rop_g, rop_go, ep_g, tau_u_g, tau_v_g, tau_w_g, &
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
-         f_gds, drag_am, drag_bm, IER)
+         f_gds, drag_am, drag_bm, flag, IER)
 
       USE u_g_conv_dif, only: conv_dif_u_g
       USE v_g_conv_dif, only: conv_dif_v_g
@@ -87,6 +87,8 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -120,7 +122,7 @@ module solve_vel_star_module
 
       ! Calculate the source terms for the gas and solids phase u-momentum eqs
       CALL SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
-                      u_g, u_go, tau_u_g)
+                      u_g, u_go, tau_u_g, flag)
 
       IF(POINT_SOURCE) CALL POINT_SOURCE_U_G (A_M, B_M)
 
@@ -165,7 +167,7 @@ module solve_vel_star_module
       CALL CONV_DIF_V_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
       CALL SOURCE_V_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
-                      v_g, v_go, tau_v_g)
+                      v_g, v_go, tau_v_g, flag)
       IF(POINT_SOURCE) CALL POINT_SOURCE_V_G (A_M, B_M)
 
 ! calculate coefficients for the pressure correction equation
@@ -206,7 +208,7 @@ module solve_vel_star_module
       CALL CONV_DIF_W_G (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
 
       CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
-                         w_g, w_go, tau_w_g)
+                         w_g, w_go, tau_w_g, flag)
       IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)
 
 ! calculate coefficients for the pressure correction equation

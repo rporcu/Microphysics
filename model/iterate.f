@@ -201,7 +201,7 @@ module iterate_module
                           p_g,ro_g,rop_g,rop_go,ep_g,&
                           tau_u_g,tau_v_g,tau_w_g,&
                           d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,&
-                          f_gds, drag_am, drag_bm, IER)
+                          f_gds, drag_am, drag_bm, flag, IER)
 
 
 ! Calculate densities.
@@ -229,7 +229,7 @@ module iterate_module
 ! modified by sof to force wall functions so even when NSW or FSW are
 ! declared, default wall BC will still be treated as NSW and no wall
 ! functions will be used
-      CALL SET_WALL_BC (u_g,v_g,w_g)
+      CALL SET_WALL_BC (u_g,v_g,w_g, flag)
 
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)

@@ -29,7 +29,7 @@ module source_w_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            w_g, w_go, tau_w_g)
+                            w_g, w_go, tau_w_g, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -81,6 +81,8 @@ module source_w_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -184,7 +186,7 @@ module source_w_g_module
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_W_G_BC (A_M, B_M, W_G)
+      CALL SOURCE_W_G_BC (A_M, B_M, W_G, flag)
 
       RETURN
       END SUBROUTINE SOURCE_W_G
@@ -206,7 +208,7 @@ module source_w_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G)
+      SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G, flag)
 
       use matrix, only: e, w, s, n, t, b
       USE geometry , only: imax2,imin3,imax3
@@ -215,7 +217,7 @@ module source_w_g_module
       USE geometry , only: odx, ody
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
-      USE functions, only: fluid_at, wall_at, ns_wall_at, fs_wall_at
+      USE functions, only: fluid_at, wall_at
       USE functions, only: im1, jm1
 
       use compar, only: istart3, iend3
@@ -234,6 +236,8 @@ module source_w_g_module
 ! Velocity
       DOUBLE PRECISION, INTENT(IN   ) :: W_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
 !-----------------------------------------------
 ! Local parameters
@@ -273,7 +277,7 @@ module source_w_g_module
       J1 = 1
       DO K1 = kmin3,kmax3
          DO I1 = imin3,imax3
-            IF (ns_wall_at(i1,j1,k1)) THEN
+            IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
                A_M(I1,J1,K1,N) = -ONE
@@ -282,7 +286,7 @@ module source_w_g_module
                A_M(I1,J1,K1,B) = ZERO
                A_M(I1,J1,K1,0) = -ONE
                B_M(I1,J1,K1) = ZERO
-            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+            ELSEIF (flag(i1,j1,k1,1) == 101) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
                A_M(I1,J1,K1,N) = ONE
@@ -299,7 +303,7 @@ module source_w_g_module
       J1 = JMAX2
       DO K1 = kmin3, kmax3
          DO I1 = imin3, imax3
-            IF (ns_wall_at(i1,j1,k1)) THEN
+            IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and oppostive to the adjacent fluid cell value)
                A_M(I1,J1,K1,E) = ZERO
@@ -310,7 +314,7 @@ module source_w_g_module
                A_M(I1,J1,K1,B) = ZERO
                A_M(I1,J1,K1,0) = -ONE
                B_M(I1,J1,K1) = ZERO
-            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+            ELSEIF (flag(i1,j1,k1,1) == 101) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
                A_M(I1,J1,K1,E) = ZERO
@@ -329,7 +333,7 @@ module source_w_g_module
       I1 = 1
       DO K1 = kmin3, kmax3
          DO J1 = jmin3, jmax3
-            IF (ns_wall_at(i1,j1,k1)) THEN
+            IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = -ONE
                A_M(I1,J1,K1,W) = ZERO
                A_M(I1,J1,K1,N) = ZERO
@@ -338,7 +342,7 @@ module source_w_g_module
                A_M(I1,J1,K1,B) = ZERO
                A_M(I1,J1,K1,0) = -ONE
                B_M(I1,J1,K1) = ZERO
-            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+            ELSEIF (flag(i1,j1,k1,1) == 101) THEN
                A_M(I1,J1,K1,E) = ONE
                A_M(I1,J1,K1,W) = ZERO
                A_M(I1,J1,K1,N) = ZERO
@@ -355,7 +359,7 @@ module source_w_g_module
       I1 = IMAX2
       DO K1 = kmin3,kmax3
          DO J1 = jmin3,jmax3
-            IF (ns_wall_at(i1,j1,k1)) THEN
+            IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = -ONE
                A_M(I1,J1,K1,N) = ZERO
@@ -364,7 +368,7 @@ module source_w_g_module
                A_M(I1,J1,K1,B) = ZERO
                A_M(I1,J1,K1,0) = -ONE
                B_M(I1,J1,K1) = ZERO
-            ELSEIF (fs_wall_at(i1,j1,k1)) THEN
+            ELSEIF (flag(i1,j1,k1,1) == 101) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ONE
                A_M(I1,J1,K1,N) = ZERO

@@ -7,7 +7,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g)
+      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -27,6 +27,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -58,10 +60,10 @@
 
             SELECT CASE (TRIM(BC_TYPE(L)))
                CASE ('FREE_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g, flag)
 
                CASE ('NO_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, u_g, v_g, w_g, flag)
 
                CASE ('PAR_SLIP_WALL')
 ! updating the boundary velocity may improve convergence
@@ -79,7 +81,7 @@
          DO I1 = ISTART3, IEND3
             IF(K1.NE.KSTART2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
 
@@ -89,7 +91,7 @@
          DO I1 = ISTART3, IEND3
             IF(K1.NE.KEND2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
 
@@ -99,7 +101,7 @@
          DO I1 = ISTART3, IEND3
             IF(J1.NE.JSTART2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
 
@@ -109,7 +111,7 @@
          DO I1 = ISTART3, IEND3
             IF(J1.NE.JEND2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
 
@@ -119,7 +121,7 @@
          DO J1 = JSTART3, JEND3
             IF(I1.NE.ISTART2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
 
@@ -129,7 +131,7 @@
          DO J1 = JSTART3, JEND3
             IF(I1.NE.IEND2) EXIT
             IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g)
+                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
          ENDDO
       ENDDO
       RETURN
@@ -146,7 +148,8 @@
 !           cell                                                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, u_g, v_g, w_g)
+      SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, &
+         u_g, v_g, w_g, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -155,7 +158,7 @@
       USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      USE functions, only: ns_wall_at, wall_at
+      USE functions, only: wall_at
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -173,6 +176,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -202,7 +207,7 @@
          DO J = J1, J2
             DO I = I1, I2
 
-               IF(NS_WALL_AT(i,j,k))THEN
+               IF(flag(i,j,k,1) == 100)THEN
                   SIGN0 = -ONE
                ELSE
                   SIGN0 = ONE
