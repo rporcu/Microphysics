@@ -1,3 +1,18 @@
+MODULE FLOW_TO_VEL_NEW_MODULE
+
+      use bc, only: BC_MASSFLOW_G
+      use bc, only: BC_MASSFLOW_S
+      use bc, only: BC_VOLFLOW_G
+      use bc, only: BC_VOLFLOW_S
+      use bc, only: bc_type, bc_plane, bc_u_s, bc_v_s, bc_w_s, bc_ep_s, bc_ep_g
+      use bc, only: bc_area, bc_u_g, bc_v_g, bc_w_g
+      use exit_mod, only: mfix_exit
+      use param, only: DIM_M
+      use param1, only: UNDEFINED, ZERO, ONE
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      use toleranc, only: compare
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: FLOW_TO_VEL_NEW                                         !
@@ -20,16 +35,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE FLOW_TO_VEL_NEW(DO_VEL_CHECK, M_TOT, SKIP, BCV)
-
-      use param, only: DIM_M
-      use param1, only: UNDEFINED
-      use bc, only: BC_MASSFLOW_G
-      use bc, only: BC_VOLFLOW_G
-      use bc, only: BC_MASSFLOW_S
-      use bc, only: BC_VOLFLOW_S
-
-      use error_manager
-      use toleranc
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -110,12 +115,11 @@
       use bc, only: BC_T_g
       use bc, only: BC_VOLFLOW_g
       use eos, only: EOSG
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       use param    , only: DIMENSION_BC
       use param1   , only: zero, undefined
       use fld_const, only: mw_avg, ro_g0
       use scales   , only: P_REF
-      use toleranc
 
       IMPLICIT NONE
 
@@ -195,8 +199,7 @@
       USE bc, only: BC_VOLFLOW_s
       USE param1, only: UNDEFINED, ZERO
       USE constant, only: RO_s0
-      use error_manager
-      use toleranc
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
@@ -258,11 +261,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE GAS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK, BCV)
 
-      USE bc
       USE compar, only: myPE
 
-      use error_manager
-      use toleranc
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -368,12 +369,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SOLIDS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK, BCV, M, SKIP_M)
 
-      USE bc
       USE funits, only: dmp_log, unit_log
       USE compar, only: myPE
 
-      use error_manager
-      use toleranc
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -508,3 +507,4 @@
       LOGICAL :: DO_VEL_CHECK
 
       END SUBROUTINE FLOW_TO_VEL
+END MODULE FLOW_TO_VEL_NEW_MODULE

@@ -40,7 +40,7 @@
       use stl, only: DEFAULT_STL
 
       use stl_dbg_des
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
@@ -195,7 +195,7 @@
       use stl_functions_des, only: TRI_BOX_OVERLAP
 
       use param1, only: ZERO, HALF, ONE
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
       IMPLICIT NONE
 

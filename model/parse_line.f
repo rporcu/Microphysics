@@ -1,3 +1,11 @@
+MODULE parse_line_module
+
+      use compar, only: mype
+      use exit_mod, only: mfix_exit
+      use param1, only: one
+
+   contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: PARSE_LINE(LINE, LMAX,           READ_FLAG)            C
@@ -8,14 +16,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
       SUBROUTINE PARSE_LINE(LINE, LMAX, READ_FLAG)
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE compar
-      USE param
-      USE exit_mod, only: mfix_exit
-      USE param1
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -84,15 +84,10 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE PARSE_ARITH(LINE, LMAX)
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE compar
+
       USE exit_mod, only: mfix_exit
-      USE param
-      USE param1
       USE utilities, ONLY: seek_end
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -225,6 +220,4 @@
          '*')/)
       END SUBROUTINE PARSE_ARITH
 
-!// Comments on the modifications for DMP version implementation
-!// 001 Include header file and common declarations for parallelization
-!//PAR_I/O added myPE stamp in output
+   END MODULE parse_line_module

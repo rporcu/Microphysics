@@ -39,8 +39,9 @@
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
+      use flow_to_vel_new_module, only: flow_to_vel_new
 
       IMPLICIT NONE
 
@@ -116,7 +117,7 @@
 
       use bc
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
@@ -289,7 +290,7 @@
 
       USE bc
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

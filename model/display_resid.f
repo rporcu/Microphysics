@@ -43,7 +43,7 @@
       use param1, only: UNDEFINED_I
       use residual, only: RESID_STRING, RESID_INDEX, RESID
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
@@ -107,7 +107,7 @@
       use residual, only: RESID_GRP, RESID_GRP_STRING
       use residual, only: HYDRO_GRP, THETA_GRP
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

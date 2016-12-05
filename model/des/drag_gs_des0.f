@@ -51,7 +51,7 @@ module drag_gs_des0_module
 ! Local variables
 !-----------------------------------------------
 ! general i, j, k indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
       INTEGER :: II, JJ, KK
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
@@ -237,7 +237,7 @@ module drag_gs_des0_module
 ! local variable used for debugging
       LOGICAL :: FOCUS
 ! general i, j, k indices
-      INTEGER :: I, J, K, IJK, cur_ijk
+      INTEGER :: I, J, K
       INTEGER :: II, JJ, KK
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)

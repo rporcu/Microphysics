@@ -203,19 +203,20 @@ module source_u_g_module
 
       SUBROUTINE SOURCE_U_G_BC(A_M, B_M, U_G)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use matrix, only: e, w, s, n, t, b
-      USE bc
-      USE geometry  , only: jmax2, kmax2
-      USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
-      USE geometry  , only: ody, odz
+      USE bc, only: bc_hw_g, bc_uw_g
+      USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+      USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
+      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: fs_wall_at, ns_wall_at
-      USE functions, only: wall_at, fluid_at
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE functions, only: wall_at, fluid_at
+      USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
+      USE geometry  , only: jmax2, kmax2
+      USE geometry  , only: ody, odz
+      USE matrix, only: e, w, s, n, t, b
+      USE param1, only: zero, one, half, undefined
+
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -651,11 +652,12 @@ module source_u_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_U_G(A_M, B_M)
 
-      use param1   , only: small_number
-      use geometry , only: vol
-      use functions, only: fluid_at
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use ps
+      use functions, only: fluid_at
+      use geometry , only: vol
+      use param1   , only: small_number
+      use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
       implicit none
 

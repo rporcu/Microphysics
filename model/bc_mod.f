@@ -23,12 +23,9 @@
 
       MODULE bc
 
+      USE param, only: dimension_bc, dim_m, dim_n_g, dim_n_s, dimension_ic
+      USE param1, only: zero, small_number, one, undefined, half
 
-      Use param
-      Use param1
-
-
-!
 !                      x coordinate of the west face of a region where
 !                      boundary conditions are specified
       DOUBLE PRECISION BC_X_w (DIMENSION_BC)

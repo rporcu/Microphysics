@@ -28,9 +28,8 @@
 
 ! Module procedures
 !---------------------------------------------------------------------//
-      use error_manager
-      use toleranc
-      use allocate_mod
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
+      use allocate_mod, only: allocate_arrays_geometry
 
       IMPLICIT NONE
 

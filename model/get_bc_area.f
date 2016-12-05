@@ -20,25 +20,13 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_BC_AREA
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE geometry
-      USE bc
-      USE compar
+
+      USE param, only: dimension_bc
+      USE param1, only: zero
+      USE geometry, only: dx, dy, dz
+      USE bc, only: bc_defined, bc_area, bc_plane, bc_k_b, bc_k_t, bc_defined, bc_j_n, bc_j_s, bc_i_e, bc_i_w
+
       IMPLICIT NONE
-!-----------------------------------------------
-!   G l o b a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
 !
 ! BC number
       INTEGER :: BCV

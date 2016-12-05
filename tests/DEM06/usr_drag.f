@@ -27,7 +27,7 @@
 
       use usr, only: Re, Cd
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

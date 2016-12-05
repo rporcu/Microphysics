@@ -43,8 +43,6 @@
 
       INTEGER :: ijkproc
 
-      LOGICAL :: PRESENT
-
 !......................................................................!
 
 
@@ -124,7 +122,6 @@
         SUBROUTINE GRIDMAP_INIT
 
         use functions, only: funijk
-        use toleranc
         use compar, only: ijksize3_all, ijkstart3_all, ijkend3_all
         use compar, only: istart_all, iend_all
         use compar, only: jstart_all, jend_all
@@ -138,8 +135,16 @@
         use compar, only: imap, jmap, kmap
         use compar, only: imap_c, jmap_c, kmap_c
         use compar, only: imap_c, jmap_c, kmap_c
+        use compar, only: c0, c1, c2
         use compar
-        use geometry
+        use geometry, only: imin2, jmin2, kmin2
+        use geometry, only: imin3, jmin3, kmin3
+        use geometry, only: imin4, jmin4, kmin4
+        use geometry, only: imax2, jmax2, kmax2
+        use geometry, only: imax3, jmax3, kmax3
+        use geometry, only: imax4, jmax4, kmax4
+        use geometry, only: cyclic_x, cyclic_y, cyclic_z
+        use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
 
         implicit none
 

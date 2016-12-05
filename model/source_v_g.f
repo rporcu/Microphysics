@@ -1,4 +1,10 @@
 module source_v_g_module
+
+   use bc, only: bc_hw_g, bc_vw_g
+   use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+   use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
+   use param1, only: zero, half, one, undefined
+
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -202,16 +208,15 @@ module source_v_g_module
 ! Modules
 !-----------------------------------------------
 
-      use matrix, only: e, w, s, n, t, b
-      USE bc
+      USE functions, only: fs_wall_at, ns_wall_at
+      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
+      USE functions, only: jminus, jplus, jm1
+      USE functions, only: wall_at, fluid_at
       USE geometry  , only: imax2, kmax2
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: odx, odz
-      USE functions, only: fs_wall_at, ns_wall_at
-      USE functions, only: wall_at, fluid_at
-      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-      USE functions, only: jminus, jplus, jm1
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use matrix, only: e, w, s, n, t, b
 
       IMPLICIT NONE
 
@@ -653,7 +658,8 @@ module source_v_g_module
       use functions, only: fluid_at
       use geometry, only: vol
       use param1  , only: small_number
-      use ps
+      use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3

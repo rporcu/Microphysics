@@ -18,17 +18,12 @@
 
       SUBROUTINE CHECK_CONVERGENCE(NIT, u_g, v_g, w_g, ep_g, errorpercent, MUSTIT)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE geometry
-      USE param
-      USE param1
-      USE constant
-      USE residual
-      USE run
-      USE toleranc
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE param1, only: zero, undefined_i
+      USE residual, only: max_resid_index, nresid, resid_p, resid_ro, resid_u, resid_v, resid_w
+      USE residual, only: resid, resid_index, resid_string, resid_x, sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
+      USE run, only: detect_stall, momentum_x_eq, momentum_y_eq, momentum_z_eq
+      USE toleranc, only: tol_resid, tol_diverge
       USE utilities, ONLY: check_vel_bound
 
       IMPLICIT NONE

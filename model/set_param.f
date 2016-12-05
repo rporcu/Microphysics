@@ -14,7 +14,7 @@
       use constant, only: MMAX
 
 ! Domain indices.
-      use geometry, only: IMAX3, JMAX3, KMAX3, IJKMAX3
+      use geometry, only: IMAX3, JMAX3, KMAX3
 
 ! Rank specific decompositions.
       USE compar, only: iStart3, iEnd3

@@ -34,14 +34,13 @@ module time_march_module
       USE run, only: automatic_restart, auto_restart, chk_batchq_end, call_usr
       USE run, only: dem_solids
       USE run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
-      USE time_cpu
+      USE time_cpu, only: cpu_io
 
       USE toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
 
       ! Use function MAX_VEL_INLET to compute max. velocity at inlet
       USE utilities, ONLY: MAX_VEL_INLET
 
-!     USE vtp
       use output   , only: RES_DT
       use adjust_dt, only: adjustdt
 
@@ -50,8 +49,8 @@ module time_march_module
 
       use des_time_march_module, only: des_time_march
       use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
-      use set_bc1_module
-      use output_manager_module
+      use set_bc1_module, only: set_bc1
+      use output_manager_module, only: init_output_vars, output_manager
 
       implicit none
 

@@ -20,7 +20,7 @@
       use compar
       use ic, only: icbc_fluid
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       USE functions
 
       USE open_files_mod, only: open_pe_log

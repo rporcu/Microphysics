@@ -56,7 +56,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION :: tmp_A, tmp_B
 ! Averaging factor
@@ -180,7 +180,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION tmp_A, tmp_B
 ! Averaging factor
@@ -298,7 +298,7 @@
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! temporary variables for matrix A_M and vector B_M
       DOUBLE PRECISION tmp_A, tmp_B
 ! Averaging factor

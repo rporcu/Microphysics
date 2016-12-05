@@ -8,16 +8,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE GET_PS(PSV)
 
-      USE param
-      USE param1
-      USE geometry
-      USE ps
-      USE funits
-      USE compar
+      USE param1, only: undefined, undefined_i
+      USE geometry, only: dx, dy, dz
+      USE geometry, only: imax, jmax, kmax
+      USE geometry, only: imax2, jmax2, kmax2
+      USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
+      USE ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
+      USE ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

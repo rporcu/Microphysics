@@ -10,10 +10,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DEPRECATED_OR_UNKNOWN(LINE_NO, INPUT)
 
-      use param
-      use param1
       use compar, only: myPE
-      use error_manager
+      use exit_mod, only: mfix_exit
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
       IMPLICIT NONE
 

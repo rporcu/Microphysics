@@ -9,19 +9,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_DATA
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
       USE gridmap        , only: gridmap_init
       USE mpi_init_des   , only: desmpi_init
       USE open_files_mod, only: open_files
       USE param1         , only: undefined
+      USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
+      USE run, only: dem_solids
+      USE set_icbc_flags_module, only: set_icbc_flag
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
-      use run, only: dem_solids
-
 
       IMPLICIT NONE
 !-----------------------------------------------

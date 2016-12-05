@@ -170,7 +170,6 @@
       use compar  , only: myPE, PE_IO
       use geometry, only:  flag
       use param1  , only: small_number
-      use constant, only: mmax
       use ps
       use functions,only: fluid_at
 
@@ -181,7 +180,7 @@
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
 
-      INTEGER :: IJK, I, J, K, M
+      INTEGER :: IJK, I, J, K
 
       INTEGER :: lc1
 

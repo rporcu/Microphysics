@@ -13,12 +13,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       MODULE matrix
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE compar
-      USE funits
-!-----------------------------------------------
+      USE compar, only: iend3, jend3, kend3
+      USE compar, only: istart3, jstart3, kstart3
+      USE compar, only: mype
+      USE funits, only: dmp_log
+      USE param1, only: zero, one
 
 ! linear equation matrix and vector
       DOUBLE PRECISION, DIMENSION(:,:,:, :), ALLOCATABLE :: A_m
@@ -70,10 +69,6 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE INIT_AB_M(A_M, B_M)
-
-      USE param
-      USE param1
-      USE compar
 
       IMPLICIT NONE
 

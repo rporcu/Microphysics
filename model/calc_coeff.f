@@ -1,5 +1,7 @@
 module calc_coeff_module
 
+      use calc_drag_des_module, only: calc_drag_des_explicit, calc_drag_des_2fluid
+
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      !
@@ -26,7 +28,6 @@ module calc_coeff_module
 
       ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
-      use calc_drag_des_module
 
       implicit none
 
@@ -91,8 +92,6 @@ module calc_coeff_module
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: DES_CONTINUUM_COUPLED
-
-      use calc_drag_des_module
 
       implicit none
 

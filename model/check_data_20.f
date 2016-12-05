@@ -33,7 +33,7 @@
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: wall_at, iminus, jminus, kminus
 
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

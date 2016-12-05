@@ -139,8 +139,6 @@ MODULE interpolation
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
        !USE discretelement, ONLY : order,ob2l,ob2r, des_periodic_walls_x,y,z
 
-      USE geometry, only: dx, dy, dz
-
     IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

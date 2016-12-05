@@ -32,13 +32,13 @@ module iterate_module
       USE toleranc, only: norm_g
       USE vavg_mod, ONLY: vavg_g
 
-      USE solve_pp_module
-      USE solve_vel_star_module
-      USE calc_coeff_module
-      USE set_bc1_module
+      USE solve_pp_module, only: solve_pp_g
+      USE solve_vel_star_module, only: solve_vel_star
+      USE calc_coeff_module, only: calc_coeff
+      USE set_bc1_module, only: set_bc1
 
-      use error_manager
-      use tunit_module
+      USE error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      USE tunit_module, only: get_tunit
 
       implicit none
 

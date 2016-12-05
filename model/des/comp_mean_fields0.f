@@ -39,10 +39,8 @@ module comp_mean_fields0_module
 ! Local variables
 !-----------------------------------------------
 ! general i, j, k indices
-      INTEGER :: I, J, K, IJK, &
+      INTEGER :: I, J, K, &
                  II, JJ, KK
-      INTEGER :: IJK2
-      INTEGER :: CUR_IJK
 ! indices used for interpolation stencil (unclear why IE, JN, KTP are
 ! needed)
       INTEGER :: IW, IE, JS, JN, KB, KTP

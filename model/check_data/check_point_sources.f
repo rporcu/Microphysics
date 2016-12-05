@@ -76,10 +76,6 @@
       use ps, only: PS_X_e, PS_X_w, PS_I_e, PS_I_w
       use ps, only: PS_Y_n, PS_Y_s, PS_J_n, PS_J_s
       use ps, only: PS_Z_t, PS_Z_b, PS_K_t, PS_K_b
-! User specified: System geometry
-      use geometry, only: XLENGTH
-      use geometry, only: YLENGTH
-      use geometry, only: ZLENGTH
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

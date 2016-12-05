@@ -1,5 +1,10 @@
 module source_w_g_module
 
+   use bc, only: bc_hw_g, bc_ww_g
+   use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+   use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
+   use param1, only: zero, half, one, undefined
+
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -203,13 +208,7 @@ module source_w_g_module
 
       SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
       use matrix, only: e, w, s, n, t, b
-      USE bc
       USE geometry , only: imax2,imin3,imax3
       USE geometry , only: jmax2,jmin3,jmax3
       USE geometry , only:       kmin3,kmax3
@@ -681,7 +680,8 @@ module source_w_g_module
       use compar  , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use param1  , only: small_number, zero
       use geometry, only: vol
-      use ps
+      use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
       use functions, only: fluid_at
       IMPLICIT NONE
 

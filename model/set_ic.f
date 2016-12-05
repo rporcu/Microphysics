@@ -29,7 +29,7 @@
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 ! Local index for initial condition
       INTEGER :: L
 ! Temporary variable for storing IC_EP_g

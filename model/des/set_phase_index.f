@@ -11,7 +11,7 @@
       USE discretelement, only: DES_RADIUS, RO_SOL
       USE discretelement, only: MAX_PIP
       USE discretelement, only: PIJK
-      USE error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost, particle_state
       USE mpi_funs_des, only: des_par_exchange
       USE open_files_mod, only: open_pe_log

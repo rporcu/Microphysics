@@ -13,9 +13,9 @@ module solve_vel_star_module
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
          f_gds, drag_am, drag_bm, IER)
 
-      use u_g_conv_dif
-      use v_g_conv_dif
-      use w_g_conv_dif
+      USE u_g_conv_dif, only: conv_dif_u_g
+      USE v_g_conv_dif, only: conv_dif_v_g
+      USE w_g_conv_dif, only: conv_dif_w_g
 
       USE adjust_a  , only: adjust_a_g
       USE calc_d_mod, only: calc_d
@@ -29,9 +29,9 @@ module solve_vel_star_module
                           resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
 
-      USE source_u_g_module
-      USE source_v_g_module
-      USE source_w_g_module
+      USE source_u_g_module, only: source_u_g, point_source_u_g
+      USE source_v_g_module, only: source_v_g, point_source_v_g
+      USE source_w_g_module, only: source_w_g, point_source_w_g
 
       IMPLICIT NONE
 !-----------------------------------------------

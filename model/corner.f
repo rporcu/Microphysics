@@ -179,18 +179,11 @@
       END SUBROUTINE GET_CORNER_CELLS
 !
       SUBROUTINE ADDCORN(NOTCORNER, NCORN)
-!...Translated by Pacific-Sierra Research VAST-90 2.06G5  12:17:31  12/09/98
-!...Switches: -xf
-!
-!  Include param.inc file to specify parameter values
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE compar
+
+      USE param1, only: max_ncorn
+      USE compar, only: mype
       USE exit_mod, only: mfix_exit
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

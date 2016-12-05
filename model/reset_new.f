@@ -21,7 +21,6 @@
 ! Local Variables
 !-----------------------------------------------
       integer :: i,j,k
-      integer :: ierr
 
       do k=kstart3, kend3
          do j=jstart3,jend3

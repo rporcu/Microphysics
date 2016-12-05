@@ -19,20 +19,15 @@ module solve_pp_module
          ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, flag, NORMG, &
          RESG, IER)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE param1  , only: zero, one
-      USE residual, only: resid_p, resid, num_resid
-      USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
+      USE conv_pp_g_module, only: conv_pp_g
       USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
-      USE run
-      use matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
-      use ps
-
-      use conv_pp_g_module
-      use source_pp_module
+      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
+      USE param1  , only: zero, one
+      USE ps, only: point_source
+      USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
+      USE residual, only: resid_p, resid, num_resid
+      USE source_pp_module, only: source_pp_g
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -166,11 +161,10 @@ module solve_pp_module
       SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax)
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use functions, only: fluid_at
       use geometry, only: vol
       use param1  , only: small_number
-      use ps
-      use run
-      use functions, only: fluid_at
+      use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume, ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
 
       IMPLICIT NONE
 !-----------------------------------------------

@@ -1,3 +1,25 @@
+MODULE set_icbc_flags_module
+
+      use bc, only: bc_x_e, bc_x_w, bc_i_e, bc_i_w
+      use bc, only: bc_y_n, bc_y_s, bc_j_s, bc_j_n
+      use bc, only: bc_z_t, bc_z_b, bc_k_b, bc_k_t
+      use bc, only: dimension_bc, bc_type, bc_x_e, bc_defined
+      use compar, only: iend3, jend3, kend3
+      use compar, only: istart3, jstart3, kstart3
+      use geometry    , only: cyclic_x, cyclic_y, cyclic_z
+      use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use geometry    , only: flag
+      use geometry, only: imax2, jmax2, kmax2
+      use geometry, only: imax3, jmax3, kmax3
+      use geometry, only: imin2, jmin2, kmin2
+      use geometry, only: imin3, jmin3, kmin3
+      use ic, only: icbc_cyclp, icbc_cycl, icbc_free, icbc_undef, icbc_no_s, icbc_fluid
+      use ic, only: icbc_m_inf, icbc_m_out, icbc_p_out, icbc_outfl, icbc_p_inf, icbc_pslip
+      use param1, only: zero, undefined
+      use run, only: run_type
+
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: SET_ICBC_FLAG                                            !
@@ -33,19 +55,6 @@
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE INIT_ICBC_FLAG
-
-      use compar
-      use functions
-      use geometry, only: imax2, jmax2, kmax2
-      use geometry, only: imin2, jmin2, kmin2
-      use geometry, only: imax3, jmax3, kmax3
-      use geometry, only: imin3, jmin3, kmin3
-      use geometry    , only: cyclic_x, cyclic_y, cyclic_z
-      use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry    , only: flag
-      use ic
-      use param1, only: zero
-      use run, only: run_type
 
       implicit none
       INTEGER :: I, J, K
@@ -124,8 +133,7 @@
       use compar, only: iend2, jend2, kend2
       use compar, only: istart2, jstart2, kstart2
       use compar, only: numpes, mype
-      use error_manager
-      ! use functions
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
       use geometry, only: flag
       use ic, only: icbc_undef
       use open_files_mod, only: open_pe_log
@@ -220,8 +228,7 @@
 
       use param, only: dimension_ic
 
-      use error_manager
-      use functions
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use geometry, only : flag
 
       IMPLICIT NONE
@@ -276,13 +283,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_WALL
 
-      USE bc
-      USE ic
-      USE funits
-      USE compar
-      USE functions
-
-      use error_manager
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use geometry, only : flag
 
       IMPLICIT NONE
@@ -333,8 +334,6 @@
       RETURN
       END SUBROUTINE SET_BC_FLAGS_WALL
 
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_FLAGS_FLOW                                       !
@@ -346,13 +345,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_FLOW
 
-      use bc
       use compar       , only: nodesi, nodesj, nodesk
-      use error_manager
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       use functions    , only: wall_icbc_flag
       use geometry     , only: flag, imax2, jmax2, kmax2
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
-      use ic
 
       USE open_files_mod, only: open_pe_log
 
@@ -485,3 +482,4 @@
 
       RETURN
       END SUBROUTINE SET_BC_FLAGS_FLOW
+END MODULE set_icbc_flags_module

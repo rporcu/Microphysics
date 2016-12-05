@@ -8,14 +8,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_GEOMETRY1
 
-! Modules
-!-----------------------------------------------
-      USE param
-      USE param1
-      USE run
-      USE geometry
-      USE compar
-      USE functions
+      USE compar, only: istart3, jstart3, kstart3
+      USE geometry, only: dx, dy, dz, ayz, axy, axz, vol
 
       IMPLICIT NONE
 

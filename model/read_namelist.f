@@ -1,3 +1,8 @@
+MODULE read_namelist_module
+
+   use parse_line_module, only: parse_line
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !     Module name: READ_NAMELIST(POST)                                 !
@@ -10,30 +15,27 @@
 
       USE bc
       USE compar
-      USE constant
-      USE des_bc
+      USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
+      USE fld_const, only: ro_g0
       USE discretelement
-      USE error_manager
-      USE fld_const
+      USE fld_const, only: mu_g0, mw_avg
       USE funits
       USE geometry
       USE ic
       USE leqsol
       USE output
-      USE param
-      USE param1
-      USE particle_filter
-      USE constant
+      USE particle_filter, only: des_interp_mean_fields, des_interp_on, des_interp_scheme, des_interp_width, des_report_mass_interp
       USE ps
-      USE residual
+      USE residual, only: group_resid, resid_string
       USE run
-      USE scales
+      USE scales, only: p_ref, p_scale
       USE toleranc
       USE ur_facs
       USE usr
       USE utilities, ONLY: blank_line, line_too_big, seek_comment
       USE utilities, ONLY: make_upper_case, replace_tab
       Use stl
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
@@ -375,3 +377,5 @@
       END SUBROUTINE SET_KEYWORD
 
 END SUBROUTINE READ_NAMELIST
+
+END MODULE read_namelist_module
