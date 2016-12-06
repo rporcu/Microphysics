@@ -12,7 +12,7 @@
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: fluid_at, cyclic_at
+      USE functions, only: fluid_at
       USE param1   , only: max_ncorn
       USE funits   , only: dmp_log, unit_log
       use matrix   , only: e, w, s, n, t, b
@@ -49,7 +49,8 @@
          do j = jstart3, jend3
             do i = istart3, iend3
 
-               IF (flag(i,j,k,1)>=100.AND..NOT.CYCLIC_AT(i,j,k)) THEN
+               IF (flag(i,j,k,1)>=100 .AND. flag(i,j,k,1) /= 106 .and. &
+                  flag(i,j,k,1) /= 107) then
 !----------------------------------------------------------------
                   NUM = 0
 

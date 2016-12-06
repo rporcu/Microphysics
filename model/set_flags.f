@@ -181,7 +181,7 @@
       USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: cyclic_at, fluid_at
+      USE functions, only: fluid_at
 
       implicit none
 !-----------------------------------------------
@@ -207,7 +207,7 @@
             FLAG(i,jminus(i,j,k),k,3) = 0
             FLAG(i,j,kminus(i,j,k),4) = 0
 
-            IF (CYCLIC_AT(i,j,k)) THEN
+            if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
 ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
@@ -233,7 +233,7 @@
                   ENDIF
                ENDIF
 
-            ENDIF   ! end if cyclic_at(i,j,k)
+            ENDIF
 
 ! ----------------------------------------------------------------<<<
          ELSEIF (fluid_at(i,j,k)) THEN

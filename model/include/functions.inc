@@ -60,17 +60,6 @@
       END FUNCTION WALL_ICBC_FLAG
 
 
-! Cyclic
-!---------------------------------------------------------------------//
-      LOGICAL FUNCTION CYCLIC_AT(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      CYCLIC_AT = (FLAG(i,j,k,1) .EQ. 106 .OR. FLAG(i,j,k,1) .EQ. 107)
-      END FUNCTION CYCLIC_AT
-
-
-
 ! Flow boundaries
 !---------------------------------------------------------------------//
 ! identify flow at east boundary

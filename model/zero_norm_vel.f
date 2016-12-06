@@ -24,7 +24,7 @@
       USE geometry , only: imax2, jmax2, kmax2
       USE geometry , only: imax3, jmax3, kmax3
       USE functions, only: iminus, jminus, kminus
-      USE functions, only: ip_at_e, ip_at_n, ip_at_t, cyclic_at
+      USE functions, only: ip_at_e, ip_at_n, ip_at_t
 
       IMPLICIT NONE
 
@@ -48,23 +48,22 @@
           do i = istart3, iend3
 
 
-            IF (flag(i,j,k,1)<100) THEN
-               IF (ip_at_e(i,j,k)) U_G(I,J,K) = ZERO
-               IF (ip_at_n(i,j,k)) V_G(I,J,K) = ZERO
-               IF (ip_at_t(i,j,k)) W_G(I,J,K) = ZERO
-            ELSE
+            if (flag(i,j,k,1)<100) then
+               if (ip_at_e(i,j,k)) u_g(i,j,k) = zero
+               if (ip_at_n(i,j,k)) v_g(i,j,k) = zero
+               if (ip_at_t(i,j,k)) w_g(i,j,k) = zero
+            else
 
                U_G(I,J,K) = ZERO
                V_G(I,J,K) = ZERO
                W_G(I,J,K) = ZERO
 
-               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (I==IMAX2 .OR. &
-                   I==IMAX3))) U_G(IMinus(i,j,k),J,K) = ZERO
-               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (J==JMAX2 .OR. &
-                   J==JMAX3))) V_G(I,JMinus(i,j,k),K) = ZERO
-               IF (.NOT.(CYCLIC_AT(I,J,K) .AND. (K==KMAX2 .OR. &
-                   K==KMAX3))) W_G(I,J,KMinus(i,j,k)) = ZERO
-            ENDIF
+               if(flag(i,j,k,1) /= 106 .and. flag(i,j,k,1) /= 107) then
+                  if(i < imax2) u_g(iminus(i,j,k),j,k) = zero
+                  if(j < jmax2) v_g(i,jminus(i,j,k),k) = zero
+                  if(k < kmax2) w_g(i,j,kminus(i,j,k)) = zero
+               endif
+            endif
 
           end do
         end do
