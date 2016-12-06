@@ -65,7 +65,7 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! file name
-      CHARACTER*64 :: FNAME1, FNAME2
+      CHARACTER(len=64) :: FNAME1, FNAME2
 ! logical used for testing is the data file already exists
       LOGICAL :: F_EXISTS1, F_EXISTS2
 ! file unit for heat transfer data

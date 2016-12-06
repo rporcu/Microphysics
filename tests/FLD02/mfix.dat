@@ -85,8 +85,6 @@
   CYCLIC_X_PD = .TRUE.
 ! DELP_X = [-3.0, 3.0]  -passed as argument-
 
-  CYCLIC_Z = .T.
-
 ! The north was has a constant velocity of 10.0 m/s, and is set using
 ! a partial slip wall (PSW):  dU/dn + hw(U-Uw) = 0 where Uw = 10.0 m/s
 ! and hw=unsepcified (i.e., no-slip moving wall).

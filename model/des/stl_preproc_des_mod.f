@@ -39,13 +39,16 @@
 ! STLs for default walls
       use stl, only: DEFAULT_STL
 
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      use stl_dbg_des, only: stl_dbg_write_facets
+
+      use error_manager, only: err_msg, flush_err_msg
 
       IMPLICIT NONE
 
 ! Pre-procssing for the des in order to assign facets to grid cells.
       WRITE(ERR_MSG,"('Pre-Processing geometry for DES.')")
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+
 
 ! Process the STL files
       N_FACETS_DES = 0
@@ -54,8 +57,6 @@
 
 ! Process stair-step geometries
       CALL CONVERT_BC_WALLS_TO_STL
-! Process default walls
-      CALL CONVERT_DEFAULT_WALLS_TO_STL
 
 ! Bin the STL to the DES grid.
       CALL BIN_FACETS_TO_DG
@@ -65,7 +66,7 @@
 !      CALL STL_DBG_WRITE_FACETS(BCWALLS_STL)
 !      CALL STL_DBG_WRITE_FACETS(IMPRMBL_STL)
 !      CALL STL_DBG_WRITE_FACETS(DEFAULT_STL)
-!      CALL STL_DBG_WRITE_FACETS(ALL_STL)
+      CALL STL_DBG_WRITE_FACETS(ALL_STL)
 !      CALL STL_DBG_WRITE_STL_FROM_DG(STL_TYPE=BASE_STL)
 
 ! Pre-procssing for the des in order to assign facets to grid cells.
@@ -339,7 +340,11 @@
       use bc, only: BC_I_w, BC_I_e
       use bc, only: BC_J_s, BC_J_n
       use bc, only: BC_K_b, BC_K_t
+      use bc, only: BC_X_w, BC_X_e
+      use bc, only: BC_Y_s, BC_Y_n
+      use bc, only: BC_Z_b, BC_Z_t
 
+      use geometry, only: xLength, yLength, zLength
       use stl, only: N_FACETS_DES
       use stl, only: STL_START, STL_END, BCWALLS_STL
 
@@ -364,9 +369,42 @@
             BC_TYPE(BCV) == 'NO_SLIP_WALL'   .OR.   &
             BC_TYPE(BCV) == 'PAR_SLIP_WALL') THEN
 
-            lXw = XE(BC_I_w(BCV)-1); lXe = XE(BC_I_e(BCV))
-            lYs = YN(BC_J_s(BCV)-1); lYn = YN(BC_J_n(BCV))
-            lZb = ZT(BC_K_b(BCV)-1); lZt = ZT(BC_K_t(BCV))
+            lXw = XE(BC_I_w(BCV)-1)
+            lXe = XE(BC_I_e(BCV))
+            IF(BC_X_w(BCV) == BC_X_e(BCV)) then
+               if(BC_X_w(BCV) == 0.0d0) then
+                  lXw = 0.0d0
+                  lXe = 0.0d0
+               elseif(BC_X_e(BCV) == xLength) then
+                  lXw = xLength
+                  lXe = xLength
+               endif
+            endif
+
+            lYs = YN(BC_J_s(BCV)-1)
+            lYn =YN(BC_J_n(BCV))
+            if(BC_Y_s(bcv) == BC_Y_n(bcv)) then
+               if(BC_Y_s(BCV) == 0.0d0) then
+                  lYs = 0.0d0
+                  lYn = 0.0d0
+               elseif(BC_Y_s(BCV) == yLength) then
+                  lYs = yLength
+                  lYn = yLength
+               endif
+            endif
+
+            lZt = ZT(BC_K_t(BCV))
+            lZb = ZT(BC_K_b(BCV)-1)
+            if(BC_Z_b(bcv) == BC_Z_t(bcv)) then
+               if(BC_Z_b(bcv) == 0.0d0) then
+                  lZb = 0.0d0
+                  lZt = 0.0d0
+               elseif(BC_Z_b(bcv) == zLength) then
+                  lZb = zLength
+                  lZt = zLength
+               endif
+            endif
+
             CALL GENERATE_STL_BOX(lXw, lXe, lYs, lYn, lZb, lZt)
          ENDIF
       ENDDO
@@ -374,90 +412,6 @@
 
       RETURN
       END SUBROUTINE CONVERT_BC_WALLS_TO_STL
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CONVERT_DEFAULT_WALLS_TO_STL                            !
-!  Author: J.Musser                                   Date: 03-Nov-15  !
-!                                                                      !
-!  Purpose: Convert user specified walls to STLs for particle-wall     !
-!  collision detection.                                                !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      Subroutine CONVERT_DEFAULT_WALLS_TO_STL
-
-      USE geometry, only: XLENGTH, YLENGTH, ZLENGTH
-      use stl, only: VERTEX, NORM_FACE
-      use stl, only: N_FACETS_DES
-      use stl, only: STL_START, STL_END, DEFAULT_STL
-
-      use discretelement, only: DES_PERIODIC_WALLS_X
-      use discretelement, only: DES_PERIODIC_WALLS_Y
-      use discretelement, only: DES_PERIODIC_WALLS_Z
-
-      USE param1, only: ZERO, ONE
-
-      IMPLICIT NONE
-
-      STL_START(DEFAULT_STL)=N_FACETS_DES+1
-
-! West Face
-      IF(.NOT.DES_PERIODIC_WALLS_X)THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/ZERO, ZERO, ZERO/)
-         VERTEX(2,:,N_FACETS_DES) = (/ZERO, 2*YLENGTH, ZERO/)
-         VERTEX(3,:,N_FACETS_DES) = (/ZERO, ZERO, 2*ZLENGTH/)
-         NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
-
-! East Face
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/XLENGTH, ZERO, ZERO/)
-         VERTEX(2,:,N_FACETS_DES) = (/XLENGTH, 2*YLENGTH, ZERO/)
-         VERTEX(3,:,N_FACETS_DES) = (/XLENGTH, ZERO, 2*ZLENGTH/)
-         NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
-      ENDIF
-
-! South Face
-      IF(.NOT.DES_PERIODIC_WALLS_Y)THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/ZERO, ZERO, ZERO/)
-         VERTEX(2,:,N_FACETS_DES) = (/2*XLENGTH, ZERO, ZERO/)
-         VERTEX(3,:,N_FACETS_DES) = (/ZERO, ZERO, 2*ZLENGTH/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
-
-! North Face
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/ZERO, YLENGTH, ZERO/)
-         VERTEX(2,:,N_FACETS_DES) = (/2*XLENGTH, YLENGTH, ZERO/)
-         VERTEX(3,:,N_FACETS_DES) = (/ZERO, YLENGTH, 2*ZLENGTH/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
-      ENDIF
-
-! Bottom Face
-      IF(.NOT.DES_PERIODIC_WALLS_Z) THEN
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/ZERO, ZERO, ZERO/)
-         VERTEX(2,:,N_FACETS_DES) = (/2*XLENGTH, ZERO, ZERO/)
-         VERTEX(3,:,N_FACETS_DES) = (/ZERO, 2*YLENGTH, ZERO/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
-
-! Top Face
-         N_FACETS_DES = N_FACETS_DES+1
-         VERTEX(1,:,N_FACETS_DES) = (/ZERO, ZERO, ZLENGTH/)
-         VERTEX(2,:,N_FACETS_DES) = (/2*XLENGTH, ZERO, ZLENGTH/)
-         VERTEX(3,:,N_FACETS_DES) = (/ZERO, 2*YLENGTH, ZLENGTH/)
-         NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
-      ENDIF
-
-      STL_END(DEFAULT_STL)=N_FACETS_DES
-
-      RETURN
-      END SUBROUTINE CONVERT_DEFAULT_WALLS_TO_STL
-
-      END MODULE STL_PREPROC_DES
-
-
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -473,6 +427,7 @@
 
       use stl, only: VERTEX, NORM_FACE
       use stl, only: N_FACETS_DES
+      use geometry, only: xLength, yLength, zLength
 
       use param1, only: ZERO, ONE
 
@@ -481,82 +436,133 @@
       DOUBLE PRECISION, INTENT(IN) :: pXw, pXe, pYs, pYn, pZb, pZt
 
 ! West Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
+      if(pYs /= pYn .and. pZb /= pZt) then
+         vertex(1,:,n_facets_des + 1) = (/pXw, pYs, pZb/)
+         vertex(2,:,n_facets_des + 1) = (/pXw, pYn, pZb/)
+         vertex(3,:,n_facets_des + 1) = (/pXw, pYn, pZt/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/-ONE, ZERO, ZERO/)
+         vertex(1,:,n_facets_des + 2) = (/pXw, pYs, pZt/)
+         vertex(2,:,n_facets_des + 2) = (/pXw, pYs, pZb/)
+         vertex(3,:,n_facets_des + 2) = (/pXw, pYn, pZt/)
+
+         if(pXw == pXe) then
+            if(pXw == 0.0d0) then
+               norm_face(:,n_facets_des + 1) = (/ one, zero, zero/)
+               norm_face(:,n_facets_des + 2) = (/ one, zero, zero/)
+            elseif(pXw == xLength) then
+               norm_face(:,n_facets_des + 1) = (/-one, zero, zero/)
+               norm_face(:,n_facets_des + 2) = (/-one, zero, zero/)
+            else
+               stop 9800
+            endif
+         else
+            norm_face(:,n_facets_des + 1) = (/-one, zero, zero/)
+            norm_face(:,n_facets_des + 2) = (/-one, zero, zero/)
+         endif
+         n_facets_des = n_facets_des+2
 
 ! East Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
+         if(pXw /= pXe) then
+            vertex(3,:,n_facets_des + 1) = (/pXe, pYs, pZb/)
+            vertex(2,:,n_facets_des + 1) = (/pXe, pYn, pZb/)
+            vertex(1,:,n_facets_des + 1) = (/pXe, pYn, pZt/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ONE, ZERO, ZERO/)
+            vertex(3,:,n_facets_des + 2) = (/pXe, pYs, pZt/)
+            vertex(2,:,n_facets_des + 2) = (/pXe, pYs, pZb/)
+            vertex(1,:,n_facets_des + 2) = (/pXe, pYn, pZt/)
+
+            norm_face(:,n_facets_des + 1) = (/ one, zero, zero/)
+            norm_face(:,n_facets_des + 2) = (/ one, zero, zero/)
+            n_facets_des = n_facets_des + 2
+         endif
+      endif
+
 
 ! South Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
+      if(pXw /= pXe .and. pZb /= pZt) then
+         vertex(1,:,n_facets_des + 1) = (/pXw, pYs, pZb/)
+         vertex(2,:,n_facets_des + 1) = (/pXe, pYs, pZb/)
+         vertex(3,:,n_facets_des + 1) = (/pXe, pYs, pZt/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYs, pZt/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, -ONE, ZERO/)
+         vertex(1,:,n_facets_des + 2) = (/pXe, pYs, pZt/)
+         vertex(2,:,n_facets_des + 2) = (/pXw, pYs, pZt/)
+         vertex(3,:,n_facets_des + 2) = (/pXw, pYs, pZb/)
+
+         if(pYs == pYn) then
+            if(pYs == 0.0d0) then
+               norm_face(:,n_facets_des + 1) = (/zero, one, zero/)
+               norm_face(:,n_facets_des + 2) = (/zero, one, zero/)
+            elseif(pYs == yLength) then
+               norm_face(:,n_facets_des + 1) = (/zero,-one, zero/)
+               norm_face(:,n_facets_des + 2) = (/zero,-one, zero/)
+            else
+               stop 9801
+            endif
+            norm_face(:,n_facets_des + 1) = (/zero,-one, zero/)
+            norm_face(:,n_facets_des + 2) = (/zero,-one, zero/)
+         endif
+         n_facets_des = n_facets_des + 2
 
 ! North Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
+         if(pYs /= pYn) then
+            vertex(3,:,n_facets_des + 1) = (/pXw, pYn, pZb/)
+            vertex(2,:,n_facets_des + 1) = (/pXe, pYn, pZb/)
+            vertex(1,:,n_facets_des + 1) = (/pXe, pYn, pZt/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZt/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYn, pZt/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ONE, ZERO/)
+            vertex(3,:,n_facets_des + 2) = (/pXe, pYn, pZt/)
+            vertex(2,:,n_facets_des + 2) = (/pXw, pYn, pZt/)
+            vertex(1,:,n_facets_des + 2) = (/pXw, pYn, pZb/)
+            norm_face(:,n_facets_des + 1) = (/zero, one, zero/)
+            norm_face(:,n_facets_des + 2) = (/zero, one, zero/)
+            n_facets_des = n_facets_des + 2
+         endif
+      endif
 
 ! Bottom Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
+      if(pXw /= pXe .and. pYs /= pYn) then
+         vertex(1,:,n_facets_des + 1) = (/pXw, pYs, pZb/)
+         vertex(2,:,n_facets_des + 1) = (/pXe, pYs, pZb/)
+         vertex(3,:,n_facets_des + 1) = (/pXe, pYn, pZb/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, -ONE/)
+         vertex(1,:,n_facets_des + 2) = (/pXe, pYn, pZb/)
+         vertex(2,:,n_facets_des + 2) = (/pXw, pYn, pZb/)
+         vertex(3,:,n_facets_des + 2) = (/pXw, pYs, pZb/)
+
+         if(pZb == pZt) then
+            if(pZb == 0.0d0) then
+               norm_face(:,n_facets_des + 1) = (/zero, zero, one/)
+               norm_face(:,n_facets_des + 2) = (/zero, zero, one/)
+            elseif(pZb == zLength) then
+               norm_face(:,n_facets_des + 1) = (/zero, zero,-one/)
+               norm_face(:,n_facets_des + 2) = (/zero, zero,-one/)
+            else
+               stop 9802
+            endif
+         else
+            norm_face(:,n_facets_des + 1) = (/zero, zero,-one/)
+            norm_face(:,n_facets_des + 2) = (/zero, zero,-one/)
+         endif
+         n_facets_des = n_facets_des+2
 
 ! Top Face
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXe, pYs, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
+         if(pZb /= pZt) then
+            vertex(3,:,n_facets_des + 1) = (/pXw, pYs, pZb/)
+            vertex(2,:,n_facets_des + 1) = (/pXe, pYs, pZb/)
+            vertex(1,:,n_facets_des + 1) = (/pXe, pYn, pZb/)
 
-      N_FACETS_DES = N_FACETS_DES+1
-      VERTEX(3,:,N_FACETS_DES) = (/pXe, pYn, pZb/)
-      VERTEX(2,:,N_FACETS_DES) = (/pXw, pYn, pZb/)
-      VERTEX(1,:,N_FACETS_DES) = (/pXw, pYs, pZb/)
-      NORM_FACE(:,N_FACETS_DES) = (/ZERO, ZERO, ONE/)
+            vertex(3,:,n_facets_des + 2) = (/pXe, pYn, pZb/)
+            vertex(2,:,n_facets_des + 2) = (/pXw, pYn, pZb/)
+            vertex(1,:,n_facets_des + 2) = (/pXw, pYs, pZb/)
+
+            norm_face(:,n_facets_des + 1) = (/zero, zero, one/)
+            norm_face(:,n_facets_des + 2) = (/zero, zero, one/)
+
+            n_facets_des = n_facets_des + 2
+         endif
+      endif
 
       RETURN
       END SUBROUTINE GENERATE_STL_BOX
+
+
+      END MODULE STL_PREPROC_DES

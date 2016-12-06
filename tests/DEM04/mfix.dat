@@ -7,7 +7,7 @@
 #  References:                                                         #
 #                                                                      #
 #  R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of open-   #
-#     source MFIX-DEM software for gas-solids flows," from URL:        #
+#     source MFIX-DEM software for gas-solids flows, from URL:         #
 #     https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,      #
 #                                                                      #
 ########################################################################
@@ -121,7 +121,14 @@
 #_______________________________________________________________________
 # BOUNDARY CONDITIONS SECTION
 
-! None: Using default walls.
+  BC_X_w(1:6) =  0.00  1.00  0.00  0.00  0.00  0.00  ! (m)
+  BC_X_e(1:6) =  0.00  1.00  1.00  1.00  1.00  1.00  ! (m)
+  BC_Y_s(1:6) =  0.00  0.00  0.00  1.00  0.00  0.00  ! (m)
+  BC_Y_n(1:6) =  1.00  1.00  0.00  1.00  1.00  1.00  ! (m)
+  BC_Z_b(1:6) =  0.00  0.00  0.00  0.00  0.00  1.00  ! (m)
+  BC_Z_t(1:6) =  1.00  1.00  1.00  1.00  0.00  1.00  ! (m)
+
+  BC_TYPE(1:6) = 6*'NSW'
 
 
 #_______________________________________________________________________

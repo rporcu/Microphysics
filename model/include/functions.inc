@@ -59,19 +59,6 @@
 
       END FUNCTION WALL_ICBC_FLAG
 
-      LOGICAL FUNCTION DEFAULT_WALL_AT(i,j,k)
-      use geometry, only: flag
-      use ic, only: icbc_cycl, icbc_cyclp
-      implicit none
-      integer, intent(in) :: i,j,k
-      integer             :: icbc
-
-      icbc = mod(flag(i,j,k,0),1000)
-
-      DEFAULT_WALL_AT = (ICBC .NE. icbc_cycl  .and. &
-         ICBC .NE. icbc_cyclp .and. flag(i,j,k,0) < 1000)
-
-      END FUNCTION DEFAULT_WALL_AT
 
 ! Cyclic
 !---------------------------------------------------------------------//

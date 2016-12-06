@@ -16,7 +16,6 @@
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE functions, only: default_wall_at
       USE geometry, only: imax2, jmax2, kmax2
 
       implicit none
@@ -71,69 +70,6 @@
          ENDIF
       ENDDO
 
-
-! The above section did not address bc_type=undefined (which by default
-! is either a ns wall, a fs wall) or
-! bc_type='dummy' conditions. The section below will handle both events
-! since default_wall_at will register as true
-      K1 = 1
-      DO J1 = JSTART3, JEND3
-         DO I1 = ISTART3, IEND3
-            IF(K1.NE.KSTART2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
-
-! top xy-plane
-      K1 = KMAX2
-      DO J1 = JSTART3, JEND3
-         DO I1 = ISTART3, IEND3
-            IF(K1.NE.KEND2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
-
-! south xz-plane
-      J1 = 1
-      DO K1 = KSTART3, KEND3
-         DO I1 = ISTART3, IEND3
-            IF(J1.NE.JSTART2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
-
-! north xz-plane
-      J1 = JMAX2
-      DO K1 = KSTART3, KEND3
-         DO I1 = ISTART3, IEND3
-            IF(J1.NE.JEND2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
-
-! west zy-plane
-      I1 = 1
-      DO K1 = KSTART3, KEND3
-         DO J1 = JSTART3, JEND3
-            IF(I1.NE.ISTART2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
-
-! east zy-plane
-      I1 = IMAX2
-      DO K1 = KSTART3, KEND3
-         DO J1 = JSTART3, JEND3
-            IF(I1.NE.IEND2) EXIT
-            IF (DEFAULT_WALL_AT(i1,j1,k1)) CALL SET_WALL_BC1 &
-                 (I1, I1, J1, J1, K1, K1, u_g, v_g, w_g, flag)
-         ENDDO
-      ENDDO
       RETURN
       END SUBROUTINE SET_WALL_BC
 

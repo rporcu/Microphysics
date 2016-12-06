@@ -40,7 +40,6 @@ MODULE functions
 
 ! logical function to identify various wall cells
 ! LOGICAL :: wall_at
-! LOGICAL :: DEFAULT_WALL_AT
 ! LOGICAL :: WALL_ICBC_FLAG
 
 ! Logical function to identify a cyclic cell and different
