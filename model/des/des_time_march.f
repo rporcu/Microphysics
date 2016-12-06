@@ -24,7 +24,7 @@ module des_time_march_module
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
+      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, fc, pvol, des_vel_new, drag_fc
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -119,7 +119,7 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg)
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pvol, des_vel_new, fc)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg)
       ENDIF
@@ -145,7 +145,7 @@ module des_time_march_module
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,fc,drag_fc,pvol,des_vel_new)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES

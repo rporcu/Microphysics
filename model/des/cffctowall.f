@@ -7,12 +7,12 @@
 !  Reviewer: Rahul Garg                               Date: 02-Aug-07!
 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      SUBROUTINE CFFCTOWALL(L, NORM, DIST_LI, FN, FT)
+      SUBROUTINE CFFCTOWALL(L, NORM, DIST_LI, FN, FT, DES_RADIUS, FC, TOW)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: fc, tow, des_crossprdct, des_radius
+      USE discretelement, only: des_crossprdct
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -26,6 +26,9 @@
       DOUBLE PRECISION, INTENT(IN) :: NORM(3)
 ! normal and tangential force
       DOUBLE PRECISION, INTENT(IN) :: FN(3), FT(3)
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: DES_RADIUS
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: FC, TOW
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

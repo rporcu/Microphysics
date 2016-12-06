@@ -25,7 +25,7 @@ module time_march_module
 !-----------------------------------------------
       USE compar, only: myPE
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE discretelement, only: des_continuum_coupled
+      USE discretelement, only: des_continuum_coupled, pvol, des_vel_new, fc, max_pip
       USE error_manager, only: err_msg, flush_err_msg
       USE fld_const, only: mu_g0
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
@@ -160,7 +160,7 @@ module time_march_module
 
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-         f_gds, drag_am, drag_bm)
+         f_gds, drag_am, drag_bm, pvol(1:MAX_PIP), des_vel_new(1:MAX_PIP, :), fc(1:MAX_PIP, :))
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
@@ -210,7 +210,7 @@ module time_march_module
 
 ! Calculate coefficients
       CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-         f_gds, drag_am, drag_bm)
+         f_gds, drag_am, drag_bm, pvol, des_vel_new, fc)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -239,17 +239,17 @@ module time_march_module
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                    flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                    tau_u_g,tau_v_g,tau_w_g,&
-                   flag, IER, NIT)
+                   pvol, des_vel_new, fc, flag, IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, &
          rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
-         drag_am, drag_bm, IER,NIT))
+         drag_am, drag_bm, pvol, des_vel_new, fc, IER,NIT))
 
          call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                       tau_u_g,tau_v_g,tau_w_g,&
-                      flag, IER, NIT)
+                      pvol, des_vel_new, fc, flag, IER, NIT)
       ENDDO
 
       IF(DT < DT_MIN) THEN

@@ -14,7 +14,8 @@
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE des_time_march_module, only: des_time_march
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
-         USE discretelement, only: des_pos_new, pft_neighbor, fc, tow, des_coll_model_enum, dtsolid
+         USE discretelement, only: des_pos_new, des_vel_new, omega_new, wall_collision_pft, pft_neighbor, fc, tow
+         USE discretelement, only: des_coll_model_enum, dtsolid
          USE discretelement, only: kn, kt, max_pip, mew, hertzian, des_radius, neighbor_index, pijk
          USE discretelement, only: particle_state, nonexistent
          USE drag_gs_des0_module, only: drag_gs_des0
@@ -68,7 +69,8 @@
 
 !-----------------------------------------------
 
-      CALL CALC_DEM_FORCE_WITH_WALL_STL
+      CALL CALC_DEM_FORCE_WITH_WALL_STL(des_radius(1:MAX_PIP), des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
+         omega_new(1:MAX_PIP, :), fc(1:MAX_PIP, :), tow(1:MAX_PIP, :), wall_collision_pft)
 
 ! Check particle LL neighbor contacts
 !---------------------------------------------------------------------//

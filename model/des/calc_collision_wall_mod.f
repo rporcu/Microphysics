@@ -15,8 +15,8 @@
       USE discretelement, only: des_coll_model_enum, wall_collision_facet_id, collision_array_max
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
       USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
-      USE discretelement, only: dimn, des_pos_new, wall_collision_pft, fc, tow, pijk, des_crossprdct
-      USE discretelement, only: kn_w, kt_w, mew_w, max_pip, dtsolid, dg_pijk, des_radius
+      USE discretelement, only: dimn, pijk, des_crossprdct
+      USE discretelement, only: kn_w, kt_w, mew_w, dtsolid, dg_pijk
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE param1, only: small_number, zero
       USE stl, only: facets_at_dg, vertex, norm_face
@@ -36,9 +36,14 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL
+      SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
+      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
 
       INTEGER :: LL
       INTEGER :: NF
@@ -72,7 +77,7 @@
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
          (DES_PERIODIC_WALLS_Z)) RETURN
 
-      DO LL = 1, MAX_PIP
+      DO LL = 1, size(des_radius)
 
 ! skipping non-existent particles or ghost particles
 ! make sure the particle is not classified as a new 'entering' particle
@@ -193,7 +198,7 @@
 
 ! Calculate the translational relative velocity
             CALL CFRELVEL_WALL(LL, V_REL_TRANS_NORM,VREL_T,           &
-               NORMAL, DISTMOD)
+               NORMAL, DISTMOD, DES_VEL_NEW, OMEGA_NEW)
 
 ! Calculate the spring model parameters.
             phaseLL = PIJK(LL,5)
@@ -427,18 +432,19 @@
 !  Comments: Only the magnitude of the normal component is returned    !
 !  whereas the full tangential vector is returned.                     !
 !----------------------------------------------------------------------!
-      SUBROUTINE CFRELVEL_WALL(LL, VRN, VRT, NORM, DIST)
+      SUBROUTINE CFRELVEL_WALL(LL, VRN, VRT, NORM, DIST, DES_VEL_NEW, OMEGA_NEW)
 
-! Particle translational velocity
-      use discretelement, only: DES_VEL_NEW
-! Particle rotational velocity
-      use discretelement, only: OMEGA_NEW
 ! Spatial array size (parameter)
       use discretelement, only: DIMN
 ! Function for calculating the cross prodcut
       use discretelement, only: DES_CROSSPRDCT
 
       IMPLICIT NONE
+
+! Particle translational velocity
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: DES_VEL_NEW
+! Particle rotational velocity
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: OMEGA_NEW
 
 ! Dummy arguments:
 !---------------------------------------------------------------------//

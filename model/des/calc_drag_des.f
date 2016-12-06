@@ -4,7 +4,6 @@ module calc_drag_des_module
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DES_EXPLICITLY_COUPLED
-      use discretelement, only: DRAG_FC, FC, MAX_PIP
       use discretelement, only: NORMAL_PARTICLE, PARTICLE_STATE
       use drag_gs_des0_module, only: drag_gs_des0, drag_gs_gas0
       use drag_gs_des1_module, only: drag_gs_des1, drag_gs_gas1
@@ -22,7 +21,7 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
+      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,fc,drag_fc,pvol,des_vel_new)
 
       IMPLICIT NONE
 
@@ -40,6 +39,9 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: drag_fc, des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
 
       INTEGER :: II
 
@@ -47,7 +49,7 @@ module calc_drag_des_module
       IF(DES_EXPLICITLY_COUPLED) THEN
 
          IF(DES_CONTINUUM_COUPLED) THEN
-            DO II = 1, MAX_PIP
+            DO II = 1, size(pvol)
                IF(NORMAL_PARTICLE==PARTICLE_STATE(II)) &
                   FC(II,:) = FC(II,:) + DRAG_FC(II,:)
             ENDDO
@@ -60,7 +62,7 @@ module calc_drag_des_module
             if(des_interp_scheme_enum == des_interp_garg) then
                CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
             else
-               CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
+               CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pvol,des_vel_new,fc)
             endif
          ENDIF
 
@@ -79,7 +81,7 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_am, drag_bm)
+         f_gds, drag_am, drag_bm, pvol, des_vel_new, fc)
 
       IMPLICIT NONE
 
@@ -101,6 +103,9 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
@@ -109,7 +114,7 @@ module calc_drag_des_module
                f_gds, drag_am, drag_bm)
          else
             CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               f_gds, drag_am, drag_bm)
+               f_gds, drag_am, drag_bm, pvol, des_vel_new, fc)
          endif
       ENDIF
 
@@ -129,7 +134,7 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(ep_g, u_g, v_g, w_g, ro_g, &
-         rop_g, mu_g, f_gds, drag_am, drag_bm)
+         rop_g, mu_g, f_gds, drag_am, drag_bm, pvol, des_vel_new, fc)
 
 
       IMPLICIT NONE
@@ -154,6 +159,9 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
 
 ! Bin particles to the fluid grid.
       CALL PARTICLES_IN_CELL
@@ -162,7 +170,7 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, &
-         ro_g, mu_g, f_gds, drag_am, drag_bm)
+         ro_g, mu_g, f_gds, drag_am, drag_bm, pvol, des_vel_new, fc)
 
       END SUBROUTINE CALC_DRAG_DES_EXPLICIT
 
