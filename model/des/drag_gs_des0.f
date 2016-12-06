@@ -208,7 +208,7 @@ module drag_gs_des0_module
       use functions     , only: fluid_at,ip1,jp1,kp1
       use mpi_node_des, only: des_addnodevalues
 
-      use des_drag_gp_module
+      use des_drag_gp_module, only: des_drag_gp
       use discretelement, only: particle_state, nonexistent, &
          normal_ghost, entering_ghost, exiting_ghost
       IMPLICIT NONE

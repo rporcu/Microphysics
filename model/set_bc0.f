@@ -336,7 +336,7 @@
       use param1, only: UNDEFINED
       use param1, only: UNDEFINED_I
 
-      use compar
+      use compar, only: mype
       use funits, only: UNIT_LOG
       use exit_mod, only: mfix_exit
 

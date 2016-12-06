@@ -9,15 +9,13 @@
 
       SUBROUTINE SET_FLAGS
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use ic
+      use ic, only: icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl, icbc_fluid, icbc_no_s, icbc_free, icbc_pslip
+      use ic, only: icbc_cyclp, icbc_no_s, icbc_cycl
       use geometry, only: flag, ijkmax3
-      use compar, only: iend3
-      use compar
+      use compar, only: iend3, mype, pe_io
       use param1, only: undefined_i
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

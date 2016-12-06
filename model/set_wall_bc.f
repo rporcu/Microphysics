@@ -154,7 +154,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc
+      USE param1, only: one
       USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus

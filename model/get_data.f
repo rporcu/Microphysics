@@ -20,6 +20,7 @@
       USE run, only: dem_solids
       USE set_icbc_flags_module, only: set_icbc_flag
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
+      USE set_bc_flow_module, only: set_bc_flow
 
       IMPLICIT NONE
 !-----------------------------------------------

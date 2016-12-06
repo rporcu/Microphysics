@@ -9,19 +9,20 @@
 
       SUBROUTINE SET_FLUIDBED_P(p_g, ep_g)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE bc
+      USE bc, only: delp_x, delp_y, delp_z, dimension_ic, dimension_bc, bc_type, bc_p_g, bc_defined
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar   , only: myPE
       USE constant , only: gravity
       USE eos      , ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
       USE functions, only: fluid_at
-      USE geometry
+      USE geometry, only: dx, dy, dz
+      USE geometry, only: imax1, jmax1, kmax1
+      USE geometry, only: imin1, jmin1, kmin1
+      USE geometry, only: jmax2
+      USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
-      USE param1   , only: undefined
+      USE param1   , only: undefined, zero
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log

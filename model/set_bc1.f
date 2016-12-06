@@ -17,7 +17,7 @@ module set_bc1_module
       USE param , only: dimension_bc
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use set_outflow_module
+      use set_outflow_module, only: set_outflow
 
       implicit none
 

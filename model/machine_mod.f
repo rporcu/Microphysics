@@ -32,7 +32,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_RUN_ID
 
-      USE param
       IMPLICIT NONE
 
 ! temporary array to hold time data

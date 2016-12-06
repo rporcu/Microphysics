@@ -1,18 +1,4 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: SET_BC_FLOW                                             !
-!  Author: P. Nicoletti                               Date: 10-DEC-91  !
-!                                                                      !
-!  Purpose: Check boundary condition specifications                    !
-!     - convert physical locations to i, j, k's                        !
-!     - compute area of boundary surfaces (GET_BC_AREA)                !
-!     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
-!     - check specification of physical quantities                     !
-!                                                                      !
-!  Comments:                                                           !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_FLOW
+MODULE set_bc_flow_module
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -28,6 +14,10 @@
       use bc, only: BC_EP_s
       use bc, only: BC_EP_g
 
+      use bc, only: bc_u_g, bc_v_g, bc_w_g
+      use bc, only: bc_u_s, bc_v_s, bc_w_s
+      use bc, only: bc_plane
+
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants
@@ -36,6 +26,23 @@
       use param, only: DIMENSION_BC
 ! Maximum number of disperse phases
       use param, only: DIM_M
+
+   contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SET_BC_FLOW                                             !
+!  Author: P. Nicoletti                               Date: 10-DEC-91  !
+!                                                                      !
+!  Purpose: Check boundary condition specifications                    !
+!     - convert physical locations to i, j, k's                        !
+!     - compute area of boundary surfaces (GET_BC_AREA)                !
+!     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
+!     - check specification of physical quantities                     !
+!                                                                      !
+!  Comments:                                                           !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE SET_BC_FLOW
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -114,8 +121,6 @@
       USE param, only: DIM_M
       USE param1, only: ZERO
       USE param1, only: UNDEFINED
-
-      use bc
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
@@ -288,8 +293,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_BC_VEL_OUTFLOW(M_TOT, SKIP, BCV)
 
-      USE bc
-
+      use bc, only: dim_m
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
@@ -440,3 +444,4 @@
          'correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_BC_VEL_OUTFLOW
+END MODULE set_bc_flow_module

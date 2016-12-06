@@ -27,8 +27,8 @@ module iterate_module
       USE output   , only: full_log, nlog
       USE param1   , only: small_number, undefined, zero, one
       USE residual , only: resid, resid_p
-      USE run
-      USE time_cpu
+      USE run, only: call_usr, dt, dt_prev, nstep, time, tstop
+      USE time_cpu, only: cpuos, cpu_nlog, cpu0, time_nlog
       USE toleranc, only: norm_g
       USE vavg_mod, ONLY: vavg_g
 
@@ -407,7 +407,8 @@ module iterate_module
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc
+      USE bc, only: delp_x, delp_y, delp_z, flux_g
+      USE param1, only: one
       USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
       USE exit_mod, only: mfix_exit
       USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf

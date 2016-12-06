@@ -81,7 +81,7 @@ CONTAINS
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, ONLY: fluid_at
-      USE param1
+      USE param1, only: zero
 
       IMPLICIT NONE
 

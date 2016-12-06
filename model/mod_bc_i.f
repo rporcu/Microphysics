@@ -14,16 +14,15 @@
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      USE geometry, only: FLAG
-      USE ic
+      use geometry, only: FLAG
 
-      use compar
+      use compar, only: mype
       use ic, only: icbc_fluid
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      USE functions
+      use functions, only: wall_icbc_flag
 
-      USE open_files_mod, only: open_pe_log
+      use open_files_mod, only: open_pe_log
 
       IMPLICIT NONE
 

@@ -13,10 +13,11 @@
 ! Modules
 !-----------------------------------------------
       USE compar, only: istart3,jstart3,iend3,jend3,kstart3,kend3
-      USE ic
+      USE ic, only: dimension_ic
+      USE ic, only: ic_defined, ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_type, ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       USE scales, only: scale_pressure
-      USE functions
       USE param1, only: undefined
+
       IMPLICIT NONE
 
       double precision, intent(inout) :: ep_g&
