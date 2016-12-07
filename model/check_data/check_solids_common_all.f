@@ -190,9 +190,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Parameter constants
-      use param1, only: ZERO, ONE
-      use param1, only: UNDEFINED, UNDEFINED_I
+      use param1, only: UNDEFINED
 ! Maximum number of solids phases.
       use param, only: DIM_M
 

@@ -210,7 +210,7 @@
             if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
 ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
-                  IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
+                  IF ((J/=1.AND.J/=0) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
                         IF(flag(iminus(i,j,k),j,k,1) <100) &
                            FLAG(iminus(i,j,k),j,k,2) = 2000
@@ -226,7 +226,7 @@
                   ENDIF
                 ENDIF
                IF (K == KMAX2) THEN
-                  IF ((J/=1.AND.J/=0.) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
+                  IF ((J/=1.AND.J/=0) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((I/=1.AND.I/=0) .AND. (I/=IMAX2.AND.I/=IMAX3) .AND. &
                         flag(i,j,kminus(i,j,k),1)<100) &
                         FLAG(i,j,kminus(i,j,k),4) = 2000

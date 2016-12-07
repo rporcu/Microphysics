@@ -55,7 +55,7 @@
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS, PVOL
 ! Map to fluid grid cells and solids phase
-      use discretelement, only: PIJK, particle_phase
+      use discretelement, only: particle_phase
 ! Number of particles on the process (max particle array size)
       use discretelement, only: PIP
 ! Number of ghost particles on the current process

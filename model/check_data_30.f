@@ -129,7 +129,6 @@
 !---------------------------------------------------------------------//
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use open_files_mod, only: open_pe_log, close_pe_log
-      use toleranc, only: TMIN, TMAX, TOL_COM
 
       IMPLICIT NONE
 

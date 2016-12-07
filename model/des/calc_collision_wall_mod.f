@@ -36,7 +36,7 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(pijk,particle_phase, &
+         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
             des_radius, &
             des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
@@ -46,7 +46,6 @@
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
       INTEGER :: LL
