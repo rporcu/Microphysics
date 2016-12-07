@@ -129,7 +129,7 @@ module solve_vel_star_module
 ! evaluate local variable vxf_gs
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_X_EQ(0)) THEN
-         CALL CALC_D(D_E, "X", A_M, ep_g, f_gds)
+         CALL CALC_D(D_E, "X", A_M, ep_g, f_gds, flag)
       ENDIF
 
 ! handle special case where center coefficient is zero
@@ -172,7 +172,7 @@ module solve_vel_star_module
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_Y_EQ(0)) THEN
-         CALL CALC_D(D_N, "Y", A_M, ep_g, f_gds)
+         CALL CALC_D(D_N, "Y", A_M, ep_g, f_gds, flag)
       ENDIF
 
       IF (MOMENTUM_Y_EQ(0)) CALL adjust_a_g('V',A_M, B_M, ROP_G)
@@ -213,7 +213,7 @@ module solve_vel_star_module
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_Z_EQ(0)) THEN
-         CALL CALC_D(D_T, "Z", A_M, ep_g, f_gds)
+         CALL CALC_D(D_T, "Z", A_M, ep_g, f_gds, flag)
       ENDIF
 
       IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)

@@ -34,7 +34,6 @@ module source_u_g_module
       USE bc      , only: delp_x
 
       USE functions, only: avg
-      USE functions, only: ip_at_e
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax
 
@@ -112,7 +111,7 @@ module source_u_g_module
           EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
 ! Impermeable internal surface
-         IF (ip_at_e(i,j,k)) THEN
+         IF (flag(i,j,k,2) < 1000) THEN
             A_M(I,J,K,E) = ZERO
             A_M(I,J,K,W) = ZERO
             A_M(I,J,K,N) = ZERO
@@ -254,8 +253,7 @@ module source_u_g_module
 ! the east and west zy planes do not have to be explicitly addressed for
 ! the u-momentum equation. In this direction the velocities are defined
 ! at the wall (due staggered grid). They are defined as zero for a
-! no penetration condition (see zero_norm_vel subroutine and code under
-! the ip_at_e branch in the above source routine).
+! no penetration condition.
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
       K1 = 1

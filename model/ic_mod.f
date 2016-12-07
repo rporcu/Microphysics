@@ -104,34 +104,34 @@
 ! Flag to extend the lattice distribution in a given IC to available area
       LOGICAL :: IC_DES_FIT_TO_REGION (DIMENSION_IC)
 
-   !  Cell flag definitions
-   !
-   !  ICBC_FLAG BC_TYPE             Cell type
-   !  ----- --------- -------        ---------
-   !             UNDEF        0 Undefined
-   !    .        -            1 Cell containing gas or solids or both
-   !    p      P_INFLOW       2 Specified pressure inflow cell
-   !    P      P_OUTFLOW      3 Specified pressure outflow cell
-   !    I      MASS_INFLOW    4 Specified mass flux inflow cell
-   !    O      MASS_OUTFLOW   5 Specified mass flux outflow cell
-   !    o      OUTFLOW        6 outflow cell
-   !    W      NO_SLIP_WALL   7 Internal/external wall with no-slip b.c.
-   !    S      FREE_SLIP_WALL 8 Internal/external wall with free-slip
-   !    s      PAR_SLIP_WALL  9 Internal/external wall with partial-slip b.c.
-   !    c      CYCLIC         10 Cyclic b.c.
-   !    C      CYCLIC_PD      11 yclic b.c. with pressure drop
+!  Cell flag definitions
+!
+!     BC_TYPE        FLAG       Cell type
+!  ------------------------------------------------------
+!     UNDEF            0    Undefined
+!     -                1    Cell containing gas or solids or both
+!   P_INFLOW          10    Specified pressure inflow cell
+!   P_OUTFLOW         11    Specified pressure outflow cell
+!   MASS_INFLOW       20    Specified mass flux inflow cell
+!   MASS_OUTFLOW      21    Specified mass flux outflow cell
+!   OUTFLOW           31    outflow cell
+!   NO_SLIP_WALL     100    Internal/external wall with no-slip b.c.
+!   FREE_SLIP_WALL   101    Internal/external wall with free-slip
+!   PAR_SLIP_WALL    102    Internal/external wall with partial-slip b.c.
+!   CYCLIC           106    Cyclic b.c.
+!   CYCLIC_PD        107    Cyclic b.c. with pressure drop
 
-   integer, parameter :: icbc_undef =   0
-   integer, parameter :: icbc_fluid =   1
-   integer, parameter :: icbc_p_inf =  10
-   integer, parameter :: icbc_p_out =  11
-   integer, parameter :: icbc_m_inf =  20
-   integer, parameter :: icbc_m_out =  21
-   integer, parameter :: icbc_outfl =  31
-   integer, parameter :: icbc_no_s  = 100
-   integer, parameter :: icbc_free  = 101
-   integer, parameter :: icbc_pslip = 102
-   integer, parameter :: icbc_cycl  = 106
-   integer, parameter :: icbc_cyclp = 107
+   integer, parameter :: UNDEF_CELL =   0
+   integer, parameter :: FLUID_     =   1
+   integer, parameter :: PINF_      =  10
+   integer, parameter :: POUT_      =  11
+   integer, parameter :: MINF_      =  20
+   integer, parameter :: MOUT_      =  21
+   integer, parameter :: OUTF_      =  31
+   integer, parameter :: NSW_       = 100
+   integer, parameter :: FSW_       = 101
+   integer, parameter :: PSW_       = 102
+   integer, parameter :: CYCL_      = 106
+   integer, parameter :: CYCP_      = 107
 
       END MODULE ic

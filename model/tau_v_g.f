@@ -32,7 +32,7 @@
 !  (i.e., those of the form mu.grad(v)                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -62,6 +62,8 @@
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -81,7 +83,7 @@
           DO I = istart3, iend3
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
-            IF ( .NOT.ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S) THEN
+            IF (flag(i,j,k,3) > 1000 .AND. EPGA>DIL_EP_S) THEN
 
                JP = JP1(J)
                IM = IM1(I)
@@ -136,7 +138,7 @@
 
             ELSE
                lTAU_V_G(i,j,k) = ZERO
-            ENDIF   ! end if (.NOT. ip_at_n(i,j,k) .AND. EPGA>DIL_EP_S)
+            ENDIF
          ENDDO
          ENDDO
          ENDDO

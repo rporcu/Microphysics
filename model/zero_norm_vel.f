@@ -23,7 +23,6 @@
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE geometry , only: imax2, jmax2, kmax2
       USE functions, only: iminus, jminus, kminus
-      USE functions, only: ip_at_e, ip_at_n, ip_at_t
 
       IMPLICIT NONE
 
@@ -48,9 +47,9 @@
 
 
             if (flag(i,j,k,1)<100) then
-               if (ip_at_e(i,j,k)) u_g(i,j,k) = zero
-               if (ip_at_n(i,j,k)) v_g(i,j,k) = zero
-               if (ip_at_t(i,j,k)) w_g(i,j,k) = zero
+               if (flag(i,j,k,2) < 1000) u_g(i,j,k) = zero
+               if (flag(i,j,k,3) < 1000) v_g(i,j,k) = zero
+               if (flag(i,j,k,4) < 1000) w_g(i,j,k) = zero
             else
 
                U_G(I,J,K) = ZERO

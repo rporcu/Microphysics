@@ -17,8 +17,8 @@
       use geometry, only: FLAG
 
       use compar, only: mype
-      use ic, only: icbc_fluid
-      use ic, only: icbc_no_s, icbc_free, icbc_pslip
+      use ic, only: FLUID_
+      use ic, only: NSW_, FSW_, PSW_
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
@@ -58,18 +58,18 @@
       IF(myPE == OWNER) THEN
 
 ! Flow on west boundary (fluid cell on east).
-         if(flag(i+1,j,k,1) == icbc_fluid .and. (&
-            flag(i,j,k,1) == icbc_no_s .or. &
-            flag(i,j,k,1) == icbc_free .or. &
-            flag(i,j,k,1) == icbc_pslip)) then
+         if(flag(i+1,j,k,1) == FLUID_ .and. (&
+            flag(i,j,k,1) == NSW_ .or. &
+            flag(i,j,k,1) == FSW_ .or. &
+            flag(i,j,k,1) == PSW_)) then
 
             BC_PLANE(BCV) = 'E'
 
 ! Flow on east boundary (fluid cell on west).
-         elseif(flag(i,j,k,1) == icbc_fluid .and. (&
-            flag(i+1,j,k,1) == icbc_no_s .or. &
-            flag(i+1,j,k,1) == icbc_free .or. &
-            flag(i+1,j,k,1) == icbc_pslip)) then
+         elseif(flag(i,j,k,1) == FLUID_ .and. (&
+            flag(i+1,j,k,1) == NSW_ .or. &
+            flag(i+1,j,k,1) == FSW_ .or. &
+            flag(i+1,j,k,1) == PSW_)) then
 
             BC_I_W(BCV) = BC_I_W(BCV) + 1
             BC_I_E(BCV) = BC_I_E(BCV) + 1
@@ -109,10 +109,10 @@
          DO J = BC_J_S(BCV), BC_J_N(BCV)
 ! Verify that the the fluid and wall cells match the FLAG.
 ! Only check cells that you own and contain fluid.
-            IF(FLAG(i_fluid,j,k,1) /= icbc_fluid .and. (&
-               flag(i_wall,j,k,1) /= icbc_no_s .or. &
-               flag(i_wall,j,k,1) /= icbc_free .or. &
-               flag(i_wall,j,k,1) /= icbc_pslip)) ERROR = .TRUE.
+            IF(FLAG(i_fluid,j,k,1) /= FLUID_ .and. (&
+               flag(i_wall,j,k,1) /= NSW_ .or. &
+               flag(i_wall,j,k,1) /= FSW_ .or. &
+               flag(i_wall,j,k,1) /= PSW_)) ERROR = .TRUE.
 
             ENDDO
       ENDDO
@@ -133,10 +133,10 @@
          DO K = BC_K_B(BCV), BC_K_T(BCV)
             DO J = BC_J_S(BCV), BC_J_N(BCV)
 
-               IF(FLAG(i_fluid,j,k,1) /= icbc_fluid .and. (&
-                  flag(i_wall,j,k,1) /= icbc_no_s .or. &
-                  flag(i_wall,j,k,1) /= icbc_free .or. &
-                  flag(i_wall,j,k,1) /= icbc_pslip)) then
+               IF(FLAG(i_fluid,j,k,1) /= FLUID_ .and. (&
+                  flag(i_wall,j,k,1) /= NSW_ .or. &
+                  flag(i_wall,j,k,1) /= FSW_ .or. &
+                  flag(i_wall,j,k,1) /= PSW_)) then
 
                   WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,1),  &
                      I_FLUID, J, K, FLAG(i_fluid,j,k,1)

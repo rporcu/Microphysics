@@ -205,9 +205,9 @@ module calc_coeff_module
       CALL CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      CALL CALC_TAU_U_G (TAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
-      CALL CALC_TAU_V_G (TAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
-      CALL CALC_TAU_W_G (TAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g)
+      CALL CALC_TAU_U_G (TAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      CALL CALC_TAU_V_G (TAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      CALL CALC_TAU_W_G (TAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
 
       END SUBROUTINE CALC_TRD_AND_TAU
 

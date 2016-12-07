@@ -282,21 +282,21 @@
            ! Skip walls where some values are undefined.
            IF(flag(i,j,k,1)>=100) cycle
 
-           IF (.NOT.ip_at_e(i,j,k)) THEN
+           IF (flag(i,j,k,2) > 1000) THEN
 
 ! evaluating the residual at cell (i,j,k):
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
 
-             NUM1 = B_M(I,J,K) - (&
-              A_M(I,J,K,0)*vel(i,j,k)+&
-              A_M(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
-              A_M(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
-              A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
-              A_M(I,J,K,S)*vel(i,jminus(i,j,k),k))
+              NUM1 = B_M(I,J,K) - (&
+                 A_M(I,J,K,0)*vel(i,j,k)+&
+                 A_M(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
+                 A_M(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
+                 A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
+                 A_M(I,J,K,S)*vel(i,jminus(i,j,k),k))
 
-             NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
-                A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
+              NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
+                 A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
 
             ! Ignore momentum residual in stagnant regions.  Need an alternative
             ! criteria for residual scaling for such cases.

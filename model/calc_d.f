@@ -11,7 +11,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g,f_gds)
+      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g, f_gds, flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -31,9 +31,8 @@ MODULE CALC_D_MOD
       use functions, only: AVG
       use geometry, only: AYZ, AXZ, AXY, VOL
       use param1, only: ZERO, SMALL_NUMBER
-      use functions, only: ip_at_e, ip_at_n, ip_at_t
       use functions, only: ieast, jnorth, ktop
-      use functions, only: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
+      use functions, only: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T
 
       IMPLICIT NONE
 
@@ -49,6 +48,8 @@ MODULE CALC_D_MOD
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -71,32 +72,33 @@ MODULE CALC_D_MOD
          AM0 = -A_M(I,J,K,0)
 
          if (axis.eq.'X') then
-
-            IF (ip_at_e(i,j,k) .OR. MFLOW_AT_E(i,j,k)) THEN
-               EPGA = ZERO
-            ELSE
+            if(flag(i,j,k,2) >= 2000 .and. &
+               flag(i,j,k,2) <= 2011) then
                EPGA = AYZ*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
                IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
                   (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
+            ELSE
+               EPGA = ZERO
             ENDIF
 
          else if (axis.eq.'Y') then
-
-            IF (ip_at_n(i,j,k) .OR. MFLOW_AT_N(i,j,k)) THEN
-               EPGA = ZERO
-            ELSE
+            if(flag(i,j,k,3) >= 2000 .and. &
+               flag(i,j,k,3) <= 2011) then
                EPGA = AXZ*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
                IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
                   (F_GDS(i,j,k) + F_GDS(i,jnorth(i,j,k),k))
+            ELSE
+               EPGA = ZERO
             ENDIF
 
          else if (axis.eq.'Z') then
-            IF (ip_at_t(i,j,k) .OR. MFLOW_AT_T(i,j,k)) THEN
-               EPGA = ZERO
-            ELSE
+            if(flag(i,j,k,4) >= 2000 .and. &
+               flag(i,j,k,4) <= 2011) then
                EPGA = AXY*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
                IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
                   (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
+            ELSE
+               EPGA = ZERO
             ENDIF
          endif
 

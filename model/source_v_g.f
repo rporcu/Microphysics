@@ -40,7 +40,6 @@ module source_v_g_module
       USE bc, only: delp_y
 
       USE functions, only: avg
-      USE functions, only: ip_at_n
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax
@@ -116,7 +115,7 @@ module source_v_g_module
            EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
 
 ! Impermeable internal surface
-         IF (ip_at_n(i,j,k)) THEN
+         IF (flag(i,j,k,2)<1000) THEN
             A_M(I,J,K,E) = ZERO
             A_M(I,J,K,W) = ZERO
             A_M(I,J,K,N) = ZERO
@@ -255,8 +254,7 @@ module source_v_g_module
 ! the north and south xz planes do not have to be explicitly addressed for
 ! the v-momentum equation. In this direction the velocities are defined
 ! at the wall (due staggered grid). They are defined as zero for a
-! no penetration condition (see zero_norm_vel subroutine and code under
-! the ip_at_n branch in the above source routine).
+! no penetration condition.
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
       K1 = 1

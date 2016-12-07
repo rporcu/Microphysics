@@ -45,10 +45,6 @@ MODULE functions
 ! LOGICAL :: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T
 ! LOGICAL :: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
 
-! Logical functions to identify different impermeable/semipermeable
-! surface boundaries (specific type of internal surface)
-! LOGICAL :: ip_at_e, ip_at_n, ip_at_t
-
 
 ! Additional functions
 !---------------------------------------------------------------------//

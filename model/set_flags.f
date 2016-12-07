@@ -10,8 +10,8 @@
       SUBROUTINE SET_FLAGS
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use ic, only: icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl, icbc_fluid, icbc_no_s, icbc_free, icbc_pslip
-      use ic, only: icbc_cyclp, icbc_no_s, icbc_cycl
+      use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, FLUID_, NSW_, FSW_, PSW_
+      use ic, only: CYCP_, NSW_, CYCL_
       use geometry, only: flag, ijkmax3
       use compar, only: iend3, mype, pe_io
       use param1, only: undefined_i
@@ -51,43 +51,43 @@
             DO k = kstart3, kend3
 
               select case (flag(i,j,k,1))
-                case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
+                case (PINF_, POUT_, MINF_, MOUT_, OUTF_)
 
                 ib = min( iend3, max (istart3, i+1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
                 ib = min( iend3, max (istart3, i-1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j+1) )
                 kb = min( kend3, max (kstart3, k) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j-1) )
                 kb = min( kend3, max (kstart3, k) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k+1) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k-1) )
-                if (flag(ib,jb,kb,1) == icbc_no_s) &
-                   flag(ib,jb,kb,1) = icbc_free
+                if (flag(ib,jb,kb,1) == NSW_) &
+                   flag(ib,jb,kb,1) = FSW_
 
               end select
 
@@ -245,6 +245,18 @@
 
           end do
         end do
+     end do
+
+! Clean up edge cases
+     do k = kstart3, kend3
+         do j = jstart3, jend3
+            do i = istart3, iend3
+               if(flag(i,j,k,2) == UNDEFINED_I) flag(i,j,k,2) = 0
+               if(flag(i,j,k,3) == UNDEFINED_I) flag(i,j,k,3) = 0
+               if(flag(i,j,k,4) == UNDEFINED_I) flag(i,j,k,4) = 0
+               write(1200,"(4(i4),3(I11))") i,j,k,flag(i,j,k,:)
+            end do
+         end do
       end do
 ! ----------------------------------------------------------------<<<
 
