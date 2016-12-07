@@ -1,3 +1,6 @@
+MODULE NEIGHBOUR_MODULE
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: NEIGHBOUR                                              C
@@ -70,3 +73,4 @@ LOGICAL :: found
 
       RETURN
       END SUBROUTINE NEIGHBOUR
+END MODULE NEIGHBOUR_MODULE

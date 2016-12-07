@@ -14,6 +14,7 @@ module des_time_march_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g)
 
+      USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
       use calc_epg_des_module, only: calc_epg_des
       use calc_force_dem_module, only: calc_force_dem

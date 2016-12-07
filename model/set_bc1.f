@@ -168,17 +168,16 @@ module set_bc1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
-! Modules
-!---------------------------------------------------------------------//
       use bc, only: bc_dt_0, bc_time
-      use bc, only: bc_out_n
       use bc, only: bc_mout_g
+      use bc, only: bc_out_n
       use bc, only: bc_vout_g
-
+      use calc_outflow_module, only: calc_outflow
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: dmp_log, unit_log
       use param1, only: undefined, zero
       use run, only: time, dt, tstop
+
       IMPLICIT NONE
 
       DOUBLE PRECISION, INTENT(IN   ) :: u_g&
@@ -233,8 +232,6 @@ module set_bc1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
-! Modules
-!---------------------------------------------------------------------//
       use bc, only: bc_dt_0, bc_time
       use bc, only: bc_i_w, bc_i_e
       use bc, only: bc_j_s, bc_j_n
@@ -246,6 +243,7 @@ module set_bc1_module
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_volflow_g
       use bc, only: bc_vout_g
+      use calc_outflow_module, only: calc_outflow
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iminus, jminus, kminus
       use funits, only: dmp_log, unit_log

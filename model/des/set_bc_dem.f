@@ -1,3 +1,5 @@
+MODULE SET_BC_DEM_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_DEM                                              !
@@ -17,6 +19,7 @@
       USE layout_mi_dem_module, only: layout_mi_dem
       USE param1, only: undefined_i
       USE set_bc_dem_mi_module, only: set_bc_dem_mi
+      USE set_bc_dem_mo_module, only: set_bc_dem_mo
 
       IMPLICIT NONE
 
@@ -49,3 +52,4 @@
 
       RETURN
       END SUBROUTINE SET_BC_DEM
+END MODULE SET_BC_DEM_MODULE

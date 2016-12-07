@@ -1,3 +1,5 @@
+MODULE SET_FILTER_DES_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_FILTER_DES                                          !
@@ -30,3 +32,4 @@
 
       RETURN
       END SUBROUTINE SET_FILTER_DES
+END MODULE SET_FILTER_DES_MODULE

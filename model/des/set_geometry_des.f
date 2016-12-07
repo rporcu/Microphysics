@@ -1,3 +1,5 @@
+MODULE SET_GEOMETRY_DES_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_GEOMETRY_DES                                        !
@@ -78,3 +80,4 @@
 
       RETURN
       END SUBROUTINE SET_GEOMETRY_DES
+END MODULE SET_GEOMETRY_DES_MODULE

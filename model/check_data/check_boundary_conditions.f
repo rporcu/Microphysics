@@ -43,6 +43,7 @@
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival
 
+      use check_bc_geometry_module, only: check_bc_geometry, check_bc_geometry_flow, check_bc_geometry_wall
 
       IMPLICIT NONE
 
@@ -130,8 +131,7 @@
 
       RETURN
 
-      END SUBROUTINE CHECK_BOUNDARY_CONDITIONS
-
+   CONTAINS
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -267,3 +267,5 @@
  1100 FORMAT('Error 1100:',A,' specified for an undefined BC location')
 
       END SUBROUTINE CHECK_BC_RANGE
+
+   END SUBROUTINE CHECK_BOUNDARY_CONDITIONS

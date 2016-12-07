@@ -204,7 +204,6 @@ set(SOURCES
   model/ps_mod.f
   model/read_namelist.f
   model/remove_comment.f
-  model/reset_new.f
   model/residual_mod.f
   model/run_mod.f
   model/scales_mod.f
@@ -243,7 +242,6 @@ set(SOURCES
   model/time_cpu_mod.f
   model/time_march.f
   model/toleranc_mod.f
-  model/update_old.f
   model/ur_facs_mod.f
   model/usr/usr0.f
   model/usr/usr0_des.f

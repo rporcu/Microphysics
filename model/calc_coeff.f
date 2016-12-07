@@ -1,6 +1,10 @@
 module calc_coeff_module
 
       use calc_drag_des_module, only: calc_drag_des_explicit, calc_drag_des_2fluid
+      use calc_tau_u_g_module, only: calc_tau_u_g
+      use calc_tau_v_g_module, only: calc_tau_v_g
+      use calc_tau_w_g_module, only: calc_tau_w_g
+      use calc_trd_g_module, only: calc_trd_g
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC

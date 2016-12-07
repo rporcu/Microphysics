@@ -1,3 +1,5 @@
+MODULE READ_PAR_INPUT_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 ! Subroutine: READ_PAR_INPUT                                           !
 !                                                                      !
@@ -146,3 +148,4 @@
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE READ_PAR_INPUT
+END MODULE READ_PAR_INPUT_MODULE

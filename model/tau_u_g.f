@@ -1,3 +1,5 @@
+MODULE CALC_TAU_U_G_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CALC_Tau_U_g                                            C
@@ -161,3 +163,4 @@
       INCLUDE 'functions.inc'
 
     END SUBROUTINE CALC_TAU_U_G
+END MODULE CALC_TAU_U_G_MODULE

@@ -1,3 +1,5 @@
+MODULE CALC_CELL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine name: CALC_CELL                                          C
@@ -152,3 +154,4 @@
 
       RETURN
       END SUBROUTINE CALC_CELL_INTERSECT
+END MODULE CALC_CELL_MODULE

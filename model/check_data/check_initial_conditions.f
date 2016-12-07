@@ -29,6 +29,9 @@
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival
 
+      use calc_cell_module, only: calc_cell
+      use location_check_module, only: location_check
+
       IMPLICIT NONE
 
 ! Local Variables:
@@ -67,8 +70,8 @@
       CALL FINL_ERR_MSG
 
       RETURN
-      END SUBROUTINE CHECK_INITIAL_CONDITIONS
 
+   CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -733,3 +736,5 @@
  1010 FORMAT('Error 1010: ',A,' specified in an undefined IC region')
 
       END SUBROUTINE CHECK_IC_OVERFLOW
+
+END SUBROUTINE CHECK_INITIAL_CONDITIONS
