@@ -22,7 +22,6 @@
       USE param1   , only: zero
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE geometry , only: imax2, jmax2, kmax2
-      USE geometry , only: imax3, jmax3, kmax3
       USE functions, only: iminus, jminus, kminus
       USE functions, only: ip_at_e, ip_at_n, ip_at_t
 

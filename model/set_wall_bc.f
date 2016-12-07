@@ -14,9 +14,8 @@
 !-----------------------------------------------
       USE bc, only: bc_defined, bc_type, dimension_bc
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-      USE compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
+      USE compar, only: jend2,kend2
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE geometry, only: imax2, jmax2, kmax2
 
       implicit none
 

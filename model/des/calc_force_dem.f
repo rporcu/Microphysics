@@ -14,7 +14,6 @@ MODULE CALC_FORCE_DEM_MODULE
       SUBROUTINE CALC_FORCE_DEM(pijk, particle_state, des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
-         USE des_time_march_module, only: des_time_march
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
          USE discretelement, only: pft_neighbor
          USE discretelement, only: des_coll_model_enum, dtsolid

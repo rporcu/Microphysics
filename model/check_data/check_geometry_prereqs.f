@@ -16,7 +16,7 @@
 ! Domain partitions in various directions.
       use geometry, only: IMAX
       use geometry, only: JMAX
-      use geometry, only: KMAX, ZLENGTH
+      use geometry, only: KMAX
 
 ! Runtime flag specifying 2D simulations
 
