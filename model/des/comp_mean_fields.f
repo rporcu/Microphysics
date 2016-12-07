@@ -5,8 +5,8 @@ module comp_mean_fields_module
    use comp_mean_fields1_module, only: comp_mean_fields1
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
    use discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
-   use discretelement, only: max_pip, pijk, pvol, des_rop_s
-   use functions, only: funijk, fluid_at
+   use discretelement, only: max_pip, des_rop_s
+   use functions, only: fluid_at
    use geometry, only: vol
    use param1, only: zero
    use particle_filter, only: DES_INTERP_GARG
@@ -25,9 +25,14 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
+      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -42,8 +47,8 @@ module comp_mean_fields_module
       IF(DES_INTERP_MEAN_FIELDS) THEN
          SELECT CASE(DES_INTERP_SCHEME_ENUM)
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
-         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g)
-         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1
+         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
+         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(pijk,pvol)
          END SELECT
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER
@@ -53,7 +58,8 @@ module comp_mean_fields_module
       CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
 
       RETURN
-      END SUBROUTINE COMP_MEAN_FIELDS
+
+      CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -71,7 +77,7 @@ module comp_mean_fields_module
 ! Loop counters: partciles, filter cells, phases
       INTEGER NP, M
 ! Fluid cell index
-      INTEGER :: I,J,K, IJK
+      INTEGER :: I,J,K
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX)
 ! PVOL times statistical weight
@@ -91,7 +97,6 @@ module comp_mean_fields_module
          I = PIJK(NP,1)
          J = PIJK(NP,2)
          K = PIJK(NP,3)
-         IJK = PIJK(NP,4)
 ! Particle phase for data binning.
          M = PIJK(NP,5)
 ! Accumulate total solids volume (by phase)
@@ -106,7 +111,6 @@ module comp_mean_fields_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
@@ -127,5 +131,7 @@ module comp_mean_fields_module
 
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
+
+      END SUBROUTINE COMP_MEAN_FIELDS
 
 end module comp_mean_fields_module

@@ -15,7 +15,7 @@
       USE discretelement, only: des_coll_model_enum, wall_collision_facet_id, collision_array_max
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
       USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
-      USE discretelement, only: dimn, pijk, des_crossprdct
+      USE discretelement, only: dimn, des_crossprdct
       USE discretelement, only: kn_w, kt_w, mew_w, dtsolid, dg_pijk
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE param1, only: small_number, zero
@@ -36,14 +36,15 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+      SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(pijk,des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
       INTEGER :: LL
       INTEGER :: NF

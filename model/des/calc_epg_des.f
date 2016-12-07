@@ -37,7 +37,6 @@ module calc_epg_des_module
 
 ! Flag: Fluid exists at indexed cell
       use functions, only: fluid_at
-      use functions, only: FUNIJK
 
       use param1   , only: one, zero
 
@@ -65,7 +64,7 @@ module calc_epg_des_module
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop indices
-      INTEGER :: I,j,k,IJK, M, LC
+      INTEGER :: I,j,k, M, LC
 ! Total solids volume fraction
       DOUBLE PRECISION SUM_EPS
 ! Integer Error Flag
@@ -81,7 +80,6 @@ module calc_epg_des_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
 ! Skip wall cells.
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 ! Initialize EP_g and the accumulator.
@@ -123,11 +121,10 @@ module calc_epg_des_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
             IF(.NOT.fluid_at(i,j,k)) CYCLE
             IF(EP_G(I,J,K) > ZERO .AND. EP_G(I,J,K) <= ONE) CYCLE
 
-            WRITE(ERR_MSG,1101) trim(iVal(IJK)), trim(iVal(I)),&
+            WRITE(ERR_MSG,1101) trim(iVal(I)),&
                trim(iVal(J)), trim(iVal(K)),EP_G(I,J,K), &
                trim(iVal(PINC(I,J,K))), VOL
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
@@ -145,7 +142,7 @@ module calc_epg_des_module
          ENDDO
          ENDDO
 
- 1101 FORMAT(/3x,'Fluid Cell IJK: ',A,6x,'I/J/K: (',A,',',A,',',A,')',/&
+ 1101 FORMAT(/3x,'Fluid Cell I/J/K: (',A,',',A,',',A,')',/&
          T6,'EP_G = ',g11.4,T30,/T6,'PINC: ',A,T30,&
          'VOL = ',g11.4)
 

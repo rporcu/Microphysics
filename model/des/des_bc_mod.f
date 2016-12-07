@@ -100,18 +100,13 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION EXCLUDE_DEM_MI_CELL(lI, lJ, lK)
 
-      use functions, only: FUNIJK
       use functions, only: fluid_at
-
 
 ! Indicies of cell to check
       INTEGER, INTENT(IN) :: lI, lJ, lK
-! Local value for IJK
-      INTEGER :: IJK
 
       EXCLUDE_DEM_MI_CELL = .TRUE.
 
-      IJK = FUNIJK(lI,lJ,lK)
       IF(.NOT.fluid_at(li,lj,lk)) RETURN
 
       EXCLUDE_DEM_MI_CELL = .FALSE.

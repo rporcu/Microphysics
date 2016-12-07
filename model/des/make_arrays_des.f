@@ -19,7 +19,7 @@
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE discretelement, only: des_pos_new, des_vel_new
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
-      USE functions, only: funijk, ip1, jp1, kp1, fluid_at
+      USE functions, only: ip1, jp1, kp1, fluid_at
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE geometry, only: vol_surr, vol
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
@@ -41,7 +41,7 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: I, J, K, L, IJK
+      INTEGER :: I, J, K, L
       INTEGER :: count
       INTEGER :: I1, I2, J1, J2, K1, K2
       INTEGER :: lcurpar, lpip_all(0:numpes-1), lglobal_id
@@ -58,7 +58,6 @@
          DO J = JSTART2, JEND1
             DO I = ISTART2, IEND1
 
-               IJK = funijk(I,J,K)
                I1 = I
                I2 = ip1(i)
                J1 = J
@@ -152,7 +151,7 @@
       CALL NEIGHBOUR
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

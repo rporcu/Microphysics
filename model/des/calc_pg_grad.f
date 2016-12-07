@@ -36,7 +36,6 @@ MODULE CALC_PG_GRAD_MODULE
 
       use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
 
-      use functions, only: funijk
       use functions, only: fluid_at
 
 ! Global Parameters:

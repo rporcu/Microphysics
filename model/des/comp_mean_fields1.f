@@ -5,25 +5,29 @@ module comp_mean_fields1_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS1
+      SUBROUTINE COMP_MEAN_FIELDS1(pijk,pvol)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
-      USE discretelement, only: max_pip, pijk, pvol, des_rop_s
+      USE discretelement, only: max_pip, des_rop_s
       USE discretelement, only: normal_particle, normal_particle, particle_state, normal_ghost
-      USE functions, only: fluid_at, funijk
+      USE functions, only: fluid_at
       USE geometry, only: vol
       USE param1, only: zero
       USE constant, only:MMAX, RO_S0
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Loop counters: partciles, filter cells, phases
       INTEGER NP, M
 ! Fluid cell index
-      INTEGER I,J,K,IJK
+      INTEGER I,J,K
 ! Total Mth solids phase volume in IJK
       DOUBLE PRECISION :: SOLVOLINC(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX)
 !-----------------------------------------------
@@ -46,7 +50,6 @@ module comp_mean_fields1_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IJK = FUNIJK(i,j,k)
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase

@@ -15,7 +15,6 @@ MODULE PARTICLES_IN_CELL_MODULE
       USE desgrid, only: desgrid_pic
       USE geometry, only: imin2, jmin2, kmin2
       USE geometry, only: imax2, jmax2, kmax2
-      USE functions, only: funijk
 
 ! The number of particles on the current process.
       use discretelement, only: PIP, MAX_PIP
@@ -67,7 +66,7 @@ CONTAINS
 ! accounted for particles
       INTEGER PC
 ! ijk indices
-      INTEGER I, J, K, IJK
+      INTEGER I, J, K
 ! variables that count/store the number of particles in i, j, k cell
       INTEGER:: npic, pos
 ! The accumulated number of particles in each IJK.
@@ -146,14 +145,11 @@ CONTAINS
             ENDIF
          ENDIF
 
-! Calculate the fluid cell index.
-         IJK = FUNIJK(I,J,K)
-
 ! Assign PIJK(L,1:4)
          PIJK(L,1) = I
          PIJK(L,2) = J
          PIJK(L,3) = K
-         PIJK(L,4) = IJK
+         PIJK(L,4) = FUNIJK(I,J,K)
 
 ! Increment the number of particles in cell IJK
          IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
@@ -171,8 +167,6 @@ CONTAINS
         DO K = kstart3, kend3
         DO J = jstart3, jend3
         DO I = istart3, iend3
-
-         IJK = FUNIJK(i,j,k)
 
 ! checking all cells (including ghost cells); updating entering/exiting
 ! particle regions
@@ -204,7 +198,6 @@ CONTAINS
          I = PIJK(L,1)
          J = PIJK(L,2)
          K = PIJK(L,3)
-         IJK = PIJK(L,4)
          POS = PARTICLE_COUNT(I,J,K)
          PIC(I,J,K)%P(POS) = L
          PARTICLE_COUNT(I,J,K) = PARTICLE_COUNT(I,J,K) + 1
@@ -243,7 +236,7 @@ CONTAINS
 ! particle no.
       INTEGER :: L
 ! ijk indices
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 
       CALL INIT_ERR_MSG("INIT_PARTICLES_IN_CELL")
 
@@ -281,8 +274,7 @@ CONTAINS
          PIJK(L,3) = K
 
 ! Assigning PIJK(L,4) now that particles have been located on the fluid
-         IJK = FUNIJK(I,J,K)
-         PIJK(L,4) = IJK
+         PIJK(L,4) = FUNIJK(I,J,K)
 
 ! Enumerate the number of 'real' particles in the ghost cell.
          IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. &

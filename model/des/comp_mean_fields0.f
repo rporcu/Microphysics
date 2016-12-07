@@ -3,7 +3,7 @@ module comp_mean_fields0_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g)
+      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
 
 !-----------------------------------------------
 ! Modules
@@ -15,7 +15,7 @@ module comp_mean_fields0_module
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: mype, pe_io
       USE discretelement, only: des_rop_s, des_rops_node, xe, yn, zt, interp_scheme
-      USE discretelement, only: pic, des_vel_node, des_pos_new, des_vel_new, dimn, pinc, pijk, pmass, pvol
+      USE discretelement, only: pic, des_vel_node, dimn, pinc
       USE calc_epg_des_module, only: calc_epg_des
       USE interpolation, only: set_interpolation_scheme
       USE functions, only: fluid_at
@@ -34,6 +34,10 @@ module comp_mean_fields0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 !-----------------------------------------------
 ! Local variables

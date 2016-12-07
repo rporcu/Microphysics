@@ -186,7 +186,7 @@ module des_time_march_module
 ! Bin particles to fluid grid.
             CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 ! Calculate mean fields (EPg).
-            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
+            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
          ENDIF
 
 ! Update time to reflect changes

@@ -7,7 +7,7 @@ module drag_gs_des1_module
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Function to deterine if a cell contains fluid.
       use functions, only: fluid_at
-      use functions, only: funijk, iminus, jminus, kminus
+      use functions, only: iminus, jminus, kminus
 
 ! Volume of scalar cell.
       use geometry, only: VOL
