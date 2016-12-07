@@ -51,7 +51,7 @@
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

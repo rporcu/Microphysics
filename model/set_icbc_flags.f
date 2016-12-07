@@ -30,7 +30,7 @@ MODULE set_icbc_flags_module
       SUBROUTINE SET_ICBC_FLAG(flag)
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       CALL INIT_ICBC_FLAG(flag)
 
@@ -60,7 +60,7 @@ MODULE set_icbc_flags_module
       implicit none
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       INTEGER :: I, J, K
 
@@ -71,47 +71,47 @@ MODULE set_icbc_flags_module
 
 ! Initialize the ICBC Flag
          if (run_type == 'NEW') then
-            flag(i,j,k,0) = icbc_undef
+            flag(i,j,k,1) = icbc_undef
          else
-            flag(i,j,k,0) = icbc_fluid
+            flag(i,j,k,1) = icbc_fluid
          endif
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
          IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
             IF (CYCLIC_Z_PD) THEN
-               FLAG(i,j,k,0) = icbc_cyclp
+               FLAG(i,j,k,1) = icbc_cyclp
             ELSEIF (CYCLIC_Z) THEN
-               FLAG(i,j,k,0) = icbc_cycl
+               FLAG(i,j,k,1) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = icbc_no_s
+               FLAG(i,j,k,1) = icbc_no_s
             ENDIF
          ENDIF
 
          IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
             IF (CYCLIC_Y_PD) THEN
-               FLAG(i,j,k,0) = icbc_cyclp
+               FLAG(i,j,k,1) = icbc_cyclp
             ELSEIF (CYCLIC_Y) THEN
-               FLAG(i,j,k,0) = icbc_cycl
+               FLAG(i,j,k,1) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = icbc_no_s
+               FLAG(i,j,k,1) = icbc_no_s
             ENDIF
          ENDIF
 
          IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
             IF (CYCLIC_X_PD) THEN
-               FLAG(i,j,k,0) = icbc_cyclp
+               FLAG(i,j,k,1) = icbc_cyclp
             ELSEIF (CYCLIC_X) THEN
-               FLAG(i,j,k,0) = icbc_cycl
+               FLAG(i,j,k,1) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = icbc_no_s
+               FLAG(i,j,k,1) = icbc_no_s
             ENDIF
          ENDIF
 ! corner cells are wall cells
          IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
              (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
              (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
-            IF (FLAG(i,j,k,0) /= icbc_free) FLAG(i,j,k,0) = icbc_no_s
+            IF (FLAG(i,j,k,1) /= icbc_free) FLAG(i,j,k,1) = icbc_no_s
          ENDIF
 
       ENDDO ! end do loop (i=istart3, iend3)
@@ -146,7 +146,7 @@ MODULE set_icbc_flags_module
       IMPLICIT NONE
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       INTEGER :: I, J ,K, IER
 
@@ -160,7 +160,7 @@ MODULE set_icbc_flags_module
       DO K = kStart2, kEnd2
          DO J = jStart2, jEnd2
             DO I = iStart2, iEnd2
-               IF (FLAG(i,j,k,0) == icbc_undef) ERROR = .TRUE.
+               IF (FLAG(i,j,k,1) == icbc_undef) ERROR = .TRUE.
             ENDDO
          ENDDO
       ENDDO
@@ -181,7 +181,7 @@ MODULE set_icbc_flags_module
          DO K = kStart2, kEnd2
             DO J = jStart2, jEnd2
                DO I = iStart2, iEnd2
-                  IF (FLAG(i,j,k,0) == icbc_undef) then
+                  IF (FLAG(i,j,k,1) == icbc_undef) then
                      WRITE(ERR_MSG,1101) I, J, K
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF
@@ -240,7 +240,7 @@ MODULE set_icbc_flags_module
       IMPLICIT NONE
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------
 ! Local variables
@@ -262,7 +262,7 @@ MODULE set_icbc_flags_module
          DO K = IC_K_B(ICV), IC_K_T(ICV)
             DO J = IC_J_S(ICV), IC_J_N(ICV)
                DO I = IC_I_W(ICV), IC_I_E(ICV)
-                  flag(i,j,k,0) = icbc_fluid
+                  flag(i,j,k,1) = icbc_fluid
                ENDDO
             ENDDO
          ENDDO
@@ -297,7 +297,7 @@ MODULE set_icbc_flags_module
       IMPLICIT NONE
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------
 ! Local variables
@@ -327,9 +327,9 @@ MODULE set_icbc_flags_module
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,0) = icbc_free
-                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,0) = icbc_no_s
-                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,0) = icbc_pslip
+                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,1) = icbc_free
+                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,1) = icbc_no_s
+                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,1) = icbc_pslip
                END SELECT
             ENDDO
             ENDDO
@@ -366,7 +366,7 @@ MODULE set_icbc_flags_module
       IMPLICIT NONE
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! loop/variable indices
       INTEGER :: BCV, I, J, K
@@ -437,16 +437,16 @@ MODULE set_icbc_flags_module
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Verify that the FLOW BC is overwriting a wall.
-               IF(flag(i,j,k,0) == icbc_no_s .or. &
-                  flag(i,j,k,0) == icbc_free .or. &
-                  flag(i,j,k,0) == icbc_pslip) then
+               IF(flag(i,j,k,1) == icbc_no_s .or. &
+                  flag(i,j,k,1) == icbc_free .or. &
+                  flag(i,j,k,1) == icbc_pslip) then
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
-                     CASE ('P_OUTFLOW');    FLAG(i,j,k,0) = 1000*BCV + icbc_p_out
-                     CASE ('MASS_INFLOW');  FLAG(i,j,k,0) = 1000*BCV + icbc_m_inf
-                     CASE ('MASS_OUTFLOW'); FLAG(i,j,k,0) = 1000*BCV + icbc_m_out
-                     CASE ('OUTFLOW');      FLAG(i,j,k,0) = 1000*BCV + icbc_outfl
-                     CASE ('P_INFLOW');     FLAG(i,j,k,0) = 1000*BCV + icbc_p_inf
+                     CASE ('P_OUTFLOW');    FLAG(i,j,k,1) = icbc_p_out
+                     CASE ('MASS_INFLOW');  FLAG(i,j,k,1) = icbc_m_inf
+                     CASE ('MASS_OUTFLOW'); FLAG(i,j,k,1) = icbc_m_out
+                     CASE ('OUTFLOW');      FLAG(i,j,k,1) = icbc_outfl
+                     CASE ('P_INFLOW');     FLAG(i,j,k,1) = icbc_p_inf
                   END SELECT
 
                ELSE
@@ -476,10 +476,10 @@ MODULE set_icbc_flags_module
                DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Verify that the FLOW BC is overwriting a wall.
-                  IF(flag(i,j,k,0) /= icbc_no_s .and. &
-                     flag(i,j,k,0) /= icbc_free .and. &
-                     flag(i,j,k,0) /= icbc_pslip) then
-                     WRITE(ERR_MSG, 1201) I,J,K, FLAG(i,j,k,0)
+                  IF(flag(i,j,k,1) /= icbc_no_s .and. &
+                     flag(i,j,k,1) /= icbc_free .and. &
+                     flag(i,j,k,1) /= icbc_pslip) then
+                     WRITE(ERR_MSG, 1201) I,J,K, FLAG(i,j,k,1)
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF
 

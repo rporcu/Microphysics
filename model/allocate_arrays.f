@@ -174,7 +174,7 @@ module allocate_mod
       CALL INIT_ERR_MSG("ALLOCATE_ARRAYS_GEOMETRY")
 
 ! Flags for the scalar grid.
-      Allocate( FLAG  (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4), STAT=IER)
+      Allocate( FLAG  (istart3:iend3,jstart3:jend3,kstart3:kend3,4), STAT=IER)
       IF(IER /= 0) goto 500
 
 ! total volume of each cell's surrounding stencil cells

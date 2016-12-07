@@ -52,17 +52,17 @@
 
       IF(myPE == OWNER)THEN
 
-         if(flag(i,j+1,k,0) == icbc_fluid .and. (&
-            flag(i,j  ,k,0) == icbc_no_s .or. &
-            flag(i,j  ,k,0) == icbc_free .or. &
-            flag(i,j  ,k,0) == icbc_pslip)) then
+         if(flag(i,j+1,k,1) == icbc_fluid .and. (&
+            flag(i,j  ,k,1) == icbc_no_s .or. &
+            flag(i,j  ,k,1) == icbc_free .or. &
+            flag(i,j  ,k,1) == icbc_pslip)) then
 
             BC_PLANE(BCV) = 'N'
 
-         elseif(flag(i,j,k,0) == icbc_fluid .and. (&
-            flag(i,j+1,k,0) == icbc_no_s .or. &
-            flag(i,j+1,k,0) == icbc_free .or. &
-            flag(i,j+1,k,0) == icbc_pslip)) then
+         elseif(flag(i,j,k,1) == icbc_fluid .and. (&
+            flag(i,j+1,k,1) == icbc_no_s .or. &
+            flag(i,j+1,k,1) == icbc_free .or. &
+            flag(i,j+1,k,1) == icbc_pslip)) then
 
             BC_J_S(BCV) = BC_J_S(BCV) + 1
             BC_J_N(BCV) = BC_J_N(BCV) + 1
@@ -99,10 +99,10 @@
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO I = BC_I_W(BCV), BC_I_E(BCV)
-            IF(flag(i,j_fluid,k,0) /= icbc_fluid .and. (&
-               flag(i,j_wall,k,0) /= icbc_no_s .or. &
-               flag(i,j_wall,k,0) /= icbc_free .or. &
-               flag(i,j_wall,k,0) /= icbc_pslip)) ERROR = .TRUE.
+            IF(flag(i,j_fluid,k,1) /= icbc_fluid .and. (&
+               flag(i,j_wall,k,1) /= icbc_no_s .or. &
+               flag(i,j_wall,k,1) /= icbc_free .or. &
+               flag(i,j_wall,k,1) /= icbc_pslip)) ERROR = .TRUE.
          ENDDO
       ENDDO
 
@@ -125,14 +125,14 @@
          DO K = BC_K_B(BCV), BC_K_T(BCV)
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-               IF(FLAG(i,j_fluid,k,0) /= icbc_fluid .and. (&
-                  flag(i,j_wall,k,0) /= icbc_no_s .or. &
-                  flag(i,j_wall,k,0) /= icbc_free .or. &
-                  flag(i,j_wall,k,0) /= icbc_pslip)) then
+               IF(FLAG(i,j_fluid,k,1) /= icbc_fluid .and. (&
+                  flag(i,j_wall,k,1) /= icbc_no_s .or. &
+                  flag(i,j_wall,k,1) /= icbc_free .or. &
+                  flag(i,j_wall,k,1) /= icbc_pslip)) then
 
                   WRITE(ERR_MSG, 1201) &
-                     I, J_WALL,  K, FLAG(i,j_wall, k,0), &
-                     I, J_FLUID, K, FLAG(i,j_fluid,k,0)
+                     I, J_WALL,  K, FLAG(i,j_wall, k,1), &
+                     I, J_FLUID, K, FLAG(i,j_fluid,k,1)
                   CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                ENDIF
 

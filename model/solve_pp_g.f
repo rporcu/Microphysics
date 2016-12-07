@@ -73,7 +73,7 @@ module solve_pp_module
       DOUBLE PRECISION, INTENT(IN  ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not

@@ -50,50 +50,44 @@
          DO j = jstart3, jend3
             DO k = kstart3, kend3
 
-              select case (mod(flag(i,j,k,0),1000))
+              select case (flag(i,j,k,1))
                 case (icbc_p_inf, icbc_p_out, icbc_m_inf, icbc_m_out, icbc_outfl)
 
                 ib = min( iend3, max (istart3, i+1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
                 ib = min( iend3, max (istart3, i-1) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j+1) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j-1) )
                 kb = min( kend3, max (kstart3, k) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k+1) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
                 ib = min( iend3, max (istart3, i) )
                 jb = min( jend3, max (jstart3, j) )
                 kb = min( kend3, max (kstart3, k-1) )
-                inc = flag(ib,jb,kb,0) - mod(flag(ib,jb,kb,0),1000)
-                if (flag(ib,jb,kb,0) == icbc_no_s) &
-                   flag(ib,jb,kb,0) = icbc_free+inc
+                if (flag(ib,jb,kb,1) == icbc_no_s) &
+                   flag(ib,jb,kb,1) = icbc_free
 
               end select
 
@@ -109,24 +103,7 @@
          do j = jstart3, jend3
            do i = istart3, iend3
 
-              select case (mod(flag(i,j,k,0),1000))
-
-                CASE (icbc_fluid);  FLAG(i,j,k,1) = 1
-                CASE (icbc_p_inf);  FLAG(i,j,k,1) = 10
-                CASE (icbc_p_out);  FLAG(i,j,k,1) = 11
-                CASE (icbc_m_inf);  FLAG(i,j,k,1) = 20
-                CASE (icbc_m_out);  FLAG(i,j,k,1) = 21
-                CASE (icbc_outfl);  FLAG(i,j,k,1) = 31
-                CASE (icbc_no_s);   FLAG(i,j,k,1) = 100
-                CASE (icbc_free);   FLAG(i,j,k,1) = 101
-                CASE (icbc_pslip);  FLAG(i,j,k,1) = 102
-                CASE (icbc_cycl);   FLAG(i,j,k,1) = 106
-                CASE (icbc_cyclp);  FLAG(i,j,k,1) = 107
-                CASE DEFAULT
-
-              end select
-
-              ! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
+! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
               flag(i,j,k,2) = UNDEFINED_I
               flag(i,j,k,3) = UNDEFINED_I
               flag(i,j,k,4) = UNDEFINED_I

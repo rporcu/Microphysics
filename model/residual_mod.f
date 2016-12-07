@@ -236,7 +236,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER, INTENT(in) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 ! Phase index
       INTEGER, INTENT(IN) :: M
 ! Numerator and denominator

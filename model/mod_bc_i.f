@@ -58,18 +58,18 @@
       IF(myPE == OWNER) THEN
 
 ! Flow on west boundary (fluid cell on east).
-         if(flag(i+1,j,k,0) == icbc_fluid .and. (&
-            flag(i,j,k,0) == icbc_no_s .or. &
-            flag(i,j,k,0) == icbc_free .or. &
-            flag(i,j,k,0) == icbc_pslip)) then
+         if(flag(i+1,j,k,1) == icbc_fluid .and. (&
+            flag(i,j,k,1) == icbc_no_s .or. &
+            flag(i,j,k,1) == icbc_free .or. &
+            flag(i,j,k,1) == icbc_pslip)) then
 
             BC_PLANE(BCV) = 'E'
 
 ! Flow on east boundary (fluid cell on west).
-         elseif(flag(i,j,k,0) == icbc_fluid .and. (&
-            flag(i+1,j,k,0) == icbc_no_s .or. &
-            flag(i+1,j,k,0) == icbc_free .or. &
-            flag(i+1,j,k,0) == icbc_pslip)) then
+         elseif(flag(i,j,k,1) == icbc_fluid .and. (&
+            flag(i+1,j,k,1) == icbc_no_s .or. &
+            flag(i+1,j,k,1) == icbc_free .or. &
+            flag(i+1,j,k,1) == icbc_pslip)) then
 
             BC_I_W(BCV) = BC_I_W(BCV) + 1
             BC_I_E(BCV) = BC_I_E(BCV) + 1
@@ -89,7 +89,7 @@
       IF(BC_PLANE(BCV) == '.') THEN
          WRITE(ERR_MSG, 1100) BCV, BC_I_W(BCV), BC_I_E(BCV), &
             BC_J_S(BCV), BC_K_B(BCV)
-!           FLAG(i_w,j_s,k_b,0), FLAG(i_w+1,j_s,k_b,0)
+!           FLAG(i,j,k,1), FLAG(i+1,j,k,1)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -109,10 +109,10 @@
          DO J = BC_J_S(BCV), BC_J_N(BCV)
 ! Verify that the the fluid and wall cells match the FLAG.
 ! Only check cells that you own and contain fluid.
-            IF(FLAG(i_fluid,j,k,0) /= icbc_fluid .and. (&
-               flag(i_wall,j,k,0) /= icbc_no_s .or. &
-               flag(i_wall,j,k,0) /= icbc_free .or. &
-               flag(i_wall,j,k,0) /= icbc_pslip)) ERROR = .TRUE.
+            IF(FLAG(i_fluid,j,k,1) /= icbc_fluid .and. (&
+               flag(i_wall,j,k,1) /= icbc_no_s .or. &
+               flag(i_wall,j,k,1) /= icbc_free .or. &
+               flag(i_wall,j,k,1) /= icbc_pslip)) ERROR = .TRUE.
 
             ENDDO
       ENDDO
@@ -133,13 +133,13 @@
          DO K = BC_K_B(BCV), BC_K_T(BCV)
             DO J = BC_J_S(BCV), BC_J_N(BCV)
 
-               IF(FLAG(i_fluid,j,k,0) /= icbc_fluid .and. (&
-                  flag(i_wall,j,k,0) /= icbc_no_s .or. &
-                  flag(i_wall,j,k,0) /= icbc_free .or. &
-                  flag(i_wall,j,k,0) /= icbc_pslip)) then
+               IF(FLAG(i_fluid,j,k,1) /= icbc_fluid .and. (&
+                  flag(i_wall,j,k,1) /= icbc_no_s .or. &
+                  flag(i_wall,j,k,1) /= icbc_free .or. &
+                  flag(i_wall,j,k,1) /= icbc_pslip)) then
 
-                  WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,0),  &
-                     I_FLUID, J, K, FLAG(i_fluid,j,k,0)
+                  WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,1),  &
+                     I_FLUID, J, K, FLAG(i_fluid,j,k,1)
                   CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                ENDIF
             ENDDO

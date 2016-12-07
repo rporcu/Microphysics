@@ -51,7 +51,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_Y_EQ(0)) RETURN
@@ -212,7 +212,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -305,7 +305,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEgER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -451,7 +451,7 @@ module v_g_conv_dif
       DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//

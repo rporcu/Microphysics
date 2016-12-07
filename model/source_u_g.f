@@ -69,7 +69,7 @@ module source_u_g_module
       DOUBLE PRECISION, INTENT(IN   ) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Dummy arguments
 !--------o------------------------------------------------------------//
@@ -232,7 +232,7 @@ module source_u_g_module
       DOUBLE PRECISION, INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

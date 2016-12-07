@@ -28,7 +28,7 @@
       double precision, intent(in   ) ::  ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer, intent(in   ) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------
 ! Local variables

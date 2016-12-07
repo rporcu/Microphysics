@@ -79,7 +79,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       DOUBLE PRECISION, INTENT(IN   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

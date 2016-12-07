@@ -99,7 +99,7 @@ module iterate_module
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc

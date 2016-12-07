@@ -199,7 +199,7 @@ module calc_coeff_module
       DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+            (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
       CALL CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
