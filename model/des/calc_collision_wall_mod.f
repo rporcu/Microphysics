@@ -36,7 +36,9 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(pijk,des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(pijk,particle_phase, &
+            des_radius, &
+            des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
       IMPLICIT NONE
 
@@ -45,6 +47,7 @@
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
       INTEGER :: LL
       INTEGER :: NF
@@ -202,7 +205,7 @@
                NORMAL, DISTMOD, DES_VEL_NEW, OMEGA_NEW)
 
 ! Calculate the spring model parameters.
-            phaseLL = PIJK(LL,5)
+            phaseLL = particle_phase(LL)
 
 ! Hertz vs linear spring-dashpot contact model
             IF (DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN

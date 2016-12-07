@@ -3,7 +3,7 @@ module comp_mean_fields0_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
+      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
 
 !-----------------------------------------------
 ! Modules
@@ -38,6 +38,7 @@ module comp_mean_fields0_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
 !-----------------------------------------------
 ! Local variables
@@ -143,7 +144,7 @@ module comp_mean_fields0_module
 
                   call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
 
-                  M = PIJK(NP,5)
+                  M = particle_phase(NP)
 
                   MASS_SOL1 = MASS_SOL1 + PMASS(NP)
 

@@ -202,7 +202,7 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
-                                interp_scheme, pijk, des_vol_node
+                                interp_scheme, des_vol_node, particle_phase
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: fluid_at,ip1,jp1,kp1
@@ -362,7 +362,7 @@ module drag_gs_des0_module
 ! the gas phase momentum balances.
 !----------------------------------------------------------------->>>
             focus = .false.
-            M = pijk(np,5)
+            M = particle_phase(np)
 
             DO k = 1, ONEW
                DO j = 1, onew

@@ -32,8 +32,6 @@ MODULE PARTICLES_IN_CELL_MODULE
       USE geometry, only: KMIN2, KMAX2
 ! Fixed array sizes in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
-! Function to conpute IJK from I/J/K
-      use functions, only: FUNIJK
 
 CONTAINS
 
@@ -145,11 +143,10 @@ CONTAINS
             ENDIF
          ENDIF
 
-! Assign PIJK(L,1:4)
+! Assign PIJK(L,1:3)
          PIJK(L,1) = I
          PIJK(L,2) = J
          PIJK(L,3) = K
-         PIJK(L,4) = FUNIJK(I,J,K)
 
 ! Increment the number of particles in cell IJK
          IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
@@ -251,7 +248,7 @@ CONTAINS
 
 ! Assigning PIJK(L,1), PIJK(L,2) and PIJK(L,3) the i, j, k indices
 ! of particle L (locating particle on fluid grid). Also determine
-! composite ijk index. If first_pass, also assigning PIJK(L,5) the
+! composite ijk index. If first_pass, also assigning particle_phase(L,5) the
 ! solids phase index of particle.
 ! ---------------------------------------------------------------->>>
       DO L = 1, MAX_PIP
@@ -272,9 +269,6 @@ CONTAINS
          CALL PIC_SEARCH(K, DES_POS_NEW(L,3), ZT,                   &
             DIMENSION_K, KMIN2, KMAX2)
          PIJK(L,3) = K
-
-! Assigning PIJK(L,4) now that particles have been located on the fluid
-         PIJK(L,4) = FUNIJK(I,J,K)
 
 ! Enumerate the number of 'real' particles in the ghost cell.
          IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. &

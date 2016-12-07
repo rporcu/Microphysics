@@ -135,7 +135,8 @@ CONTAINS
 
 ! For each particle track its i,j,k location on computational fluid grid
 ! defined by imax, jmax and kmax in mfix.dat and phase no.
-      Allocate(  PIJK (MAX_PIP,5) )
+      Allocate(  PIJK (MAX_PIP,3) )
+      Allocate(  PARTICLE_PHASE (MAX_PIP) )
 
 ! Explicit drag force acting on a particle.
       Allocate(DRAG_FC (MAX_PIP,DIMN) )

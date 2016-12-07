@@ -55,8 +55,8 @@
       use discretelement, only: OMEGA_NEW
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS
-! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
-      use discretelement, only: PIJK
+! Map to fluid grid cells and solids phase
+      use discretelement, only: particle_phase
 ! User-defined variables for each particle.
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
 ! Function to convert DES grid IJK to new proc value.
@@ -109,7 +109,7 @@
 ! 4) Radius
             call pack_dbuf(lbuf,des_radius(lcurpar),pface)
 ! 5) Phase index
-            call pack_dbuf(lbuf,pijk(lcurpar,5),pface)
+            call pack_dbuf(lbuf,particle_phase(lcurpar),pface)
 ! 6) Position
             call pack_dbuf(lbuf,des_pos_new(lcurpar,:)+                &
                dcycl_offset(pface,:),pface)
@@ -166,8 +166,8 @@
       use discretelement, only: FC, TOW
 ! One of the moment of inertia
       use discretelement, only: OMOI
-! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
-      use discretelement, only: PIJK
+! Map to fluid grid cells and solids phase
+      use discretelement, only: PIJK, particle_phase
 ! Flag to send/recv old (previous) values
       use discretelement, only: DO_OLD
 ! Number of particles on the process (max particle array size)
@@ -255,7 +255,7 @@
             lk = pijk(lcurpar,3) + icycoffset(pface,3)
             call pack_dbuf(lbuf,lk,pface)
 ! 9) Particle solids phase index
-            call pack_dbuf(lbuf,pijk(lcurpar,5),pface)
+            call pack_dbuf(lbuf,particle_phase(lcurpar),pface)
 ! 10) Entering particle flag.
             call pack_dbuf(lbuf, entering_particle==particle_state(lcurpar).or.entering_ghost==particle_state(lcurpar), pface)
 ! 11) Exiting particle flag.

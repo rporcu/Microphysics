@@ -54,8 +54,8 @@
       use discretelement, only: OMEGA_NEW
 ! Particle radius, volume
       use discretelement, only: DES_RADIUS, PVOL
-! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
-      use discretelement, only: PIJK
+! Map to fluid grid cells and solids phase
+      use discretelement, only: PIJK, particle_phase
 ! Number of particles on the process (max particle array size)
       use discretelement, only: PIP
 ! Number of ghost particles on the current process
@@ -125,7 +125,7 @@
 ! 4) Radious
             call unpack_dbuf(lbuf,des_radius(llocpar),pface)
 ! 5) Phase index
-            call unpack_dbuf(lbuf,pijk(llocpar,5),pface)
+            call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
 ! 6) Position
             call unpack_dbuf(lbuf,des_pos_new(llocpar,1:dimn),pface)
 ! 7) Translational Velocity
@@ -175,7 +175,7 @@
 !  4) Radius
             call unpack_dbuf(lbuf,des_radius(ispot),pface)
 !  5) Phase index
-            call unpack_dbuf(lbuf,pijk(ispot,5),pface)
+            call unpack_dbuf(lbuf,particle_phase(ispot),pface)
 !  6) Position
             call unpack_dbuf(lbuf,des_pos_new(ispot,1:dimn),pface)
 !  7) Translational velocity
@@ -260,7 +260,6 @@
 ! Module Procedures:
 !---------------------------------------------------------------------//
       use des_allocate
-      use functions, only: funijk
 
       implicit none
 
@@ -327,9 +326,7 @@
          call unpack_dbuf(lbuf,pijk(llocpar,1),pface)
          call unpack_dbuf(lbuf,pijk(llocpar,2),pface)
          call unpack_dbuf(lbuf,pijk(llocpar,3),pface)
-         call unpack_dbuf(lbuf,pijk(llocpar,5),pface)
-         pijk(llocpar,4) = funijk(pijk(llocpar,1), pijk(llocpar,2),&
-            pijk(llocpar,3))
+         call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
 ! 10) Entering particle flag.
          call unpack_dbuf(lbuf,tmp,pface)
          if (tmp) PARTICLE_STATE(llocpar) = ENTERING_PARTICLE

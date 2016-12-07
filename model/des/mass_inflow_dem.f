@@ -18,7 +18,6 @@ MODULE MASS_INFLOW_DEM_MODULE
       use discretelement, only: max_pip, dtsolid, imax_global_id
       use discretelement, only: dg_pic, s_time, pip, normal_particle
       use discretelement, only: entering_particle, entering_ghost, normal_ghost, exiting_particle, exiting_ghost, nonexistent
-      use functions, only: funijk
       use param1, only: half, zero
       use constant, only: d_p0, ro_s0
 
@@ -32,7 +31,7 @@ MODULE MASS_INFLOW_DEM_MODULE
 !  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MASS_INFLOW_DEM(pijk, dg_pijk, iglobal_id, particle_state, &
+      SUBROUTINE MASS_INFLOW_DEM(pijk, particle_phase, dg_pijk, iglobal_id, particle_state, &
          des_radius, omoi, pmass, pvol, ro_sol, &
          des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
@@ -43,6 +42,7 @@ MODULE MASS_INFLOW_DEM_MODULE
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
       INTEGER :: IP, LS, M, NP, IJK, LC
       INTEGER :: BCV, BCV_I
@@ -123,7 +123,7 @@ MODULE MASS_INFLOW_DEM_MODULE
             iGLOBAL_ID(LS) = iMAX_GLOBAL_ID
 
 ! Set the properties of the new particle.
-            CALL SET_NEW_PARTICLE_PROPS(BCV, M, LS, POS, IJKP, pijk, dg_pijk, particle_state, &
+            CALL SET_NEW_PARTICLE_PROPS(BCV, M, LS, POS, IJKP, pijk, particle_phase, dg_pijk, particle_state, &
                des_radius, omoi, pmass, pvol, ro_sol, &
                des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
@@ -270,7 +270,7 @@ MODULE MASS_INFLOW_DEM_MODULE
 !  Purpose:  Set the properties of the new particle.                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_NEW_PARTICLE_PROPS(lBCV, lM, lNP, lPOS, lIJKP, pijk, dg_pijk, particle_state, &
+      SUBROUTINE SET_NEW_PARTICLE_PROPS(lBCV, lM, lNP, lPOS, lIJKP, pijk, particle_phase, dg_pijk, particle_state, &
          des_radius, omoi, pmass, pvol, ro_sol, &
          des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
@@ -294,6 +294,7 @@ MODULE MASS_INFLOW_DEM_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, drag_fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 ! I/J/K index of DES grid cell
       INTEGER :: lI, lJ, lK
@@ -328,10 +329,9 @@ MODULE MASS_INFLOW_DEM_MODULE
 
 ! Store the I/J/K indices of the particle.
       PIJK(lNP,1:3) = lIJKP(:)
-      PIJK(lNP,4) = FUNIJK(lIJKP(1), lIJKP(2), lIJKP(3))
 
 ! Set the particle mass phase
-      PIJK(lNP,5) = lM
+      particle_phase(lNP) = lM
 
 ! Calculate the DES grid cell indices.
       lI = min(DG_IEND2,max(DG_ISTART2,IOFPOS(DES_POS_NEW(lNP,1))))

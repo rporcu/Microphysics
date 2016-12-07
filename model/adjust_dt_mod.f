@@ -12,7 +12,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
          LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
-            f_gds, drag_am, drag_bm, pijk, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new, IER, NIT)
+            f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+            particle_state, pmass, pvol, des_pos_new, des_vel_new, IER, NIT)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -84,6 +85,7 @@
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
       INTEGER, INTENT(INOUT) :: IER
@@ -183,7 +185,7 @@
 
             ! Recalculate all coefficients
             CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-               f_gds, drag_am, drag_bm, pijk, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
+               f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.
 

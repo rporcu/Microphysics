@@ -22,7 +22,7 @@
 !  ******************************************************************  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_USR(IJK, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
+      SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
          ROs, lUg, lVg, lWg)
 
       use usr, only: Re, Cd
@@ -32,9 +32,9 @@
       IMPLICIT NONE
 
 ! Index of fluid cell:
-      INTEGER, INTENT(IN) :: IJK
+      INTEGER, INTENT(IN) :: I,J,K
 ! TFM SOLIDS --> Index of phase (M)
-! DES SOLIDS --> Index of particle (NP); M = PIJK(NP,5)
+! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
       INTEGER, INTENT(IN) :: M_NP
 
 ! drag coefficient

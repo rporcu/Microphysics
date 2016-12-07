@@ -11,7 +11,8 @@ MODULE CALC_FORCE_DEM_MODULE
 !           accounting for the wall properties                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM(pijk, particle_state, des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+      SUBROUTINE CALC_FORCE_DEM(pijk, particle_phase, particle_state, &
+         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
@@ -27,6 +28,7 @@ MODULE CALC_FORCE_DEM_MODULE
       IMPLICIT NONE
 
       INTEGER, DIMENSION(:,:), INTENT(IN) :: PIJK
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
@@ -65,7 +67,7 @@ MODULE CALC_FORCE_DEM_MODULE
 ! temporary storage of torque
       DOUBLE PRECISION :: TOW_TMP(3,2)
 
-! store solids phase index of particle (i.e. pijk(np,5))
+! store solids phase index of particle (i.e. particle_phase(np))
       INTEGER :: PHASEI, PHASELL
 ! local values used spring constants and damping coefficients
       DOUBLE PRECISION :: ETAN_DES, ETAT_DES
@@ -77,7 +79,9 @@ MODULE CALC_FORCE_DEM_MODULE
 
 !-----------------------------------------------
 
-      CALL CALC_DEM_FORCE_WITH_WALL_STL(pijk,des_radius(1:MAX_PIP), des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
+      CALL CALC_DEM_FORCE_WITH_WALL_STL(pijk,particle_phase, &
+         des_radius(1:MAX_PIP), &
+         des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
          omega_new(1:MAX_PIP, :), fc(1:MAX_PIP, :), tow(1:MAX_PIP, :), wall_collision_pft)
 
 ! Check particle LL neighbor contacts
@@ -125,8 +129,8 @@ MODULE CALC_FORCE_DEM_MODULE
             CALL CFRELVEL(LL, I, V_REL_TRANS_NORM, VREL_T,            &
                NORMAL(:), DIST_MAG)
 
-            phaseLL = PIJK(LL,5)
-            phaseI = PIJK(I,5)
+            phaseLL = particle_phase(LL)
+            phaseI = particle_phase(I)
 
 ! Hertz spring-dashpot contact model
             IF (DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN

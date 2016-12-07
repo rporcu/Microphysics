@@ -3,7 +3,7 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: err_msg, flush_err_msg, finl_err_msg, init_err_msg
-      use functions, only: funijk, fluid_at
+      use functions, only: fluid_at
 
         INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_COUNT
 
@@ -88,7 +88,7 @@
 ! Number of particles in the system (current)
       use discretelement, only: PIP
 ! Angular velocity
-      use discretelement, only: OMEGA_NEW, PIJK
+      use discretelement, only: OMEGA_NEW, PIJK, particle_phase
 ! solid phase diameters and densities.
       use constant, only: D_p0, RO_s0, MMAX
 ! IC Region solids volume fraction.
@@ -109,7 +109,7 @@
 
 ! to access random number generator subroutines
       ! use randomno
-      use functions, only: fluid_at, FUNIJK
+      use functions, only: fluid_at
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -147,7 +147,7 @@
 ! Number of particles in the lattice
       INTEGER :: SEED_X, SEED_Y, SEED_Z
 ! Loop indices phase/fluid cell
-      INTEGER :: M, MM, I, J, K, IJK
+      INTEGER :: M, MM, I, J, K
 ! Loop indicies for seeding
       INTEGER :: II, JJ, KK
 ! Start and end bound for IC region.
@@ -279,7 +279,6 @@
 ! Skip cells that return invalid IJKs.
 
 ! Skip cells that are not part of the local fuild domain.
-         IJK = FUNIJK(i,j,k)
          IF(.NOT.fluid_at(i,j,k)) CYCLE
 
          !IF(CARTESIAN_GRID) THEN
@@ -307,8 +306,7 @@
          PIJK(PIP,1) = I
          PIJK(PIP,2) = J
          PIJK(PIP,3) = K
-         PIJK(PIP,4) = IJK
-         PIJK(PIP,5) = M
+         particle_phase(PIP) = M
 
          SOLIDS_DATA(M) = SOLIDS_DATA(M) + 1.0
 
@@ -384,7 +382,7 @@
 
 ! Local variables
 !---------------------------------------------------------------------//
-      INTEGER :: I, J, K, IJK
+      INTEGER :: I, J, K
 !......................................................................!
 
 
@@ -393,7 +391,6 @@
       DO J = IC_J_S(ICV), IC_J_N(ICV)
       DO I = IC_I_W(ICV), IC_I_E(ICV)
 
-         IJK = FUNIJK(I,J,K)
          IF(fluid_at(i,j,k)) IC_VOL = IC_VOL + VOL
 
       ENDDO

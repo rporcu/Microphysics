@@ -14,7 +14,7 @@
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
-      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost, pijk
+      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost, pijk, particle_phase
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE discretelement, only: des_pos_new, des_vel_new
@@ -138,7 +138,7 @@
          OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI
       ENDDO
 
-      CALL SET_PHASE_INDEX(pijk)
+      CALL SET_PHASE_INDEX(particle_phase)
       CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new)
 
 ! do_nsearch should be set before calling particle in cell
@@ -151,7 +151,7 @@
       CALL NEIGHBOUR
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

@@ -8,7 +8,7 @@ MODULE SET_PHASE_INDEX_MODULE
 !  density.                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_PHASE_INDEX(PIJK)
+      SUBROUTINE SET_PHASE_INDEX(particle_phase)
 
       USE discretelement, only: DES_RADIUS, RO_SOL
       USE discretelement, only: MAX_PIP
@@ -21,7 +21,7 @@ MODULE SET_PHASE_INDEX_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 !-----------------------------------------------
 ! Local Variables
@@ -54,12 +54,12 @@ MODULE SET_PHASE_INDEX_MODULE
             dDp  = ABS(2.0d0*DES_RADIUS(L)-D_P0(M))
             dRho = ABS( RO_Sol(L)-RO_S0(M))
             IF( dDp < SMALL_NUMBER .AND. dRho < SMALL_NUMBER) THEN
-               PIJK(L,5) = M
+               particle_phase(L) = M
                EXIT M_LP
             ENDIF
          ENDDO M_LP
 ! Flag error if no match is found.
-         IF(PIJK(L,5).EQ.0) IER = 1
+         IF(particle_phase(L).EQ.0) IER = 1
       ENDDO
 
 ! Sync up the error flag across all processes.
@@ -84,7 +84,7 @@ MODULE SET_PHASE_INDEX_MODULE
          IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
 
 ! Flag as an error if no match is found.
-         IF(PIJK(L,5).EQ.0) THEN
+         IF(particle_phase(L).EQ.0) THEN
             WRITE(ERR_MSG,9000) L,  2.0*DES_RADIUS(L), Ro_Sol(L)
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
          ENDIF

@@ -20,7 +20,7 @@ MODULE MASS_OUTFLOW_DEM_MODULE
 !  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MASS_OUTFLOW_DEM(FORCE_NSEARCH, pijk, iglobal_id, particle_state, &
+      SUBROUTINE MASS_OUTFLOW_DEM(FORCE_NSEARCH, particle_phase, iglobal_id, particle_state, &
          des_radius, omoi, pmass, pvol, ro_sol, &
          des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
 
@@ -32,7 +32,7 @@ MODULE MASS_OUTFLOW_DEM_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, fc, tow
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
       INTEGER :: IJK
       INTEGER :: LC, LP, NP, M
@@ -109,7 +109,7 @@ MODULE MASS_OUTFLOW_DEM_MODULE
 ! only applies to mass outflows where the speed at which particles
 ! exit needs to be controled.
                   ELSE
-                     M = PIJK(NP,5)
+                     M = particle_phase(NP)
                      DES_VEL_NEW(NP,1) = BC_U_s(BCV,M)
                      DES_VEL_NEW(NP,2) = BC_V_s(BCV,M)
                      DES_VEL_NEW(NP,3) = BC_W_s(BCV,M)

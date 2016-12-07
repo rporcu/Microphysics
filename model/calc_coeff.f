@@ -20,7 +20,7 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
-        mu_g, f_gds, drag_am, drag_bm, pijk, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
+        mu_g, f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -59,6 +59,7 @@ module calc_coeff_module
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 !-----------------------------------------------------------------------
 
@@ -68,7 +69,8 @@ module calc_coeff_module
          f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new)
 
       IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(ep_g, &
-         u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_bm, pijk, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
+         u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, particle_state, &
+         pmass, pvol, des_pos_new, des_vel_new)
 
       END SUBROUTINE CALC_COEFF_ALL
 

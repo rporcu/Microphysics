@@ -274,7 +274,8 @@
 
 ! For each particle track its i, j, k & ijk location on the fluid grid
 ! and solids phase no.:
-      INTEGER, DIMENSION(:,:), ALLOCATABLE :: PIJK ! (PARTICLES,5)=>I,J,K,IJK,M
+      INTEGER, DIMENSION(:,:), ALLOCATABLE :: PIJK ! (PARTICLES,3)=>I,J,K
+      INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_PHASE
 !-----------------------------------------------------------------<<<
 
 ! Explicitly calculated fluid-particle drag force.

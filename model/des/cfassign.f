@@ -5,7 +5,7 @@ MODULE CFASSIGN_MODULE
    use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
    use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
    use des_allocate, only: des_vol_node
-   use functions, only: funijk, fluid_at
+   use functions, only: fluid_at
    use geometry, only: dx, dy, dz
    use param1, only: zero
 
@@ -37,11 +37,10 @@ MODULE CFASSIGN_MODULE
 ! Local Variables
 !-----------------------------------------------
 ! ijk index of fluid grid and corresponding i, j, k indices
-      integer :: ijk, iraw, jraw, kraw
+      integer :: iraw, jraw, kraw
 ! i, j, k and (i+1, j+1, k+1) indices corrected for any
 ! cyclic ghost boundaries on fluid grid
       INTEGER :: I, J, K, ip, jp, kp
-      integer :: ipjk, ijpk, ipjpk, ijkp, ipjkp, ijpkp, ipjpkp
 ! volume of indicated grid
       double precision :: vol_ijk, vol_ipjk, vol_ijpk, vol_ipjpk
       double precision :: vol_ijkp, vol_ipjkp, vol_ijpkp, vol_ipjpkp
@@ -62,7 +61,6 @@ MODULE CFASSIGN_MODULE
         DO Jraw = jstart3, jend3
         DO Iraw = istart3, iend3
 
-         IJK = FUNIJK(iraw,jraw,kraw)
          des_vol_node(iraw,jraw,kraw) = zero
 
 ! start at 1 (ghost cell) and go to last fluid cell. why start at a
@@ -86,14 +84,6 @@ MODULE CFASSIGN_MODULE
          K = kmap_c(kraw)
          IP = imap_c(iraw+1)
          JP = jmap_c(jraw+1)
-
-! using a function like iplus(i,j,k) should work the same as getting funijk
-! of the shifted i, j, k indices.  however, small differences will
-! occur on the 'edges/corners'. so retaining the latter method at this
-! time. see j. galvin for discussion
-         ipjk = funijk(IP,J,K)
-         ijpk = funijk(I,JP,K)
-         ipjpk = funijk(IP,JP,K)
 
 ! the existing variable vol(ijk) is not used here for cut-cell reasons
 ! see r. garg for discussion
@@ -131,10 +121,6 @@ MODULE CFASSIGN_MODULE
                                          vol_ijpk + vol_ipjpk)
 
          KP     = kmap_c(kraw+1)
-         ijkp   = funijk(I, J, KP)
-         ipjkp  = funijk(IP,J, KP)
-         ijpkp  = funijk(I, JP,KP)
-         ipjpkp = funijk(IP,JP,KP)
 
          vol_ijkp   = dx*dy*dz
          vol_ipjkp  = dx*dy*dz

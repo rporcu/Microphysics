@@ -28,7 +28,7 @@ module des_drag_gp_module
       USE compar  , only: myPE
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
-      USE discretelement, only: pijk, pvol, des_radius, des_rop_s
+      USE discretelement, only: pijk, particle_phase, pvol, des_radius, des_rop_s
       USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
                         drag_koch_hill, drag_bvk
       USE param1, only: one, zero
@@ -61,7 +61,7 @@ module des_drag_gp_module
 ! Local variables
 !-----------------------------------------------
 ! indices, associated with current particle
-      INTEGER :: IJK, I, J, K
+      INTEGER :: I, J, K
 ! solids phase index, associated with current particle
       INTEGER :: M
 ! Slip velocity and its magnitude
@@ -89,12 +89,11 @@ module des_drag_gp_module
 
 
 ! values based on current particle
-      IJK = PIJK(NP,4)
       I = PIJK(NP,1)
       J = PIJK(NP,2)
       K = PIJK(NP,3)
 ! solids phase index of current particle
-      M = PIJK(NP,5)
+      M = particle_phase(NP)
 ! Gas material and bulk densities
       ROg = RO_G(I,J,K)
       ROPg = RO_G(I,J,K) * EPg
@@ -127,7 +126,7 @@ module des_drag_gp_module
          CALL DRAG_KOCH_HILL(DgA,EPg,Mu,ROPg,VREL,DPM,DPM,phis)
 
       CASE (USER_DRAG)
-         CALL DRAG_USR(IJK,NP,DgA,EPg,Mu,ROg,VREL,DPM,RO_S0(M), &
+         CALL DRAG_USR(I,J,K,NP,DgA,EPg,Mu,ROg,VREL,DPM,RO_S0(M), &
             FLUID_VEL(1), FLUID_VEL(2), FLUID_VEL(3))
 
       CASE DEFAULT

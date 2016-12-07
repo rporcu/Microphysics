@@ -22,7 +22,7 @@
 !  ******************************************************************  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_USR(IJK, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
+      SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
          ROs, lUg, lVg, lWg)
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
@@ -30,9 +30,9 @@
       IMPLICIT NONE
 
 ! Index of fluid cell:
-      INTEGER, INTENT(IN) :: IJK
+      INTEGER, INTENT(IN) :: I,J,K
 ! TFM SOLIDS --> Index of phase (M)
-! DES SOLIDS --> Index of particle (NP); M = PIJK(NP,5)
+! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
       INTEGER, INTENT(IN) :: M_NP
 
 ! drag coefficient

@@ -25,13 +25,14 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
+      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
 
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
@@ -47,8 +48,8 @@ module comp_mean_fields_module
       IF(DES_INTERP_MEAN_FIELDS) THEN
          SELECT CASE(DES_INTERP_SCHEME_ENUM)
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
-         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,pmass,pvol,des_pos_new,des_vel_new)
-         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(pijk,pvol)
+         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
+         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(particle_phase,pvol)
          END SELECT
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER
@@ -98,7 +99,7 @@ module comp_mean_fields_module
          J = PIJK(NP,2)
          K = PIJK(NP,3)
 ! Particle phase for data binning.
-         M = PIJK(NP,5)
+         M = particle_phase(NP)
 ! Accumulate total solids volume (by phase)
          SOLVOLINC(I,J,K,M) = SOLVOLINC(I,J,K,M) + VOL_WT
 ! Accumulate total solids momenum-ish (by phase)

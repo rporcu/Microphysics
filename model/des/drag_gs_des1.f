@@ -70,7 +70,7 @@ module drag_gs_des1_module
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK
+      INTEGER :: NP
 ! Interpolated gas phase quanties.
       DOUBLE PRECISION :: lEPg, VELFP(3)
 ! Drag force acting on each particle.
@@ -93,7 +93,6 @@ module drag_gs_des1_module
 
 ! Calculate the gas volume fraction, velocity, and pressure force at
 ! the particle's position.
-         IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
          VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
          VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
@@ -164,7 +163,7 @@ module drag_gs_des1_module
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, IJK, I, J, K
+      INTEGER :: NP, I, J, K
 ! Interpolation weight
       DOUBLE PRECISION :: WEIGHT
 ! Interpolated gas phase quanties.
@@ -200,7 +199,6 @@ module drag_gs_des1_module
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
-         IJK = PIJK(NP,4)
          lEPG = EP_G(I,J,K)
          VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
          VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
@@ -213,7 +211,6 @@ module drag_gs_des1_module
 
          lDRAG_BM = f_gp*DES_VEL_NEW(NP,:)
 
-         IJK = PIJK(NP,4)
          WEIGHT = ONE/VOL
 
          DRAG_BM(I,J,K,1) = DRAG_BM(I,J,K,1) + lDRAG_BM(1)*WEIGHT

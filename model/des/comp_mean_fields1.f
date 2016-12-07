@@ -5,7 +5,7 @@ module comp_mean_fields1_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS1(pijk,pvol)
+      SUBROUTINE COMP_MEAN_FIELDS1(particle_phase,pvol)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
@@ -19,7 +19,7 @@ module comp_mean_fields1_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
 !-----------------------------------------------
 ! Local variables
@@ -38,7 +38,7 @@ module comp_mean_fields1_module
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP) .and. .NOT.NORMAL_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Particle phase for data binning.
-         M = PIJK(NP,5)
+         M = particle_phase(NP)
 ! Accumulate total solids volume (by phase)
          SOLVOLINC(I,J,K,M) = SOLVOLINC(I,J,K,M) + PVOL(NP)
       ENDDO
