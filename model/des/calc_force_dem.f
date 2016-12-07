@@ -1,3 +1,5 @@
+MODULE CALC_FORCE_DEM_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CALC_FORCE_DEM                                          !
@@ -9,21 +11,28 @@
 !           accounting for the wall properties                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM
+      SUBROUTINE CALC_FORCE_DEM(pijk, particle_state, des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE des_time_march_module, only: des_time_march
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
-         USE discretelement, only: des_pos_new, des_vel_new, omega_new, wall_collision_pft, pft_neighbor, fc, tow
+         USE discretelement, only: pft_neighbor
          USE discretelement, only: des_coll_model_enum, dtsolid
-         USE discretelement, only: kn, kt, max_pip, mew, hertzian, des_radius, neighbor_index, pijk
-         USE discretelement, only: particle_state, nonexistent
+         USE discretelement, only: kn, kt, max_pip, mew, hertzian, neighbor_index
+         USE discretelement, only: nonexistent
          USE drag_gs_des0_module, only: drag_gs_des0
          USE drag_gs_des1_module, only: drag_gs_des1
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
          USE param1, only: small_number, zero
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: PIJK
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
+      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -233,3 +242,5 @@
       END SUBROUTINE PRINT_EXCESS_OVERLAP
 
     END SUBROUTINE CALC_FORCE_DEM
+
+END MODULE CALC_FORCE_DEM_MODULE

@@ -16,6 +16,8 @@ module des_time_march_module
 
       use calc_drag_des_module, only: calc_drag_des
       use calc_epg_des_module, only: calc_epg_des
+      use calc_force_dem_module, only: calc_force_dem
+      use cfnewvalues_module, only: cfnewvalues
       use comp_mean_fields_module, only: comp_mean_fields
       use compar, only: iend3, jend3, kend3
       use compar, only: istart3, jstart3, kstart3
@@ -24,7 +26,9 @@ module des_time_march_module
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, fc, pvol, des_vel_new, drag_fc
+      use discretelement, only: des_vel_new, drag_fc, des_radius, omoi, ppos, des_pos_new, omega_new
+      use discretelement, only: particle_state, pijk, wall_collision_pft
+      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, fc, tow, pvol, des_acc_old, rot_acc_old
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -143,14 +147,15 @@ module des_time_march_module
          ENDIF
 
 ! Calculate forces acting on particles (collisions, drag, etc).
-         CALL CALC_FORCE_DEM
+         CALL CALC_FORCE_DEM(pijk, particle_state, des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,fc,drag_fc,pvol,des_vel_new)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES
+         CALL CFNEWVALUES(particle_state, des_radius, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+            des_acc_old, rot_acc_old)
 
 ! Set DO_NSEARCH before calling DES_PAR_EXCHANGE.
          DO_NSEARCH = (NN == 1 .OR. MOD(NN,NEIGHBOR_SEARCH_N) == 0)

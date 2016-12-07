@@ -1,3 +1,5 @@
+MODULE CFNEWVALUES_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: CFNEWVALUES                                            C
@@ -6,16 +8,23 @@
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES
+      SUBROUTINE CFNEWVALUES(particle_state, des_radius, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+         des_acc_old, rot_acc_old)
 
-      USE discretelement, only: des_acc_old, rot_acc_old, fc, tow, des_vel_new, des_pos_new, omega_new, ppos, do_nsearch, dtsolid
-      USE discretelement, only: max_pip, intg_euler, omoi, intg_adams_bashforth, des_radius, pmass, neighbor_search_rad_ratio
-      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_particle, exiting_ghost, particle_state
+      USE discretelement, only: do_nsearch, dtsolid
+      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth, pmass, neighbor_search_rad_ratio
+      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_particle, exiting_ghost
       USE discretelement, only: normal_ghost
       USE param1, only: zero
       use constant, only: gravity
 
       IMPLICIT NONE
+
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, omoi
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: ppos
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, des_vel_new, omega_new, fc, tow, des_acc_old, rot_acc_old
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -105,3 +114,5 @@
         include 'functions.inc'
 
       END SUBROUTINE CFNEWVALUES
+
+END MODULE CFNEWVALUES_MODULE
