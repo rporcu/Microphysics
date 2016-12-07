@@ -121,17 +121,17 @@
    !    c      CYCLIC         10 Cyclic b.c.
    !    C      CYCLIC_PD      11 yclic b.c. with pressure drop
 
-   integer, parameter :: icbc_undef = 0
-   integer, parameter :: icbc_fluid = 1
-   integer, parameter :: icbc_p_inf = 2
-   integer, parameter :: icbc_p_out = 3
-   integer, parameter :: icbc_m_inf = 4
-   integer, parameter :: icbc_m_out = 5
-   integer, parameter :: icbc_outfl = 6
-   integer, parameter :: icbc_no_s  = 7
-   integer, parameter :: icbc_free  = 8
-   integer, parameter :: icbc_pslip = 9
-   integer, parameter :: icbc_cycl  = 10
-   integer, parameter :: icbc_cyclp = 11
+   integer, parameter :: icbc_undef =   0
+   integer, parameter :: icbc_fluid =   1
+   integer, parameter :: icbc_p_inf =  10
+   integer, parameter :: icbc_p_out =  11
+   integer, parameter :: icbc_m_inf =  20
+   integer, parameter :: icbc_m_out =  21
+   integer, parameter :: icbc_outfl =  31
+   integer, parameter :: icbc_no_s  = 100
+   integer, parameter :: icbc_free  = 101
+   integer, parameter :: icbc_pslip = 102
+   integer, parameter :: icbc_cycl  = 106
+   integer, parameter :: icbc_cyclp = 107
 
       END MODULE ic

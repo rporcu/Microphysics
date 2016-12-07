@@ -18,9 +18,9 @@
 
       use compar, only: mype
       use ic, only: icbc_fluid
+      use ic, only: icbc_no_s, icbc_free, icbc_pslip
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      use functions, only: wall_icbc_flag
 
       use open_files_mod, only: open_pe_log
 
@@ -33,11 +33,7 @@
       INTEGER, INTENT(IN) :: BCV
 
 ! i cell indices defining location of yz plane
-      INTEGER :: I_w, I_e
-! south/bottom j,k cell indices of yz plane
-      INTEGER :: J_s, K_b
-
-      INTEGER :: j,k
+      INTEGER :: i,j,k
 
 !-----------------------------------------------
 ! Local variables
@@ -51,11 +47,9 @@
 
       CALL INIT_ERR_MSG("MOD_BC_I")
 
-      I_W = BC_I_W(BCV)
-      I_E = BC_I_E(BCV)
-
-      J_S = BC_J_S(BCV)
-      K_B = BC_K_B(BCV)
+      K = BC_K_B(BCV)
+      J = BC_J_S(BCV)
+      I = BC_I_W(BCV)
 
 ! Establish the OWNER of the BC
       OWNER = myPE
@@ -63,36 +57,38 @@
 
       IF(myPE == OWNER) THEN
 
-         ! Flow on west boundary (fluid cell on east).
-         if (wall_icbc_flag(i_w  ,j_s,k_b) .and. &
-            mod(flag(i_w+1,j_s,k_b,0),1000) .eq. icbc_fluid) then
-            I_W = I_W
-            I_E = I_E
+! Flow on west boundary (fluid cell on east).
+         if(flag(i+1,j,k,0) == icbc_fluid .and. (&
+            flag(i,j,k,0) == icbc_no_s .or. &
+            flag(i,j,k,0) == icbc_free .or. &
+            flag(i,j,k,0) == icbc_pslip)) then
+
             BC_PLANE(BCV) = 'E'
 
-         ! Flow on east boundary (fluid cell on west).
-         elseif (wall_icbc_flag(i_w+1,j_s,k_b) .and. &
-            mod(flag(i_w,j_s,k_b,0),1000) .eq. icbc_fluid) then
+! Flow on east boundary (fluid cell on west).
+         elseif(flag(i,j,k,0) == icbc_fluid .and. (&
+            flag(i+1,j,k,0) == icbc_no_s .or. &
+            flag(i+1,j,k,0) == icbc_free .or. &
+            flag(i+1,j,k,0) == icbc_pslip)) then
 
-            I_W = I_W + 1
-            I_E = I_E + 1
+            BC_I_W(BCV) = BC_I_W(BCV) + 1
+            BC_I_E(BCV) = BC_I_E(BCV) + 1
             BC_PLANE(BCV) = 'W'
 
-         ! Set the plane of a value we know to be wrong so we can detect the error.
+! Set the plane of a value we know to be wrong so we can detect the error.
          ELSE
             BC_PLANE(BCV) = '.'
          ENDIF
       ENDIF
 
-! The owner distributes the new Iw/Ie coordinates to the other ranks.
       !CALL BCAST(I_W,   OWNER)
       !CALL BCAST(I_E,   OWNER)
       !CALL BCAST(BC_PLANE(BCV), OWNER)
 
-
 ! If there is an error, send I,J,K to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-         WRITE(ERR_MSG, 1100) BCV, I_W, I_E, J_S, K_B
+         WRITE(ERR_MSG, 1100) BCV, BC_I_W(BCV), BC_I_E(BCV), &
+            BC_J_S(BCV), BC_K_B(BCV)
 !           FLAG(i_w,j_s,k_b,0), FLAG(i_w+1,j_s,k_b,0)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -100,10 +96,6 @@
  1100 FORMAT('Error 1100: Cannot locate flow plane for boundary ',     &
          'condition ',I3,'.',2/3x,'I West   =  ',I6,' I East   = ',I6,/&
          3x,'J South  =  ',I6,' K Bottom = ',I6)
-
-! Store the new values in the global data array.
-      BC_I_W(BCV) = I_W
-      BC_I_E(BCV) = I_E
 
 ! Set up the I-indices for checking the entire BC region.
       I_WALL = BC_I_W(BCV)
@@ -114,12 +106,15 @@
 ! inflow/outflow specified against a wall. Flag any errors.
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
-      DO J = BC_J_S(BCV), BC_J_N(BCV)
+         DO J = BC_J_S(BCV), BC_J_N(BCV)
 ! Verify that the the fluid and wall cells match the FLAG.
-         IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                       &
-            mod(FLAG(i_fluid,j,k,0),1000) == icbc_fluid)) ERROR = .TRUE.
+! Only check cells that you own and contain fluid.
+            IF(FLAG(i_fluid,j,k,0) /= icbc_fluid .and. (&
+               flag(i_wall,j,k,0) /= icbc_no_s .or. &
+               flag(i_wall,j,k,0) /= icbc_free .or. &
+               flag(i_wall,j,k,0) /= icbc_pslip)) ERROR = .TRUE.
 
-      ENDDO
+            ENDDO
       ENDDO
 
 ! Sync up the error flag across all processes.
@@ -136,16 +131,18 @@
          CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
 
          DO K = BC_K_B(BCV), BC_K_T(BCV)
-         DO J = BC_J_S(BCV), BC_J_N(BCV)
+            DO J = BC_J_S(BCV), BC_J_N(BCV)
 
-            IF(.NOT.(WALL_ICBC_FLAG(i_wall ,j,k) .and.                    &
-               mod(FLAG(i_fluid,j,k,0),1000) == icbc_fluid)) THEN
+               IF(FLAG(i_fluid,j,k,0) /= icbc_fluid .and. (&
+                  flag(i_wall,j,k,0) /= icbc_no_s .or. &
+                  flag(i_wall,j,k,0) /= icbc_free .or. &
+                  flag(i_wall,j,k,0) /= icbc_pslip)) then
 
-               WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,0),  &
-                  I_FLUID, J, K, FLAG(i_fluid,j,k,0)
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            ENDIF
-         ENDDO
+                  WRITE(ERR_MSG, 1201) I_WALL, J, K, FLAG(i_wall,j,k,0),  &
+                     I_FLUID, J, K, FLAG(i_fluid,j,k,0)
+                  CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+               ENDIF
+            ENDDO
          ENDDO
 
          WRITE(ERR_MSG,"('Please correct the mfix.dat file.')")

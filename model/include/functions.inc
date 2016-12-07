@@ -40,25 +40,6 @@
          fluid_at = (flag(i,j,k,1).eq.1)
       end function fluid_at
 
-!---------------------------------------------------------------------//
-      LOGICAL FUNCTION WALL_ICBC_FLAG(i,j,k)
-      use geometry, only: flag
-      use ic, only: icbc_no_s, icbc_free, icbc_pslip, icbc_cycl, icbc_cyclp
-      implicit none
-      integer, intent(in) :: i,j,k
-      integer :: icbc
-
-      icbc = mod(flag(i,j,k,0),1000)
-
-      WALL_ICBC_FLAG = &
-        (icbc .EQ. icbc_no_s  .OR. &
-         icbc .EQ. icbc_free  .OR. &
-         icbc .EQ. icbc_pslip .OR. &
-         icbc .EQ. icbc_cycl  .OR. &
-         icbc .EQ. icbc_cyclp)
-
-      END FUNCTION WALL_ICBC_FLAG
-
 
 ! Flow boundaries
 !---------------------------------------------------------------------//

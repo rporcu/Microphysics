@@ -15,11 +15,11 @@
 
       use geometry, only: FLAG
       use ic, only: icbc_fluid
+      use ic, only: icbc_no_s, icbc_free, icbc_pslip
 
       use compar, only: myPE
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      USE functions, only: wall_icbc_flag
 
       use open_files_mod, only: open_pe_log
 
@@ -29,11 +29,8 @@
       INTEGER, INTENT(in) :: BCV
 
 ! Calculated cell indices in I,J,K directions
-      INTEGER :: J_s, J_n
-      INTEGER :: I_w, K_b
-
       INTEGER :: OWNER
-      INTEGER :: I, K
+      INTEGER :: I, J, K
 
       INTEGER :: IER
       LOGICAL :: ERROR
@@ -45,11 +42,9 @@
 
       CALL INIT_ERR_MSG("MOD_BC_J")
 
-      J_S = BC_J_S(BCV)
-      J_N = BC_J_N(BCV)
-
-      I_W = BC_I_W(BCV)
-      K_B = BC_K_B(BCV)
+      K = BC_K_B(BCV)
+      J = BC_J_S(BCV)
+      I = BC_I_W(BCV)
 
 ! Establish the OWNER of the BC
       OWNER = myPE
@@ -57,18 +52,20 @@
 
       IF(myPE == OWNER)THEN
 
-         IF (WALL_ICBC_FLAG(i_w,j_s,k_b) .AND. &
-            mod(FLAG(i_w,j_s+1,k_b,0),1000)==icbc_fluid) THEN
+         if(flag(i,j+1,k,0) == icbc_fluid .and. (&
+            flag(i,j  ,k,0) == icbc_no_s .or. &
+            flag(i,j  ,k,0) == icbc_free .or. &
+            flag(i,j  ,k,0) == icbc_pslip)) then
 
-            J_S = J_S
-            J_N = J_N
             BC_PLANE(BCV) = 'N'
 
-         ELSE IF (WALL_ICBC_FLAG(i_w,j_s+1,k_b) .AND. &
-            mod(FLAG(i_w,j_s,k_b,0),1000)==icbc_fluid) THEN
+         elseif(flag(i,j,k,0) == icbc_fluid .and. (&
+            flag(i,j+1,k,0) == icbc_no_s .or. &
+            flag(i,j+1,k,0) == icbc_free .or. &
+            flag(i,j+1,k,0) == icbc_pslip)) then
 
-            J_S = J_S + 1
-            J_N = J_N + 1
+            BC_J_S(BCV) = BC_J_S(BCV) + 1
+            BC_J_N(BCV) = BC_J_N(BCV) + 1
             BC_PLANE(BCV) = 'S'
 
          ELSE
@@ -82,8 +79,8 @@
 
 ! If there is an error, send i,j,k to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
-
-         WRITE(ERR_MSG, 1100) BCV, J_S, J_N, I_W, K_B
+         WRITE(ERR_MSG, 1100) BCV, BC_J_S(BCV), BC_J_N(BCV), &
+            BC_I_W(BCV), BC_K_B(BCV)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
@@ -91,11 +88,6 @@
  1100 FORMAT('Error 1100: Cannot locate flow plane for boundary ',     &
          'condition ',I3,'.',2/3x,'J South   =  ',I6,' J North   = ',I6,/&
          3x,'I West  =  ',I6,' K Bottom = ',I6)
-
-
-! Store the new values in the global data array.
-      BC_J_S(BCV) = J_S
-      BC_J_N(BCV) = J_N
 
 
       J_WALL = BC_J_S(BCV)
@@ -106,13 +98,13 @@
 ! inflow/outflow specified against a wall. Flag any errors.
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
-      DO I = BC_I_W(BCV), BC_I_E(BCV)
-
-          IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND. &
-             mod(FLAG(i,j_fluid,k,0),1000)== icbc_fluid)) ERROR = .TRUE.
-
-       ENDDO
-       ENDDO
+         DO I = BC_I_W(BCV), BC_I_E(BCV)
+            IF(flag(i,j_fluid,k,0) /= icbc_fluid .and. (&
+               flag(i,j_wall,k,0) /= icbc_no_s .or. &
+               flag(i,j_wall,k,0) /= icbc_free .or. &
+               flag(i,j_wall,k,0) /= icbc_pslip)) ERROR = .TRUE.
+         ENDDO
+      ENDDO
 
 
 ! Sync up the error flag across all processes.
@@ -131,20 +123,23 @@
  1200 FORMAT('Error 1200: Illegal geometry for boundary condition:',I3)
 
          DO K = BC_K_B(BCV), BC_K_T(BCV)
-         DO I = BC_I_W(BCV), BC_I_E(BCV)
+            DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-            IF(.NOT.(WALL_ICBC_FLAG(i,j_wall ,k) .AND.                    &
-               mod(FLAG(i,j_fluid,k,0),1000)==icbc_fluid)) THEN
+               IF(FLAG(i,j_fluid,k,0) /= icbc_fluid .and. (&
+                  flag(i,j_wall,k,0) /= icbc_no_s .or. &
+                  flag(i,j_wall,k,0) /= icbc_free .or. &
+                  flag(i,j_wall,k,0) /= icbc_pslip)) then
 
-               WRITE(ERR_MSG, 1201) I, J_WALL, K,FLAG(i,j_wall ,k,0), &
-                  I, J_FLUID, K, FLAG(i,j_fluid,k,0)
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            ENDIF
+                  WRITE(ERR_MSG, 1201) &
+                     I, J_WALL,  K, FLAG(i,j_wall, k,0), &
+                     I, J_FLUID, K, FLAG(i,j_fluid,k,0)
+                  CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+               ENDIF
 
  1201 FORMAT(' ',/14X,'I',7X,'J',7X,'K',7X,'FLAG',/3x,        &
          'WALL ',3(2x,I6),3x,I3,/3x,'FLUID',3(2x,I6),3x,I3)
 
-         ENDDO
+            ENDDO
          ENDDO
 
          WRITE(ERR_MSG,"('Please correct the mfix.dat file.')")

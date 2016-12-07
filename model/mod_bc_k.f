@@ -15,11 +15,11 @@
 
       use geometry, only: FLAG
       use ic, only: icbc_fluid
+      use ic, only: icbc_no_s, icbc_free, icbc_pslip
 
       use compar, only: myPE
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      USE functions, only: wall_icbc_flag
 
       use open_files_mod, only: open_pe_log
 
@@ -29,12 +29,9 @@
       INTEGER, INTENT(in) :: BCV
 
 ! calculated cell indices in I,J,K directions
-      INTEGER :: K_b, K_t
-      INTEGER :: I_w, J_s
-
       INTEGER :: OWNER
 
-      INTEGER :: I, J
+      INTEGER :: I, J, K
 
       INTEGER :: IER
       LOGICAL :: ERROR
@@ -46,11 +43,9 @@
 
       CALL INIT_ERR_MSG("MOD_BC_K")
 
-      K_B = BC_K_B(BCV)
-      K_T = BC_K_T(BCV)
-
-      I_W = BC_I_W(BCV)
-      J_S = BC_J_S(BCV)
+      K = BC_K_B(BCV)
+      J = BC_J_S(BCV)
+      I = BC_I_W(BCV)
 
 
 ! Establish the OWNER of the BC
@@ -59,16 +54,18 @@
 
       IF(myPE == OWNER) THEN
 
-         IF(WALL_ICBC_FLAG(i_w,j_s,k_b) .and.  &
-            mod(FLAG(i_w,j_s,k_b+1,0),1000) ==icbc_fluid) then
-            K_B = K_B
-            K_T = K_T
+         if(FLAG(i,j,k+1,0) ==icbc_fluid .and. (&
+            flag(i,j,k,0) == icbc_no_s .or. &
+            flag(i,j,k,0) == icbc_free .or. &
+            flag(i,j,k,0) == icbc_pslip)) then
             BC_PLANE(BCV) = 'T'
 
-         ELSEIF(WALL_ICBC_FLAG(i_w,j_s,k_b+1) .and. &
-            mod(FLAG(i_w,j_s,k_b,0),1000) == icbc_fluid) then
-            K_B = K_B + 1
-            K_T = K_T + 1
+         ELSEIF(FLAG(i,j,k,0) == icbc_fluid .and. (&
+            flag(i,j,k+1,0) == icbc_no_s .or. &
+            flag(i,j,k+1,0) == icbc_free .or. &
+            flag(i,j,k+1,0) == icbc_pslip)) then
+            BC_K_b(BCV) = BC_K_b(BCV) + 1
+            BC_K_t(BCV) = BC_K_t(BCV) + 1
             BC_PLANE(BCV) = 'B'
          ELSE
             BC_PLANE(BCV) = '.'
@@ -83,17 +80,14 @@
 ! If there is an error, send i,j,k to all ranks. Report and exit.
       IF(BC_PLANE(BCV) == '.') THEN
 
-         WRITE(ERR_MSG, 1100) BCV, K_B, K_T, I_W, J_S
+         WRITE(ERR_MSG, 1100) BCV, BC_K_B(BCV), BC_K_T(BCV), &
+            BC_I_W(BCV), BC_J_S(BCV)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1100 FORMAT('Error 1100: Cannot locate flow plane for boundary ',     &
          'condition ',I3,'.',2/3x,'K Bottom =  ',I6,' K Top    = ',I6,/&
          3x,'I West   =  ',I6,' J South  = ',I6)
-
-! Store the new values in the global data array.
-      BC_K_B(BCV) = K_B
-      BC_K_T(BCV) = K_T
 
 ! Set up the I-indices for checking the entire BC region.
       K_WALL = BC_K_B(BCV)
@@ -105,8 +99,10 @@
       DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Only check cells that you own and contain fluid.
-         IF(.NOT.(WALL_ICBC_FLAG(i,j,k_wall) .AND.                       &
-            mod(FLAG(i,j,k_fluid,0),1000)==icbc_fluid)) ERROR = .TRUE.
+         IF(FLAG(i,j,k_fluid,0) /= icbc_fluid .and. (&
+            flag(i,j,k_wall,0) /= icbc_no_s .or. &
+            flag(i,j,k_wall,0) /= icbc_free .or. &
+            flag(i,j,k_wall,0) /= icbc_pslip)) ERROR = .TRUE.
 
       ENDDO
       ENDDO
@@ -129,8 +125,10 @@
          DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Only check cells that you own and contain fluid.
-            if (.not. (WALL_ICBC_FLAG(i,j,k_wall) .AND. &
-               mod(FLAG(i,j,k_fluid,0),1000)==icbc_fluid) ) THEN
+            IF(FLAG(i,j,k_fluid,0) /= icbc_fluid .and. (&
+               flag(i,j,k_wall,0) /= icbc_no_s .or. &
+               flag(i,j,k_wall,0) /= icbc_free .or. &
+               flag(i,j,k_wall,0) /= icbc_pslip)) then
 
                WRITE(ERR_MSG, 1201) I, J, K_WALL,  FLAG(i,j,k_wall,0),  &
                   I, J, K_FLUID, FLAG(i,j,k_fluid,0)

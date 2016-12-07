@@ -8,7 +8,6 @@ MODULE set_icbc_flags_module
       use compar, only: istart3, jstart3, kstart3
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry    , only: flag
       use geometry, only: imax2, jmax2, kmax2
       use geometry, only: imax3, jmax3, kmax3
       use geometry, only: imin2, jmin2, kmin2
@@ -28,19 +27,21 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE SET_ICBC_FLAG
+      SUBROUTINE SET_ICBC_FLAG(flag)
 
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
-      CALL INIT_ICBC_FLAG
+      CALL INIT_ICBC_FLAG(flag)
 
-      CALL SET_IC_FLAGS
+      CALL SET_IC_FLAGS(flag)
 
-      CALL SET_BC_FLAGS_WALL
+      CALL SET_BC_FLAGS_WALL(flag)
 
-      CALL SET_BC_FLAGS_FLOW
+      CALL SET_BC_FLAGS_FLOW(flag)
 
 ! Verify that ICBC flags are set for all fluid cells.
-      CALL CHECK_ICBC_FLAG
+      CALL CHECK_ICBC_FLAG(flag)
 
       END SUBROUTINE SET_ICBC_FLAG
 
@@ -54,9 +55,13 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE INIT_ICBC_FLAG
+      SUBROUTINE INIT_ICBC_FLAG(flag)
 
       implicit none
+
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
+
       INTEGER :: I, J, K
 
 ! Initialize the icbc_flag array.
@@ -75,31 +80,31 @@ MODULE set_icbc_flags_module
 ! specified, cyclic)
          IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
             IF (CYCLIC_Z_PD) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+               FLAG(i,j,k,0) = icbc_cyclp
             ELSEIF (CYCLIC_Z) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cycl
+               FLAG(i,j,k,0) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = 1000 + icbc_no_s
+               FLAG(i,j,k,0) = icbc_no_s
             ENDIF
          ENDIF
 
          IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
             IF (CYCLIC_Y_PD) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+               FLAG(i,j,k,0) = icbc_cyclp
             ELSEIF (CYCLIC_Y) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cycl
+               FLAG(i,j,k,0) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = 1000 + icbc_no_s
+               FLAG(i,j,k,0) = icbc_no_s
             ENDIF
          ENDIF
 
          IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
             IF (CYCLIC_X_PD) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cyclp
+               FLAG(i,j,k,0) = icbc_cyclp
             ELSEIF (CYCLIC_X) THEN
-               FLAG(i,j,k,0) = 1000 + icbc_cycl
+               FLAG(i,j,k,0) = icbc_cycl
             ELSE
-               FLAG(i,j,k,0) = 1000 + icbc_no_s
+               FLAG(i,j,k,0) = icbc_no_s
             ENDIF
          ENDIF
 ! corner cells are wall cells
@@ -128,22 +133,24 @@ MODULE set_icbc_flags_module
 !  Note that the error message may be incomplete
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_ICBC_FLAG
+      SUBROUTINE CHECK_ICBC_FLAG(flag)
 
       use compar, only: iend2, jend2, kend2
       use compar, only: istart2, jstart2, kstart2
-      use compar, only: mype
+      use compar, only: numpes, mype
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
-      use geometry, only: flag
       use ic, only: icbc_undef
       use open_files_mod, only: open_pe_log
       use run, only: RUN_TYPE
 
       IMPLICIT NONE
 
-      LOGICAL :: ERROR = .FALSE.
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
       INTEGER :: I, J ,K, IER
+
+      LOGICAL :: ERROR = .FALSE.
 
       IF(RUN_TYPE(1:3) /= 'NEW') RETURN
 
@@ -151,11 +158,11 @@ MODULE set_icbc_flags_module
 
       ! First check for any errors.
       DO K = kStart2, kEnd2
-      DO J = jStart2, jEnd2
-      DO I = iStart2, iEnd2
-         IF (FLAG(i,j,k,0) == icbc_undef) ERROR = .TRUE.
-      ENDDO
-      ENDDO
+         DO J = jStart2, jEnd2
+            DO I = iStart2, iEnd2
+               IF (FLAG(i,j,k,0) == icbc_undef) ERROR = .TRUE.
+            ENDDO
+         ENDDO
       ENDDO
 
 ! Sync up the error flag across all processes.
@@ -172,15 +179,15 @@ MODULE set_icbc_flags_module
          CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
 
          DO K = kStart2, kEnd2
-         DO J = jStart2, jEnd2
-         DO I = iStart2, iEnd2
-            IF (FLAG(i,j,k,0) == icbc_undef) then
-               WRITE(ERR_MSG,1101) I, J, K
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            ENDIF
+            DO J = jStart2, jEnd2
+               DO I = iStart2, iEnd2
+                  IF (FLAG(i,j,k,0) == icbc_undef) then
+                     WRITE(ERR_MSG,1101) I, J, K
+                     CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+                  ENDIF
 
-         ENDDO
-         ENDDO
+               ENDDO
+            ENDDO
          ENDDO
 
          WRITE(ERR_MSG, 1102)
@@ -216,7 +223,7 @@ MODULE set_icbc_flags_module
 !  Purpose: Set the IC portions of the ICBC_Flag array.                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_IC_FLAGS
+      SUBROUTINE SET_IC_FLAGS(flag)
 
       use ic, only: IC_DEFINED
       use ic, only: IC_TYPE
@@ -229,9 +236,11 @@ MODULE set_icbc_flags_module
       use param, only: dimension_ic
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      use geometry, only : flag
 
       IMPLICIT NONE
+
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 !-----------------------------------------------
 ! Local variables
@@ -253,7 +262,7 @@ MODULE set_icbc_flags_module
          DO K = IC_K_B(ICV), IC_K_T(ICV)
             DO J = IC_J_S(ICV), IC_J_N(ICV)
                DO I = IC_I_W(ICV), IC_I_E(ICV)
-                  flag(i,j,k,0) = 1000*ICV + icbc_fluid
+                  flag(i,j,k,0) = icbc_fluid
                ENDDO
             ENDDO
          ENDDO
@@ -281,12 +290,14 @@ MODULE set_icbc_flags_module
 !  Purpose: Find and validate i, j, k locations for walls BC's         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_FLAGS_WALL
+      SUBROUTINE SET_BC_FLAGS_WALL(flag)
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      use geometry, only : flag
 
       IMPLICIT NONE
+
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 !-----------------------------------------------
 ! Local variables
@@ -295,6 +306,9 @@ MODULE set_icbc_flags_module
       INTEGER :: I , J , K
 ! loop index
       INTEGER :: BCV
+
+! Total number of valid BC types
+      INTEGER, PARAMETER :: DIM_BCTYPE = 21
 
 !-----------------------------------------------
 
@@ -313,9 +327,9 @@ MODULE set_icbc_flags_module
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
                SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,0) = 1000*BCV + icbc_free
-                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,0) = 1000*BCV + icbc_no_s
-                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,0) = 1000*BCV + icbc_pslip
+                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,0) = icbc_free
+                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,0) = icbc_no_s
+                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,0) = icbc_pslip
                END SELECT
             ENDDO
             ENDDO
@@ -340,17 +354,19 @@ MODULE set_icbc_flags_module
 !           set value of bc_plane for flow BC's.                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_FLAGS_FLOW
+      SUBROUTINE SET_BC_FLAGS_FLOW(flag)
 
       use compar       , only: nodesi, nodesj, nodesk
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      use functions    , only: wall_icbc_flag
-      use geometry     , only: flag, imax2, jmax2, kmax2
+      use geometry     , only: imax2, jmax2, kmax2
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
 
       USE open_files_mod, only: open_pe_log
 
       IMPLICIT NONE
+
+      integer, intent(inout) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,0:4)
 
 ! loop/variable indices
       INTEGER :: BCV, I, J, K
@@ -382,12 +398,16 @@ MODULE set_icbc_flags_module
             Y_CONSTANT = (BC_Y_S(BCV) == BC_Y_N(BCV))
             Z_CONSTANT = (BC_Z_B(BCV) == BC_Z_T(BCV))
 
+
+            write(*,*) 'call mod_bc_i',bcv
             IF(X_CONSTANT .AND. BC_X_W(BCV)/=UNDEFINED)                &
                CALL MOD_BC_I(BCV)
 
+            write(*,*) 'call mod_bc_j',bcv
             IF(Y_CONSTANT .AND. BC_Y_S(BCV)/=UNDEFINED)                &
                CALL MOD_BC_J(BCV)
 
+            write(*,*) 'call mod_bc_k',bcv
             IF(Z_CONSTANT .AND. BC_Z_B(BCV)/=UNDEFINED)                &
                CALL MOD_BC_K(BCV)
 
@@ -417,7 +437,9 @@ MODULE set_icbc_flags_module
             DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Verify that the FLOW BC is overwriting a wall.
-               IF(WALL_ICBC_FLAG(i,j,k)) THEN
+               IF(flag(i,j,k,0) == icbc_no_s .or. &
+                  flag(i,j,k,0) == icbc_free .or. &
+                  flag(i,j,k,0) == icbc_pslip) then
 
                   SELECT CASE (TRIM(BC_TYPE(BCV)))
                      CASE ('P_OUTFLOW');    FLAG(i,j,k,0) = 1000*BCV + icbc_p_out
@@ -454,7 +476,9 @@ MODULE set_icbc_flags_module
                DO I = BC_I_W(BCV), BC_I_E(BCV)
 
 ! Verify that the FLOW BC is overwriting a wall.
-                  IF(.NOT.WALL_ICBC_FLAG(i,j,k)) THEN
+                  IF(flag(i,j,k,0) /= icbc_no_s .and. &
+                     flag(i,j,k,0) /= icbc_free .and. &
+                     flag(i,j,k,0) /= icbc_pslip) then
                      WRITE(ERR_MSG, 1201) I,J,K, FLAG(i,j,k,0)
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
                   ENDIF
@@ -470,6 +494,8 @@ MODULE set_icbc_flags_module
 
             ENDIF ! IF(ERROR)
          ENDIF ! IF(not a wall BC)
+
+            write(*,*) 'done',bcv
       ENDDO ! BC Loop
 
 ! Sync the ICBC flag across ghost layers

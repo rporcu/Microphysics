@@ -40,7 +40,6 @@ MODULE functions
 
 ! logical function to identify various wall cells
 ! LOGICAL :: wall_at
-! LOGICAL :: WALL_ICBC_FLAG
 
 ! logical function to identify different flow at boundaries
 ! LOGICAL :: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T

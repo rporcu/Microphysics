@@ -20,6 +20,7 @@
       USE set_icbc_flags_module, only: set_icbc_flag
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
       USE set_bc_flow_module, only: set_bc_flow
+      use geometry, only: flag
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -84,7 +85,7 @@
 
 
 ! This call needs to occur before any of the IC/BC checks.
-      CALL SET_ICBC_FLAG
+      CALL SET_ICBC_FLAG(flag)
 
 ! Compute area of boundary surfaces.
       CALL GET_BC_AREA
