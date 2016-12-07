@@ -19,7 +19,7 @@
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fld_const, only: ro_g0, mu_g0
       use functions, only: fluid_at
-      use param1   , only: zero, half, one, undefined
+      use param1   , only: zero, one, undefined
 
       implicit none
 

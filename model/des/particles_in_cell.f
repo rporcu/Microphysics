@@ -1,11 +1,12 @@
 MODULE PARTICLES_IN_CELL_MODULE
 
-      use discretelement, only: PIJK, PINC
-      USE discretelement, only: DES_POS_NEW
+      use discretelement, only: PINC
       USE discretelement, only: MAX_PIP
       USE discretelement, only: XE, YN, ZT
-      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost, particle_state
+      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
       use mpi_funs_des, only: des_par_exchange
+
+      use check_cell_movement_module, only: check_cell_movement
 
 ! Number of particles in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
@@ -18,8 +19,6 @@ MODULE PARTICLES_IN_CELL_MODULE
 
 ! The number of particles on the current process.
       use discretelement, only: PIP, MAX_PIP
-! The I/J/K, IJK, and phase index of each particle
-      use discretelement, only: PIJK
 ! The number and list of particles in each fluid cell IJK.
       use discretelement, only: PINC, PIC
 ! The East/North/Top face location of a given I/J/K index.
@@ -37,8 +36,6 @@ MODULE PARTICLES_IN_CELL_MODULE
 ! Function to conpute IJK from I/J/K
       use functions, only: FUNIJK
 
-      use discretelement, only: DES_POS_NEW
-
 CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -54,9 +51,14 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE PARTICLES_IN_CELL
+      SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -159,7 +161,7 @@ CONTAINS
 
       ENDDO
 
-      CALL CHECK_CELL_MOVEMENT
+      CALL CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new)
 
 ! Assigning the variable PIC(IJK)%p(:). For each computational fluid
 ! cell compare the number of current particles in the cell to what was
@@ -227,9 +229,14 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE INIT_PARTICLES_IN_CELL
+      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new)
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

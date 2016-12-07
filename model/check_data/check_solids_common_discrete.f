@@ -44,7 +44,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: undefined, undefined_c
+      use param1, only: undefined
       use param, only: dim_m
 
 ! Use the error manager for posting error messages.

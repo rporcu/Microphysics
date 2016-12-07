@@ -22,10 +22,7 @@
          use compar, only: kstart3, kend3
          use compar, only: mype
          use exit_mod, only: mfix_exit
-         use funits, only: unit_log
-         use param, only: DIM_EQS
          use param, only: dimension_3
-         use param1, only: zero
          use residual, only: resid
          use toleranc, only: tol_resid
 

@@ -23,9 +23,7 @@
          use exit_mod, only: mfix_exit
          use funits, only: unit_log, dmp_log
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
-         use param, only: DIM_EQS
          use param, only: dimension_3
-         use param1, only: zero
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -107,10 +105,8 @@
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
          use functions, only: funijk
-         use funits, only: unit_log
          use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
-         use param, only: DIM_EQS
          use param, only: dimension_3
          use param1, only: zero, one, small_number
 

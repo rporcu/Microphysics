@@ -14,11 +14,10 @@ MODULE MASS_INFLOW_DEM_MODULE
       use desgrid, only: dg_istart, dg_jstart, dg_kstart
       use desgrid, only: dg_istart2, dg_jstart2, dg_kstart2
       use desgrid, only: iofpos, jofpos, kofpos
-      use discretelement, only: des_explicitly_coupled, pvol, dg_pijk, xe, yn, zt
-      use discretelement, only: des_pos_new, ppos, omega_new, pijk, max_pip, dtsolid, imax_global_id, pmass
-      use discretelement, only: dg_pic, particle_state, s_time, pip, normal_particle, des_radius, des_vel_new, drag_fc, ro_sol
+      use discretelement, only: des_explicitly_coupled, xe, yn, zt
+      use discretelement, only: max_pip, dtsolid, imax_global_id
+      use discretelement, only: dg_pic, s_time, pip, normal_particle
       use discretelement, only: entering_particle, entering_ghost, normal_ghost, exiting_particle, exiting_ghost, nonexistent
-      use discretelement, only: omoi, des_pos_new, ppos, omega_new, pijk, iglobal_id
       use functions, only: funijk
       use param1, only: half, zero
       use constant, only: d_p0, ro_s0
@@ -33,9 +32,17 @@ MODULE MASS_INFLOW_DEM_MODULE
 !  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MASS_INFLOW_DEM
+      SUBROUTINE MASS_INFLOW_DEM(pijk, dg_pijk, iglobal_id, particle_state, &
+         des_radius, omoi, pmass, pvol, ro_sol, &
+         des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, omoi, pmass, pvol, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, drag_fc
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
       INTEGER :: IP, LS, M, NP, IJK, LC
       INTEGER :: BCV, BCV_I
@@ -116,7 +123,9 @@ MODULE MASS_INFLOW_DEM_MODULE
             iGLOBAL_ID(LS) = iMAX_GLOBAL_ID
 
 ! Set the properties of the new particle.
-            CALL SET_NEW_PARTICLE_PROPS(BCV, M, LS, POS, IJKP)
+            CALL SET_NEW_PARTICLE_PROPS(BCV, M, LS, POS, IJKP, pijk, dg_pijk, particle_state, &
+               des_radius, omoi, pmass, pvol, ro_sol, &
+               des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
          ENDDO PLoop
 
@@ -261,7 +270,9 @@ MODULE MASS_INFLOW_DEM_MODULE
 !  Purpose:  Set the properties of the new particle.                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_NEW_PARTICLE_PROPS(lBCV, lM, lNP, lPOS, lIJKP)
+      SUBROUTINE SET_NEW_PARTICLE_PROPS(lBCV, lM, lNP, lPOS, lIJKP, pijk, dg_pijk, particle_state, &
+         des_radius, omoi, pmass, pvol, ro_sol, &
+         des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -277,6 +288,13 @@ MODULE MASS_INFLOW_DEM_MODULE
       DOUBLE PRECISION, INTENT(IN) :: lPOS(3)
 ! I/J/K index of fluid cell containing the new particle.
       INTEGER, INTENT(IN) :: lIJKP(3)
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, omoi, pmass, pvol, ro_sol
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, drag_fc
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
 ! I/J/K index of DES grid cell
       INTEGER :: lI, lJ, lK
 

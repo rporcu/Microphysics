@@ -14,7 +14,6 @@
 !-----------------------------------------------
       USE bc, only: bc_defined, bc_type, dimension_bc
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-      USE compar, only: jend2,kend2
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       implicit none

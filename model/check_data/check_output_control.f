@@ -17,7 +17,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Number aliases
-      use param1, only: UNDEFINED, UNDEFINED_I, ZERO, LARGE_NUMBER
+      use param1, only: UNDEFINED, ZERO
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//

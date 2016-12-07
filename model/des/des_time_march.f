@@ -17,6 +17,7 @@ module des_time_march_module
       use calc_drag_des_module, only: calc_drag_des
       use calc_epg_des_module, only: calc_epg_des
       use calc_force_dem_module, only: calc_force_dem
+      use calc_pg_grad_module, only: calc_pg_grad
       use cfnewvalues_module, only: cfnewvalues
       use comp_mean_fields_module, only: comp_mean_fields
       use compar, only: iend3, jend3, kend3
@@ -25,10 +26,10 @@ module des_time_march_module
       use des_allocate, only: particle_grow
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
-      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: des_vel_new, drag_fc, des_radius, omoi, ppos, des_pos_new, omega_new
-      use discretelement, only: particle_state, pijk, wall_collision_pft
-      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, fc, tow, pvol, des_acc_old, rot_acc_old
+      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt, fc, tow
+      use discretelement, only: des_vel_new, drag_fc, des_radius, omoi, ppos, des_pos_new, omega_new, particle_state, pijk, dg_pijk
+      use discretelement, only: iglobal_id, pmass, ro_sol
+      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, pvol, des_acc_old, rot_acc_old, wall_collision_pft
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -123,9 +124,9 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pvol, des_vel_new, fc)
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc)
          ENDIF
-         CALL CALC_PG_GRAD(p_g, gradPg)
+         CALL CALC_PG_GRAD(p_g, gradPg, pijk)
       ENDIF
 
 
@@ -149,7 +150,7 @@ module des_time_march_module
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM(pijk, particle_state, des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,fc,drag_fc,pvol,des_vel_new)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol,des_vel_new)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -161,8 +162,12 @@ module des_time_march_module
          DO_NSEARCH = (NN == 1 .OR. MOD(NN,NEIGHBOR_SEARCH_N) == 0)
 
 ! Add/Remove particles to the system via flow BCs.
-         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM
-         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM(DO_NSEARCH)
+         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, DG_PIJK, iglobal_id, PARTICLE_STATE, &
+            DES_RADIUS, OMOI, PMASS, PVOL, RO_SOL, &
+            DES_VEL_NEW, DES_POS_NEW, PPOS, OMEGA_NEW, DRAG_FC)
+         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM(DO_NSEARCH, pijk, iglobal_id, particle_state, &
+            des_radius, omoi, pmass, pvol, ro_sol, &
+            des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
 
 ! Call exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
@@ -179,7 +184,7 @@ module des_time_march_module
          IF(DES_CONTINUUM_COUPLED .AND. &
             .NOT.DES_EXPLICITLY_COUPLED) THEN
 ! Bin particles to fluid grid.
-            CALL PARTICLES_IN_CELL
+            CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 ! Calculate mean fields (EPg).
             CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g)
          ENDIF

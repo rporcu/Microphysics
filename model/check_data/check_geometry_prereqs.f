@@ -24,7 +24,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ONE, ZERO, UNDEFINED_I, UNDEFINED
+      use param1, only: UNDEFINED_I
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//

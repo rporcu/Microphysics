@@ -14,9 +14,10 @@
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
-      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
+      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost, pijk
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
+      USE discretelement, only: des_pos_new, des_vel_new
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: funijk, ip1, jp1, kp1, fluid_at
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
@@ -25,6 +26,7 @@
       USE param1, only: zero
       USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
       USE run, only: run_type, time
+      USE set_phase_index_module, only: set_phase_index
       USE stl_preproc_des, only: add_facet
 
       IMPLICIT NONE
@@ -137,15 +139,15 @@
          OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI
       ENDDO
 
-      CALL SET_PHASE_INDEX
-      CALL INIT_PARTICLES_IN_CELL
+      CALL SET_PHASE_INDEX(pijk)
+      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
 ! Bin the particles to the DES grid.
       CALL DESGRID_PIC(PLOCATE=.TRUE.)
       CALL DES_PAR_EXCHANGE
-      CALL PARTICLES_IN_CELL
+      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 
       CALL NEIGHBOUR
 

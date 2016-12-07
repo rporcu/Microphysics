@@ -1,14 +1,13 @@
 MODULE MASS_OUTFLOW_DEM_MODULE
 
-      USE bc, only: bc_u_s, bc_v_s, bc_w_s
       USE bc, only: bc_i_w, bc_j_s, bc_k_b
       USE bc, only: bc_type, bc_plane
+      USE bc, only: bc_u_s, bc_v_s, bc_w_s
       USE des_bc, only: dem_bcmo, dem_bcmo_map, dem_bcmo_ijk, dem_bcmo_ijkstart, dem_bcmo_ijkend
-      USE discretelement, only: des_vel_new, des_pos_new, dg_pic, ppos, tow, pip, iglobal_id, des_radius, pijk, pmass, ro_sol, omoi
-      USE discretelement, only: omega_new, fc, wall_collision_facet_id, wall_collision_pft, dg_pic, des_vel_new, pvol
-      USE discretelement, only: particle_state, nonexistent, entering_ghost, exiting_ghost, exiting_particle, entering_particle
-      USE discretelement, only: xe, yn, zt
       USE discretelement, only: normal_ghost, normal_particle
+      USE discretelement, only: particle_state, nonexistent, entering_ghost, exiting_ghost, exiting_particle, entering_particle
+      USE discretelement, only: wall_collision_facet_id, dg_pic, pip
+      USE discretelement, only: xe, yn, zt
       USE param1, only: zero
 
    CONTAINS
@@ -21,11 +20,19 @@ MODULE MASS_OUTFLOW_DEM_MODULE
 !  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MASS_OUTFLOW_DEM(FORCE_NSEARCH)
+      SUBROUTINE MASS_OUTFLOW_DEM(FORCE_NSEARCH, pijk, iglobal_id, particle_state, &
+         des_radius, omoi, pmass, pvol, ro_sol, &
+         des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
 
       implicit none
 
       LOGICAL, INTENT(INOUT) :: FORCE_NSEARCH
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, omoi, pmass, pvol, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, fc, tow
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
       INTEGER :: IJK
       INTEGER :: LC, LP, NP, M
@@ -128,7 +135,8 @@ MODULE MASS_OUTFLOW_DEM_MODULE
 !      CALL GLOBAL_ALL_OR(FORCE_NSEARCH)
 
       RETURN
-      END SUBROUTINE MASS_OUTFLOW_DEM
+
+      CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -175,5 +183,6 @@ MODULE MASS_OUTFLOW_DEM_MODULE
 
       RETURN
       END SUBROUTINE DELETE_PARTICLE
+   END SUBROUTINE MASS_OUTFLOW_DEM
 
 END MODULE MASS_OUTFLOW_DEM_MODULE

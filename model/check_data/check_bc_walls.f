@@ -62,7 +62,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants.
-      use param1, only: ZERO, UNDEFINED
+      use param1, only: UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//

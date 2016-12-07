@@ -105,7 +105,7 @@
 
       use residual, only: RESID_STRING
       use residual, only: RESID_GRP, RESID_GRP_STRING
-      use residual, only: HYDRO_GRP, THETA_GRP
+      use residual, only: HYDRO_GRP
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 

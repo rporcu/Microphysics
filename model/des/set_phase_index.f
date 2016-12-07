@@ -1,3 +1,5 @@
+MODULE SET_PHASE_INDEX_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_PHASE_INDEX                                         !
@@ -6,11 +8,10 @@
 !  density.                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_PHASE_INDEX
+      SUBROUTINE SET_PHASE_INDEX(PIJK)
 
       USE discretelement, only: DES_RADIUS, RO_SOL
       USE discretelement, only: MAX_PIP
-      USE discretelement, only: PIJK
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost, particle_state
       USE mpi_funs_des, only: des_par_exchange
@@ -19,6 +20,9 @@
       USE constant, only: MMAX, D_P0, RO_s0
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -105,3 +109,4 @@
  9000 FORMAT(I10,2(2x,g12.5))
 
       END SUBROUTINE SET_PHASE_INDEX
+END MODULE SET_PHASE_INDEX_MODULE

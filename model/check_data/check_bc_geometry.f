@@ -25,7 +25,7 @@
 ! The max number of BCs.
       use param, only: DIMENSION_BC
 ! Parameter constants
-      use param1, only: ZERO, UNDEFINED, UNDEFINED_I, UNDEFINED_C
+      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -354,7 +354,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, UNDEFINED_I, UNDEFINED
+      use param1, only: UNDEFINED_I, UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//

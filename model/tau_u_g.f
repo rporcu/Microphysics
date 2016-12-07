@@ -40,7 +40,7 @@
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE param1, only: zero, half
+      USE param1, only: zero
       USE toleranc, only: dil_ep_s
       USE geometry, only: axy, axz, ayz, odx
       IMPLICIT NONE

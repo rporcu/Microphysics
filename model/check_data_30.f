@@ -11,7 +11,7 @@
 !---------------------------------------------------------------------//
       use compar, only: istart2,iend2, jstart2, jend2, kstart2, kend2
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use param1, only: zero, one
+      use param1, only: zero
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 

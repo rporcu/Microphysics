@@ -197,7 +197,7 @@
 
 ! Center of DES grid cell and half size. Note that a buffer is added to
 ! the half size to make the cell appear a little larger. This ensures
-! that paricles near the edge 'see' STLs that are nearby but do not
+! that particles near the edge 'see' STLs that are nearby but do not
 ! directly intersect the DES grid cell contain the particle center.
       DOUBLE PRECISION :: CENTER(3), HALFSIZE(3)
 ! Flag: STL intersects the DES grid cell

@@ -38,9 +38,6 @@
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3
 
-! MPI-Domain decompoint and rank flags.
-      use compar, only: myPE
-
       IMPLICIT NONE
 !......................................................................!
 

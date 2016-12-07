@@ -82,7 +82,7 @@
 ! The max number of BCs.
       use param, only: DIMENSION_PS
 ! Parameter constants
-      use param1, only: ZERO, UNDEFINED, UNDEFINED_I
+      use param1, only: UNDEFINED, UNDEFINED_I
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -277,10 +277,6 @@
 ! Gas phase mass flowrate for PS and velocities
       use ps, only: PS_MASSFLOW_G, PS_U_g, PS_V_g, PS_W_g
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Maximum input array sizes.
-      use param, only: DIM_M, DIM_N_g, DIM_N_s
 ! Parameter constants
       use param1, only: UNDEFINED
 

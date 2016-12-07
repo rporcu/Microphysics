@@ -16,7 +16,6 @@
       use bc    , only: bc_type, bc_defined
 
       use param, only: dimension_bc
-      use param1, only: undefined_i
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -98,11 +97,9 @@
       use bc, only: bc_p_g
       use bc, only: bc_ep_g
 
-      use constant, only: pi
 
-      use param1, only: undefined, zero
+      use param1, only: undefined
       use scales, only: scale_pressure
-      use toleranc, only: tmin
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -208,9 +205,7 @@
       use bc, only: bc_p_g
       use bc, only: bc_ep_g
 
-      use constant, only: pi
 
-      use param1, only: zero
       use scales, only: scale_pressure
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3

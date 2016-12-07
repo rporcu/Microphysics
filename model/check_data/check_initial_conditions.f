@@ -667,8 +667,6 @@
       use param1, only: UNDEFINED
 ! Maximum number of solids phases
       use param, only: DIM_M
-! Maximum number of gas and solids phase species
-      use param, only: DIM_N_g, DIM_N_s
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//

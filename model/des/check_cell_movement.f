@@ -1,3 +1,6 @@
+MODULE CHECK_CELL_MOVEMENT_MODULE
+CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_CELL_MOVEMENT                                     !
@@ -8,14 +11,12 @@
 !  The collection could get expensive so the call frequency of this    !
 !  routine should probably be reduced.                                 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_CELL_MOVEMENT
+      SUBROUTINE CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Max number of particles in process
       use discretelement, only: MAX_PIP
-! The I/J/K/IJK indicies of the fluid cell
-      use discretelement, only: PIJK
 ! Run time flag indicating DEM or PIC solids.
       use run, only: DEM_SOLIDS
 
@@ -28,6 +29,11 @@
       use error_manager, only: err_msg, flush_err_msg, ival, init_err_msg
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
+
 
 ! Local Variables:
 !----------------------------------------------------------------------!
@@ -75,18 +81,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_CELL_MOVEMENT_DEM
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! The global ID of a particle.
-      use discretelement, only: iGlobal_ID
 ! Max number of particles in process
       use discretelement, only: MAX_PIP
-! The I/J/K/IJK indicies of the fluid cell
-      use discretelement, only: PIJK
-! Particle positions and velocities
-      use discretelement, only: DES_POS_NEW, DES_VEL_NEW
 
       USE open_files_mod, only: open_pe_log
+
+      IMPLICIT NONE
 
 ! Local Variables:
 !----------------------------------------------------------------------!
@@ -147,3 +147,4 @@
       END SUBROUTINE CHECK_CELL_MOVEMENT_DEM
 
       END SUBROUTINE CHECK_CELL_MOVEMENT
+END MODULE CHECK_CELL_MOVEMENT_MODULE

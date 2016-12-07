@@ -1,3 +1,6 @@
+MODULE CALC_PG_GRAD_MODULE
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CALC_PG_GRAD                                            !
@@ -11,7 +14,7 @@
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g, gradPg)
+      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost, particle_state
@@ -31,7 +34,7 @@
       use geometry, only: XLENGTH, YLENGTH, ZLENGTH
 ! Gas phase pressure
 
-      use discretelement, only: MAX_PIP, PIJK, DES_EXPLICITLY_COUPLED
+      use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
 
       use functions, only: funijk
       use functions, only: fluid_at
@@ -47,6 +50,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(out  ) :: gradPg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      INTEGER, DIMENSION(:,:), INTENT(out) :: pijk
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
@@ -94,3 +98,5 @@
 
       RETURN
       END SUBROUTINE CALC_PG_GRAD
+
+END MODULE CALC_PG_GRAD_MODULE

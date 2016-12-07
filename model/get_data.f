@@ -14,7 +14,6 @@
       USE gridmap        , only: gridmap_init
       USE mpi_init_des   , only: desmpi_init
       USE open_files_mod, only: open_files
-      USE param1         , only: undefined
       USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
       USE run, only: dem_solids
