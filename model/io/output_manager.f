@@ -323,7 +323,6 @@ module output_manager_module
       SUBROUTINE INIT_OUTPUT_VARS
 
       use machine, only: wall_time
-      use output, only: ONEMEG
       use output, only: OUT_TIME, OUT_DT
       use output, only: RES_TIME, RES_DT
       use output, only: USR_TIME, USR_DT
@@ -332,7 +331,6 @@ module output_manager_module
       use output, only: RES_BACKUPS
       use param, only: DIMENSION_USR
       use param1, only: UNDEFINED
-      use param1, only: ZERO
       use run, only: RUN_TYPE
       use run, only: TIME, DT
       use time_cpu, only: CPU_IO

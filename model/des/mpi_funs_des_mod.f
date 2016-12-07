@@ -168,7 +168,6 @@
 
       use discretelement, only: dg_pic
       use desmpi, only: iMAXBUF
-      use desmpi, only: iBUFOFFSET
       use desmpi, only: dSENDBUF, dRECVBUF
       use desmpi, only: iSENDINDICES
       use desmpi, only: iGhostPacketSize
@@ -250,7 +249,6 @@
       use desmpi, only: iRECVINDICES
       use desmpi, only: iEXCHFLAG
 
-      use param1, only: ZERO
       use discretelement, only: dimn, nonexistent, particle_state
 
       implicit none

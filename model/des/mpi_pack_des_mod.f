@@ -70,12 +70,6 @@
 ! Cell number of ghost particles
       use desmpi, only: iSENDINDICES
 
-! Global Constants:
-!---------------------------------------------------------------------//
-      use constant, only: PI
-! Dimension of particle spatial arrays.
-      use discretelement, only: DIMN
-
       IMPLICIT NONE
 
 ! Dummy arguments:
@@ -186,8 +180,6 @@
       use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
 ! Pair collision history information
       use discretelement, only: PFT_NEIGHBOR
-! Dimension of particle spatial arrays.
-      use discretelement, only: DIMN
 ! Flag indicating the the fluid-particle drag is explicitly coupled.
       use discretelement, only: DES_EXPLICITLY_COUPLED
 ! Explicit particle drag force

@@ -48,7 +48,6 @@
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
-      character(len=80), parameter :: name = 'desmpi_sendrecv_init'
       integer :: ldebug,ltag,lrecvface
 !-----------------------------------------------
 
@@ -111,7 +110,6 @@
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
-      character(len=80), parameter :: name = 'desmpi_sendrecv_wait'
       integer :: ldebug
 !-----------------------------------------------
 
@@ -150,7 +148,6 @@
 ! local variables
 !-----------------------------------------------
       integer lroot,lidebug
-      character(len=80), parameter :: name = 'desmpi_scatterv'
 !-----------------------------------------------
 
       lroot = pe_io
@@ -193,7 +190,6 @@
 ! local variables
 !-----------------------------------------------
       integer lroot,lidebug
-      character(len=80), parameter :: name = 'des_gather'
 !-----------------------------------------------
 
       lroot = pe_io

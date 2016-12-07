@@ -89,7 +89,6 @@
 !-----------------------------------------------
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1  , only: large_number, zero, one
-      use matrix  , only: e, w, s, n, t, b
       use run     , only: debug_resid
 
       implicit none

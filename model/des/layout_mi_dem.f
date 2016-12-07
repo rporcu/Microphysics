@@ -83,8 +83,6 @@ MODULE layout_mi_dem_module
 
       use des_bc, only: DEM_MI
 
-      use stl, only: DEFAULT_STL
-
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
@@ -93,7 +91,7 @@ MODULE layout_mi_dem_module
 
 ! Global parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, HALF, ONE
+      use param1, only: HALF, ONE
 
 ! Module procedures
 !---------------------------------------------------------------------//
@@ -398,8 +396,6 @@ MODULE layout_mi_dem_module
 
       use des_bc, only: DEM_MI
 
-      use stl, only: DEFAULT_STL
-
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
@@ -408,7 +404,7 @@ MODULE layout_mi_dem_module
 
 ! Global parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, HALF, ONE
+      use param1, only: HALF, ONE
 
 ! Module procedures
 !---------------------------------------------------------------------//
@@ -714,7 +710,6 @@ MODULE layout_mi_dem_module
 
       use des_bc, only: DEM_MI
 
-      use stl, only: DEFAULT_STL
       use compar, only: myPE
       use geometry, only: IMAX, JMAX, KMAX
       use geometry, only: DX, DY, DZ
@@ -723,7 +718,7 @@ MODULE layout_mi_dem_module
 
 ! Global parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, HALF, ONE
+      use param1, only: HALF, ONE
 
 ! Module procedures
 !---------------------------------------------------------------------//

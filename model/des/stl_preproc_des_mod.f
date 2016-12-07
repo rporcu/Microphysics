@@ -32,12 +32,6 @@
       use stl, only: ALL_STL
 ! STLs read from geometry files
       use stl, only: BASE_STL
-! STLs for user specified walls (NSW, PSW, FSW)
-      use stl, only: BCWALLS_STL
-! STLs for impermeable surfaces
-      use stl, only: IMPRMBL_STL
-! STLs for default walls
-      use stl, only: DEFAULT_STL
 
       use stl_dbg_des, only: stl_dbg_write_facets
 
@@ -99,7 +93,6 @@
       use stl, only: VERTEX
 
       use stl, only: TOL_STL
-      use param1, only: ZERO, ONE
 
       use desgrid, only: DG_FUNIJK
       use desgrid, only: IofPOS, JofPOS, KofPOS
@@ -194,7 +187,7 @@
 
       use stl_functions_des, only: TRI_BOX_OVERLAP
 
-      use param1, only: ZERO, HALF, ONE
+      use param1, only: HALF, ONE
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ival
 
       IMPLICIT NONE
@@ -351,7 +344,6 @@
       use discretelement, only: XE, YN, ZT
 
       use param, only: DIMENSION_BC
-      USE param1, only: ZERO
 
       IMPLICIT NONE
 

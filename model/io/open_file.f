@@ -26,7 +26,7 @@ MODULE OPEN_FILE_MOD
       SUBROUTINE OPEN_FILE(FILENAME, NB, IUNIT, EXT, FULL_NAME,        &
          OPEN_STAT, OPEN_ACCESS, OPEN_FORM, IRECL, IER)
 
-      use compar, only: mype, numpes
+      use compar, only: mype
 
       IMPLICIT NONE
 

@@ -118,7 +118,6 @@
       Subroutine intersectLnPlane(ref_line, dir_line, ref_plane,       &
          norm_plane, line_param)
 
-      USE discretelement, only: dimn
       USE param1, only: zero
 
       IMPLICIT NONE

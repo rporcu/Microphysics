@@ -49,7 +49,7 @@ module source_w_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param1, only: zero, one, half
+      USE param1, only: zero, one
       USE run, only: momentum_z_eq, odt
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
@@ -239,13 +239,6 @@ module source_w_g_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,0:4)
 
-!-----------------------------------------------
-! Local parameters
-!-----------------------------------------------
-! C_mu is constant in turbulent viscosity
-      DOUBLE PRECISION, PARAMETER :: C_mu = 0.09D0
-! Kappa is Von Karmen constant
-      DOUBLE PRECISION, PARAMETER :: Kappa = 0.42D0
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

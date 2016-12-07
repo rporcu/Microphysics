@@ -116,7 +116,6 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       use bc, only: BC_VOLFLOW_g
       use eos, only: EOSG
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      use param    , only: DIMENSION_BC
       use param1   , only: zero, undefined
       use fld_const, only: mw_avg, ro_g0
       use scales   , only: P_REF
@@ -197,7 +196,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 
       USE bc, only: BC_MASSFLOW_s
       USE bc, only: BC_VOLFLOW_s
-      USE param1, only: UNDEFINED, ZERO
+      USE param1, only: UNDEFINED
       USE constant, only: RO_s0
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 

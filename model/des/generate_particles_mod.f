@@ -85,8 +85,6 @@
       use discretelement, only: DES_POS_NEW
 ! particle velocity
       use discretelement, only: DES_VEL_NEW
-! Simulation dimension (2D/3D)
-      use discretelement, only: DIMN
 ! Number of particles in the system (current)
       use discretelement, only: PIP
 ! Angular velocity
@@ -105,9 +103,9 @@
 ! Flag to extend the lattice distribution in a given IC to available area
       use ic, only: IC_DES_FIT_TO_REGION
 ! Parameter for detecting unspecified values, zero, and one
-      use param1, only: UNDEFINED, UNDEFINED_I, ZERO, ONE, Half
+      use param1, only: ZERO, Half
 ! Parameter for small and large numbers
-      use param1, only: SMALL_NUMBER, LARGE_NUMBER
+      use param1, only: SMALL_NUMBER
 
 ! to access random number generator subroutines
       ! use randomno

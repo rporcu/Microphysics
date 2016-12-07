@@ -42,8 +42,6 @@
 !----------------------------------------------------------------------!
       subroutine desmpi_init
 
-      use particle_filter, only: DES_INTERP_GARG
-
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize

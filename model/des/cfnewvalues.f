@@ -13,7 +13,7 @@ MODULE CFNEWVALUES_MODULE
 
       USE discretelement, only: do_nsearch, dtsolid
       USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth, pmass, neighbor_search_rad_ratio
-      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_particle, exiting_ghost
+      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_ghost
       USE discretelement, only: normal_ghost
       USE param1, only: zero
       use constant, only: gravity

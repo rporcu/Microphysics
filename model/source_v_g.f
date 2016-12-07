@@ -49,7 +49,7 @@ module source_v_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param1, only: zero, one, half
+      USE param1, only: zero, one
       USE run, only: momentum_y_eq, odt
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s

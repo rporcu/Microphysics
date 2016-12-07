@@ -202,8 +202,6 @@ module w_g_conv_dif
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
 
-      use matrix, only: e, w, n, s, t, b
-
       IMPLICIT NONE
 
 ! Dummy arguments
