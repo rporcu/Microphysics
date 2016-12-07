@@ -1,3 +1,6 @@
+MODULE GAS_DRAG_MODULE
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: GAS_DRAG_W                                              !
@@ -360,3 +363,4 @@
 
       RETURN
       END SUBROUTINE GAS_DRAG_W
+END MODULE GAS_DRAG_MODULE

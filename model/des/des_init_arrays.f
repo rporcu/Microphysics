@@ -1,3 +1,5 @@
+MODULE DES_INIT_ARRAYS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                         !
 !  Subrourtine: DES_INIT_ARRAYS                                           !
@@ -102,3 +104,4 @@
 
       RETURN
       END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
+END MODULE DES_INIT_ARRAYS_MODULE

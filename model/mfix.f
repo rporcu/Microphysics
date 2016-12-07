@@ -79,6 +79,7 @@
       use write_res1_mod, only: write_res1
 
       use time_march_module, only: time_march
+      USE des_init_arrays_module, only: des_init_arrays
       use set_bc1_module, only: set_bc1
       USE des_allocate, only: des_allocate_arrays
       use allocate_mod, only: allocate_arrays
