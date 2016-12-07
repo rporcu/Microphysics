@@ -79,7 +79,7 @@ MODULE CALC_FORCE_DEM_MODULE
 
 !-----------------------------------------------
 
-      CALL CALC_DEM_FORCE_WITH_WALL_STL(pijk,particle_phase, &
+      CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
          des_radius(1:MAX_PIP), &
          des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
          omega_new(1:MAX_PIP, :), fc(1:MAX_PIP, :), tow(1:MAX_PIP, :), wall_collision_pft)

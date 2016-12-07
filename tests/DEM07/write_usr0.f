@@ -80,8 +80,6 @@
 
 ! Initial granular energy (m^2/sec^2)
       double precision, parameter :: T0 = 1.0d-1
-      double precision, parameter :: one_third = 1.0d0/3.0d0
-
 
       lRad = 0.5d0*D_p0(1)
       lDp = D_p0(1)

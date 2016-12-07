@@ -302,6 +302,7 @@ CONTAINS
            call byte_grow(PARTICLE_STATE,MAX_PIP)
            call integer_grow(iglobal_id,MAX_PIP)
            call integer_grow2_reverse(pijk,MAX_PIP)
+           call integer_grow(particle_phase,MAX_PIP)
            call integer_grow(dg_pijk,MAX_PIP)
            call integer_grow(dg_pijkprv,MAX_PIP)
            call logical_grow(ighost_updated,MAX_PIP)
