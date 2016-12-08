@@ -11,7 +11,6 @@ MODULE DES_ALLOCATE
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
-      USE des_init_arrays_module, only: des_init_particle_arrays
       USE compar, only: numpes
       USE des_bc, only: numfrac_limit
       USE des_bc, only: pi_factor, pi_count, dem_mi_time, dem_mi, dem_bc_poly_layout, dem_bcmi_ijkstart, dem_bcmi_ijkend, dem_bcmi

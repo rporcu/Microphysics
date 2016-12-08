@@ -17,7 +17,6 @@ MODULE CALC_PG_GRAD_MODULE
       SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-      use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost, particle_state
       use discretelement, only: nonexistent
 

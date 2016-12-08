@@ -1,4 +1,3 @@
-MODULE CALC_INTERP_WEIGHTS_MODULE
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Subroutine: CALC_INTERP_WEIGHTS                                     !
 !                                                                      !
@@ -14,4 +13,3 @@ MODULE CALC_INTERP_WEIGHTS_MODULE
 
       RETURN
       END SUBROUTINE CALC_INTERP_WEIGHTS
-   END MODULE CALC_INTERP_WEIGHTS_MODULE

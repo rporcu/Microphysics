@@ -13,8 +13,6 @@ module solve_vel_star_module
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
          f_gds, drag_am, drag_bm, flag, IER)
 
-      USE gas_drag_module, only: gas_drag_u, gas_drag_v, gas_drag_w
-
       USE u_g_conv_dif, only: conv_dif_u_g
       USE v_g_conv_dif, only: conv_dif_v_g
       USE w_g_conv_dif, only: conv_dif_w_g

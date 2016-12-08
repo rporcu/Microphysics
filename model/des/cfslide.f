@@ -1,5 +1,3 @@
-MODULE CFSLIDE_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
 !  Subroutine: CFSLIDE(V_TANG, PARTICLE_SLIDE, MU)
@@ -55,4 +53,3 @@ MODULE CFSLIDE_MODULE
 
       RETURN
       END SUBROUTINE CFSLIDE
-   END MODULE CFSLIDE_MODULE
