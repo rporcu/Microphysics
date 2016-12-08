@@ -16,7 +16,7 @@ module iterate_module
                          flux_ge, flux_gn, flux_gt, mu_g,&
                          f_gds, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_state, pvol, des_pos_new, des_vel_new, flag, IER, NIT)
+                         pijk, particle_state, pvol, des_vel_new, flag, IER, NIT)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar   , only: myPE, PE_IO
@@ -103,7 +103,7 @@ module iterate_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 !-----------------------------------------------
@@ -199,7 +199,7 @@ module iterate_module
 
 ! Calculate coefficients, excluding density and reactions.
       CALL CALC_COEFF(1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_pos_new, des_vel_new)
+         f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new)
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components

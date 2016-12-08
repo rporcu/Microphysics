@@ -15,14 +15,15 @@ module drag_gs_des0_module
 !       include the gas-solids drag force and gas pressure force       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, pvol, des_pos_new, des_vel_new, fc)
+      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
 
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, interp_scheme
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, pvol, &
+         des_pos_new, des_vel_new, fc, interp_scheme
       use functions     , only: fluid_at,ip1,jp1,kp1
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
@@ -45,10 +46,6 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
 
 !-----------------------------------------------
 ! Local variables
@@ -196,7 +193,7 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g,&
-         f_gds, drag_am, drag_bm, des_vel_new, des_pos_new)
+         f_gds, drag_am, drag_bm)
 
 !-----------------------------------------------
 ! Modules
@@ -204,7 +201,8 @@ module drag_gs_des0_module
       use compar        , only:  istart2, iend2, jstart2, jend2, kstart2, kend2
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, interp_scheme, des_vol_node, particle_phase
+      use discretelement, only: xe, yn, zt, dimn, pic, pinc, des_pos_new, des_vel_new, &
+                                interp_scheme, des_vol_node, particle_phase
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: fluid_at,ip1,jp1,kp1
@@ -233,9 +231,6 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
-
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
