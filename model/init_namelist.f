@@ -21,25 +21,26 @@
 
       SUBROUTINE INIT_NAMELIST
 
-      USE bc
-      USE compar
-      USE constant
-      USE constant
-      USE des_init_namelist_module, only: des_init_namelist
-      USE fld_const, only: ro_g0, mu_g0, mw_avg
-      USE geometry
-      USE ic
-      USE leqsol
-      USE output
+!-----------------------------------------------
+! Modules
+!-----------------------------------------------
       USE param
       USE param1
-      USE ps
-      USE residual
       USE run
-      USE scales
+      USE output
+      USE constant
+      USE geometry
+      USE ic
+      USE bc
+      USE ps
+      USE fld_const, only: ro_g0, mu_g0, mw_avg
+      USE constant
       USE toleranc
+      USE scales
       USE ur_facs
-
+      USE leqsol
+      USE residual
+      USE compar
       IMPLICIT NONE
 !-----------------------------------------------
 ! Local variables

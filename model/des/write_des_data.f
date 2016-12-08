@@ -1,5 +1,3 @@
-MODULE WRITE_DES_DATA_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: WRITE_DES_DATA                                          !
@@ -110,4 +108,3 @@ MODULE WRITE_DES_DATA_MODULE
 
       RETURN
       END SUBROUTINE WRITE_DES_VTP
-END MODULE WRITE_DES_DATA_MODULE

@@ -1,6 +1,3 @@
-MODULE CALC_TAU_V_G_MODULE
-CONTAINS
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CALC_Tau_V_g                                            C
@@ -154,4 +151,3 @@ CONTAINS
       INCLUDE 'functions.inc'
 
     END SUBROUTINE CALC_TAU_V_G
-END MODULE CALC_TAU_V_G_MODULE

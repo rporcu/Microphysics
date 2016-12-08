@@ -1,5 +1,3 @@
-MODULE NSQUARE_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: NSQUARE                                                C
@@ -129,4 +127,3 @@ MODULE NSQUARE_MODULE
 
       RETURN
       END SUBROUTINE NSQUARE
-END MODULE NSQUARE_MODULE

@@ -1,6 +1,3 @@
-MODULE LOCATION_CHECK_MODULE
-   CONTAINS
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: LOCATION_CHECK                                          !
@@ -22,7 +19,7 @@ MODULE LOCATION_CHECK_MODULE
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Cell index specified in the input file.
-      INTEGER, INTENT(IN) :: CELL_SPECIFIED
+      INTEGER, INTENT(INOUT) :: CELL_SPECIFIED
 ! Cell index calculated for location coordinate.
       INTEGER, INTENT(IN) :: CELL_CALCULATED
 ! Index for BC, IC, or IS
@@ -55,4 +52,3 @@ MODULE LOCATION_CHECK_MODULE
 
       RETURN
       END SUBROUTINE LOCATION_CHECK
-END MODULE LOCATION_CHECK_MODULE

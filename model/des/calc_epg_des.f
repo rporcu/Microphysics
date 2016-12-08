@@ -46,7 +46,7 @@ module calc_epg_des_module
       use compar, only: myPE
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
-      use write_des_data_module, only: write_des_data
+! Global communication function to sum to all ranks.
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

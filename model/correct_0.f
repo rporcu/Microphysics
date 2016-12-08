@@ -1,5 +1,3 @@
-MODULE CORRECT_0_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CORRECT_0                                               C
@@ -77,4 +75,3 @@ MODULE CORRECT_0_MODULE
 
       RETURN
       END SUBROUTINE CORRECT_0
-END MODULE CORRECT_0_MODULE

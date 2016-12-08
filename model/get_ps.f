@@ -8,12 +8,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE GET_PS(PSV)
 
-      USE calc_cell_module, only: calc_loc, calc_cell
+      USE param1, only: undefined, undefined_i
       USE geometry, only: dx, dy, dz
       USE geometry, only: imax, jmax, kmax
       USE geometry, only: imax2, jmax2, kmax2
-      USE location_check_module, only: location_check
-      USE param1, only: undefined, undefined_i
       USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
       USE ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
       USE ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t

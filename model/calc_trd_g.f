@@ -1,5 +1,3 @@
-MODULE CALC_TRD_G_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: CALC_trD_g                                             C
@@ -70,4 +68,3 @@ MODULE CALC_TRD_G_MODULE
       END DO
 
       END SUBROUTINE CALC_TRD_G
-END MODULE CALC_TRD_G_MODULE

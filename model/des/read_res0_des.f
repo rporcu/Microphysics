@@ -1,5 +1,3 @@
-MODULE READ_RES0_DES_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: DES_READ_RESTART                                        !
@@ -108,4 +106,3 @@ MODULE READ_RES0_DES_MODULE
 
       RETURN
       END SUBROUTINE READ_RES0_DES
-END MODULE READ_RES0_DES_MODULE

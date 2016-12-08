@@ -1,5 +1,3 @@
-MODULE MAKE_ARRAYS_DES_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Module name: MAKE_ARRAYS_DES                                        !
 !  Author: Jay Boyalakuntla                           Date: 12-Jun-04  !
@@ -16,25 +14,20 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
-      USE discretelement, only: des_pos_new, des_vel_new
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost, pijk, particle_phase
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
+      USE discretelement, only: des_pos_new, des_vel_new
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1, fluid_at
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE geometry, only: vol_surr, vol
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
-      USE neighbour_module, only: neighbour
       USE param1, only: zero
       USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
-      USE read_par_input_module, only: read_par_input
-      USE read_res0_des_module, only: read_res0_des
       USE run, only: run_type, time
-      USE set_filter_des_module, only: set_filter_des
       USE set_phase_index_module, only: set_phase_index
       USE stl_preproc_des, only: add_facet
-      USE write_des_data_module, only: write_des_data
 
       IMPLICIT NONE
 
@@ -169,4 +162,3 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       RETURN
       END SUBROUTINE MAKE_ARRAYS_DES
-END MODULE MAKE_ARRAYS_DES_MODULE

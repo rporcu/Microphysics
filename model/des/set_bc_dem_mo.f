@@ -1,5 +1,3 @@
-MODULE SET_BC_DEM_MO_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_DEM_MO                                           !
@@ -201,4 +199,3 @@ MODULE SET_BC_DEM_MO_MODULE
 
       RETURN
       END SUBROUTINE SET_BC_DEM_MO
-END MODULE SET_BC_DEM_MO_MODULE

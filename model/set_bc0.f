@@ -1,5 +1,3 @@
-MODULE SET_BC0_MODULE
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: set_bc0                                                 C
@@ -657,4 +655,3 @@ MODULE SET_BC0_MODULE
       IERR = 0
       RETURN
       END SUBROUTINE IJK_Pg_SEARCH
-END MODULE SET_BC0_MODULE
