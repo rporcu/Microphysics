@@ -115,7 +115,7 @@ module source_v_g_module
            EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
 
 ! Impermeable internal surface
-         IF (flag(i,j,k,2)<1000) THEN
+         IF (flag(i,j,k,3)<1000) THEN
             A_M(I,J,K,E) = ZERO
             A_M(I,J,K,W) = ZERO
             A_M(I,J,K,N) = ZERO
