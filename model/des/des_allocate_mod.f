@@ -11,7 +11,6 @@ MODULE DES_ALLOCATE
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
-      USE des_init_arrays_module, only: des_init_particle_arrays
       USE compar, only: numpes
       USE des_bc, only: numfrac_limit
       USE des_bc, only: pi_factor, pi_count, dem_mi_time, dem_mi, dem_bc_poly_layout, dem_bcmi_ijkstart, dem_bcmi_ijkend, dem_bcmi
@@ -158,6 +157,86 @@ CONTAINS
       CALL FINL_ERR_MSG
 
       RETURN
+   CONTAINS
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                         !
+!  Subrourtine: DES_INIT_PARTICLE_ARRAYS                                  !
+!  Author: Jay Boyalakuntla                              Date: 12-Jun-04  !
+!                                                                         !
+!  Purpose: Initialize particle arrays. The upper and lower bounds are    !
+!  passed so that after resizing particle arrays (see GROW_PARTICLE) the  !
+!  new portions of the arrays can be initialized.                         !
+!                                                                         !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE DES_INIT_PARTICLE_ARRAYS(LB,UB)
+
+         use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
+         use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
+         use discretelement, only: rot_acc_old, des_usr_var_size
+         use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
+         use param1, only: zero
+
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: LB, UB
+      INTEGER :: II
+
+      IGLOBAL_ID(LB:UB) = 0
+      PARTICLE_STATE(LB:UB) = NONEXISTENT
+
+! Physical properties:
+      DES_RADIUS(LB:UB) = ZERO
+      RO_Sol(LB:UB) = ZERO
+      PVOL(LB:UB) = ZERO
+      PMASS(LB:UB) = ZERO
+      OMOI(LB:UB) = ZERO
+
+! Particle position, velocity, etc
+      DES_POS_NEW(LB:UB,:) = ZERO
+      DES_VEL_NEW(LB:UB,:) = ZERO
+      OMEGA_NEW(LB:UB,:) = ZERO
+
+! Particle state flag
+      DO II = LB, UB
+         particle_state(II) = nonexistent
+      ENDDO
+      NEIGHBOR_INDEX(:) = 0
+
+! DES grid bin information
+      DG_PIJK(LB:UB) = -1
+      DG_PIJKPRV(LB:UB) = -1
+      IGHOST_UPDATED(LB:UB) = .false.
+
+! Fluid cell bin information
+      PIJK(LB:UB,:) = 0
+
+! Translation and rotational forces
+      FC(LB:UB,:) = ZERO
+      TOW(LB:UB,:) = ZERO
+
+! Collision data
+      WALL_COLLISION_FACET_ID(:,LB:UB) = -1
+      WALL_COLLISION_PFT(:,:,LB:UB) = ZERO
+
+! Initializing user defined array
+      IF(DES_USR_VAR_SIZE > 0) &
+         DES_USR_VAR(LB:UB,:) = ZERO
+
+! Particle center drag coefficient and explicit drag force
+      DRAG_FC(LB:UB,:) = ZERO
+
+! Higher order time integration variables.
+      IF (DO_OLD) THEN
+         DES_ACC_OLD(LB:UB,:) = ZERO
+         ROT_ACC_OLD(LB:UB,:) = ZERO
+      ENDIF
+
+      RETURN
+      END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
+
+
       END SUBROUTINE DES_ALLOCATE_ARRAYS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -300,21 +379,21 @@ CONTAINS
            call real_grow2_reverse(DES_VEL_NEW,MAX_PIP)
            call real_grow2_reverse(OMEGA_NEW,MAX_PIP)
            call real_grow2_reverse(PPOS,MAX_PIP)
-           call byte_grow(PARTICLE_STATE,MAX_PIP)
-           call integer_grow(iglobal_id,MAX_PIP)
-           call integer_grow2_reverse(pijk,MAX_PIP)
-           call integer_grow(particle_phase,MAX_PIP)
-           call integer_grow(dg_pijk,MAX_PIP)
-           call integer_grow(dg_pijkprv,MAX_PIP)
-           call logical_grow(ighost_updated,MAX_PIP)
+           call byte_grow(PARTICLE_STATE,MAX_PIP,nonexistent)
+           call integer_grow(iglobal_id,MAX_PIP,0)
+           call integer_grow2_reverse(pijk,MAX_PIP,0)
+           call integer_grow(particle_phase,MAX_PIP,0)
+           call integer_grow(dg_pijk,MAX_PIP,-1)
+           call integer_grow(dg_pijkprv,MAX_PIP,-1)
+           call logical_grow(ighost_updated,MAX_PIP,.false.)
            call real_grow2_reverse(FC,MAX_PIP)
            call real_grow2_reverse(TOW,MAX_PIP)
-           call integer_grow2(WALL_COLLISION_FACET_ID,MAX_PIP)
+           call integer_grow2(WALL_COLLISION_FACET_ID,MAX_PIP,-1)
            call real_grow3(WALL_COLLISION_PFT,MAX_PIP)
            call real_grow2_reverse(DRAG_FC,MAX_PIP)
 
-           call integer_grow(NEIGHBOR_INDEX,MAX_PIP)
-           call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP)
+           call integer_grow(NEIGHBOR_INDEX,MAX_PIP,0)
+           call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP,0)
 
 
            IF (DO_OLD) THEN
@@ -325,50 +404,53 @@ CONTAINS
            IF(DES_USR_VAR_SIZE > 0) &
               call real_grow2_reverse(DES_USR_VAR,MAX_PIP)
 
-           CALL DES_INIT_PARTICLE_ARRAYS(MAX_PIP/2+1,MAX_PIP)
-
         ENDDO
 
       RETURN
 
       END SUBROUTINE PARTICLE_GROW
 
-      SUBROUTINE BYTE_GROW(byte_array,new_size)
+      SUBROUTINE BYTE_GROW(byte_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: byte_array
         INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE :: byte_tmp
+        INTEGER(KIND=1) :: ival ! initial value
         INTEGER lSIZE
 
         lSIZE = size(byte_array,1)
         allocate(byte_tmp(new_size))
         byte_tmp(1:lSIZE) = byte_array(1:lSIZE)
         call move_alloc(byte_tmp,byte_array)
+        byte_array(new_size+1:) = ival
 
       END SUBROUTINE BYTE_GROW
 
-      SUBROUTINE INTEGER_GROW(integer_array,new_size)
+      SUBROUTINE INTEGER_GROW(integer_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: integer_array
         INTEGER, DIMENSION(:), ALLOCATABLE :: integer_tmp
+        INTEGER :: ival
         INTEGER lSIZE
 
         lSIZE = size(integer_array,1)
         allocate(integer_tmp(new_size))
         integer_tmp(1:lSIZE) = integer_array(1:lSIZE)
         call move_alloc(integer_tmp,integer_array)
+        integer_array(new_size+1:) = ival
 
       END SUBROUTINE INTEGER_GROW
 
-      SUBROUTINE INTEGER_GROW2_reverse(integer_array,new_size)
+      SUBROUTINE INTEGER_GROW2_reverse(integer_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: integer_array
         INTEGER, DIMENSION(:,:), ALLOCATABLE :: integer_tmp
+        INTEGER :: ival
         INTEGER lSIZE, lSIZE2
 
         lSIZE = size(integer_array,1)
@@ -376,15 +458,17 @@ CONTAINS
         allocate(integer_tmp(new_size,lSIZE2))
         integer_tmp(1:lSIZE,:) = integer_array(1:lSIZE,:)
         call move_alloc(integer_tmp,integer_array)
+        integer_array(new_size+1:,:) = ival
 
       END SUBROUTINE INTEGER_GROW2_reverse
 
-      SUBROUTINE INTEGER_GROW2(integer_array,new_size)
+      SUBROUTINE INTEGER_GROW2(integer_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: integer_array
         INTEGER, DIMENSION(:,:), ALLOCATABLE :: integer_tmp
+        INTEGER :: ival
         INTEGER lSIZE, lSIZE2
 
         lSIZE = size(integer_array,1)
@@ -392,30 +476,34 @@ CONTAINS
         allocate(integer_tmp(lSIZE,new_size))
         integer_tmp(:,1:lSIZE2) = integer_array(:,1:lSIZE2)
         call move_alloc(integer_tmp,integer_array)
+        integer_array(:,new_size+1:) = ival
 
       END SUBROUTINE INTEGER_GROW2
 
-      SUBROUTINE LOGICAL_GROW(logical_array,new_size)
+      SUBROUTINE LOGICAL_GROW(logical_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         LOGICAL, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: logical_array
         LOGICAL, DIMENSION(:), ALLOCATABLE :: logical_tmp
+        LOGICAL :: ival
         INTEGER lSIZE
 
         lSIZE = size(logical_array,1)
         allocate(logical_tmp(new_size))
         logical_tmp(1:lSIZE) = logical_array(1:lSIZE)
         call move_alloc(logical_tmp,logical_array)
+        logical_array(new_size+1:) = ival
 
       END SUBROUTINE LOGICAL_GROW
 
-      SUBROUTINE LOGICAL_GROW2(logical_array,new_size)
+      SUBROUTINE LOGICAL_GROW2(logical_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
         LOGICAL, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: logical_array
         LOGICAL, DIMENSION(:,:), ALLOCATABLE :: logical_tmp
+        LOGICAL :: ival
         INTEGER lSIZE, lSIZE2
 
         lSIZE = size(logical_array,1)
@@ -423,6 +511,7 @@ CONTAINS
         allocate(logical_tmp(lSIZE,new_size))
         logical_tmp(:,1:lSIZE2) = logical_array(:,1:lSIZE2)
         call move_alloc(logical_tmp,logical_array)
+        logical_array(:,new_size+1:) = ival
 
       END SUBROUTINE LOGICAL_GROW2
 
@@ -438,6 +527,7 @@ CONTAINS
         allocate(real_tmp(new_size))
         real_tmp(1:lSIZE) = real_array(1:lSIZE)
         call move_alloc(real_tmp,real_array)
+        real_array(new_size+1:) = ZERO
 
       END SUBROUTINE REAL_GROW
 
@@ -454,6 +544,7 @@ CONTAINS
         allocate(real_tmp(lSIZE,new_size))
         real_tmp(:,1:lSIZE2) = real_array(:,1:lSIZE2)
         call move_alloc(real_tmp,real_array)
+        real_array(:,new_size+1:) = ZERO
 
       END SUBROUTINE REAL_GROW2
 
@@ -470,6 +561,7 @@ CONTAINS
         allocate(real_tmp(new_size,lSIZE2))
         real_tmp(1:lSIZE,:) = real_array(1:lSIZE,:)
         call move_alloc(real_tmp,real_array)
+        real_array(new_size+1:,:) = ZERO
 
       END SUBROUTINE REAL_GROW2_REVERSE
 
@@ -487,22 +579,25 @@ CONTAINS
         allocate(real_tmp(lSIZE,lSIZE2,new_size))
         real_tmp(:,:,1:lSIZE3) = real_array(:,:,1:lSIZE3)
         call move_alloc(real_tmp,real_array)
+        real_array(:,:,new_size+1:) = ZERO
 
       END SUBROUTINE REAL_GROW3
 
-      SUBROUTINE LOGICAL_GROW2_REVERSE(real_array,new_size)
+      SUBROUTINE LOGICAL_GROW2_REVERSE(logical_array,new_size,ival)
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
-        LOGICAL, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: real_array
-        LOGICAL, DIMENSION(:,:), ALLOCATABLE :: real_tmp
+        LOGICAL, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: logical_array
+        LOGICAL, DIMENSION(:,:), ALLOCATABLE :: logical_tmp
+        LOGICAL :: ival
         INTEGER lSIZE, lSIZE2
 
-        lSIZE = size(real_array,1)
-        lSIZE2 = size(real_array,2)
-        allocate(real_tmp(new_size,lSIZE2))
-        real_tmp(1:lSIZE,:) = real_array(1:lSIZE,:)
-        call move_alloc(real_tmp,real_array)
+        lSIZE = size(logical_array,1)
+        lSIZE2 = size(logical_array,2)
+        allocate(logical_tmp(new_size,lSIZE2))
+        logical_tmp(1:lSIZE,:) = logical_array(1:lSIZE,:)
+        call move_alloc(logical_tmp,logical_array)
+        logical_array(new_size+1:,:) = ival
 
       END SUBROUTINE LOGICAL_GROW2_REVERSE
 

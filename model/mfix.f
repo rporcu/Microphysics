@@ -68,7 +68,7 @@
       USE compar, only: myPE
 
       USE funits , only: dmp_log, unit_log
-      USE param1 , only: undefined
+      USE param1 , only: undefined, zero
       USE machine, only: wall_time
       USE run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
       USE time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
@@ -89,6 +89,7 @@
       use set_bc_dem_module, only: set_bc_dem
       use time_march_module, only: time_march
       use zero_norm_vel_module, only: zero_norm_vel
+      use discretelement, only: pinc, des_rop_s
 
       IMPLICIT NONE
 
@@ -169,7 +170,10 @@
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
       IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
-      IF (DEM_SOLIDS) CALL DES_INIT_ARRAYS
+      IF (DEM_SOLIDS) THEN
+         PINC(:,:,:) = 0
+         DES_ROP_S(:,:,:,:) = ZERO
+      ENDIF
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0

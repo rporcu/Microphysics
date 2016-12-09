@@ -51,13 +51,13 @@
 
       INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE :: PARTICLE_STATE ! (PARTICLES)
 
-      INTEGER, PARAMETER :: nonexistent=0
-      INTEGER, PARAMETER :: normal_particle=1
-      INTEGER, PARAMETER :: entering_particle=2
-      INTEGER, PARAMETER :: exiting_particle=3
-      INTEGER, PARAMETER :: normal_ghost=4
-      INTEGER, PARAMETER :: entering_ghost=5
-      INTEGER, PARAMETER :: exiting_ghost=6
+      INTEGER(KIND=1), PARAMETER :: nonexistent=0
+      INTEGER(KIND=1), PARAMETER :: normal_particle=1
+      INTEGER(KIND=1), PARAMETER :: entering_particle=2
+      INTEGER(KIND=1), PARAMETER :: exiting_particle=3
+      INTEGER(KIND=1), PARAMETER :: normal_ghost=4
+      INTEGER(KIND=1), PARAMETER :: entering_ghost=5
+      INTEGER(KIND=1), PARAMETER :: exiting_ghost=6
 
 ! PARALLEL PROCESSING: explanation of variables in parallel architecture
 ! pip - particles in each processor (includes the ghost particles)
