@@ -124,7 +124,6 @@ set(SOURCES
   model/des/mpi_pack_des_mod.f
   model/des/mpi_unpack_des_mod.f
   model/des/neighbour.f
-  model/des/nsquare.f
   model/des/particle_filter_mod.f
   model/des/particles_in_cell.f
   model/des/randomno_mod.f
