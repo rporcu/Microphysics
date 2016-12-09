@@ -25,7 +25,7 @@ module time_march_module
 !-----------------------------------------------
       USE compar, only: myPE
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE discretelement, only: des_continuum_coupled, pmass, pvol, des_pos_new, des_vel_new
+      USE discretelement, only: des_continuum_coupled, pmass, pvol, des_pos_new, des_vel_new, des_radius
       USE discretelement, only: max_pip, particle_state, pijk, iglobal_id, particle_phase
       USE error_manager, only: err_msg, flush_err_msg
       USE fld_const, only: mu_g0
@@ -162,7 +162,7 @@ module time_march_module
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk(1:MAX_PIP,:), particle_state(1:MAX_PIP), &
-         pvol(1:MAX_PIP), des_vel_new(1:MAX_PIP, :))
+         pvol(1:MAX_PIP), des_vel_new(1:MAX_PIP, :), des_radius(1:MAX_PIP))
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
@@ -212,7 +212,8 @@ module time_march_module
 
 ! Calculate coefficients
       CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-         f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
+         f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -241,17 +242,18 @@ module time_march_module
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                    flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                    tau_u_g,tau_v_g,tau_w_g,&
-                   pijk, particle_state, pvol, des_vel_new, flag, IER, NIT)
+                   pijk, particle_state, pvol, des_radius, des_vel_new, flag, IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, &
          rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
-         drag_am, drag_bm, pijk, particle_phase, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new, IER, NIT))
+         drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+         particle_state, pmass, pvol, des_radius, des_pos_new, des_vel_new, IER, NIT))
 
          call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
                       flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
                       tau_u_g,tau_v_g,tau_w_g,&
-                      pijk, particle_state, pvol, des_vel_new, flag, IER, NIT)
+                      pijk, particle_state, pvol, des_radius, des_vel_new, flag, IER, NIT)
       ENDDO
 
       IF(DT < DT_MIN) THEN

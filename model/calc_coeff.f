@@ -24,7 +24,8 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
-        mu_g, f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, particle_state, pmass, pvol, des_pos_new, des_vel_new)
+        mu_g, f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+        particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -58,7 +59,7 @@ module calc_coeff_module
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, pmass
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, pmass, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
@@ -70,11 +71,11 @@ module calc_coeff_module
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
       CALL CALC_COEFF(2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new)
+         f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)
 
       IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(ep_g, &
          u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, particle_state, &
-         pmass, pvol, des_pos_new, des_vel_new)
+         pmass, pvol, des_pos_new, des_vel_new, des_radius)
 
       END SUBROUTINE CALC_COEFF_ALL
 
@@ -98,7 +99,7 @@ module calc_coeff_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_COEFF(pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
-         w_g, mu_g, f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new)
+         w_g, mu_g, f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)
 
       use fld_const, only: ro_g0
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -137,7 +138,7 @@ module calc_coeff_module
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
@@ -151,7 +152,7 @@ module calc_coeff_module
 ! Calculate interphase coeffs: (momentum and energy)
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &
          CALL CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-            f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new)
+            f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)
 
       END SUBROUTINE CALC_COEFF
 

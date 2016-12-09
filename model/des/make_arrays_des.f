@@ -145,7 +145,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
          OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI
       ENDDO
 
-      CALL SET_PHASE_INDEX(particle_phase)
+      CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol)
       CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new)
 
 ! do_nsearch should be set before calling particle in cell

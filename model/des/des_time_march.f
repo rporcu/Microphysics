@@ -125,7 +125,7 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc)
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc, des_radius)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg, pijk)
       ENDIF
@@ -152,7 +152,7 @@ module des_time_march_module
          CALL CALC_FORCE_DEM(particle_phase, particle_state, &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol,des_vel_new)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol,des_vel_new,des_radius)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
