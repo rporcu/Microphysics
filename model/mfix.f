@@ -80,7 +80,6 @@
 
       use allocate_mod, only: allocate_arrays
       use des_allocate, only: des_allocate_arrays
-      use des_init_arrays_module, only: des_init_arrays
       use geometry, only: flag
       use make_arrays_des_module, only: make_arrays_des
       use matrix, only: A_m, b_m
