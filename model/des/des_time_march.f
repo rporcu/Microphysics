@@ -12,7 +12,10 @@ module des_time_march_module
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g)
+      SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
+         pijk, dg_pijk, iglobal_id, particle_state, particle_phase, &
+         des_radius, ro_sol, pvol, pmass, omoi, &
+         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -27,10 +30,9 @@ module des_time_march_module
       use des_allocate, only: particle_grow
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
-      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt, fc, tow
-      use discretelement, only: des_vel_new, drag_fc, des_radius, omoi, ppos, des_pos_new, omega_new, particle_state, pijk, dg_pijk
-      use discretelement, only: iglobal_id, pmass, ro_sol, particle_phase
-      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n, pvol, des_acc_old, rot_acc_old, wall_collision_pft
+      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
+      use discretelement, only: drag_fc
+      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -60,6 +62,15 @@ module des_time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
+      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 !------------------------------------------------
 ! Local variables

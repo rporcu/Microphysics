@@ -11,7 +11,7 @@
 MODULE interpolation
 
   USE constant, only: pi
-  USE discretelement, only: dimn, pijk, interp_scheme, scheme, ob2r, ob2l, order, des_pos_new
+  USE discretelement, only: dimn, interp_scheme, scheme, ob2r, ob2l, order
   USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z, xe, yn, zt
   USE functions, only: funijk
   USE geometry, only: imax, jmax, kmax
@@ -135,9 +135,6 @@ MODULE interpolation
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
   SUBROUTINE set_interpolation_stencil(PC, IW, IE, JS, JN, KB, KTP,&
       isch,dimprob,ordernew)
-
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-       !USE discretelement, ONLY : order,ob2l,ob2r, des_periodic_walls_x,y,z
 
     IMPLICIT NONE
 !-----------------------------------------------
@@ -269,7 +266,7 @@ MODULE interpolation
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_INTERPOLATION_STENCIL_CC(NP, PC, IW, JS, KB, FOCUS)
+      SUBROUTINE SET_INTERPOLATION_STENCIL_CC(NP, PC, IW, JS, KB, FOCUS, des_pos_new)
 
       USE geometry, only: dx, dy, dz
 
@@ -285,6 +282,8 @@ MODULE interpolation
       INTEGER, INTENT(OUT) :: IW, JS, KB
 ! flag to tell whether local debugging was called in drag_fgs
       LOGICAL, INTENT(IN) :: FOCUS
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
 
 !-----------------------------------------------
 ! Local variables
@@ -378,7 +377,7 @@ MODULE interpolation
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE INTERPOLATE_CC(NP, INTP_IJK, INTP_WEIGHTS, FOCUS)
+      SUBROUTINE INTERPOLATE_CC(NP, INTP_IJK, INTP_WEIGHTS, FOCUS, PIJK, des_pos_new)
 
       USE geometry, only: dx, dy, dz
 
@@ -394,6 +393,9 @@ MODULE interpolation
       INTEGER, INTENT(INOUT)  :: INTP_IJK(2**DIMN)
 ! Weights associated with the IJK cells in INTP_IJK
       DOUBLE PRECISION, INTENT(INOUT)  :: INTP_WEIGHTS(2**DIMN)
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 !-----------------------------------------------
 ! Local variables
@@ -427,7 +429,7 @@ MODULE interpolation
 ! Obtain the starting cell index values for interpolation around
 ! particle NP
       CALL SET_INTERPOLATION_STENCIL_CC(NP, PIJK(NP,1:3), IW, JS, KB, &
-         FOCUS)
+         FOCUS, des_pos_new)
 
       LC = 0
       DO K = 1, (3-DIMN)*1+(DIMN-2)*2
@@ -555,7 +557,6 @@ MODULE interpolation
 
   SUBROUTINE set_interpolation_pstencil(pc, ib,ie,jb,je,kb,ke, isch&
        &,dimprob, ordernew)
-       !USE discretelement, ONLY : order,ob2l,ob2r,  intx_per, inty_per, intz_per
 
     IMPLICIT NONE
     INTEGER, DIMENSION(3), INTENT(in):: pc

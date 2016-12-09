@@ -94,7 +94,10 @@ MODULE MAKE_ARRAYS_DES_MODULE
       IF(RUN_TYPE == 'NEW') THEN
          IF(PARTICLES /= 0) THEN
             IF(GENER_PART_CONFIG) THEN
-               CALL GENERATE_PARTICLE_CONFIG
+               CALL GENERATE_PARTICLE_CONFIG(pijk, particle_state, particle_phase, &
+                  des_radius, ro_sol, &
+                  des_pos_new, des_vel_new, omega_new)
+
             ELSE
                CALL READ_PAR_INPUT
             ENDIF

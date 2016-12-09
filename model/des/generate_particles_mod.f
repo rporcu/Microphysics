@@ -22,7 +22,9 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GENERATE_PARTICLE_CONFIG
+      SUBROUTINE GENERATE_PARTICLE_CONFIG(pijk, particle_state, particle_phase, &
+         des_radius, ro_sol, &
+         des_pos_new, des_vel_new, omega_new)
 
       use discretelement, only: PIP, PARTICLES
 ! Flag indicating that the IC region is defined.
@@ -36,6 +38,12 @@
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
       INTEGER :: ICV
 
 ! Initialize the error manager.
@@ -46,7 +54,10 @@
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
          IF(IC_EP_G(ICV) == ONE) CYCLE
 
-         CALL GENERATE_PARTICLE_CONFIG_DEM(ICV)
+         CALL GENERATE_PARTICLE_CONFIG_DEM(ICV, &
+         pijk, particle_state, particle_phase, &
+         des_radius, ro_sol, &
+         des_pos_new, des_vel_new, omega_new)
 
       ENDDO
 
@@ -75,20 +86,15 @@
 !           that has not been deleted yet                              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM(ICV)
+      SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM(ICV, &
+         pijk, particle_state, particle_phase, &
+         des_radius, ro_sol, &
+         des_pos_new, des_vel_new, omega_new)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! particle radius and density
-      use discretelement, only: DES_RADIUS, RO_Sol
-! particle position
-      use discretelement, only: DES_POS_NEW
-! particle velocity
-      use discretelement, only: DES_VEL_NEW
 ! Number of particles in the system (current)
       use discretelement, only: PIP
-! Angular velocity
-      use discretelement, only: OMEGA_NEW, PIJK, particle_phase
 ! solid phase diameters and densities.
       use constant, only: D_p0, RO_s0, MMAX
 ! IC Region solids volume fraction.
@@ -125,7 +131,7 @@
       use desgrid, only: IofPOS, JofPOS, KofPOS
       use toleranc, only: compare
 
-      use discretelement, only: max_pip, max_radius, xe, yn, zt, particle_state, normal_particle
+      use discretelement, only: max_pip, max_radius, xe, yn, zt, normal_particle
       use param, only: dim_m
       use param, only: dimension_i, dimension_j, dimension_k
       use particles_in_cell_module, only: pic_search
@@ -135,6 +141,12 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
       INTEGER, INTENT(IN) :: ICV
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Local variables
 !---------------------------------------------------------------------//
