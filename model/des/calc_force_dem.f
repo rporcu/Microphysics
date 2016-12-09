@@ -11,15 +11,16 @@ MODULE CALC_FORCE_DEM_MODULE
 !           accounting for the wall properties                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM(pijk, particle_phase, particle_state, &
+      SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state, &
          des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
-         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
-         USE discretelement, only: pft_neighbor
+         USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
+         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
          USE discretelement, only: kn, kt, max_pip, mew, hertzian, neighbor_index
          USE discretelement, only: nonexistent
+         USE discretelement, only: pft_neighbor
          USE drag_gs_des0_module, only: drag_gs_des0
          USE drag_gs_des1_module, only: drag_gs_des1
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
@@ -27,7 +28,6 @@ MODULE CALC_FORCE_DEM_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: PIJK
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
@@ -127,7 +127,7 @@ MODULE CALC_FORCE_DEM_MODULE
 ! Calculate the components of translational relative velocity for a
 ! contacting particle pair and the tangent to the plane of contact
             CALL CFRELVEL(LL, I, V_REL_TRANS_NORM, VREL_T,            &
-               NORMAL(:), DIST_MAG)
+               NORMAL(:), DIST_MAG, DES_VEL_NEW, DES_RADIUS, OMEGA_NEW)
 
             phaseLL = particle_phase(LL)
             phaseI = particle_phase(I)

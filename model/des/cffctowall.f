@@ -1,3 +1,5 @@
+MODULE CFFCTOWALL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
 !  Subroutine: CFFCTOWALL
@@ -50,3 +52,5 @@
 
       RETURN
       END SUBROUTINE CFFCTOWALL
+
+END MODULE CFFCTOWALL_MODULE

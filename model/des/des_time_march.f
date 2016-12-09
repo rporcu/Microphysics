@@ -148,7 +148,7 @@ module des_time_march_module
          ENDIF
 
 ! Calculate forces acting on particles (collisions, drag, etc).
-         CALL CALC_FORCE_DEM(pijk, particle_phase, particle_state, &
+         CALL CALC_FORCE_DEM(particle_phase, particle_state, &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol,des_vel_new)

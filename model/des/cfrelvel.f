@@ -1,3 +1,5 @@
+MODULE CFRELVEL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
 !  Subroutine: CFRELVEL
@@ -15,13 +17,17 @@
 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-      SUBROUTINE CFRELVEL(L, II, VRN, VSLIP, NORM, DIST_LI)
+      SUBROUTINE CFRELVEL(L, II, VRN, VSLIP, NORM, DIST_LI, DES_VEL_NEW, DES_RADIUS, OMEGA_NEW)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: DES_VEL_NEW, DES_RADIUS, OMEGA_NEW, DES_CROSSPRDCT
+      USE discretelement, only: DES_CROSSPRDCT
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, omega_new
+
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -75,3 +81,5 @@
 
       RETURN
       END SUBROUTINE CFRELVEL
+
+END MODULE CFRELVEL_MODULE
