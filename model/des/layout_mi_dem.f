@@ -1,5 +1,6 @@
 MODULE layout_mi_dem_module
 
+      use calc_cell_module, only: calc_cell_intersect
       use compar, only: mype
       use error_manager, only: init_err_msg, flush_err_msg, finl_err_msg, err_msg
 

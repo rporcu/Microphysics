@@ -1,3 +1,5 @@
+MODULE WRITE_RES0_DES_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvc
 !
 !  module name: des_write_restart
@@ -88,3 +90,4 @@
 
       RETURN
       END SUBROUTINE WRITE_RES0_DES
+END MODULE WRITE_RES0_DES_MODULE

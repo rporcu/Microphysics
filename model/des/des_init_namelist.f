@@ -1,3 +1,5 @@
+MODULE DES_INIT_NAMELIST_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                         C
 !     Module name: DES_INIT_NAMELIST                                      C
@@ -522,3 +524,4 @@
 
       RETURN
       END SUBROUTINE DES_INIT_NAMELIST
+END MODULE DES_INIT_NAMELIST_MODULE

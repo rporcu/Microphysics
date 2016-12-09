@@ -1,3 +1,5 @@
+MODULE CONV_ROP_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CONV_ROP                                                C
@@ -43,8 +45,7 @@
       ENDIF
 
       RETURN
-      END SUBROUTINE CONV_ROP
-
+   CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -253,3 +254,7 @@
 
       RETURN
       END SUBROUTINE CONV_ROP1
+
+   END SUBROUTINE CONV_ROP
+
+END MODULE CONV_ROP_MODULE

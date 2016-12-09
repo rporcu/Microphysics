@@ -1,3 +1,5 @@
+MODULE ZERO_NORM_VEL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: ZERO_NORM_VEL                                           C
@@ -68,3 +70,4 @@
       end do
 
       END SUBROUTINE ZERO_NORM_VEL
+END MODULE ZERO_NORM_VEL_MODULE

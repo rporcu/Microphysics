@@ -16,10 +16,12 @@ module iterate_module
                          flux_ge, flux_gn, flux_gt, mu_g,&
                          f_gds, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_state, pvol, des_vel_new, fc, flag, IER, NIT)
+                         pijk, particle_state, pvol, des_vel_new, flag, IER, NIT)
 
-      USE compar   , only: myPE, PE_IO
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE compar   , only: myPE, PE_IO
+      USE conv_rop_module, only: conv_rop
+      USE correct_0_module, only: correct_0
       USE fld_const, only: ro_g0
       USE funits   , only: dmp_log, unit_log
       USE geometry , only: cyclic, cyclic_x, cyclic_y, cyclic_z, vol
@@ -102,7 +104,6 @@ module iterate_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 !-----------------------------------------------

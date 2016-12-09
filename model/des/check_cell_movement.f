@@ -27,6 +27,7 @@ CONTAINS
 
       use discretelement, only: normal_particle, particle_state
       use error_manager, only: err_msg, flush_err_msg, ival, init_err_msg
+      use write_des_data_module, only: write_des_data
 
       IMPLICIT NONE
 

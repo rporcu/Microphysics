@@ -28,6 +28,8 @@ module output_manager_module
       use run, only: TIME, DT, TSTOP
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
+      use write_des_data_module, only: write_des_data
+      use write_res0_des_module, only: write_res0_des
       use write_res1_mod, only: write_res1
 
       IMPLICIT NONE

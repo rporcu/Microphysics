@@ -1,3 +1,8 @@
+MODULE CHECK_BC_GEOMETRY_MODULE
+
+      use calc_cell_module, only: calc_loc, calc_cell
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_BC_GEOMETRY                                        !
@@ -30,7 +35,6 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-
 
       IMPLICIT NONE
 
@@ -196,6 +200,8 @@
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
+      use location_check_module, only: location_check
+
 
       IMPLICIT NONE
 
@@ -360,6 +366,8 @@
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
+      use location_check_module, only: location_check
+
       IMPLICIT NONE
 
 
@@ -488,3 +496,4 @@
       RETURN
 
       END SUBROUTINE CHECK_BC_GEOMETRY_FLOW
+END MODULE CHECK_BC_GEOMETRY_MODULE
