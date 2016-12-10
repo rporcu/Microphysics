@@ -64,7 +64,7 @@ MODULE READ_RES0_DES_MODULE
          ENDDO
       ENDIF
 
-      CALL DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
+      CALL DES_RESTART_GHOST(particle_state, dg_pijk, dg_pijkprv, des_pos_new)
 
 ! RES2 does not need the collision of BC information.
       IF(RUN_TYPE == 'RESTART_2') RETURN

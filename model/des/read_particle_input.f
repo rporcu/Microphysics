@@ -135,7 +135,7 @@ MODULE READ_PAR_INPUT_MODULE
          ! CALL GLOBAL_ALL_SUM(IOS)
          IF(IOS /= 0) CALL MFIX_EXIT(myPE)
 
-         CALL DES_SCATTER_PARTICLE
+         CALL DES_SCATTER_PARTICLE(particle_state,des_radius,ro_sol,des_pos_new,des_vel_new)
 
          IF(myPE == PE_IO) &
             deallocate (dpar_pos,dpar_vel,dpar_rad,dpar_den)

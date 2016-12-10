@@ -7,7 +7,7 @@
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA
+      SUBROUTINE GET_DATA(ro_sol)
 
       USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
@@ -24,6 +24,9 @@
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -99,7 +102,7 @@
 
       IF(DEM_SOLIDS) THEN
          CALL DESGRID_INIT
-         CALL DESMPI_INIT
+         CALL DESMPI_INIT(ro_sol)
          CALL DES_STL_PREPROCESSING
       ENDIF
 

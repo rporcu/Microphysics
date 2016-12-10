@@ -24,8 +24,8 @@
       use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts, ineighproc
       use desmpi, only: drecvbuf, dsendbuf, isendcnt, isendindices, irecvindices, isendreq, irecvreq, iexchflag, igathercnts
       use discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
-      use discretelement, only: particle_state, normal_particle, do_nsearch, do_old, des_explicitly_coupled, des_radius, ro_sol
-      use discretelement, only: particles, des_pos_new, des_vel_new, dimn, ighost_updated, pip, max_pip, xe, yn, zt
+      use discretelement, only: normal_particle, do_nsearch, do_old, des_explicitly_coupled
+      use discretelement, only: particles, dimn, ighost_updated, pip, max_pip, xe, yn, zt
       use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
       use param, only: DIMENSION_N_s
 
@@ -40,16 +40,17 @@
 !  interfaces.                                                         !
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine desmpi_init
+      subroutine desmpi_init(ro_sol)
 
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
       use desmpi, only: iPairPacketSize
       use discretelement, only: DES_USR_VAR_SIZE
 
-
-!-----------------------------------------------
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
+
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
@@ -361,12 +362,17 @@
 !                    based on the location and it will be packed in drootbuf
 !                    Each proc receives its particles along with particle count
 !------------------------------------------------------------------------
-      subroutine des_scatter_particle
+      subroutine des_scatter_particle(particle_state, des_radius, ro_sol, des_pos_new, des_vel_new)
 
       use mpi_comm_des, only: desmpi_scatterv
       use des_allocate, only: particle_grow
-!-----------------------------------------------
+
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new, des_vel_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
@@ -474,7 +480,7 @@
 ! Parameters       : none
 !------------------------------------------------------------------------
 
-      subroutine DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
+      subroutine DES_RESTART_GHOST(particle_state, dg_pijk, dg_pijkprv, des_pos_new)
 
       use mpi_comm_des, only: desmpi_sendrecv_init
       use mpi_comm_des, only: desmpi_sendrecv_wait
@@ -486,6 +492,7 @@
       implicit none
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
 

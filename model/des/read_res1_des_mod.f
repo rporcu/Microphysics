@@ -550,7 +550,7 @@
          CALL READ_RES_DES(lNEXT_REC, NEIGHBORS(:))
       ENDIF
 
-      CALL DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
+      CALL DES_RESTART_GHOST(particle_state, dg_pijk, dg_pijkprv, des_pos_new)
 
       allocate(iPAR_COL(2, cIN_COUNT))
       iPAR_COL = 0
