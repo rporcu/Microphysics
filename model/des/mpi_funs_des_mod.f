@@ -37,7 +37,8 @@
 !   DES_PAR_EXCHANGE; When DO_NSEARCH is true, ghost particles are     !
 !   updated and later used  to generate the PAIR lists.                !
 !----------------------------------------------------------------------!
-      subroutine des_par_exchange(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
+      subroutine des_par_exchange(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
       use discretelement, only: DES_PERIODIC_WALLS
 
@@ -62,10 +63,13 @@
 
       implicit none
 
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijkprv
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -81,10 +85,10 @@
 ! Check that the send/recv buffer is sufficient every 100 calls to
 ! avoid the related global communications.
       if (mod(lcheckbuf,100) == 0) then
-         call desmpi_check_sendrecvbuf(check_global=.true.)
+         call desmpi_check_sendrecvbuf
          lcheckbuf = 0
       elseif (mod(lcheckbuf,5) == 0) then
-         call desmpi_check_sendrecvbuf(check_global=.false.)
+         call desmpi_check_sendrecvbuf
       end if
       lcheckbuf = lcheckbuf + 1
 
@@ -161,6 +165,58 @@
 !      call des_dbgmpi(6)
 !      call des_dbgmpi(7)
 
+   CONTAINS
+
+!----------------------------------------------------------------------!
+! Subroutine: DESMPI_CLEANUP                                           !
+! Author: Pradeep Gopalakrishnan                                       !
+!                                                                      !
+! Purpose: Cleans the ghost particle array positions.                  !
+!----------------------------------------------------------------------!
+      SUBROUTINE DESMPI_CLEANUP
+
+      use discretelement, only: PIP
+      use discretelement, only: iGHOST_CNT
+      use discretelement, only: DES_USR_VAR_SIZE
+      use discretelement, only: dg_pic
+
+      use discretelement, only: iGHOST_UPDATED
+      use desmpi, only: iRECVINDICES
+      use desmpi, only: iEXCHFLAG
+
+      use discretelement, only: dimn, nonexistent
+
+      implicit none
+
+! Local variables:
+!---------------------------------------------------------------------//
+      integer ltot_ind,lface,lindx,lijk,lcurpar,lpicloc
+
+      do lface = 1,dimn*2
+         if(.not.iexchflag(lface))cycle
+         ltot_ind = irecvindices(1,lface)
+         do lindx = 2,ltot_ind+1
+            lijk = irecvindices(lindx,lface)
+            do lpicloc =1,dg_pic(lijk)%isize
+               lcurpar = dg_pic(lijk)%p(lpicloc)
+               if(ighost_updated(lcurpar)) cycle
+               pip = pip - 1
+               ighost_cnt = ighost_cnt-1
+               particle_state(lcurpar) = nonexistent
+               fc(lcurpar,:) = 0.0
+               des_pos_new(lcurpar,:)=0
+               pijk(lcurpar,:) = -10
+               des_vel_new(lcurpar,:)=0
+               omega_new(lcurpar,:)=0
+
+               IF(DES_USR_VAR_SIZE > 0)&
+                  des_usr_var(lcurpar,:)= 0
+
+            end do
+         end do
+      end do
+      END SUBROUTINE DESMPI_CLEANUP
+
       END SUBROUTINE DES_PAR_EXCHANGE
 
 
@@ -171,7 +227,7 @@
 ! Purpose: Checks if the sendrecvbuf size is large enough. If the      !
 !    buffers are not sufficent, they are resized.                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE DESMPI_CHECK_SENDRECVBUF(check_global)
+      SUBROUTINE DESMPI_CHECK_SENDRECVBUF
 
       use discretelement, only: dg_pic
       use desmpi, only: iMAXBUF
@@ -183,7 +239,6 @@
       use discretelement, only: dimn
       implicit none
 
-      logical, intent(in) :: check_global
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Loop counters
@@ -235,59 +290,6 @@
       endif
 
       END SUBROUTINE DESMPI_CHECK_SENDRECVBUF
-
-!----------------------------------------------------------------------!
-! Subroutine: DESMPI_CLEANUP                                           !
-! Author: Pradeep Gopalakrishnan                                       !
-!                                                                      !
-! Purpose: Cleans the ghost particle array positions.                  !
-!----------------------------------------------------------------------!
-      SUBROUTINE DESMPI_CLEANUP
-
-      use discretelement, only: DES_VEL_NEW, DES_POS_NEW
-      use discretelement, only: OMEGA_NEW
-      use discretelement, only: FC
-      use discretelement, only: PIP
-      use discretelement, only: iGHOST_CNT
-      use discretelement, only: DES_USR_VAR_SIZE, DES_USR_VAR
-      use discretelement, only: dg_pic, pijk
-
-      use discretelement, only: iGHOST_UPDATED
-      use desmpi, only: iRECVINDICES
-      use desmpi, only: iEXCHFLAG
-
-      use discretelement, only: dimn, nonexistent, particle_state
-
-      implicit none
-
-! Local variables:
-!---------------------------------------------------------------------//
-      integer ltot_ind,lface,lindx,lijk,lcurpar,lpicloc
-
-      do lface = 1,dimn*2
-         if(.not.iexchflag(lface))cycle
-         ltot_ind = irecvindices(1,lface)
-         do lindx = 2,ltot_ind+1
-            lijk = irecvindices(lindx,lface)
-            do lpicloc =1,dg_pic(lijk)%isize
-               lcurpar = dg_pic(lijk)%p(lpicloc)
-               if(ighost_updated(lcurpar)) cycle
-               pip = pip - 1
-               ighost_cnt = ighost_cnt-1
-               particle_state(lcurpar) = nonexistent
-               fc(lcurpar,:) = 0.0
-               des_pos_new(lcurpar,:)=0
-               pijk(lcurpar,:) = -10
-               des_vel_new(lcurpar,:)=0
-               omega_new(lcurpar,:)=0
-
-               IF(DES_USR_VAR_SIZE > 0)&
-                  des_usr_var(lcurpar,:)= 0
-
-            end do
-         end do
-      end do
-      END SUBROUTINE DESMPI_CLEANUP
 
 
       END MODULE MPI_FUNS_DES

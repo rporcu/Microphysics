@@ -499,7 +499,7 @@
       do_nsearch = .true.
       call desgrid_pic(plocate=.true., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
          des_pos_new=des_pos_new, particle_state=particle_state)
-      call desmpi_check_sendrecvbuf(check_global = .true.)
+      call desmpi_check_sendrecvbuf
 
 !call ghost particle exchange in E-W, N-S, T-B order
 

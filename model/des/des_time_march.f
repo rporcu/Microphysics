@@ -192,7 +192,8 @@ module des_time_march_module
          IF (DO_NSEARCH .OR. (numPEs>1) .OR. DES_PERIODIC_WALLS) THEN
             CALL DESGRID_PIC(.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
                des_pos_new=des_pos_new, particle_state=particle_state)
-            CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
+            CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+               des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
          ENDIF
 
          IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)

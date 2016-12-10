@@ -220,12 +220,14 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, dg_pijk, dg_pijkprv, particle_state, des_pos_new)
+      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
@@ -247,7 +249,8 @@ CONTAINS
       CALL DESGRID_PIC(.TRUE., dg_pijkprv, dg_pijk, particle_state, des_pos_new)
 ! Call exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
-      CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
+      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
 ! Assigning PIJK(L,1), PIJK(L,2) and PIJK(L,3) the i, j, k indices
 ! of particle L (locating particle on fluid grid). Also determine
@@ -284,7 +287,8 @@ CONTAINS
 ! Calling exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
 ! unclear why this needs to be called again.
-      CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
+      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
       CALL FINL_ERR_MSG
 

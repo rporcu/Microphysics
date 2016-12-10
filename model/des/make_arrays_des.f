@@ -10,7 +10,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -48,10 +48,11 @@ MODULE MAKE_ARRAYS_DES_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id, dg_pijkprv
+      INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
@@ -161,14 +162,16 @@ MODULE MAKE_ARRAYS_DES_MODULE
       ENDDO
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol)
-      CALL INIT_PARTICLES_IN_CELL(pijk, dg_pijk, dg_pijkprv, particle_state, des_pos_new)
+      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
 ! Bin the particles to the DES grid.
       CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
          des_pos_new=des_pos_new, particle_state=particle_state)
-      CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
+      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
       CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
