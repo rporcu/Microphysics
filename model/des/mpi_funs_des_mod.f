@@ -37,7 +37,7 @@
 !   DES_PAR_EXCHANGE; When DO_NSEARCH is true, ghost particles are     !
 !   updated and later used  to generate the PAIR lists.                !
 !----------------------------------------------------------------------!
-      subroutine des_par_exchange()
+      subroutine des_par_exchange(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
 
       use discretelement, only: DES_PERIODIC_WALLS
 
@@ -61,6 +61,11 @@
       use compar, only: numpes
 
       implicit none
+
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijkprv
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -105,7 +110,8 @@
          do lface = linter*2-1,linter*2
             if(dsendbuf(1+mod(lface,2))%facebuf(1).gt.0 .or. &
                drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
-               call desgrid_pic(plocate=.false.)
+               call desgrid_pic(plocate=.false., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+                  des_pos_new=des_pos_new, particle_state=particle_state)
                exit
             end if
          end do
@@ -140,7 +146,8 @@
          do lface = linter*2-1,linter*2
             if(dsendbuf(1+mod(lface,2))%facebuf(1) .gt.0.or.&
                drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
-               call desgrid_pic(plocate=.false.)
+               call desgrid_pic(plocate=.false., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+                  des_pos_new=des_pos_new, particle_state=particle_state)
                exit
             end if
          end do

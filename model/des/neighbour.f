@@ -18,7 +18,7 @@ MODULE NEIGHBOUR_MODULE
       SUBROUTINE NEIGHBOUR
 
       USE discretelement, only: ppos, neighbor_index_old, pft_neighbor_old, neighbor_index, do_nsearch, max_pip, neighbors_old
-      USE discretelement, only: des_pos_new, pft_neighbor, neighbors
+      USE discretelement, only: des_pos_new, pft_neighbor, neighbors, des_radius, dg_pijk, particle_state
       USE desgrid, only: desgrid_neigh_build
 
       IMPLICIT NONE
@@ -41,7 +41,7 @@ LOGICAL :: found
 
       NEIGHBOR_INDEX(:) = 0
 
-      CALL DESGRID_NEIGH_BUILD
+      CALL DESGRID_NEIGH_BUILD(des_pos_new, dg_pijk, particle_state, des_radius)
 
       do ll = 1, max_pip
 

@@ -474,7 +474,7 @@
 ! Parameters       : none
 !------------------------------------------------------------------------
 
-      subroutine DES_RESTART_GHOST
+      subroutine DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
 
       use mpi_comm_des, only: desmpi_sendrecv_init
       use mpi_comm_des, only: desmpi_sendrecv_wait
@@ -483,8 +483,12 @@
       use mpi_pack_des, only: desmpi_pack_ghostpar
       use mpi_unpack_des, only: desmpi_unpack_ghostpar
 
-!-----------------------------------------------
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
+
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------
@@ -493,7 +497,8 @@
 !-----------------------------------------------
 ! set do_nsearch true so that the ghost cell will be updated
       do_nsearch = .true.
-      call desgrid_pic(plocate=.true.)
+      call desgrid_pic(plocate=.true., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+         des_pos_new=des_pos_new, particle_state=particle_state)
       call desmpi_check_sendrecvbuf(check_global = .true.)
 
 !call ghost particle exchange in E-W, N-S, T-B order
@@ -520,7 +525,8 @@
          do lface = linter*2-1,linter*2
             if(dsendbuf(1+mod(lface,2))%facebuf(1).gt.0.or.&
                drecvbuf(1+mod(lface,2))%facebuf(1).gt.0) then
-               call desgrid_pic(plocate=.true.)
+               call desgrid_pic(plocate=.true., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+                  des_pos_new=des_pos_new, particle_state=particle_state)
                exit
             endif
          enddo

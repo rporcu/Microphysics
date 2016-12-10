@@ -13,7 +13,7 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-         pijk, dg_pijk, iglobal_id, particle_state, particle_phase, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
@@ -69,6 +69,7 @@ module des_time_march_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
@@ -185,8 +186,9 @@ module des_time_march_module
 ! Call exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
          IF (DO_NSEARCH .OR. (numPEs>1) .OR. DES_PERIODIC_WALLS) THEN
-            CALL DESGRID_PIC(.TRUE.)
-            CALL DES_PAR_EXCHANGE
+            CALL DESGRID_PIC(.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+               des_pos_new=des_pos_new, particle_state=particle_state)
+            CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
          ENDIF
 
          IF(DO_NSEARCH) CALL NEIGHBOUR

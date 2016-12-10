@@ -10,7 +10,7 @@ MODULE READ_RES0_DES_MODULE
 
       use des_allocate, only: allocate_dem_mi
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
-      use discretelement, only: des_vel_new, omega_new, des_radius, dtsolid, iglobal_id
+      use discretelement, only: des_vel_new, des_pos_new, omega_new, des_radius, dtsolid, iglobal_id, dg_pijk, dg_pijkprv
       use discretelement, only: particle_state, ro_sol, tecplot_findex, des_usr_var_size, vtp_findex, des_usr_var
       use error_manager, only: err_msg, flush_err_msg
       use mpi_init_des, only: DES_RESTART_GHOST
@@ -57,7 +57,7 @@ MODULE READ_RES0_DES_MODULE
          ENDDO
       ENDIF
 
-      CALL DES_RESTART_GHOST
+      CALL DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
 
 ! RES2 does not need the collision of BC information.
       IF(RUN_TYPE == 'RESTART_2') RETURN

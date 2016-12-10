@@ -19,7 +19,7 @@ module time_march_module
          tau_u_g,tau_v_g,tau_w_g,&
          flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g,&
          f_gds, drag_am, drag_bm,flag, &
-         pijk, dg_pijk, iglobal_id, particle_state, particle_phase, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
@@ -132,6 +132,7 @@ module time_march_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
@@ -294,7 +295,7 @@ module time_march_module
 ! Other solids model implementations
       IF(DEM_SOLIDS) THEN
          call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-            pijk, dg_pijk, iglobal_id, particle_state, particle_phase, &
+            pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
             des_radius, ro_sol, pvol, pmass, omoi, &
             ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN

@@ -17,7 +17,8 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
       USE discretelement, only: des_pos_new, des_vel_new
-      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost, pijk, particle_phase
+      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state
+      USE discretelement, only: normal_ghost, pijk, particle_phase, dg_pijk, dg_pijkprv
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
       USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
@@ -149,13 +150,14 @@ MODULE MAKE_ARRAYS_DES_MODULE
       ENDDO
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol)
-      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new)
+      CALL INIT_PARTICLES_IN_CELL(pijk, dg_pijk, dg_pijkprv, particle_state, des_pos_new)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
 ! Bin the particles to the DES grid.
-      CALL DESGRID_PIC(PLOCATE=.TRUE.)
-      CALL DES_PAR_EXCHANGE
+      CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
+         des_pos_new=des_pos_new, particle_state=particle_state)
+      CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 
       CALL NEIGHBOUR

@@ -26,11 +26,11 @@
       use discretelement, only: DES_PERIODIC_WALLS_X
       use discretelement, only: DES_PERIODIC_WALLS_Y
       use discretelement, only: DES_PERIODIC_WALLS_Z
-      use discretelement, only: DIMN, dg_pijkprv, dg_pijk, factor_RLM, max_pip, max_isize, pip
-      use discretelement, only: XE, YN, ZT, neighbor_index, des_radius, des_pos_new
+      use discretelement, only: DIMN, factor_RLM, max_pip, max_isize, pip
+      use discretelement, only: XE, YN, ZT, neighbor_index
       use discretelement, only: dg_pic
       use discretelement, only: entering_ghost, normal_ghost, normal_particle
-      use discretelement, only: particle_state, nonexistent, exiting_ghost, entering_particle
+      use discretelement, only: nonexistent, exiting_ghost, entering_particle
       use error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       use geometry, only: XLENGTH, YLENGTH, ZLENGTH
       use geometry, only: imax2, jmax2, kmax2
@@ -670,13 +670,19 @@
 !                    be located; if it is false only PIC information will be
 !                    updated by this routine
 !------------------------------------------------------------------------
-      subroutine desgrid_pic(plocate)
+      subroutine desgrid_pic(plocate, dg_pijkprv, dg_pijk, particle_state, des_pos_new)
 
       implicit none
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
       logical, INTENT(IN) :: plocate
+
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -776,9 +782,15 @@
 ! Purpose          : This particles build the neigh list for the particles
 !                    currently active in the system
 !------------------------------------------------------------------------
-      subroutine desgrid_neigh_build ()
+      subroutine desgrid_neigh_build(des_pos_new, dg_pijk, particle_state, des_radius)
 
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: dg_pijk
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

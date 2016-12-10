@@ -521,7 +521,7 @@
 ! Purpose: Generates the mapping used by the scatter routines to send  !
 ! read data to the correct rank.                                       !
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE READ_PAR_COL(lNEXT_REC)
+      SUBROUTINE READ_PAR_COL(lNEXT_REC, dg_pijk, dg_pijkprv, des_pos_new)
 
       use discretelement, only: NEIGHBORS, NEIGH_NUM
       use compar, only: numPEs
@@ -530,6 +530,9 @@
 
       implicit none
 
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, INTENT(INOUT) :: lNEXT_REC
 
       INTEGER :: LC1, lPROC
@@ -546,7 +549,7 @@
          CALL READ_RES_DES(lNEXT_REC, NEIGHBORS(:))
       ENDIF
 
-      CALL DES_RESTART_GHOST
+      CALL DES_RESTART_GHOST(dg_pijk, dg_pijkprv, des_pos_new)
 
       allocate(iPAR_COL(2, cIN_COUNT))
       iPAR_COL = 0
