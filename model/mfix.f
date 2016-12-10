@@ -326,7 +326,10 @@
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
-      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
+      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         des_radius, ro_sol, pvol, pmass, omoi, &
+         ppos, des_pos_new, des_vel_new, omega_new)
 
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM

@@ -259,7 +259,7 @@ module comp_mean_fields0_module
       ENDDO
       ENDDO
 
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
 
 ! turn on the below statements to check if the mass is conserved
 ! between discrete and continuum representations. Should be turned to

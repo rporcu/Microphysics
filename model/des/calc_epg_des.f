@@ -14,7 +14,7 @@ module calc_epg_des_module
 !  flag back to the caller and combining with other error checks.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g)
+      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -22,8 +22,6 @@ module calc_epg_des_module
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Global ID of particles
       use discretelement, only: iGLOBAL_ID
-! Particle positions
-      use discretelement, only: DES_POS_NEW
 ! Number of continuum solids phases
       use constant, only: MMAX, RO_S0
 ! Discrete particle material and bulk densities
@@ -60,6 +58,7 @@ module calc_epg_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
 
 ! Local Variables:
 !---------------------------------------------------------------------//

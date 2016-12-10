@@ -7,7 +7,10 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !  Purpose: DES - allocating DES arrays
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g)
+      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         des_radius, ro_sol, pvol, pmass, omoi, &
+         ppos, des_pos_new, des_vel_new, omega_new)
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -16,11 +19,9 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
-      USE discretelement, only: des_pos_new, des_vel_new, ppos, neighbor_index, neighbor_index_old
-      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state
-      USE discretelement, only: normal_ghost, pijk, particle_phase, dg_pijk, dg_pijkprv
-      USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
-      USE discretelement, only: omega_new, do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, omoi, vtp_findex
+      USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
+      USE discretelement, only: gener_part_config, print_des_data, s_time
+      USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1, fluid_at
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
@@ -45,6 +46,14 @@ MODULE MAKE_ARRAYS_DES_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id, dg_pijkprv
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 !-----------------------------------------------
 ! Local variables
@@ -100,7 +109,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
                   des_pos_new, des_vel_new, omega_new)
 
             ELSE
-               CALL READ_PAR_INPUT
+               CALL READ_PAR_INPUT(particle_state, des_radius, ro_sol, des_pos_new, des_vel_new)
             ENDIF
          ENDIF
 

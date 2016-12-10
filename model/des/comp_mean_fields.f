@@ -56,7 +56,7 @@ module comp_mean_fields_module
       ENDIF
 
 ! Calculate the gas phase volume fraction from DES_ROP_s.
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
 
       RETURN
 

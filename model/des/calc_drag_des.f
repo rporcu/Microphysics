@@ -21,7 +21,8 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol,des_vel_new,des_radius)
+     SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
+        des_pos_new,des_vel_new,des_radius)
 
       IMPLICIT NONE
 
@@ -41,7 +42,7 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol,des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: drag_fc, des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: drag_fc, des_vel_new, des_pos_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
@@ -63,7 +64,7 @@ module calc_drag_des_module
 ! Calculate gas-solids drag force on particle
          IF(DES_CONTINUUM_COUPLED) THEN
             if(des_interp_scheme_enum == des_interp_garg) then
-               CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,des_radius,pvol)
+               CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,des_radius,pvol,des_pos_new,des_vel_new,fc)
             else
                CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,pvol,des_vel_new,fc,des_radius)
             endif
@@ -84,7 +85,7 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)
+         f_gds, drag_am, drag_bm, pijk, particle_state, particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
 
       IMPLICIT NONE
 
@@ -108,15 +109,16 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
          if(des_interp_scheme_enum == des_interp_garg) then
             CALL DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               f_gds, drag_am, drag_bm, des_radius, pvol)
+               f_gds, drag_am, drag_bm, des_radius, pvol, des_pos_new, des_vel_new, particle_phase)
          else
             CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                f_gds, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)

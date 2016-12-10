@@ -6,11 +6,13 @@ MODULE READ_PAR_INPUT_MODULE
 ! Purpose: Read the particle input and broadcasts the particle data to !
 ! respective processors.                                               !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_PAR_INPUT
+      SUBROUTINE READ_PAR_INPUT(particle_state, &
+         des_radius, ro_sol, &
+         des_pos_new, des_vel_new)
 
       use compar, only: myPE, pe_io
       use desmpi, only: dpar_pos, dpar_vel, dpar_rad, dpar_den
-      use discretelement, only: particle_state, normal_particle,  pip, particles, des_pos_new, des_radius, ro_sol, des_vel_new
+      use discretelement, only: normal_particle,  pip, particles
       use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
       use exit_mod, only: mfix_exit
       use funits, only: dmp_log, unit_log
@@ -18,6 +20,11 @@ MODULE READ_PAR_INPUT_MODULE
       use run, only: bdist_io
 
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
