@@ -92,7 +92,7 @@
 
       use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
       use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
-      use discretelement, only: rot_acc_old, des_usr_var_size, particle_phase, ppos
+      use discretelement, only: rot_acc_old, des_usr_var_size, particle_phase, ppos, neighbor_index_old
       use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
 
       IMPLICIT NONE
@@ -347,7 +347,7 @@
          flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
          f_gds, drag_am, drag_bm, flag, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
-         des_radius, ro_sol, pvol, pmass, omoi, &
+         des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
 ! Call user-defined subroutine after time-loop.

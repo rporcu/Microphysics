@@ -13,7 +13,7 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
@@ -67,6 +67,7 @@ module des_time_march_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
@@ -191,7 +192,7 @@ module des_time_march_module
             CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
          ENDIF
 
-         IF(DO_NSEARCH) CALL NEIGHBOUR
+         IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
 ! Explicitly coupled simulations do not need to rebin particles to
 ! the fluid grid every time step. However, this implies that the

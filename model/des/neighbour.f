@@ -15,13 +15,21 @@ MODULE NEIGHBOUR_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE NEIGHBOUR
+      SUBROUTINE NEIGHBOUR(dg_pijk, particle_state, des_radius, &
+         des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
-      USE discretelement, only: ppos, neighbor_index_old, pft_neighbor_old, neighbor_index, do_nsearch, max_pip, neighbors_old
-      USE discretelement, only: des_pos_new, pft_neighbor, neighbors, des_radius, dg_pijk, particle_state
+      USE discretelement, only: pft_neighbor_old, do_nsearch, max_pip, neighbors_old
+      USE discretelement, only: pft_neighbor, neighbors
       USE desgrid, only: desgrid_neigh_build
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
+      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, ppos
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

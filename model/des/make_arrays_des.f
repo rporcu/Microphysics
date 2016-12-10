@@ -16,7 +16,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
-      USE discretelement, only: des_pos_new, des_vel_new
+      USE discretelement, only: des_pos_new, des_vel_new, ppos, neighbor_index, neighbor_index_old
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state
       USE discretelement, only: normal_ghost, pijk, particle_phase, dg_pijk, dg_pijkprv
       USE discretelement, only: gener_part_config, print_des_data, s_time, iglobal_id, pvol, pmass, des_radius, ro_sol
@@ -160,7 +160,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       CALL DES_PAR_EXCHANGE(des_pos_new, dg_pijk, dg_pijkprv, particle_state)
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
 
-      CALL NEIGHBOUR
+      CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
