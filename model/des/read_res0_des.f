@@ -6,18 +6,25 @@ MODULE READ_RES0_DES_MODULE
 !  Purpose : Reads either single restart file or multiple restart      !
 !  fles (based on bdist_io) flag.                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_RES0_DES
+      SUBROUTINE READ_RES0_DES(dg_pijk, dg_pijkprv, iglobal_id, particle_state, &
+         des_radius, ro_sol, des_usr_var, &
+         des_pos_new, des_vel_new, omega_new)
 
       use des_allocate, only: allocate_dem_mi
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
-      use discretelement, only: des_vel_new, des_pos_new, omega_new, des_radius, dtsolid, iglobal_id, dg_pijk, dg_pijkprv
-      use discretelement, only: particle_state, ro_sol, tecplot_findex, des_usr_var_size, vtp_findex, des_usr_var
+      use discretelement, only: tecplot_findex, des_usr_var_size, vtp_findex, dtsolid
       use error_manager, only: err_msg, flush_err_msg
       use mpi_init_des, only: DES_RESTART_GHOST
       use read_res1_des, only: init_read_res_des, finl_read_res_des, read_par_pos, read_res_des, read_res_parray
       use run, only: run_name, run_type, time
 
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
+      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
 
       INTEGER :: LC1, LC2
       INTEGER :: lDIMN, lNEXT_REC

@@ -9,16 +9,23 @@ MODULE WRITE_RES0_DES_MODULE
 !  Purpose : Reads either single restart file or multiple restart files
 !            (based on bdist_io) flag
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^c
-      subroutine WRITE_RES0_DES
+      SUBROUTINE WRITE_RES0_DES(iglobal_id, particle_state, &
+         des_radius, ro_sol, des_usr_var, &
+         des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: des_pos_new, des_vel_new, omega_new, des_usr_var, des_radius, des_usr_var_size, dtsolid, iglobal_id
-      use discretelement, only: particle_state, ro_sol, tecplot_findex, vtp_findex
+      use discretelement, only: des_usr_var_size, dtsolid, tecplot_findex, vtp_findex
       use run, only: run_name
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
 
       use write_res1_des, only: init_write_res_des, write_res_des, write_res_parray, finl_write_res_des
 
       implicit none
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, omega_new, des_usr_var
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: iglobal_id
+
 !-----------------------------------------------
 ! local variables
 !-----------------------------------------------

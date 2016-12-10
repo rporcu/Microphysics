@@ -25,14 +25,17 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol, &
+        des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
@@ -48,7 +51,8 @@ module comp_mean_fields_module
       IF(DES_INTERP_MEAN_FIELDS) THEN
          SELECT CASE(DES_INTERP_SCHEME_ENUM)
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
-         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
+         CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
+            des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
          CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(particle_phase,pvol)
          END SELECT
       ELSE
@@ -56,7 +60,7 @@ module comp_mean_fields_module
       ENDIF
 
 ! Calculate the gas phase volume fraction from DES_ROP_s.
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
       RETURN
 

@@ -9,7 +9,9 @@ module output_manager_module
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, EXIT_SIGNAL, FINISHED)
+     SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+        iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
+        EXIT_SIGNAL, FINISHED)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -48,6 +50,11 @@ module output_manager_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
+         DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, omega_new, des_usr_var
+         INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+         INTEGER, DIMENSION(:), INTENT(IN) :: iglobal_id
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -91,7 +98,9 @@ module output_manager_module
          CALL NOTIFY_USER('.RES;')
 
          IF(DEM_SOLIDS) THEN
-            CALL WRITE_RES0_DES
+            CALL WRITE_RES0_DES(iglobal_id, particle_state, &
+               des_radius, ro_sol, des_usr_var, &
+               des_pos_new, des_vel_new, omega_new)
             CALL NOTIFY_USER('DES.RES;')
          ENDIF
 
@@ -120,7 +129,7 @@ module output_manager_module
       IF(DEM_SOLIDS) THEN
          IF(CHECK_TIME(VTP_TIME)) THEN
             VTP_TIME = NEXT_TIME(VTP_DT)
-            CALL WRITE_DES_DATA
+            CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
             CALL NOTIFY_USER('DES.vtp;')
          ENDIF
       ENDIF

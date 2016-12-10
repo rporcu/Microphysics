@@ -142,7 +142,7 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(ep_g, u_g, v_g, w_g, ro_g, &
          rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
-         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius)
+         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
       IMPLICIT NONE
 
@@ -166,16 +166,17 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol,pmass,des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 ! Bin particles to the fluid grid.
-      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
+      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 ! Calculate mean fields (EPg).
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol, &
+         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, &

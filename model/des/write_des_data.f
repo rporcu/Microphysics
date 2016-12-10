@@ -15,11 +15,14 @@ MODULE WRITE_DES_DATA_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      SUBROUTINE WRITE_DES_DATA
+      SUBROUTINE WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
 
-      IMPLICIT NONE
+         IMPLICIT NONE
 
-      CALL WRITE_DES_VTP
+         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+         DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+
+         CALL WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
 
       RETURN
       END SUBROUTINE WRITE_DES_DATA
@@ -32,17 +35,18 @@ MODULE WRITE_DES_DATA_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      SUBROUTINE WRITE_DES_VTP
+      SUBROUTINE WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
 
       use vtp
       use discretelement, only: S_TIME
-      use discretelement, only: DES_POS_NEW, DES_VEL_NEW, DES_USR_VAR
-      use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
-      use discretelement, only: DES_RADIUS
+      use discretelement, only: DES_USR_VAR_SIZE
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
 
       DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_DIAMETER !(PARTICLES)
       CHARACTER(len=10) :: lNoP

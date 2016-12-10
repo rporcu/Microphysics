@@ -11,7 +11,7 @@ CONTAINS
 !  The collection could get expensive so the call frequency of this    !
 !  routine should probably be reduced.                                 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new)
+      SUBROUTINE CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -31,9 +31,10 @@ CONTAINS
 
       IMPLICIT NONE
 
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
 
 
 ! Local Variables:
@@ -142,7 +143,7 @@ CONTAINS
          'will be written',/'to aid debugging.')
 
 
-      CALL WRITE_DES_DATA
+      CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE CHECK_CELL_MOVEMENT_DEM

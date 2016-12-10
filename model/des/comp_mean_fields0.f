@@ -3,7 +3,8 @@ module comp_mean_fields0_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol,des_pos_new,des_vel_new)
+      SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
+         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
 !-----------------------------------------------
 ! Modules
@@ -35,10 +36,11 @@ module comp_mean_fields0_module
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
 
 !-----------------------------------------------
 ! Local variables
@@ -259,7 +261,7 @@ module comp_mean_fields0_module
       ENDDO
       ENDDO
 
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
 ! turn on the below statements to check if the mass is conserved
 ! between discrete and continuum representations. Should be turned to

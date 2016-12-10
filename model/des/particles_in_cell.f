@@ -48,11 +48,12 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new)
+      SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
@@ -154,7 +155,7 @@ CONTAINS
 
       ENDDO
 
-      CALL CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new)
+      CALL CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
 
 ! Assigning the variable PIC(IJK)%p(:). For each computational fluid
 ! cell compare the number of current particles in the cell to what was

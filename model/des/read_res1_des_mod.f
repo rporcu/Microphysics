@@ -521,7 +521,7 @@
 ! Purpose: Generates the mapping used by the scatter routines to send  !
 ! read data to the correct rank.                                       !
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE READ_PAR_COL(lNEXT_REC, dg_pijk, dg_pijkprv, des_pos_new)
+      SUBROUTINE READ_PAR_COL(lNEXT_REC, dg_pijk, dg_pijkprv, des_pos_new, iglobal_id)
 
       use discretelement, only: NEIGHBORS, NEIGH_NUM
       use compar, only: numPEs
@@ -532,6 +532,7 @@
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, INTENT(INOUT) :: lNEXT_REC
 
@@ -568,10 +569,10 @@
 ! Determine which process owns the neighbor datasets. This is done either
 ! through matching global ids or a search. The actual method depends
 ! on the ability to allocate a large enough array.
-      CALL MAP_cARRAY_TO_PROC(COL_CNT)
+      CALL MAP_cARRAY_TO_PROC(COL_CNT,iglobal_id)
 
 ! Send the particle position data to the individual ranks.
-      CALL GLOBAL_TO_LOC_COL
+      CALL GLOBAL_TO_LOC_COL(iglobal_id)
 
 ! Set up the read/scatter arrary information.
       cPROCCNT = NEIGH_NUM
@@ -603,16 +604,16 @@
 ! Purpose: Use the particle positions to determine which processor     !
 ! they live on and count the number of particles on each process.      !
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE MAP_cARRAY_TO_PROC(lCOL_CNT)
+      SUBROUTINE MAP_cARRAY_TO_PROC(lCOL_CNT, iglobal_id)
 
       use compar, only: numPEs, myPE
-      use discretelement, only: iGLOBAL_ID
       use discretelement, only: PIP
       use discretelement, only: NEIGH_MAX, NEIGH_NUM
 
       implicit none
 
       INTEGER, INTENT(OUT) :: lCOL_CNT(0:numPEs-1)
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
 
 ! Loop counters.
       INTEGER :: LC1, LC2
@@ -754,9 +755,8 @@
 ! Purpose: Generates the mapping used by the scatter routines to send  !
 ! read data to the correct rank.                                       !
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE GLOBAL_TO_LOC_COL
+      SUBROUTINE GLOBAL_TO_LOC_COL(iglobal_id)
 
-      use discretelement, only: iGLOBAL_ID
       use discretelement, only: PIP
 
 
@@ -765,6 +765,8 @@
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       implicit none
+
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
 
 ! Loop counters.
       INTEGER :: LC1, LC2, LC3, IER

@@ -329,7 +329,7 @@
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, omega_new)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new)
 
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM
@@ -351,7 +351,7 @@
          f_gds, drag_am, drag_bm, flag, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
-         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)

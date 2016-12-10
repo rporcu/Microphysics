@@ -14,14 +14,12 @@ module calc_epg_des_module
 !  flag back to the caller and combining with other error checks.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new)
+      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Flag: Discrete and continuum solids co-exist
       use discretelement, only: DES_CONTINUUM_COUPLED
-! Global ID of particles
-      use discretelement, only: iGLOBAL_ID
 ! Number of continuum solids phases
       use constant, only: MMAX, RO_S0
 ! Discrete particle material and bulk densities
@@ -58,7 +56,10 @@ module calc_epg_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_usr_var, des_vel_new
+      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -154,7 +155,7 @@ module calc_epg_des_module
  1104 FORMAT('This is a fatal error. A particle output file (vtp) ',   &
          'will be written',/'to aid debugging.')
 
-      CALL WRITE_DES_DATA
+      CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
       CALL MFIX_EXIT(myPE)
 
       END SUBROUTINE CALC_EPG_DES

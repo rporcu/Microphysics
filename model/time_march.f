@@ -21,7 +21,7 @@ module time_march_module
          f_gds, drag_am, drag_bm,flag, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
-         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
 !-----------------------------------------------
 ! Modules
@@ -129,7 +129,7 @@ module time_march_module
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
@@ -197,7 +197,9 @@ module time_march_module
 ! Set wall boundary conditions and transient flow b.c.'s
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
 
-      CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, EXIT_SIGNAL, FINISH)
+      CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+               iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
+         EXIT_SIGNAL, FINISH)
 
       IF (DT == UNDEFINED) THEN
          IF (FINISH) THEN
@@ -225,7 +227,7 @@ module time_march_module
 ! Calculate coefficients
       CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
          f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius)
+         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -259,7 +261,7 @@ module time_march_module
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, &
          rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
          drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-         particle_state, pmass, pvol, des_radius, des_pos_new, des_vel_new, IER, NIT))
+         particle_state, pmass, pvol, des_radius, des_pos_new, des_vel_new, des_usr_var, IER, NIT))
 
          call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
@@ -298,7 +300,7 @@ module time_march_module
          call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
             pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
             neighbor_index, neighbor_index_old, des_radius, ro_sol, pvol, pmass, omoi, &
-            ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+            ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
       ENDIF
 
