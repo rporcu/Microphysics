@@ -1,16 +1,14 @@
       MODULE WRITE_RES1_DES
 
-      use desmpi
-      use compar, only: myPE
       use compar, only: PE_IO
-
-      use run, only: bDist_IO
-
-      use mpi_comm_des, only: DES_GATHER
-      use mpi_comm_des, only: DESMPI_GATHERV
-
-      use out_bin_512_mod, only: out_bin_512
+      use compar, only: myPE
+      use desmpi
       use discretelement, only: nonexistent, particle_state
+      use mpi_comm_des, only: DESMPI_GATHERV
+      use mpi_comm_des, only: DES_GATHER
+      use out_bin_512_mod, only: out_bin_512
+      use out_bin_512i_mod, only: out_bin_512i
+      use run, only: bDist_IO
 
       IMPLICIT NONE
 

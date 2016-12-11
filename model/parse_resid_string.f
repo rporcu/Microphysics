@@ -9,8 +9,9 @@
       SUBROUTINE PARSE_RESID_STRING()
 
       USE param1, only: undefined_c, undefined_i
-      USE residual, only: resid_string, energy_grp, group_resid, ke_grp, nprefix, scalar_grp, hydro_grp, theta_grp
       USE residual, only: resid_grp_string, resid_index, max_resid_index, resid_x, resid_prefix
+      USE residual, only: resid_string, energy_grp, group_resid, ke_grp, nprefix, scalar_grp, hydro_grp, theta_grp
+      USE write_error_module, only: write_error
 
       IMPLICIT NONE
 !-----------------------------------------------

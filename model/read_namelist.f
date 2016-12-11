@@ -16,9 +16,10 @@ MODULE read_namelist_module
       USE bc
       USE compar
       USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
-      USE fld_const, only: ro_g0
+      USE deprecated_or_unknown_module, only: deprecated_or_unknown
       USE discretelement
       USE fld_const, only: mu_g0, mw_avg
+      USE fld_const, only: ro_g0
       USE funits
       USE geometry
       USE ic
@@ -26,6 +27,8 @@ MODULE read_namelist_module
       USE output
       USE particle_filter, only: des_interp_mean_fields, des_interp_on, des_interp_scheme, des_interp_width, des_report_mass_interp
       USE ps
+      USE remove_comment_module, only: remove_comment
+      USE remove_comment_module, only: remove_par_blanks
       USE residual, only: group_resid, resid_string
       USE run
       USE scales, only: p_ref, p_scale

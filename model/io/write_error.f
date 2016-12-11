@@ -1,3 +1,5 @@
+MODULE WRITE_ERROR_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: Write_error(Name, Line, L)                             C                     C
@@ -47,3 +49,4 @@
  1010 FORMAT(1X,A)
  1020 FORMAT(/,/,1X,70('*'))
       END SUBROUTINE WRITE_ERROR
+END MODULE WRITE_ERROR_MODULE

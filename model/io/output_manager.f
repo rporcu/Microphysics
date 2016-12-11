@@ -1,4 +1,5 @@
 module output_manager_module
+   use write_out1_module, only: write_out1
   contains
 !----------------------------------------------------------------------!
 !                                                                      !

@@ -1,3 +1,5 @@
+MODULE SOLVE_LIN_EQ_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SOLVE_LIN_EQ                                            C
@@ -25,6 +27,7 @@
          use param, only: dimension_3
          use residual, only: resid
          use toleranc, only: tol_resid
+         use write_error_module, only: write_error
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -123,3 +126,4 @@
 
       RETURN
       END SUBROUTINE SOLVE_LIN_EQ
+END MODULE SOLVE_LIN_EQ_MODULE

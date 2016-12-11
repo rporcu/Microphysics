@@ -25,10 +25,11 @@ module solve_pp_module
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE param1  , only: zero, one
       USE ps, only: point_source
-      USE source_pp_module, only: source_pp_g
-      use residual, only: CALC_RESID_PP
       USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
       USE residual, only: resid_p, resid, num_resid
+      USE solve_lin_eq_module, only: solve_lin_eq
+      USE source_pp_module, only: source_pp_g
+      use residual, only: CALC_RESID_PP
 
       IMPLICIT NONE
 !-----------------------------------------------

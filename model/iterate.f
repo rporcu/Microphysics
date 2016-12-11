@@ -28,6 +28,7 @@ module iterate_module
       USE leqsol   , only: leq_adjust, max_nit
       USE output   , only: full_log, nlog
       USE param1   , only: small_number, undefined, zero, one
+      USE physical_prop_module, only: physical_prop
       USE residual , only: resid, resid_p
       USE run, only: call_usr, dt, dt_prev, nstep, time, tstop
       USE time_cpu, only: cpuos, cpu_nlog, cpu0, time_nlog
@@ -214,7 +215,7 @@ module iterate_module
 
 
 ! Calculate densities.
-      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)
+      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
       IF (IER_MANAGER()) goto 1000
 
 ! Calculate the face values of densities.
@@ -231,7 +232,7 @@ module iterate_module
       ENDIF
 
 ! Recalculate densities.
-      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0)
+      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
       IF (IER_MANAGER()) goto 1000
 
 ! Update wall velocities:

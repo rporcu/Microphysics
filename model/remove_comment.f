@@ -1,3 +1,5 @@
+MODULE REMOVE_COMMENT_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine Name: REMOVE_COMMENT (LINE, LSTART, MAXCOL)              !
@@ -116,3 +118,4 @@
 
       return
       END SUBROUTINE REMOVE_PAR_BLANKS
+END MODULE REMOVE_COMMENT_MODULE

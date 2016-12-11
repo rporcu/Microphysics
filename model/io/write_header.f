@@ -1,3 +1,5 @@
+MODULE WRITE_HEADER_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: WRITE_HEADER                                           C
@@ -50,3 +52,4 @@
          ,'-',I4)
  1015 FORMAT(72('_'))
       END SUBROUTINE WRITE_HEADER
+END MODULE WRITE_HEADER_MODULE

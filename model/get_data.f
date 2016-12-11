@@ -28,6 +28,7 @@ MODULE GET_DATA_MODULE
       USE set_icbc_flags_module, only: set_icbc_flag
       USE set_max2_module, only: set_max2
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
+      USE write_header_module, only: write_header
 
       IMPLICIT NONE
 

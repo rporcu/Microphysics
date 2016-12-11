@@ -1,3 +1,6 @@
+MODULE CORNER_MODULE
+      USE write_error_module, only: write_error
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: GET_CORNER_CELLS(IER)                                  C
@@ -11,10 +14,10 @@
       SUBROUTINE GET_CORNER_CELLS(flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE functions, only: fluid_at
-      USE param1   , only: max_ncorn
+      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE funits   , only: dmp_log, unit_log
+      USE param1   , only: max_ncorn
       use matrix   , only: e, w, s, n, t, b
 
       IMPLICIT NONE
@@ -180,7 +183,7 @@
  1100 FORMAT(3X,I6)
 !
  1300 FORMAT(/1X,70('*')/)
-      END SUBROUTINE GET_CORNER_CELLS
+      CONTAINS
 !
       SUBROUTINE ADDCORN(NOTCORNER, NCORN)
 
@@ -216,3 +219,5 @@
 !
       RETURN
       END SUBROUTINE ADDCORN
+      END SUBROUTINE GET_CORNER_CELLS
+END MODULE CORNER_MODULE

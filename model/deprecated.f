@@ -1,3 +1,5 @@
+MODULE DEPRECATED_OR_UNKNOWN_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !     Module name: DEPRECATED_OR_UNKNOWN                               !
@@ -92,3 +94,4 @@
 
 
       END SUBROUTINE DEPRECATED_OR_UNKNOWN
+END MODULE DEPRECATED_OR_UNKNOWN_MODULE

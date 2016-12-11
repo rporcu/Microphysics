@@ -25,9 +25,10 @@ module solve_vel_star_module
       USE discretelement, only: des_continuum_coupled
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
-      USE ur_facs , only: under_relax
       USE ps      , only: point_source
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
+      USE solve_lin_eq_module, only: solve_lin_eq
+      USE ur_facs , only: under_relax
 
       USE source_u_g_module, only: source_u_g, point_source_u_g
       USE source_v_g_module, only: source_v_g, point_source_v_g

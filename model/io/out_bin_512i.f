@@ -1,3 +1,5 @@
+MODULE OUT_BIN_512I_MOD
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OUT_BIN_512I                                           C
@@ -97,3 +99,4 @@
 !
       RETURN
       END SUBROUTINE OUT_BIN_512I
+END MODULE OUT_BIN_512I_MOD

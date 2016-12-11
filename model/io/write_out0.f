@@ -1,3 +1,5 @@
+MODULE WRITE_OUT0_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: WRITE_OUT0                                              !
@@ -617,3 +619,4 @@
       END FUNCTION LOCATION
 
       END SUBROUTINE WRITE_OUT0
+END MODULE WRITE_OUT0_MODULE

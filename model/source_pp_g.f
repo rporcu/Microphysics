@@ -28,17 +28,15 @@ module source_pp_module
 subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
-      USE geometry, ONLY: VOL
-      use matrix, ONLY: E, W, N, S, T, B
       USE fld_const, ONLY: RO_G0
+      USE geometry, ONLY: VOL
+      USE matrix, ONLY: E, W, N, S, T, B
       USE run, ONLY: ODT, UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
+      USE write_error_module, only: write_error
 
       IMPLICIT NONE
 !-----------------------------------------------

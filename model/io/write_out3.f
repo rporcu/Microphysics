@@ -1,3 +1,5 @@
+MODULE WRITE_OUT3_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Module name: WRITE_OUT3                                             !
@@ -49,3 +51,4 @@
 
       RETURN
       END SUBROUTINE WRITE_OUT3
+END MODULE WRITE_OUT3_MODULE

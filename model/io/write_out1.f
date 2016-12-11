@@ -1,3 +1,5 @@
+MODULE WRITE_OUT1_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: WRITE_OUT1                                             C
@@ -17,11 +19,11 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      DOUBLE PRECISION, INTENT(IN) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      DOUBLE PRECISION, INTENT(IN) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      DOUBLE PRECISION, INTENT(IN) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       double precision, allocatable :: array1(:,:,:)
@@ -76,3 +78,4 @@
  1100 FORMAT(1X,A1,/5X,'--- Void fraction (EP_g) at time ',G12.5,' ---',2/)
  1200 FORMAT(1X,A1,/5X,'--- Gas density (RO_g) at time ',G12.5,' ---',2/)
       END SUBROUTINE WRITE_OUT1
+END MODULE WRITE_OUT1_MODULE

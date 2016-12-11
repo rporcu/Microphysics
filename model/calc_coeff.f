@@ -5,6 +5,8 @@ module calc_coeff_module
       use calc_tau_v_g_module, only: calc_tau_v_g
       use calc_tau_w_g_module, only: calc_tau_w_g
       use calc_trd_g_module, only: calc_trd_g
+      use geometry, only: flag
+      use physical_prop_module, only: physical_prop
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -148,7 +150,7 @@ module calc_coeff_module
       integer IER
 
 ! Calculate physical properties: (density, specific heat, diameter)
-      CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0)
+      CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
 
 ! Calculate interphase coeffs: (momentum and energy)
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &

@@ -1,3 +1,5 @@
+MODULE PHYSICAL_PROP_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: PHYSICAL_PROP                                           C
@@ -39,11 +41,11 @@
 
       double precision, intent(inout) ::  ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
+      double precision, intent(out) :: rop_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::   p_g&
+      double precision, intent(in) ::   p_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  ep_g&
+      double precision, intent(in) ::  ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(in   ) :: ro_g0
       integer, intent(in   ) ::  flag&
@@ -264,3 +266,4 @@
 
 
       END SUBROUTINE PHYSICAL_PROP
+END MODULE PHYSICAL_PROP_MODULE
