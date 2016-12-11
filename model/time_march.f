@@ -299,8 +299,8 @@ module time_march_module
       IF(DEM_SOLIDS) THEN
          call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
             pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
-            neighbor_index, neighbor_index_old, des_radius, ro_sol, pvol, pmass, omoi, &
-            ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+            neighbor_index, neighbor_index_old, des_radius, ro_sol, pvol, pmass, omoi, des_usr_var, &
+            ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
       ENDIF
 
