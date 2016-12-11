@@ -113,8 +113,6 @@
 ! Parameter for small and large numbers
       use param1, only: SMALL_NUMBER
 
-! to access random number generator subroutines
-      ! use randomno
       use functions, only: fluid_at
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart

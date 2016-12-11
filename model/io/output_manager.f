@@ -424,13 +424,12 @@ module output_manager_module
       use compar, only: myPE, PE_IO
       use output, only: RES_BACKUPS
       use run, only: DEM_SOLIDS
-      USE iso_c_binding
 
       IMPLICIT NONE
 
       INTERFACE
          FUNCTION rename(input,output) BIND(C,name="rename") RESULT(r)
-            USE iso_c_binding
+            USE iso_c_binding, only: c_char, c_int
             CHARACTER(kind=c_char),INTENT(in) :: input(*)
             CHARACTER(kind=c_char),INTENT(in) :: output(*)
             INTEGER(c_int)        :: r

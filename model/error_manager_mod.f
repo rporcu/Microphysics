@@ -6,7 +6,6 @@
 !----------------------------------------------------------------------!
       MODULE ERROR_MANAGER
 
-      use, intrinsic :: ISO_C_BINDING
       use exit_mod, only: mfix_exit
 
       implicit none

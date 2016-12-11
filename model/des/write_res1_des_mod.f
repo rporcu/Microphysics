@@ -2,7 +2,7 @@
 
       use compar, only: PE_IO
       use compar, only: myPE
-      use desmpi
+      use desmpi, only: dprocbuf, drootbuf, iprocbuf, irootbuf, idispls, igath_sendcnt, igathercnts
       use discretelement, only: nonexistent, particle_state
       use mpi_comm_des, only: DESMPI_GATHERV
       use mpi_comm_des, only: DES_GATHER

@@ -15,7 +15,7 @@
 !---------------------------------------------------------------------//
       use param, only: dim_M, dim_eqs
       use param1, only: UNDEFINED_I
-      USE, INTRINSIC :: ISO_C_BINDING
+      use iso_c_binding, only: c_double
 !---------------------------------------------------------------------//
 
 

@@ -161,17 +161,17 @@
          IF (DEN*NORM > ZERO) THEN
             ! if norm=1 then this simply becomes an unscaled 'average' residual
             resid = NUM/(DEN*NORM)
-         ELSEIF (NUM == ZERO) THEN
+         ELSEIF (abs(NUM) < epsilon(NUM)) THEN
             resid = zero
          ELSE
             resid = LARGE_NUMBER
          ENDIF
       ELSE   ! if(debug_resid) branch
          ! Normalizing the residual
-         IF (DEN*NORM > ZERO) THEN
+         IF (abs(DEN*NORM) < epsilon(DEN*NORM)) THEN
             resid = NUM/(DEN*NORM)
             max_resid = NCELLS*MAX_RESID/(DEN*NORM)
-         ELSEIF (NUM == ZERO) THEN
+         ELSEIF (abs(NUM) < epsilon(NUM)) THEN
             resid = zero
             max_resid = zero
             i_resid = 0
@@ -344,7 +344,7 @@
       IF (DEN > ZERO) THEN
          resid = NUM/DEN
          max_resid = NCELLS * max_resid / DEN
-      ELSEIF (NUM == ZERO) THEN
+      ELSEIF (abs(NUM) < epsilon(NUM)) THEN
          resid = ZERO
          max_resid = ZERO
          i_resid = 0

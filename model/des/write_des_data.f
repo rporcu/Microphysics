@@ -37,11 +37,11 @@ MODULE WRITE_DES_DATA_MODULE
 
       SUBROUTINE WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
 
-      use vtp
+      use vtp, only: add_vtp_to_pvd, vtp_close_file, vtp_open_file, vtp_write_element, vtp_write_data
       use discretelement, only: S_TIME
       use discretelement, only: DES_USR_VAR_SIZE
 
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 

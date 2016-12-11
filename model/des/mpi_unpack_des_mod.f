@@ -63,7 +63,8 @@
 ! User-defined variables for each particle.
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
 
-      use des_allocate
+      use discretelement, only: particle_state, normal_ghost, exiting_ghost, nonexistent
+      use des_allocate, only: particle_grow
 
 ! Global Constants:
 !---------------------------------------------------------------------//
@@ -257,9 +258,8 @@
 ! The ID of the current process
       use compar, only: myPE
 
-! Module Procedures:
-!---------------------------------------------------------------------//
-      use des_allocate
+      use des_allocate, only: add_pair, particle_grow
+      use discretelement, only: entering_particle, exiting_particle, normal_ghost, particle_state, normal_particle, particle_phase
 
       implicit none
 

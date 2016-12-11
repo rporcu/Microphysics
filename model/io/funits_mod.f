@@ -77,20 +77,20 @@
       SUBROUTINE CREATE_DIR(PDIR)
 
       use compar, only: myPE, PE_IO
-      use iso_c_binding
+      use iso_c_binding, only: c_int16_t
 
       IMPLICIT NONE
 
       interface
          function mkdir(path,mode) bind(c,name="mkdir")
-            use iso_c_binding
+            use iso_c_binding, only: c_int16_t, c_int, c_char
             integer(c_int) :: mkdir
             character(kind=c_char,len=1) :: path(*)
             integer(c_int16_t), value :: mode
          end function mkdir
 
          function rmdir(path,mode) bind(c,name="rmdir")
-            use iso_c_binding
+            use iso_c_binding, only: c_int16_t, c_int, c_char
             integer(c_int) :: rmdir
             character(kind=c_char,len=1) :: path(*)
             integer(c_int16_t), value :: mode

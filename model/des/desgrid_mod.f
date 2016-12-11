@@ -18,7 +18,6 @@
       use compar, only: istart1_all, jstart1_all, kstart1_all
       use compar, only: istart2, jstart2, kstart2
       use compar, only: nodesi, nodesj, nodesk, numpes, mype
-      ! use constant
       use des_allocate, only: add_pair
       use discretelement, only: DESGRIDSEARCH_IMAX
       use discretelement, only: DESGRIDSEARCH_JMAX
