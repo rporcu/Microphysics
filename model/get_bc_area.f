@@ -1,3 +1,5 @@
+MODULE GET_BC_AREA_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: GET_BC_AREA                                            C
@@ -55,3 +57,4 @@
 
       RETURN
       END SUBROUTINE GET_BC_AREA
+END MODULE GET_BC_AREA_MODULE

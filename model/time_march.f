@@ -23,18 +23,16 @@ module time_march_module
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE compar, only: myPE
+      USE check_batch_queue_end_module, only: check_batch_queue_end
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      USE compar, only: myPE
       USE discretelement, only: des_continuum_coupled, max_pip
       USE error_manager, only: err_msg, flush_err_msg
       USE fld_const, only: mu_g0
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
       USE param1, only: undefined, small_number, zero
-      USE run, only: automatic_restart, auto_restart, chk_batchq_end, dem_solids
       USE run, only: automatic_restart, auto_restart, chk_batchq_end, call_usr
+      USE run, only: automatic_restart, auto_restart, chk_batchq_end, dem_solids
       USE run, only: dem_solids
       USE run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
       USE time_cpu, only: cpu_io

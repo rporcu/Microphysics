@@ -1,3 +1,5 @@
+MODULE SET_MAX2_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: SET_MAX2                                               C
@@ -115,3 +117,4 @@
 
       RETURN
       END SUBROUTINE SET_MAX2
+END MODULE SET_MAX2_MODULE

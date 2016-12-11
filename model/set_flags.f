@@ -1,3 +1,5 @@
+MODULE SET_FLAGS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_FLAGS                                               C
@@ -279,3 +281,4 @@
 
       RETURN
       END SUBROUTINE SET_FLAGS1
+END MODULE SET_FLAGS_MODULE

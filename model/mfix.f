@@ -79,16 +79,21 @@
       use write_res1_mod, only: write_res1
 
       use allocate_mod, only: allocate_arrays
+      use set_ro_g_module, only: set_ro_g
+      use set_flags_module, only: set_flags1
       use des_allocate, only: des_allocate_arrays
+      use discretelement, only: pinc, des_rop_s, max_pip
       use geometry, only: flag
+      use get_data_module, only: get_data
       use make_arrays_des_module, only: make_arrays_des
       use matrix, only: A_m, b_m
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_bc_dem_module, only: set_bc_dem
+      use set_ic_module, only: set_ic
+      use set_ps_module, only: set_ps
       use time_march_module, only: time_march
       use zero_norm_vel_module, only: zero_norm_vel
-      use discretelement, only: pinc, des_rop_s, max_pip
 
       use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
       use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk

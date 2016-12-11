@@ -1,3 +1,6 @@
+MODULE SET_IC_MODULE
+CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_IC                                                  !
@@ -91,3 +94,4 @@
 
       RETURN
       END SUBROUTINE SET_IC
+END MODULE SET_IC_MODULE

@@ -1,3 +1,5 @@
+MODULE GET_DATA_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  SUBROUTINE: GET_DATA                                                C
@@ -12,15 +14,19 @@
       USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
       USE geometry, only: flag
+      USE get_bc_area_module, only: get_bc_area
       USE gridmap        , only: gridmap_init
+      USE init_namelist_module, only: init_namelist
       USE mpi_init_des   , only: desmpi_init
       USE open_files_mod, only: open_files
       USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
       USE run, only: dem_solids
       USE set_bc_flow_module, only: set_bc_flow
+      USE set_flags_module, only: set_flags
       USE set_geometry_des_module, only: set_geometry_des
       USE set_icbc_flags_module, only: set_icbc_flag
+      USE set_max2_module, only: set_max2
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
 
       IMPLICIT NONE
@@ -109,3 +115,4 @@
 !--------------------------  ARRAY ALLOCATION -----------------------!
 
       END SUBROUTINE GET_DATA
+END MODULE GET_DATA_MODULE

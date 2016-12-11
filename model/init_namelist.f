@@ -1,3 +1,5 @@
+MODULE INIT_NAMELIST_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: INIT_NAMELIST                                           !
@@ -1847,3 +1849,4 @@
 
       RETURN
       END SUBROUTINE INIT_NAMELIST
+END MODULE INIT_NAMELIST_MODULE

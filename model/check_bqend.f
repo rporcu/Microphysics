@@ -1,3 +1,5 @@
+MODULE CHECK_BATCH_QUEUE_END_MODULE
+   CONTAINS
 !----------------------------------------------------------------------!
 !                                                                      !
 !  Subroutine: CHECK_BATCH_QUEUE_END                                   !
@@ -72,3 +74,4 @@
       ! call bcast (pEXIT_SIGNAL,PE_IO)
 
       END SUBROUTINE CHECK_BATCH_QUEUE_END
+END MODULE CHECK_BATCH_QUEUE_END_MODULE

@@ -1,3 +1,6 @@
+MODULE SET_PS_MODULE
+   CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: CHECK_DATA_09                                          C
@@ -257,3 +260,4 @@
       if(allocated(gFlags_i)) deallocate(gFlags_i)
 
       END SUBROUTINE DEBUG_PS
+END MODULE SET_PS_MODULE

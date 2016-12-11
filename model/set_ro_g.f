@@ -1,3 +1,5 @@
+MODULE SET_RO_g_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_RO_g                                                C
@@ -75,3 +77,4 @@
 
       RETURN
       END SUBROUTINE SET_RO_G
+END MODULE SET_RO_g_MODULE
