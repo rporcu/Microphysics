@@ -168,7 +168,7 @@
          ENDIF
       ELSE   ! if(debug_resid) branch
          ! Normalizing the residual
-         IF (abs(DEN*NORM) < epsilon(DEN*NORM)) THEN
+         IF (abs(DEN*NORM) > epsilon(DEN*NORM)) THEN
             resid = NUM/(DEN*NORM)
             max_resid = NCELLS*MAX_RESID/(DEN*NORM)
          ELSEIF (abs(NUM) < epsilon(NUM)) THEN
