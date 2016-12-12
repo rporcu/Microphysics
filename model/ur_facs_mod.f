@@ -18,7 +18,7 @@ MODULE ur_facs
 !  Purpose: Under-relax equation.                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   SUBROUTINE UNDER_RELAX(VAR, A_M, B_M, AXIS, EQ)
+   SUBROUTINE UNDER_RELAX(VAR, A_M, B_M, AXIS, flag, EQ)
 
    use param1, only: one
    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -35,6 +35,8 @@ MODULE ur_facs
 !   Vector b_m
       DOUBLE PRECISION :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      integer, intent(in   ) ::  flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 ! Equation ID
       INTEGER :: EQ
 ! Axis ID: U, V, W, S (scalar)
@@ -56,71 +58,66 @@ MODULE ur_facs
       if (axis.eq.'S') then
 
          do k = kstart3, kend3
-           do j = jstart3, jend3
-             do i = istart3, iend3
-
-            IF (fluid_at(i,j,k)) THEN
-               AP = A_M(I,J,K,0)
-               IF (AP /= (-ONE)) THEN
-                  A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
-               ENDIF
-            ENDIF
-             end do
-           end do
+            do j = jstart3, jend3
+               do i = istart3, iend3
+                  IF(flag(i,j,k,1) == 1) THEN
+                     AP = A_M(I,J,K,0)
+                     IF (AP /= (-ONE)) THEN
+                        A_M(I,J,K,0) = AP*F1
+                        B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
+                     ENDIF
+                  ENDIF
+               end do
+            end do
          end do
 
       else if (axis.eq.'U') then
          do k = kstart3, kend3
-           do j = jstart3, jend3
-             do i = istart3, iend3
-
-            IF (FLOW_AT_E(I,J,K)) THEN
-               AP = A_M(I,J,K,0)
-               IF (AP /= (-ONE)) THEN
-                  A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
-               ENDIF
-            ENDIF
-             end do
-           end do
+            do j = jstart3, jend3
+               do i = istart3, iend3
+                  IF(flag(i,j,k,2) >= 2000 .and. &
+                     flag(i,j,k,2) <= 2011) THEN
+                     AP = A_M(I,J,K,0)
+                     IF (AP /= (-ONE)) THEN
+                        A_M(I,J,K,0) = AP*F1
+                        B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
+                     ENDIF
+                  ENDIF
+               end do
+            end do
          end do
 
       else if (axis.eq.'V') then
          do k = kstart3, kend3
-           do j = jstart3, jend3
-             do i = istart3, iend3
-
-            IF (FLOW_AT_N(I,J,K)) THEN
-               AP = A_M(I,J,K,0)
-               IF (AP /= (-ONE)) THEN
-                  A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
-               ENDIF
-            ENDIF
-
-             end do
-           end do
+            do j = jstart3, jend3
+               do i = istart3, iend3
+                  IF(flag(i,j,k,3) >= 2000 .and. &
+                     flag(i,j,k,3) <= 2011) THEN
+                     AP = A_M(I,J,K,0)
+                     IF (AP /= (-ONE)) THEN
+                        A_M(I,J,K,0) = AP*F1
+                        B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
+                     ENDIF
+                  ENDIF
+               end do
+            end do
          end do
 
       else if (axis.eq.'W') then
          do k = kstart3, kend3
-           do j = jstart3, jend3
-             do i = istart3, iend3
-
-
-            IF (FLOW_AT_T(I,J,K)) THEN
-               AP = A_M(I,J,K,0)
-               IF (AP /= (-ONE)) THEN
-                  A_M(I,J,K,0) = AP*F1
-                  B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
-               ENDIF
-            ENDIF
-
-             end do
-           end do
+            do j = jstart3, jend3
+               do i = istart3, iend3
+                  IF(flag(i,j,k,4) >= 2000 .and. &
+                     flag(i,j,k,4) <= 2011) THEN
+                     AP = A_M(I,J,K,0)
+                     IF (AP /= (-ONE)) THEN
+                        A_M(I,J,K,0) = AP*F1
+                        B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
+                     ENDIF
+                  ENDIF
+               end do
+            end do
          end do
-
       endif
 
       RETURN

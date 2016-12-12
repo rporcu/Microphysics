@@ -41,66 +41,6 @@
       end function fluid_at
 
 
-! Flow boundaries
-!---------------------------------------------------------------------//
-! identify flow at east boundary
-      LOGICAL FUNCTION FLOW_AT_E(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      FLOW_AT_E   = FLAG(i,j,k,2) .GE. 2000 .AND.&
-                    FLAG(i,j,k,2) .LE. 2011
-      END FUNCTION FLOW_AT_E
-
-! identify specified flow north boundary
-      LOGICAL FUNCTION FLOW_AT_N(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      FLOW_AT_N   = FLAG(i,j,k,3) .GE. 2000 .AND.&
-                    FLAG(i,j,k,3) .LE. 2011
-      END FUNCTION FLOW_AT_N
-
-! identify specified flow top boundary
-      LOGICAL FUNCTION FLOW_AT_T(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER, INTENT(IN) :: i,j,k
-      FLOW_AT_T   = FLAG(i,j,k,4) .GE. 2000 .AND.&
-                    FLAG(i,j,k,4) .LE. 2011
-      END FUNCTION FLOW_AT_T
-
-! identify specified flow east boundary
-      LOGICAL FUNCTION MFLOW_AT_E(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      MFLOW_AT_E  = FLAG(i,j,k,2) .EQ. 2020 .OR. &
-                    FLAG(i,j,k,2) .EQ. 2021 .OR. &
-                    FLAG(i,j,k,2) .EQ. 2031
-      END FUNCTION MFLOW_AT_E
-
-! identify specified flow north boundary
-      LOGICAL FUNCTION MFLOW_AT_N(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      MFLOW_AT_N  = FLAG(i,j,k,3) .EQ. 2020 .OR. &
-                    FLAG(i,j,k,3) .EQ. 2021 .OR. &
-                    FLAG(i,j,k,3) .EQ. 2031
-      END FUNCTION MFLOW_AT_N
-
-! identify specified flow top boundary
-      LOGICAL FUNCTION MFLOW_AT_T(i,j,k)
-      use geometry, only: flag
-      implicit none
-      INTEGER i,j,k
-      MFLOW_AT_T  = FLAG(i,j,k,4) .EQ. 2020 .OR. &
-                    FLAG(i,j,k,4) .EQ. 2021 .OR. &
-                    FLAG(i,j,k,4) .EQ. 2031
-      END FUNCTION MFLOW_AT_T
-
-
 
 ! Misc
 !---------------------------------------------------------------------//

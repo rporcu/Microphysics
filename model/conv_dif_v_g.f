@@ -124,9 +124,7 @@ module v_g_conv_dif
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Purpose: Calculate the convective fluxes through the faces of a     C
-!  v-momentum cell. Note the fluxes are calculated at all faces        C
-!  regardless of flow_at_n of condition of the west, south, or         C
-!  bottom face.                                                        C
+!  v-momentum cell. Note the fluxes are calculated at all faces.       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GCFLUX_TERMS(&
@@ -179,8 +177,7 @@ module v_g_conv_dif
 !                                                                      C
 !  Purpose: Calculate the components of diffusive flux through the     C
 !  the faces of a v-momentum cell. Note the fluxes are calculated at   C
-!  all faces regardless of flow_at_n of condition of the west, south   C
-!  or bottom face.                                                      C
+!  all faces.                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
@@ -190,11 +187,6 @@ module v_g_conv_dif
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
-      ! USE functions, only: wall_at
-      ! USE functions, only: iminus, jminus, kminus
-      ! USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
-      ! USE functions, only: im1, jp1, km1
 
       USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
@@ -284,7 +276,6 @@ module v_g_conv_dif
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: flow_at_n
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
@@ -320,75 +311,78 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
 
       DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
 
-         IF (FLOW_AT_N(i,j,k)) THEN
+               IF(flag(i,j,k,3) >= 2000 .and. &
+                  flag(i,j,k,3) <= 2011) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-            CALL GET_VCELL_GCFLUX_TERMS(&
-               flux_e, flux_w, flux_n, &
-               flux_s, flux_t, flux_b, &
-               flux_ge, flux_gn, flux_gt, i, j, k)
-            CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-               d_ft, d_fb, mu_g, i, j, k, flag)
+                  CALL GET_VCELL_GCFLUX_TERMS(&
+                     flux_e, flux_w, flux_n, &
+                     flux_s, flux_t, flux_b, &
+                     flux_ge, flux_gn, flux_gt, i, j, k)
+                  CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
+                     d_ft, d_fb, mu_g, i, j, k, flag)
 
 ! East face (i+1/2, j+1/2, k)
-            IF (Flux_e >= ZERO) THEN
-               A_V_G(I,J,K,E) = D_Fe
-               A_V_G(iplus(i,j,k),j,k,W) = D_Fe + Flux_e
-            ELSE
-               A_V_G(I,J,K,E) = D_Fe - Flux_e
-               A_V_G(iplus(i,j,k),j,k,W) = D_Fe
-            ENDIF
+                  IF (Flux_e >= ZERO) THEN
+                     A_V_G(I,J,K,E) = D_Fe
+                     A_V_G(iplus(i,j,k),j,k,W) = D_Fe + Flux_e
+                  ELSE
+                     A_V_G(I,J,K,E) = D_Fe - Flux_e
+                     A_V_G(iplus(i,j,k),j,k,W) = D_Fe
+                  ENDIF
 ! West face (i-1/2, j+1/2, k)
-            IF (.NOT.FLOW_AT_N(iminus(i,j,k),j,k)) THEN
-               IF (Flux_w >= ZERO) THEN
-                  A_V_G(I,J,K,W) = D_Fw + Flux_w
-               ELSE
-                  A_V_G(I,J,K,W) = D_Fw
-               ENDIF
-            ENDIF
+                  IF(flag(iminus(i,j,k),j,k,3) < 2000 .or. &
+                     flag(iminus(i,j,k),j,k,3) > 2011) THEN
+                     IF (Flux_w >= ZERO) THEN
+                        A_V_G(I,J,K,W) = D_Fw + Flux_w
+                     ELSE
+                        A_V_G(I,J,K,W) = D_Fw
+                     ENDIF
+                  ENDIF
 
 
 ! North face (i, j+1, k)
-            IF (Flux_n >= ZERO) THEN
-               A_V_G(I,J,K,N) = D_Fn
-               A_V_G(i,jplus(i,j,k),k,S) = D_Fn + Flux_n
-            ELSE
-               A_V_G(I,J,K,N) = D_Fn - Flux_n
-               A_V_G(i,jplus(i,j,k),k,S) = D_Fn
-            ENDIF
+                  IF (Flux_n >= ZERO) THEN
+                     A_V_G(I,J,K,N) = D_Fn
+                     A_V_G(i,jplus(i,j,k),k,S) = D_Fn + Flux_n
+                  ELSE
+                     A_V_G(I,J,K,N) = D_Fn - Flux_n
+                     A_V_G(i,jplus(i,j,k),k,S) = D_Fn
+                  ENDIF
 ! South face (i, j, k)
-            IF (.NOT.FLOW_AT_N(i,jminus(i,j,k),k)) THEN
-               IF (Flux_s >= ZERO) THEN
-                  A_V_G(I,J,K,S) = D_Fs + Flux_s
-               ELSE
-                  A_V_G(I,J,K,S) = D_Fs
-               ENDIF
-            ENDIF
+                  IF(flag(i,jminus(i,j,k),k,3) < 2000 .or. &
+                     flag(i,jminus(i,j,k),k,3) > 2011) THEN
+                     IF (Flux_s >= ZERO) THEN
+                        A_V_G(I,J,K,S) = D_Fs + Flux_s
+                     ELSE
+                        A_V_G(I,J,K,S) = D_Fs
+                     ENDIF
+                  ENDIF
 
 
 ! Top face (i, j+1/2, k+1/2)
-            IF (Flux_t >= ZERO) THEN
-               A_V_G(I,J,K,T) = D_Ft
-               A_V_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
-            ELSE
-               A_V_G(I,J,K,T) = D_Ft - Flux_t
-               A_V_G(i,j,kplus(i,j,k),B) = D_Ft
-            ENDIF
+                  IF (Flux_t >= ZERO) THEN
+                     A_V_G(I,J,K,T) = D_Ft
+                     A_V_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
+                  ELSE
+                     A_V_G(I,J,K,T) = D_Ft - Flux_t
+                     A_V_G(i,j,kplus(i,j,k),B) = D_Ft
+                  ENDIF
 ! Bottom face (i, j+1/2, k-1/2)
-            IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
-               IF (Flux_b >= ZERO) THEN
-                  A_V_G(I,J,K,B) = D_Fb + Flux_b
-               ELSE
-                  A_V_G(I,J,K,B) = D_Fb
+                  IF(flag(i,j,kminus(i,j,k),3) < 2000 .or. &
+                     flag(i,j,kminus(i,j,k),3) > 2011) THEN
+                     IF (Flux_b >= ZERO) THEN
+                        A_V_G(I,J,K,B) = D_Fb + Flux_b
+                     ELSE
+                        A_V_G(I,J,K,B) = D_Fb
+                     ENDIF
+                  ENDIF
                ENDIF
-            ENDIF
-
-         ENDIF   ! end if flow_at_n
-      ENDDO
-      ENDDO
+            ENDDO
+         ENDDO
       ENDDO
 
       RETURN
@@ -419,7 +413,6 @@ module v_g_conv_dif
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: flow_at_n
 
       USE param1, only: one
 
@@ -486,52 +479,61 @@ module v_g_conv_dif
 
 
       DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
 
-             IF (FLOW_AT_N(i,j,k)) THEN
+               IF(flag(i,j,k,3) >= 2000 .and. &
+                  flag(i,j,k,3) <= 2011) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-                CALL GET_VCELL_GCFLUX_TERMS(&
-                   flux_e, flux_w, flux_n, &
-                   flux_s, flux_t, flux_b, &
-                   flux_ge, flux_gn, flux_gt, i, j, k)
-                CALL GET_VCELL_GDIFF_TERMS(&
-                   d_fe, d_fw, d_fn, d_fs, &
-                   d_ft, d_fb, mu_g, i, j, k,flag)
+                  CALL GET_VCELL_GCFLUX_TERMS(&
+                     flux_e, flux_w, flux_n, &
+                     flux_s, flux_t, flux_b, &
+                     flux_ge, flux_gn, flux_gt, i, j, k)
+                  CALL GET_VCELL_GDIFF_TERMS(&
+                     d_fe, d_fw, d_fn, d_fs, &
+                     d_ft, d_fb, mu_g, i, j, k,flag)
 
 ! East face (i+1/2, j+1/2, k)
-                A_V_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
-                A_V_G(iplus(i,j,k),j,k,W) = D_Fe + (ONE - XSI_E(i,j,k))*Flux_e
+                  A_V_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
+                  A_V_G(iplus(i,j,k),j,k,W) = D_Fe + flux_e*&
+                     (ONE - XSI_E(i,j,k))
 ! West face (i-1/2, j+1/2, k)
-                IF (.NOT.FLOW_AT_N(iminus(i,j,k),j,k)) THEN
-                   A_V_G(I,J,K,W) = D_Fw + (ONE - XSI_E(iminus(i,j,k),j,k))*Flux_w
-                ENDIF
-
+                  IF(flag(iminus(i,j,k),j,k,3) < 2000 .or. &
+                     flag(iminus(i,j,k),j,k,3) > 2011) THEN
+                     A_V_G(I,J,K,W) = D_Fw + flux_w*&
+                        (ONE - XSI_E(iminus(i,j,k),j,k))
+                  ENDIF
 
 ! North face (i, j+1, k)
-                A_V_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
-                A_V_G(i,jplus(i,j,k),k,S) = D_Fn + (ONE - XSI_N(i,j,k))*Flux_n
+                  A_V_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
+                  A_V_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n*&
+                     (ONE - XSI_N(i,j,k))
 ! South face (i, j, k)
-                IF (.NOT.FLOW_AT_N(i,jminus(i,j,k),k)) THEN
-                   A_V_G(I,J,K,S) = D_Fs + (ONE - XSI_N(i,jminus(i,j,k),k))*Flux_s
-                ENDIF
+                  IF(flag(i,jminus(i,j,k),k,3) < 2000 .or. &
+                     flag(i,jminus(i,j,k),k,3) > 2011) THEN
+                     A_V_G(I,J,K,S) = D_Fs + flux_s*&
+                        (ONE - XSI_N(i,jminus(i,j,k),k))
+                  ENDIF
 
 ! Top face (i, j+1/2, k+1/2)
-                A_V_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
-                A_V_G(i,j,kplus(i,j,k),B) = D_Ft + (ONE - XSI_T(i,j,k))*Flux_t
+                  A_V_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
+                  A_V_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t*&
+                     (ONE - XSI_T(i,j,k))
 ! Bottom face (i, j+1/2, k-1/2)
-                IF (.NOT.FLOW_AT_N(i,j,kminus(i,j,k))) THEN
-                   A_V_G(I,J,K,B) = D_Fb + (ONE - XSI_T(i,j,kminus(i,j,k)))*Flux_b
-                ENDIF
+                  IF(flag(i,j,kminus(i,j,k),3) < 2000 .or. &
+                     flag(i,j,kminus(i,j,k),3) > 2011) THEN
+                     A_V_G(I,J,K,B) = D_Fb + flux_b*&
+                        (ONE - XSI_T(i,j,kminus(i,j,k)))
+                  ENDIF
 
-             ENDIF   ! end if (flow_at_n)
-          ENDDO
-       ENDDO
-    ENDDO
+               ENDIF
+            ENDDO
+         ENDDO
+      ENDDO
 
-    deallocate( U, V, WW )
-    deallocate( xsi_e, xsi_n, xsi_t)
+      deallocate( U, V, WW )
+      deallocate( xsi_e, xsi_n, xsi_t)
 
       RETURN
       END SUBROUTINE STORE_A_V_G1

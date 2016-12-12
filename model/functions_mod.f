@@ -36,14 +36,6 @@ MODULE functions
 !---------------------------------------------------------------------//
 ! logical function to identify various fluid/flow cells
 ! LOGICAL :: fluid_at
-! LOGICAL :: FLOW_AT
-
-! logical function to identify various wall cells
-! LOGICAL :: wall_at
-
-! logical function to identify different flow at boundaries
-! LOGICAL :: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T
-! LOGICAL :: MFLOW_AT_E, MFLOW_AT_N, MFLOW_AT_T
 
 
 ! Additional functions

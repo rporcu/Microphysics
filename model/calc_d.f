@@ -32,7 +32,6 @@ MODULE CALC_D_MOD
       use geometry, only: AYZ, AXZ, AXY, VOL
       use param1, only: ZERO, SMALL_NUMBER
       use functions, only: ieast, jnorth, ktop
-      use functions, only: FLOW_AT_E, FLOW_AT_N, FLOW_AT_T
 
       IMPLICIT NONE
 

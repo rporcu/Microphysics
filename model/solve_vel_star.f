@@ -141,14 +141,14 @@ module solve_vel_star_module
 ! calculate modifications to the A matrix center coefficient and B
 ! source vector for treating DEM drag terms
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, IER)
+         CALL GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
 
       IF (MOMENTUM_X_EQ(0)) THEN
          CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, 0, &
             NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
             RESID(RESID_U), MAX_RESID(RESID_U), &
             i_resid(RESID_U),j_resid(RESID_U),k_resid(RESID_U), flag)
-         CALL UNDER_RELAX (U_G, A_M, B_M, 'U', 3)
+         CALL UNDER_RELAX (U_G, A_M, B_M, 'U', flag, 3)
       ENDIF
 
       IF (MOMENTUM_X_EQ(0)) THEN
@@ -181,7 +181,7 @@ module solve_vel_star_module
       IF (MOMENTUM_Y_EQ(0)) CALL adjust_a_g('V',A_M, B_M, ROP_G)
 
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_V(A_M, B_M, f_gds, drag_am, drag_bm, IER)
+         CALL GAS_DRAG_V(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
 
       IF (MOMENTUM_Y_EQ(0)) THEN
          ! Note we pass V first since that is the primary velocity component
@@ -190,7 +190,7 @@ module solve_vel_star_module
             NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
             RESID(RESID_V), MAX_RESID(RESID_V), &
             i_resid(RESID_V),j_resid(RESID_V),k_resid(RESID_V), flag)
-         CALL UNDER_RELAX (V_G, A_M, B_M, 'V', 4)
+         CALL UNDER_RELAX (V_G, A_M, B_M, 'V', flag, 4)
       ENDIF
 
       IF (MOMENTUM_Y_EQ(0)) THEN
@@ -222,7 +222,7 @@ module solve_vel_star_module
       IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)
 
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_W(A_M, B_M, f_gds, drag_am, drag_bm, IER)
+         CALL GAS_DRAG_W(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
 
       IF (MOMENTUM_Z_EQ(0)) THEN
             ! Note we pass W first since that is the primary velocity component
@@ -230,7 +230,7 @@ module solve_vel_star_module
             NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
             RESID(RESID_W), MAX_RESID(RESID_W), &
             i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W),flag)
-         CALL UNDER_RELAX (W_G, A_M, B_M, 'W', 5)
+         CALL UNDER_RELAX (W_G, A_M, B_M, 'W', flag, 5)
       ENDIF
 
 
