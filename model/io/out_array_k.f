@@ -1,3 +1,5 @@
+MODULE OUT_ARRAY_K_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OUT_ARRAY_K                                            C
@@ -105,3 +107,4 @@
  5100 FORMAT(1X,I3,3X,10(1PE12.4))
       RETURN
       END SUBROUTINE OUT_ARRAY_K
+END MODULE OUT_ARRAY_K_MODULE

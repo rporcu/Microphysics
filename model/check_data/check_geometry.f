@@ -1,4 +1,7 @@
 MODULE CHECK_GEOMETRY_MODULE
+
+   USE check_axis_module, only: check_axis
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

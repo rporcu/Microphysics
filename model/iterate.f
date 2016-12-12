@@ -18,6 +18,8 @@ module iterate_module
                          tau_u_g, tau_v_g, tau_w_g, &
                          pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
 
+      USE calc_mflux_module, only: calc_mflux
+      USE check_convergence_module, only: check_convergence
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar   , only: myPE, PE_IO
       USE conv_rop_module, only: conv_rop

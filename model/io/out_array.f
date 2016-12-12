@@ -13,12 +13,14 @@ MODULE OUT_ARRAY_MOD
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-         USE geometry, only: cyclic_z, ijkmax2
+
          USE functions, only: funijk
          USE funits, only: unit_out
+         USE geometry, only: cyclic_z, ijkmax2
          USE geometry, only: kmax1
          USE geometry, only: kmax2
          USE in_binary_512, only: convert_to_io_dp
+         USE out_array_k_module, only: out_array_k
 
       IMPLICIT NONE
 

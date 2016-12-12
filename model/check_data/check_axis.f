@@ -1,3 +1,5 @@
+MODULE CHECK_AXIS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_AXIS                                              !
@@ -127,3 +129,4 @@
          'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_AXIS
+END MODULE CHECK_AXIS_MODULE

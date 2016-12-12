@@ -1,3 +1,5 @@
+MODULE OUT_BIN_R_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: OUT_BIN_R                                              C
@@ -65,3 +67,4 @@
 !// Comments on the modifications for DMP version implementation
 !// 001 Include header file and common declarations for parallelization
 !// 020 New local variables for parallelization, array_real(ijkmax2)
+END MODULE OUT_BIN_R_MODULE

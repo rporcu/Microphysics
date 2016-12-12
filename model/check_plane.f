@@ -1,3 +1,5 @@
+MODULE CHECK_PLANE_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: CHECK_PLANE                                            C
@@ -58,3 +60,4 @@
  1000 FORMAT(/70('*')//' From: CHECK_PLANE',/'Message: ',A,' No ',I3,&
          ' is not a plane',/70('*')/)
       END SUBROUTINE CHECK_PLANE
+END MODULE CHECK_PLANE_MODULE

@@ -1,6 +1,7 @@
 MODULE CHECK_BC_GEOMETRY_MODULE
 
       use calc_cell_module, only: calc_loc, calc_cell
+      use check_plane_module, only: check_plane
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

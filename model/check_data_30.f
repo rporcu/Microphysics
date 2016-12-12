@@ -1,3 +1,5 @@
+MODULE CHECK_DATA_30_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Module name: CHECK_DATA_30                                          !
 !  Author: M. Syamlal                                 Date: 27-OCT-92  !
@@ -230,3 +232,4 @@
       RETURN
       END SUBROUTINE REPORT_ERROR
       END SUBROUTINE CHECK_DATA_30
+END MODULE CHECK_DATA_30_MODULE

@@ -24,6 +24,7 @@ module time_march_module
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
       USE check_batch_queue_end_module, only: check_batch_queue_end
+      USE check_data_30_module, only: check_data_30
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE compar, only: myPE
       USE discretelement, only: des_continuum_coupled, max_pip

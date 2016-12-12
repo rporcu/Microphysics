@@ -1,3 +1,5 @@
+MODULE CHECK_CONVERGENCE_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CHECK_CONVERGENCE                                       C
@@ -144,3 +146,4 @@
 
       RETURN
       END SUBROUTINE CHECK_CONVERGENCE
+END MODULE CHECK_CONVERGENCE_MODULE

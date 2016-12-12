@@ -1,3 +1,5 @@
+MODULE CALC_MFLUX_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CALC_MFLUX                                              C
@@ -81,3 +83,4 @@
       ENDDO
 
       END SUBROUTINE CALC_MFLUX
+END MODULE CALC_MFLUX_MODULE
