@@ -494,8 +494,6 @@ MODULE set_icbc_flags_module
 
             ENDIF ! IF(ERROR)
          ENDIF ! IF(not a wall BC)
-
-            write(*,*) 'done',bcv
       ENDDO ! BC Loop
 
 ! Sync the ICBC flag across ghost layers

@@ -1,3 +1,5 @@
+module set_geo_mod
+contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Module name: SET_GEOMETRY                                           !
@@ -64,3 +66,4 @@
 
       RETURN
       END SUBROUTINE SET_GEOMETRY
+end module set_geo_mod

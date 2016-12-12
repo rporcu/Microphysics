@@ -36,7 +36,8 @@
       DOUBLE PRECISION, INTENT(INOUT) :: flux_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      INTEGER, intent(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//

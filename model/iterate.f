@@ -176,7 +176,8 @@ module iterate_module
 
       ! Calculate the face values of densities and mass fluxes
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
-      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
+      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
+         flux_ge, flux_gn, flux_gt,flag)
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! Default/Generic Error message
@@ -242,7 +243,8 @@ module iterate_module
       CALL SET_WALL_BC (u_g,v_g,w_g, flag)
 
 ! Calculate the face values of mass fluxes
-      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
+      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
+         flux_ge, flux_gn, flux_gt, flag)
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! User-defined linear equation solver parameters may be adjusted after
@@ -253,7 +255,7 @@ module iterate_module
 ! Check for convergence
       CALL ACCUM_RESID ! Accumulating residuals from all the processors
       RESG = RESID(RESID_P)
-      CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT)
+      CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT,flag)
 
       IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
          CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, flux_ge, flux_gn, flux_gt, flag)

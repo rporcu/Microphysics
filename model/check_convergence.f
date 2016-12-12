@@ -36,7 +36,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      INTEGER, INTENT(IN) :: FLAG&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------

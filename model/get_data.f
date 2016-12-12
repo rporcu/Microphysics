@@ -29,11 +29,12 @@ MODULE GET_DATA_MODULE
       USE set_max2_module, only: set_max2
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
       USE write_header_module, only: write_header
+      use set_geo_mod, only: set_geometry
 
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
-      INTEGER, DIMENSION(:,:,:,:), INTENT(INOUT) :: FLAG
+      INTEGER, allocatable, intent(INOUT) :: FLAG(:,:,:,:)
 
 !-----------------------------------------------
 ! Local variables
@@ -85,7 +86,7 @@ MODULE GET_DATA_MODULE
       IF(DEM_SOLIDS) CALL CHECK_GEOMETRY_DES
 
 ! Set grid spacing variables.
-      CALL SET_GEOMETRY
+      CALL SET_GEOMETRY(flag)
       IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES
 
       CALL CHECK_INITIAL_CONDITIONS
@@ -113,7 +114,6 @@ MODULE GET_DATA_MODULE
          CALL DESMPI_INIT(ro_sol)
          CALL DES_STL_PREPROCESSING
       ENDIF
-
 !--------------------------  ARRAY ALLOCATION -----------------------!
 
       END SUBROUTINE GET_DATA
