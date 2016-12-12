@@ -1,3 +1,5 @@
+MODULE SET_FLUIDBED_P_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_FLUIDBED_P                                          C
@@ -199,3 +201,4 @@
          'condition need to be specified',/1X,70('*')/)
 
       END SUBROUTINE SET_FLUIDBED_P
+END MODULE SET_FLUIDBED_P_MODULE

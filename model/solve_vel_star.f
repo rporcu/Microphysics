@@ -126,7 +126,7 @@ module solve_vel_star_module
       CALL SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                       u_g, u_go, tau_u_g, flag)
 
-      IF(POINT_SOURCE) CALL POINT_SOURCE_U_G (A_M, B_M)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_U_G (A_M, B_M, flag)
 
 ! evaluate local variable vxf_gs
 ! calculate coefficients for the pressure correction equation
@@ -170,7 +170,7 @@ module solve_vel_star_module
 
       CALL SOURCE_V_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                       v_g, v_go, tau_v_g, flag)
-      IF(POINT_SOURCE) CALL POINT_SOURCE_V_G (A_M, B_M)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_V_G (A_M, B_M, flag)
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_Y_EQ(0)) THEN
@@ -211,7 +211,7 @@ module solve_vel_star_module
 
       CALL SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
                          w_g, w_go, tau_w_g, flag)
-      IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_W_G (A_M, B_M, flag)
 
 ! calculate coefficients for the pressure correction equation
       IF (MOMENTUM_Z_EQ(0)) THEN

@@ -141,14 +141,12 @@ module allocate_mod
 !  Purpose: Calculate X, X_E,  oX, oX_E                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE ALLOCATE_ARRAYS_GEOMETRY
+      SUBROUTINE ALLOCATE_ARRAYS_GEOMETRY(flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-! Domain flags.
-      use geometry, only: FLAG
 ! Domain volumes and areas.
       use geometry, only: VOL_SURR
 
@@ -164,6 +162,8 @@ module allocate_mod
       INTEGER :: IER
 ! Flag indicating that the arrays were previously allocated.
       INTEGER, SAVE :: CALLED = -1
+
+      INTEGER, DIMENSION(:,:,:,:), ALLOCATABLE :: FLAG
 !......................................................................!
 
       CALLED = CALLED + 1

@@ -175,7 +175,7 @@ module iterate_module
       ENDIF   ! if(full_log)
 
       ! Calculate the face values of densities and mass fluxes
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
       CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
@@ -202,7 +202,7 @@ module iterate_module
       IF (CALL_USR) CALL USR2
 
 ! Calculate coefficients, excluding density and reactions.
-      CALL CALC_COEFF(1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
+      CALL CALC_COEFF(flag, 1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, pvol, des_pos_new, des_vel_new, des_radius)
       IF (IER_MANAGER()) goto 1000
 
@@ -219,7 +219,7 @@ module iterate_module
       IF (IER_MANAGER()) goto 1000
 
 ! Calculate the face values of densities.
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
@@ -256,7 +256,7 @@ module iterate_module
       CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT)
 
       IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
-         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, flux_ge, flux_gn, flux_gt)
+         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, flux_ge, flux_gn, flux_gt, flag)
 
 
 !  If not converged continue iterations; else exit subroutine.
@@ -302,11 +302,11 @@ module iterate_module
       G12.5, ' Gas Flux=', G12.5)
 
             IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
-               Vavg = VAVG_G(U_G, EP_G, VOL)
+               Vavg = VAVG_G(U_G, EP_G, VOL, flag)
                IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
-               Vavg = VAVG_G(V_G, EP_G, VOL)
+               Vavg = VAVG_G(V_G, EP_G, VOL, flag)
                IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
-               Vavg = VAVG_G(W_G, EP_G, VOL)
+               Vavg = VAVG_G(W_G, EP_G, VOL, flag)
                IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
             ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
 
@@ -412,7 +412,7 @@ module iterate_module
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      subroutine GoalSeekMassFlux(NIT, MUSTIT, OUTIT, delp_n, mdot_n, flux_ge, flux_gn, flux_gt)
+      subroutine GoalSeekMassFlux(NIT, MUSTIT, OUTIT, delp_n, mdot_n, flux_ge, flux_gn, flux_gt, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -434,6 +434,7 @@ module iterate_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -457,13 +458,13 @@ module iterate_module
 ! Calculate the average gas mass flux and error
       IF(CYCLIC_X_MF)THEN
          delp_n = delp_x
-         mdot_n = VAVG_Flux_G(flux_ge, ayz)
+         mdot_n = VAVG_Flux_G(flux_ge, ayz, flag)
       ELSEIF(CYCLIC_Y_MF)THEN
          delp_n = delp_y
-         mdot_n = VAVG_Flux_G(flux_gn, axz)
+         mdot_n = VAVG_Flux_G(flux_gn, axz, flag)
       ELSEIF(CYCLIC_Z_MF)THEN
          delp_n = delp_z
-         mdot_n = VAVG_Flux_G(flux_gt, axy)
+         mdot_n = VAVG_Flux_G(flux_gt, axy, flag)
       ELSE
          RETURN
       ENDIF

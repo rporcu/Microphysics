@@ -15,7 +15,7 @@ module drag_gs_des0_module
 !       include the gas-solids drag force and gas pressure force       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-     SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
+     SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, flag, &
         pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
 
 !-----------------------------------------------
@@ -25,7 +25,6 @@ module drag_gs_des0_module
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, interp_scheme
       use functions     , only: ip1,jp1,kp1
-      use geometry, only: flag
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
       use des_drag_gp_module, only: des_drag_gp
@@ -37,6 +36,7 @@ module drag_gs_des0_module
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -201,7 +201,7 @@ module drag_gs_des0_module
 !       x, y and z momentum balances using F_GP.                       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g,&
+      SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, flag, &
          f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new, particle_phase, particle_state)
 
 !-----------------------------------------------
@@ -215,7 +215,6 @@ module drag_gs_des0_module
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: ip1,jp1,kp1
-      use geometry, only: flag
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module, only: des_drag_gp
@@ -225,6 +224,7 @@ module drag_gs_des0_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -285,9 +285,6 @@ module drag_gs_des0_module
       DOUBLE PRECISION :: f_gp
 
 !-----------------------------------------------
-
-
-
 ! INTERPOLATED fluid-solids drag (the rest of this routine):
 ! Calculate the fluid solids drag coefficient using the particle
 ! velocity and the fluid velocity interpolated to particle

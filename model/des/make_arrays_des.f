@@ -7,7 +7,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !  Purpose: DES - allocating DES arrays
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
+      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
@@ -25,7 +25,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
-      USE geometry, only: vol_surr, vol, flag
+      USE geometry, only: vol_surr, vol
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
       USE neighbour_module, only: neighbour
       USE param1, only: zero
@@ -51,6 +51,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id, dg_pijkprv
       INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
@@ -67,7 +68,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")
 
 ! Check interpolation input.
-      CALL SET_FILTER_DES
+      CALL SET_FILTER_DES(flag)
 
       vol_surr(:,:,:) = ZERO
 
@@ -105,7 +106,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       IF(RUN_TYPE == 'NEW') THEN
          IF(PARTICLES /= 0) THEN
             IF(GENER_PART_CONFIG) THEN
-               CALL GENERATE_PARTICLE_CONFIG(pijk, particle_state, particle_phase, &
+               CALL GENERATE_PARTICLE_CONFIG(flag, pijk, particle_state, particle_phase, &
                   des_radius, ro_sol, &
                   des_pos_new, des_vel_new, omega_new)
 
@@ -178,7 +179,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

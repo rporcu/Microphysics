@@ -7,14 +7,12 @@
 !     This is a yz plane                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE MOD_BC_I(BCV)
+      SUBROUTINE MOD_BC_I(BCV, flag)
 
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
-
-      use geometry, only: FLAG
 
       use compar, only: mype
       use ic, only: FLUID_
@@ -31,6 +29,7 @@
 !-----------------------------------------------
 ! boundary condition index
       INTEGER, INTENT(IN) :: BCV
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! i cell indices defining location of yz plane
       INTEGER :: i,j,k

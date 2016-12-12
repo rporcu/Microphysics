@@ -64,39 +64,40 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE fld_const, only: ro_g0
-      USE compar, only: myPE
-
-      USE funits , only: dmp_log, unit_log
-      USE param1 , only: undefined, zero
-      USE machine, only: wall_time
-      USE run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
-      USE time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
-
-      use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
-      use exit_mod, only: mfix_exit
-      use read_res1_mod, only: read_res1
-      use write_res1_mod, only: write_res1
 
       use allocate_mod, only: allocate_arrays
-      use des_allocate, only: des_allocate_arrays
+      use check_data_20_module, only: check_data_20
+      use compar, only: myPE
       use corner_module, only: get_corner_cells
+      use des_allocate, only: des_allocate_arrays
       use discretelement, only: pinc, des_rop_s, max_pip
+      use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
+      use exit_mod, only: mfix_exit
+      use fld_const, only: ro_g0
+      use funits , only: dmp_log, unit_log
       use geometry, only: flag
       use get_data_module, only: get_data
+      use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
       use matrix, only: A_m, b_m
+      use param1 , only: undefined, zero
+      use read_res1_mod, only: read_res1
+      use run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_bc_dem_module, only: set_bc_dem
+      use set_constprop_module, only: set_constprop
       use set_flags_module, only: set_flags1
+      use set_fluidbed_p_module, only: set_fluidbed_p
       use set_ic_module, only: set_ic
       use set_ps_module, only: set_ps
       use set_ro_g_module, only: set_ro_g
+      use time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
       use time_march_module, only: time_march
       use write_out0_module, only: write_out0
       use write_out1_module, only: write_out1
       use write_out3_module, only: write_out3
+      use write_res1_mod, only: write_res1
       use zero_norm_vel_module, only: zero_norm_vel
 
       use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
@@ -176,7 +177,7 @@
 
 ! Read input data, check data, do computations for IC and BC locations
 ! and flows, and set geometry parameters such as X, X_E, DToDX, etc.
-      call get_data(ro_sol)
+      call get_data(ro_sol,flag)
 
 ! Allocate array storage.
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
@@ -302,7 +303,7 @@
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      CALL SET_FLAGS1
+      CALL SET_FLAGS1(flag)
 
 ! Calculate cell volumes and face areas
       CALL SET_GEOMETRY1
@@ -317,11 +318,11 @@
       CALL SET_IC(ep_g, p_g, u_g, v_g, w_g, flag)
 
 ! Set point sources.
-      CALL SET_PS
+      CALL SET_PS(flag)
 
 ! Set boundary conditions
       CALL ZERO_NORM_VEL(u_g,v_g,w_g, flag)
-      CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0)
+      CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
 
 ! Set the pressure field for a fluidized bed
       IF (RUN_TYPE == 'NEW') CALL SET_FLUIDBED_P(p_g, ep_g, flag)
@@ -337,12 +338,12 @@
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         flag, pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
 ! Set the inflow/outflow BCs for DEM solids
-      IF(DEM_SOLIDS) CALL SET_BC_DEM
+      IF(DEM_SOLIDS) CALL SET_BC_DEM(flag)
 
 ! Initializations for CPU time calculations in iterate
       CPUOS = 0.

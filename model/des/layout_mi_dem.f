@@ -17,7 +17,7 @@ MODULE layout_mi_dem_module
 !  necessary for the dependent subrountines to function properly.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE LAYOUT_MI_DEM(BCV, BCV_I, MAX_DIA)
+      SUBROUTINE LAYOUT_MI_DEM(BCV, BCV_I, MAX_DIA, flag)
 
       use bc, only: BC_PLANE
       USE run, only: RUN_TYPE
@@ -27,6 +27,7 @@ MODULE layout_mi_dem_module
       INTEGER, INTENT(IN) :: BCV
       INTEGER, INTENT(IN) :: BCV_I      ! BC loop counter
       DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 ! Local debug flags.
       LOGICAL, parameter :: setDBG = .FALSE.
       LOGICAL, parameter :: showMAP = .FALSE.
@@ -44,11 +45,11 @@ MODULE layout_mi_dem_module
       ELSE
          SELECT CASE (BC_PLANE(BCV))
          CASE('N','S')
-            CALL LAYOUT_DEM_MI_NS(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+            CALL LAYOUT_DEM_MI_NS(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
          CASE('E','W')
-            CALL LAYOUT_DEM_MI_EW(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+            CALL LAYOUT_DEM_MI_EW(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
          CASE('T','B')
-            CALL LAYOUT_DEM_MI_TB(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+            CALL LAYOUT_DEM_MI_TB(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
          END SELECT
       ENDIF
 
@@ -74,7 +75,7 @@ MODULE layout_mi_dem_module
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE LAYOUT_DEM_MI_NS(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+      SUBROUTINE LAYOUT_DEM_MI_NS(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
@@ -110,6 +111,8 @@ MODULE layout_mi_dem_module
       DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
 ! Debug flas.
       LOGICAL, INTENT(IN) :: setDBG, showMAP
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -223,18 +226,18 @@ MODULE layout_mi_dem_module
 
          CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
          CALL CALC_CELL_INTERSECT(MESH_Q(H), DZ, KMAX, K)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          SHIFT = MESH_P(W)+WINDOW
          CALL CALC_CELL_INTERSECT(SHIFT, DX, IMAX, I)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          SHIFT = MESH_Q(H)+WINDOW
          CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, K)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          FULL_MAP(W,H) = myPE+1
       ENDDO
@@ -389,7 +392,7 @@ MODULE layout_mi_dem_module
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE LAYOUT_DEM_MI_EW(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+      SUBROUTINE LAYOUT_DEM_MI_EW(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
 
       use bc, only: BC_PLANE, BC_X_w, BC_AREA
       use bc, only: BC_Y_s, BC_Y_n
@@ -458,6 +461,7 @@ MODULE layout_mi_dem_module
       LOGICAL :: dFlag
 !......................................................................!
 
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG('LAYOUT_DEM_MI_EW')
@@ -535,18 +539,18 @@ MODULE layout_mi_dem_module
 
             CALL CALC_CELL_INTERSECT(MESH_P(W), DY, JMAX, J)
             CALL CALC_CELL_INTERSECT(MESH_Q(H), DZ, KMAX, K)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+            IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
             SHIFT = MESH_P(W)+WINDOW
             CALL CALC_CELL_INTERSECT(SHIFT, DY, JMAX, J)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+            IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
             SHIFT = MESH_Q(H)+WINDOW
             CALL CALC_CELL_INTERSECT(SHIFT, DZ, KMAX, K)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+            IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
             CALL CALC_CELL_INTERSECT(MESH_P(W), DY, JMAX, J)
-            IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+            IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          FULL_MAP(W,H) = myPE+1
       ENDDO
@@ -701,7 +705,7 @@ MODULE layout_mi_dem_module
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE LAYOUT_DEM_MI_TB(BCV, BCV_I, MAX_DIA, setDBG, showMAP)
+      SUBROUTINE LAYOUT_DEM_MI_TB(BCV, BCV_I, MAX_DIA, setDBG, showMAP, flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
@@ -737,6 +741,8 @@ MODULE layout_mi_dem_module
       DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
 ! Debug flas.
       LOGICAL, INTENT(IN) :: setDBG, showMAP
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -851,18 +857,18 @@ MODULE layout_mi_dem_module
 
          CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
          CALL CALC_CELL_INTERSECT(MESH_Q(H), DY, JMAX, J)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          SHIFT = MESH_P(W)+WINDOW
          CALL CALC_CELL_INTERSECT(SHIFT, DX, IMAX, I)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          SHIFT = MESH_Q(H)+WINDOW
          CALL CALC_CELL_INTERSECT(SHIFT, DY, JMAX, J)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          CALL CALC_CELL_INTERSECT(MESH_P(W), DX, IMAX, I)
-         IF(EXCLUDE_DEM_MI_CELL(I, J, K)) CYCLE
+         IF(EXCLUDE_DEM_MI_CELL(I, J, K,flag)) CYCLE
 
          FULL_MAP(W,H) = myPE+1
       ENDDO

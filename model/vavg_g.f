@@ -22,13 +22,12 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      DOUBLE PRECISION FUNCTION VAVG_G (vel_g, ep_g, vol)
+      DOUBLE PRECISION FUNCTION VAVG_G (vel_g, ep_g, vol, flag)
 
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE geometry, only: flag
       USE param1   , ONLY: ZERO
 
       IMPLICIT NONE
@@ -42,6 +41,8 @@ CONTAINS
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 !     Integral of U_g*EP_g for entire volume
       DOUBLE PRECISION :: sum_g
@@ -77,10 +78,9 @@ CONTAINS
       RETURN
       END FUNCTION VAVG_G
 
-      DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE)
+      DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE, flag)
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE geometry, only: flag
       USE param1, only: zero
 
       IMPLICIT NONE
@@ -90,6 +90,8 @@ CONTAINS
 
 ! gas mass flux
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: I,J,K
 

@@ -1,3 +1,5 @@
+MODULE CHECK_DATA_20_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CHECK_DATA_20                                           C
@@ -230,3 +232,4 @@
 
 
       END SUBROUTINE CHECK_DATA_20
+END MODULE CHECK_DATA_20_MODULE

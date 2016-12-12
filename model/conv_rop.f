@@ -10,7 +10,7 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
+      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -34,13 +34,14 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT)
+         CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &
-                         rop_g, u_g, v_g, w_g, &
+                         flag, rop_g, u_g, v_g, w_g, &
                          rop_ge, rop_gn, rop_gt)
       ENDIF
 
@@ -57,12 +58,11 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP0(ROP, U, V, W, ROP_E, ROP_N, ROP_T)
+      SUBROUTINE CONV_ROP0(ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE geometry, only: flag
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -81,6 +81,8 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -161,14 +163,13 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP1(DISC, &
+      SUBROUTINE CONV_ROP1(DISC, flag, &
                            rop, u, v, w, &
                            rop_e, rop_n, rop_t)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE geometry, only: flag
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -190,6 +191,8 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(OUT) :: rop_e(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: rop_n(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: rop_t(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !
 ! Local variables
 !---------------------------------------------------------------------//

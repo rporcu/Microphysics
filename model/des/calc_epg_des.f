@@ -14,7 +14,7 @@ module calc_epg_des_module
 !  flag back to the caller and combining with other error checks.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
+      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -30,9 +30,6 @@ module calc_epg_des_module
       use discretelement, only: PIC
 ! Volume of scalar grid cell.
       use geometry, only: VOL
-
-! Flag: Fluid exists at indexed cell
-      use geometry, only: flag
 
       use param1   , only: one, zero
 
@@ -60,6 +57,8 @@ module calc_epg_des_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_usr_var, des_vel_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local Variables:
 !---------------------------------------------------------------------//

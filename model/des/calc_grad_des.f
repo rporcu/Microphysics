@@ -1,6 +1,6 @@
 MODULE CALC_GRAD_DES_MODULE
    CONTAINS
-      SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI)
+      SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI, flag)
 
 ! Modules
 !-----------------------------------------------
@@ -10,7 +10,6 @@ MODULE CALC_GRAD_DES_MODULE
       USE geometry, only: IMAX1, JMAX1, KMAX1
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use geometry, only: flag
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use functions, only: AVG
 
@@ -24,6 +23,7 @@ MODULE CALC_GRAD_DES_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: DEL_PHI&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//

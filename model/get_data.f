@@ -9,11 +9,11 @@ MODULE GET_DATA_MODULE
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA(ro_sol)
+      SUBROUTINE GET_DATA(ro_sol,flag)
 
+      USE check_geometry_module, only: check_geometry, check_geometry_des
       USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
-      USE geometry, only: flag
       USE get_bc_area_module, only: get_bc_area
       USE gridmap        , only: gridmap_init
       USE init_namelist_module, only: init_namelist
@@ -33,6 +33,7 @@ MODULE GET_DATA_MODULE
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
+      INTEGER, DIMENSION(:,:,:,:), INTENT(INOUT) :: FLAG
 
 !-----------------------------------------------
 ! Local variables
@@ -105,7 +106,7 @@ MODULE GET_DATA_MODULE
       CALL SET_BC_FLOW
 
 ! Set the flags for identifying computational cells
-      CALL SET_FLAGS
+      CALL SET_FLAGS(flag)
 
       IF(DEM_SOLIDS) THEN
          CALL DESGRID_INIT

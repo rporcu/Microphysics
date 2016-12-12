@@ -1,3 +1,5 @@
+MODULE SET_CONSTPROP_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: set_constprop                                           C
@@ -69,3 +71,4 @@
       end do
 
       END SUBROUTINE SET_CONSTPROP
+END MODULE SET_CONSTPROP_MODULE

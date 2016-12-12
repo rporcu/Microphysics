@@ -23,9 +23,11 @@ MODULE SET_BC_DEM_MI_MODULE
 !  Purpose:                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_DEM_MI
+      SUBROUTINE SET_BC_DEM_MI(flag)
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: BCV
 
@@ -106,7 +108,7 @@ MODULE SET_BC_DEM_MI_MODULE
          DEM_MI(BCV_I)%POLYDISPERSE = (PHASE_CNT > 1)
 
 ! Layout the feed pattern.
-         CALL LAYOUT_MI_DEM(BCV, BCV_I, MAX_DIA)
+         CALL LAYOUT_MI_DEM(BCV, BCV_I, MAX_DIA, flag)
 
 ! Initialize
          MAX_VEL = ZERO

@@ -11,7 +11,7 @@ MODULE SET_BC_DEM_MODULE
 !  necessary for the dependent subrountines to function properly.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_DEM
+      SUBROUTINE SET_BC_DEM(flag)
 
       USE des_bc, only: dem_bcmo, dem_mio, dem_bcmi
       USE discretelement, only: particles
@@ -23,6 +23,7 @@ MODULE SET_BC_DEM_MODULE
 
       IMPLICIT NONE
 
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       CALL INIT_ERR_MSG("SET_BC_DEM")
 
@@ -42,7 +43,7 @@ MODULE SET_BC_DEM_MODULE
  1202 FORMAT('WARNING 1202: The system is initiated with no particles',&
          ' and no',/'solids inlet was detected.')
 
-      IF(DEM_BCMI > 0) CALL SET_BC_DEM_MI
+      IF(DEM_BCMI > 0) CALL SET_BC_DEM_MI(flag)
       IF(DEM_BCMO > 0) CALL SET_BC_DEM_MO
 
 ! Set the flag that one or more DEM MI/MO exists.

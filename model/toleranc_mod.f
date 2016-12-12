@@ -102,10 +102,9 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      LOGICAL FUNCTION IS_SMALL (V, tol)
+      LOGICAL FUNCTION IS_SMALL (V, tol, flag)
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use geometry, only: flag
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -114,6 +113,8 @@
       DOUBLE PRECISION, INTENT(IN) :: tol
 ! Field variable array
       DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !--------------------------------------------------------------------//

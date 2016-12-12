@@ -1,3 +1,5 @@
+MODULE CHECK_GEOMETRY_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_GEOMETRY                                          !
@@ -129,3 +131,4 @@
 
       RETURN
       END SUBROUTINE CHECK_GEOMETRY_DES
+END MODULE CHECK_GEOMETRY_MODULE

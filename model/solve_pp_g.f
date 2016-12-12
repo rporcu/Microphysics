@@ -115,7 +115,7 @@ module solve_pp_module
       call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
-      IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX, flag)
 
 ! Find average residual, maximum residual and location
       NORMGloc = NORMG
@@ -160,10 +160,9 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax)
+      SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax,flag)
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use geometry, only: flag
       use geometry, only: vol
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume, ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
@@ -178,6 +177,9 @@ module solve_pp_module
 ! maximum term in b_m expression
       DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

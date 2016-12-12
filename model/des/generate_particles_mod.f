@@ -3,7 +3,6 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: err_msg, flush_err_msg, finl_err_msg, init_err_msg
-      use geometry, only: flag
 
         INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_COUNT
 
@@ -22,7 +21,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GENERATE_PARTICLE_CONFIG(pijk, particle_state, particle_phase, &
+      SUBROUTINE GENERATE_PARTICLE_CONFIG(flag,pijk, particle_state, particle_phase, &
          des_radius, ro_sol, &
          des_pos_new, des_vel_new, omega_new)
 
@@ -43,6 +42,7 @@
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: ICV
 
@@ -55,7 +55,7 @@
          IF(IC_EP_G(ICV) == ONE) CYCLE
 
          CALL GENERATE_PARTICLE_CONFIG_DEM(ICV, &
-         pijk, particle_state, particle_phase, &
+         flag,pijk, particle_state, particle_phase, &
          des_radius, ro_sol, &
          des_pos_new, des_vel_new, omega_new)
 
@@ -86,7 +86,7 @@
 !           that has not been deleted yet                              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM(ICV, &
+      SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM(ICV, flag, &
          pijk, particle_state, particle_phase, &
          des_radius, ro_sol, &
          des_pos_new, des_vel_new, omega_new)
@@ -112,8 +112,6 @@
       use param1, only: ZERO, Half
 ! Parameter for small and large numbers
       use param1, only: SMALL_NUMBER
-
-      use geometry, only: flag
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -145,6 +143,7 @@
       INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -360,8 +359,7 @@
  2010 FORMAT(2x,'|  ',I3,'  |',1x,I9,1x,'|',2(1x,ES9.2,1x,'|'),/2x,    &
          '|-------|',3(11('-'),'|'))
 
-
-      END SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM
+      CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -409,5 +407,7 @@
 
       RETURN
       END SUBROUTINE GET_IC_VOLUME
+      END SUBROUTINE GENERATE_PARTICLE_CONFIG_DEM
+
 
       END MODULE GENERATE_PARTICLES

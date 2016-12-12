@@ -6,14 +6,13 @@
 !  Purpose: modify the "K" values for the b.c. plane                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MOD_BC_K(BCV)
+      SUBROUTINE MOD_BC_K(BCV,flag)
 
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      use geometry, only: FLAG
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
 
@@ -27,6 +26,7 @@
 
 ! boundary condition index
       INTEGER, INTENT(in) :: BCV
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! calculated cell indices in I,J,K directions
       INTEGER :: OWNER

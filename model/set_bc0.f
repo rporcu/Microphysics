@@ -11,7 +11,7 @@ MODULE SET_BC0_MODULE
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0(p_g, ep_g, u_g, v_g, w_g, ro_g0)
+      SUBROUTINE SET_BC0(p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -30,6 +30,7 @@ MODULE SET_BC0_MODULE
       double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       double precision, intent(in   ) :: ro_g0
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -39,7 +40,7 @@ MODULE SET_BC0_MODULE
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
-      CALL SET_IJK_P_G(ro_g0)
+      CALL SET_IJK_P_G(ro_g0,flag)
 
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
@@ -311,7 +312,7 @@ MODULE SET_BC0_MODULE
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_IJK_P_G (RO_G0)
+      SUBROUTINE SET_IJK_P_G (RO_G0, flag)
 
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_G
@@ -341,6 +342,7 @@ MODULE SET_BC0_MODULE
 
       ! Specified constant gas density.
       double precision, intent(in) :: ro_g0
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !--------------------------------------------------------------------//
       INTEGER :: BCV
 
@@ -438,7 +440,7 @@ MODULE SET_BC0_MODULE
       ENDIF
 
 ! Invoke the search routine.
-      CALL IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr)
+      CALL IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr, flag)
 
       IF(iErr == 0) RETURN
 
@@ -497,14 +499,13 @@ MODULE SET_BC0_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE IJK_Pg_SEARCH(ll3, ll2, lu2, ll1, lu1, lMAP,          &
-         ldFlag, iErr)
+         ldFlag, iErr, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use geometry, only: flag
       use compar, only: numpes, mype
       implicit none
 
@@ -516,6 +517,7 @@ MODULE SET_BC0_MODULE
       LOGICAL, INTENT(IN) :: ldFlag
       INTEGER, INTENT(OUT)  :: iErr
       CHARACTER(len=*), INTENT(IN) :: lMAP
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !--------------------------------------------------------------------//

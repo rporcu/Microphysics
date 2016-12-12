@@ -8,7 +8,7 @@ MODULE SET_FILTER_DES_MODULE
 !  Purpose:                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_FILTER_DES
+      SUBROUTINE SET_FILTER_DES(flag)
 
       use cfassign_module, only: compute_volume_of_nodes
       use error_manager, only: init_err_msg, finl_err_msg
@@ -16,6 +16,8 @@ MODULE SET_FILTER_DES_MODULE
       use particle_filter, only: DES_INTERP_SCHEME_ENUM
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("SET_FILTER_DES")
@@ -25,7 +27,7 @@ MODULE SET_FILTER_DES_MODULE
 
       CASE(DES_INTERP_GARG)
 ! Compute the volume of nodes needed in drag_fgs_des0.f
-         CALL COMPUTE_VOLUME_OF_NODES
+         CALL COMPUTE_VOLUME_OF_NODES(flag)
       END SELECT
 
       CALL FINL_ERR_MSG

@@ -5,7 +5,6 @@ MODULE CFASSIGN_MODULE
    use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
    use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
    use des_allocate, only: des_vol_node
-   use geometry, only: flag
    use geometry, only: dx, dy, dz
    use param1, only: zero
 
@@ -30,9 +29,12 @@ MODULE CFASSIGN_MODULE
 ! volume of the nodes.                                                     C
 !                                                                          C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE compute_volume_of_nodes
+      SUBROUTINE compute_volume_of_nodes(flag)
 
       implicit none
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

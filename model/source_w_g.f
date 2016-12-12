@@ -666,7 +666,7 @@ module source_w_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_W_G(A_M, B_M)
+      SUBROUTINE POINT_SOURCE_W_G(A_M, B_M, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -676,7 +676,6 @@ module source_w_g_module
       use geometry, only: vol
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
-      use geometry, only: flag
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -687,6 +686,9 @@ module source_w_g_module
 ! Vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

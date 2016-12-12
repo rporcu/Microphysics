@@ -170,7 +170,7 @@ module time_march_module
       IF (CALL_USR) CALL USR0
 
 ! Calculate all the coefficients once before entering the time loop
-      CALL CALC_COEFF(2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
+      CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk(1:MAX_PIP,:), particle_phase(1:MAX_PIP), particle_state(1:MAX_PIP), &
          pvol(1:MAX_PIP), des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), des_radius(1:MAX_PIP))
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
@@ -226,7 +226,7 @@ module time_march_module
 ! Calculate coefficients
       CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
          f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
+         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, flag)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
       CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -257,7 +257,7 @@ module time_march_module
                    tau_u_g,tau_v_g,tau_w_g,&
                    pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
 
-      DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, rop_g, &
+      DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, rop_g, &
          rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
          drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
          particle_state, pmass, pvol, des_radius, des_pos_new, des_vel_new, des_usr_var, IER, NIT))
@@ -299,7 +299,7 @@ module time_march_module
          call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
             pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
             neighbor_index, neighbor_index_old, des_radius, ro_sol, pvol, pmass, omoi, des_usr_var, &
-            ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+            ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft, flag)
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
       ENDIF
 

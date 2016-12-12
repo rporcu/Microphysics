@@ -14,7 +14,7 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc)
+      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc, flag)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use calc_grad_des_module, only: calc_grad_des
@@ -33,8 +33,6 @@ MODULE CALC_PG_GRAD_MODULE
 
       use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
 
-      use geometry, only: flag
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Double precision values.
@@ -51,6 +49,7 @@ MODULE CALC_PG_GRAD_MODULE
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: drag_fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
@@ -59,7 +58,7 @@ MODULE CALC_PG_GRAD_MODULE
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(P_G, gradPg)
+      CALL CALC_GRAD_DES(P_G, gradPg, flag)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)

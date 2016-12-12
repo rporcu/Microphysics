@@ -16,7 +16,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CHECK_CONVERGENCE(NIT, u_g, v_g, w_g, ep_g, errorpercent, MUSTIT)
+      SUBROUTINE CHECK_CONVERGENCE(NIT, u_g, v_g, w_g, ep_g, errorpercent, MUSTIT, flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero, undefined_i
@@ -36,6 +36,7 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -137,7 +138,7 @@
 ! Check upper bound (speed of sound) limit for gas velocity components.
       IF(MOMENTUM_X_EQ(0) .OR. MOMENTUM_Y_EQ(0) .OR. &
           MOMENTUM_Z_EQ(0)) THEN
-         IF(CHECK_VEL_BOUND(u_g,v_g,w_g,ep_g)) MUSTIT = 2     !divergence
+         IF(CHECK_VEL_BOUND(u_g,v_g,w_g,ep_g,flag)) MUSTIT = 2     !divergence
       ENDIF
 
       RETURN

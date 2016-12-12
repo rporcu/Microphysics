@@ -6,7 +6,7 @@
 !  Purpose: Calculate X, X_E,  oX, oX_E                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_GEOMETRY
+      SUBROUTINE SET_GEOMETRY(flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -24,7 +24,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, HALF, ONE, UNDEFINED
+      use param1, only: HALF, ONE, UNDEFINED
 
 ! Module procedures
 !---------------------------------------------------------------------//
@@ -32,6 +32,8 @@
       use allocate_mod, only: allocate_arrays_geometry
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:,:,:), allocatable :: FLAG
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -41,7 +43,7 @@
       CALL INIT_ERR_MSG("SET_GEOMETRY")
 
 ! Allocate geometry arrays.
-      CALL ALLOCATE_ARRAYS_GEOMETRY
+      CALL ALLOCATE_ARRAYS_GEOMETRY(flag)
 
 !  Determine the cyclic direction with a specified mass flux
       CYCLIC_X_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_X_PD)

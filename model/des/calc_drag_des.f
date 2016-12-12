@@ -22,7 +22,7 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
-        des_pos_new,des_vel_new,des_radius,particle_phase)
+        des_pos_new,des_vel_new,des_radius,particle_phase,flag)
 
       IMPLICIT NONE
 
@@ -47,6 +47,7 @@ module calc_drag_des_module
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: II
 
@@ -66,10 +67,10 @@ module calc_drag_des_module
          IF(DES_CONTINUUM_COUPLED) THEN
             if(des_interp_scheme_enum == des_interp_garg) then
                CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-                  pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
+                  flag, pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
             else
                CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-                  pijk,particle_state,pvol,des_vel_new,fc,des_radius,particle_phase)
+                  flag,pijk,particle_state,pvol,des_vel_new,fc,des_radius,particle_phase)
             endif
          ENDIF
 
@@ -87,7 +88,7 @@ module calc_drag_des_module
 !  calls the correct routine for calculating the gas drag force.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+      SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, flag, &
          f_gds, drag_am, drag_bm, pijk, particle_state, particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
 
       IMPLICIT NONE
@@ -115,13 +116,14 @@ module calc_drag_des_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
          if(des_interp_scheme_enum == des_interp_garg) then
             CALL DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new,particle_phase,particle_state)
+               flag, f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new,particle_phase,particle_state)
          else
             CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                f_gds, drag_bm, pijk, particle_phase, particle_state, pvol, des_vel_new, des_radius)
@@ -143,7 +145,7 @@ module calc_drag_des_module
 !  computational overhead.                                             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_EXPLICIT(ep_g, u_g, v_g, w_g, ro_g, &
+      SUBROUTINE CALC_DRAG_DES_EXPLICIT(flag,ep_g, u_g, v_g, w_g, ro_g, &
          rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
          particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
@@ -172,14 +174,15 @@ module calc_drag_des_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Bin particles to the fluid grid.
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 ! Calculate mean fields (EPg).
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, &

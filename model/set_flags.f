@@ -9,21 +9,24 @@ MODULE SET_FLAGS_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_FLAGS
+      SUBROUTINE SET_FLAGS(flag)
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, FLUID_, NSW_, FSW_, PSW_
-      use ic, only: CYCP_, NSW_, CYCL_
-      use geometry, only: flag, ijkmax3
+      use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, FLUID_, NSW_, FSW_
+      use ic, only: CYCP_, NSW_
+      use geometry, only: ijkmax3
       use compar, only: iend3, mype, pe_io
       use param1, only: undefined_i
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(INOUT) :: FLAG
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Indices
-      INTEGER :: i, j, k, ib, jb, kb, inc
+      INTEGER :: i, j, k, ib, jb, kb
       integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
@@ -151,17 +154,20 @@ MODULE SET_FLAGS_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_FLAGS1
+      SUBROUTINE SET_FLAGS1(flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE param1   , only: undefined_i
-      USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag
+      USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       implicit none
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(INOUT) :: FLAG
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

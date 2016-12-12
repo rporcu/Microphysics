@@ -6,10 +6,9 @@
 !  Purpose: Calculate the molecular viscosity.                         C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_MU_G(lambda_g,mu_g,mu_g0)
+      SUBROUTINE CALC_MU_G(lambda_g,mu_g,mu_g0,flag)
 
       USE param1   , only: zero, undefined
-      USE geometry, only: flag
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
@@ -17,6 +16,9 @@
       double precision, intent(inout) :: lambda_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(inout) ::     mu_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(in   ) ::     mu_g0
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------

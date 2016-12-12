@@ -8,11 +8,10 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_MFLUX (u, v, w, rop_e, rop_n, rop_t, &
-                             flux_e, flux_n, flux_t)
+                             flux_e, flux_n, flux_t, flag)
 
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE geometry, only: flag
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: ayz, axz, axy
 
@@ -36,6 +35,8 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//

@@ -11,16 +11,17 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_PS
+      SUBROUTINE SET_PS(flag)
 
       use compar   , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
-      use geometry, only: flag
       use geometry , only: vol
       use param1, only: zero, small_number
       use ps
 
       implicit none
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: I, J, K
 
@@ -86,7 +87,7 @@ MODULE SET_PS_MODULE
          PS_VOLUME(PSV) = sum(gData_dp)
          if(PS_VOLUME(PSV) == ZERO) then
             eMsg = 'No PS_VOLUME == ZERO'
-            CALL DEBUG_PS(PSV, PS_SIZE)
+            CALL DEBUG_PS(PSV, PS_SIZE, flag)
             goto 501
          endif
 
@@ -94,7 +95,7 @@ MODULE SET_PS_MODULE
          if(allocated(gData_dp)) deallocate(gData_dp)
 
 
-         IF(dbg_PS) CALL DEBUG_PS(PSV, PS_SIZE)
+         IF(dbg_PS) CALL DEBUG_PS(PSV, PS_SIZE, flag)
 
 
       enddo L50
@@ -168,13 +169,11 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DEBUG_PS(lPSV, lPS_SIZE)
+      SUBROUTINE DEBUG_PS(lPSV, lPS_SIZE, flag)
 
       use compar  , only: myPE, PE_IO
-      use geometry, only:  flag
       use param1  , only: small_number
       use ps
-      use geometry, only: flag
 
       implicit none
 
@@ -182,6 +181,8 @@ MODULE SET_PS_MODULE
       INTEGER, intent(in) :: lPSV
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
+
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
       INTEGER :: IJK, I, J, K
 

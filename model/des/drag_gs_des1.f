@@ -20,7 +20,6 @@ module drag_gs_des1_module
 
       use discretelement, only: entering_particle, entering_ghost, exiting_particle
       use discretelement, only: nonexistent, exiting_ghost, normal_particle
-      use geometry, only: flag
 
   contains
 
@@ -42,7 +41,7 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
+     SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, flag, &
         pijk, particle_state, pvol, des_vel_new, fc, des_radius, particle_phase)
 
       IMPLICIT NONE
@@ -68,6 +67,7 @@ module drag_gs_des1_module
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !---------------------------------------------------------------------//

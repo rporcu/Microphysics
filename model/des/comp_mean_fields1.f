@@ -5,13 +5,12 @@ module comp_mean_fields1_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol)
+      SUBROUTINE COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
       USE discretelement, only: max_pip, des_rop_s
       USE discretelement, only: normal_particle, normal_particle, normal_ghost
-      USE geometry, only: flag
       USE geometry, only: vol
       USE param1, only: zero
       USE constant, only:MMAX, RO_S0
@@ -21,6 +20,7 @@ module comp_mean_fields1_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 !-----------------------------------------------
 ! Local variables

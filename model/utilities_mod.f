@@ -142,14 +142,13 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND (u_g,v_g,w_g,ep_g)
+      LOGICAL FUNCTION CHECK_VEL_BOUND (u_g,v_g,w_g,ep_g,flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE toleranc, only: max_inlet_vel
-      USE geometry, only: flag
 
       IMPLICIT NONE
 
@@ -161,6 +160,7 @@ CONTAINS
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
