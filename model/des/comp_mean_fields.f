@@ -4,7 +4,7 @@ module comp_mean_fields_module
    use comp_mean_fields0_module, only: comp_mean_fields0
    use comp_mean_fields1_module, only: comp_mean_fields1
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-   use discretelement, only: entering_ghost, exiting_ghost, nonexistent, particle_state, normal_ghost
+   use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
    use discretelement, only: max_pip, des_rop_s
    use functions, only: fluid_at
    use geometry, only: vol
@@ -25,7 +25,7 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol, &
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
       IMPLICIT NONE
@@ -33,6 +33,7 @@ module comp_mean_fields_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
@@ -53,7 +54,7 @@ module comp_mean_fields_module
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
          CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
             des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
-         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(particle_phase,pvol)
+         CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol)
          END SELECT
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER

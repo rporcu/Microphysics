@@ -5,7 +5,7 @@ MODULE MASS_OUTFLOW_DEM_MODULE
       USE bc, only: bc_u_s, bc_v_s, bc_w_s
       USE des_bc, only: dem_bcmo, dem_bcmo_map, dem_bcmo_ijk, dem_bcmo_ijkstart, dem_bcmo_ijkend
       USE discretelement, only: normal_ghost, normal_particle
-      USE discretelement, only: particle_state, nonexistent, entering_ghost, exiting_ghost, exiting_particle, entering_particle
+      USE discretelement, only: nonexistent, entering_ghost, exiting_ghost, exiting_particle, entering_particle
       USE discretelement, only: wall_collision_facet_id, dg_pic, pip
       USE discretelement, only: xe, yn, zt
       USE param1, only: zero

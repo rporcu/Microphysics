@@ -16,12 +16,12 @@
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
       USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
       USE discretelement, only: dimn, des_crossprdct
-      USE discretelement, only: kn_w, kt_w, mew_w, dtsolid, dg_pijk
+      USE discretelement, only: kn_w, kt_w, mew_w, dtsolid
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE param1, only: small_number, zero
       USE stl, only: facets_at_dg, vertex, norm_face
       USE stl_functions_des, only: closestptpointtriangle
-      use discretelement, only: normal_particle, particle_state
+      use discretelement, only: normal_particle
 
       PRIVATE
       PUBLIC :: CALC_DEM_FORCE_WITH_WALL_STL
@@ -36,7 +36,7 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
+         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state, dg_pijk, &
             des_radius, &
             des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 
@@ -46,7 +46,9 @@
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
       INTEGER :: LL
       INTEGER :: NF
@@ -227,7 +229,7 @@
 
 ! Calculate the tangential displacement.
             OVERLAP_T(:) = DTSOLID*VREL_T(:) + GET_COLLISION(LL,       &
-               NF, WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT)
+               NF, WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT, dg_pijk)
             MAG_OVERLAP_T = sqrt(DOT_PRODUCT(OVERLAP_T, OVERLAP_T))
 
 ! Check for Coulombs friction law and limit the maximum value of the
@@ -275,11 +277,13 @@
 !  Purpose: Return the integrated (t0->t) tangential displacement.     !
 !......................................................................!
       FUNCTION GET_COLLISION(LLL,FACET_ID,WALL_COLLISION_FACET_ID,     &
-          WALL_COLLISION_PFT)
+          WALL_COLLISION_PFT, dg_pijk)
 
       use stl_dbg_des, only: write_this_stl
 
       IMPLICIT NONE
+
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
       DOUBLE PRECISION :: GET_COLLISION(DIMN)
       INTEGER, INTENT(IN) :: LLL,FACET_ID

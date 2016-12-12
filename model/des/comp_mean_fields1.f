@@ -5,12 +5,12 @@ module comp_mean_fields1_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS1(particle_phase,pvol)
+      SUBROUTINE COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
       USE discretelement, only: max_pip, des_rop_s
-      USE discretelement, only: normal_particle, normal_particle, particle_state, normal_ghost
+      USE discretelement, only: normal_particle, normal_particle, normal_ghost
       USE functions, only: fluid_at
       USE geometry, only: vol
       USE param1, only: zero
@@ -19,6 +19,7 @@ module comp_mean_fields1_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
 !-----------------------------------------------

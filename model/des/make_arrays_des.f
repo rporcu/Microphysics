@@ -161,7 +161,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
          OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI
       ENDDO
 
-      CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol)
+      CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
       CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
          des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
@@ -177,7 +177,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol, &
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
          des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN

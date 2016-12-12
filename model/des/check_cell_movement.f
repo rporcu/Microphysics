@@ -11,7 +11,7 @@ CONTAINS
 !  The collection could get expensive so the call frequency of this    !
 !  routine should probably be reduced.                                 !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
+      SUBROUTINE CHECK_CELL_MOVEMENT(pijk, particle_state, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -25,7 +25,7 @@ CONTAINS
       use compar, only: iend1, jend1, kend1
       use exit_mod, only: mfix_exit
 
-      use discretelement, only: normal_particle, particle_state
+      use discretelement, only: normal_particle
       use error_manager, only: err_msg, flush_err_msg, ival, init_err_msg
       use write_des_data_module, only: write_des_data
 
@@ -33,6 +33,7 @@ CONTAINS
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 

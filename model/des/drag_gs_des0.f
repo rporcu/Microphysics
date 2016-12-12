@@ -15,7 +15,8 @@ module drag_gs_des0_module
 !       include the gas-solids drag force and gas pressure force       C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,des_radius,pvol,des_pos_new,des_vel_new,fc)
+     SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
+        particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
 
 !-----------------------------------------------
 ! Modules
@@ -27,11 +28,12 @@ module drag_gs_des0_module
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
       use des_drag_gp_module, only: des_drag_gp
-      use discretelement, only: particle_state, entering_ghost, exiting_ghost, nonexistent, normal_ghost
+      use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
 
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -197,7 +199,7 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g,&
-         f_gds, drag_am, drag_bm, des_radius, pvol, des_pos_new, des_vel_new, particle_phase)
+         f_gds, drag_am, drag_bm, des_radius, pvol, des_pos_new, des_vel_new, particle_phase, particle_state)
 
 !-----------------------------------------------
 ! Modules
@@ -213,11 +215,11 @@ module drag_gs_des0_module
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module, only: des_drag_gp
-      use discretelement, only: particle_state, nonexistent, &
-         normal_ghost, entering_ghost, exiting_ghost
+      use discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)

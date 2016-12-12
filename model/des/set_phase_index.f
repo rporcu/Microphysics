@@ -8,11 +8,11 @@ MODULE SET_PHASE_INDEX_MODULE
 !  density.                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_PHASE_INDEX(particle_phase,des_radius,ro_sol)
+      SUBROUTINE SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
 
       USE discretelement, only: MAX_PIP
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost, particle_state
+      USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
       USE mpi_funs_des, only: des_par_exchange
       USE open_files_mod, only: open_pe_log
       USE param1, only: small_number
@@ -20,8 +20,9 @@ MODULE SET_PHASE_INDEX_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 !-----------------------------------------------
 ! Local Variables

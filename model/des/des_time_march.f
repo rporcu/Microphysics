@@ -142,7 +142,7 @@ module des_time_march_module
          IF(DES_EXPLICITLY_COUPLED) THEN
             CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc, des_radius)
          ENDIF
-         CALL CALC_PG_GRAD(p_g, gradPg, pijk)
+         CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state)
       ENDIF
 
 
@@ -164,7 +164,7 @@ module des_time_march_module
          ENDIF
 
 ! Calculate forces acting on particles (collisions, drag, etc).
-         CALL CALC_FORCE_DEM(particle_phase, particle_state, &
+         CALL CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
@@ -206,7 +206,7 @@ module des_time_march_module
 ! Bin particles to fluid grid.
             CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 ! Calculate mean fields (EPg).
-            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_phase,pmass,pvol, &
+            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
                des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id)
          ENDIF
 

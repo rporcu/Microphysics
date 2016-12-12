@@ -14,11 +14,11 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk)
+      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk, particle_state)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use calc_grad_des_module, only: calc_grad_des
-      use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost, particle_state
+      use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost
       use discretelement, only: nonexistent
 
 ! Particle volume.
@@ -51,6 +51,8 @@ MODULE CALC_PG_GRAD_MODULE
       DOUBLE PRECISION, INTENT(out  ) :: gradPg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, DIMENSION(:,:), INTENT(out) :: pijk
+
+      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K

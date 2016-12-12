@@ -155,7 +155,7 @@ CONTAINS
 
       ENDDO
 
-      CALL CHECK_CELL_MOVEMENT(pijk, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
+      CALL CHECK_CELL_MOVEMENT(pijk, particle_state, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
 
 ! Assigning the variable PIC(IJK)%p(:). For each computational fluid
 ! cell compare the number of current particles in the cell to what was
