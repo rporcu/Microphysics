@@ -110,7 +110,7 @@ module solve_pp_module
       CALL INIT_AB_M (A_M, B_M)
 
 ! Forming the sparse matrix equation.
-      CALL CONV_PP_G (A_M, rop_ge, rop_gn, rop_gt)
+      CALL CONV_PP_G (A_M, rop_ge, rop_gn, rop_gt, flag)
 
       call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
@@ -124,12 +124,12 @@ module solve_pp_module
 ! and use this to form normalization factor
         CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P), &
          DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
          NORMGloc = RESID(RESID_P)/DEN
       ENDIF
       CALL CALC_RESID_PP (B_M, NORMGloc, NUM_RESID(RESID_P),  &
          DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
       RESG = RESID(RESID_P)
 
 ! Solve P_g_prime equation

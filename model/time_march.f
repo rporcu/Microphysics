@@ -193,7 +193,8 @@ module time_march_module
       IF (CALL_USR) CALL USR1
 
 ! Set wall boundary conditions and transient flow b.c.'s
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+      CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g,w_g, &
+         flux_ge, flux_gn, flux_gt, flag)
 
       CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
                iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &

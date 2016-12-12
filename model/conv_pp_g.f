@@ -34,7 +34,7 @@ module conv_pp_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt)
+      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -44,7 +44,6 @@ module conv_pp_g_module
       use matrix   , only: e, w, s, n, t, b
       USE geometry , only: axy, ayz, axz
       USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
-      USE functions, only: fluid_at
 
       implicit none
 
@@ -60,6 +59,8 @@ module conv_pp_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -73,7 +74,7 @@ module conv_pp_g_module
       DO K = kstart2, kend2
         DO J = jstart2, jend2
           DO I = istart2, iend2
-         IF (fluid_at(i,j,k)) THEN
+         IF (flag(i,j,k,1)==1) THEN
 
 ! East face (i+1/2, j, k)
             AM = ROP_GE(I,J,K)*AYZ
@@ -91,23 +92,23 @@ module conv_pp_g_module
             A_M(I,J,kplus(i,j,k),B) = AM
 
 ! West face (i-1/2, j, k)
-            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
+            IF (flag(iminus(i,j,k),j,k,1) /= 1) THEN
                AM = ROP_GE(iminus(i,j,k),j,k)*AYZ
                A_M(I,J,K,W) = AM
             ENDIF
 
 ! South face (i, j-1/2, k)
-            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
+            IF (flag(i,jminus(i,j,k),k,1) /=1 ) THEN
                AM = ROP_GN(i,jminus(i,j,k),k)*AXZ
                A_M(I,J,K,S) = AM
             ENDIF
 
 ! Bottom face (i, j, k-1/2)
-            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+            IF (flag(i,j,kminus(i,j,k),1)/=1) THEN
                AM = ROP_GT(i,j,kminus(i,j,k))*AXY
                A_M(I,J,K,B) = AM
             ENDIF
-         ENDIF   ! end if (fluid_at(i,j,k))
+         ENDIF
       ENDDO
       ENDDO
       ENDDO

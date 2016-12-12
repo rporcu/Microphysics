@@ -82,7 +82,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
-         i_resid, j_resid, k_resid)
+         i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -110,6 +110,8 @@
 
       ! Maximum value of Residual
       DOUBLE PRECISION, INTENT(OUT) :: MAX_RESID
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
       ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
@@ -134,7 +136,7 @@
       DO K = kstart3, kend3
         DO J = jstart3, jend3
           DO I = istart3, iend3
-             IF (fluid_at(i,j,k)) THEN
+             IF(flag(i,j,k,1)==1) THEN
 
                ! evaluating the residual at cell (i,j,k):
                NUM1 = ABS(B_M(I,J,K))

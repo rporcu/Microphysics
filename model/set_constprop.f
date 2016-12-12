@@ -18,7 +18,6 @@
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fld_const, only: ro_g0, mu_g0
-      use functions, only: fluid_at
       use param1   , only: zero, undefined
 
       implicit none
@@ -57,7 +56,7 @@
             IF (RO_G0 /= UNDEFINED) RO_G(I,J,K) = RO_G0
            ENDIF
 
-           IF (fluid_at(i,j,k)) THEN
+           IF(flag(i,j,k,1)==1) THEN
 ! Strictly Fluid cells: FLAG = 1
             IF (MU_G0 /= UNDEFINED) THEN
                MU_G(i,j,k) = MU_G0

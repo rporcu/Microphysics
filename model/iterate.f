@@ -177,7 +177,7 @@ module iterate_module
       ! Calculate the face values of densities and mass fluxes
       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
@@ -243,7 +243,7 @@ module iterate_module
 
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, flux_ge, flux_gn, flux_gt)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration

@@ -36,7 +36,7 @@ module set_outflow_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_OUTFLOW(BCV,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g, &
-                             flux_ge,flux_gn,flux_gt)
+         flux_ge, flux_gn, flux_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -44,7 +44,6 @@ module set_outflow_module
       use bc, only: bc_j_s, bc_j_n
       use bc, only: bc_i_w, bc_i_e
 
-      use functions, only: fluid_at
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -77,6 +76,8 @@ module set_outflow_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -102,7 +103,7 @@ module set_outflow_module
 
 ! Fluid cell at West
 ! --------------------------------------------------------------------//
-               IF (fluid_at(im,j,k)) THEN
+               IF (flag(im,j,k,1)==1) THEN
                   RVEL_G = U_G(im,j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,I,J,K,im,j,k,p_g,ro_g)
@@ -136,7 +137,7 @@ module set_outflow_module
 
 ! Fluid cell at East
 ! --------------------------------------------------------------------//
-               IF (fluid_at(ip,j,k)) THEN
+               IF (flag(ip,j,k,1)==1) THEN
 ! define normal component such that it is positive when exiting the
 ! domain
                   RVEL_G = -U_G(I,J,K)
@@ -168,7 +169,7 @@ module set_outflow_module
 
 ! Fluid cell at South
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,jm,k)) THEN
+               IF (flag(i,jm,k,1)==1) THEN
                   RVEL_G = V_G(i,jm,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jm,k,p_g,ro_g)
@@ -190,7 +191,7 @@ module set_outflow_module
 
 ! Fluid cell at North
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,jp,k)) THEN
+               IF (flag(i,jp,k,1)==1) THEN
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jp,k,p_g,ro_g)
@@ -214,7 +215,7 @@ module set_outflow_module
 
 ! Fluid cell at Bottom
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,j,km)) THEN
+               IF (flag(i,j,km,1)==1) THEN
                   RVEL_G = W_G(i,j,km)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,km,p_g,ro_g)
@@ -237,7 +238,7 @@ module set_outflow_module
 
 ! Fluid cell at Top
 ! --------------------------------------------------------------------//
-               IF (fluid_at(i,j,kp)) THEN
+               IF (flag(i,j,kp,1)==1) THEN
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kp,p_g,ro_g)

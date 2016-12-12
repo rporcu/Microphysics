@@ -160,7 +160,6 @@ MODULE SET_FLAGS_MODULE
       USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3,flag
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE functions, only: fluid_at
 
       implicit none
 !-----------------------------------------------
@@ -191,7 +190,7 @@ MODULE SET_FLAGS_MODULE
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0) .AND. (J/=JMAX2.AND.J/=JMAX3)) THEN
                      IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2.AND.K/=KMAX3)) THEN
-                        IF(flag(iminus(i,j,k),j,k,1) <100) &
+                        IF(flag(iminus(i,j,k),j,k,1) < 100) &
                            FLAG(iminus(i,j,k),j,k,2) = 2000
                      ENDIF
                   ENDIF
@@ -215,7 +214,7 @@ MODULE SET_FLAGS_MODULE
             ENDIF
 
 ! ----------------------------------------------------------------<<<
-         ELSEIF (fluid_at(i,j,k)) THEN
+         ELSEIF (flag(i,j,k,1)==1) THEN
 ! ---------------------------------------------------------------->>>
 
             IF ( flag(iminus(i,j,k),j,k,1) < 100 .AND. &

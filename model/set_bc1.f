@@ -9,7 +9,8 @@ module set_bc1_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt)
+     SUBROUTINE SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
+        flux_ge, flux_gn, flux_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -41,6 +42,8 @@ module set_bc1_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER, INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -55,20 +58,20 @@ module set_bc1_module
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt)
+                                flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt)
+                                flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_ADJUST_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_INFLOW')
                CALL SET_BC1_JET(L,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt)
+                                flux_ge,flux_gn,flux_gt,flag)
             CASE ('OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt)
+                                flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             END SELECT
          ENDIF   ! end if (bc_defined(l))
