@@ -14,17 +14,13 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk, particle_state)
+      SUBROUTINE CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, exiting_particle, entering_ghost, exiting_ghost
       use discretelement, only: nonexistent
 
-! Particle volume.
-      use discretelement, only: PVOL
-! Particle drag force
-      use discretelement, only: DRAG_FC
 ! Loop bounds for fluid grid
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flags for cyclic BC with pressure drop
@@ -52,6 +48,8 @@ MODULE CALC_PG_GRAD_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, DIMENSION(:,:), INTENT(out) :: pijk
 
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: drag_fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
 
 ! Loop counters: Particle, fluid cell, neighbor cells

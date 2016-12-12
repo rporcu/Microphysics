@@ -42,7 +42,8 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc, des_radius)
+     SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
+        pijk, particle_state, pvol, des_vel_new, fc, des_radius, particle_phase)
 
       IMPLICIT NONE
 
@@ -65,6 +66,7 @@ module drag_gs_des1_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Local variables
@@ -102,7 +104,7 @@ module drag_gs_des1_module
 ! gas phase drag calculations.
 
 ! Calculate the drag coefficient.
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, des_radius, pvol)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, pijk, des_radius, pvol, particle_phase)
 
 ! Calculate the gas-solids drag force on the particle
          D_FORCE = F_GP*(VELFP - DES_VEL_NEW(NP,:))
@@ -134,7 +136,7 @@ module drag_gs_des1_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_bm, pijk, particle_state, pvol, des_vel_new, des_radius)
+         f_gds, drag_bm, pijk, particle_phase, particle_state, pvol, des_vel_new, des_radius)
 
       IMPLICIT NONE
 
@@ -158,6 +160,7 @@ module drag_gs_des1_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Local variables
@@ -207,7 +210,7 @@ module drag_gs_des1_module
          IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, des_radius, pvol)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, pijk, des_radius, pvol, particle_phase)
 
          lDRAG_BM = f_gp*DES_VEL_NEW(NP,:)
 

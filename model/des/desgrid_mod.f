@@ -26,7 +26,7 @@
       use discretelement, only: DES_PERIODIC_WALLS_Y
       use discretelement, only: DES_PERIODIC_WALLS_Z
       use discretelement, only: DIMN, factor_RLM, max_pip, max_isize, pip
-      use discretelement, only: XE, YN, ZT, neighbor_index
+      use discretelement, only: XE, YN, ZT
       use discretelement, only: dg_pic
       use discretelement, only: entering_ghost, normal_ghost, normal_particle
       use discretelement, only: nonexistent, exiting_ghost, entering_particle
@@ -781,12 +781,13 @@
 ! Purpose          : This particles build the neigh list for the particles
 !                    currently active in the system
 !------------------------------------------------------------------------
-      subroutine desgrid_neigh_build(des_pos_new, dg_pijk, particle_state, des_radius)
+      subroutine desgrid_neigh_build(des_pos_new, dg_pijk, particle_state, des_radius, neighbor_index)
 
       implicit none
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: dg_pijk
 

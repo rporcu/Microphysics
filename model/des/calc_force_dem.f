@@ -12,13 +12,13 @@ MODULE CALC_FORCE_DEM_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
-         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
-         USE discretelement, only: kn, kt, max_pip, mew, hertzian, neighbor_index
+         USE discretelement, only: kn, kt, max_pip, mew, hertzian
          USE discretelement, only: nonexistent
          USE discretelement, only: pft_neighbor
          USE drag_gs_des0_module, only: drag_gs_des0
@@ -33,8 +33,9 @@ MODULE CALC_FORCE_DEM_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
+      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
 ! Local variables
 !---------------------------------------------------------------------//

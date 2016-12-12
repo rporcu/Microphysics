@@ -16,7 +16,7 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-        particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
+        pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
 
 !-----------------------------------------------
 ! Modules
@@ -34,6 +34,8 @@ module drag_gs_des0_module
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -164,7 +166,7 @@ module drag_gs_des0_module
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g,f_gp, des_radius, pvol)
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g,f_gp, pijk, des_radius, pvol, particle_phase)
 
 ! Calculate the gas-solids drag force on the particle
             D_FORCE(1:3) = F_GP*(VELFP-VEL_NEW)
@@ -199,7 +201,7 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g,&
-         f_gds, drag_am, drag_bm, des_radius, pvol, des_pos_new, des_vel_new, particle_phase, particle_state)
+         f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new, particle_phase, particle_state)
 
 !-----------------------------------------------
 ! Modules
@@ -220,6 +222,7 @@ module drag_gs_des0_module
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -367,7 +370,7 @@ module drag_gs_des0_module
 !    beta(u_g-u_s)*vol_p/eps.
 ! Therefore, the drag force = f_gp*(u_g - u_s)
             VEL_NEW(:) = DES_VEL_NEW(NP,:)
-            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g, f_gp, des_radius, pvol)
+            CALL DES_DRAG_GP(NP, VEL_NEW, VELFP, EP_G(llI,llJ,llK), ro_g, mu_g, f_gp, pijk, des_radius, pvol, particle_phase)
 
 !-----------------------------------------------------------------<<<
 ! Calculate the corresponding gas solids drag force that is used in

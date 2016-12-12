@@ -140,9 +140,10 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, pvol, des_vel_new, fc, des_radius)
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
+               pijk, particle_state, pvol, des_vel_new, fc, des_radius, particle_phase)
          ENDIF
-         CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state)
+         CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc)
       ENDIF
 
 
@@ -165,15 +166,15 @@ module des_time_march_module
 
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
-            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
-            des_pos_new,des_vel_new,des_radius)
+            des_pos_new,des_vel_new,des_radius,particle_phase)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(particle_state, des_radius, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
 ! Set DO_NSEARCH before calling DES_PAR_EXCHANGE.

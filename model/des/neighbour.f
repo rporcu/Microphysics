@@ -49,7 +49,7 @@ LOGICAL :: found
 
       NEIGHBOR_INDEX(:) = 0
 
-      CALL DESGRID_NEIGH_BUILD(des_pos_new, dg_pijk, particle_state, des_radius)
+      CALL DESGRID_NEIGH_BUILD(des_pos_new, dg_pijk, particle_state, des_radius, neighbor_index)
 
       do ll = 1, max_pip
 

@@ -8,11 +8,11 @@ MODULE CFNEWVALUES_MODULE
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(particle_state, des_radius, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+      SUBROUTINE CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
       USE discretelement, only: do_nsearch, dtsolid
-      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth, pmass, neighbor_search_rad_ratio
+      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth, neighbor_search_rad_ratio
       USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_ghost
       USE discretelement, only: normal_ghost
       USE param1, only: zero
@@ -21,7 +21,7 @@ MODULE CFNEWVALUES_MODULE
       IMPLICIT NONE
 
       INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, omoi
+      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, omoi, pmass
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: ppos
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, des_vel_new, omega_new, fc, tow, des_acc_old, rot_acc_old
 
