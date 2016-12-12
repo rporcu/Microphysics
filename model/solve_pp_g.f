@@ -163,7 +163,7 @@ module solve_pp_module
       SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax)
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: fluid_at
+      use geometry, only: flag
       use geometry, only: vol
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume, ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
@@ -199,7 +199,7 @@ module solve_pp_module
          do j = PS_J_S(PSV), PS_J_N(PSV)
          do i = PS_I_W(PSV), PS_I_E(PSV)
 
-            if(fluid_at(i,j,k)) then
+            if(1.eq.flag(i,j,k,1)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
                B_M(I,J,K) = B_M(I,J,K) - pSource

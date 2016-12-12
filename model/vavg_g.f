@@ -28,7 +28,7 @@ CONTAINS
 !   M o d u l e s
 !-----------------------------------------------
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, ONLY: fluid_at
+      USE geometry, only: flag
       USE param1   , ONLY: ZERO
 
       IMPLICIT NONE
@@ -61,7 +61,7 @@ CONTAINS
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
             SUM_VOL = SUM_VOL + VOL
             SUM_G = SUM_G + vel_G(I,J,K)*EP_G(I,J,K)*VOL
          ENDIF
@@ -80,7 +80,7 @@ CONTAINS
       DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE)
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, ONLY: fluid_at
+      USE geometry, only: flag
       USE param1, only: zero
 
       IMPLICIT NONE
@@ -108,7 +108,7 @@ CONTAINS
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
             SUM_G = SUM_G + Flux_g(I,J,K)
             SUM_AREA = SUM_AREA + A_FACE
          ENDIF

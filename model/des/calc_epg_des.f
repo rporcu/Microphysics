@@ -32,7 +32,7 @@ module calc_epg_des_module
       use geometry, only: VOL
 
 ! Flag: Fluid exists at indexed cell
-      use functions, only: fluid_at
+      use geometry, only: flag
 
       use param1   , only: one, zero
 
@@ -81,7 +81,7 @@ module calc_epg_des_module
         DO I = istart3, iend3
 
 ! Skip wall cells.
-         IF(.NOT.fluid_at(i,j,k)) CYCLE
+         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
 ! Initialize EP_g and the accumulator.
          ep_g(I,J,K) = ONE
          SUM_EPS = ZERO
@@ -121,7 +121,7 @@ module calc_epg_des_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-            IF(.NOT.fluid_at(i,j,k)) CYCLE
+            IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
             IF(EP_G(I,J,K) > ZERO .AND. EP_G(I,J,K) <= ONE) CYCLE
 
             WRITE(ERR_MSG,1101) trim(iVal(I)),&

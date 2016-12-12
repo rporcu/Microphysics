@@ -15,9 +15,9 @@ MODULE SET_PS_MODULE
 
       use compar   , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
-      use functions, only: fluid_at
+      use geometry, only: flag
       use geometry , only: vol
-      use param1, only: zero, small_number, undefined
+      use param1, only: zero, small_number
       use ps
 
       implicit none
@@ -72,7 +72,7 @@ MODULE SET_PS_MODULE
          do k = PS_K_B(PSV), PS_K_T(PSV)
             do j = PS_J_S(PSV), PS_J_N(PSV)
                do i = PS_I_W(PSV), PS_I_E(PSV)
-                  if(fluid_at(i,j,k)) &
+                  if(1.eq.flag(i,j,k,1)) &
                      lData_dp(myPE) = lData_dp(myPE) + VOL
                enddo
             enddo
@@ -174,7 +174,7 @@ MODULE SET_PS_MODULE
       use geometry, only:  flag
       use param1  , only: small_number
       use ps
-      use functions,only: fluid_at
+      use geometry, only: flag
 
       implicit none
 
@@ -205,7 +205,7 @@ MODULE SET_PS_MODULE
             do i = PS_I_W(lPSV), PS_I_E(lPSV)
 
                lc1 = lc1 + 1
-               if(fluid_at(i,j,k)) then
+               if(1.eq.flag(i,j,k,1)) then
                   lFlags_i(lc1,1) = myPE
                   lFlags_i(lc1,2) = FLAG(i,j,k,1)
                endif

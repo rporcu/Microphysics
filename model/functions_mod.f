@@ -31,13 +31,6 @@ MODULE functions
 ! status of that computational cell. It may not return corner cells
 ! unless the ijk cell itself is a corner cell.
 !---------------------------------------------------------------------//
-
-! Logical functions to identify indicated condition:
-!---------------------------------------------------------------------//
-! logical function to identify various fluid/flow cells
-! LOGICAL :: fluid_at
-
-
 ! Additional functions
 !---------------------------------------------------------------------//
 ! DOUBLE PRECISION :: ZMAX

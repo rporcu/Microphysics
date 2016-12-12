@@ -9,7 +9,7 @@
       SUBROUTINE CALC_MU_G(lambda_g,mu_g,mu_g0)
 
       USE param1   , only: zero, undefined
-      USE functions, only: fluid_at
+      USE geometry, only: flag
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       IMPLICIT NONE
@@ -37,7 +37,7 @@
 ! For air  C = 110 (Tb=74.82)
 !         mu = 1.71*10-4 poise at T = 273K
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
 
             IF (mu_g0 == UNDEFINED) MU_G(I,J,K) = 1.7D-5 * &
                (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
@@ -49,7 +49,7 @@
             MU_G(I,J,K)  = ZERO
             LAMBDA_G(i,j,k) = ZERO
 
-         ENDIF   ! end if (fluid_at(i,j,k))
+         ENDIF   ! end if (1.eq.flag(i,j,k))
 
       ENDDO
       ENDDO

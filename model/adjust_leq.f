@@ -1,3 +1,5 @@
+MODULE ADJUST_LEQ_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: ADJUST_LEQ(RESID, LEQ_IT, LEQ_METHOD, LEQI, LEQM, IER) C
@@ -25,17 +27,6 @@
 !-----------------------------------------------
       INTEGER LEQ_ITL, LEQ_METHODL, LEQI, LEQM
       DOUBLE PRECISION RESID
-!-----------------------------------------------
-!   L o c a l   P a r a m e t e r s
-!-----------------------------------------------
-!                      Linear equation solver parameters used when
-!                      a particular equation set has converged
-      INTEGER, PARAMETER :: LEQ_IT_CONV = 5
-      INTEGER, PARAMETER :: LEQ_METHOD_CONV = 1
-!-----------------------------------------------
-!   L o c a l   V a r i a b l e s
-!-----------------------------------------------
-!-----------------------------------------------
 !
 !  The adjustment is disabled, because it was adversely affecting species
 !  conservation
@@ -49,3 +40,4 @@
 !
       RETURN
       END SUBROUTINE ADJUST_LEQ
+END MODULE ADJUST_LEQ_MODULE

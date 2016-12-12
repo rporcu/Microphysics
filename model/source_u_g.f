@@ -210,7 +210,6 @@ module source_u_g_module
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
-      USE functions, only: fluid_at
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: jmax2, kmax2
       USE geometry  , only: ody, odz
@@ -391,13 +390,13 @@ module source_u_g_module
                         A_M(I,J,K,B) = ZERO
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
-                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
+                        if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
                            A_M(I,J,K,N) = -ONE
-                        else iF (fluid_at(i,jsouth(i,j,k),k)) THEN
+                        else iF (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
                            A_M(I,J,K,S) = -ONE
-                        else iF (fluid_at(i,j,ktop(i,j,k))) THEN
+                        else iF (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
                            A_M(I,J,K,T) = -ONE
-                        else iF (fluid_at(i,j,kbot(i,j,k))) THEN
+                        else iF (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
                            A_M(I,J,K,B) = -ONE
                         ENDIF
                      ENDDO
@@ -423,13 +422,13 @@ module source_u_g_module
                         A_M(I,J,K,B) = ZERO
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
-                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
+                        if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
                            A_M(I,J,K,N) = ONE
-                        else if (fluid_at(i,jsouth(i,j,k),k)) THEN
+                        else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
                            A_M(I,J,K,S) = ONE
-                        else if (fluid_at(i,j,ktop(i,j,k))) THEN
+                        else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
                            A_M(I,J,K,T) = ONE
-                        else if (fluid_at(i,j,kbot(i,j,k))) THEN
+                        else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
                            A_M(I,J,K,B) = ONE
                         ENDIF
                      ENDDO
@@ -455,7 +454,7 @@ module source_u_g_module
                         A_M(I,J,K,B) = ZERO
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
-                        if (fluid_at(i,jnorth(i,j,k),k)) THEN
+                        if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(I,J,K,N) = -HALF
                               A_M(I,J,K,0) = -HALF
@@ -465,7 +464,7 @@ module source_u_g_module
                               A_M(I,J,K,N) = -(HALF*BC_HW_G(L)-ODY)
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_at(i,jsouth(i,j,k),k)) THEN
+                        else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(I,J,K,S) = -HALF
                               A_M(I,J,K,0) = -HALF
@@ -475,7 +474,7 @@ module source_u_g_module
                               A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_at(i,j,ktop(i,j,k))) THEN
+                        else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(I,J,K,T) = -HALF
                               A_M(I,J,K,0) = -HALF
@@ -485,7 +484,7 @@ module source_u_g_module
                               A_M(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (fluid_at(i,j,kbot(i,j,k))) THEN
+                        else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
                            IF (BC_HW_G(L) == UNDEFINED) THEN
                               A_M(I,J,K,B) = -HALF
                               A_M(I,J,K,0) = -HALF
@@ -654,7 +653,7 @@ module source_u_g_module
       SUBROUTINE POINT_SOURCE_U_G(A_M, B_M)
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: fluid_at
+      use geometry, only: flag
       use geometry , only: vol
       use param1   , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
@@ -703,7 +702,7 @@ module source_u_g_module
          do j = PS_J_S(PSV), PS_J_N(PSV)
          do i = lIW, lIE
 
-            if(.NOT. fluid_at(i,j,k)) cycle
+            if(.NOT. 1.eq.flag(i,j,k,1)) cycle
 
             pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 

@@ -14,7 +14,6 @@ MODULE CORNER_MODULE
       SUBROUTINE GET_CORNER_CELLS(flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: fluid_at
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE funits   , only: dmp_log, unit_log
       USE param1   , only: max_ncorn
@@ -57,42 +56,42 @@ MODULE CORNER_MODULE
 !----------------------------------------------------------------
                   NUM = 0
 
-                  IF (fluid_at(iminus(i,j,k),j,k)) then
+                  IF (1.eq.flag(iminus(i,j,k),j,k,1)) then
                      NUM = NUM + 1
                      DIR(W) = .TRUE.
                   ELSE
                      DIR(W) = .FALSE.
                   ENDIF
 
-                  IF (fluid_at(iplus(i,j,k),j,k)) then
+                  IF (1.eq.flag(iplus(i,j,k),j,k,1)) then
                      NUM = NUM + 1
                      DIR(E) = .TRUE.
                   ELSE
                      DIR(E) = .FALSE.
                   ENDIF
 
-                  IF (fluid_at(i,jminus(i,j,k),k)) then
+                  IF (1.eq.flag(i,jminus(i,j,k),k,1)) then
                      NUM = NUM + 1
                      DIR(S) = .TRUE.
                   ELSE
                      DIR(S) = .FALSE.
                   ENDIF
 
-                  IF (fluid_at(i,jplus(i,j,k),k)) then
+                  IF (1.eq.flag(i,jplus(i,j,k),k,1)) then
                      NUM = NUM + 1
                      DIR(N) = .TRUE.
                   ELSE
                      DIR(N) = .FALSE.
                   ENDIF
 
-                  IF (fluid_at(i,j,kminus(i,j,k))) then
+                  IF (1.eq.flag(i,j,kminus(i,j,k),1)) then
                      NUM = NUM + 1
                      DIR(B) = .TRUE.
                   ELSE
                      DIR(B) = .FALSE.
                   ENDIF
 
-                  IF (fluid_at(i,j,kplus(i,j,k))) then
+                  IF (1.eq.flag(i,j,kplus(i,j,k),1)) then
                      NUM = NUM + 1
                      DIR(T) = .TRUE.
                   ELSE

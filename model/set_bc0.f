@@ -504,7 +504,7 @@ MODULE SET_BC0_MODULE
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use functions, only: fluid_at
+      use geometry, only: flag
       use compar, only: numpes, mype
       implicit none
 
@@ -585,7 +585,7 @@ MODULE SET_BC0_MODULE
             END SELECT
 
 ! If there is fluid at this location, store the IJK and exit loops.
-            if(fluid_at(i,j,k)) then
+            if(1.eq.flag(i,j,k,1)) then
                gIJK(myPE,1) = I
                gIJK(myPE,2) = J
                gIJK(myPE,3) = K

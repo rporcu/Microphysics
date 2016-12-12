@@ -105,7 +105,7 @@
       LOGICAL FUNCTION IS_SMALL (V, tol)
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use functions, only: fluid_at
+      use geometry, only: flag
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -124,7 +124,7 @@
         do j = jstart3, jend3
           do i = istart3, iend3
 
-             if (fluid_at(i,j,k)) then
+             if (1.eq.flag(i,j,k,1)) then
                if (abs(V(i,j,k)) > tol) return
              end if
           end do

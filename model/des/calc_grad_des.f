@@ -10,7 +10,7 @@ MODULE CALC_GRAD_DES_MODULE
       USE geometry, only: IMAX1, JMAX1, KMAX1
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use functions, only: fluid_at
+      use geometry, only: flag
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use functions, only: AVG
 
@@ -37,7 +37,7 @@ MODULE CALC_GRAD_DES_MODULE
         DO I = istart3, iend3
 
          DEL_PHI(I,J,K,:) = ZERO
-         IF(.NOT.fluid_at(i,j,k)) CYCLE
+         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
          IF((I>IMIN1).AND.(I<IMAX1)) THEN
             DEL_PHI(I,J,K,1) = oDX*(AVG(PHI(I,J,K),PHI(iplus(i,j,k),j,k)) -     &

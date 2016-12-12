@@ -31,17 +31,6 @@
       funijk = c0 + li + lj*c1 + lk*c2
       END FUNCTION funijk
 
-!---------------------------------------------------------------------//
-      ! logical function to identify a fluid cell
-      logical function fluid_at(i,j,k)
-         use geometry, only: flag
-         implicit none
-         integer, intent(in) :: i,j,k
-         fluid_at = (flag(i,j,k,1).eq.1)
-      end function fluid_at
-
-
-
 ! Misc
 !---------------------------------------------------------------------//
 

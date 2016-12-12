@@ -62,7 +62,7 @@ MODULE CONV_ROP_MODULE
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE functions, only: fluid_at
+      USE geometry, only: flag
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -92,7 +92,7 @@ MODULE CONV_ROP_MODULE
         DO J = jstart3, jend3
           DO I = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
 
 ! East face (i+1/2, j, k)
             IF (U(i,j,k) >= ZERO) THEN
@@ -101,7 +101,7 @@ MODULE CONV_ROP_MODULE
                ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
             ENDIF
 ! West face (i-1/2, j, k)
-            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
+            IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                IF (U(iminus(i,j,k),j,k) >= ZERO) THEN
                   ROP_E(iminus(i,j,k),j,k) = ROP(iwest(i,j,k),j,k)
                ELSE
@@ -117,7 +117,7 @@ MODULE CONV_ROP_MODULE
                ROP_N(i,j,k) = ROP(i,jnorth(i,j,k),k)
             ENDIF
 ! South face (i, j-1/2, k)
-            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
+            IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
                IF (V(i,jminus(i,j,k),k) >= ZERO) THEN
                  ROP_N(i,jminus(i,j,k),k) = ROP(i,jsouth(i,j,k),k)
                ELSE
@@ -133,7 +133,7 @@ MODULE CONV_ROP_MODULE
                ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
             ENDIF
 ! Bottom face (i, j, k-1/2)
-            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+            IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
                IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
                   ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
                ELSE
@@ -141,7 +141,7 @@ MODULE CONV_ROP_MODULE
                ENDIF
             ENDIF
 
-         ENDIF   ! end if fluid_at
+         ENDIF
       ENDDO
       ENDDO
       ENDDO
@@ -168,7 +168,7 @@ MODULE CONV_ROP_MODULE
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE functions, only: fluid_at
+      USE geometry, only: flag
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -212,13 +212,13 @@ MODULE CONV_ROP_MODULE
         DO J = jstart3, jend3
           DO I = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
 
 ! East face (i+1/2, j, k)
             ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
                XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
 ! West face (i-1/2, j, k)
-            IF (.NOT.fluid_at(iminus(i,j,k),j,k)) THEN
+            IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                ROP_E(iminus(i,j,k),j,k) = &
                   ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(iwest(i,j,k),j,k) + &
                   XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
@@ -229,7 +229,7 @@ MODULE CONV_ROP_MODULE
             ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
                XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
 ! South face (i, j-1/2, k)
-            IF (.NOT.fluid_at(i,jminus(i,j,k),k)) THEN
+            IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
                ROP_N(i,jminus(i,j,k),k) = &
                   ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
                   XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
@@ -239,13 +239,13 @@ MODULE CONV_ROP_MODULE
             ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
                XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
 ! Bottom face (i, j, k-1/2)
-            IF (.NOT.fluid_at(i,j,kminus(i,j,k))) THEN
+            IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
                ROP_T(i,j,kminus(i,j,k)) = &
                   ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
                   XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
             ENDIF
 
-         ENDIF   ! end if fluid_at
+         ENDIF
       ENDDO
       ENDDO
       ENDDO

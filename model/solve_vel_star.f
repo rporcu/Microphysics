@@ -13,29 +13,28 @@ module solve_vel_star_module
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
          f_gds, drag_am, drag_bm, flag, IER)
 
-      USE gas_drag_module, only: gas_drag_u, gas_drag_v, gas_drag_w
-
-      USE u_g_conv_dif, only: conv_dif_u_g
-      USE v_g_conv_dif, only: conv_dif_v_g
-      USE w_g_conv_dif, only: conv_dif_w_g
-
       USE adjust_a  , only: adjust_a_g
+      USE adjust_leq_module, only: adjust_leq
       USE calc_d_mod, only: calc_d
       USE compar    , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE discretelement, only: des_continuum_coupled
+      USE gas_drag_module, only: gas_drag_u, gas_drag_v, gas_drag_w
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
       USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
       USE ps      , only: point_source
+      USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid
+      USE residual, only: resid_u, resid_v, resid_w, num_resid
       USE run    , only: momentum_x_eq, momentum_y_eq, momentum_z_eq
       USE solve_lin_eq_module, only: solve_lin_eq
-      USE ur_facs , only: under_relax
-
       USE source_u_g_module, only: source_u_g, point_source_u_g
       USE source_v_g_module, only: source_v_g, point_source_v_g
       USE source_w_g_module, only: source_w_g, point_source_w_g
+      USE u_g_conv_dif, only: conv_dif_u_g
+      USE ur_facs , only: under_relax
+      USE v_g_conv_dif, only: conv_dif_v_g
+      USE w_g_conv_dif, only: conv_dif_w_g
       use residual, only: CALC_RESID_VEL
-      USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid,&
-                          resid_u, resid_v, resid_w, num_resid
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

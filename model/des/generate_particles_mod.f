@@ -3,7 +3,7 @@
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: err_msg, flush_err_msg, finl_err_msg, init_err_msg
-      use functions, only: fluid_at
+      use geometry, only: flag
 
         INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_COUNT
 
@@ -113,7 +113,7 @@
 ! Parameter for small and large numbers
       use param1, only: SMALL_NUMBER
 
-      use functions, only: fluid_at
+      use geometry, only: flag
 
       use desgrid, only: dg_xstart, dg_ystart, dg_zstart
       use desgrid, only: dg_xend, dg_yend, dg_zend
@@ -289,7 +289,7 @@
 ! Skip cells that return invalid IJKs.
 
 ! Skip cells that are not part of the local fuild domain.
-         IF(.NOT.fluid_at(i,j,k)) CYCLE
+         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
          !IF(CARTESIAN_GRID) THEN
          !   CALL CHECK_IF_PARTICLE_OVERLAPS_STL(POS, I, J, K, SKIP)
@@ -401,7 +401,7 @@
       DO J = IC_J_S(ICV), IC_J_N(ICV)
       DO I = IC_I_W(ICV), IC_I_E(ICV)
 
-         IF(fluid_at(i,j,k)) IC_VOL = IC_VOL + VOL
+         IF(1.eq.flag(i,j,k,1)) IC_VOL = IC_VOL + VOL
 
       ENDDO
       ENDDO

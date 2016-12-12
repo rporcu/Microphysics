@@ -19,13 +19,13 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: numpes, mype
       USE constant, only: pi
       USE desgrid, only: desgrid_pic
+      USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
       USE discretelement, only: gener_part_config, print_des_data, s_time
-      USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
-      USE functions, only: ip1, jp1, kp1, fluid_at
+      USE functions, only: ip1, jp1, kp1
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
-      USE geometry, only: vol_surr, vol
+      USE geometry, only: vol_surr, vol, flag
       USE mpi_funs_des, only: DES_PAR_EXCHANGE
       USE neighbour_module, only: neighbour
       USE param1, only: zero
@@ -85,14 +85,14 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
                ! Looping over stencil points (node values)
                count = 0
-               if(fluid_at(i1,j1,k1)) count = count + 1
-               if(fluid_at(i2,j1,k1)) count = count + 1
-               if(fluid_at(i1,j2,k1)) count = count + 1
-               if(fluid_at(i2,j2,k1)) count = count + 1
-               if(fluid_at(i1,j1,k2)) count = count + 1
-               if(fluid_at(i2,j1,k2)) count = count + 1
-               if(fluid_at(i1,j2,k2)) count = count + 1
-               if(fluid_at(i2,j2,k2)) count = count + 1
+               if(1.eq.flag(i1,j1,k1,1)) count = count + 1
+               if(1.eq.flag(i2,j1,k1,1)) count = count + 1
+               if(1.eq.flag(i1,j2,k1,1)) count = count + 1
+               if(1.eq.flag(i2,j2,k1,1)) count = count + 1
+               if(1.eq.flag(i1,j1,k2,1)) count = count + 1
+               if(1.eq.flag(i2,j1,k2,1)) count = count + 1
+               if(1.eq.flag(i1,j2,k2,1)) count = count + 1
+               if(1.eq.flag(i2,j2,k2,1)) count = count + 1
                vol_surr(i,j,k) = dble(count) * vol
 
             ENDDO

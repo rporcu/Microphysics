@@ -33,7 +33,7 @@ MODULE CALC_PG_GRAD_MODULE
 
       use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
 
-      use functions, only: fluid_at
+      use geometry, only: flag
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -88,7 +88,7 @@ MODULE CALC_PG_GRAD_MODULE
             i = PIJK(NP,1)
             j = PIJK(NP,2)
             k = PIJK(NP,3)
-            if (.NOT.fluid_at(i,j,k)) CYCLE
+            if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
 ! Include gas pressure and gas-solids drag
             DRAG_FC(NP,:) = DRAG_FC(NP,:) + gradPg(i,j,k,:)*PVOL(NP)

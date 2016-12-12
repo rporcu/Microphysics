@@ -149,7 +149,7 @@ CONTAINS
 !-----------------------------------------------
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE toleranc, only: max_inlet_vel
-      USE functions, only: fluid_at
+      USE geometry, only: flag
 
       IMPLICIT NONE
 
@@ -177,7 +177,7 @@ LOOP_FLUID: DO K = kstart3, kend3
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
             IF(ABS(U_G(I,J,K)) > MAX_INLET_VEL .OR. &
                ABS(V_G(I,J,K)) > MAX_INLET_VEL .OR. &
                ABS(W_G(I,J,K)) > MAX_INLET_VEL) THEN

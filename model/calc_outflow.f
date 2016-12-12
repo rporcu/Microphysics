@@ -23,7 +23,7 @@ MODULE CALC_OUTFLOW_MODULE
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use geometry, only: dx, dy, dz
-      use functions, only: fluid_at
+      use geometry, only: flag
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       implicit none

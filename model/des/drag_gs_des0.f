@@ -24,7 +24,8 @@ module drag_gs_des0_module
 
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: xe, yn, zt, dimn, pic, pinc, interp_scheme
-      use functions     , only: fluid_at,ip1,jp1,kp1
+      use functions     , only: ip1,jp1,kp1
+      use geometry, only: flag
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
       use des_drag_gp_module, only: des_drag_gp
@@ -101,7 +102,7 @@ module drag_gs_des0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-         if(.not.fluid_at(lli,llj,llk) .or. pinc(lli,llj,llk).eq.0) cycle
+         if(.not.1.eq.flag(lli,llj,llk,1) .or. pinc(lli,llj,llk).eq.0) cycle
          i = lli
          j = llj
          k = llk
@@ -213,7 +214,8 @@ module drag_gs_des0_module
                                 interp_scheme, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
-      use functions     , only: fluid_at,ip1,jp1,kp1
+      use functions     , only: ip1,jp1,kp1
+      use geometry, only: flag
       use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module, only: des_drag_gp
@@ -305,7 +307,7 @@ module drag_gs_des0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-         IF(.NOT.fluid_at(lli,llj,llk) .OR. PINC(lli,llj,llk)==0) cycle
+         IF(.NOT.1.eq.flag(lli,llj,llk,1) .OR. PINC(lli,llj,llk)==0) cycle
          i = lli
          j = llj
          k = llk
@@ -428,7 +430,7 @@ module drag_gs_des0_module
          DO J = jstart3, jend3
             DO I = istart3, iend3
 
-               if(fluid_at(i,j,k)) then
+               if(1.eq.flag(i,j,k,1)) then
                   if (i.lt.istart2 .or. i.gt.iend2) cycle
                   if (j.lt.jstart2 .or. j.gt.jend2) cycle
                   if (k.lt.kstart2 .or. k.gt.kend2) cycle

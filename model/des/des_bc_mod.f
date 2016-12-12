@@ -100,14 +100,14 @@
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION EXCLUDE_DEM_MI_CELL(lI, lJ, lK)
 
-      use functions, only: fluid_at
+      use geometry, only: flag
 
 ! Indicies of cell to check
       INTEGER, INTENT(IN) :: lI, lJ, lK
 
       EXCLUDE_DEM_MI_CELL = .TRUE.
 
-      IF(.NOT.fluid_at(li,lj,lk)) RETURN
+      IF(.NOT.1.eq.flag(li,lj,lk,1)) RETURN
 
       EXCLUDE_DEM_MI_CELL = .FALSE.
       RETURN

@@ -6,7 +6,7 @@ module comp_mean_fields_module
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
    use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
    use discretelement, only: max_pip, des_rop_s
-   use functions, only: fluid_at
+   use geometry, only: flag
    use geometry, only: vol
    use param1, only: zero
    use particle_filter, only: DES_INTERP_GARG
@@ -117,7 +117,7 @@ module comp_mean_fields_module
         DO J = jstart3, jend3
         DO I = istart3, iend3
 
-         IF(.NOT.fluid_at(i,j,k)) CYCLE
+         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
 ! calculating the cell average solids velocity for each solids phase
          DO M = 1, MMAX

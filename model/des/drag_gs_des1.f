@@ -6,7 +6,6 @@ module drag_gs_des1_module
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Function to deterine if a cell contains fluid.
-      use functions, only: fluid_at
       use functions, only: iminus, jminus, kminus
 
 ! Volume of scalar cell.
@@ -21,6 +20,7 @@ module drag_gs_des1_module
 
       use discretelement, only: entering_particle, entering_ghost, exiting_particle
       use discretelement, only: nonexistent, exiting_ghost, normal_particle
+      use geometry, only: flag
 
   contains
 
@@ -88,7 +88,7 @@ module drag_gs_des1_module
          i = pijk(np,1)
          j = pijk(np,2)
          k = pijk(np,3)
-         if (.NOT.fluid_at(i,j,k)) CYCLE
+         if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
          lEPG = ZERO
          VELFP = ZERO

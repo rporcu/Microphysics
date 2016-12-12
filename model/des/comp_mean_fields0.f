@@ -19,7 +19,7 @@ module comp_mean_fields0_module
       USE discretelement, only: pic, des_vel_node, dimn, pinc
       USE calc_epg_des_module, only: calc_epg_des
       USE interpolation, only: set_interpolation_scheme
-      USE functions, only: fluid_at
+      USE geometry, only: flag
       USE geometry, only: vol_surr, vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
@@ -110,7 +110,7 @@ module comp_mean_fields0_module
 
 ! Cycle this cell if not in the fluid domain or if it contains no
 ! particle/parcel
-               IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
+               IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
                IF( PINC(lli,llj,llk) == 0) CYCLE
 
                PCELL(1) = lli-1
@@ -224,7 +224,7 @@ module comp_mean_fields0_module
             DO JJ = J, J+1
             DO II = I, I+1
 
-               IF(fluid_at(II,JJ,KK)) THEN
+               IF(1.eq.flag(II,JJ,KK,1)) THEN
 ! Since the data in the ghost cells is spurious anyway and overwritten during
 ! subsequent send receives, do not compute any value here as this will
 ! mess up the total mass value that is computed below to ensure mass conservation
@@ -247,7 +247,7 @@ module comp_mean_fields0_module
       DO llK = kstart3, kend3
       DO llJ = jstart3, jend3
       DO llI = istart3, iend3
-         IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
+         IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
 
          DO M = 1, MMAX
             IF(DES_ROP_S(lli,llj,llk, M).GT.ZERO) THEN
@@ -272,8 +272,8 @@ module comp_mean_fields0_module
         DO llJ = jstart3, jend3
          DO llI = istart3, iend3
 
-! It is important to check fluid_at
-            IF(.NOT.fluid_at(lli,llj,llk)) CYCLE
+! It is important to check for fluid
+            IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
 
             MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(lli,llj,llk,1:MMAX))*VOL
          ENDDO

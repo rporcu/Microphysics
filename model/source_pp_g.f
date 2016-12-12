@@ -98,7 +98,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
            do j = jstart3, jend3
              do i = istart3, iend3
 
-            IF (fluid_at(i,j,k)) THEN
+            IF (1.eq.flag(i,j,k,1)) THEN
 
             bma = (ROP_G(I,J,K)-ROP_GO(I,J,K))*VOL*ODT
             bme = A_M(I,J,K,E)*U_G(I,J,K)
@@ -132,7 +132,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
                ENDIF
             ENDIF
 
-         ELSE   ! if/else branch .not.fluid_at(i,j,k)
+         ELSE   ! if/else branch .not.1.eq.flag(i,j,k)
 ! set the value (correction) in all wall and flow boundary cells to zero
 ! note the matrix coefficients and source vector should already be zero
 ! from the initialization of A and B but the following ensures the zero
@@ -145,7 +145,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
             A_M(I,J,K,B) = ZERO
             A_M(I,J,K,0) = -ONE
             B_M(I,J,K) = ZERO
-         ENDIF   ! end if/else branch fluid_at(i,j,k)
+         ENDIF   ! end if/else branch 1.eq.flag(i,j,k)
       ENDDO
       ENDDO
       ENDDO
@@ -158,7 +158,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
             do j = jstart3, jend3
               do i = istart3, iend3
 
-               if (fluid_at(i,j,k)) THEN
+               if (1.eq.flag(i,j,k,1)) THEN
                   A_M(I,J,K,0) = A_M(I,J,K,0) - &
                      fac*DROODP_G(RO_G(I,J,K),P_G(I,J,K))*&
                      EP_G(I,J,K)*VOL*ODT
@@ -178,7 +178,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          do j = jstart3, jend3
            do i = istart3, iend3
 
-         IF (fluid_at(i,j,k)) THEN
+         IF (1.eq.flag(i,j,k,1)) THEN
 
 ! Cut the neighbor link between fluid cell and adjacent pressure flow cell
             if(flag(iminus(i,j,k),j,k,1) == 10 .OR. &
