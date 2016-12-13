@@ -14,6 +14,7 @@ MODULE set_icbc_flags_module
       use geometry, only: imin3, jmin3, kmin3
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_
       use ic, only: MINF_, MOUT_, POUT_, OUTF_, PINF_, PSW_
+      use mod_bc, only: mod_bc_i, mod_bc_j, mod_bc_k
       use param1, only: zero, undefined
       use run, only: run_type
 
@@ -398,15 +399,15 @@ MODULE set_icbc_flags_module
 
             write(*,*) 'call mod_bc_i',bcv
             IF(X_CONSTANT .AND. BC_X_W(BCV)/=UNDEFINED)                &
-               CALL MOD_BC_I(BCV)
+               CALL MOD_BC_I(BCV,flag)
 
             write(*,*) 'call mod_bc_j',bcv
             IF(Y_CONSTANT .AND. BC_Y_S(BCV)/=UNDEFINED)                &
-               CALL MOD_BC_J(BCV)
+               CALL MOD_BC_J(BCV,flag)
 
             write(*,*) 'call mod_bc_k',bcv
             IF(Z_CONSTANT .AND. BC_Z_B(BCV)/=UNDEFINED)                &
-               CALL MOD_BC_K(BCV)
+               CALL MOD_BC_K(BCV,flag)
 
 ! Extend the boundaries for cyclic implementation
             IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (IMAX2 - 1) .AND. &

@@ -190,9 +190,7 @@ set(SOURCES
   model/location_check.f
   model/machine_mod.f
   model/matrix_mod.f
-  model/mod_bc_i.f
-  model/mod_bc_j.f
-  model/mod_bc_k.f
+  model/mod_bc.f
   model/output_mod.f
   model/param1_mod.f
   model/param_mod.f
