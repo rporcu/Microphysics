@@ -26,7 +26,7 @@ contains
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: HALF, ONE, UNDEFINED
+      use param1, only: ONE, UNDEFINED
 
 ! Module procedures
 !---------------------------------------------------------------------//

@@ -32,8 +32,6 @@
       use param1, only: DIMENSION_LM
 ! Total number of species
       use param1, only: DIMENSION_N_all
-! Parameter constants.
-      use param1, only: UNDEFINED_I
 ! Axis decomposition
       USE param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
       USE param, only: DIMENSION_3

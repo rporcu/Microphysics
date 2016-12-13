@@ -106,7 +106,7 @@
 ! The max number of ICs.
       use param, only: DIMENSION_IC
 ! Parameter constants
-      use param1, only: ZERO, UNDEFINED, UNDEFINED_I
+      use param1, only: UNDEFINED, UNDEFINED_I
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -329,7 +329,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants
-      use param1, only: ZERO, ONE, UNDEFINED
+      use param1, only: ZERO, UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//

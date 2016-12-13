@@ -137,7 +137,7 @@ MODULE set_icbc_flags_module
 
       use compar, only: iend2, jend2, kend2
       use compar, only: istart2, jstart2, kstart2
-      use compar, only: numpes, mype
+      use compar, only: mype
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
       use ic, only: UNDEF_CELL
       use open_files_mod, only: open_pe_log
@@ -306,9 +306,6 @@ MODULE set_icbc_flags_module
       INTEGER :: I , J , K
 ! loop index
       INTEGER :: BCV
-
-! Total number of valid BC types
-      INTEGER, PARAMETER :: DIM_BCTYPE = 21
 
 !-----------------------------------------------
 

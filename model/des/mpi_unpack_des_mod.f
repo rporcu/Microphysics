@@ -253,13 +253,11 @@
       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
 ! Neighbor collision history information
       use discretelement, only: PFT_NEIGHBOR
-! Dimension of particle spatial arrays.
-      use discretelement, only: DIMN
 ! The ID of the current process
       use compar, only: myPE
 
       use des_allocate, only: add_pair, particle_grow
-      use discretelement, only: entering_particle, exiting_particle, normal_ghost, particle_state, normal_particle, particle_phase
+      use discretelement, only: entering_particle, exiting_particle, particle_state, normal_particle, particle_phase
 
       implicit none
 

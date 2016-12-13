@@ -22,7 +22,7 @@
 
       USE ic, only: IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t
 
-      USE param1, only: UNDEFINED, UNDEFINED_I, ZERO, ONE
+      USE param1, only: UNDEFINED_I, ZERO, ONE
 
 ! direction wise spans of the domain and grid spacing in each direction
       Use geometry, only: xlength, ylength, zlength

@@ -12,8 +12,8 @@ MODULE SET_FLAGS_MODULE
       SUBROUTINE SET_FLAGS(flag)
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, FLUID_, NSW_, FSW_
-      use ic, only: CYCP_, NSW_
+      use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
+      use ic, only: NSW_
       use geometry, only: ijkmax3
       use compar, only: iend3, mype, pe_io
       use param1, only: undefined_i
