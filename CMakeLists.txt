@@ -5,8 +5,7 @@ enable_language(C)
 enable_language(Fortran)
 
 # This is where the CCSE lib was installed
-set(BOXLIB_HOME /home/jmusser/packages/boxlib)
-set(CCSE_DIR /home/jmusser/packages/boxlib)
+set(CCSE_DIR $ENV{BOXLIB_HOME})
 
 # Set some defaults
 set(BL_SPACEDIM 3 CACHE INT "Dimension of BoxLib build")
