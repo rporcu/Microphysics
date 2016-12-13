@@ -9,7 +9,7 @@ MODULE GET_DATA_MODULE
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA(ro_sol,flag)
+      SUBROUTINE GET_DATA(flag)
 
       USE check_geometry_module, only: check_geometry, check_geometry_des
       USE desgrid        , only: desgrid_init
@@ -33,7 +33,6 @@ MODULE GET_DATA_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
       INTEGER, allocatable, intent(INOUT) :: FLAG(:,:,:,:)
 
 !-----------------------------------------------
@@ -111,7 +110,7 @@ MODULE GET_DATA_MODULE
 
       IF(DEM_SOLIDS) THEN
          CALL DESGRID_INIT
-         CALL DESMPI_INIT(ro_sol)
+         CALL DESMPI_INIT
          CALL DES_STL_PREPROCESSING
       ENDIF
 !--------------------------  ARRAY ALLOCATION -----------------------!

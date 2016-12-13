@@ -79,7 +79,7 @@ MODULE SET_BC_DEM_MO_MODULE
             BND1 = IofPOS(BC_X_e(BCV)) - IofPOS(BC_X_w(BCV))
             BND2 = JofPOS(BC_Y_n(BCV)) - JofPOS(BC_Y_s(BCV))
          CASE DEFAULT
-            STOP __LINE__
+            STOP
          END SELECT
 
          MAX_CELLS = MAX_CELLS +                                      &

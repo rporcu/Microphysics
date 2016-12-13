@@ -1,41 +1,38 @@
 cmake_minimum_required(VERSION 2.8)
-project("MFIX" Fortran)
 
+enable_language(CXX)
+enable_language(C)
+enable_language(Fortran)
+
+# This is where the CCSE lib was installed
+set(BOXLIB_HOME /home/jmusser/packages/boxlib)
+set(CCSE_DIR /home/jmusser/packages/boxlib)
+
+# Set some defaults
+set(BL_SPACEDIM 3 CACHE INT "Dimension of BoxLib build")
+set(ENABLE_MPI 0 CACHE INT "Enable build with MPI")
+set(ENABLE_OpenMP 0 CACHE INT "Enable build with OpenMP")
+set(BL_PRECISION "DOUBLE" CACHE INT "Precision of BoxLib build")
+set(BL_USE_PARTICLES 0 CACHE INT "Include Particles classes in BoxLib build")
+set(ENABLE_PROFILING 0 CACHE INT "Include profiling information in BoxLib build")
+set(ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in BoxLib build")
+
+
+set(CMAKE_MODULE_PATH ${CCSE_DIR}/cmake)
+find_package(CCSE REQUIRED)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CCSE_INCLUDE_DIR})
 include_directories(model/include)
+link_directories(${CCSE_LIBRARY_DIR})
 
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
 
-option(MPI "MPI support" OFF)
+project(MFIXEXA)
 
-if ( SMP )
-  find_package ( OpenMP REQUIRED)
-    message("openmp found")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif ( SMP )
-
-if ( MPI )
-  find_package ( MPI REQUIRED)
-  if ( MPI_Fortran_COMPILER )
-    include_directories( ${MPI_INCLUDE_PATH} )
-    set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-    add_definitions(-DMPI)
-  else ( MPI_Fortran_COMPILER )
-    message (FATAL_ERROR " MPI support requested but MPI compiler not found ")
-  endif ( MPI_Fortran_COMPILER )
-endif ( MPI )
-
-if (CMAKE_Fortran_COMPILER MATCHES "gfortran.*")
-  # gfortran
-  set (CMAKE_Fortran_FLAGS "-fimplicit-none -fconvert=big-endian ${CMAKE_Fortran_FLAGS}")
-  set (CMAKE_Fortran_FLAGS "-ffree-form ${CMAKE_Fortran_FLAGS}")
-elseif (CMAKE_Fortran_COMPILER MATCHES "ifort.*")
-  # ifort
-  set (CMAKE_Fortran_FLAGS "-implicitnone -convert big_endian ${CMAKE_Fortran_FLAGS}")
-  set (CMAKE_Fortran_FLAGS "-free ${CMAKE_Fortran_FLAGS}")
-endif (CMAKE_Fortran_COMPILER MATCHES "gfortran.*")
-
-set(SOURCES
+set(CXX_sources model/main.cpp  )
+set(CXX_includes model/include/mfix_F.H)
+set(F90_sources
   model/accum_resid.f90
   model/adjust_a_g.f90
   model/adjust_dt_mod.f90
@@ -190,6 +187,7 @@ set(SOURCES
   model/location_check.f90
   model/machine_mod.f90
   model/matrix_mod.f90
+  model/mfix.f90
   model/mod_bc.f90
   model/output_mod.f90
   model/param1_mod.f90
@@ -258,38 +256,29 @@ set(SOURCES
   model/utilities_mod.f90
   model/vavg_g.f90
   model/xsi_mod.f90
-  model/zero_norm_vel.f90)
+  model/zero_norm_vel.f90
+  model/boxlib_to_mfix.F90)
+set(F77_sources  )
+set(FPP_includes )
+set(FPP_sources  )
+
+include(PreprocessBoxLibFortran)
+preprocess_boxlib_fortran(FPP_out ${FPP_sources})
 
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
-add_executable(mfix model/mfix.f90 ${USR_OVERRIDES})
-add_library(model STATIC ${SOURCES})
+set(local_includes ${CXX_includes} ${FPP_includes})
+set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
 
-set_source_files_properties(model/mfix.f90 ${SOURCES} ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
+add_executable(mfix model/main.cpp ${USR_OVERRIDES})
+add_library(model STATIC ${local_sources} ${local_includes})
 
-set_target_properties(mfix PROPERTIES Fortran_FORMAT "FREE")
-set_target_properties(model PROPERTIES Fortran_FORMAT "FREE")
+target_link_libraries(mfix ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
 
-target_link_libraries(mfix model)
 
 enable_testing()
 
 set(TESTS
   tests/FLD01
-  tests/FLD02
-  tests/DEM01
-  tests/DEM02
-  tests/DEM03
-  tests/DEM04
-  tests/DEM05
-  tests/DEM06
-  tests/DEM07
-  benchmarks/DEM01
-  benchmarks/DEM02
-  benchmarks/DEM03
-  benchmarks/FLD01
-  # box3d
-  # cyclone
-  # fluidbed_DES
   )
 
 foreach( testdir ${TESTS})
@@ -297,10 +286,10 @@ foreach( testdir ${TESTS})
   STRING(REPLACE "/" "_" testname ${testdir} )
 
   FILE(GLOB USR_OVERRIDES ${testdir}/*.f90)
-  add_executable(mfix_${testname} EXCLUDE_FROM_ALL model/mfix.f90 ${USR_OVERRIDES})
+  set(local_includes ${CXX_includes} ${FPP_includes})
+  set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
 
-  set_target_properties(mfix_${testname} PROPERTIES Fortran_FORMAT "FREE")
-  set_source_files_properties(model/mfix.f90 ${USR_OVERRIDES} PROPERTIES COMPILE_FLAGS -cpp)
+  add_executable(mfix_${testname} EXCLUDE_FROM_ALL model/main.cpp ${USR_OVERRIDES})
 
   add_test(build_${testname} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${testname})
 
@@ -316,5 +305,6 @@ foreach( testdir ${TESTS})
     PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/mfix_${testname}"
     )
 
-  target_link_libraries(mfix_${testname} model)
+  target_link_libraries(mfix_${testname} ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
+
 endforeach( testdir ${TESTS})

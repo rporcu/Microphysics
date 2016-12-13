@@ -40,7 +40,7 @@
 !  interfaces.                                                         !
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine desmpi_init(ro_sol)
+      subroutine desmpi_init
 
       use desmpi, only: iGhostPacketSize
       use desmpi, only: iParticlePacketSize
@@ -48,8 +48,6 @@
       use discretelement, only: DES_USR_VAR_SIZE
 
       implicit none
-
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ro_sol
 
 !-----------------------------------------------
 ! local variables
