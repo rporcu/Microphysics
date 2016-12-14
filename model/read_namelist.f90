@@ -391,8 +391,8 @@ subroutine add_argument(fname, nlen) &
 
    use iso_c_binding, only: c_int, c_float, c_char
    implicit none
-   character(kind=c_char), intent(in) :: fname(nlen)
    integer(c_int), intent(in) :: nlen
+   character(kind=c_char), intent(in) :: fname(nlen)
    integer :: lc, bnd
    character :: string(80)
 
