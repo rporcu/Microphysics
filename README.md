@@ -10,33 +10,8 @@
 
 
 
-## Build instructions
-
-_Example: Building and linking to BoxLib_
-
-Clone BoxLib repo and set environment variable.
-```shell
-git clone https://github.com/BoxLib-Codes/BoxLib
-cd BoxLib
-export BOXLIB_HOME=`pwd`
-```
-Go to the MFIX directory 'new' and invoke _make_.
-```shell
-cd <MFIX source directory>
-cd new
-make
-```
-
-
-## Notes on building BoxLib on Joule
-
-Get copy of BoxLib
-```shell
-git clone https://github.com/git/git.git
-git checkout 2b28b7be21cf35590d0bd9177a6fdf1ebe63d3bd
-```
-
-Load GCC module
+## Building BoxLib on Joule (Joule specific)
+For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
 ```shell
 module load gnu/6.1.0
 export CC=/nfs/apps/Compilers/GNU/6.1.0/bin/gcc
@@ -45,27 +20,37 @@ export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
 
-Edit BoxLib/CMakeLists.txt
-Disable MPI build (change 1 to 0)
-```shell
-set(ENABLE_MPI 0 CACHE INIT "Enable build with MPI")
-```
+## Build instructions
 
-Build BoxLib library
+_Example: Building and installing BoxLib_
+
+Clone BoxLib repo and set environment variable.
 ```shell
-cd BoxLib/
+git clone https://github.com/BoxLib-Codes/BoxLib
+cd BoxLib
+git checkout 2b28b7be21cf35590d0bd9177a6fdf1ebe63d3bd
+export BOXLIB_HOME=`pwd`
 mkdir build
 cd build/
-cmake -DCMAKE_INSTALL_PREFIX:PATH=~/packages/boxlib/gnu6.1.0 ../.
+cmake -DENABLE_MPI:STRING=0 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME
 make
 make install
 ```
+Go to the MFIX directory, run cmake and run make.
+```shell
+cd <MFIX source directory>
+cmake .
+make
+```
+
+
+
 
 ---------------------------------------------------------------------
 
 
 
-## Build instructions
+## Building MFIX
 
 This version of MFIX is built by invoking cmake from your run
 directory that contains any modified user source files. The
