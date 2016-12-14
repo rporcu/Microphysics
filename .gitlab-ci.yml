@@ -30,15 +30,15 @@ build:
     paths:
     - build
 
-build_intel:
-  stage: build
-  script:
-    - mkdir build_intel
-    - cd build_intel
-    # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
-    - env FC="/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -stand f08 -check all -warn all" cmake ..
-    - make
-    - ctest -R build_
+# build_intel:
+#   stage: build
+#   script:
+#     - mkdir build_intel
+#     - cd build_intel
+#     # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
+#     - env FC="/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -stand f08 -check all -warn all" cmake ..
+#     - make
+#     - ctest -R build_
 
 test:
   stage: test
