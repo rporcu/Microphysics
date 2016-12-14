@@ -3,6 +3,8 @@
 extern "C"
 {
   void mfix_MAIN();
+
+  void mfix_add_argument(char* fname, int* nlen);
   void mfix_get_data(int* imax, int* jmax, int* kmax);
 
   void mfix_set_domain(int* icbc_flag, int* flag, int* flag_e,

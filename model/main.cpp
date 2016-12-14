@@ -10,17 +10,24 @@
 
 int main (int argc, char* argv[])
 {
-    BoxLib::Initialize(argc,argv);
 
-    Real strt_time = ParallelDescriptor::second();
+  // Copy arguments into MFIX
+  for(int i=1; i < argc; i++) {
+    int nlen = strlen(argv[i]);
+    mfix_add_argument(argv[i], &nlen);
+  }
 
-    mfix_MAIN();
+  BoxLib::Initialize(argc,argv);
 
-    Real end_time = ParallelDescriptor::second() - strt_time;
+  Real strt_time = ParallelDescriptor::second();
 
-    if (ParallelDescriptor::IOProcessor())
-       std::cout << "Time spent in main " << end_time << std::endl;
+  mfix_MAIN();
 
-    BoxLib::Finalize();
-    return 0;
+  Real end_time = ParallelDescriptor::second() - strt_time;
+
+  if (ParallelDescriptor::IOProcessor())
+    std::cout << "Time spent in main " << end_time << std::endl;
+
+  BoxLib::Finalize();
+  return 0;
 }
