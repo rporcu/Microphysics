@@ -52,5 +52,5 @@ benchmarks:
   script:
     - mkdir build-benchmarks
     - cd build-benchmarks
-    - FC='/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran -g -std=f2008 -Wall' cmake -DCMAKE_BUILD_TYPE=Release ..
+    - FC='/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran -g -std=f2008 -Wall' CC='/nfs/apps/Compilers/GNU/6.1.0/bin/gcc -g -Wall' CXX='/nfs/apps/Compilers/GNU/6.1.0/bin/g++ -g -Wall' cmake -DCMAKE_BUILD_TYPE=Release ..
     - ctest -R benchmarks
