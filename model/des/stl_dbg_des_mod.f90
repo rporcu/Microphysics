@@ -123,7 +123,7 @@
          lEND=N_FACETS_DES
          FNAME='ALL_FACETS.stl'
       CASE DEFAULT
-         STOP __LINE__
+         STOP
       END SELECT
 
       IF(lEND < lSTART) THEN
@@ -231,7 +231,7 @@
             LEND=N_FACETS_DES
             FID='ALL'
          CASE DEFAULT
-            STOP __LINE__
+            STOP
          END SELECT
       ELSE
          LSTART = 1

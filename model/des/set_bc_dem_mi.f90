@@ -389,7 +389,7 @@ MODULE SET_BC_DEM_MI_MODULE
             BND2 = min(JofPOS(BC_Y_n(BCV))+1,dg_JMAX1) - &
                max(JofPOS(BC_Y_s(BCV))-1,dg_JMIN1)
          CASE DEFAULT
-            STOP __LINE__
+            STOP
          END SELECT
 
          MAX_CELLS = MAX_CELLS + (BND1 + 1)*(BND2 + 1)

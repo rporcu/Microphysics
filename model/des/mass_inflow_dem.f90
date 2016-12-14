@@ -74,7 +74,7 @@ MODULE MASS_INFLOW_DEM_MODULE
                CASE('T'); DIST = DES_POS_NEW(NP,3) - ZT(BC_K_b(BCV))
                CASE('B'); DIST = ZT(BC_K_b(BCV)-1) - DES_POS_NEW(NP,3)
                CASE DEFAULT
-                  STOP __LINE__
+                  STOP
                END SELECT
 ! The particle is still inside the domain
                IF(DIST > DES_RADIUS(NP)) THEN

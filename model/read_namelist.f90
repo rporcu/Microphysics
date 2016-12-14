@@ -2,6 +2,9 @@ MODULE read_namelist_module
 
    use parse_line_module, only: parse_line
 
+   integer, private :: argc = 0
+   character(len=80), private :: argv(32)
+
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -149,9 +152,10 @@ MODULE read_namelist_module
 
       ENDDO READ_LP
 
-      DO II=1, COMMAND_ARGUMENT_COUNT()
-         CALL GET_COMMAND_ARGUMENT(ii,LINE_STRING)
-         LINE_LEN = len(line_string)
+      DO II=1, argc
+         line_string = argv(ii)
+         line_len = len(line_string)
+         write(*,*) 'string:',line_string, line_len
          CALL SET_KEYWORD(ERROR)
          IF (ERROR) THEN
             CALL DEPRECATED_OR_UNKNOWN(LINE_NO, LINE_STRING(1:LINE_LEN))
@@ -380,5 +384,36 @@ MODULE read_namelist_module
       END SUBROUTINE SET_KEYWORD
 
 END SUBROUTINE READ_NAMELIST
+
+
+subroutine add_argument(fname, nlen) &
+   bind(c,name='mfix_add_argument')
+
+   use iso_c_binding, only: c_int, c_float, c_char
+   implicit none
+   integer(c_int), intent(in) :: nlen
+   character(kind=c_char), intent(in) :: fname(nlen)
+   integer :: lc, bnd
+   character :: string(80)
+
+   argc = argc + 1
+   if(argc > 32) then
+      write(*,*) 'from add_argument:'
+      write(*,*) 'too many arguments!!!!'
+      stop 986532
+   endif
+
+! Copy over the string, character-by-character.
+   bnd = min(nlen,80)
+   do lc=1, bnd
+      argv(argc)(lc:lc) = fname(lc)
+   enddo
+! Clear out the remaining string.
+   do lc=bnd+1,80
+      argv(argc)(lc:lc) = ' '
+   enddo
+
+end subroutine add_argument
+
 
 END MODULE read_namelist_module

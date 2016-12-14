@@ -738,19 +738,6 @@
       lindx(:) = 1
       lparcount = 1
 
-#if ( defined(__GFORTRAN__) &&  ( __GNUC__ < 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ < 7 ) ) ) \
-      ||  ( defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 1400) )
-
-      do lcurpar = 1, max_pip
-         if(lparcount.gt.pip) exit
-         if(nonexistent==particle_state(lcurpar)) cycle
-         lparcount = lparcount + 1
-         lijk = dg_pijk(lcurpar)
-         dg_pic(lijk)%p(lindx(lijk)) = lcurpar
-         lindx(lijk) = lindx(lijk) +  1
-      enddo
-#else
-
       do lcurpar = 1, max_pip
          if(lparcount.gt.pip) cycle
          if(nonexistent==particle_state(lcurpar)) cycle
@@ -764,7 +751,6 @@
          lparcount = lparcount + 1
       enddo
 
-#endif
 
 !      open (unit=100,file='desgrid.txt',status='unknown')
 !      write(100,*)lpic
