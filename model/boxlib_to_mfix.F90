@@ -7,8 +7,11 @@ module boxlib_to_mfix_module
   implicit none
 
 contains
-! **************************************************************************
 
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
   subroutine mfix_MAIN() &
        bind(C, name="mfix_MAIN")
 
@@ -16,18 +19,20 @@ contains
 
   end subroutine mfix_MAIN
 
-! **************************************************************************
 
-! **************************************************************************
-
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
   subroutine mfix_get_data(imax_to_c,jmax_to_c,kmax_to_c) &
        bind(C, name="mfix_get_data")
 
-    use geometry
+    use get_data_module, only: get_data
+    use geometry, only: imax, jmax, kmax
 
     integer imax_to_c, jmax_to_c, kmax_to_c
 
-!    call get_data()
+    call get_data()
 
     imax_to_c = imax
     jmax_to_c = jmax

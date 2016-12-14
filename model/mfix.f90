@@ -23,7 +23,7 @@
       use fld_const, only: ro_g0
       use funits , only: dmp_log, unit_log
       use geometry, only: flag
-      use get_data_module, only: get_data
+      use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
       use matrix, only: A_m, b_m
@@ -39,7 +39,6 @@
       use set_ic_module, only: set_ic
       use set_ps_module, only: set_ps
       use set_ro_g_module, only: set_ro_g
-      use time_cpu, only: cpu_io, cpu_nlog, cpuos, time_nlog, wall0, cpu00
       use time_march_module, only: time_march
       use write_out0_module, only: write_out0
       use write_out1_module, only: write_out1
@@ -102,10 +101,6 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! Final value of CPU time.
-      DOUBLE PRECISION :: CPU1
-! time used for computations.
-      DOUBLE PRECISION :: CPUTIME_USED, WALLTIME_USED
 ! Save TIME in input file for RESTART_2
       DOUBLE PRECISION :: TIME_SAVE
 ! Temporary storage for DT
@@ -113,14 +108,9 @@
 
       INTEGER :: II, lb, ub
 
-! AEOLUS: stop trigger mechanism to terminate MFIX normally before batch
-! queue terminates. timestep at the beginning of execution
-      CALL CPU_TIME (CPU00)
-      WALL0 = WALL_TIME()
-
 ! Read input data, check data, do computations for IC and BC locations
 ! and flows, and set geometry parameters such as X, X_E, DToDX, etc.
-      call get_data(flag)
+      call set_domain(flag)
 
 ! Allocate array storage.
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
@@ -284,11 +274,6 @@
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM(flag)
 
-! Initializations for CPU time calculations in iterate
-      CPUOS = 0.
-      CALL CPU_TIME (CPU1)
-      CPU_NLOG = CPU1
-      TIME_NLOG = TIME - DT
 
 ! Find the solution of the equations from TIME to TSTOP at
 ! intervals of DT
@@ -305,11 +290,6 @@
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)
-
-! Compute the CPU time and write it out in the .OUT file.
-      CPUTIME_USED = 0.0d0
-      WALLTIME_USED = WALL_TIME() - WALL0
-      CALL WRITE_OUT3 (CPUTIME_USED, WALLTIME_USED, CPU_IO)
 
 
       CALL FINL_ERR_MSG
