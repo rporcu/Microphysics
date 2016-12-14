@@ -28,15 +28,15 @@ Clone BoxLib repo and set environment variable.
 ```shell
 git clone https://github.com/BoxLib-Codes/BoxLib
 cd BoxLib
-git checkout 2b28b7be21cf35590d0bd9177a6fdf1ebe63d3bd
-export BOXLIB_HOME=`pwd`
-mkdir build
-cd build/
-cmake -DENABLE_MPI:STRING=0 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME
-make
-make install
+git checkout 16.12.2
+export BOXLIB_HOME=$PWD
+cmake -DENABLE_MPI:STRING=0 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
+make -j -k install
 ```
-Go to the MFIX directory, run cmake and run make.
+The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
+
+
+Go to the MFIX directory, run cmake and run make (make sure BOXLIB_HOME is still set)
 ```shell
 cd <MFIX source directory>
 cmake .
