@@ -23,7 +23,7 @@ build:
     - mkdir build
     - cd build
     # - FC='mpifort -g -std=f2008 -fcheck=all -Wall' cmake -DMPI=1 -DSMP=1 ..
-    - FC='/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran -g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface -Wuse-without-only' cmake ..
+    - FC='/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran -g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface -Wuse-without-only' CC='/nfs/apps/Compilers/GNU/6.1.0/bin/gcc -g -Wall' CXX='/nfs/apps/Compilers/GNU/6.1.0/bin/g++ -g -Wall' cmake ..
     - make
     - ctest -R build_
   artifacts:
