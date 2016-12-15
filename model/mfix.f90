@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine MFIX
+      subroutine MFIX(flag_in)
 
 !-----------------------------------------------
 ! Modules
@@ -14,7 +14,7 @@
 
       use allocate_mod, only: allocate_arrays
       use check_data_20_module, only: check_data_20
-      use compar, only: myPE
+      use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
       use des_allocate, only: des_allocate_arrays
       use discretelement, only: pinc, des_rop_s, max_pip
@@ -22,7 +22,7 @@
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
       use funits , only: dmp_log, unit_log
-      use geometry, only: flag
+      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
@@ -52,6 +52,8 @@
       use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
 
       IMPLICIT NONE
+
+      integer, intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Fluid Variables
 !---------------------------------------------------------------------//
@@ -97,7 +99,6 @@
       DOUBLE PRECISION, ALLOCATABLE :: drag_bm(:,:,:,:)
 
 !---------------------------------------------------------------------//
-
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -108,9 +109,15 @@
 
       INTEGER :: II, lb, ub
 
-! Read input data, check data, do computations for IC and BC locations
-! and flows, and set geometry parameters such as X, X_E, DToDX, etc.
-      call set_domain(flag)
+!---------------------------------------------------------------------//
+      flag = flag_in
+!-----------------------------------------------
+
+      ! This is now called from main.cpp
+      ! call set_domain(flag)
+
+      write(6,*) 'allocating'
+      call flush(6)
 
 ! Allocate array storage.
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
@@ -118,7 +125,14 @@
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
+      write(6,*) 'allocated'
+      call flush(6)
+
       IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
+
+      write(6,*) 'done with des_allocate'
+      call flush(6)
+
       IF (DEM_SOLIDS) THEN
          PINC(:,:,:) = 0
          DES_ROP_S(:,:,:,:) = ZERO
@@ -177,9 +191,15 @@
          ENDIF
       ENDIF
 
+      write(6,*) 'here 2'
+      call flush(6)
+
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
 !     CALL WRITE_FLAGS
+
+      write(6,*) 'here 3'
+      call flush(6)
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
@@ -230,12 +250,18 @@
          DT = DT_TMP
       ENDIF
 
+      write(6,*) 'here 5'
+      call flush(6)
+
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
       CALL SET_FLAGS1(flag)
 
-! Calculate cell volumes and face areas
-      CALL SET_GEOMETRY1
+      ! Calculate cell volumes and face areas
+      VOL = DX*DY*DZ
+      AYZ = DY*DZ
+      AXY = DX*DY
+      AXZ = DX*DZ
 
 ! Find corner cells and set their face areas to zero
       CALL GET_CORNER_CELLS(flag)

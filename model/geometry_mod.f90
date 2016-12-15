@@ -76,9 +76,6 @@
       INTEGER :: IMAX4, JMAX4, KMAX4
       INTEGER :: IJKMAX4, IJKMIN4
 
-! Cell flags.
-      INTEGER, DIMENSION(:,:,:,:), ALLOCATABLE :: FLAG
-
 !  one or more periodic boundary condition is used
       LOGICAL :: CYCLIC
 ! Variable to flag periodic boundary condition in X
@@ -112,5 +109,8 @@
 
 ! Total volume of cell's DES stencil neighbors
       DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: vol_surr
+
+! Cell flags.
+      integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag
 
       END MODULE geometry

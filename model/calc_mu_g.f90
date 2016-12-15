@@ -16,8 +16,7 @@
       double precision, intent(inout) :: lambda_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(inout) ::     mu_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(in   ) ::     mu_g0
-
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer         , intent(in   ) :: flag     (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------
 ! Local parameters

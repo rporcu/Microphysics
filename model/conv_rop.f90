@@ -34,7 +34,7 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
@@ -82,7 +82,7 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -192,7 +192,7 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(OUT) :: rop_n(istart3:iend3,jstart3:jend3,kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT) :: rop_t(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 !
 ! Local variables
 !---------------------------------------------------------------------//

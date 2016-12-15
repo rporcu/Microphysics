@@ -16,7 +16,7 @@ MODULE MOD_BC
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      use compar, only: mype
+      use compar, only: mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
 
@@ -30,8 +30,8 @@ MODULE MOD_BC
 ! Dummy arguments
 !-----------------------------------------------
 ! boundary condition index
-      INTEGER, INTENT(IN) :: BCV
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: BCV
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! i cell indices defining location of yz plane
       INTEGER :: i,j,k

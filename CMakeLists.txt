@@ -207,8 +207,6 @@ set(F90_sources
   model/set_domain.f90
   model/set_flags.f90
   model/set_fluidbed_p.f90
-  model/set_geometry.f90
-  model/set_geometry1.f90
   model/set_ic.f90
   model/set_icbc_flags.f90
   model/set_max2.f90

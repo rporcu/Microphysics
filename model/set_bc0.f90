@@ -30,7 +30,7 @@ MODULE SET_BC0_MODULE
       double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       double precision, intent(in   ) :: ro_g0
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer         , intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -334,7 +334,7 @@ MODULE SET_BC0_MODULE
       use param1, only: UNDEFINED
       use param1, only: UNDEFINED_I
 
-      use compar, only: mype
+      use compar, only: mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: UNIT_LOG
       use exit_mod, only: mfix_exit
 
@@ -342,7 +342,7 @@ MODULE SET_BC0_MODULE
 
       ! Specified constant gas density.
       double precision, intent(in) :: ro_g0
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer         , intent(in) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 !--------------------------------------------------------------------//
       INTEGER :: BCV
 
@@ -506,18 +506,19 @@ MODULE SET_BC0_MODULE
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i
-      use compar, only: numpes, mype
+      use compar, only: numpes, mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       implicit none
 
 ! Dummy arguments
 !--------------------------------------------------------------------//
-      INTEGER, INTENT(IN)  :: ll3
-      INTEGER, INTENT(IN)  :: ll2, lu2
-      INTEGER, INTENT(IN)  :: ll1, lu1
-      LOGICAL, INTENT(IN) :: ldFlag
-      INTEGER, INTENT(OUT)  :: iErr
+      INTEGER, INTENT(IN   )  :: ll3
+      INTEGER, INTENT(IN   )  :: ll2, lu2
+      INTEGER, INTENT(IN   )  :: ll1, lu1
+      LOGICAL, INTENT(IN   ) :: ldFlag
+      INTEGER, INTENT(  OUT)  :: iErr
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+
       CHARACTER(len=*), INTENT(IN) :: lMAP
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Local variables
 !--------------------------------------------------------------------//

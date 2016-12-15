@@ -1,4 +1,5 @@
-MODULE SET_DOMAIN_MODULE
+MODULE set_domain_module
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -11,8 +12,24 @@ MODULE SET_DOMAIN_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_DOMAIN(flag)
 
-      use set_geo_mod, only: set_geometry
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
+      ! Domain decomposition and dimensions
+      use geometry, only: DX, oDX
+      use geometry, only: DY, oDZ
+      use geometry, only: DZ, oDY
+
+      ! Cyclic domain flags.
+      use geometry, only: CYCLIC
+      use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
+      use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
+      use geometry, only: CYCLIC_Z, CYCLIC_Z_PD, CYCLIC_Z_MF
+
       use set_geometry_des_module, only: set_geometry_des
+
+      ! Flag for specificed constant mass flux.
+      use bc, only: Flux_g
+
       use set_icbc_flags_module, only: set_icbc_flag
       use get_bc_area_module, only: get_bc_area
       use set_bc_flow_module, only: set_bc_flow
@@ -21,14 +38,33 @@ MODULE SET_DOMAIN_MODULE
       use mpi_init_des   , only: desmpi_init
       use stl_preproc_des, only: des_stl_preprocessing
 
+      use param1, only: one, undefined
+
       use run, only: dem_solids
 
       implicit none
 
-      INTEGER, allocatable, intent(INOUT) :: FLAG(:,:,:,:)
+      integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-! Set grid spacing variables.
-      CALL SET_GEOMETRY(flag)
+      ! This used to be in set_geometry
+
+      !  Determine the cyclic direction with a specified mass flux
+      CYCLIC_X_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_X_PD)
+      CYCLIC_Y_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_Y_PD)
+      CYCLIC_Z_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_Z_PD)
+
+      ! Force the cyclic flag if cyclic with pressure drop.
+      IF (CYCLIC_X_PD) CYCLIC_X = .TRUE.
+      IF (CYCLIC_Y_PD) CYCLIC_Y = .TRUE.
+      IF (CYCLIC_Z_PD) CYCLIC_Z = .TRUE.
+      CYCLIC = CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z
+
+      ODX = ONE/DX
+      ODY = ONE/DY
+      ODZ = ONE/DZ
+
+      ! End of what used to be in set_geometry
+
       IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES
 
       CALL CHECK_INITIAL_CONDITIONS
@@ -53,5 +89,5 @@ MODULE SET_DOMAIN_MODULE
          CALL DES_STL_PREPROCESSING
       ENDIF
 
-      END SUBROUTINE SET_DOMAIN
-END MODULE SET_DOMAIN_MODULE
+      end subroutine set_domain
+end module set_domain_module

@@ -42,7 +42,8 @@ CONTAINS
       DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag &
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
 !     Integral of U_g*EP_g for entire volume
       DOUBLE PRECISION :: sum_g
@@ -90,8 +91,8 @@ CONTAINS
 
 ! gas mass flux
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
-
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag &
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
       INTEGER :: I,J,K
 

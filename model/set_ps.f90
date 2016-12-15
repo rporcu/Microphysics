@@ -13,7 +13,7 @@ MODULE SET_PS_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_PS(flag)
 
-      use compar   , only: myPE, PE_IO, numPEs
+      use compar   , only: myPE, PE_IO, numPEs, istart3, iend3, jstart3, jend3, kstart3, kend3
       use exit_mod, only: mfix_exit
       use geometry , only: vol
       use param1, only: zero, small_number
@@ -21,7 +21,7 @@ MODULE SET_PS_MODULE
 
       implicit none
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       INTEGER :: I, J, K
 

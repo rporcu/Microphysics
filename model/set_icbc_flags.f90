@@ -41,12 +41,13 @@ MODULE set_icbc_flags_module
 
       CALL SET_BC_FLAGS_FLOW(flag)
 
+      write(6,*) 'CALING CHECK'
+      call flush(6)
+
 ! Verify that ICBC flags are set for all fluid cells.
       CALL CHECK_ICBC_FLAG(flag)
 
       END SUBROUTINE SET_ICBC_FLAG
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -118,6 +119,9 @@ MODULE set_icbc_flags_module
       ENDDO ! end do loop (i=istart3, iend3)
       ENDDO ! end do loop (j=jstart3, jend3)
       ENDDO ! end do loop (k=kstart3, kend3)
+
+      write(6,*)'OUT OF INIT '
+      call flush(6)
 
       RETURN
 

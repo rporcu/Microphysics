@@ -114,7 +114,8 @@
 ! Field variable array
       DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag &
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
 ! Local variables
 !--------------------------------------------------------------------//

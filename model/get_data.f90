@@ -29,7 +29,6 @@ MODULE GET_DATA_MODULE
       USE set_max2_module, only: set_max2
       USE stl_preproc_des, only: DES_STL_PREPROCESSING
       USE write_header_module, only: write_header
-      use set_geo_mod, only: set_geometry
 
       IMPLICIT NONE
 

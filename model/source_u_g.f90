@@ -67,7 +67,7 @@ module source_u_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      INTEGER, INTENT(IN   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Dummy arguments
@@ -669,7 +669,8 @@ module source_u_g_module
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: flag &
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
 !-----------------------------------------------
 ! Local Variables

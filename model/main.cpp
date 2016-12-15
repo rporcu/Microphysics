@@ -25,6 +25,10 @@ int main (int argc, char* argv[])
   int imax,jmax,kmax;
   mfix_get_data(&imax,&jmax,&kmax);
 
+  std::cout << "IMAX " << imax << std::endl;
+  std::cout << "JMAX " << jmax << std::endl;
+  std::cout << "KMAX " << kmax << std::endl;
+
   IntVect dom_lo(IntVect(D_DECL(0,0,0)));
   IntVect dom_hi(IntVect(D_DECL(imax-1, jmax-1, kmax-1)));
 
@@ -64,8 +68,31 @@ int main (int argc, char* argv[])
   // define dx[]
   const Real* dx = geom.CellSize();
 
+  int nghost;
+  if (ParallelDescriptor::NProcs() == 1) {
+     nghost = 1;
+  } else {
+     nghost = 2;
+  }
+  std::cout << "NGHOST " << nghost << std::endl;
 
-  mfix_MAIN();
+  // Define and allocate the integer MultiFab on BoxArray ba with 4 components and nghost ghost cells.
+  iMultiFab flag(ba,4,nghost);
+  flag.setVal(0);
+
+  // Call set_domain for each subdomain
+  // Read input data, check data, do computations for IC and BC locations
+  // and flows, and set geometry parameters such as X, X_E, DToDX, etc.
+  for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+     mfix_set_domain(flag[mfi].dataPtr());
+
+  std::cout << "OUT OF SET_DOMAIN BCK IN MAIN " << std::endl;
+
+  MultiFab vol_surr(ba,1,nghost);
+  vol_surr.setVal(0.);
+
+  for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+     mfix_MAIN(flag[mfi].dataPtr());
 
   Real end_time = ParallelDescriptor::second() - strt_time;
 

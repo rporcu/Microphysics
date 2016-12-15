@@ -1,6 +1,7 @@
 module boxlib_to_mfix_module
 ! _________________________________________________________________
 
+  use compar
   use iso_c_binding
   use bl_fort_module, only : c_real
 
@@ -12,10 +13,14 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_MAIN() &
+  subroutine mfix_MAIN(flag) &
        bind(C, name="mfix_MAIN")
 
-     call mfix()
+    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+
+    integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+
+    call mfix(flag)
 
   end subroutine mfix_MAIN
 
@@ -42,28 +47,16 @@ contains
 
 ! **************************************************************************
 
-  subroutine mfix_set_domain(icbc_flag,flag,flag_e,flag_n,flag_t,nlen,dx_from_c) &
+  subroutine mfix_set_domain(flag) &
        bind(C, name="mfix_set_domain")
 
-    use geometry, only: AXY, AYZ, AXZ, VOL
+    use set_domain_module, only: set_domain
 
-    integer          :: nlen
-    integer          :: icbc_flag(nlen)
-    integer          :: flag(nlen)
-    integer          :: flag_e(nlen)
-    integer          :: flag_n(nlen)
-    integer          :: flag_t(nlen)
-    double precision :: dx_from_c(3)
+    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    AXY = dx_from_c(1)*dx_from_c(2)
-    AYZ = dx_from_c(2)*dx_from_c(3)
-    AXZ = dx_from_c(1)*dx_from_c(3)
+    integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-    VOL = dx_from_c(1)*dx_from_c(2)*dx_from_c(3)
-
-    print *,'DX ',dx_from_c(1),dx_from_c(2),dx_from_c(3)
-
-!    call set_domain(icbc_flag,flag,flag_e,flag_n,flag_t,nlen)
+    call set_domain(flag)
 
   end subroutine mfix_set_domain
 

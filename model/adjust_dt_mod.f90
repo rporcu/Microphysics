@@ -86,7 +86,8 @@
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
       INTEGER, INTENT(INOUT) :: IER

@@ -66,7 +66,8 @@ module calc_coeff_module
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------------------------------
 
@@ -145,7 +146,8 @@ module calc_coeff_module
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+
+      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------------------------------
       integer IER
