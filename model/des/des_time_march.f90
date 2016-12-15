@@ -13,9 +13,11 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+         neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, des_usr_var, &
-         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft, flag)
+         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft, &
+         flag, vol_surr)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -62,6 +64,10 @@ module des_time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      integer         , INTENT(IN) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+      DOUBLE PRECISION, INTENT(IN) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
@@ -73,7 +79,6 @@ module des_time_march_module
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 !------------------------------------------------
 ! Local variables
@@ -209,7 +214,7 @@ module des_time_march_module
             CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
 ! Calculate mean fields (EPg).
             CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-               des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+                                  des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id)
          ENDIF
 
 ! Update time to reflect changes

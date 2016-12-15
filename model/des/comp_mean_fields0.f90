@@ -4,7 +4,7 @@ module comp_mean_fields0_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag)
 
 !-----------------------------------------------
 ! Modules
@@ -19,7 +19,7 @@ module comp_mean_fields0_module
       USE discretelement, only: pic, des_vel_node, dimn, pinc
       USE calc_epg_des_module, only: calc_epg_des
       USE interpolation, only: set_interpolation_scheme
-      USE geometry, only: vol_surr, vol
+      USE geometry, only: vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero
@@ -35,6 +35,8 @@ module comp_mean_fields0_module
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      DOUBLE PRECISION, INTENT(in   ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol

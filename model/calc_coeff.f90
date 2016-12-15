@@ -26,7 +26,8 @@ module calc_coeff_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-        particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, flag)
+        particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, &
+        flag, vol_surr)
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -60,6 +61,11 @@ module calc_coeff_module
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
+      integer, intent(in   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+      double precision, intent(in   ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, pmass, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
@@ -67,17 +73,18 @@ module calc_coeff_module
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 !-----------------------------------------------------------------------
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, pvol, des_pos_new, des_vel_new, des_radius)
+         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, pvol, &
+         des_pos_new, des_vel_new, des_radius)
 
-      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(flag,ep_g, &
-         u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, particle_state, &
+      IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(flag, vol_surr, ep_g, &
+         u_g, v_g, w_g, ro_g, rop_g, mu_g, f_gds, drag_bm, pijk, &
+         particle_phase, iglobal_id, particle_state, &
          pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
 
       END SUBROUTINE CALC_COEFF_ALL

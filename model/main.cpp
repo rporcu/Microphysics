@@ -81,6 +81,7 @@ int main (int argc, char* argv[])
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_set_domain(flag[mfi].dataPtr());
 
+  // Total volume of cell's DES stencil neighbors
   MultiFab vol_surr(ba,1,nghost);
   vol_surr.setVal(0.);
 

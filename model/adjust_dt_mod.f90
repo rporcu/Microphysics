@@ -10,7 +10,7 @@
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-         LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
+         LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, vol_surr, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
             f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
             particle_state, pmass, pvol, des_radius, des_pos_new, des_vel_new, des_usr_var, IER, NIT)
@@ -79,6 +79,10 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      integer         , INTENT(in    ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      DOUBLE PRECISION, INTENT(in    ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, pmass, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
@@ -86,8 +90,6 @@
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
       INTEGER, INTENT(INOUT) :: IER
@@ -188,7 +190,8 @@
             ! Recalculate all coefficients
             CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
                f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-               particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, flag)
+               particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, &
+               flag, vol_surr)
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.
 

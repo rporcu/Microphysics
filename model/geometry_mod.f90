@@ -107,9 +107,6 @@
 ! Cell volume - scalar cell
       DOUBLE PRECISION :: VOL
 
-! Total volume of cell's DES stencil neighbors
-      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: vol_surr
-
 ! Cell flags.
       integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag
 

@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine MFIX(flag_in, vol_surr_in)
+      subroutine MFIX(flag_in, vol_surr)
 
 !-----------------------------------------------
 ! Modules
@@ -22,7 +22,7 @@
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
       use funits , only: dmp_log, unit_log
-      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag, vol_surr
+      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
@@ -53,8 +53,8 @@
 
       IMPLICIT NONE
 
-      integer, intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-      integer, intent(inout) :: vol_surr_in(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer         , intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      double precision, intent(inout) :: vol_surr(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Fluid Variables
 !---------------------------------------------------------------------//
@@ -112,7 +112,6 @@
 
 !---------------------------------------------------------------------//
       flag     = flag_in
-      vol_surr = vol_surr_in
 !-----------------------------------------------
 
       ! This is now called from main.cpp
@@ -292,7 +291,8 @@
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         flag, pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         flag, vol_surr, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+         particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
@@ -308,10 +308,11 @@
          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
          tau_u_g, tau_v_g, tau_w_g,&
          flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-         f_gds, drag_am, drag_bm, flag, &
+         f_gds, drag_am, drag_bm, flag, vol_surr, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+         ppos, des_pos_new, des_vel_new, des_usr_var, & 
+         omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
 ! Call user-defined subroutine after time-loop.
       IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)

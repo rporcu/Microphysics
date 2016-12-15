@@ -25,7 +25,7 @@ module comp_mean_fields_module
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-        des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+        des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id)
 
       IMPLICIT NONE
 
@@ -44,8 +44,10 @@ module comp_mean_fields_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      INTEGER         , INTENT(IN   ) :: flag&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+      DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !......................................................................!
 
@@ -54,7 +56,7 @@ module comp_mean_fields_module
          SELECT CASE(DES_INTERP_SCHEME_ENUM)
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
          CASE(DES_INTERP_GARG) ; CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-            des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+            des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag)
          CASE DEFAULT          ; CALL COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag)
          END SELECT
       ELSE
