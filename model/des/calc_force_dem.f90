@@ -113,7 +113,7 @@ MODULE CALC_FORCE_DEM_MODULE
                CYCLE
             ENDIF
 
-            IF(DIST_MAG == 0) THEN
+            IF(abs(DIST_MAG) < epsilon(dist_mag)) THEN
                WRITE(*,8550) LL, I
                STOP "division by zero"
  8550 FORMAT('distance between particles is zero:',2(2x,I10))

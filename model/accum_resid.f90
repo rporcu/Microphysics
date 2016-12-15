@@ -69,7 +69,7 @@
       DO NN = 2, NRESID
          IF (DEN_RESID(NN) > ZERO) THEN
             RESID(NN) = NUM_RESID(NN)/DEN_RESID(NN)
-         ELSE IF (NUM_RESID(NN) == ZERO) THEN
+         ELSE IF (abs(NUM_RESID(NN)) < epsilon(ZERO)) THEN
             RESID(NN) = ZERO
          ELSE
             RESID(NN) = UNDEFINED

@@ -148,7 +148,7 @@ CONTAINS
 
       lDgA = 0.75D0*Mug*EPg*C_DSXRE_DV(RE/V_RM)/(V_RM*DPM*DPM)
 
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
 
@@ -216,7 +216,7 @@ CONTAINS
          lDgA = 0.75D0*C_d*VREL*ROPg*EPg**(-2.65D0) / DPM
       ENDIF
 
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
 
@@ -301,7 +301,7 @@ CONTAINS
 
 ! Blend the models
       lDgA = (1.D0-PHI_gs)*Ergun + PHI_gs*WenYu
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
       END SUBROUTINE DRAG_GIDASPOW_BLEND
@@ -364,7 +364,7 @@ CONTAINS
       ENDIF
 
       lDgA = 0.75D0 * C_d * VREL * ROPg * EPg**(-2.65D0) / DPM
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
       END SUBROUTINE DRAG_WEN_YU
@@ -496,7 +496,7 @@ CONTAINS
       ENDIF
 
       lDgA = F * F_STOKES
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
       END SUBROUTINE DRAG_KOCH_HILL
@@ -568,7 +568,7 @@ CONTAINS
              (ONE+10.d0**(3d0*phis)/RE**(0.5+2.d0*phis))
 
       lDgA = F*F_STOKES
-      IF (RE == ZERO) lDgA = ZERO
+      IF (RE < EPSILON(RE)) lDgA = ZERO
 
       RETURN
       END SUBROUTINE DRAG_BVK

@@ -26,7 +26,7 @@
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
          SUPERBEE = HALF*MAX(ZERO,MIN(ONE,2.d0*TH),MIN(2.d0,TH))
-      ELSE IF (PHI_C == ONE) THEN
+      ELSE IF (abs(PHI_C-ONE) < epsilon(ONE)) THEN
          SUPERBEE = ONE
       ELSE                                       !first order upwinding
          SUPERBEE = ZERO
@@ -48,7 +48,7 @@
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
          SMART = HALF*MAX(ZERO,MIN(4.0D0*TH,0.75D0 + 0.25D0*TH,2.0D0))
-      ELSE IF (PHI_C == ONE) THEN
+      ELSE IF (abs(PHI_C-ONE) < epsilon(ONE)) THEN
          SMART = ONE
       ELSE                                       !first order upwinding
          SMART = ZERO
@@ -130,7 +130,7 @@
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
          MUSCL = HALF*MAX(ZERO,MIN(2.0D0*TH,(ONE + TH)/2.0D0,2.0D0))
-      ELSE IF (PHI_C == ONE) THEN
+      ELSE IF (abs(PHI_C-ONE) < epsilon(ONE)) THEN
          MUSCL = ONE
       ELSE                                       !first order upwinding
          MUSCL = ZERO
@@ -206,7 +206,7 @@
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
          UMIST = HALF*MAX(ZERO,MIN(2.0D0*TH,0.75D0 + 0.25D0*TH,2.0D0))
-      ELSE IF (PHI_C == ONE) THEN
+      ELSE IF (abs(PHI_C-ONE) < EPSILON(ONE)) THEN
          UMIST = ONE
       ELSE                                       !first order upwinding
          UMIST = ZERO

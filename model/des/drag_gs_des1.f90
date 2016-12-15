@@ -207,7 +207,7 @@ module drag_gs_des1_module
          VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
          VELFP(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(I,J,K))
 
-         IF(lEPg == ZERO) lEPG = EP_g(I,J,K)
+         IF(lEPg < EPSILON(lEPg)) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
          CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, pijk, des_radius, pvol, particle_phase)

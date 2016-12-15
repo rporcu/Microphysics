@@ -247,7 +247,7 @@ module des_time_march_module
          DTSOLID = DTSOLID_TMP
       ENDIF
 
-      IF(TMP_DTS.NE.ZERO) THEN
+      IF(abs(TMP_DTS) < abs(ZERO)) THEN
          DTSOLID = TMP_DTS
          TMP_DTS = ZERO
       ENDIF

@@ -123,7 +123,7 @@ module solve_pp_module
 
 ! Find average residual, maximum residual and location
       NORMGloc = NORMG
-      IF(NORMG == ZERO) THEN
+      IF(abs(NORMG) < epsilon(ZERO)) THEN
 ! calculating the residual based on dominate term in correction equation
 ! and use this to form normalization factor
         CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P), &

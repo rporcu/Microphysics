@@ -85,7 +85,7 @@ MODULE SET_PS_MODULE
          ! CALL global_all_sum(lData_dp, gData_dp)
 
          PS_VOLUME(PSV) = sum(gData_dp)
-         if(PS_VOLUME(PSV) == ZERO) then
+         if(abs(PS_VOLUME(PSV)) < epsilon(ZERO)) then
             eMsg = 'No PS_VOLUME == ZERO'
             CALL DEBUG_PS(PSV, PS_SIZE, flag)
             goto 501
