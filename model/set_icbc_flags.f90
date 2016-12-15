@@ -41,9 +41,6 @@ MODULE set_icbc_flags_module
 
       CALL SET_BC_FLAGS_FLOW(flag)
 
-      write(6,*) 'CALING CHECK'
-      flush(6)
-
 ! Verify that ICBC flags are set for all fluid cells.
       CALL CHECK_ICBC_FLAG(flag)
 
@@ -119,9 +116,6 @@ MODULE set_icbc_flags_module
       ENDDO ! end do loop (i=istart3, iend3)
       ENDDO ! end do loop (j=jstart3, jend3)
       ENDDO ! end do loop (k=kstart3, kend3)
-
-      write(6,*)'OUT OF INIT '
-      flush(6)
 
       RETURN
 
@@ -399,7 +393,6 @@ MODULE set_icbc_flags_module
             X_CONSTANT = (BC_X_W(BCV) == BC_X_E(BCV))
             Y_CONSTANT = (BC_Y_S(BCV) == BC_Y_N(BCV))
             Z_CONSTANT = (BC_Z_B(BCV) == BC_Z_T(BCV))
-
 
             write(*,*) 'call mod_bc_i',bcv
             IF(X_CONSTANT .AND. BC_X_W(BCV)/=UNDEFINED)                &

@@ -13,14 +13,15 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_MAIN(flag) &
+  subroutine mfix_MAIN(flag,vol_surr) &
        bind(C, name="mfix_MAIN")
 
     use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+    integer         , intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+    double precision, intent(inout) :: vol_surr(istart3:iend3,jstart3:jend3,kstart3:kend3,1)
 
-    call mfix(flag)
+    call mfix(flag,vol_surr)
 
   end subroutine mfix_MAIN
 

@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine MFIX(flag_in)
+      subroutine MFIX(flag_in, vol_surr_in)
 
 !-----------------------------------------------
 ! Modules
@@ -22,7 +22,7 @@
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
       use funits , only: dmp_log, unit_log
-      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag
+      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag, vol_surr
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
@@ -54,6 +54,7 @@
       IMPLICIT NONE
 
       integer, intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer, intent(inout) :: vol_surr_in(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Fluid Variables
 !---------------------------------------------------------------------//
@@ -110,14 +111,12 @@
       INTEGER :: II, lb, ub
 
 !---------------------------------------------------------------------//
-      flag = flag_in
+      flag     = flag_in
+      vol_surr = vol_surr_in
 !-----------------------------------------------
 
       ! This is now called from main.cpp
       ! call set_domain(flag)
-
-      write(6,*) 'allocating'
-      flush(6)
 
 ! Allocate array storage.
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
@@ -125,7 +124,7 @@
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
-      write(6,*) 'allocated'
+      write(6,*) 'calling des_allocate_arrays'
       flush(6)
 
       IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS

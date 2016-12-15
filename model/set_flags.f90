@@ -178,7 +178,6 @@ MODULE SET_FLAGS_MODULE
       do k = kstart3, kend3
          do j = jstart3, jend3
            do i = istart3, iend3
-                print *,'IJK ',i,j,k,flag(i,j,k,1)
 
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
@@ -187,24 +186,12 @@ MODULE SET_FLAGS_MODULE
 ! ---------------------------------------------------------------->>>
 ! the default is equivalent to an impermeable surface and these cells
 ! will be treated as such in the momentum routines
-                write(6,*) 'setting 2'
-                flush(6)
             FLAG(i,j,k,2) = 0
-                write(6,*) 'set     2'
-                flush(6)
             FLAG(i,j,k,3) = 0
             FLAG(i,j,k,4) = 0
-                print *,'MINUS ',i,j,k,iminus(i,j,k)
-                flush(6)
             FLAG(iminus(i,j,k),j,k,2) = 0
-                write(6,*) jminus(i,j,k)
-                flush(6)
             FLAG(i,jminus(i,j,k),k,3) = 0
-                write(6,*) kminus(i,j,k)
-                flush(6)
             FLAG(i,j,kminus(i,j,k),4) = 0
-
-                print *,'here now '
 
             if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
 ! make the upper (E, N, T) boundary permeable
@@ -231,8 +218,6 @@ MODULE SET_FLAGS_MODULE
                         FLAG(i,j,kminus(i,j,k),4) = 2000
                   ENDIF
                ENDIF
-
-                print *,'here end '
 
             ENDIF
 

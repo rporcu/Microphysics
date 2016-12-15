@@ -215,9 +215,6 @@
 ! with our present approach - need to be generalized if only one ghost
 ! layer is needed
       do iproc=0,numPEs-1
-         print *,'SETTING LIMITS: IMIN1 ',imin1
-         print *,'SETTING LIMITS: IMAX1 ',imax1
-         print *,'SETTING LIMITS: ISTRT_1 ',istart1_all(iproc)
          istart2_all(iproc) = max(imin1-1,min(imax1+1,istart1_all(iproc)-1))
          if(nodesi.ne.1) then
             istart3_all(iproc) = max(imin1-2,min(imax1+2,istart2_all(iproc)-1))

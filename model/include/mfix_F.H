@@ -2,7 +2,7 @@
 
 extern "C"
 {
-  void mfix_MAIN(int* flag);
+  void mfix_MAIN(int* flag, Real* vol_surr);
 
   void mfix_add_argument(char* fname, int* nlen);
   void mfix_get_data(int* imax, int* jmax, int* kmax);
