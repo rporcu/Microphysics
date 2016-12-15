@@ -117,7 +117,7 @@
       ! call set_domain(flag)
 
       write(6,*) 'allocating'
-      call flush(6)
+      flush(6)
 
 ! Allocate array storage.
       CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
@@ -126,12 +126,12 @@
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
       write(6,*) 'allocated'
-      call flush(6)
+      flush(6)
 
       IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
 
       write(6,*) 'done with des_allocate'
-      call flush(6)
+      flush(6)
 
       IF (DEM_SOLIDS) THEN
          PINC(:,:,:) = 0
@@ -192,14 +192,14 @@
       ENDIF
 
       write(6,*) 'here 2'
-      call flush(6)
+      flush(6)
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
 !     CALL WRITE_FLAGS
 
       write(6,*) 'here 3'
-      call flush(6)
+      flush(6)
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
@@ -251,7 +251,7 @@
       ENDIF
 
       write(6,*) 'here 5'
-      call flush(6)
+      flush(6)
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
