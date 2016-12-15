@@ -36,7 +36,6 @@ set(F90_sources
   model/adjust_a_g.f90
   model/adjust_dt_mod.f90
   model/adjust_leq.f90
-  model/allocate_arrays.f90
   model/bc_mod.f90
   model/calc_cell.f90
   model/calc_coeff.f90

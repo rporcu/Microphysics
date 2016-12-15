@@ -6,13 +6,16 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine MFIX(flag_in, vol_surr, A_m, b_m)
+subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
+   ro_g, ro_go, rop_g, rop_go, u_g, u_go, v_g,v_go, w_g, w_go, &
+   pp_g, d_e, d_n, d_t, mu_g, lambda_g, trD_g, tau_u_g ,tau_v_g, tau_w_g,&
+   flux_ge, flux_gn, flux_gt, rop_ge, rop_gn, rop_gt, &
+   f_gds, drag_am, drag_bm)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
 
-      use allocate_mod, only: allocate_arrays
       use check_data_20_module, only: check_data_20
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
@@ -52,54 +55,89 @@
 
       IMPLICIT NONE
 
-      integer         , intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-      double precision, intent(inout) :: vol_surr(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer         , intent(inout) :: flag_in&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      double precision, intent(inout) :: vol_surr&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      double precision, intent(inout) :: A_m(istart3:iend3,jstart3:jend3,kstart3:kend3,7)
-      double precision, intent(inout) :: b_m(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: A_m&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,7)
+      double precision, intent(inout) :: b_m&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ep_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: p_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: p_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ro_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: ro_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-! Fluid Variables
-!---------------------------------------------------------------------//
-! Void fraction
-      DOUBLE PRECISION, ALLOCATABLE ::  EP_g(:,:,:), EP_go(:,:,:)
-! Gas pressure
-      DOUBLE PRECISION, ALLOCATABLE ::  P_g(:,:,:), P_gO(:,:,:)
-! Gas density
-      DOUBLE PRECISION, ALLOCATABLE ::  RO_g(:,:,:), RO_go(:,:,:)
-! Macroscopic gas density
-      DOUBLE PRECISION, ALLOCATABLE ::  ROP_g(:,:,:), ROP_go(:,:,:)
-! x-component of gas velocity
-      DOUBLE PRECISION, ALLOCATABLE ::  U_g(:,:,:), U_go(:,:,:)
-! y-component of gas velocity
-      DOUBLE PRECISION, ALLOCATABLE ::  V_g(:,:,:), V_go(:,:,:)
-! z-component of gas velocity
-      DOUBLE PRECISION, ALLOCATABLE ::  W_g(:,:,:), W_go(:,:,:)
-! Gas viscosity
-      DOUBLE PRECISION, ALLOCATABLE ::  MU_g(:,:,:)
-! Second coefficient of viscosity
-      DOUBLE PRECISION, ALLOCATABLE ::  LAMBDA_G(:,:,:)
-! trace of D_g at i, j, k
-      DOUBLE PRECISION, ALLOCATABLE ::  trD_g(:,:,:)
-! cross terms
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_U_g(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_V_g(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE ::  TAU_W_g(:,:,:)
-! Gas mass fluxes at the east, north, and top faces
-      DOUBLE PRECISION, ALLOCATABLE ::  Flux_gE(:,:,:), Flux_gN(:,:,:), Flux_gT(:,:,:)
-! macroscopic gas density at east, north, and top faces
-      DOUBLE PRECISION, ALLOCATABLE ::  ROP_gE(:,:,:), ROP_gN(:,:,:), ROP_gT(:,:,:)
-! Pressure correction equation
-      DOUBLE PRECISION, ALLOCATABLE ::  Pp_g(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE ::  d_e(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE ::  d_n(:,:,:)
-      DOUBLE PRECISION, ALLOCATABLE ::  d_t(:,:,:)
+      double precision, intent(inout) :: u_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: u_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-! drag coefficient between gas phase and discrete particles
-      DOUBLE PRECISION, ALLOCATABLE :: f_gds(:,:,:)
-! the coefficient add to gas momentum A matrix
-      DOUBLE PRECISION, ALLOCATABLE :: drag_am(:,:,:)
-! the coefficient add to gas momentum B matrix
-      DOUBLE PRECISION, ALLOCATABLE :: drag_bm(:,:,:,:)
+      double precision, intent(inout) :: v_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: v_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: w_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: w_go&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: pp_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: d_e&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: d_t&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: d_n&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: mu_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: lambda_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: trD_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: tau_u_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: tau_v_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: tau_w_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: flux_gE&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: flux_gN&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: flux_gT&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: rop_gE&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_gN&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: rop_gT&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: f_gds&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: drag_am&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      double precision, intent(inout) :: drag_bm&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,3)
 
 !---------------------------------------------------------------------//
 !-----------------------------------------------
@@ -118,12 +156,6 @@
 
       ! This is now called from main.cpp
       ! call set_domain(flag)
-
-! Allocate array storage.
-      CALL ALLOCATE_ARRAYS(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
-         ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
-         mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
-         flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
 
       write(6,*) 'calling des_allocate_arrays'
       flush(6)
@@ -269,8 +301,16 @@
 ! Set constant physical properties
       CALL SET_CONSTPROP(ro_g, lambda_g, mu_g, flag)
 
+      write(6,*) 'here 6'
+      flush(6)
+
+
 ! Set initial conditions
       CALL SET_IC(ep_g, p_g, u_g, v_g, w_g, flag)
+
+      write(6,*) 'here 7'
+      flush(6)
+
 
 ! Set point sources.
       CALL SET_PS(flag)
@@ -313,7 +353,7 @@
          f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, & 
+         ppos, des_pos_new, des_vel_new, des_usr_var, &
          omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
 ! Call user-defined subroutine after time-loop.

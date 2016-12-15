@@ -91,9 +91,118 @@ int main (int argc, char* argv[])
   A_m.setVal(0.);
   b_m.setVal(0.);
 
+  // Void fraction
+  MultiFab ep_g (ba,1,nghost);
+  MultiFab ep_go(ba,1,nghost);
+  ep_g.setVal(0.);
+  ep_go.setVal(0.);
+
+  // Gas pressure fraction
+  MultiFab p_g (ba,1,nghost);
+  MultiFab p_go(ba,1,nghost);
+  p_g.setVal(0.);
+  p_go.setVal(0.);
+
+  // Gas density
+  MultiFab ro_g (ba,1,nghost);
+  MultiFab ro_go(ba,1,nghost);
+  ro_g.setVal(0.);
+  ro_go.setVal(0.);
+
+  // Gas bulk density
+  MultiFab rop_g (ba,1,nghost);
+  MultiFab rop_go(ba,1,nghost);
+  rop_g.setVal(0.);
+  rop_go.setVal(0.);
+
+  // X-axis gas velocity
+  MultiFab u_g (ba,1,nghost);
+  MultiFab u_go(ba,1,nghost);
+  u_g.setVal(0.);
+  u_go.setVal(0.);
+
+  // Y-axis gas velocity
+  MultiFab v_g (ba,1,nghost);
+  MultiFab v_go(ba,1,nghost);
+  v_g.setVal(0.);
+  v_go.setVal(0.);
+
+  // Z-axis gas velocity
+  MultiFab w_g (ba,1,nghost);
+  MultiFab w_go(ba,1,nghost);
+  w_g.setVal(0.);
+  w_go.setVal(0.);
+
+  // Pressure correction equation
+  MultiFab pp_g(ba,1,nghost);
+  MultiFab d_e (ba,1,nghost);
+  MultiFab d_n (ba,1,nghost);
+  MultiFab d_t (ba,1,nghost);
+  pp_g.setVal(0.);
+  d_e.setVal(0.);
+  d_n.setVal(0.);
+  d_t.setVal(0.);
+
+  // Molecular viscosity
+  MultiFab mu_g (ba,1,nghost);
+  mu_g.setVal(0.);
+
+  //
+  MultiFab lambda_g (ba,1,nghost);
+  MultiFab trD_g (ba,1,nghost);
+  lambda_g.setVal(0.);
+  trD_g.setVal(0.);
+
+  //
+  MultiFab tau_u_g (ba,1,nghost);
+  MultiFab tau_v_g (ba,1,nghost);
+  MultiFab tau_w_g (ba,1,nghost);
+  tau_u_g.setVal(0.);
+  tau_v_g.setVal(0.);
+  tau_w_g.setVal(0.);
+
+  MultiFab flux_gE (ba,1,nghost);
+  MultiFab flux_gN (ba,1,nghost);
+  MultiFab flux_gT (ba,1,nghost);
+  flux_gE.setVal(0.);
+  flux_gN.setVal(0.);
+  flux_gT.setVal(0.);
+
+  MultiFab rop_gE (ba,1,nghost);
+  MultiFab rop_gN (ba,1,nghost);
+  MultiFab rop_gT (ba,1,nghost);
+  rop_gE.setVal(0.);
+  rop_gN.setVal(0.);
+  rop_gT.setVal(0.);
+
+  //
+  MultiFab f_gds  (ba,1,nghost);
+  MultiFab drag_am(ba,1,nghost);
+  MultiFab drag_bm(ba,3,nghost);
+  f_gds.setVal(0.);
+  drag_am.setVal(0.);
+  drag_bm.setVal(0.);
+
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-     mfix_MAIN(flag[mfi].dataPtr(),vol_surr[mfi].dataPtr(),
-               A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
+     mfix_MAIN(flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               A_m[mfi].dataPtr(),     b_m[mfi].dataPtr(),
+               ep_g[mfi].dataPtr(),    ep_go[mfi].dataPtr(),
+               p_g[mfi].dataPtr(),     p_go[mfi].dataPtr(),
+               ro_g[mfi].dataPtr(),    ro_go[mfi].dataPtr(),
+               rop_g[mfi].dataPtr(),   rop_go[mfi].dataPtr(),
+               u_g[mfi].dataPtr(),     u_go[mfi].dataPtr(),
+               v_g[mfi].dataPtr(),     v_go[mfi].dataPtr(),
+               w_g[mfi].dataPtr(),     w_go[mfi].dataPtr(),
+               pp_g[mfi].dataPtr(),    d_e[mfi].dataPtr(),
+               d_n[mfi].dataPtr(),     d_t[mfi].dataPtr(),
+               mu_g[mfi].dataPtr(),    lambda_g[mfi].dataPtr(),
+               trD_g[mfi].dataPtr(),   tau_u_g[mfi].dataPtr(),
+               tau_v_g[mfi].dataPtr(), tau_w_g[mfi].dataPtr(),
+               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),
+               flux_gT[mfi].dataPtr(), rop_gE[mfi].dataPtr(),
+               rop_gN[mfi].dataPtr(),  rop_gT[mfi].dataPtr(),
+               f_gds[mfi].dataPtr(),   drag_am[mfi].dataPtr(),
+               drag_bm[mfi].dataPtr()  );
 
   Real end_time = ParallelDescriptor::second() - strt_time;
 
