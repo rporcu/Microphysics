@@ -14,7 +14,7 @@ module iterate_module
                          p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
                          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
                          flux_ge, flux_gn, flux_gt, mu_g,&
-                         f_gds, drag_am, drag_bm, &
+                         f_gds, A_m, b_m, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
                          pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
 
@@ -98,6 +98,10 @@ module iterate_module
       DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
+      DOUBLE PRECISION, INTENT(OUT  ) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -214,8 +218,7 @@ module iterate_module
                           p_g,ro_g,rop_g,rop_go,ep_g,&
                           tau_u_g,tau_v_g,tau_w_g,&
                           d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,&
-                          f_gds, drag_am, drag_bm, flag, IER)
-
+                          f_gds, A_m, b_m, drag_am, drag_bm, flag, IER)
 
 ! Calculate densities.
       CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
@@ -227,7 +230,7 @@ module iterate_module
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
          CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
-            rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, flag, NORMG, RESG, IER)
+            rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, NORMG, RESG, IER)
 
 ! Correct pressure, velocities, and density
          CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)

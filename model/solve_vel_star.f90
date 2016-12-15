@@ -11,7 +11,7 @@ module solve_vel_star_module
       SUBROUTINE SOLVE_VEL_STAR(u_g, v_g, w_g, u_go, v_go, w_go,    &
          p_g, ro_g, rop_g, rop_go, ep_g, tau_u_g, tau_v_g, tau_w_g, &
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
-         f_gds, drag_am, drag_bm, flag, IER)
+         f_gds, A_m, b_m, drag_am, drag_bm, flag, IER)
 
       USE adjust_a  , only: adjust_a_g
       USE adjust_leq_module, only: adjust_leq
@@ -20,7 +20,7 @@ module solve_vel_star_module
       USE discretelement, only: des_continuum_coupled
       USE gas_drag_module, only: gas_drag_u, gas_drag_v, gas_drag_w
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
-      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
+      USE matrix  , only: init_ab_m, lock_ambm, unlock_ambm
       USE ps      , only: point_source
       USE residual, only: resid, den_resid, max_resid, i_resid, j_resid, k_resid
       USE residual, only: resid_u, resid_v, resid_w, num_resid
@@ -89,6 +89,10 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      DOUBLE PRECISION, INTENT(inout) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
+      DOUBLE PRECISION, INTENT(inout) :: b_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------

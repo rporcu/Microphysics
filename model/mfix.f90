@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine MFIX(flag_in, vol_surr)
+      subroutine MFIX(flag_in, vol_surr, A_m, b_m)
 
 !-----------------------------------------------
 ! Modules
@@ -26,7 +26,6 @@
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
-      use matrix, only: A_m, b_m
       use param1 , only: undefined, zero
       use read_res1_mod, only: read_res1
       use run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
@@ -55,6 +54,9 @@
 
       integer         , intent(inout) :: flag_in(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
       double precision, intent(inout) :: vol_surr(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: A_m(istart3:iend3,jstart3:jend3,kstart3:kend3,7)
+      double precision, intent(inout) :: b_m(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Fluid Variables
 !---------------------------------------------------------------------//
@@ -118,7 +120,7 @@
       ! call set_domain(flag)
 
 ! Allocate array storage.
-      CALL ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
+      CALL ALLOCATE_ARRAYS(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt, f_gds, drag_am, drag_bm)
@@ -308,7 +310,7 @@
          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
          tau_u_g, tau_v_g, tau_w_g,&
          flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-         f_gds, drag_am, drag_bm, flag, vol_surr, &
+         f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
          ppos, des_pos_new, des_vel_new, des_usr_var, & 

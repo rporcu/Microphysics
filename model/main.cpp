@@ -85,8 +85,15 @@ int main (int argc, char* argv[])
   MultiFab vol_surr(ba,1,nghost);
   vol_surr.setVal(0.);
 
+  // Matrix and rhs vector
+  MultiFab A_m(ba,7,nghost);
+  MultiFab b_m(ba,1,nghost);
+  A_m.setVal(0.);
+  b_m.setVal(0.);
+
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-     mfix_MAIN(flag[mfi].dataPtr(),vol_surr[mfi].dataPtr());
+     mfix_MAIN(flag[mfi].dataPtr(),vol_surr[mfi].dataPtr(),
+               A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
 
   Real end_time = ParallelDescriptor::second() - strt_time;
 

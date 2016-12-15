@@ -18,7 +18,7 @@ module time_march_module
          rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
          tau_u_g,tau_v_g,tau_w_g,&
          flux_ge,flux_gn,flux_gt,trd_g,lambda_g,mu_g,&
-         f_gds, drag_am, drag_bm, flag, vol_surr,  &
+         f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr,  &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
          ppos, des_pos_new, des_vel_new, des_usr_var, &
@@ -119,6 +119,10 @@ module time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(INOUT) :: b_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       DOUBLE PRECISION, INTENT(INOUT) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: drag_bm&
@@ -258,9 +262,11 @@ module time_march_module
 ! Advance the solution in time by iteratively solving the equations
       call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                    rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                   flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
+                   flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
+                   A_m, b_m, drag_am, drag_bm,&
                    tau_u_g,tau_v_g,tau_w_g,&
-                   pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
+                   pijk, particle_phase, particle_state, pvol, &
+                   des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
 
       DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, vol_surr, &
          rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
@@ -269,9 +275,11 @@ module time_march_module
 
          call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
                       rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-                      flux_ge,flux_gn,flux_gt,mu_g,f_gds, drag_am, drag_bm,&
+                      flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
+                      A_m, b_m, drag_am, drag_bm,&
                       tau_u_g,tau_v_g,tau_w_g,&
-                      pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
+                      pijk, particle_phase, particle_state, pvol, &
+                      des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
       ENDDO
 
       IF(DT < DT_MIN) THEN

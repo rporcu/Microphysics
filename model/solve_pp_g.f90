@@ -16,13 +16,13 @@ module solve_pp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-         ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, flag, NORMG, &
-         RESG, IER)
+         ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, &
+         flag, NORMG, RESG, IER)
 
       USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE conv_pp_g_module, only: conv_pp_g
       USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
-      USE matrix  , only: a_m, b_m, init_ab_m, lock_ambm, unlock_ambm
+      USE matrix  , only: init_ab_m, lock_ambm, unlock_ambm
       USE param1  , only: zero, one
       USE ps, only: point_source
       USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
@@ -73,6 +73,10 @@ module solve_pp_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN  ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      DOUBLE PRECISION, INTENT(inout) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
+      DOUBLE PRECISION, INTENT(inout) :: b_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
@@ -96,7 +100,7 @@ module solve_pp_module
 
 ! temporary use of global arrays:
 ! arraym1 (locally b_mmax)
-! vector B_M based on dominate term in correction equation
+! vector b_m based on dominate term in correction equation
 !-----------------------------------------------
 ! Vector b_m
       DOUBLE PRECISION, allocatable :: B_MMAX(:,:,:)
@@ -107,15 +111,15 @@ module solve_pp_module
 
 ! initializing
       PP_G = 0.0d0
-      CALL INIT_AB_M (A_M, B_M)
+      CALL INIT_AB_M (A_m, b_m)
 
 ! Forming the sparse matrix equation.
-      CALL CONV_PP_G (A_M, rop_ge, rop_gn, rop_gt, flag)
+      CALL CONV_PP_G (A_m, rop_ge, rop_gn, rop_gt, flag)
 
-      call source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(A_m, b_m, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
-      IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (B_M, B_MMAX, flag)
+      IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (b_m, B_MMAX, flag)
 
 ! Find average residual, maximum residual and location
       NORMGloc = NORMG
@@ -127,7 +131,7 @@ module solve_pp_module
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
          NORMGloc = RESID(RESID_P)/DEN
       ENDIF
-      CALL CALC_RESID_PP (B_M, NORMGloc, NUM_RESID(RESID_P),  &
+      CALL CALC_RESID_PP (b_m, NORMGloc, NUM_RESID(RESID_P),  &
          DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
       RESG = RESID(RESID_P)
@@ -136,7 +140,7 @@ module solve_pp_module
        LEQI = LEQ_IT(1)
        LEQM = LEQ_METHOD(1)
 
-      CALL SOLVE_LIN_EQ ('Pp_g', 1, PP_G, A_M, B_M, 0, LEQI, LEQM, &
+      CALL SOLVE_LIN_EQ ('Pp_g', 1, PP_G, A_m, b_m, 0, LEQI, LEQM, &
                          LEQ_SWEEP(1), LEQ_TOL(1), LEQ_PC(1), IER)
 
 !      call out_array(Pp_g, 'Pp_g')
@@ -160,7 +164,7 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(B_M, B_mmax,flag)
+      SUBROUTINE POINT_SOURCE_PP_G(b_m, B_mmax,flag)
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use geometry, only: vol
@@ -204,8 +208,8 @@ module solve_pp_module
             if(1.eq.flag(i,j,k,1)) then
                pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
-               B_M(I,J,K) = B_M(I,J,K) - pSource
-               B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(B_M(I,J,K)))
+               b_m(I,J,K) = b_m(I,J,K) - pSource
+               B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(b_m(I,J,K)))
             endif
 
          enddo

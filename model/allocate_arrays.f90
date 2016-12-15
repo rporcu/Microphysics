@@ -9,7 +9,7 @@ module allocate_mod
 !  Reviewer:                                                           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE ALLOCATE_ARRAYS(A_m, B_m,ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
+      SUBROUTINE ALLOCATE_ARRAYS(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,&
          ep_go,p_go,ro_go,rop_go,u_go,v_go,w_go,d_e,d_n,d_t,pp_g,&
          mu_g,lambda_g,trD_g,tau_u_g,tau_v_g,tau_w_g,flux_ge,&
          flux_gn,flux_gt,rop_ge,rop_gn,rop_gt,f_gds, drag_am, drag_bm)
@@ -25,8 +25,6 @@ module allocate_mod
 
       IMPLICIT NONE
 
-      double precision, allocatable, intent(inout) :: A_m(:,:,:,:)
-      double precision, allocatable, intent(inout) :: B_m(:,:,:)
       double precision, allocatable, intent(inout) :: ep_g(:,:,:)
       double precision, allocatable, intent(inout) :: p_g(:,:,:)
       double precision, allocatable, intent(inout) :: ro_g(:,:,:)
@@ -68,9 +66,6 @@ module allocate_mod
       is3 = istart3;   ie3 = iend3
       js3 = jstart3;   je3 = jend3
       ks3 = kstart3;   ke3 = kend3
-
-      Allocate( A_m(is3:ie3,js3:je3,ks3:ke3, -3:3) )
-      Allocate( B_m(is3:ie3,js3:je3,ks3:ke3) )
 
       Allocate( EP_g (is3:ie3,js3:je3,ks3:ke3) )
       Allocate( P_g (is3:ie3,js3:je3,ks3:ke3) )
