@@ -32,7 +32,7 @@ module time_march_module
       USE error_manager, only: err_msg, flush_err_msg
       USE fld_const, only: mu_g0
       USE leqsol, only: SOLVER_STATISTICS, REPORT_SOLVER_STATS
-      USE param1, only: undefined, small_number, zero
+      USE param1, only: undefined, small_number, zero, is_undefined, is_defined
       USE run, only: automatic_restart, auto_restart, chk_batchq_end, call_usr
       USE run, only: automatic_restart, auto_restart, chk_batchq_end, dem_solids
       USE run, only: dem_solids
@@ -181,7 +181,7 @@ module time_march_module
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk(1:MAX_PIP,:), particle_phase(1:MAX_PIP), particle_state(1:MAX_PIP), &
          pvol(1:MAX_PIP), des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), des_radius(1:MAX_PIP))
-      IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
+      IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
@@ -208,7 +208,7 @@ module time_march_module
                iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
          EXIT_SIGNAL, FINISH)
 
-      IF (DT == UNDEFINED) THEN
+      IF (IS_UNDEFINED(DT)) THEN
          IF (FINISH) THEN
             RETURN
          ELSE
@@ -317,7 +317,7 @@ module time_march_module
          IF(.NOT.DES_CONTINUUM_COUPLED) RETURN
       ENDIF
 
-      IF (DT /= UNDEFINED) THEN
+      IF (IS_DEFINED(DT)) THEN
          IF(USE_DT_PREV) THEN
             TIME = TIME + DT_PREV
          ELSE

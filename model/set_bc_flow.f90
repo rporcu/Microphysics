@@ -21,7 +21,7 @@ MODULE set_bc_flow_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants
-      use param1, only: ZERO, ONE, UNDEFINED
+      use param1, only: ZERO, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
 ! Maximum number of BCs
       use param, only: DIMENSION_BC
 ! Maximum number of disperse phases
@@ -119,8 +119,6 @@ MODULE set_bc_flow_module
       SUBROUTINE CHECK_BC_VEL_INFLOW(M_TOT, SKIP, BCV)
 
       USE param, only: DIM_M
-      USE param1, only: ZERO
-      USE param1, only: UNDEFINED
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
@@ -139,24 +137,24 @@ MODULE set_bc_flow_module
 
 
 ! Check that gas phase velocities are defined.
-      IF(BC_U_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_U_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF (BC_V_G(BCV) == UNDEFINED) THEN
+      IF (IS_UNDEFINED(BC_V_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF(BC_W_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_W_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check that solids phase velocities are defined.
       DO M = 1, M_TOT
-         IF(BC_U_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_U_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_U_S(BCV,M) = ZERO
             ELSE
@@ -165,7 +163,7 @@ MODULE set_bc_flow_module
             ENDIF
          ENDIF
 
-         IF(BC_V_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_V_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_V_S(BCV,M) = ZERO
             ELSE
@@ -174,7 +172,7 @@ MODULE set_bc_flow_module
             ENDIF
          ENDIF
 
-         IF(BC_W_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_W_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_W_S(BCV,M) = ZERO
             ELSE
@@ -309,24 +307,24 @@ MODULE set_bc_flow_module
       CALL INIT_ERR_MSG("CHECK_BC_VEL_OUTFLOW")
 
 ! Check that gas phase velocities are defined.
-      IF(BC_U_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_U_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_U_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF (BC_V_G(BCV) == UNDEFINED) THEN
+      IF (IS_UNDEFINED(BC_V_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_V_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF(BC_W_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_W_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_W_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check that solids phase velocities are defined.
       DO M = 1, M_TOT
-         IF(BC_U_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_U_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_U_S(BCV,M) = ZERO
             ELSE
@@ -335,7 +333,7 @@ MODULE set_bc_flow_module
             ENDIF
          ENDIF
 
-         IF(BC_V_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_V_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_V_S(BCV,M) = ZERO
             ELSE
@@ -344,7 +342,7 @@ MODULE set_bc_flow_module
             ENDIF
          ENDIF
 
-         IF(BC_W_S(BCV,M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_W_S(BCV,M))) THEN
             IF(SKIP(M)) THEN
                BC_W_S(BCV,M) = ZERO
             ELSE

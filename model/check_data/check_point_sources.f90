@@ -1,3 +1,9 @@
+MODULE CHECK_POINT_SOURCES_MODULE
+
+! Parameter constants
+      use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_POINT_SOURCES                                     !
@@ -81,8 +87,6 @@
 !---------------------------------------------------------------------//
 ! The max number of BCs.
       use param, only: DIMENSION_PS
-! Parameter constants
-      use param1, only: UNDEFINED, UNDEFINED_I
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -107,18 +111,18 @@
 ! Determine which point source indices have values.
       PSV_LP: do PSV = 1, DIMENSION_PS
 
-         IF (PS_X_W(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_X_E(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_Y_S(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_Y_N(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_Z_B(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_Z_T(PSV) /= UNDEFINED)   PS_DEFINED(PSV) = .TRUE.
-         IF (PS_I_W(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
-         IF (PS_I_E(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
-         IF (PS_J_S(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
-         IF (PS_J_N(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
-         IF (PS_K_B(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
-         IF (PS_K_T(PSV) /= UNDEFINED_I) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_X_W(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_X_E(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_Y_S(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_Y_N(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_Z_B(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_Z_T(PSV)))   PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_I_W(PSV))) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_I_E(PSV))) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_J_S(PSV))) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_J_N(PSV))) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_K_B(PSV))) PS_DEFINED(PSV) = .TRUE.
+         IF (IS_DEFINED(PS_K_T(PSV))) PS_DEFINED(PSV) = .TRUE.
 
 ! Skip consistency checks if nothing was defined.
          IF (.NOT.PS_DEFINED(PSV)) cycle PSV_LP
@@ -126,27 +130,27 @@
 ! Flag that one or more point sources has been detected.
          POINT_SOURCE = .TRUE.
 
-         IF(PS_X_W(PSV)==UNDEFINED .AND. PS_I_W(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_X_W(PSV)) .AND. IS_UNDEFINED(PS_I_W(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_X_w and PS_I_w '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(PS_X_E(PSV)==UNDEFINED .AND. PS_I_E(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_X_E(PSV)) .AND. IS_UNDEFINED(PS_I_E(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_X_e and PS_I_e '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(PS_Y_S(PSV)==UNDEFINED .AND. PS_J_S(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_Y_S(PSV)) .AND. IS_UNDEFINED(PS_J_S(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_Y_s and PS_J_s '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(PS_Y_N(PSV)==UNDEFINED .AND. PS_J_N(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_Y_N(PSV)) .AND. IS_UNDEFINED(PS_J_N(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_Y_n and PS_J_n '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(PS_Z_B(PSV)==UNDEFINED .AND. PS_K_B(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_Z_B(PSV)) .AND. IS_UNDEFINED(PS_K_B(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_Z_b and PS_K_b '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(PS_Z_T(PSV)==UNDEFINED .AND. PS_K_T(PSV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(PS_Z_T(PSV)) .AND. IS_UNDEFINED(PS_K_T(PSV))) THEN
             WRITE(ERR_MSG,1101) PSV, 'PS_Z_t and PS_K_t '
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -181,8 +185,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Parameter constants
-      use param1, only: ZERO, UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -201,10 +203,10 @@
 
 
 ! Check mass flow and velocity
-      IF(PS_MASSFLOW_G(PSV) == UNDEFINED) THEN
-         IF(PS_U_g(PSV) /= UNDEFINED .OR. &
-            PS_V_g(PSV) /= UNDEFINED .OR. &
-            PS_W_g(PSV) /= UNDEFINED) THEN
+      IF(IS_UNDEFINED(PS_MASSFLOW_G(PSV))) THEN
+         IF(IS_DEFINED(PS_U_g(PSV)) .OR. &
+            IS_DEFINED(PS_V_g(PSV)) .OR. &
+            IS_DEFINED(PS_W_g(PSV))) THEN
 
             WRITE(ERR_MSG,1100) PSV, trim(iVar('PS_MASSFLOW_G',PSV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -248,9 +250,9 @@
 
 ! Velocity does not have to be defined (no momentum source). If the
 ! components are UNDEFINED, zero them out.
-         IF(PS_U_g(PSV) == UNDEFINED) PS_U_g(PSV) = ZERO
-         IF(PS_V_g(PSV) == UNDEFINED) PS_V_g(PSV) = ZERO
-         IF(PS_W_g(PSV) == UNDEFINED) PS_W_g(PSV) = ZERO
+         IF(IS_UNDEFINED(PS_U_g(PSV))) PS_U_g(PSV) = ZERO
+         IF(IS_UNDEFINED(PS_V_g(PSV))) PS_V_g(PSV) = ZERO
+         IF(IS_UNDEFINED(PS_W_g(PSV))) PS_W_g(PSV) = ZERO
 
       ENDIF
 
@@ -277,9 +279,6 @@
 ! Gas phase mass flowrate for PS and velocities
       use ps, only: PS_MASSFLOW_G, PS_U_g, PS_V_g, PS_W_g
 
-! Parameter constants
-      use param1, only: UNDEFINED
-
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -296,16 +295,16 @@
       CALL INIT_ERR_MSG("CHECK_PS_OVERFLOW")
 
 
-      IF(PS_MASSFLOW_G(PSV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(PS_MASSFLOW_G(PSV))) THEN
          WRITE(ERR_MSG,1010) trim(iVar('PS_MASSFLOW_G',PSV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(PS_U_g(PSV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(PS_U_g(PSV))) THEN
          WRITE(ERR_MSG,1010) trim(iVar('PS_U_g',PSV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(PS_V_g(PSV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(PS_V_g(PSV))) THEN
          WRITE(ERR_MSG,1010) trim(iVar('PS_V_g',PSV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(PS_W_g(PSV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(PS_W_g(PSV))) THEN
          WRITE(ERR_MSG,1010) trim(iVar('PS_W_g',PSV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -317,3 +316,4 @@
  1010 FORMAT('Error 1010: ',A,' specified in an undefined PS region.')
 
       END SUBROUTINE CHECK_PS_OVERFLOW
+END MODULE CHECK_POINT_SOURCES_MODULE

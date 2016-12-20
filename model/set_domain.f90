@@ -1,5 +1,9 @@
 MODULE set_domain_module
 
+   use check_boundary_conditions_module, only: check_boundary_conditions
+   use check_initial_conditions_module, only: check_initial_conditions
+   use check_point_sources_module, only: check_point_sources
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -38,7 +42,7 @@ MODULE set_domain_module
       use mpi_init_des   , only: desmpi_init
       use stl_preproc_des, only: des_stl_preprocessing
 
-      use param1, only: one, undefined
+      use param1, only: one, is_defined
 
       use run, only: dem_solids
 
@@ -49,9 +53,9 @@ MODULE set_domain_module
       ! This used to be in set_geometry
 
       !  Determine the cyclic direction with a specified mass flux
-      CYCLIC_X_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_X_PD)
-      CYCLIC_Y_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_Y_PD)
-      CYCLIC_Z_MF = (FLUX_G /= UNDEFINED .AND. CYCLIC_Z_PD)
+      CYCLIC_X_MF = (IS_DEFINED(FLUX_G) .AND. CYCLIC_X_PD)
+      CYCLIC_Y_MF = (IS_DEFINED(FLUX_G) .AND. CYCLIC_Y_PD)
+      CYCLIC_Z_MF = (IS_DEFINED(FLUX_G) .AND. CYCLIC_Z_PD)
 
       ! Force the cyclic flag if cyclic with pressure drop.
       IF (CYCLIC_X_PD) CYCLIC_X = .TRUE.

@@ -1,5 +1,6 @@
 module output_manager_module
    use write_out1_module, only: write_out1
+   use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
   contains
 !----------------------------------------------------------------------!
 !                                                                      !
@@ -27,7 +28,6 @@ module output_manager_module
       use output, only: USR_TIME, USR_DT
       use output, only: VTP_TIME, VTP_DT
       use param, only: DIMENSION_USR
-      use param1, only: UNDEFINED
       use run, only: TIME, DT, TSTOP
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
@@ -153,7 +153,7 @@ module output_manager_module
 
       DOUBLE PRECISION, INTENT(IN) :: lTIME
 
-      IF(DT == UNDEFINED) THEN
+      IF(IS_UNDEFINED(DT)) THEN
          CHECK_TIME = FINISHED
       ELSE
          CHECK_TIME = (TIME+0.1d0*DT>=lTIME).OR.(TIME+0.1d0*DT>=TSTOP)
@@ -170,7 +170,7 @@ module output_manager_module
 
       DOUBLE PRECISION, INTENT(IN) :: lWRITE_DT
 
-      IF (DT /= UNDEFINED) THEN
+      IF (IS_DEFINED(DT)) THEN
          NEXT_TIME = (INT((TIME + 0.1d0*DT)/lWRITE_DT)+1)*lWRITE_DT
       ELSE
          NEXT_TIME = lWRITE_DT
@@ -302,7 +302,7 @@ module output_manager_module
             max(TIME-TIME_START,1.0d-6)
          CALL GET_TUNIT(WALL_LEFT, UNIT_LEFT)
 
-         IF (DT /= UNDEFINED) THEN
+         IF (IS_DEFINED(DT)) THEN
             CHAR_LEFT=''; WRITE(CHAR_LEFT,"(F9.2)") WALL_LEFT
             CHAR_LEFT = trim(adjustl(CHAR_LEFT))
          ELSE
@@ -342,14 +342,12 @@ module output_manager_module
       use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
       use output, only: RES_BACKUPS
       use param, only: DIMENSION_USR
-      use param1, only: UNDEFINED
       use run, only: RUN_TYPE
       use run, only: TIME, DT
       use time_cpu, only: CPU_IO
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
       use discretelement, only: PRINT_DES_DATA
-      use param1, only:  UNDEFINED_I
 
       use funits, only: CREATE_DIR
 
@@ -359,7 +357,7 @@ module output_manager_module
       INTEGER :: LC
 
 ! Initialize times for writing outputs
-      OUT_TIME = merge(TIME, UNDEFINED, OUT_DT /= UNDEFINED)
+      OUT_TIME = merge(TIME, UNDEFINED, IS_DEFINED(OUT_DT))
 
 ! Initialize the amount of time spent on IO
       CPU_IO = 0.0d0
@@ -368,7 +366,7 @@ module output_manager_module
       IF (RUN_TYPE == 'NEW') THEN
          RES_TIME = TIME
       ELSE
-         IF (DT /= UNDEFINED) THEN
+         IF (IS_DEFINED(DT)) THEN
             RES_TIME = RES_DT *                                        &
                (INT((TIME + 0.1d0*DT)/RES_DT) + 1)
          ENDIF
@@ -376,13 +374,13 @@ module output_manager_module
 
 ! Initizle RES_BACKUP_TIME
       RES_BACKUP_TIME = UNDEFINED
-      IF(RES_BACKUP_DT /= UNDEFINED) RES_BACKUP_TIME =                 &
+      IF(IS_DEFINED(RES_BACKUP_DT)) RES_BACKUP_TIME =                 &
          RES_BACKUP_DT * (INT((TIME+0.1d0*DT)/RES_BACKUP_DT)+1)
 
 ! Initialize USR_TIME
       DO LC = 1, DIMENSION_USR
          USR_TIME(LC) = UNDEFINED
-         IF (USR_DT(LC) /= UNDEFINED) THEN
+         IF (IS_DEFINED(USR_DT(LC))) THEN
             IF (RUN_TYPE == 'NEW') THEN
                USR_TIME(LC) = TIME
             ELSE
@@ -393,7 +391,7 @@ module output_manager_module
       ENDDO
 
       VTP_TIME = UNDEFINED
-      IF(VTP_DT /= UNDEFINED) THEN
+      IF(IS_DEFINED(VTP_DT)) THEN
          PRINT_DES_DATA = .TRUE.
          IF (RUN_TYPE == 'NEW'.OR.RUN_TYPE=='RESTART_2') THEN
             VTP_TIME = TIME

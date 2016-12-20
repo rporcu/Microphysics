@@ -11,7 +11,7 @@ MODULE CHECK_AXIS_MODULE
       SUBROUTINE CHECK_AXIS(NA, DIMEN, ALENGTH, DA, AXIS, &
          AXIS_INDEX)
 
-      USE param1, only: undefined, undefined_i
+      USE param1, only: is_undefined
       USE error_manager, only: finl_err_msg, err_msg, ival, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
@@ -54,7 +54,7 @@ MODULE CHECK_AXIS_MODULE
       CALL INIT_ERR_MSG("CHECK_AXIS")
 
 ! 1) MAKE SURE AT LEAST TWO OF NA, ALENGTH, DA ARE SPECIFIED
-      IF (NA == UNDEFINED_I .or. ALENGTH == UNDEFINED) THEN
+      IF (IS_UNDEFINED(NA) .or. IS_UNDEFINED(ALENGTH)) THEN
          WRITE(ERR_MSG, 1101) AXIS, AXIS, AXIS_INDEX
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -89,7 +89,7 @@ MODULE CHECK_AXIS_MODULE
 
       lSUM = 0.0
       DO LC = 1, NA
-         IF (DA<=0.0 .OR. DA==UNDEFINED) THEN
+         IF (DA<=0.0 .OR. IS_UNDEFINED(DA)) THEN
             WRITE(ERR_MSG, 1201) trim(iVar(AXIS,LC))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF

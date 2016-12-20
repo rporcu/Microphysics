@@ -29,7 +29,7 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
-      use param1 , only: undefined, zero
+      use param1 , only: zero, is_defined
       use read_res1_mod, only: read_res1
       use run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
       use set_bc0_module, only: set_bc0
@@ -276,7 +276,7 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
 
       END SELECT
 
-      IF (DT_TMP /= UNDEFINED) THEN
+      IF (IS_DEFINED(DT_TMP)) THEN
          DT = MAX(DT_MIN,MIN(DT_MAX,DT))
       ELSE
          DT = DT_TMP

@@ -1,3 +1,5 @@
+MODULE CHECK_RUN_CONTROL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_RUN_CONTROL                                       !
@@ -25,7 +27,7 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      USE param1, only: UNDEFINED, UNDEFINED_C
+      USE param1, only: UNDEFINED_C, IS_UNDEFINED
       USE param1, only: ONE, ZERO
 
 ! Global Module procedures:
@@ -64,7 +66,7 @@
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
 ! Steady-state simulation.
-      ELSEIF(DT == UNDEFINED .OR. DT == ZERO) THEN
+      ELSEIF(IS_UNDEFINED(DT) .OR. IS_UNDEFINED(DT)) THEN
          ODT = ZERO
          TIME = ZERO
 
@@ -73,11 +75,11 @@
 ! Calculate one over the initial timestep.
          ODT = ONE/DT
 ! Verify the remaining time settings.
-         IF (TIME == UNDEFINED) THEN
+         IF (IS_UNDEFINED(TIME)) THEN
             WRITE(ERR_MSG,1000) 'TIME'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
-         ELSEIF (TSTOP == UNDEFINED) THEN
+         ELSEIF (IS_UNDEFINED(TSTOP)) THEN
             WRITE(ERR_MSG,1000) 'TSTOP'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
@@ -114,3 +116,4 @@
          'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_RUN_CONTROL
+END MODULE CHECK_RUN_CONTROL_MODULE

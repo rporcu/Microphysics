@@ -1,3 +1,10 @@
+MODULE CHECK_SOLIDS_PHASES_MODULE
+
+   use check_solids_common_all_module, only: check_solids_common_all
+   use check_solids_common_discrete_module, only: check_solids_common_discrete
+   use check_des_solids_module, only: check_solids_dem
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  SUBROUTINE: CHECK_SOLIDS_PHASES                                     !
 !                                                                      !
@@ -42,3 +49,4 @@
       RETURN
 
       END SUBROUTINE CHECK_SOLIDS_PHASES
+END MODULE CHECK_SOLIDS_PHASES_MODULE

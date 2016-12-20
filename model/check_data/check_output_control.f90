@@ -1,3 +1,5 @@
+MODULE CHECK_OUTPUT_CONTROL_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Subroutine: CHECK_OUTPUT_CONTROL                                    !
 !  Purpose: Check the output control namelist section                  !
@@ -17,7 +19,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Number aliases
-      use param1, only: UNDEFINED, ZERO
+      use param1, only: ZERO, IS_UNDEFINED
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//
@@ -33,7 +35,7 @@
 
 
 ! Check the values specified for the RES file.
-      IF (RES_DT==UNDEFINED)THEN
+      IF (IS_UNDEFINED(RES_DT))THEN
          WRITE(ERR_MSG,1000) 'RES_DT'
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ELSEIF(RES_DT <= ZERO) THEN
@@ -62,3 +64,4 @@
          'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_OUTPUT_CONTROL
+END MODULE CHECK_OUTPUT_CONTROL_MODULE

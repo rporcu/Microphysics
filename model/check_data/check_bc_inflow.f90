@@ -1,3 +1,8 @@
+MODULE CHECK_BC_INFLOW_MODULE
+
+      use param1   , only: undefined, one, zero, is_undefined, is_defined
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_BC_INFLOW                                          !
@@ -46,7 +51,6 @@
       use bc, only: bc_rop_s, bc_ep_s
       use bc, only: bc_massflow_g
       use param    , only: dim_m
-      use param1   , only: undefined, one, zero
       use fld_const, only: ro_g0
       use constant , only: ro_s0
       use toleranc , only: compare
@@ -72,16 +76,16 @@
       CALL INIT_ERR_MSG("CHECK_BC_MASS_INFLOW")
 
 ! Check gas phase volume fraction.
-      IF(BC_EP_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_EP_G(BCV))) THEN
          WRITE(ERR_MSG, 1000) trim(iVar('BC_EP_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Verify compressible boundary condition variables.
-      IF(RO_G0 == UNDEFINED) THEN
-         IF(BC_P_G(BCV) == UNDEFINED) THEN
-            IF(BC_MASSFLOW_G(BCV) /= UNDEFINED .AND.                   &
-               BC_MASSFLOW_G(BCV) /= ZERO) THEN
+      IF(IS_UNDEFINED(RO_G0)) THEN
+         IF(IS_UNDEFINED(BC_P_G(BCV))) THEN
+            IF(IS_UNDEFINED(BC_MASSFLOW_G(BCV)) .AND.                   &
+               ABS(BC_MASSFLOW_G(BCV)) > ZERO) THEN
                WRITE(ERR_MSG, 1100) trim(iVar('BC_P_g',BCV))
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
@@ -100,7 +104,7 @@
 
 ! Calculate the solids volume fraction from the gas phase if there is
 ! only one solids phase.
-      IF(M_TOT == 1 .AND. BC_EP_S(BCV,1) == UNDEFINED) THEN
+      IF(M_TOT == 1 .AND. IS_UNDEFINED(BC_EP_S(BCV,1))) THEN
          BC_EP_S(BCV,1) = ONE - BC_EP_g(BCV)
       ENDIF
 
@@ -108,8 +112,8 @@
 ! if there are more than one solids phase.
       IF(M_TOT > 1 .AND. .NOT.COMPARE(BC_EP_g(BCV),ONE)) THEN
          DO M = 1, M_TOT
-            IF(BC_ROP_S(BCV,M) == UNDEFINED .AND. &
-               BC_EP_S(BCV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(BC_ROP_S(BCV,M)) .AND. &
+               IS_UNDEFINED(BC_EP_S(BCV,M))) THEN
                WRITE(ERR_MSG, 1200) M, BCV, 'BC_ROP_s and BC_EP_s'
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
@@ -135,8 +139,8 @@
          BC_ROs(M) = RO_s0(M)
 
 ! If both input parameters are defined. Make sure they are equivalent.
-         IF(BC_ROP_S(BCV,M) /= UNDEFINED .AND.                         &
-            BC_EP_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_ROP_S(BCV,M)) .AND.                         &
+            IS_DEFINED(BC_EP_S(BCV,M))) THEN
 
             IF(.NOT.COMPARE(BC_EP_S(BCV,M)*BC_ROs(M),                  &
                BC_ROP_S(BCV,M))) THEN
@@ -148,11 +152,11 @@
          'mfix.dat file.')
 
 ! Compute BC_EP_s from BC_ROP_s
-         ELSEIF(BC_EP_S(BCV,M) == UNDEFINED) THEN
+         ELSEIF(IS_UNDEFINED(BC_EP_S(BCV,M))) THEN
             BC_EP_S(BCV,M) = BC_ROP_S(BCV,M) / BC_ROs(M)
 
 ! Compute BC_ROP_s from BC_EP_s and BC_ROs
-         ELSEIF(BC_ROP_S(BCV,M) == UNDEFINED) THEN
+         ELSEIF(IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
             BC_ROP_S(BCV,M) = BC_EP_S(BCV,M) * BC_ROs(M)
 
          ENDIF
@@ -206,7 +210,6 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
       use param    , only: dim_m
-      use param1   , only: undefined, zero
       use fld_const, only: ro_g0
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
       IMPLICIT NONE
@@ -227,13 +230,13 @@
 
 ! Remove checks on bc_ep_g/bc_rop_s; using routine check_bc_outflow
 
-      IF (BC_P_G(BCV) == UNDEFINED) THEN
+      IF (IS_UNDEFINED(BC_P_G(BCV))) THEN
          WRITE(ERR_MSG,1000) 'BC_P_g', BCV
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
  1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
          'correct the mfix.dat file.')
 
-      ELSEIF (BC_P_G(BCV)<=ZERO .AND. RO_G0==UNDEFINED) THEN
+      ELSEIF (BC_P_G(BCV)<=ZERO .AND. IS_UNDEFINED(RO_G0)) THEN
          WRITE(ERR_MSG, 1101) BCV, trim(iVal(BC_P_G(BCV)))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
  1101 FORMAT('Error 1101: Pressure must be greater than zero for ',    &
@@ -245,17 +248,17 @@
 ! as initial conditions for the boundary region. If they are not
 ! specified then a default value is set here otherwise check_data_20
 ! will complain and cause MFIX to exit.
-      IF(BC_U_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_U_G(BCV))) THEN
          BC_U_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_U_g',BCV))
       ENDIF
 
-      IF(BC_V_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_V_G(BCV))) THEN
          BC_V_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_V_g',BCV))
       ENDIF
 
-      IF(BC_W_G(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_W_G(BCV))) THEN
          BC_W_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_W_g',BCV))
       ENDIF
@@ -266,21 +269,21 @@
             BC_V_S(BCV,M) = ZERO
             BC_W_S(BCV,M) = ZERO
          ELSE
-            IF(BC_U_S(BCV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(BC_U_S(BCV,M))) THEN
                BC_U_S(BCV,M) = ZERO
-               IF(BC_ROP_S(BCV,M) /= ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_U_s',BCV,M))
             ENDIF
 
-            IF(BC_V_S(BCV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(BC_V_S(BCV,M))) THEN
                BC_V_S(BCV,M) = ZERO
-               IF(BC_ROP_S(BCV,M) /= ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_V_s',BCV,M))
             ENDIF
 
-            IF(BC_W_S(BCV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(BC_W_S(BCV,M))) THEN
                BC_W_S(BCV,M) = ZERO
-               IF(BC_ROP_S(BCV,M) /= ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_W_s',BCV,M))
             ENDIF
          ENDIF
@@ -294,3 +297,4 @@
 
       RETURN
       END SUBROUTINE CHECK_BC_P_INFLOW
+END MODULE CHECK_BC_INFLOW_MODULE

@@ -1,3 +1,5 @@
+MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_SOLIDS_COMMON_DISCRETE                            !
@@ -211,7 +213,7 @@
 ! Flag: Interplate variables for drag calculation.
       use particle_filter, only: DES_INTERP_ON
 
-      use param1, only: UNDEFINED
+      use param1, only: IS_DEFINED
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
@@ -262,7 +264,7 @@
 
       CASE(DES_INTERP_NONE)
 
-         IF(DES_INTERP_WIDTH /= UNDEFINED) THEN
+         IF(IS_DEFINED(DES_INTERP_WIDTH)) THEN
             WRITE(ERR_MSG,2100) trim(adjustl(DES_INTERP_SCHEME))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -275,7 +277,7 @@
       CASE(DES_INTERP_GARG)
          DES_INTERP_MEAN_FIELDS= .TRUE.
 
-         IF(DES_INTERP_WIDTH /= UNDEFINED) THEN
+         IF(IS_DEFINED(DES_INTERP_WIDTH)) THEN
             WRITE(ERR_MSG,2100) trim(adjustl(DES_INTERP_SCHEME))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -287,3 +289,4 @@
 
       RETURN
       END SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_INTERP
+END MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE

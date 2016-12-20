@@ -11,7 +11,12 @@ MODULE GET_DATA_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_DATA
 
+      USE check_gas_phase_module, only: check_gas_phase
       USE check_geometry_module, only: check_geometry, check_geometry_des
+      USE check_numerics_module, only: check_numerics
+      USE check_output_control_module, only: check_output_control
+      USE check_run_control_module, only: check_run_control
+      USE check_solids_phases_module, only: check_solids_phases
       USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area

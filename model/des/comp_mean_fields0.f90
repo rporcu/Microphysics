@@ -214,7 +214,7 @@ module comp_mean_fields0_module
       DO K = KSTART2, KEND1
       DO J = JSTART2, JEND1
       DO I = ISTART2, IEND1
-         if (vol_surr(i,j,k).eq.ZERO) CYCLE
+         if (abs(vol_surr(i,j,k)) < epsilon(zero)) CYCLE
 
 ! looping over stencil points (NODE VALUES)
          DO M = 1, MMAX

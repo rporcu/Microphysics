@@ -1,3 +1,5 @@
+MODULE CHECK_BC_DEM_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 ! minimum amount of geometry data.                                     !
 !                                                                      !
@@ -30,7 +32,7 @@
 ! The max number of BCs.
       use param, only: DIMENSION_BC
 ! Parameter constants
-      use param1, only: ZERO, UNDEFINED
+      use param1, only: ZERO, IS_DEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -84,7 +86,7 @@
          CASE ('CG_MI')
             DO M=1,M_TOT
                IF(SOLIDS_MODEL(M)=='DEM') THEN
-                  IF(BC_EP_s(BCV,M) /= UNDEFINED .AND.                 &
+                  IF(IS_DEFINED(BC_EP_s(BCV,M)) .AND.                 &
                      BC_EP_s(BCV,M) > ZERO) THEN
                      WRITE(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)),    &
                         'GC_MI'
@@ -115,3 +117,4 @@
          'mfix.dat file.')
 
       END SUBROUTINE CHECK_BC_DEM
+END MODULE CHECK_BC_DEM_MODULE
