@@ -23,7 +23,7 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
       use discretelement, only: pinc, des_rop_s, max_pip
       use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
-      use fld_const, only: ro_g0
+      use fld_const, only: ro_g0, mu_g0
       use funits , only: dmp_log, unit_log
       use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag
       use set_domain_module, only: set_domain
@@ -31,7 +31,9 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
       use make_arrays_des_module, only: make_arrays_des
       use param1 , only: undefined, zero
       use read_res1_mod, only: read_res1
-      use run    , only: call_usr, dt, dt_min, dt_max, time, nstep, run_type, dem_solids
+      use run, only: call_usr, run_type, dem_solids, nstep
+      use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev, dt_prev
+      use run, only: chk_batchq_end
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_bc_dem_module, only: set_bc_dem
@@ -47,6 +49,11 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
       use write_out3_module, only: write_out3
       use write_res1_mod, only: write_res1
       use zero_norm_vel_module, only: zero_norm_vel
+      use output_manager_module, only: init_output_vars, output_manager
+      use calc_coeff_module, only: calc_coeff
+      USE check_batch_queue_end_module, only: check_batch_queue_end
+      USE discretelement, only: des_continuum_coupled
+      use des_time_march_module, only: des_time_march
 
       use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
       use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
@@ -150,9 +157,16 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
 
       INTEGER :: II, lb, ub
 
+! Flag to indicate one pass through iterate for steady
+! state conditions.
+      LOGICAL :: FINISH
+! Flag to save results and cleanly exit.
+      LOGICAL :: EXIT_SIGNAL = .FALSE.
+
 !---------------------------------------------------------------------//
       flag     = flag_in
 !-----------------------------------------------
+      FINISH  = .FALSE.
 
       ! This is now called from main.cpp
       ! call set_domain(flag)
@@ -342,23 +356,91 @@ subroutine MFIX(flag_in, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
       IF(DEM_SOLIDS) CALL SET_BC_DEM(flag)
 
 
+! ######################## Moved here from time march
+
+
+      CALL INIT_OUTPUT_VARS
+
+! Parse residual strings
+      CALL PARSE_RESID_STRING ()
+
+! Call user-defined subroutine to set constants, check data, etc.
+      IF (CALL_USR) CALL USR0
+
+! Calculate all the coefficients once before entering the time loop
+      CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
+         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
+         pvol, des_pos_new, des_vel_new, des_radius)
+
+      IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
+
+! Remove undefined values at wall cells for scalars
+      where(rop_g == undefined) rop_g = 0.0
+
+
+
+      time_step: do
+! Terminate MFIX normally before batch queue terminates.
+         IF (CHK_BATCHQ_END) CALL CHECK_BATCH_QUEUE_END(EXIT_SIGNAL)
+
+         IF (CALL_USR) CALL USR1
+
+! Set wall boundary conditions and transient flow b.c.'s
+         CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g,w_g, &
+            flux_ge, flux_gn, flux_gt, flag)
+
+         CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+            iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, &
+            des_vel_new, des_usr_var, omega_new, EXIT_SIGNAL, FINISH)
+
+         IF (DT == UNDEFINED) THEN
+            IF (FINISH) THEN
+               exit time_step
+            ELSE
+               FINISH = .TRUE.
+            ENDIF
+
+! Mechanism to terminate MFIX normally before batch queue terminates.
+         ELSEIF (TIME + 0.1d0*DT >= TSTOP .OR. EXIT_SIGNAL) THEN
+            exit time_step
+         ENDIF
+
 ! Find the solution of the equations from TIME to TSTOP at
 ! intervals of DT
-      call time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
-         p_g, p_go, pp_g, ep_g, ep_go, &
-         ro_g, ro_go, rop_g, rop_go, &
-         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
-         tau_u_g, tau_v_g, tau_w_g,&
-         flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-         f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
-         des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, &
-         omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
+         call time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
+            p_g, p_go, pp_g, ep_g, ep_go, &
+            ro_g, ro_go, rop_g, rop_go, &
+            rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
+            tau_u_g, tau_v_g, tau_w_g,&
+            flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
+            f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr, &
+            pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+            des_radius, ro_sol, pvol, pmass, omoi, neighbor_index, neighbor_index_old, &
+            ppos, des_pos_new, des_vel_new, des_usr_var, &
+            omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
-! Call user-defined subroutine after time-loop.
-      IF (CALL_USR) CALL USR3(u_g, v_g, w_g, p_g)
+! Other solids model implementations
+         IF(DEM_SOLIDS) THEN
+            call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
+               pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+               neighbor_index, neighbor_index_old, des_radius, ro_sol, pvol, pmass,&
+               omoi, des_usr_var, ppos, des_pos_new, des_vel_new, omega_new, &
+               des_acc_old, rot_acc_old, fc, tow, wall_collision_pft, &
+               flag, vol_surr)
+            IF(.NOT.DES_CONTINUUM_COUPLED) exit time_step
+         ENDIF
 
+         IF(DT /= UNDEFINED)THEN
+            IF(USE_DT_PREV)THEN
+               TIME = TIME + DT_PREV
+            ELSE
+               TIME = TIME + DT
+            ENDIF
+            USE_DT_PREV = .FALSE.
+            NSTEP = NSTEP + 1
+         ENDIF
+
+      enddo time_step
 
       CALL FINL_ERR_MSG
 

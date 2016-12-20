@@ -126,8 +126,11 @@ contains
 
   end subroutine mfix_get_data
 
-! **************************************************************************
 
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
   subroutine mfix_set_domain(flag) &
        bind(C, name="mfix_set_domain")
 
@@ -141,30 +144,28 @@ contains
 
   end subroutine mfix_set_domain
 
-! **************************************************************************
 
-  subroutine mfix_init_fvars(u,v,w,ep,p,ro,rop,nlen) &
-       bind(C, name="mfix_init_fvars")
 
-    integer          :: nlen
-    double precision :: u(nlen), v(nlen), w(nlen), ep(nlen), p(nlen), ro(nlen), rop(nlen)
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
+  subroutine mfix_usr3(u_g, v_g, w_g, p_g) &
+       bind(C, name="mfix_usr3")
 
-!    call init_fvars(u,v,w,ep,p,ro,rop,nlen)
+    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-  end subroutine mfix_init_fvars
+    double precision, intent(inout) :: u_g&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+    double precision, intent(inout) :: v_g&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+    double precision, intent(inout) :: w_g&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+    double precision, intent(inout) :: p_g&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-! **************************************************************************
+    call usr3(u_g, v_g, w_g, p_g)
 
-  subroutine mfix_set_constprop(ro_g,mu_g,lambda_g,nlen) &
-       bind(C, name="mfix_set_constprop")
-
-    integer          :: nlen
-    double precision :: ro_g(nlen), mu_g(nlen), lambda_g(nlen)
-
-!    call set_constprop(ro_g,mu_g,lambda_g)
-
-  end subroutine mfix_set_constprop
-
-! **************************************************************************
+  end subroutine mfix_usr3
 
 end module boxlib_to_mfix_module

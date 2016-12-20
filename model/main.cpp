@@ -204,6 +204,11 @@ int main (int argc, char* argv[])
                f_gds[mfi].dataPtr(),   drag_am[mfi].dataPtr(),
                drag_bm[mfi].dataPtr()  );
 
+
+  for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+     mfix_usr3(u_g[mfi].dataPtr(),    v_g[mfi].dataPtr(),
+               w_g[mfi].dataPtr(),    p_g[mfi].dataPtr());
+
   Real end_time = ParallelDescriptor::second() - strt_time;
 
   if (ParallelDescriptor::IOProcessor())
