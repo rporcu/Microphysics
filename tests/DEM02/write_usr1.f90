@@ -21,6 +21,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
+      use discretelement, only: max_pip
+
       IMPLICIT NONE
 
       integer, intent(in) :: l
