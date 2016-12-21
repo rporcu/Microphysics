@@ -208,27 +208,22 @@ int main (int argc, char* argv[])
 
   Array<Real> wall_collision_pft(3*8*nparticles);
 
-
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-     mfix_MAIN(flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
-               A_m[mfi].dataPtr(),     b_m[mfi].dataPtr(),
+     mfix_MAIN(
+               u_g[mfi].dataPtr(),     v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+               u_go[mfi].dataPtr(),    v_go[mfi].dataPtr(),     w_go[mfi].dataPtr(),
+               p_g[mfi].dataPtr(),     p_go[mfi].dataPtr(),     pp_g[mfi].dataPtr(),
                ep_g[mfi].dataPtr(),    ep_go[mfi].dataPtr(),
-               p_g[mfi].dataPtr(),     p_go[mfi].dataPtr(),
                ro_g[mfi].dataPtr(),    ro_go[mfi].dataPtr(),
                rop_g[mfi].dataPtr(),   rop_go[mfi].dataPtr(),
-               u_g[mfi].dataPtr(),     u_go[mfi].dataPtr(),
-               v_g[mfi].dataPtr(),     v_go[mfi].dataPtr(),
-               w_g[mfi].dataPtr(),     w_go[mfi].dataPtr(),
-               pp_g[mfi].dataPtr(),    d_e[mfi].dataPtr(),
-               d_n[mfi].dataPtr(),     d_t[mfi].dataPtr(),
-               mu_g[mfi].dataPtr(),    lambda_g[mfi].dataPtr(),
-               trD_g[mfi].dataPtr(),   tau_u_g[mfi].dataPtr(),
-               tau_v_g[mfi].dataPtr(), tau_w_g[mfi].dataPtr(),
-               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),
-               flux_gT[mfi].dataPtr(), rop_gE[mfi].dataPtr(),
-               rop_gN[mfi].dataPtr(),  rop_gT[mfi].dataPtr(),
-               f_gds[mfi].dataPtr(),   drag_am[mfi].dataPtr(),
-               drag_bm[mfi].dataPtr(),
+               rop_gE[mfi].dataPtr(),  rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
+               d_e[mfi].dataPtr(),     d_n[mfi].dataPtr(),      d_t[mfi].dataPtr(),
+               tau_u_g[mfi].dataPtr(), tau_v_g[mfi].dataPtr(),  tau_w_g[mfi].dataPtr(),
+               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(), flux_gT[mfi].dataPtr(), 
+               trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),    
+               f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),     b_m[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
+               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
                pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
@@ -238,6 +233,32 @@ int main (int argc, char* argv[])
                rot_acc_old.dataPtr(), fc.dataPtr(), tow.dataPtr(),
                wall_collision_pft.dataPtr());
 
+#if 0
+  for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+     mfix_time_march(
+               u_g[mfi].dataPtr(),     v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+               u_go[mfi].dataPtr(),    v_go[mfi].dataPtr(),     w_go[mfi].dataPtr(),
+               p_g[mfi].dataPtr(),     p_go[mfi].dataPtr(),     pp_g[mfi].dataPtr(),
+               ep_g[mfi].dataPtr(),    ep_go[mfi].dataPtr(),
+               ro_g[mfi].dataPtr(),    ro_go[mfi].dataPtr(),
+               rop_g[mfi].dataPtr(),   rop_go[mfi].dataPtr(),
+               rop_gE[mfi].dataPtr(),  rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
+               d_e[mfi].dataPtr(),     d_n[mfi].dataPtr(),      d_t[mfi].dataPtr(),
+               tau_u_g[mfi].dataPtr(), tau_v_g[mfi].dataPtr(),  tau_w_g[mfi].dataPtr(),
+               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(), 
+               trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),    
+               f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
+               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
+               iglobal_id.dataPtr(), particle_state.dataPtr(), particle_phase.dataPtr(), 
+               des_radius.dataPtr(), ro_sol.dataPtr(),
+               pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
+               ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+               des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
+               rot_acc_old.dataPtr(), fc.dataPtr(), tow.dataPtr(),
+               wall_collision_pft.dataPtr());
+#endif
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_usr3(u_g[mfi].dataPtr(),    v_g[mfi].dataPtr(),
