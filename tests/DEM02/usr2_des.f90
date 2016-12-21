@@ -15,7 +15,7 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR2_DES(des_pos_new, des_vel_new)
+      SUBROUTINE USR2_DES(des_pos_new, des_vel_new, omega_new)
 
       Use discretelement, only: max_pip
       Use run
@@ -25,6 +25,7 @@
 
       double precision, intent(in) :: des_pos_new(max_pip,3)
       double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(inout) :: omega_new(max_pip,3)
 
 ! Check if particle reached the peak of the bounce.
       IF(DES_VEL_new(1,2) < 0.0) THEN

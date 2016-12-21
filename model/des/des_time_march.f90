@@ -240,14 +240,14 @@ module des_time_march_module
                .FALSE., .FALSE.)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(CALL_USR) CALL USR2_DES(des_pos_new, des_vel_new)
+         IF(CALL_USR) CALL USR2_DES(des_pos_new, des_vel_new, omega_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
 ! END DEM time loop
 !-----------------------------------------------------------------<<<
 
-      IF(CALL_USR) CALL USR3_DES
+      IF(CALL_USR) CALL USR3_DES(des_pos_new, des_vel_new, omega_new)
 
       CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,&
          des_usr_var,iglobal_id,flag)

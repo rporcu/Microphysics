@@ -15,27 +15,24 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR2_DES
+      SUBROUTINE USR2_DES(des_pos_new, des_vel_new, omega_new)
 
       Use discretelement, only: MAX_PIP
-      Use discretelement, only: iGLOBAL_ID
-      Use discretelement, only: DES_VEL_NEW
-      Use discretelement, only: DES_POS_NEW
-      Use discretelement, only: OMEGA_NEW
 
       IMPLICIT NONE
 
       INTEGER :: LL
+      double precision, intent(inout) :: des_pos_new(max_pip,3)
+      double precision, intent(inout) :: des_vel_new(max_pip,3)
+      double precision, intent(inout) :: omega_new(max_pip,3)
 
 ! Move particles 63-93 below particles 32-62 to fake a wall.
-      DO LL=1,MAX_PIP
-         IF(iGLOBAL_ID(LL) >= 63) THEN
-            DES_VEL_NEW(LL,:) = 0.0d0
-            DES_POS_NEW(LL,1) = DES_POS_NEW(LL-31,1)
-            DES_POS_NEW(LL,3) = DES_POS_NEW(LL-31,3)
-            DES_POS_NEW(LL,2) = 0.0475d0
-            OMEGA_NEW(LL,:) = 0.0d0
-         ENDIF
+      DO LL=63,MAX_PIP
+         DES_VEL_NEW(LL,:) = 0.0d0
+         DES_POS_NEW(LL,1) = DES_POS_NEW(LL-31,1)
+         DES_POS_NEW(LL,3) = DES_POS_NEW(LL-31,3)
+         DES_POS_NEW(LL,2) = 0.0475d0
+         OMEGA_NEW(LL,:) = 0.0d0
       ENDDO
 
       RETURN
