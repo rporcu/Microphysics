@@ -19,20 +19,23 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L)
+      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
+      use discretelement, only: max_pip
       use usr, only: UPDATE_RK4_SOL
       use run, only: TIME
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: L
-
+      integer, intent(in) :: l
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
       CASE(1)
          CALL UPDATE_RK4_SOL(TIME)
-         CALL WRITE_DES_OUT(TIME)
+         CALL WRITE_DES_OUT(TIME, des_pos_new, des_vel_new)
       END SELECT
 
       RETURN
@@ -51,10 +54,9 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime)
+      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
 
-      Use discretelement, only: DES_POS_NEW, DES_VEL_NEW
-      Use discretelement, only: DES_USR_VAR
+      use discretelement, only: max_pip
       Use usr, only: RK4_POS, RK4_VEL
 
       IMPLICIT NONE
@@ -62,7 +64,8 @@
 ! Dummy Arguments
 !---------------------------------------------------------------------//
       DOUBLE PRECISION, INTENT(IN) :: lTime
-
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//

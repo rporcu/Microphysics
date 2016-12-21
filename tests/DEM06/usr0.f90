@@ -12,8 +12,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use discretelement, only: DES_POS_NEW
-      use discretelement, only: DES_VEL_NEW
       use discretelement, only: PIP
       use exit_mod, only: mfix_exit
       use usr
@@ -28,8 +26,8 @@
       ENDIF
 
 ! Store the initial position and velocity
-      RK4_POS(:) = DES_POS_NEW(1,:)
-      RK4_VEL(:) = DES_VEL_NEW(1,:)
+      RK4_POS(:) = (/0.0050d0, 0.0925d0, 0.0050d0/)
+      RK4_VEL(:) = (/0.0000d0, 0.0000d0, 0.0000d0/)
 
       return
       END SUBROUTINE USR0

@@ -282,7 +282,7 @@ set(TESTS
   tests/DEM03
   tests/DEM04
   tests/DEM05
-  #tests/DEM06
+  tests/DEM06
   #tests/DEM07
   #benchmarks/DEM01
   #benchmarks/DEM02
