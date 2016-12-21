@@ -21,7 +21,7 @@ MODULE SET_PHASE_INDEX_MODULE
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 !-----------------------------------------------

@@ -69,11 +69,11 @@ module des_time_march_module
       DOUBLE PRECISION, INTENT(IN) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
+      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
-      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
@@ -125,7 +125,8 @@ module des_time_march_module
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
          CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-         iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
+            iglobal_id, particle_state, des_radius, ro_sol, des_pos_new,&
+            des_vel_new, des_usr_var, omega_new, &
          .FALSE., .FALSE.)
       ENDIF   ! end if/else (des_continuum_coupled)
 
@@ -147,7 +148,8 @@ module des_time_march_module
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
             CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
-               flag, pijk, particle_state, pvol, des_vel_new, fc, des_radius, particle_phase)
+               flag, pijk, particle_state, pvol, des_vel_new, fc, &
+               des_radius, particle_phase)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc, flag)
       ENDIF
@@ -180,17 +182,20 @@ module des_time_march_module
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos,&
+            des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
 ! Set DO_NSEARCH before calling DES_PAR_EXCHANGE.
          DO_NSEARCH = (NN == 1 .OR. MOD(NN,NEIGHBOR_SEARCH_N) == 0)
 
 ! Add/Remove particles to the system via flow BCs.
-         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, particle_phase, DG_PIJK, iglobal_id, PARTICLE_STATE, &
+         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, particle_phase, DG_PIJK, &
+            iglobal_id, PARTICLE_STATE, &
             DES_RADIUS, OMOI, PMASS, PVOL, RO_SOL, &
             DES_VEL_NEW, DES_POS_NEW, PPOS, OMEGA_NEW, DRAG_FC)
-         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM(DO_NSEARCH, particle_phase, iglobal_id, particle_state, &
+         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM(DO_NSEARCH, &
+            particle_phase, iglobal_id, particle_state, &
             des_radius, omoi, pmass, pvol, ro_sol, &
             des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
 
@@ -203,7 +208,8 @@ module des_time_march_module
                des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
          ENDIF
 
-         IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
+         IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius,&
+            des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
 ! Explicitly coupled simulations do not need to rebin particles to
 ! the fluid grid every time step. However, this implies that the
@@ -211,10 +217,12 @@ module des_time_march_module
          IF(DES_CONTINUUM_COUPLED .AND. &
             .NOT.DES_EXPLICITLY_COUPLED) THEN
 ! Bin particles to fluid grid.
-            CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
+            CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
+               des_pos_new, des_vel_new, des_radius, des_usr_var)
 ! Calculate mean fields (EPg).
-            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-                                  des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id)
+            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
+               particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
+               des_radius,des_usr_var,flag,vol_surr,iglobal_id)
          ENDIF
 
 ! Update time to reflect changes
@@ -227,11 +235,12 @@ module des_time_march_module
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
             CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-               iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
+               iglobal_id, particle_state, des_radius, ro_sol, &
+               des_pos_new, des_vel_new, des_usr_var, omega_new, &
                .FALSE., .FALSE.)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(CALL_USR) CALL USR2_DES
+         IF(CALL_USR) CALL USR2_DES(des_pos_new, des_vel_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
@@ -240,7 +249,8 @@ module des_time_march_module
 
       IF(CALL_USR) CALL USR3_DES
 
-       CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,&
+         des_usr_var,iglobal_id,flag)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN

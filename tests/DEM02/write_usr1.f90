@@ -19,11 +19,14 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L)
+      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: L
+      integer, intent(in) :: l
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
       CASE(1); CALL WRITE_DES_OUT()
@@ -65,7 +68,7 @@
       double precision :: maxHS
 ! Loop counter
       integer :: k
-! Save the last location of the loop counter 
+! Save the last location of the loop counter
       integer, save :: last_k = 0
 
       IF(myPE /= PE_IO) RETURN
@@ -86,7 +89,7 @@
 
 ! Write the results to a file.
          WRITE(uHeight,"(3x,I2,5X,F15.8,2(3x,F15.8))") k, &
-            maxHS, MAX_HEIGHT(k), apDiff 
+            maxHS, MAX_HEIGHT(k), apDiff
 
       enddo
       last_k = k

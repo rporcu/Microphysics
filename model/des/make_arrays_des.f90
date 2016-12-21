@@ -55,7 +55,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id, dg_pijkprv
       INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase

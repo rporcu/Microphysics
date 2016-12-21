@@ -4,7 +4,7 @@ extern "C"
 {
   void mfix_add_argument(char* fname, int* nlen);
 
-  void mfix_get_data(int* imax, int* jmax, int* kmax);
+  void mfix_get_data(int* imax, int* jmax, int* kmax, int* dem_solids);
 
   void mfix_set_domain(int* flag);
 
@@ -26,7 +26,28 @@ extern "C"
                  Real* flux_gT, Real* rop_gE,
                  Real* rop_gN,  Real* rop_gT,
                  Real* f_gds,   Real* drag_am,
-                 Real* drag_bm  );
+                 Real* drag_bm,
+                 int* pijk,
+                 int* dg_pijk,
+                 int* dg_pijkprv,
+                 int* iglobal_id,
+                 int* particle_state,
+                 int* particle_phase,
+                 Real* des_radius,
+                 Real* ro_sol,
+                 Real* pvol,
+                 Real* pmass,
+                 Real* omoi,
+                 Real* ppos,
+                 Real* des_pos_new,
+                 Real* des_vel_new,
+                 Real* des_usr_var,
+                 Real* omega_new,
+                 Real* des_acc_old,
+                 Real* rot_acc_old,
+                 Real* fc,
+                 Real* tow,
+                 Real* wall_collision_pft);
 
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);

@@ -64,7 +64,7 @@ module drag_gs_des1_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
@@ -159,7 +159,7 @@ module drag_gs_des1_module
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 

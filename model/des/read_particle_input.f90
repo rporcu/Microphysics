@@ -23,7 +23,7 @@ MODULE READ_PAR_INPUT_MODULE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
 
 !-----------------------------------------------
 ! Local variables

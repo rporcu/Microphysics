@@ -57,13 +57,8 @@
         ldebug = pdebug
       endif
 
-
-
 !direct copy in case of single processor
       lrecvface = pface+mod(pface,2)-mod(pface+1,2)
-
-
-
 
       if (ineighproc(pface).eq.mype) then
          drecvbuf(1+mod(lrecvface,2))%facebuf(1:isendcnt(pface)) = &
@@ -232,6 +227,10 @@
       integer :: lcurpar,lparcount,lcount
 !-----------------------------------------------
 
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      return
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+
 ! pack the variables in case of
       lparcount = 1
       lcount = 0
@@ -266,6 +265,10 @@
 !-----------------------------------------------
       integer :: lcurpar,lparcount,lcount
 !-----------------------------------------------
+
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      return
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 
 ! pack the variables in proc buffer
       lparcount = 1
@@ -311,6 +314,10 @@
       integer :: lcurpar,lparcount,lcount
       logical :: lloc2glb
 !-----------------------------------------------
+
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      return
+! HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
 
       if (present(ploc2glb)) then
          lloc2glb = ploc2glb

@@ -28,11 +28,11 @@ MODULE CALC_FORCE_DEM_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
+      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk

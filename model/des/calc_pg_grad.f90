@@ -48,7 +48,7 @@ MODULE CALC_PG_GRAD_MODULE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: drag_fc
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
 ! Loop counters: Particle, fluid cell, neighbor cells

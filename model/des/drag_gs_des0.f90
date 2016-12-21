@@ -33,7 +33,7 @@ module drag_gs_des0_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
@@ -222,7 +222,7 @@ module drag_gs_des0_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 

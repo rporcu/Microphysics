@@ -48,8 +48,6 @@ CONTAINS
 ! For parallel processing the array size required should be either
 ! specified by the USEr or could be determined from total particles
 ! with some factor.
-      MAX_PIP = merge(0, PARTICLES/numPEs, PARTICLES==UNDEFINED_I)
-      MAX_PIP = MAX(MAX_PIP,4)
 
       WRITE(ERR_MSG,1000) trim(iVal(MAX_PIP))
       CALL FLUSH_ERR_MSG(HEADER = .FALSE., FOOTER = .FALSE.)
@@ -58,47 +56,6 @@ CONTAINS
 
 ! DES Allocatable arrays
 !-----------------------------------------------
-! Dynamic particle info including another index for parallel
-! processing for ghost
-      ALLOCATE( PARTICLE_STATE (MAX_PIP) )
-      ALLOCATE (iglobal_id(max_pip))
-
-! Particle attributes
-! Radius, density, mass, moment of inertia
-      Allocate(  DES_RADIUS (MAX_PIP) )
-      Allocate(  RO_Sol (MAX_PIP) )
-      Allocate(  PVOL (MAX_PIP) )
-      Allocate(  PMASS (MAX_PIP) )
-      Allocate(  OMOI (MAX_PIP) )
-
-! Old and new particle positions, velocities (translational and
-! rotational)
-      Allocate(  DES_POS_NEW (MAX_PIP,DIMN) )
-      Allocate(  DES_VEL_NEW (MAX_PIP,DIMN) )
-      Allocate(  OMEGA_NEW (MAX_PIP,DIMN) )
-
-      IF (DO_OLD) THEN
-         Allocate(  DES_ACC_OLD (MAX_PIP,DIMN) )
-         Allocate(  ROT_ACC_OLD (MAX_PIP,DIMN))
-      ENDIF
-
-! Allocating user defined array
-      IF(DES_USR_VAR_SIZE > 0) &
-         Allocate( DES_USR_VAR(MAX_PIP,DES_USR_VAR_SIZE) )
-
-! Particle positions at the last call neighbor search algorithm call
-      Allocate(  PPOS (MAX_PIP,DIMN) )
-
-! Total, normal and tangetial forces
-      Allocate(  FC (MAX_PIP,DIMN) )
-
-! Torque
-      Allocate(  TOW (MAX_PIP,DIMN) )
-
-
-! allocate variable for des grid binning
-      allocate(dg_pijk(max_pip)); dg_pijk=0
-      allocate(dg_pijkprv(max_pip)); dg_pijkprv=0
 
 ! allocate variables related to ghost particles
       allocate(ighost_updated(max_pip))
@@ -107,7 +64,6 @@ CONTAINS
 
       Allocate(  wall_collision_facet_id (COLLISION_ARRAY_MAX, MAX_PIP) )
       wall_collision_facet_id(:,:) = -1
-      Allocate(  wall_collision_PFT (DIMN, COLLISION_ARRAY_MAX, MAX_PIP) )
 
       NEIGH_MAX = MAX_PIP
 
@@ -133,10 +89,6 @@ CONTAINS
 ! Particles in a computational fluid cell (for volume fraction)
       Allocate(  PINC (istart3:iend3, jstart3:jend3, kstart3:kend3))
 
-! For each particle track its i,j,k location on computational fluid grid
-! defined by imax, jmax and kmax in mfix.dat and phase no.
-      Allocate(  PIJK (MAX_PIP,3) )
-      Allocate(  PARTICLE_PHASE (MAX_PIP) )
 
 ! Explicit drag force acting on a particle.
       Allocate(DRAG_FC (MAX_PIP,DIMN) )
@@ -290,47 +242,8 @@ CONTAINS
         IMPLICIT NONE
 
         integer, intent(in) :: new_max_pip
-
-        DO WHILE (MAX_PIP < new_max_pip)
-           MAX_PIP = MAX_PIP*2
-
-           call real_grow(des_radius,MAX_PIP)
-           call real_grow(RO_Sol,MAX_PIP)
-           call real_grow(PVOL,MAX_PIP)
-           call real_grow(PMASS,MAX_PIP)
-           call real_grow(OMOI,MAX_PIP)
-           call real_grow2_reverse(DES_POS_NEW,MAX_PIP)
-           call real_grow2_reverse(DES_VEL_NEW,MAX_PIP)
-           call real_grow2_reverse(OMEGA_NEW,MAX_PIP)
-           call real_grow2_reverse(PPOS,MAX_PIP)
-           call byte_grow(PARTICLE_STATE,MAX_PIP,nonexistent)
-           call integer_grow(iglobal_id,MAX_PIP,0)
-           call integer_grow2_reverse(pijk,MAX_PIP,0)
-           call integer_grow(particle_phase,MAX_PIP,0)
-           call integer_grow(dg_pijk,MAX_PIP,-1)
-           call integer_grow(dg_pijkprv,MAX_PIP,-1)
-           call logical_grow(ighost_updated,MAX_PIP,.false.)
-           call real_grow2_reverse(FC,MAX_PIP)
-           call real_grow2_reverse(TOW,MAX_PIP)
-           call integer_grow2(WALL_COLLISION_FACET_ID,MAX_PIP,-1)
-           call real_grow3(WALL_COLLISION_PFT,MAX_PIP)
-           call real_grow2_reverse(DRAG_FC,MAX_PIP)
-
-           call integer_grow(NEIGHBOR_INDEX,MAX_PIP,0)
-           call integer_grow(NEIGHBOR_INDEX_OLD,MAX_PIP,0)
-
-
-           IF (DO_OLD) THEN
-              call real_grow2_reverse(DES_ACC_OLD,MAX_PIP)
-              call real_grow2_reverse(ROT_ACC_OLD,MAX_PIP)
-           ENDIF
-
-           IF(DES_USR_VAR_SIZE > 0) &
-              call real_grow2_reverse(DES_USR_VAR,MAX_PIP)
-
-           CALL DES_INIT_PARTICLE_ARRAYS(MAX_PIP/2+1,MAX_PIP)
-
-        ENDDO
+        write(*,*) 'Death in particle grow'
+        stop 887
 
       RETURN
 
@@ -347,10 +260,9 @@ CONTAINS
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_INIT_PARTICLE_ARRAYS(LB,UB)
 
-         use discretelement, only: des_radius, ro_sol, pmass, omoi, des_pos_new, des_vel_new, omega_new, particle_state, pvol
-         use discretelement, only: dg_pijk, dg_pijkprv, ighost_updated, neighbor_index, fc, tow, wall_collision_facet_id, pijk
-         use discretelement, only: rot_acc_old, des_usr_var_size
-         use discretelement, only: wall_collision_pft, iglobal_id, drag_fc, des_acc_old, nonexistent, do_old, des_usr_var
+         use discretelement, only: ighost_updated, neighbor_index, wall_collision_facet_id
+         use discretelement, only: des_usr_var_size
+         use discretelement, only: iglobal_id, drag_fc, nonexistent, do_old
          use param1, only: zero
 
       IMPLICIT NONE
@@ -358,25 +270,6 @@ CONTAINS
       INTEGER, INTENT(IN) :: LB, UB
       INTEGER :: II
 
-      IGLOBAL_ID(LB:UB) = 0
-      PARTICLE_STATE(LB:UB) = NONEXISTENT
-
-! Physical properties:
-      DES_RADIUS(LB:UB) = ZERO
-      RO_Sol(LB:UB) = ZERO
-      PVOL(LB:UB) = ZERO
-      PMASS(LB:UB) = ZERO
-      OMOI(LB:UB) = ZERO
-
-! Particle position, velocity, etc
-      DES_POS_NEW(LB:UB,:) = ZERO
-      DES_VEL_NEW(LB:UB,:) = ZERO
-      OMEGA_NEW(LB:UB,:) = ZERO
-
-! Particle state flag
-      DO II = LB, UB
-         particle_state(II) = nonexistent
-      ENDDO
       NEIGHBOR_INDEX(:) = 0
 
 ! DES grid bin information
@@ -384,29 +277,12 @@ CONTAINS
       DG_PIJKPRV(LB:UB) = -1
       IGHOST_UPDATED(LB:UB) = .false.
 
-! Fluid cell bin information
-      PIJK(LB:UB,:) = 0
-
-! Translation and rotational forces
-      FC(LB:UB,:) = ZERO
-      TOW(LB:UB,:) = ZERO
-
 ! Collision data
       WALL_COLLISION_FACET_ID(:,LB:UB) = -1
-      WALL_COLLISION_PFT(:,:,LB:UB) = ZERO
-
-! Initializing user defined array
-      IF(DES_USR_VAR_SIZE > 0) &
-         DES_USR_VAR(LB:UB,:) = ZERO
 
 ! Particle center drag coefficient and explicit drag force
       DRAG_FC(LB:UB,:) = ZERO
 
-! Higher order time integration variables.
-      IF (DO_OLD) THEN
-         DES_ACC_OLD(LB:UB,:) = ZERO
-         ROT_ACC_OLD(LB:UB,:) = ZERO
-      ENDIF
 
       RETURN
       END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
@@ -418,9 +294,9 @@ CONTAINS
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: new_size
-        INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: byte_array
-        INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE :: byte_tmp
-        INTEGER(KIND=1) :: ival ! initial value
+        INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: byte_array
+        INTEGER, DIMENSION(:), ALLOCATABLE :: byte_tmp
+        INTEGER :: ival ! initial value
         INTEGER lSIZE
 
         lSIZE = size(byte_array,1)

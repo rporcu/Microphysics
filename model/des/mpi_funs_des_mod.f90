@@ -65,7 +65,7 @@
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijkprv
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk

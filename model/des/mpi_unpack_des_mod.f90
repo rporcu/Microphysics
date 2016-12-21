@@ -28,49 +28,49 @@
 !----------------------------------------------------------------------!
       SUBROUTINE DESMPI_UNPACK_GHOSTPAR(pface)
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! Size of Particle data packet
-      use desmpi, only: iGhostPacketSize
-! Index of last particle added to this process.
-      use desmpi, only: iSPOT
-! Flag indicating that the ghost particle was updated
-      use discretelement, only: iGHOST_UPDATED
-! The MPI receive buffer
-      use desmpi, only: dRECVBUF
-! Buffer offset
-      use desmpi, only: iBUFOFFSET
-! Dimensions of DES grid
-      use desgrid, only: DG_IJKSIZE2
-! DES grid cell containing each particle: current/previous
-      use discretelement, only: DG_PIJK, DG_PIJKPRV
-! The global ID for each particle
-      use discretelement, only: iGLOBAL_ID
-! Particle positions
-      use discretelement, only: DES_POS_NEW
-! Particle tangential velocities
-      use discretelement, only: DES_VEL_NEW
-! Particle rotational velocities
-      use discretelement, only: OMEGA_NEW
-! Particle radius, volume
-      use discretelement, only: DES_RADIUS, PVOL
-! Map to fluid grid cells and solids phase
-      use discretelement, only: particle_phase
-! Number of particles on the process (max particle array size)
-      use discretelement, only: PIP
-! Number of ghost particles on the current process
-      use discretelement, only: iGHOST_CNT
-! User-defined variables for each particle.
-      use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
+! ! Global Variables:
+! !---------------------------------------------------------------------//
+! ! Size of Particle data packet
+!       use desmpi, only: iGhostPacketSize
+! ! Index of last particle added to this process.
+!       use desmpi, only: iSPOT
+! ! Flag indicating that the ghost particle was updated
+!       use discretelement, only: iGHOST_UPDATED
+! ! The MPI receive buffer
+!       use desmpi, only: dRECVBUF
+! ! Buffer offset
+!       use desmpi, only: iBUFOFFSET
+! ! Dimensions of DES grid
+!       use desgrid, only: DG_IJKSIZE2
+! ! DES grid cell containing each particle: current/previous
+!       use discretelement, only: DG_PIJK, DG_PIJKPRV
+! ! The global ID for each particle
+!       use discretelement, only: iGLOBAL_ID
+! ! Particle positions
+!       use discretelement, only: DES_POS_NEW
+! ! Particle tangential velocities
+!       use discretelement, only: DES_VEL_NEW
+! ! Particle rotational velocities
+!       use discretelement, only: OMEGA_NEW
+! ! Particle radius, volume
+!       use discretelement, only: DES_RADIUS, PVOL
+! ! Map to fluid grid cells and solids phase
+!       use discretelement, only: particle_phase
+! ! Number of particles on the process (max particle array size)
+!       use discretelement, only: PIP
+! ! Number of ghost particles on the current process
+!       use discretelement, only: iGHOST_CNT
+! ! User-defined variables for each particle.
+!       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
 
-      use discretelement, only: particle_state, normal_ghost, exiting_ghost, nonexistent
-      use des_allocate, only: particle_grow
+!       use discretelement, only: particle_state, normal_ghost, exiting_ghost, nonexistent
+!       use des_allocate, only: particle_grow
 
-! Global Constants:
-!---------------------------------------------------------------------//
-      use constant, only: PI
-! Dimension of particle spatial arrays.
-      use discretelement, only: DIMN
+! ! Global Constants:
+! !---------------------------------------------------------------------//
+!       use constant, only: PI
+! ! Dimension of particle spatial arrays.
+!       use discretelement, only: DIMN
 
       IMPLICIT NONE
 
@@ -92,114 +92,114 @@
 ! if it already exists update the position
 ! if not and do_nsearch is true then add to the particle array
 
-      lparcnt = drecvbuf(1+mod(pface,2))%facebuf(1)
-      lnewcnt = lparcnt
-      allocate (lfound(lparcnt),lnewspot(lparcnt),lnewpic(dg_ijksize2))
-      lfound(:) = .false.
-      lnewspot(:) =0
-      lnewpic = 0
+!       lparcnt = drecvbuf(1+mod(pface,2))%facebuf(1)
+!       lnewcnt = lparcnt
+!       allocate (lfound(lparcnt),lnewspot(lparcnt),lnewpic(dg_ijksize2))
+!       lfound(:) = .false.
+!       lnewspot(:) =0
+!       lnewpic = 0
 
-      do lcurpar = 1,lparcnt
-         lbuf = (lcurpar-1)*iGhostPacketSize+ibufoffset
+!       do lcurpar = 1,lparcnt
+!          lbuf = (lcurpar-1)*iGhostPacketSize+ibufoffset
 
-! 1) Global ID
-         call unpack_dbuf(lbuf,lparid,pface)
-! 2) DES Grid IJK
-         call unpack_dbuf(lbuf,lparijk,pface)
-! 3) DES Grid IJK - Previous
-         call unpack_dbuf(lbuf,lprvijk,pface)
+! ! 1) Global ID
+!          call unpack_dbuf(lbuf,lparid,pface)
+! ! 2) DES Grid IJK
+!          call unpack_dbuf(lbuf,lparijk,pface)
+! ! 3) DES Grid IJK - Previous
+!          call unpack_dbuf(lbuf,lprvijk,pface)
 
-! Determine if this particle already exists on this process as a
-! ghost particle. If so, (lfound), then the current infomration is
-! updated on the current process. Otherwise (.NOT.lfound) a new
-! ghost particle is created on this process.
-         lfound(lcurpar) = locate_par(lparid,lprvijk,llocpar)
-         if (lparijk .ne. lprvijk .and. .not.lfound(lcurpar)) then
-            lfound(lcurpar) = locate_par(lparid,lparijk,llocpar)
-         endif
+! ! Determine if this particle already exists on this process as a
+! ! ghost particle. If so, (lfound), then the current infomration is
+! ! updated on the current process. Otherwise (.NOT.lfound) a new
+! ! ghost particle is created on this process.
+!          lfound(lcurpar) = locate_par(lparid,lprvijk,llocpar)
+!          if (lparijk .ne. lprvijk .and. .not.lfound(lcurpar)) then
+!             lfound(lcurpar) = locate_par(lparid,lparijk,llocpar)
+!          endif
 
-         if(lfound(lcurpar)) then
-! Store the local variables
-            dg_pijk(llocpar) = lparijk
-            dg_pijkprv(llocpar) = lprvijk
+!          if(lfound(lcurpar)) then
+! ! Store the local variables
+!             dg_pijk(llocpar) = lparijk
+!             dg_pijkprv(llocpar) = lprvijk
 
-! 4) Radious
-            call unpack_dbuf(lbuf,des_radius(llocpar),pface)
-! 5) Phase index
-            call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
-! 6) Position
-            call unpack_dbuf(lbuf,des_pos_new(llocpar,1:dimn),pface)
-! 7) Translational Velocity
-            call unpack_dbuf(lbuf,des_vel_new(llocpar,1:dimn),pface)
-! 8) Rotational Velocity
-            call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
-! 9) Exiting particle flag
-            call unpack_dbuf(lbuf,tmp,pface)
-            if (tmp) particle_state(llocpar) = exiting_ghost
+! ! 4) Radious
+!             call unpack_dbuf(lbuf,des_radius(llocpar),pface)
+! ! 5) Phase index
+!             call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
+! ! 6) Position
+!             call unpack_dbuf(lbuf,des_pos_new(llocpar,1:dimn),pface)
+! ! 7) Translational Velocity
+!             call unpack_dbuf(lbuf,des_vel_new(llocpar,1:dimn),pface)
+! ! 8) Rotational Velocity
+!             call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
+! ! 9) Exiting particle flag
+!             call unpack_dbuf(lbuf,tmp,pface)
+!             if (tmp) particle_state(llocpar) = exiting_ghost
 
 
-! Calculate the volume of the ghost particle.
-            PVOL(llocpar) = (4.0D0/3.0D0)*PI*DES_RADIUS(llocpar)**3
-! Flag that the ghost particle was updated.
-            ighost_updated(llocpar) = .true.
-            lnewcnt = lnewcnt-1
+! ! Calculate the volume of the ghost particle.
+!             PVOL(llocpar) = (4.0D0/3.0D0)*PI*DES_RADIUS(llocpar)**3
+! ! Flag that the ghost particle was updated.
+!             ighost_updated(llocpar) = .true.
+!             lnewcnt = lnewcnt-1
 
-         else
-            lnewpic(lparijk) = lnewpic(lparijk) + 1
-         endif
-      enddo
+!          else
+!             lnewpic(lparijk) = lnewpic(lparijk) + 1
+!          endif
+!       enddo
 
-! iAdd new ghost particles
-      if(lnewcnt > 0) then
-         call PARTICLE_GROW(pip+lnewcnt)
-         ighost_cnt = ighost_cnt + lnewcnt
-         pip = pip + lnewcnt
-         do lcurpar = 1,lparcnt
-            if(lfound(lcurpar)) cycle
-            lbuf = (lcurpar-1)*iGhostPacketSize+ibufoffset
+! ! iAdd new ghost particles
+!       if(lnewcnt > 0) then
+!          call PARTICLE_GROW(pip+lnewcnt)
+!          ighost_cnt = ighost_cnt + lnewcnt
+!          pip = pip + lnewcnt
+!          do lcurpar = 1,lparcnt
+!             if(lfound(lcurpar)) cycle
+!             lbuf = (lcurpar-1)*iGhostPacketSize+ibufoffset
 
-!  1) Global particle ID
-            call unpack_dbuf(lbuf,lparid,pface)
-!  2) DES grid IJK
-            call unpack_dbuf(lbuf,lparijk,pface)
-!  3) DES grid IJK - Previous
-            call unpack_dbuf(lbuf,lprvijk,pface)
-! Locate the first open space in the particle array.
-            do while(.not.nonexistent==particle_state(ispot))
-               ispot = ispot + 1
-            enddo
-! Set the flags for the ghost particle and store the local variables.
-            particle_state(ispot) = normal_ghost
-            iglobal_id(ispot)  = lparid
-            dg_pijk(ispot) = lparijk
-            dg_pijkprv(ispot) = lprvijk
-!  4) Radius
-            call unpack_dbuf(lbuf,des_radius(ispot),pface)
-!  5) Phase index
-            call unpack_dbuf(lbuf,particle_phase(ispot),pface)
-!  6) Position
-            call unpack_dbuf(lbuf,des_pos_new(ispot,1:dimn),pface)
-!  7) Translational velocity
-            call unpack_dbuf(lbuf,des_vel_new(ispot,1:dimn),pface)
-!  8) Rotational velocity
-            call unpack_dbuf(lbuf,omega_new(ispot,1:dimn),pface)
-!  9) Exiting particle flag
-            call unpack_dbuf(lbuf,tmp,pface)
-            if (tmp) particle_state(ispot) = exiting_ghost
-! 11) User varaible
-            IF(DES_USR_VAR_SIZE > 0)&
-               call unpack_dbuf(lbuf,des_usr_var(ispot,:),pface)
+! !  1) Global particle ID
+!             call unpack_dbuf(lbuf,lparid,pface)
+! !  2) DES grid IJK
+!             call unpack_dbuf(lbuf,lparijk,pface)
+! !  3) DES grid IJK - Previous
+!             call unpack_dbuf(lbuf,lprvijk,pface)
+! ! Locate the first open space in the particle array.
+!             do while(.not.nonexistent==particle_state(ispot))
+!                ispot = ispot + 1
+!             enddo
+! ! Set the flags for the ghost particle and store the local variables.
+!             particle_state(ispot) = normal_ghost
+!             iglobal_id(ispot)  = lparid
+!             dg_pijk(ispot) = lparijk
+!             dg_pijkprv(ispot) = lprvijk
+! !  4) Radius
+!             call unpack_dbuf(lbuf,des_radius(ispot),pface)
+! !  5) Phase index
+!             call unpack_dbuf(lbuf,particle_phase(ispot),pface)
+! !  6) Position
+!             call unpack_dbuf(lbuf,des_pos_new(ispot,1:dimn),pface)
+! !  7) Translational velocity
+!             call unpack_dbuf(lbuf,des_vel_new(ispot,1:dimn),pface)
+! !  8) Rotational velocity
+!             call unpack_dbuf(lbuf,omega_new(ispot,1:dimn),pface)
+! !  9) Exiting particle flag
+!             call unpack_dbuf(lbuf,tmp,pface)
+!             if (tmp) particle_state(ispot) = exiting_ghost
+! ! 11) User varaible
+!             IF(DES_USR_VAR_SIZE > 0)&
+!                call unpack_dbuf(lbuf,des_usr_var(ispot,:),pface)
 
-            ighost_updated(ispot) = .true.
-            lnewspot(lcurpar) = ispot
+!             ighost_updated(ispot) = .true.
+!             lnewspot(lcurpar) = ispot
 
-            PVOL(ispot) = (4.0D0/3.0D0)*PI*DES_RADIUS(ispot)**3
+!             PVOL(ispot) = (4.0D0/3.0D0)*PI*DES_RADIUS(ispot)**3
 
-         enddo
-      endif
+!          enddo
+!       endif
 
-!deallocate temporary variablies
-      deallocate (lfound,lnewspot,lnewpic)
+! !deallocate temporary variablies
+!       deallocate (lfound,lnewspot,lnewpic)
 
       end subroutine desmpi_unpack_ghostpar
 
@@ -213,51 +213,51 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Size of ghost particle data packet
-      use desmpi, only: iParticlePacketSize
-! The MPI receive buffer
-      use desmpi, only: dRECVBUF
-! Buffer offset
-      use desmpi, only: iBUFOFFSET
-! DES grid cell containing each particle: current/previous
-      use discretelement, only: DG_PIJK, DG_PIJKPRV
-! The neighbor processor's rank
-      use desmpi, only: iNEIGHPROC
-! Particle positions
-      use discretelement, only: DES_POS_NEW
-! Particle tangential velocities
-      use discretelement, only: DES_VEL_NEW
-! Particle rotational velocities
-      use discretelement, only: OMEGA_NEW
-! Particle radius, volume, density, mass
-      use discretelement, only: DES_RADIUS, PVOL, RO_SOL, PMASS
-! Previous value for particle acceleration (tangential/rotational)
-      use discretelement, only: DES_ACC_OLD, ROT_ACC_OLD
-! Force arrays acting on the particle
-      use discretelement, only: FC, TOW
-! One of the moment of inertia
-      use discretelement, only: OMOI
-! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
-      use discretelement, only: PIJK
-! Flag to send/recv old (previous) values
-      use discretelement, only: DO_OLD
-! Number of particles on the process (max particle array size)
-      use discretelement, only: PIP
-! Number of ghost particles on the current process
-      use discretelement, only: iGHOST_CNT
-! Flag indicating the the fluid-particle drag is explicitly coupled.
-      use discretelement, only: DES_EXPLICITLY_COUPLED
-! Explicit fluid-particle drag force
-      use discretelement, only: DRAG_FC
-! User-defined variables for each particle.
-      use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
-! Neighbor collision history information
-      use discretelement, only: PFT_NEIGHBOR
-! The ID of the current process
-      use compar, only: myPE
+! ! Size of ghost particle data packet
+!       use desmpi, only: iParticlePacketSize
+! ! The MPI receive buffer
+!       use desmpi, only: dRECVBUF
+! ! Buffer offset
+!       use desmpi, only: iBUFOFFSET
+! ! DES grid cell containing each particle: current/previous
+!       use discretelement, only: DG_PIJK, DG_PIJKPRV
+! ! The neighbor processor's rank
+!       use desmpi, only: iNEIGHPROC
+! ! Particle positions
+!       use discretelement, only: DES_POS_NEW
+! ! Particle tangential velocities
+!       use discretelement, only: DES_VEL_NEW
+! ! Particle rotational velocities
+!       use discretelement, only: OMEGA_NEW
+! ! Particle radius, volume, density, mass
+!       use discretelement, only: DES_RADIUS, PVOL, RO_SOL, PMASS
+! ! Previous value for particle acceleration (tangential/rotational)
+!       use discretelement, only: DES_ACC_OLD, ROT_ACC_OLD
+! ! Force arrays acting on the particle
+!       use discretelement, only: FC, TOW
+! ! One of the moment of inertia
+!       use discretelement, only: OMOI
+! ! Map to fluid grid cells and solids phase (I,J,K,IJK,M)
+!       use discretelement, only: PIJK
+! ! Flag to send/recv old (previous) values
+!       use discretelement, only: DO_OLD
+! ! Number of particles on the process (max particle array size)
+!       use discretelement, only: PIP
+! ! Number of ghost particles on the current process
+!       use discretelement, only: iGHOST_CNT
+! ! Flag indicating the the fluid-particle drag is explicitly coupled.
+!       use discretelement, only: DES_EXPLICITLY_COUPLED
+! ! Explicit fluid-particle drag force
+!       use discretelement, only: DRAG_FC
+! ! User-defined variables for each particle.
+!       use discretelement, only: DES_USR_VAR, DES_USR_VAR_SIZE
+! ! Neighbor collision history information
+!       use discretelement, only: PFT_NEIGHBOR
+! ! The ID of the current process
+!       use compar, only: myPE
 
-      use des_allocate, only: add_pair, particle_grow
-      use discretelement, only: entering_particle, exiting_particle, particle_state, normal_particle, particle_phase
+!       use des_allocate, only: add_pair, particle_grow
+!       use discretelement, only: entering_particle, exiting_particle, particle_state, normal_particle, particle_phase
 
       implicit none
 
@@ -278,136 +278,136 @@
       logical :: tmp
 !......................................................................!
 
-! loop through particles and locate them and make changes
-      lparcnt = drecvbuf(1+mod(pface,2))%facebuf(1)
+! ! loop through particles and locate them and make changes
+!       lparcnt = drecvbuf(1+mod(pface,2))%facebuf(1)
 
-! make sure enough space available
-      call PARTICLE_GROW(pip+lparcnt)
+! ! make sure enough space available
+!       call PARTICLE_GROW(pip+lparcnt)
 
-      do lcurpar =1,lparcnt
+!       do lcurpar =1,lparcnt
 
-         lfound = .false.
-         lbuf = (lcurpar-1)*iParticlePacketSize + ibufoffset
-! 1) Global ID
-         call unpack_dbuf(lbuf,lparid,pface)
-! 2) DES Grid IJK
-         call unpack_dbuf(lbuf,lparijk,pface)
-! 3) DES grid IJK - previous
-         call unpack_dbuf(lbuf,lprvijk,pface)
+!          lfound = .false.
+!          lbuf = (lcurpar-1)*iParticlePacketSize + ibufoffset
+! ! 1) Global ID
+!          call unpack_dbuf(lbuf,lparid,pface)
+! ! 2) DES Grid IJK
+!          call unpack_dbuf(lbuf,lparijk,pface)
+! ! 3) DES grid IJK - previous
+!          call unpack_dbuf(lbuf,lprvijk,pface)
 
-! A DEM particle should already exist on the current processor as a
-! ghost particle. Match the sent particle to the local ghost particle
-! by matching the global IDs. Decrement the iGHOST_CNT counter to
-! account for the switch from ghost to real particle.
-         lFOUND  = LOCATE_PAR(lPARID,lPRVIJK,lLOCPAR)
-         IF (.NOT. lFOUND) THEN
-            lFOUND = exten_locate_par(lPARID, lPARIJK, lLOCPAR)
-            IF(.NOT.lFOUND) THEN
-               WRITE(*,1000) iNEIGHPROC(PFACE), MYPE, lPARID
-               ! CALL DES_MPI_STOP
-            ENDIF
-         ENDIF
-         iGHOST_CNT = iGHOST_CNT - 1
+! ! A DEM particle should already exist on the current processor as a
+! ! ghost particle. Match the sent particle to the local ghost particle
+! ! by matching the global IDs. Decrement the iGHOST_CNT counter to
+! ! account for the switch from ghost to real particle.
+!          lFOUND  = LOCATE_PAR(lPARID,lPRVIJK,lLOCPAR)
+!          IF (.NOT. lFOUND) THEN
+!             lFOUND = exten_locate_par(lPARID, lPARIJK, lLOCPAR)
+!             IF(.NOT.lFOUND) THEN
+!                WRITE(*,1000) iNEIGHPROC(PFACE), MYPE, lPARID
+!                ! CALL DES_MPI_STOP
+!             ENDIF
+!          ENDIF
+!          iGHOST_CNT = iGHOST_CNT - 1
 
- 1000 FORMAT(2/1X,72('*'),/1x,'From: DESMPI_UNPACK_PARCROSS: ',/       &
-         ' Error 1000: Unable to match particles crossing processor ', &
-         'boundaries.',/3x,'Source Proc: ',I9,' ---> Destination ',    &
-         'Proc: ', I9,/3x,'Global Particle ID: ',I12,/1x,72('*'))
+!  1000 FORMAT(2/1X,72('*'),/1x,'From: DESMPI_UNPACK_PARCROSS: ',/       &
+!          ' Error 1000: Unable to match particles crossing processor ', &
+!          'boundaries.',/3x,'Source Proc: ',I9,' ---> Destination ',    &
+!          'Proc: ', I9,/3x,'Global Particle ID: ',I12,/1x,72('*'))
 
-! convert the local particle from ghost to existing and update its position
-         particle_state(llocpar) = normal_particle
-         dg_pijk(llocpar) = lparijk
-         dg_pijkprv(llocpar) = lprvijk
-! 4) Radius
-         call unpack_dbuf(lbuf,des_radius(llocpar),pface)
-! 5-9) Fluid cell I,J,K, and solids phase index
-         call unpack_dbuf(lbuf,pijk(llocpar,1),pface)
-         call unpack_dbuf(lbuf,pijk(llocpar,2),pface)
-         call unpack_dbuf(lbuf,pijk(llocpar,3),pface)
-         call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
-! 10) Entering particle flag.
-         call unpack_dbuf(lbuf,tmp,pface)
-         if (tmp) PARTICLE_STATE(llocpar) = ENTERING_PARTICLE
-! 11) Exiting particle flag.
-         call unpack_dbuf(lbuf,tmp,pface)
-         if (tmp) PARTICLE_STATE(llocpar) = EXITING_PARTICLE
-! 12) Density
-         call unpack_dbuf(lbuf,ro_sol(llocpar),pface)
-! 13) Volume
-         call unpack_dbuf(lbuf,pvol(llocpar),pface)
-! 14) Mass
-         call unpack_dbuf(lbuf,pmass(llocpar),pface)
-! 15) 1/Moment of Inertia
-         call unpack_dbuf(lbuf,omoi(llocpar),pface)
-! 16) Position with cyclic shift
-         call unpack_dbuf(lbuf,des_pos_new(llocpar,:),pface)
-! 17) Translational velocity
-         call unpack_dbuf(lbuf,des_vel_new(llocpar,:),pface)
-! 18) Rotational velocity
-         call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
-! 19) Accumulated translational forces
-         call unpack_dbuf(lbuf,fc(llocpar,:),pface)
-! 20) Accumulated torque forces
-         call unpack_dbuf(lbuf,tow(llocpar,:),pface)
-! 23) Explicit drag force
-         IF(DES_EXPLICITLY_COUPLED) &
-            call unpack_dbuf(lbuf,drag_fc(llocpar,:),pface)
-! 24) User defined variable
-         IF(DES_USR_VAR_SIZE > 0) &
-            call unpack_dbuf(lbuf,des_usr_var(llocpar,:),pface)
+! ! convert the local particle from ghost to existing and update its position
+!          particle_state(llocpar) = normal_particle
+!          dg_pijk(llocpar) = lparijk
+!          dg_pijkprv(llocpar) = lprvijk
+! ! 4) Radius
+!          call unpack_dbuf(lbuf,des_radius(llocpar),pface)
+! ! 5-9) Fluid cell I,J,K, and solids phase index
+!          call unpack_dbuf(lbuf,pijk(llocpar,1),pface)
+!          call unpack_dbuf(lbuf,pijk(llocpar,2),pface)
+!          call unpack_dbuf(lbuf,pijk(llocpar,3),pface)
+!          call unpack_dbuf(lbuf,particle_phase(llocpar),pface)
+! ! 10) Entering particle flag.
+!          call unpack_dbuf(lbuf,tmp,pface)
+!          if (tmp) PARTICLE_STATE(llocpar) = ENTERING_PARTICLE
+! ! 11) Exiting particle flag.
+!          call unpack_dbuf(lbuf,tmp,pface)
+!          if (tmp) PARTICLE_STATE(llocpar) = EXITING_PARTICLE
+! ! 12) Density
+!          call unpack_dbuf(lbuf,ro_sol(llocpar),pface)
+! ! 13) Volume
+!          call unpack_dbuf(lbuf,pvol(llocpar),pface)
+! ! 14) Mass
+!          call unpack_dbuf(lbuf,pmass(llocpar),pface)
+! ! 15) 1/Moment of Inertia
+!          call unpack_dbuf(lbuf,omoi(llocpar),pface)
+! ! 16) Position with cyclic shift
+!          call unpack_dbuf(lbuf,des_pos_new(llocpar,:),pface)
+! ! 17) Translational velocity
+!          call unpack_dbuf(lbuf,des_vel_new(llocpar,:),pface)
+! ! 18) Rotational velocity
+!          call unpack_dbuf(lbuf,omega_new(llocpar,:),pface)
+! ! 19) Accumulated translational forces
+!          call unpack_dbuf(lbuf,fc(llocpar,:),pface)
+! ! 20) Accumulated torque forces
+!          call unpack_dbuf(lbuf,tow(llocpar,:),pface)
+! ! 23) Explicit drag force
+!          IF(DES_EXPLICITLY_COUPLED) &
+!             call unpack_dbuf(lbuf,drag_fc(llocpar,:),pface)
+! ! 24) User defined variable
+!          IF(DES_USR_VAR_SIZE > 0) &
+!             call unpack_dbuf(lbuf,des_usr_var(llocpar,:),pface)
 
-! -- Higher order integration variables
-         IF (DO_OLD) THEN
-! 29) Translational acceleration (previous)
-            call unpack_dbuf(lbuf,des_acc_old(:,llocpar),pface)
-! 30) Rotational acceleration (previous)
-            call unpack_dbuf(lbuf,rot_acc_old(:,llocpar),pface)
-         ENDIF
+! ! -- Higher order integration variables
+!          IF (DO_OLD) THEN
+! ! 29) Translational acceleration (previous)
+!             call unpack_dbuf(lbuf,des_acc_old(:,llocpar),pface)
+! ! 30) Rotational acceleration (previous)
+!             call unpack_dbuf(lbuf,rot_acc_old(:,llocpar),pface)
+!          ENDIF
 
-      end do
+!       end do
 
-! 33) Number of pair datasets
-      lbuf = lparcnt*iParticlePacketSize + ibufoffset
-      call unpack_dbuf(lbuf,num_neighborlists_sent,pface)
+! ! 33) Number of pair datasets
+!       lbuf = lparcnt*iParticlePacketSize + ibufoffset
+!       call unpack_dbuf(lbuf,num_neighborlists_sent,pface)
 
-      do nn = 1, num_neighborlists_sent
-! 34) Global ID of packed particle.
-         call unpack_dbuf(lbuf,lparid,pface)
-! 35) DES grid IJK of cell receiving the particle.
-         call unpack_dbuf(lbuf,lparijk,pface)
+!       do nn = 1, num_neighborlists_sent
+! ! 34) Global ID of packed particle.
+!          call unpack_dbuf(lbuf,lparid,pface)
+! ! 35) DES grid IJK of cell receiving the particle.
+!          call unpack_dbuf(lbuf,lparijk,pface)
 
-! Locate the particle on the current process.
-         if (.not. locate_par(lparid,lparijk,llocpar)) then
-            if (.not. exten_locate_par(lparid,lparijk,llocpar)) then
-               print *,"at buffer location",lbuf," pface = ",pface
-               print *,"COULD NOT FIND PARTICLE ",lparid," IN IJK ",lparijk
-               ! call des_mpi_stop
-            endif
-         endif
-! 36) Global ID of neighbor particle.
-         call unpack_dbuf(lbuf,lneighid,pface)
-! 37) DES grid IJK of cell containing the neighbor particle.
-         call unpack_dbuf(lbuf,lneighijk,pface)
+! ! Locate the particle on the current process.
+!          if (.not. locate_par(lparid,lparijk,llocpar)) then
+!             if (.not. exten_locate_par(lparid,lparijk,llocpar)) then
+!                print *,"at buffer location",lbuf," pface = ",pface
+!                print *,"COULD NOT FIND PARTICLE ",lparid," IN IJK ",lparijk
+!                ! call des_mpi_stop
+!             endif
+!          endif
+! ! 36) Global ID of neighbor particle.
+!          call unpack_dbuf(lbuf,lneighid,pface)
+! ! 37) DES grid IJK of cell containing the neighbor particle.
+!          call unpack_dbuf(lbuf,lneighijk,pface)
 
-! Locate the neighbor particle on the current process.
-         if (.not. locate_par(lneighid,lneighijk,lneigh)) then
-            if (.not. exten_locate_par(lneighid,lparijk,lneigh)) then
-               print *,"  "
-               print *,"  "
-               print *," fail on  ", myPE
-               print *,"at buffer location",lbuf," pface = ",pface
-               print *,"COULD NOT FIND NEIGHBOR ",lneighid," IN IJK ",lneighijk
-               ! call des_mpi_stop
-            endif
-         endif
+! ! Locate the neighbor particle on the current process.
+!          if (.not. locate_par(lneighid,lneighijk,lneigh)) then
+!             if (.not. exten_locate_par(lneighid,lparijk,lneigh)) then
+!                print *,"  "
+!                print *,"  "
+!                print *," fail on  ", myPE
+!                print *,"at buffer location",lbuf," pface = ",pface
+!                print *,"COULD NOT FIND NEIGHBOR ",lneighid," IN IJK ",lneighijk
+!                ! call des_mpi_stop
+!             endif
+!          endif
 
-! If the neighbor particle is a 'real' particle on this processor, then
-! the pair data may already exist. Check before adding it.
-! Create a new neighbor pair if it was not matched to an exiting pair.
-          cc = add_pair(llocpar,lneigh)
-! 38) Tangential collision history.
-         call unpack_dbuf(lbuf,pft_neighbor(:,cc),pface)
-      enddo
+! ! If the neighbor particle is a 'real' particle on this processor, then
+! ! the pair data may already exist. Check before adding it.
+! ! Create a new neighbor pair if it was not matched to an exiting pair.
+!           cc = add_pair(llocpar,lneigh)
+! ! 38) Tangential collision history.
+!          call unpack_dbuf(lbuf,pft_neighbor(:,cc),pface)
+!       enddo
 
       END SUBROUTINE desmpi_unpack_parcross
 

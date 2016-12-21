@@ -37,7 +37,6 @@
       END INTERFACE
 
       INTERFACE READ_RES_pARRAY
-         MODULE PROCEDURE READ_RES_pARRAY_1B
          MODULE PROCEDURE READ_RES_pARRAY_1I
          MODULE PROCEDURE READ_RES_pARRAY_1D
          MODULE PROCEDURE READ_RES_pARRAY_1L
@@ -231,7 +230,7 @@
       SUBROUTINE READ_PAR_POS(lNEXT_REC)
 
       use discretelement, only: PIP
-      use discretelement, only: DES_POS_NEW
+!      use discretelement, only: DES_POS_NEW
       use compar, only: numPEs
 
       implicit none
@@ -254,7 +253,7 @@
 ! All process read positions for distributed IO restarts.
       IF(bDIST_IO) THEN
          DO LC1 = 1, lDIMN
-            CALL READ_RES_DES(lNEXT_REC, DES_POS_NEW(:,LC1))
+ !           CALL READ_RES_DES(lNEXT_REC, DES_POS_NEW(:,LC1))
          ENDDO
          RETURN
       ENDIF
@@ -452,7 +451,7 @@
 
       use compar, only: numPEs
 
-      use discretelement, only: DES_POS_NEW
+!      use discretelement, only: DES_POS_NEW
       use discretelement, only: PIP
 
       implicit none
@@ -469,7 +468,6 @@
 ! Set up the recv count and allocate the local process buffer.
       iSCR_RECVCNT = PIP*lDIMN
       allocate (dProcBuf(iscr_recvcnt))
-
 ! Allocate the buffer for the root.
       IF (myPE == PE_IO) THEN
          allocate (dRootBuf(pIN_COUNT*lDIMN))
@@ -503,7 +501,7 @@
 ! Unpack the particle data.
       DO LC1 = 1, PIP
          lBuf = (LC1-1)*lDIMN+1
-         DES_POS_NEW(LC1,1:lDIMN) = dProcBuf(lBuf:lBuf+lDIMN-1)
+         !DES_POS_NEW(LC1,1:lDIMN) = dProcBuf(lBuf:lBuf+lDIMN-1)
          lBuf = lBuf + lDIMN
          PARTICLE_STATE(LC1) = NORMAL_PARTICLE
       ENDDO
@@ -1034,79 +1032,6 @@
       RETURN
       END SUBROUTINE READ_RES_DES_1L
 
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: READ_RES_DES_1B                                          !
-!                                                                      !
-! Purpose: Write scalar bytes to RES file.                             !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE READ_RES_pARRAY_1B(lNEXT_REC, OUTPUT_B)
-
-      use discretelement, only: PIP
-
-      use desmpi, only: iRootBuf
-      use desmpi, only: iProcBuf
-
-      use compar, only: numPEs
-
-      IMPLICIT NONE
-
-      INTEGER, INTENT(INOUT) :: lNEXT_REC
-      INTEGER(KIND=1), INTENT(OUT) :: OUTPUT_B(:)
-
-! Loop counters
-      INTEGER :: LC1
-
-      INTEGER :: lPROC
-
-      INTEGER, ALLOCATABLE :: OUTPUT_I(:)
-      INTEGER, ALLOCATABLE :: lBUF_I(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
-
-      allocate(iPROCBUF(pPROCCNT))
-      allocate(iROOTBUF(pROOTCNT))
-
-
-      iDISPLS = pDISPLS
-      iScr_RecvCNT = pRECV
-      iScatterCNTS = pSCATTER
-
-      allocate(output_i(size(output_b)))
-      OUTPUT_I(:) = OUTPUT_B(:)
-
-      IF(bDIST_IO) THEN
-         CALL IN_BIN_512i(RDES_UNIT, OUTPUT_I, pIN_COUNT, lNEXT_REC)
-         OUTPUT_B(:) = OUTPUT_I(:)
-      ELSE
-
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_I(pIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512i(RDES_UNIT, lBUF_I, pIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, pIN_COUNT
-               lPROC = pRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               iRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_I(LC1)
-            ENDDO
-
-            deallocate(lBUF_I)
-            deallocate(lCOUNT)
-         ENDIF
-         CALL DESMPI_SCATTERV(ptype=1)
-         DO LC1=1, PIP
-            OUTPUT_B(LC1) = iProcBuf(LC1)
-         ENDDO
-
-      ENDIF
-
-      deallocate(iPROCBUF)
-      deallocate(iROOTBUF)
-      deallocate(output_i)
-
-      RETURN
-      END SUBROUTINE READ_RES_pARRAY_1B
 
 !``````````````````````````````````````````````````````````````````````!
 ! Subroutine: READ_RES_DES_1I                                          !

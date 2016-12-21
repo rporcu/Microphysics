@@ -15,13 +15,14 @@
       use usr
       use discretelement
       use exit_mod, only: mfix_exit
-      use constant, only: gravity
+      use constant, only: gravity, pi
 
       IMPLICIT NONE
 
       double precision :: t_r
 
       double precision :: lRad
+      double precision :: lMass
       double precision :: lGrav
 
       double precision :: ly, ldydt
@@ -32,17 +33,17 @@
          call mfix_exit(0)
       endif
 
-      lRad  = des_radius(1)
-      h0    = des_pos_new(1,2)
-      lGrav = -gravity(2)
-
+      lRad   = 0.1d0
+      h0     = 0.5d0
+      lGrav  = -gravity(2)
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2600.0d0
 ! Calculate the start time of particle/wall collision.
       time_c =  dsqrt(2.0d0*(h0 - lRad)/lGrav)
 ! Calculate the particle's velocity at the start of the collision.
       vel_c  = -dsqrt(2.0d0*lGrav*h0)
 
-      b_r  = DES_ETAN_WALL(1)/ (2.0d0 * dsqrt(KN_W * PMASS(1)))
-      w0_r = dsqrt(KN_W / PMASS(1))
+      b_r  = DES_ETAN_WALL(1)/ (2.0d0 * dsqrt(KN_W * lMass))
+      w0_r = dsqrt(KN_W / lMass)
 
       write(*,"(//3x,'Parameters:')")
       write(*,"(5x,'Kn ',F14.0)") KN_W

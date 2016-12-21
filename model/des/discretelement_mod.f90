@@ -49,15 +49,15 @@
 
 ! GHOST, ENTERING_GHOST, EXITING_GHOST: for ghost particles
 
-      INTEGER(KIND=1), DIMENSION(:), ALLOCATABLE :: PARTICLE_STATE ! (PARTICLES)
+      INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_STATE ! (PARTICLES)
 
-      INTEGER(KIND=1), PARAMETER :: nonexistent=0
-      INTEGER(KIND=1), PARAMETER :: normal_particle=1
-      INTEGER(KIND=1), PARAMETER :: entering_particle=2
-      INTEGER(KIND=1), PARAMETER :: exiting_particle=3
-      INTEGER(KIND=1), PARAMETER :: normal_ghost=4
-      INTEGER(KIND=1), PARAMETER :: entering_ghost=5
-      INTEGER(KIND=1), PARAMETER :: exiting_ghost=6
+      INTEGER, PARAMETER :: nonexistent=0
+      INTEGER, PARAMETER :: normal_particle=1
+      INTEGER, PARAMETER :: entering_particle=2
+      INTEGER, PARAMETER :: exiting_particle=3
+      INTEGER, PARAMETER :: normal_ghost=4
+      INTEGER, PARAMETER :: entering_ghost=5
+      INTEGER, PARAMETER :: exiting_ghost=6
 
 ! PARALLEL PROCESSING: explanation of variables in parallel architecture
 ! pip - particles in each processor (includes the ghost particles)
@@ -68,7 +68,7 @@
 ! Global sum of particles (excluding ghost) in the system
       INTEGER :: TOT_PAR
 ! Maximum particles permitted in the system at once
-      INTEGER :: MAX_PIP
+      INTEGER, parameter :: MAX_PIP=5000
 
 ! End particle tracking quantities
 !-----------------------------------------------------------------<<<
@@ -222,33 +222,15 @@
 ! End particle-particle and particle-wall collision model parameters
 !-----------------------------------------------------------------<<<
 
-
-! Particle attributes: radius, density, mass, moment of inertia
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_RADIUS !(PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: RO_Sol     !(PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: PVOL       !(PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: PMASS      !(PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: OMOI       !(PARTICLES)
-
 ! Additional quantities
       DOUBLE PRECISION :: MIN_RADIUS, MAX_RADIUS
 
 ! Old and new particle positions, velocities (translational and
 ! rotational)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_POS_NEW  !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_VEL_NEW  !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: OMEGA_NEW    !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: PPOS         !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_ACC_OLD  !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ROT_ACC_OLD  !(PARTICLES,3)
 
 ! Defining user defined allocatable array
-      INTEGER :: DES_USR_VAR_SIZE
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DES_USR_VAR  !(PARTICLES,3)
+      INTEGER :: DES_USR_VAR_SIZE = 0
 
-! Total force and torque on each particle
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: FC    !(PARTICLES,3)
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: TOW   !(PARTICLES,3)
 
 ! Dynamic information related to computational (eulerian) fluid grid
 !----------------------------------------------------------------->>>
@@ -262,8 +244,7 @@
       INTEGER :: COLLISION_ARRAY_MAX = 8
 
 ! -1 value indicates no collision
-      INTEGER, DIMENSION(:,:), ALLOCATABLE :: wall_collision_facet_id       ! (COLLISION_ARRAY_MAX,PARTICLES)
-      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE :: wall_collision_PFT ! (DIMN,COLLISION_ARRAY_MAX,PARTICLES)
+      INTEGER, ALLOCATABLE :: wall_collision_facet_id(:,:)
 
 ! in order to facilitate the parallel processing the PIC is defined
 ! as single array IJK
@@ -272,10 +253,6 @@
 ! Store the number of particles in a computational fluid cell
       INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: PINC
 
-! For each particle track its i, j, k & ijk location on the fluid grid
-! and solids phase no.:
-      INTEGER, DIMENSION(:,:), ALLOCATABLE :: PIJK ! (PARTICLES,3)=>I,J,K
-      INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_PHASE
 !-----------------------------------------------------------------<<<
 
 ! Explicitly calculated fluid-particle drag force.

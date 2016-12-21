@@ -19,8 +19,8 @@
 
 ! Initialize:
 ! Previoius position and velocity.
-      yPOSO = DES_POS_NEW(1,2)
-      yVELO = DES_VEL_NEW(1,2)
+      yPOSO = 0.5d0
+      yVELO = 0.0d0
 ! Bounce counter
       BOUNCE_COUNT = 0
 ! Max bounce height

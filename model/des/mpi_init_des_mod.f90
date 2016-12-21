@@ -369,7 +369,7 @@
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_pos_new, des_vel_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(OUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
 
 !-----------------------------------------------
 ! local variables
@@ -490,7 +490,7 @@
       implicit none
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
 

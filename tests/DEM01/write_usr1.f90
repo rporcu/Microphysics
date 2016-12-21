@@ -19,17 +19,21 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L)
+      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: DES_USR_VAR
       use run, only: TIME
+      use discretelement, only: max_pip
 
       IMPLICIT NONE
+
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
       INTEGER, INTENT(IN) :: L
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME)
+      CASE(1); CALL WRITE_DES_OUT(TIME, des_pos_new, des_vel_new)
       END SELECT
 
       RETURN
@@ -48,9 +52,9 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime)
+      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
 
-      Use discretelement
+      use discretelement, only: max_pip
       Use run
       Use usr
       use compar
@@ -61,6 +65,8 @@
 ! Passed variables
 !---------------------------------------------------------------------//
       DOUBLE PRECISION, INTENT(IN) :: lTime
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -90,7 +96,7 @@
 
 ! Set local variables.
       lGrav = -gravity(2)
-      lRad  = des_radius(1)
+      lRad  = 0.1d0
       lStage = 0
 
 ! Calculate the position and velocity of the particle
@@ -134,7 +140,7 @@
 
 
       WRITE(uVel,"(F15.8,5x,I1,5X,F15.8,3(3x,F15.8))")lTime, &
-         lStage, lVel_Y, DES_VEL_new(1,2),Vel_rErr, Vel_aErr
+         lStage, lVel_Y,DES_VEL_new(1,2),Vel_rErr, Vel_aErr
       CLOSE(uVel)
 
 

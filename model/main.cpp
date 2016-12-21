@@ -22,8 +22,8 @@ int main (int argc, char* argv[])
   Real strt_time = ParallelDescriptor::second();
 
   // Size of the entire domain
-  int imax,jmax,kmax;
-  mfix_get_data(&imax,&jmax,&kmax);
+  int imax,jmax,kmax,dem_solids;
+  mfix_get_data(&imax,&jmax,&kmax,&dem_solids);
 
   IntVect dom_lo(IntVect(D_DECL(0,0,0)));
   IntVect dom_hi(IntVect(D_DECL(imax-1, jmax-1, kmax-1)));
@@ -182,6 +182,32 @@ int main (int argc, char* argv[])
   f_gds.setVal(0.);
   drag_am.setVal(0.);
   drag_bm.setVal(0.);
+  int nparticles = 5000;
+
+  Array<int>    pijk        (3*nparticles);
+  Array<int>  dg_pijk       (  nparticles);
+  Array<int>  dg_pijkprv    (  nparticles);
+  Array<int> iglobal_id     (  nparticles);
+  Array<int> particle_state (  nparticles);
+  Array<int> particle_phase (  nparticles);
+
+  Array<Real> des_radius    (  nparticles);
+  Array<Real> ro_sol        (  nparticles);
+  Array<Real> pvol          (  nparticles);
+  Array<Real> pmass         (  nparticles);
+  Array<Real> omoi          (  nparticles);
+  Array<Real> ppos          (3*nparticles);
+  Array<Real> des_pos_new   (3*nparticles);
+  Array<Real> des_vel_new   (3*nparticles);
+  Array<Real> des_usr_var   (  nparticles);
+  Array<Real> omega_new     (3*nparticles);
+  Array<Real> des_acc_old   (3*nparticles);
+  Array<Real> rot_acc_old   (3*nparticles);
+  Array<Real> fc            (3*nparticles);
+  Array<Real> tow           (3*nparticles);
+
+  Array<Real> wall_collision_pft(3*8*nparticles);
+
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_MAIN(flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
@@ -202,7 +228,15 @@ int main (int argc, char* argv[])
                flux_gT[mfi].dataPtr(), rop_gE[mfi].dataPtr(),
                rop_gN[mfi].dataPtr(),  rop_gT[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   drag_am[mfi].dataPtr(),
-               drag_bm[mfi].dataPtr()  );
+               drag_bm[mfi].dataPtr(),
+               pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
+               iglobal_id.dataPtr(), particle_state.dataPtr(),
+               particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
+               pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
+               ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+               des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
+               rot_acc_old.dataPtr(), fc.dataPtr(), tow.dataPtr(),
+               wall_collision_pft.dataPtr());
 
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)

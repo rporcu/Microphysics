@@ -24,10 +24,10 @@
          call mfix_exit(0)
       endif
 
-      gY1 = des_pos_new(1,2)
-      gY2 = des_pos_new(2,2)
-      gX1 = des_vel_new(1,2)
-      gX1 = des_vel_new(2,2)
+      gY1 = 0.00045d0
+      gY2 = 0.00135d0
+      gX1 = 0.0d0
+      gX1 = 0.0d0
 
 ! Body forces. (Gravity)
       F1b = GRAVITY(2)

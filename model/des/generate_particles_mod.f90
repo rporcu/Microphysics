@@ -39,7 +39,7 @@
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
@@ -140,7 +140,7 @@
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(INOUT) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
@@ -297,7 +297,6 @@
 
          PIP = PIP + 1
          CALL PARTICLE_GROW(PIP)
-         MAX_PIP = max(PIP,MAX_PIP)
 
          PARTICLE_STATE(PIP) = NORMAL_PARTICLE
 

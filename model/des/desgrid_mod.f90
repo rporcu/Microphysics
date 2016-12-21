@@ -678,7 +678,7 @@
       logical, INTENT(IN) :: plocate
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
 
@@ -774,7 +774,7 @@
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: dg_pijk
 
 !-----------------------------------------------

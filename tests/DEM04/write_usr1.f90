@@ -19,16 +19,21 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L)
+      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
       use run, only: TIME
+      use discretelement, only: max_pip
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: L
+      integer, intent(in) :: l
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME)
+      CASE(1); CALL WRITE_DES_OUT(TIME, &
+         des_pos_new, des_vel_new, omega_new)
       END SELECT
 
       RETURN
@@ -47,7 +52,7 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime)
+      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new, omega_new)
 
       Use discretelement
       Use run
@@ -59,8 +64,10 @@
 
 ! Passed variables
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: lTime
-
+      double precision, intent(in) :: ltime
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -71,11 +78,12 @@
 ! Flag that rolling friction already ended.
       LOGICAL, SAVE :: ROLLFRIC_END = .FALSE.
 
+      double precision, parameter :: lRad = 0.00050
 ! Return: Rolling friction already ended.
       IF(ROLLFRIC_END) RETURN
 
 ! Calculate the slip velocity.
-      SLIP = DES_VEL_NEW(1,1) + OMEGA_NEW(1,3)*DES_RADIUS(1)
+      SLIP = DES_VEL_NEW(1,1) + OMEGA_NEW(1,3)*lRad
 
 ! Check for a sign flip or a small difference.
       IF(COMPARE(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
@@ -115,7 +123,7 @@
 
 ! Calculate the non-dimensional angular velocity.
          ANL_ND = 5.0d0/7.0d0
-         DEM_ND = abs(OMEGA_NEW(1,3)*DES_RADIUS(1)/u0)
+         DEM_ND = abs(OMEGA_NEW(1,3)*lRad/u0)
 
          Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 

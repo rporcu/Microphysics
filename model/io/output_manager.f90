@@ -11,8 +11,8 @@ module output_manager_module
 !                                                                      !
 !----------------------------------------------------------------------!
      SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-        iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var, omega_new, &
-        EXIT_SIGNAL, FINISHED)
+        iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, &
+        des_vel_new, des_usr_var, omega_new, exit_signal, finished)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -34,6 +34,7 @@ module output_manager_module
       use write_des_data_module, only: write_des_data
       use write_res0_des_module, only: write_res0_des
       use write_res1_mod, only: write_res1
+      use discretelement, only: max_pip
 
       IMPLICIT NONE
 
@@ -52,10 +53,16 @@ module output_manager_module
       DOUBLE PRECISION, INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
-         DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, omega_new, des_usr_var
-         INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
-         INTEGER, DIMENSION(:), INTENT(IN) :: iglobal_id
+      double precision, intent(in) :: des_radius(max_pip)
+      double precision, intent(in) :: ro_sol(max_pip)
+
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: des_usr_var(max_pip,1)
+      double precision, intent(in) :: omega_new(max_pip,3)
+
+      integer, intent(inout) :: iglobal_id(max_pip)
+      integer, intent(inout) :: particle_state(max_pip)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -120,7 +127,7 @@ module output_manager_module
       DO LC = 1, DIMENSION_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            CALL WRITE_USR1 (LC)
+            CALL WRITE_USR1 (LC, des_pos_new, des_vel_new, omega_new)
             CALL NOTIFY_USER('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF

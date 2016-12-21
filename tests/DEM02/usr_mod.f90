@@ -38,22 +38,21 @@
 !......................................................................!
       double precision function MAX_HEIGHT_HS(k)
 
-      use discretelement, only: DES_RADIUS
       use discretelement, only: DES_EN_WALL_INPUT
 
       implicit none
 
 ! K'th bounce
       integer, intent(in) :: k
-
+      double precision, parameter :: lRad = 0.10d0
       if(k == 0) then
          MAX_HEIGHT_HS = h0
       else
-         MAX_HEIGHT_HS = DES_RADIUS(1) + &
-            (h0 - DES_RADIUS(1)) * (DES_EN_WALL_INPUT(1)**(2*k))
+         MAX_HEIGHT_HS = lRad + &
+            (h0 - lRad) * (DES_EN_WALL_INPUT(1)**(2*k))
       endif
 
-      return 
+      return
       end function MAX_HEIGHT_HS
 
 

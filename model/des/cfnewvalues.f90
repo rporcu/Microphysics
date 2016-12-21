@@ -20,7 +20,7 @@ MODULE CFNEWVALUES_MODULE
 
       IMPLICIT NONE
 
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, omoi, pmass
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: ppos
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, des_vel_new, omega_new, fc, tow, des_acc_old, rot_acc_old

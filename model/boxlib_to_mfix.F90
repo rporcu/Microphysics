@@ -17,10 +17,14 @@ contains
       ro_g, ro_go, rop_g, rop_go, u_g, u_go, v_g,v_go, w_g, w_go, &
       pp_g, d_e, d_n, d_t, mu_g, lambda_g, trD_g, tau_u_g ,tau_v_g, tau_w_g, &
       flux_ge, flux_gn, flux_gt, rop_ge, rop_gn, rop_gt, &
-      f_gds, drag_am, drag_bm) &
+      f_gds, drag_am, drag_bm, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+      particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
+      omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+      rot_acc_old, fc, tow, wall_collision_pft)  &
       bind(C, name="mfix_MAIN")
 
-    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use discretelement, only: max_pip
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
     integer         , intent(inout) :: flag&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -97,11 +101,40 @@ contains
     double precision, intent(inout) :: drag_bm&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1:3)
 
+    integer, intent(inout) :: pijk(max_pip,3)
+    integer, intent(inout) :: dg_pijk(max_pip)
+    integer, intent(inout) :: dg_pijkprv(max_pip)
+    integer, intent(inout) :: iglobal_id(max_pip)
+    integer, intent(inout) :: particle_state(max_pip)
+    integer, intent(inout) :: particle_phase(max_pip)
+
+    double precision, intent(inout) :: des_radius(max_pip)
+    double precision, intent(inout) :: ro_sol(max_pip)
+    double precision, intent(inout) :: pvol(max_pip)
+    double precision, intent(inout) :: pmass(max_pip)
+    double precision, intent(inout) :: omoi(max_pip)
+
+    double precision, intent(inout) :: ppos(max_pip,3)
+    double precision, intent(inout) :: des_pos_new(max_pip,3)
+    double precision, intent(inout) :: des_vel_new(max_pip,3)
+    double precision, intent(inout) :: des_usr_var(max_pip,1)
+    double precision, intent(inout) :: omega_new(max_pip,3)
+
+    double precision, intent(inout) :: des_acc_old(max_pip,3)
+    double precision, intent(inout) :: rot_acc_old(max_pip,3)
+    double precision, intent(inout) :: fc(max_pip,3)
+    double precision, intent(inout) :: tow(max_pip,3)
+
+    double precision, intent(inout) :: wall_collision_pft(3,8,max_pip)
+
     call mfix(flag, vol_surr, A_m, b_m, ep_g, ep_go, p_g, p_go, &
        ro_g, ro_go, rop_g, rop_go, u_g, u_go, v_g,v_go, w_g, w_go, &
        pp_g, d_e, d_n, d_t, mu_g, lambda_g, trD_g, tau_u_g ,tau_v_g, tau_w_g,&
        flux_ge, flux_gn, flux_gt, rop_ge, rop_gn, rop_gt, &
-       f_gds, drag_am, drag_bm)
+       f_gds, drag_am, drag_bm, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
+       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+       rot_acc_old, fc, tow, wall_collision_pft)
 
   end subroutine mfix_MAIN
 
@@ -110,19 +143,26 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_get_data(imax_to_c,jmax_to_c,kmax_to_c) &
+  subroutine mfix_get_data(imax_to_c,jmax_to_c,kmax_to_c,dem_solids_to_c) &
        bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
     use geometry, only: imax, jmax, kmax
+    use run     , only: dem_solids
 
-    integer imax_to_c, jmax_to_c, kmax_to_c
+    integer imax_to_c, jmax_to_c, kmax_to_c, dem_solids_to_c
 
     call get_data()
 
     imax_to_c = imax
     jmax_to_c = jmax
     kmax_to_c = kmax
+
+    IF (dem_solids) THEN
+       dem_solids_to_c = 1
+    ELSE
+       dem_solids_to_c = 0
+    ENDIF
 
   end subroutine mfix_get_data
 

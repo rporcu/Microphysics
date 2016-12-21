@@ -32,13 +32,16 @@
       double precision function F1kw(y1)
 
       use discretelement, only: KN_W
-      use discretelement, only: PMASS, DES_RADIUS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: y1  ! particle height.
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F1kw = -(KN_W/PMASS(1))*(y1 - DES_RADIUS(1))
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      F1kw = -(KN_W/lMass)*(y1 - lRad)
 
       return
       end function F1kw
@@ -59,13 +62,16 @@
       double precision function F1dw(x1)
 
       use discretelement, only: DES_ETAN_WALL
-      use discretelement, only: PMASS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: x1 ! particle velocity
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F1dw = -(DES_ETAN_WALL(1)/PMASS(1)) * x1
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      F1dw = -(DES_ETAN_WALL(1)/lMass) * x1
 
       return
       end function F1dw
@@ -86,13 +92,17 @@
       double precision function F12k(y1, y2)
 
       use discretelement, only: KN
-      use discretelement, only: PMASS, DES_RADIUS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: y1, y2 ! particle height
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F12k = -(KN/PMASS(1))*(2.0d0*DES_RADIUS(1) - (y2 - y1))
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+
+      F12k = -(KN/lMass)*(2.0d0*lRad - (y2 - y1))
 
       return
       end function F12k
@@ -114,13 +124,18 @@
       double precision function F12d(x1, x2)
 
       use discretelement, only: KN
-      use discretelement, only: PMASS, DES_ETAN
+      use discretelement, only: DES_ETAN
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: x1, x2 ! particle height
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F12d = -(DES_ETAN(1,2)/PMASS(1))*(x1 - x2)
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+
+      F12d = -(DES_ETAN(1,2)/lMass)*(x1 - x2)
 
       return
       end function F12d
@@ -141,14 +156,18 @@
       double precision function F2kw(y2)
 
       use discretelement, only: KN_W
-      use discretelement, only: PMASS, DES_RADIUS
       use geometry, only: YLENGTH
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: y2  ! particle height.
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F2kw = -(KN_W/PMASS(2))*(DES_RADIUS(2) - (YLENGTH - y2))
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+
+      F2kw = -(KN_W/lMass)*(lRad - (YLENGTH - y2))
 
       return
       end function F2kw
@@ -170,13 +189,17 @@
       double precision function F2dw(x2)
 
       use discretelement, only: DES_ETAN_WALL
-      use discretelement, only: PMASS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: x2 ! particle velocity
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass
 
-      F2dw = -(DES_ETAN_WALL(2)/PMASS(2)) * x2
+      lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+
+      F2dw = -(DES_ETAN_WALL(2)/lMass) * x2
 
       return
       end function F2dw
@@ -197,13 +220,18 @@
 !......................................................................!
       double precision function F21k(y1, y2)
 
-      use discretelement, only: PMASS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: y1, y2 ! particle height
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass1, lMass2
 
-      F21k = -(PMASS(1)/PMASS(2))* F12k(y1, y2)
+      lMass1 = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass2 = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+
+      F21k = -(lMass1/lMass2)* F12k(y1, y2)
 
       return
       end function F21k
@@ -224,13 +252,18 @@
 !......................................................................!
       double precision function F21d(x1, x2)
 
-      use discretelement, only: PMASS
+      use constant, only: pi
 
       implicit none
 
       double precision, intent(in) :: x1, x2 ! particle height
+      double precision, parameter :: lRad = 0.5d-3
+      double precision :: lMass1, lMass2
 
-      F21d = -(PMASS(1)/PMASS(2)) * F12d(x1,x2)
+      lMass1 = (4.0D0/3.0D0)*PI*(lRad**3)*2.0d+4
+      lMass2 = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
+
+      F21d = -(lMass1/lMass2) * F12d(x1,x2)
 
       return
       end function F21d

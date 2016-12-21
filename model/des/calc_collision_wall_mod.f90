@@ -42,11 +42,11 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
+      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      INTEGER(KIND=1), DIMENSION(:), INTENT(IN) :: particle_state
+      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
@@ -350,21 +350,24 @@
       INTEGER, ALLOCATABLE :: tmpI2(:,:)
       DOUBLE PRECISION, ALLOCATABLE :: tmpR3(:,:,:)
 
-      lSIZE1 = size(wall_collision_facet_id,1)
-      lSIZE2 = size(wall_collision_facet_id,2)
 
-      allocate(tmpI2(NEW_SIZE, lSIZE2))
-      tmpI2(1:lSIZE1,:) = WALL_COLLISION_FACET_ID(1:lSIZE1,:)
-      call move_alloc(tmpI2, WALL_COLLISION_FACET_ID)
-      WALL_COLLISION_FACET_ID(lSIZE1+1:NEW_SIZE,:) = -1
+      write(*,*) 'death in grow_wall_collision'
+      stop 33223
+      ! lSIZE1 = size(wall_collision_facet_id,1)
+      ! lSIZE2 = size(wall_collision_facet_id,2)
 
-      lSIZE1 = size(wall_collision_pft,1)
-      lSIZE2 = size(wall_collision_pft,2)
-      lSIZE3 = size(wall_collision_pft,3)
+      ! allocate(tmpI2(NEW_SIZE, lSIZE2))
+      ! tmpI2(1:lSIZE1,:) = WALL_COLLISION_FACET_ID(1:lSIZE1,:)
+      ! call move_alloc(tmpI2, WALL_COLLISION_FACET_ID)
+      ! WALL_COLLISION_FACET_ID(lSIZE1+1:NEW_SIZE,:) = -1
 
-      allocate(tmpR3(lSIZE1, NEW_SIZE, lSIZE3))
-      tmpR3(:,1:lSIZE2,:) = WALL_COLLISION_PFT(:,1:lSIZE2,:)
-      call move_alloc(tmpR3, WALL_COLLISION_PFT)
+      ! lSIZE1 = size(wall_collision_pft,1)
+      ! lSIZE2 = size(wall_collision_pft,2)
+      ! lSIZE3 = size(wall_collision_pft,3)
+
+      ! allocate(tmpR3(lSIZE1, NEW_SIZE, lSIZE3))
+      ! tmpR3(:,1:lSIZE2,:) = WALL_COLLISION_PFT(:,1:lSIZE2,:)
+      ! call move_alloc(tmpR3, WALL_COLLISION_PFT)
 
       RETURN
       END SUBROUTINE GROW_WALL_COLLISION
