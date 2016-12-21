@@ -108,6 +108,6 @@
       DOUBLE PRECISION :: VOL
 
 ! Cell flags.
-      integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag
+      integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag_mod
 
       END MODULE geometry

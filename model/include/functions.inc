@@ -38,18 +38,18 @@
       integer function iminus(i,j,k)
       use compar, only: istart3
       use geometry, only  : imin1,imax1,cyclic_x
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imin1 .and.  flag(i,j,k,1) > 1) then
+      if (i.eq.imin1 .and.  flag_mod(i,j,k,1) > 1) then
          iminus = i
       else
          iminus = max(istart3, i-1)
       end if
 
       if (cyclic_x .and. (iminus < imin1) .and. &
-         flag(i,j,k,1)<100) iminus = imax1
+         flag_mod(i,j,k,1)<100) iminus = imax1
 
       end function iminus
 
@@ -59,18 +59,18 @@
       integer function iplus(i,j,k)
       use compar, only: iend3
       use geometry, only  : imin1,imax1,cyclic_x
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imax1 .and. flag(i,j,k,1) > 1) then
+      if (i.eq.imax1 .and. flag_mod(i,j,k,1) > 1) then
          iplus = i
       else
          iplus = min(iend3, i+1)
       end if
 
       if (cyclic_x .and. (iplus > imax1) .and. &
-         flag(i,j,k,1)<100) iplus = imin1
+         flag_mod(i,j,k,1)<100) iplus = imin1
 
       end function iplus
 
@@ -79,18 +79,18 @@
       integer function jminus(i,j,k)
       use compar, only: jstart3
       use geometry, only  : jmin1,jmax1,cyclic_y
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmin1 .and. flag(i,j,k,1) > 1) then
+      if (j.eq.jmin1 .and. flag_mod(i,j,k,1) > 1) then
          jminus = j
       else
          jminus = max(jstart3, j-1)
       end if
 
       if (cyclic_y .and. (jminus < jmin1) .and. &
-         flag(i,j,k,1)<100) jminus = jmax1
+         flag_mod(i,j,k,1)<100) jminus = jmax1
 
       end function jminus
 
@@ -99,18 +99,18 @@
       integer function jplus(i,j,k)
       use compar, only: jend3
       use geometry, only  : jmin1,jmax1,cyclic_y
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmax1 .and. flag(i,j,k,1) > 1) then
+      if (j.eq.jmax1 .and. flag_mod(i,j,k,1) > 1) then
          jplus = j
       else
          jplus = min(jend3, j+1)
       end if
 
       if (cyclic_y .and. (jplus > jmax1) .and. &
-         flag(i,j,k,1)<100) jplus = jmin1
+         flag_mod(i,j,k,1)<100) jplus = jmin1
 
       end function jplus
 
@@ -120,18 +120,18 @@
 
       use compar, only: kstart3
       use geometry, only  : kmin1,kmax1,cyclic_z
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmin1 .and. flag(i,j,k,1) > 1) then
+      if (k.eq.kmin1 .and. flag_mod(i,j,k,1) > 1) then
          kminus = k
       else
          kminus = max(kstart3, k-1)
       end if
 
       if (cyclic_z .and. (kminus < kmin1) .and. &
-         flag(i,j,k,1)<100) kminus = kmax1
+         flag_mod(i,j,k,1)<100) kminus = kmax1
 
       end function kminus
 
@@ -141,30 +141,30 @@
 
       use compar, only: kend3
       use geometry, only: kmin1,kmax1,cyclic_z
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmax1 .and. flag(i,j,k,1) > 1) then
+      if (k.eq.kmax1 .and. flag_mod(i,j,k,1) > 1) then
          kplus = k
       else
          kplus = min(kend3, k+1)
       end if
 
       if (cyclic_z .and. (kplus > kmax1) .and. &
-         flag(i,j,k,1)<100) kplus = kmin1
+         flag_mod(i,j,k,1)<100) kplus = kmin1
 
       end function kplus
 
       ! ************************************************
 
       integer function ieast(i,j,k)
-      use geometry, only: flag
+      use geometry, only: flag_mod
 
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (flag(iplus(i,j,k),j,k,1)>=100) then
+      if (flag_mod(iplus(i,j,k),j,k,1)>=100) then
          ieast = i
       else
          ieast = iplus(i,j,k)
@@ -176,11 +176,11 @@
 
       integer function iwest(i,j,k)
 
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (flag(iminus(i,j,k),j,k,1) >= 100) then
+      if (flag_mod(iminus(i,j,k),j,k,1) >= 100) then
          iwest = i
       else
          iwest = iminus(i,j,k)
@@ -192,11 +192,11 @@
 
       integer function jnorth(i,j,k)
 
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (flag(i,jplus(i,j,k),k,1) >= 100) then
+      if (flag_mod(i,jplus(i,j,k),k,1) >= 100) then
          jnorth = j
       else
          jnorth = jplus(i,j,k)
@@ -208,11 +208,11 @@
 
       integer function jsouth(i,j,k)
 
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (flag(i,jminus(i,j,k),k,1) >= 100) then
+      if (flag_mod(i,jminus(i,j,k),k,1) >= 100) then
          jsouth = j
       else
          jsouth = jminus(i,j,k)
@@ -224,14 +224,14 @@
 
       integer function ktop(i,j,k)
 
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: kp
 
       kp = kplus(i,j,k)
 
-      if (flag(i,j,kp,1)>=100) then
+      if (flag_mod(i,j,kp,1)>=100) then
          ktop = k
       else
          ktop = kp
@@ -243,14 +243,14 @@
 
       integer function kbot(i,j,k)
 
-      use geometry, only: flag
+      use geometry, only: flag_mod
       implicit none
       integer, intent(in) :: i,j,k
       integer             :: km
 
       km = kminus(i,j,k)
 
-      if (flag(i,j,km,1)>=100) then
+      if (flag_mod(i,j,km,1)>=100) then
          kbot = k
       else
          kbot = km

@@ -16,7 +16,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
                 drag_am, drag_bm, &
-                flag_in, vol_surr, &
+                flag, vol_surr, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
@@ -35,7 +35,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0, mu_g0
       use funits , only: dmp_log, unit_log
-      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag
+      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag_mod
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
@@ -67,7 +67,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       IMPLICIT NONE
 
-      integer         , intent(inout) :: flag_in&
+      integer         , intent(inout) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
       double precision, intent(inout) :: vol_surr&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
@@ -192,7 +192,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 
 !---------------------------------------------------------------------//
-      flag     = flag_in
+      flag_mod = flag
 !-----------------------------------------------
 
 
@@ -318,6 +318,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
       CALL SET_FLAGS1(flag)
+      flag_mod = flag
 
 ! Calculate cell volumes and face areas
       VOL = DX*DY*DZ
@@ -327,6 +328,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! Find corner cells and set their face areas to zero
       CALL GET_CORNER_CELLS(flag)
+      flag_mod = flag
 
 ! Set constant physical properties
       CALL SET_CONSTPROP(ro_g, lambda_g, mu_g, flag)
@@ -383,22 +385,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
-
-
-! Find the solution of the equations from TIME to TSTOP at
-! intervals of DT
-
-    call time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
-       p_g, p_go, pp_g, ep_g, ep_go, &
-       ro_g, ro_go, rop_g, rop_go, &
-       rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
-       tau_u_g, tau_v_g, tau_w_g,&
-       flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-       f_gds, A_m, b_m, drag_am, drag_bm, flag, vol_surr, &
-       pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
-       des_radius, ro_sol, pvol, pmass, omoi, &
-       ppos, des_pos_new, des_vel_new, des_usr_var, &
-       omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft)
 
       CALL FINL_ERR_MSG
 
