@@ -17,7 +17,7 @@ module des_time_march_module
          neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-         fc, tow, wall_collision_pft, flag, vol_surr, pinc)
+         drag_fc, fc, tow, wall_collision_pft, flag, vol_surr, pinc)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -31,7 +31,6 @@ module des_time_march_module
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: drag_fc
       use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
@@ -72,7 +71,7 @@ module des_time_march_module
 
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, drag_fc, fc, tow
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD

@@ -20,7 +20,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, fc, tow, wall_collision_pft)
+                rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
 
 !-----------------------------------------------
 ! Modules
@@ -62,7 +62,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       use discretelement, only: neighbor_index, wall_collision_facet_id
       use discretelement, only: des_usr_var_size, neighbor_index_old
-      use discretelement, only: drag_fc, nonexistent, do_old, ighost_updated
+      use discretelement, only: nonexistent, do_old, ighost_updated
 
       IMPLICIT NONE
 
@@ -174,6 +174,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       double precision, intent(inout) :: des_acc_old(max_pip,3)
       double precision, intent(inout) :: rot_acc_old(max_pip,3)
+      double precision, intent(inout) :: drag_fc(max_pip,3)
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 

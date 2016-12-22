@@ -85,7 +85,7 @@ CONTAINS
       ENDDO
 
 ! Explicit drag force acting on a particle.
-      Allocate(DRAG_FC (MAX_PIP,DIMN) )
+      ! Allocate(DRAG_FC (MAX_PIP,DIMN) )
 
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))

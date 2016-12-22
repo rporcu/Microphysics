@@ -253,7 +253,7 @@
 !-----------------------------------------------------------------<<<
 
 ! Explicitly calculated fluid-particle drag force.
-      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)
+      ! DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)
 
 ! quantities are set in subroutine set_interpolation_scheme
 ! order = order of the interpolation method, ob2l = (order+1)/2,

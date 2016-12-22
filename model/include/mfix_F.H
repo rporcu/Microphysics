@@ -41,6 +41,7 @@ extern "C"
                  Real* omega_new,
                  Real* des_acc_old,
                  Real* rot_acc_old,
+                 Real* drag_fc,
                  Real* fc,
                  Real* tow,
                  Real* wall_collision_pft);
@@ -78,6 +79,7 @@ extern "C"
                  Real* omega_new,
                  Real* des_acc_old,
                  Real* rot_acc_old,
+                 Real* drag_fc,
                  Real* fc,
                  Real* tow,
                  Real* wall_collision_pft);

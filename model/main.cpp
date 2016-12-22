@@ -208,6 +208,7 @@ int main (int argc, char* argv[])
   Array<Real> omega_new     (3*nparticles);
   Array<Real> des_acc_old   (3*nparticles);
   Array<Real> rot_acc_old   (3*nparticles);
+  Array<Real> drag_fc       (3*nparticles);
   Array<Real> fc            (3*nparticles);
   Array<Real> tow           (3*nparticles);
 
@@ -235,7 +236,7 @@ int main (int argc, char* argv[])
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
-               rot_acc_old.dataPtr(), fc.dataPtr(), tow.dataPtr(),
+               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr(),
                wall_collision_pft.dataPtr());
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
@@ -260,7 +261,7 @@ int main (int argc, char* argv[])
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
-               rot_acc_old.dataPtr(), fc.dataPtr(), tow.dataPtr(),
+               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr(),
                wall_collision_pft.dataPtr());
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
