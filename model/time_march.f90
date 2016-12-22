@@ -31,10 +31,8 @@ module time_march_module
       USE check_batch_queue_end_module, only: check_batch_queue_end
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE compar, only: myPE
-      USE constant, only: mmax
       USE discretelement, only: des_continuum_coupled, max_pip
       USE error_manager, only: err_msg, flush_err_msg
-      USE fld_const, only: mu_g0
       USE param1, only: undefined, small_number, zero
       USE run, only: call_usr, dem_solids
       USE run, only: dem_solids
@@ -44,7 +42,6 @@ module time_march_module
       ! Use function MAX_VEL_INLET to compute max. velocity at inlet
       USE utilities, ONLY: MAX_VEL_INLET
 
-      use output   , only: RES_DT
       use adjust_dt, only: adjustdt
 
       use exit_mod      , only: mfix_exit

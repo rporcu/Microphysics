@@ -363,7 +363,6 @@
       subroutine des_scatter_particle(particle_state, des_radius, ro_sol, des_pos_new, des_vel_new)
 
       use mpi_comm_des, only: desmpi_scatterv
-      use des_allocate, only: particle_grow
 
       implicit none
 
@@ -414,7 +413,7 @@
 ! second pass: set and allocate scatter related variables
       pip = lproc_parcnt(mype)
       if (pip .gt. max_pip) then
-         call PARTICLE_GROW(pip)
+         stop 417
       endif
       iscr_recvcnt = pip*lpacketsize
       allocate (dprocbuf(iscr_recvcnt))

@@ -18,7 +18,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: iend1, jend1, kend1
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: numpes, mype
-      USE constant, only: pi, mmax
+      USE constant, only: pi
       USE desgrid, only: desgrid_pic
       USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost

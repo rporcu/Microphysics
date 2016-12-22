@@ -2,7 +2,6 @@
 
       use compar, only: PE_IO
       use compar, only: myPE
-      use des_allocate, only: neighbor_grow, particle_grow
       use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts
       use discretelement, only: entering_ghost, particle_state, exiting_ghost, normal_particle, normal_ghost
       use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg, ival
@@ -130,10 +129,12 @@
          PIP = pIN_COUNT
          NEIGH_NUM = cIN_COUNT
 
-         DO WHILE(NEIGH_NUM > NEIGH_MAX)
-            NEIGH_MAX = 2*NEIGH_MAX
-         ENDDO
-         CALL PARTICLE_GROW(NEIGH_MAX)
+         IF (NEIGH_NUM > NEIGH_MAX) THEN
+            STOP 13320
+         ENDIF
+         IF (NEIGH_NUM > MAX_PIP) THEN
+            STOP 13620
+         ENDIF
 
       ELSE
 
@@ -310,7 +311,7 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE MAP_pARRAY_TO_PROC(lPAR_CNT)
 
-      use discretelement, only: PIP
+      use discretelement, only: PIP, MAX_PIP
       use discretelement, only: XE, YN, ZT
       use geometry, only: IMIN1, IMAX1
       use geometry, only: JMIN1, JMAX1
@@ -413,7 +414,7 @@
 ! Each process stores the number of particles-on-its-process. The error
 ! flag is set if that number exceeds the maximum.
       PIP = lPAR_CNT(myPE)
-      CALL PARTICLE_GROW(PIP)
+      IF (PIP>MAX_PIP) STOP 41731
 
 ! Global collection of error flags to abort it the max was exceeded.
       ! CALL GLOBAL_ALL_SUM(IER)
@@ -606,7 +607,7 @@
 
       use compar, only: numPEs, myPE
       use discretelement, only: PIP
-      use discretelement, only: NEIGH_MAX, NEIGH_NUM
+      use discretelement, only: NEIGH_MAX, NEIGH_NUM, MAX_PIP
 
       implicit none
 
@@ -736,10 +737,13 @@
 ! flag is set if that number exceeds the maximum.
       NEIGH_NUM = lCOL_CNT(myPE)
 
-      DO WHILE(NEIGH_NUM > NEIGH_MAX)
-         NEIGH_MAX = 2*NEIGH_MAX
-      ENDDO
-      CALL NEIGHBOR_GROW(NEIGH_MAX)
+      IF (NEIGH_NUM > NEIGH_MAX) THEN
+         STOP 74118
+      ENDIF
+
+      IF (NEIGH_NUM > MAX_PIP) THEN
+         STOP 7451800
+      ENDIF
 
       CALL FINL_ERR_MSG
 

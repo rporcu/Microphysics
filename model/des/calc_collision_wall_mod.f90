@@ -346,9 +346,6 @@
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: NEW_SIZE
-      INTEGER :: lSIZE1, lSIZE2, lSIZE3
-      INTEGER, ALLOCATABLE :: tmpI2(:,:)
-      DOUBLE PRECISION, ALLOCATABLE :: tmpR3(:,:,:)
 
 
       write(*,*) 'death in grow_wall_collision'

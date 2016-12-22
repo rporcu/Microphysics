@@ -80,7 +80,6 @@
 ! Local variables
 !---------------------------------------------------------------------//
       integer :: lijk,lindx,ltot_ind,lpicloc,lpar_cnt,lcurpar
-      integer :: lbuf
 !......................................................................!
 
 !       lpar_cnt = 0
@@ -203,16 +202,8 @@
 
 ! Local variables
 !---------------------------------------------------------------------//
-      integer :: li, lj, lk
-      integer :: ltot_ind,lindx,cc
-      integer :: lneigh,lijk,&
-                 lpicloc,lparcnt,lcurpar
-      integer :: lbuf,num_neighborlists_to_send
+      integer :: num_neighborlists_to_send
 
-      logical, allocatable, dimension(:) :: going_to_send
-
-! Location in the buffer where the number of pair data is specified.
-      integer :: num_neighborlists_send_buf_loc
 !......................................................................!
 
 ! ! pack the particle crossing the boundary

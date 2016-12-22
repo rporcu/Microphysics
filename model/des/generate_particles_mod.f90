@@ -122,7 +122,6 @@
 
       use stl_functions_des, only: CHECK_IF_PARTICLE_OVERLAPS_STL
       use run, only: solids_model
-      use des_allocate, only: PARTICLE_GROW
 
       use desgrid, only: IofPOS, JofPOS, KofPOS
       use toleranc, only: compare
@@ -296,7 +295,7 @@
          !ENDIF
 
          PIP = PIP + 1
-         CALL PARTICLE_GROW(PIP)
+         IF (PIP > MAX_PIP) STOP 887
 
          PARTICLE_STATE(PIP) = NORMAL_PARTICLE
 

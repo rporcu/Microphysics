@@ -394,7 +394,6 @@ subroutine add_argument(fname, nlen) &
    integer(c_int), intent(in) :: nlen
    character(kind=c_char), intent(in) :: fname(nlen)
    integer :: lc, bnd
-   character :: string(80)
 
    argc = argc + 1
    if(argc > 32) then

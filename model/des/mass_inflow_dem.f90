@@ -5,7 +5,6 @@ MODULE MASS_INFLOW_DEM_MODULE
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
       use constant, only: PI
-      use des_allocate, only: particle_grow
       use des_bc, only: dem_bc_poly_layout, dem_bcmi_map, dem_bcmi_ijk, dem_bcmi_ijkstart, dem_mi_time, dem_bcmi_ijkend
       use des_bc, only: dem_mi, dem_bcmi, numfrac_limit, pi_count, pi_factor
       use desgrid, only: dg_funijk
@@ -109,7 +108,7 @@ MODULE MASS_INFLOW_DEM_MODULE
 ! Increment the number of particle on the processor by one. If the max
 ! number of particles is exceeded, set the error flag and cycle.
             PIP = PIP + 1
-            CALL PARTICLE_GROW(PIP)
+            IF (PIP > MAX_PIP) STOP 11139
 
 ! Find the first free space in the particle existance array.
             NP_LP: DO NP = LS, MAX_PIP

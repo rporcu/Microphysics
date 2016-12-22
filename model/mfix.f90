@@ -28,7 +28,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       use check_data_20_module, only: check_data_20
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
-      use constant, only: mmax
       use corner_module, only: get_corner_cells
       use des_allocate, only: des_allocate_arrays
       use discretelement, only: max_pip
@@ -43,7 +42,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use param1 , only: undefined, zero
       use read_res1_mod, only: read_res1
       use run, only: call_usr, run_type, dem_solids, nstep
-      use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev, dt_prev
+      use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_bc_dem_module, only: set_bc_dem

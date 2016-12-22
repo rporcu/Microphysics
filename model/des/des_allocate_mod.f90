@@ -171,8 +171,7 @@ CONTAINS
       INTEGER, INTENT(IN) :: ii,jj
 
       if (NEIGHBOR_INDEX(ii) > NEIGH_MAX) then
-         NEIGH_MAX = 2*NEIGH_MAX
-         CALL NEIGHBOR_GROW(NEIGH_MAX)
+         stop 17414
       endif
 
       NEIGHBORS(NEIGHBOR_INDEX(ii)) = jj
@@ -189,39 +188,38 @@ CONTAINS
 ! max should be increased before calling this routine. Also, no        !
 ! assumption to the previous array size is made as needed for restarts.!
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE NEIGHBOR_GROW(new_neigh_max)
-        IMPLICIT NONE
+      ! SUBROUTINE NEIGHBOR_GROW(new_neigh_max)
+      !   IMPLICIT NONE
 
-        integer, intent(in) :: new_neigh_max
+      !   integer, intent(in) :: new_neigh_max
 
-        INTEGER :: lSIZE1
-        INTEGER, DIMENSION(:), ALLOCATABLE :: neigh_tmp
-        DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: pf_tmp
+      !   INTEGER :: lSIZE1
+      !   INTEGER, DIMENSION(:), ALLOCATABLE :: neigh_tmp
+      !   DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: pf_tmp
 
-        lSIZE1 = size(neighbors,1)
+      !   lSIZE1 = size(neighbors,1)
 
-        allocate(neigh_tmp(new_neigh_max))
-        neigh_tmp(1:lSIZE1) = neighbors(1:lSIZE1)
-        neigh_tmp(lSIZE1+1:) = 0
-        call move_alloc(neigh_tmp,neighbors)
+      !   allocate(neigh_tmp(new_neigh_max))
+      !   neigh_tmp(1:lSIZE1) = neighbors(1:lSIZE1)
+      !   neigh_tmp(lSIZE1+1:) = 0
+      !   call move_alloc(neigh_tmp,neighbors)
 
-        allocate(neigh_tmp(new_neigh_max))
-        neigh_tmp(1:lSIZE1) = neighbors_old(1:lSIZE1)
-        neigh_tmp(lSIZE1+1:) = 0
-        call move_alloc(neigh_tmp,neighbors_old)
+      !   allocate(neigh_tmp(new_neigh_max))
+      !   neigh_tmp(1:lSIZE1) = neighbors_old(1:lSIZE1)
+      !   neigh_tmp(lSIZE1+1:) = 0
+      !   call move_alloc(neigh_tmp,neighbors_old)
 
-        allocate(pf_tmp(3,new_neigh_max))
-        pf_tmp(:,1:lSIZE1) = pft_neighbor(:,1:lSIZE1)
-        pf_tmp(:,lSIZE1+1:) = 0
-        call move_alloc(pf_tmp,pft_neighbor)
+      !   allocate(pf_tmp(3,new_neigh_max))
+      !   pf_tmp(:,1:lSIZE1) = pft_neighbor(:,1:lSIZE1)
+      !   pf_tmp(:,lSIZE1+1:) = 0
+      !   call move_alloc(pf_tmp,pft_neighbor)
 
-        allocate(pf_tmp(3,new_neigh_max))
-        pf_tmp(:,1:lSIZE1) = pft_neighbor_old(:,1:lSIZE1)
-        pf_tmp(:,lSIZE1+1:) = 0
-        call move_alloc(pf_tmp,pft_neighbor_old)
+      !   allocate(pf_tmp(3,new_neigh_max))
+      !   pf_tmp(:,1:lSIZE1) = pft_neighbor_old(:,1:lSIZE1)
+      !   pf_tmp(:,lSIZE1+1:) = 0
+      !   call move_alloc(pf_tmp,pft_neighbor_old)
 
-
-      END SUBROUTINE NEIGHBOR_GROW
+      ! END SUBROUTINE NEIGHBOR_GROW
 
 !``````````````````````````````````````````````````````````````````````!
 ! Subroutine: PARTICLE_GROW                                            !
@@ -230,17 +228,17 @@ CONTAINS
 ! max should be increased before calling this routine. Also, no        !
 ! assumption to the previous array size is made as needed for restarts.!
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE PARTICLE_GROW(new_max_pip)
+      ! SUBROUTINE PARTICLE_GROW(new_max_pip)
 
-        IMPLICIT NONE
+      !   IMPLICIT NONE
 
-        integer, intent(in) :: new_max_pip
-        write(*,*) 'Death in particle grow'
-        stop 887
+      !   integer, intent(in) :: new_max_pip
+      !   write(*,*) 'Death in particle grow'
+      !   stop 887
 
-      RETURN
+      ! RETURN
 
-      CONTAINS
+      ! CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                         !
 !  Subrourtine: DES_INIT_PARTICLE_ARRAYS                                  !
@@ -251,33 +249,31 @@ CONTAINS
 !  new portions of the arrays can be initialized.                         !
 !                                                                         !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_INIT_PARTICLE_ARRAYS(LB,UB)
+      ! SUBROUTINE DES_INIT_PARTICLE_ARRAYS(LB,UB)
 
-         use discretelement, only: ighost_updated, neighbor_index, wall_collision_facet_id
-         use discretelement, only: des_usr_var_size
-         use discretelement, only: iglobal_id, drag_fc, nonexistent, do_old
-         use param1, only: zero
+      !    use discretelement, only: ighost_updated, neighbor_index, wall_collision_facet_id
+      !    use discretelement, only: drag_fc, nonexistent
+      !    use param1, only: zero
 
-      IMPLICIT NONE
+      ! IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: LB, UB
-      INTEGER :: II
+      ! INTEGER, INTENT(IN) :: LB, UB
 
-      NEIGHBOR_INDEX(:) = 0
+      ! NEIGHBOR_INDEX(:) = 0
 
-      ! DES grid bin information
-      IGHOST_UPDATED(LB:UB) = .false.
+      ! ! DES grid bin information
+      ! IGHOST_UPDATED(LB:UB) = .false.
 
-      ! Collision data
-      WALL_COLLISION_FACET_ID(:,LB:UB) = -1
+      ! ! Collision data
+      ! WALL_COLLISION_FACET_ID(:,LB:UB) = -1
 
-      ! Particle center drag coefficient and explicit drag force
-      DRAG_FC(LB:UB,:) = ZERO
+      ! ! Particle center drag coefficient and explicit drag force
+      ! DRAG_FC(LB:UB,:) = ZERO
 
-      RETURN
-      END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
+      ! RETURN
+      ! END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
 
-      END SUBROUTINE PARTICLE_GROW
+      ! END SUBROUTINE PARTICLE_GROW
 
       SUBROUTINE BYTE_GROW(byte_array,new_size,ival)
         IMPLICIT NONE

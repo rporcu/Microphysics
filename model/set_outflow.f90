@@ -46,7 +46,6 @@ module set_outflow_module
 
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use constant , only: mmax
 
       use param, only: dimension_m
       use param1, only: undefined, zero
@@ -333,8 +332,6 @@ module set_outflow_module
 !---------------------------------------------------------------------//
       use bc, only: bc_ep_g
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use constant, only: mmax, ro_s0
-      use run, only: dem_solids
 
 ! Global parameters
 !---------------------------------------------------------------------//
@@ -370,10 +367,6 @@ module set_outflow_module
 
 ! Local variables
 !---------------------------------------------------------------------//
-! indices
-      INTEGER :: M
-! solids volume fraction
-      DOUBLE PRECISION :: EPs
 ! sum of solids phases volume fractions
       DOUBLE PRECISION :: SUM_EPs
 ! sum of solids phases bulk densities

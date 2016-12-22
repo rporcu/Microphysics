@@ -28,7 +28,6 @@ module des_time_march_module
       use compar, only: iend3, jend3, kend3
       use compar, only: istart3, jstart3, kstart3
       use compar, only: numpes
-      use des_allocate, only: particle_grow
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt

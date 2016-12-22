@@ -12,19 +12,15 @@ module comp_mean_fields0_module
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: iend1, jend1, kend1
-      USE compar, only: imap_c, jmap_c, kmap_c
       USE compar, only: istart2, jstart2, kstart2
-      USE compar, only: mype, pe_io
-      USE constant, only: mmax
-      USE discretelement, only: des_rops_node, xe, yn, zt, interp_scheme
+      USE compar, only: mype
+      USE discretelement, only: xe, yn, zt, interp_scheme
       USE discretelement, only: pic, dimn
       USE interpolation, only: set_interpolation_scheme
       USE geometry, only: vol
       USE interpolation, only: set_interpolation_stencil
       USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero
-      USE particle_filter, only: DES_REPORT_MASS_INTERP
-      USE constant, only: mmax, ro_s0
 
       IMPLICIT NONE
 
@@ -70,7 +66,7 @@ module comp_mean_fields0_module
 ! particle number index, used for looping
       INTEGER :: NP, NINDX
 
-      DOUBLE PRECISION :: TEMP1, TEMP2
+      DOUBLE PRECISION :: TEMP1
 
       DOUBLE PRECISION :: gst_tmp(2,2,2,3)
       DOUBLE PRECISION :: weight_ft(2,2,2)

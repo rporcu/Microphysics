@@ -82,7 +82,7 @@ module comp_mean_fields_module
 ! Local variables
 !-----------------------------------------------
 ! Loop counters: partciles, filter cells, phases
-      INTEGER NP, M
+      INTEGER NP
 ! Fluid cell index
       INTEGER :: I,J,K
 ! Total Mth solids phase volume in IJK

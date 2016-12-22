@@ -177,8 +177,6 @@ MODULE GAS_DRAG_MODULE
 !---------------------------------------------------------------------//
 ! Grid cell indices
       INTEGER :: I, J, K
-! temporary variables for matrix A_M and vector B_M
-      DOUBLE PRECISION tmp_A, tmp_B
 ! Averaging factor
       DOUBLE PRECISION :: AVG_FACTOR
 !......................................................................!
