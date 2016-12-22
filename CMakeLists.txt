@@ -288,30 +288,39 @@ set(TESTS
   benchmarks/FLD01
   )
 
+set (BUILD_TEST build_test)
+add_custom_target(${BUILD_TEST})
+
 foreach( testdir ${TESTS})
 
-  STRING(REPLACE "/" "_" testname ${testdir} )
+  STRING(REPLACE "/" "_" TEST_NAME ${testdir} )
 
   FILE(GLOB USR_OVERRIDES ${testdir}/*.f90)
   set(local_includes ${CXX_includes} ${FPP_includes})
   set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
 
-  add_executable(mfix_${testname} EXCLUDE_FROM_ALL model/main.cpp ${USR_OVERRIDES})
 
-  add_test(build_${testname} "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target mfix_${testname})
 
-  add_test(NAME ${testname}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${testdir}/runtests.sh ${CMAKE_CURRENT_BINARY_DIR}/mfix_${testname}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${testdir})
+  set(TEST_EXE mfix_${TEST_NAME})
 
-  set_tests_properties ( ${testname}
-    PROPERTIES DEPENDS build_${testname}
+  add_executable(${TEST_EXE} EXCLUDE_FROM_ALL model/main.cpp ${USR_OVERRIDES})
+
+  add_test(NAME ${TEST_NAME}
+    COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}
+            -DCMAKE_COMMAND=${CMAKE_COMMAND}
+            -DTEST_EXE=${TEST_EXE}
+            -DTEST_NAME=${TEST_NAME}
+            -Dtestdir=${CMAKE_CURRENT_SOURCE_DIR}/${testdir}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/runtests.cmake)
+
+
+  add_dependencies ( ${BUILD_TEST} ${TEST_EXE})
+
+  set_tests_properties ( ${TEST_NAME}
+    PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/${TEST_EXE}"
     )
 
-  set_tests_properties ( ${testname}
-    PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/mfix_${testname}"
-    )
-
-  target_link_libraries(mfix_${testname} ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
+  target_link_libraries(${TEST_EXE} ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
 
 endforeach( testdir ${TESTS})
