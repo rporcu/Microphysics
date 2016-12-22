@@ -29,13 +29,15 @@ module des_drag_gp_module
       USE compar  , only: myPE
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
-      USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
-                        drag_koch_hill, drag_bvk
-      USE param1, only: one, zero
-      USE constant, only: ro_s0
-      USE run, only: syam_obrien, gidaspow, gidaspow_blend, wen_yu_pcf, bvk, drag_type_enum, drag_type
+      USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
+         drag_wen_yu, drag_koch_hill, drag_bvk
+      USE run, only: syam_obrien, gidaspow, gidaspow_blend, wen_yu_pcf, bvk,&
+         drag_type_enum, drag_type
       USE run, only: wen_yu, koch_hill, user_drag, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
       USE funits  , only: dmp_log, unit_log
+      USE param1, only: one, zero
+      USE constant, only: ro_s0
+      use constant, only: D_p0
 
       IMPLICIT NONE
 
@@ -132,19 +134,10 @@ module des_drag_gp_module
             FLUID_VEL(1), FLUID_VEL(2), FLUID_VEL(3))
 
       CASE DEFAULT
-! HACK HACK HACK
-! Avoid des_rop_s
 
 ! calculate the average particle diameter and particle ratio
-         ! tSUM = ZERO
-         ! DO lM = 1,MMAX
-         !    IF(PHIS > ZERO) THEN
-         !       tSUM = tSUM + DES_ROP_S(i,j,k,lM) / &
-         !          (PHIS*RO_S0(lM)*D_p0(lM))
-         !     ELSE
-         !       tSUM = tSUM + ONE/D_p0(lM)
-         !     ENDIF
-         ! ENDDO
+! HACK HACK HACK HACK -- Dependence on rop_s was removed
+         tSUM = ONE/D_p0(1)
 
          DPA = ONE / tSUM
          Y_i = DPM * tSUM

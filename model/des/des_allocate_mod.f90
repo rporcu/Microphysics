@@ -90,14 +90,6 @@ CONTAINS
 ! Volume of nodes
       ALLOCATE(DES_VOL_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
-      SELECT CASE(DES_INTERP_SCHEME_ENUM)
-      CASE(DES_INTERP_GARG)
-         ALLOCATE(DES_ROPS_NODE(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX))
-      END SELECT
-
-! Bulk density in a computational fluid cell / for communication with
-! MFIX continuum
-!     ALLOCATE( DES_ROP_S(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX))
 
       CALL FINL_ERR_MSG
 

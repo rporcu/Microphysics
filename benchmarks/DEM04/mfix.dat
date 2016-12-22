@@ -17,7 +17,7 @@
   UNITS = 'SI'
 
   TIME =  0.00
-  TSTOP = 0.05
+  TSTOP = 0.01
 
   DT =     1.0d-04
   DT_MAX = 1.0d-02
@@ -33,7 +33,7 @@
 
   DES_INTERP_SCHEME = 'GARG_2012'
 
-  GENER_PART_CONFIG = .T.
+  GENER_PART_CONFIG = .F.
   CALL_USR = .T.
 
 #_______________________________________________________________________
@@ -65,7 +65,7 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
-
+  PARTICLES = 224
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle

@@ -35,7 +35,7 @@
 
   DES_INTERP_SCHEME = 'GARG_2012'
 
-  GENER_PART_CONFIG = .T.
+  GENER_PART_CONFIG = .F.
   CALL_USR = .T.
 
 #_______________________________________________________________________
@@ -70,7 +70,7 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
-
+  PARTICLES = 1611
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle

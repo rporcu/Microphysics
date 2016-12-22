@@ -82,12 +82,6 @@
 
 !------------------------------------------------------------------------
 ! Subroutine       : des_addnodevalues2
-! Purpose          : This routine is specially used for calc_des_rop_s
-!                    The backward interpolation in calc_des_rop_s computes
-!                    the grid node values of des_rops_node
-!                    node values are from istart2 to iend1;
-!                    hence a separate module is created to exchange
-!                    node values
 !
 ! Parameters       : None
 !------------------------------------------------------------------------

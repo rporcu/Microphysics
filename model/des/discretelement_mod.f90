@@ -255,11 +255,6 @@
 ! Explicitly calculated fluid-particle drag force.
       DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)
 
-
-! An intermediate array used in calculation of solids volume fraction
-! by backward interpolation, i.e., when INTERP_DES_MEAN_FIELDS is true.
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE ::  DES_ROPS_NODE
-
 ! quantities are set in subroutine set_interpolation_scheme
 ! order = order of the interpolation method, ob2l = (order+1)/2,
 ! ob2r = order/2
