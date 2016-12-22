@@ -5,7 +5,7 @@ module comp_mean_fields_module
    use comp_mean_fields1_module, only: comp_mean_fields1
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
    use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
-   use discretelement, only: max_pip, des_rop_s
+   use discretelement, only: max_pip
    use geometry, only: vol
    use param1, only: zero
    use particle_filter, only: DES_INTERP_GARG
@@ -26,11 +26,12 @@ module comp_mean_fields_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,&
         pmass,pvol, &
-        des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+        des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), INTENT(INOUT) :: des_rop_s
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
@@ -59,17 +60,17 @@ module comp_mean_fields_module
          CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
          CASE(DES_INTERP_GARG) ; &
             CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-            des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag,pinc)
+            des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,vol_surr,iglobal_id,flag,pinc)
          CASE DEFAULT          ; &
-            CALL COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag)
+            CALL COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag,des_rop_s)
          END SELECT
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER
       ENDIF
 
 ! Calculate the gas phase volume fraction from DES_ROP_s.
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,&
-                        iglobal_id,flag,pinc)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_rop_s,&
+                        des_usr_var,iglobal_id,flag,pinc)
 
       RETURN
 

@@ -15,7 +15,7 @@ module calc_epg_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,&
-                              des_radius,des_usr_var,iglobal_id,flag,pinc)
+                              des_radius,des_rop_s,des_usr_var,iglobal_id,flag,pinc)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -23,8 +23,6 @@ module calc_epg_des_module
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Number of continuum solids phases
       use constant, only: MMAX, RO_S0
-! Discrete particle material and bulk densities
-      use discretelement, only: DES_ROP_s
 ! List of particles in each cell.
       use discretelement, only: PIC
 ! Volume of scalar grid cell.
@@ -59,6 +57,8 @@ module calc_epg_des_module
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_usr_var, des_vel_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), INTENT(IN) :: des_rop_s
 
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 

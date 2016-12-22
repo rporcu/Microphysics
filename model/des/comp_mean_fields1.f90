@@ -5,11 +5,11 @@ module comp_mean_fields1_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag)
+      SUBROUTINE COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag,des_rop_s)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
-      USE discretelement, only: max_pip, des_rop_s
+      USE discretelement, only: max_pip
       USE discretelement, only: normal_particle, normal_particle, normal_ghost
       USE geometry, only: vol
       USE param1, only: zero
@@ -18,6 +18,7 @@ module comp_mean_fields1_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), INTENT(INOUT) :: des_rop_s
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
@@ -58,7 +59,7 @@ module comp_mean_fields1_module
 
 ! calculating the bulk density of solids phase m based on the total
 ! number of particles having their center in the cell
-            DES_ROP_S(i,j,k,M) = RO_S0(M)*SOLVOLINC(I,J,K,M)/VOL
+            des_rop_s(i,j,k,M) = RO_S0(M)*SOLVOLINC(I,J,K,M)/VOL
 
          ENDDO
 
@@ -67,7 +68,7 @@ module comp_mean_fields1_module
       ENDDO
 
 ! Halo exchange of solids volume fraction data.
-      ! calL SEND_RECV(DES_ROP_S,2)
+      ! calL SEND_RECV(des_rop_s,2)
 
       end SUBROUTINE COMP_MEAN_FIELDS1
 

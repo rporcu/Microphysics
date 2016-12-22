@@ -10,13 +10,14 @@ module set_bc1_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
      SUBROUTINE SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-        flux_ge, flux_gn, flux_gt, flag)
+                        des_rop_s, flux_ge, flux_gn, flux_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_defined, bc_type
-      USE param , only: dimension_bc
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE param , only : dimension_bc
+      USE compar, only : istart3, iend3, jstart3, jend3, kstart3, kend3
+      USE constant,only: mmax
 
       use set_outflow_module, only: set_outflow
 
@@ -45,6 +46,9 @@ module set_bc1_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      DOUBLE PRECISION, INTENT(INOUT) :: des_rop_s&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,mmax)
+
 ! Local variables
 !---------------------------------------------------------------------//
 ! index for boundary condition
@@ -58,20 +62,20 @@ module set_bc1_module
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt,flag)
+                                des_rop_s,flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt,flag)
+                                des_rop_s,flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_ADJUST_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             CASE ('MASS_INFLOW')
                CALL SET_BC1_JET(L,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt,flag)
+                                des_rop_s,flux_ge,flux_gn,flux_gt,flag)
             CASE ('OUTFLOW')
                CALL SET_OUTFLOW(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                                flux_ge,flux_gn,flux_gt,flag)
+                                des_rop_s,flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
             END SELECT
          ENDIF   ! end if (bc_defined(l))

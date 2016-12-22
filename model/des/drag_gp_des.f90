@@ -20,7 +20,8 @@ module des_drag_gp_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g, f_gp, pijk, des_radius, pvol, particle_phase)
+      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g, f_gp, pijk, &
+                             des_radius, des_rop_s, pvol, particle_phase)
 
 !-----------------------------------------------
 ! Modules
@@ -28,7 +29,6 @@ module des_drag_gp_module
       USE compar  , only: myPE
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
-      USE discretelement, only: des_rop_s
       USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend, drag_wen_yu,&
                         drag_koch_hill, drag_bvk
       USE param1, only: one, zero
@@ -40,6 +40,7 @@ module des_drag_gp_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
+      DOUBLE PRECISION, INTENT(IN) :: des_rop_s(:,:,:,:)
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 !-----------------------------------------------

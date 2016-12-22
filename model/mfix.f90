@@ -16,7 +16,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
                 drag_am, drag_bm, pinc, &
-                flag, vol_surr, &
+                flag, vol_surr, des_rop_s, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
@@ -28,9 +28,10 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       use check_data_20_module, only: check_data_20
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
+      use constant, only: mmax
       use corner_module, only: get_corner_cells
       use des_allocate, only: des_allocate_arrays
-      use discretelement, only: des_rop_s, max_pip
+      use discretelement, only: max_pip
       use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0, mu_g0
@@ -152,6 +153,9 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       integer, intent(inout) :: pinc&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      double precision, intent(inout) :: des_rop_s&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,mmax)
 
       integer, intent(inout) :: pijk(max_pip,3)
       integer, intent(inout) :: dg_pijk(max_pip)
@@ -348,7 +352,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! Initialize time dependent boundary conditions
       CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag)
+                   des_rop_s, flux_ge, flux_gn, flux_gt, flag)
 
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
@@ -356,7 +360,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
          flag, vol_surr, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
          particle_state, particle_phase, neighbor_index, neighbor_index_old, &
-         des_radius, ro_sol, pvol, pmass, omoi, &
+         des_radius, des_rop_s, ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
 
 ! Set the inflow/outflow BCs for DEM solids
@@ -376,7 +380,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius, pinc)
+         pvol, des_pos_new, des_vel_new, des_radius, des_rop_s, pinc)
 
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 

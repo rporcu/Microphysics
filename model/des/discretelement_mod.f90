@@ -276,7 +276,7 @@
       double precision, allocatable, dimension(:,:,:) :: des_vol_node
 
 ! Bulk density of particles in fluid cell
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
+!     DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
 
       LOGICAL :: DES_EXPLICITLY_COUPLED
 
