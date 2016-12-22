@@ -16,8 +16,8 @@ module des_time_march_module
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, des_usr_var, &
-         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, fc, tow, wall_collision_pft, &
-         flag, vol_surr)
+         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
+         fc, tow, wall_collision_pft, flag, vol_surr, pinc)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -33,7 +33,7 @@ module des_time_march_module
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: drag_fc, pinc
+      use discretelement, only: drag_fc
       use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
@@ -62,13 +62,14 @@ module des_time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: mu_g&
+      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-!     DOUBLE PRECISION, INTENT(IN) :: pinc&
-!        (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer         , INTENT(IN) :: flag&
+      integer         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      DOUBLE PRECISION, INTENT(IN) :: vol_surr&
+      DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER        , INTENT(INOUT) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
@@ -178,8 +179,9 @@ module des_time_march_module
          CALL CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
-            des_pos_new,des_vel_new,des_radius,particle_phase,flag)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
+            fc,drag_fc,pvol, &
+            des_pos_new,des_vel_new,des_radius,particle_phase,flag,pinc)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -220,11 +222,11 @@ module des_time_march_module
             .NOT.DES_EXPLICITLY_COUPLED) THEN
 ! Bin particles to fluid grid.
             CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
-               des_pos_new, des_vel_new, des_radius, des_usr_var)
+               des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 ! Calculate mean fields (EPg).
             CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
                particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
-               des_radius,des_usr_var,flag,vol_surr,iglobal_id)
+               des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
          ENDIF
 
 ! Update time to reflect changes
@@ -252,7 +254,7 @@ module des_time_march_module
       IF(CALL_USR) CALL USR3_DES(des_pos_new, des_vel_new, omega_new)
 
       CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,&
-         des_usr_var,iglobal_id,flag)
+         des_usr_var,iglobal_id,flag,pinc)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN

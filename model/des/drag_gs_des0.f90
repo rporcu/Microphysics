@@ -16,14 +16,14 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
      SUBROUTINE DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, flag, &
-        pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
+        pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc,pinc)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
 
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, interp_scheme
+      use discretelement, only: xe, yn, zt, dimn, pic, interp_scheme
       use functions     , only: ip1,jp1,kp1
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
 
@@ -52,6 +52,8 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      INTEGER,          INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
@@ -202,7 +204,8 @@ module drag_gs_des0_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, flag, &
-         f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new, particle_phase, particle_state)
+         f_gds, drag_am, drag_bm, pijk, des_radius, pvol, &
+         des_pos_new, des_vel_new, particle_phase, particle_state, pinc)
 
 !-----------------------------------------------
 ! Modules
@@ -210,8 +213,7 @@ module drag_gs_des0_module
       use compar        , only:  istart2, iend2, jstart2, jend2, kstart2, kend2
       use compar        , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      use discretelement, only: xe, yn, zt, dimn, pic, pinc, &
-                                interp_scheme, des_vol_node
+      use discretelement, only: xe, yn, zt, dimn, pic, interp_scheme, des_vol_node
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: ip1,jp1,kp1
@@ -244,6 +246,9 @@ module drag_gs_des0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+
+      INTEGER,          INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase

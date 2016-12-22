@@ -16,7 +16,8 @@ module iterate_module
                          flux_ge, flux_gn, flux_gt, mu_g,&
                          f_gds, A_m, b_m, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_phase, particle_state, pvol, des_radius, des_pos_new, des_vel_new, flag, IER, NIT)
+                         pijk, particle_phase, particle_state, pvol, &
+                         des_radius, des_pos_new, des_vel_new, flag, pinc, IER, NIT)
 
       USE calc_mflux_module, only: calc_mflux
       USE check_convergence_module, only: check_convergence
@@ -109,6 +110,9 @@ module iterate_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+
+      INTEGER, INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
@@ -210,7 +214,8 @@ module iterate_module
 
 ! Calculate coefficients, excluding density and reactions.
       CALL CALC_COEFF(flag, 1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, pvol, des_pos_new, des_vel_new, des_radius)
+         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
+         pvol, des_pos_new, des_vel_new, des_radius, pinc)
       IF (IER_MANAGER()) goto 1000
 
 ! Solve starred velocity components

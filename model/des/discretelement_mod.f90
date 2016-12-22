@@ -250,9 +250,6 @@
 ! as single array IJK
       TYPE(iap1), DIMENSION(:,:,:), ALLOCATABLE:: pic
 
-! Store the number of particles in a computational fluid cell
-      INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: PINC
-
 !-----------------------------------------------------------------<<<
 
 ! Explicitly calculated fluid-particle drag force.

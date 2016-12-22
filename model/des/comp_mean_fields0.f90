@@ -4,7 +4,7 @@ module comp_mean_fields0_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag,pinc)
 
 !-----------------------------------------------
 ! Modules
@@ -16,7 +16,7 @@ module comp_mean_fields0_module
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: mype, pe_io
       USE discretelement, only: des_rop_s, des_rops_node, xe, yn, zt, interp_scheme
-      USE discretelement, only: pic, des_vel_node, dimn, pinc
+      USE discretelement, only: pic, des_vel_node, dimn
       USE calc_epg_des_module, only: calc_epg_des
       USE interpolation, only: set_interpolation_scheme
       USE geometry, only: vol
@@ -36,6 +36,8 @@ module comp_mean_fields0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
       DOUBLE PRECISION, INTENT(in   ) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      INTEGER,          INTENT(inout) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
@@ -263,7 +265,8 @@ module comp_mean_fields0_module
       ENDDO
       ENDDO
 
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,&
+                        des_radius,des_usr_var,iglobal_id,flag,pinc)
 
 ! turn on the below statements to check if the mass is conserved
 ! between discrete and continuum representations. Should be turned to

@@ -15,7 +15,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm, pinc_in, &
+                drag_am, drag_bm, pinc, &
                 flag, vol_surr, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
@@ -30,7 +30,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
       use des_allocate, only: des_allocate_arrays
-      use discretelement, only: pinc, des_rop_s, max_pip
+      use discretelement, only: des_rop_s, max_pip
       use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0, mu_g0
@@ -150,7 +150,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: drag_bm&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,3)
 
-      integer, intent(inout) :: pinc_in&
+      integer, intent(inout) :: pinc&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer, intent(inout) :: pijk(max_pip,3)
@@ -193,7 +193,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 !---------------------------------------------------------------------//
       flag_mod = flag
-      pinc     = pinc_in
 !-----------------------------------------------
 
       ! This is now called from main.cpp
@@ -202,7 +201,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
 
       IF (DEM_SOLIDS) THEN
-         PINC(:,:,:) = 0
          DES_ROP_S(:,:,:,:) = ZERO
 
          lb = 1
@@ -359,7 +357,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
          flag, vol_surr, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
          particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
 
 ! Set the inflow/outflow BCs for DEM solids
       IF(DEM_SOLIDS) CALL SET_BC_DEM(flag)
@@ -378,7 +376,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)
+         pvol, des_pos_new, des_vel_new, des_radius, pinc)
 
       IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 

@@ -21,8 +21,9 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,fc,drag_fc,pvol, &
-        des_pos_new,des_vel_new,des_radius,particle_phase,flag)
+     SUBROUTINE CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
+        fc,drag_fc,pvol, &
+        des_pos_new,des_vel_new,des_radius,particle_phase,flag,pinc)
 
       IMPLICIT NONE
 
@@ -42,6 +43,8 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+      INTEGER         , INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol,des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: drag_fc, des_vel_new, des_pos_new
@@ -68,7 +71,8 @@ module calc_drag_des_module
          IF(DES_CONTINUUM_COUPLED) THEN
             if(des_interp_scheme_enum == des_interp_garg) then
                CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-                  flag, pijk,particle_phase,particle_state,des_radius,pvol,des_pos_new,des_vel_new,fc)
+                  flag, pijk,particle_phase,particle_state,des_radius,&
+                  pvol,des_pos_new,des_vel_new,fc,pinc)
             else
                CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
                   flag,pijk,particle_state,pvol,des_vel_new,fc,des_radius,particle_phase)
@@ -90,7 +94,8 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, flag, &
-         f_gds, drag_am, drag_bm, pijk, particle_state, particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
+         f_gds, drag_am, drag_bm, pijk, particle_state, particle_phase, &
+         pvol, des_pos_new, des_vel_new, des_radius, pinc)
 
       IMPLICIT NONE
 
@@ -113,6 +118,9 @@ module calc_drag_des_module
       DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
+      INTEGER         , INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
@@ -124,7 +132,8 @@ module calc_drag_des_module
       IF(DES_CONTINUUM_COUPLED) THEN
          if(des_interp_scheme_enum == des_interp_garg) then
             CALL DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               flag, f_gds, drag_am, drag_bm, pijk, des_radius, pvol, des_pos_new, des_vel_new,particle_phase,particle_state)
+               flag, f_gds, drag_am, drag_bm, pijk, des_radius, &
+               pvol, des_pos_new, des_vel_new,particle_phase,particle_state, pinc)
          else
             CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                f_gds, drag_bm, pijk, particle_phase, particle_state, pvol, des_vel_new, des_radius)
@@ -148,7 +157,7 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(flag, vol_surr, ep_g, u_g, v_g, w_g, ro_g, &
          rop_g, mu_g, f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
-         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var)
+         particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
       IMPLICIT NONE
 
@@ -175,6 +184,9 @@ module calc_drag_des_module
       DOUBLE PRECISION, INTENT(in   ) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
+      INTEGER,          INTENT(INOUT) :: pinc&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol,pmass,des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
@@ -183,10 +195,11 @@ module calc_drag_des_module
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 ! Bin particles to the fluid grid.
-      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
+      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
+         des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 ! Calculate mean fields (EPg).
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, &

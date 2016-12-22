@@ -1,8 +1,5 @@
 MODULE PARTICLES_IN_CELL_MODULE
 
-      use discretelement, only: PINC
-      USE discretelement, only: MAX_PIP
-      USE discretelement, only: XE, YN, ZT
       use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
       use mpi_funs_des, only: des_par_exchange
 
@@ -16,21 +13,22 @@ MODULE PARTICLES_IN_CELL_MODULE
       USE geometry, only: imin2, jmin2, kmin2
       USE geometry, only: imax2, jmax2, kmax2
 
-! The number of particles on the current process.
+      ! The number of particles on the current process.
       use discretelement, only: PIP, MAX_PIP
-! The number and list of particles in each fluid cell IJK.
-      use discretelement, only: PINC, PIC
-! The East/North/Top face location of a given I/J/K index.
+
+      ! The number and list of particles in each fluid cell IJK.
+      use discretelement, only: PIC
+
+      ! The East/North/Top face location of a given I/J/K index.
       use discretelement, only: XE, YN, ZT
-! The Upper and Loper indices covered by the current process.
-      use compar, only: ISTART3, IEND3
-      use compar, only: JSTART3, JEND3
-      use compar, only: KSTART3, KEND3
-! Fluid grid cell dimensions and mesh size
-      USE geometry, only: IMIN2, IMAX2
-      USE geometry, only: JMIN2, JMAX2
-      USE geometry, only: KMIN2, KMAX2
-! Fixed array sizes in the I/J/K direction
+
+      ! The Upper and Loper indices covered by the current process.
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3 
+
+      ! Fluid grid cell dimensions and mesh size
+      use geometry, only: imin2,imax2,jmin2,jmax2,kmin2,kmax2 
+
+      ! Fixed array sizes in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
 CONTAINS
@@ -48,7 +46,8 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
+      SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
+                                   des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
       IMPLICIT NONE
 
@@ -57,6 +56,8 @@ CONTAINS
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
+      INTEGER, DIMENSION(:,:,:), INTENT(INOUT) :: pinc
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -72,10 +73,8 @@ CONTAINS
       INTEGER, ALLOCATABLE :: PARTICLE_COUNT(:,:,:)
 !......................................................................!
 
-
 ! following quantities are reset every call to particles_in_cell
       PINC(:,:,:) = 0
-
 
 ! Use an incremental approach to determine the new particle location.
 !-----------------------------------------------------------------------
@@ -221,7 +220,7 @@ CONTAINS
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
 
       IMPLICIT NONE
 
@@ -231,6 +230,8 @@ CONTAINS
       INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
+      INTEGER, DIMENSION(:,:,:), INTENT(INOUT) :: pinc
 
 !-----------------------------------------------
 ! Local Variables

@@ -14,7 +14,8 @@ module calc_epg_des_module
 !  flag back to the caller and combining with other error checks.      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_usr_var,iglobal_id,flag)
+      SUBROUTINE CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,&
+                              des_radius,des_usr_var,iglobal_id,flag,pinc)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -24,8 +25,6 @@ module calc_epg_des_module
       use constant, only: MMAX, RO_S0
 ! Discrete particle material and bulk densities
       use discretelement, only: DES_ROP_s
-! Number of particles in indexed fluid cell
-      use discretelement, only: PINC
 ! List of particles in each cell.
       use discretelement, only: PIC
 ! Volume of scalar grid cell.
@@ -52,6 +51,9 @@ module calc_epg_des_module
       DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      INTEGER         , INTENT(INOUT) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius

@@ -11,7 +11,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state,&
          particle_phase, neighbor_index, neighbor_index_old, &
          des_radius, ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -50,6 +50,9 @@ MODULE MAKE_ARRAYS_DES_MODULE
       integer, intent(inout) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
       DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      integer, intent(inout) :: pinc &
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
@@ -168,7 +171,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
       CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+         des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
@@ -177,13 +180,15 @@ MODULE MAKE_ARRAYS_DES_MODULE
          des_pos_new=des_pos_new, particle_state=particle_state)
       CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
          des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
-      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, des_pos_new, des_vel_new, des_radius, des_usr_var)
+      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
+         des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
-      CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, neighbor_index, neighbor_index_old)
+      CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, &
+         neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

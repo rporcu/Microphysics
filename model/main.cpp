@@ -185,6 +185,7 @@ int main (int argc, char* argv[])
   int nparticles = 5000;
 
   iMultiFab pinc(ba,1,nghost);
+  pinc.setVal(0);
 
   Array<int>    pijk        (3*nparticles);
   Array<int>  dg_pijk       (  nparticles);
