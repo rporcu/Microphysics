@@ -291,9 +291,11 @@ set(TESTS
 set (BUILD_TEST build_test)
 add_custom_target(${BUILD_TEST})
 
-foreach( testdir ${TESTS})
+foreach( rel_testdir ${TESTS})
 
-  STRING(REPLACE "/" "_" TEST_NAME ${testdir} )
+  STRING(REPLACE "/" "_" TEST_NAME ${rel_testdir} )
+
+  set(testdir ${CMAKE_CURRENT_SOURCE_DIR}/${rel_testdir})
 
   FILE(GLOB USR_OVERRIDES ${testdir}/*.f90)
 
@@ -310,7 +312,7 @@ foreach( testdir ${TESTS})
             -DCMAKE_COMMAND=${CMAKE_COMMAND}
             -DTEST_EXE=${TEST_EXE}
             -DTEST_NAME=${TEST_NAME}
-            -Dtestdir=${CMAKE_CURRENT_SOURCE_DIR}/${testdir}
+            -Dtestdir=${testdir}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/runtests.cmake)
 
 
@@ -322,4 +324,4 @@ foreach( testdir ${TESTS})
 
   target_link_libraries(${TEST_EXE} ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
 
-endforeach( testdir ${TESTS})
+endforeach( rel_testdir ${TESTS})
