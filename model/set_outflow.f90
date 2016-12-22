@@ -36,7 +36,7 @@ module set_outflow_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_OUTFLOW(BCV,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g, &
-                             des_rop_s, flux_ge, flux_gn, flux_gt, flag)
+                              flux_ge, flux_gn, flux_gt, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -80,8 +80,6 @@ module set_outflow_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: des_rop_s&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,mmax)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -111,7 +109,7 @@ module set_outflow_module
                   RVEL_G = U_G(im,j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,I,J,K,im,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K,im,j,k,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,im,j,k,RVEL_G,RVEL_S)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -147,7 +145,7 @@ module set_outflow_module
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, ip,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K, ip,j,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, ip,j,k, RVEL_G, RVEL_S)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -177,7 +175,7 @@ module set_outflow_module
                   RVEL_G = V_G(i,jm,k)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jm,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K, i,jm,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,jm,k, RVEL_G, RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      V_G(I,J,K) = ROP_G(i,jm,k)*V_G(i,jm,k)/ROP_G(I,J,K)
@@ -199,7 +197,7 @@ module set_outflow_module
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jp,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K, i,jp,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G, RVEL_S)
 
                   IF (V_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -223,7 +221,7 @@ module set_outflow_module
                   RVEL_G = W_G(i,j,km)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,km,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K,i,j,km,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,i,j,km,RVEL_G,RVEL_S)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      W_G(I,J,K) = ROP_G(i,j,km)*W_G(i,j,km)/ROP_G(I,J,K)
@@ -246,7 +244,7 @@ module set_outflow_module
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kp,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K, i,j,kp,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G,RVEL_S)
 
                   IF (W_G(I,J,K) == UNDEFINED) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -329,7 +327,7 @@ module set_outflow_module
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,des_rop_s,I,J,K,FI,FJ,FK,RVEL_G,RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K,FI,FJ,FK,RVEL_G,RVEL_S)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -351,8 +349,6 @@ module set_outflow_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: des_rop_s&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,mmax)
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -388,27 +384,10 @@ module set_outflow_module
       SUM_ROPS = ZERO
       SUM_EPS = ZERO
 
-! this section must be skipped until after the initial setup of the
-! discrete element portion of the simulation (set_bc1 is called once
-! before the initial setup).
-!     IF (DEM_SOLIDS .AND. ALLOCATED(DES_ROP_S)) THEN
-      IF (DEM_SOLIDS) then
-         DO M = 1, MMAX
-! unlike in the two fluid model, in the discrete element model it is
-! possible to actually calculate the bulk density in a flow boundary
-! cell. Currently, however, such calculations are not strictly enforced.
-! therefore use the bulk density of the adjacent fluid cell
-            DES_ROP_S(i,j,k,M) = DES_ROP_S(FI,FJ,FK,M)
-            SUM_ROPS = SUM_ROPS + DES_ROP_S(i,j,k,M)
-            EPS = DES_ROP_S(i,j,k,M)/RO_S0(M)
-            SUM_EPS = SUM_EPS + EPS
-         ENDDO
-      ENDIF
-
 ! if bc_ep_g undefined, set ep_g accordingly (based on flow condition
 ! or based on bc_rop_s). if bc_ep_g is defined its set value will be
 ! maintained (from set_bc0).
-      IF (BC_EP_G(BCV) == UNDEFINED) EP_G(I,J,K) = ONE - SUM_EPS
+      IF (BC_EP_G(BCV) == UNDEFINED) EP_G(I,J,K) = ONE
 
 ! now that ep_g in the boundary cell is known, define the bulk density
 ! of the gas phase in the boundary cell

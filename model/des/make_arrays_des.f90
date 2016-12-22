@@ -10,7 +10,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, vol_surr, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state,&
          particle_phase, neighbor_index, neighbor_index_old, &
-         des_radius, des_rop_s, ro_sol, pvol, pmass, omoi, &
+         des_radius,  ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
 
       USE comp_mean_fields_module, only: comp_mean_fields
@@ -55,8 +55,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
       integer, intent(inout) :: pinc &
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(INOUT) :: des_rop_s&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, mmax)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
@@ -191,7 +189,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

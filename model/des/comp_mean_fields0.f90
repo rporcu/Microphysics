@@ -4,7 +4,7 @@ module comp_mean_fields0_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,vol_surr,iglobal_id,flag,pinc)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,vol_surr,iglobal_id,flag,pinc)
 
 !-----------------------------------------------
 ! Modules
@@ -17,8 +17,7 @@ module comp_mean_fields0_module
       USE compar, only: mype, pe_io
       USE constant, only: mmax
       USE discretelement, only: des_rops_node, xe, yn, zt, interp_scheme
-      USE discretelement, only: pic, des_vel_node, dimn
-      USE calc_epg_des_module, only: calc_epg_des
+      USE discretelement, only: pic, dimn
       USE interpolation, only: set_interpolation_scheme
       USE geometry, only: vol
       USE interpolation, only: set_interpolation_stencil
@@ -40,9 +39,6 @@ module comp_mean_fields0_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER,          INTENT(inout) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      DOUBLE PRECISION, INTENT(inout) :: des_rop_s&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,mmax)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
@@ -70,43 +66,33 @@ module comp_mean_fields0_module
 ! avg_factor=0.250 (in 3D) or =0.50 (in 2D)
       DOUBLE PRECISION :: AVG_FACTOR
 ! index of solid phase that particle NP belongs to
-      INTEGER :: llI, llJ, llK, M
+      INTEGER :: llI, llJ, llK
 ! particle number index, used for looping
       INTEGER :: NP, NINDX
 
-      DOUBLE PRECISION :: MASS_SOL1, MASS_SOL2
-! sum of mass_sol1 and mass_sol2 across all processors
-      DOUBLE PRECISION :: MASS_SOL1_ALL, MASS_SOL2_ALL
-
       DOUBLE PRECISION :: TEMP1, TEMP2
-
-      DOUBLE PRECISION, DIMENSION(3) :: DES_VEL_DENSITY
-      DOUBLE PRECISION :: DES_ROP_DENSITY
 
       INTEGER :: COUNT_NODES_OUTSIDE, &
                  COUNT_NODES_INSIDE_MAX
 !Handan Liu added on Jan 17 2013
-          DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp
-          DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
+      DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp
+      DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
+
+      double precision :: OoVOL
+      double precision :: PVOL_NODE&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision :: EPs&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 
-! initializing
-      MASS_SOL1 = ZERO
-      MASS_SOL2 = ZERO
-      MASS_SOL1_ALL = ZERO
-      MASS_SOL2_ALL = ZERO
 ! avg_factor=0.25 (in 3D) or =0.5 (in 2D)
       AVG_FACTOR = 0.25D0
 
 ! cartesian_grid related quantities
       COUNT_NODES_INSIDE_MAX =8
 
-
 ! Initialize entire arrays to zero
-      DES_VEL_NODE = ZERO
-      DES_ROPS_NODE = ZERO
-      DES_ROP_S = zero
-
+      PVOL_NODE = ZERO
 
 ! sets several quantities including interp_scheme, scheme, and
 ! order and allocates arrays necessary for interpolation
@@ -153,28 +139,19 @@ module comp_mean_fields0_module
 
                   call DRAG_WEIGHTFACTOR(gst_tmp,des_pos_new(np,:),weight_ft)
 
-                  M = particle_phase(NP)
-
-                  MASS_SOL1 = MASS_SOL1 + PMASS(NP)
-
-                  TEMP2 = RO_S0(M)*PVOL(NP)
-
                   DO K = 1, ONEW
                      DO J = 1, ONEW
                         DO I = 1, ONEW
 ! shift loop index to new variables for manipulation
-                           II = IW + I-1
-                           JJ = JS + J-1
-                           KK = KB + K-1
+                           II = IMAP_C(IW + I-1)
+                           JJ = JMAP_C(JS + J-1)
+                           KK = KMAP_C(KB + K-1)
 
-                           TEMP1 = WEIGHT_FT(I,J,K)*TEMP2
+                           TEMP1 = WEIGHT_FT(I,J,K)*PVOL(NP)
 
-                           DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) = &
-                              DES_ROPS_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),M) + TEMP1
+                           PVOL_NODE(II,JJ,KK) = &
+                              PVOL_NODE(II,JJ,KK) + TEMP1
 
-                           DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) = &
-                              DES_VEL_NODE(IMAP_C(II), JMAP_C(JJ), KMAP_C(KK),:,M) + &
-                              TEMP1*DES_VEL_NEW(NP,:)
                         ENDDO
                      ENDDO
                   ENDDO
@@ -185,13 +162,6 @@ module comp_mean_fields0_module
          ENDDO
       ENDDO
 
-
-! At the interface des_rops_node has to be added since particles
-! across the processors will contribute to the same scalar node.
-! sendrecv will be called and the node values will be added
-! at the junction. des_rops_node is altered by the routine when
-! periodic boundaries are invoked
-      CALL DES_ADDNODEVALUES_MEAN_FIELDS
 
 
 ! Now go from node to scalar center. Same convention as sketched
@@ -217,88 +187,44 @@ module comp_mean_fields0_module
 ! as the common node.
 !---------------------------------------------------------------------//
       DO K = KSTART2, KEND1
-      DO J = JSTART2, JEND1
-      DO I = ISTART2, IEND1
-         if (vol_surr(i,j,k).eq.ZERO) CYCLE
+         DO J = JSTART2, JEND1
+            DO I = ISTART2, IEND1
+               if (vol_surr(i,j,k).eq.ZERO) CYCLE
 
-! looping over stencil points (NODE VALUES)
-         DO M = 1, MMAX
+               TEMP1 = PVOL_NODE(i,j,k)/vol_surr(i,j,k)
 
-            DES_ROP_DENSITY = DES_ROPS_NODE(i,j,k, M)/vol_surr(i,j,k)
-            DES_VEL_DENSITY(:) = DES_VEL_NODE(i,j,k, :, M)/vol_surr(i,j,k)
+               DO KK = K, K+1
+                  DO JJ = J, J+1
+                     DO II = I, I+1
 
-            DO KK = K, K+1
-            DO JJ = J, J+1
-            DO II = I, I+1
-
-               IF(1.eq.flag(II,JJ,KK,1)) THEN
-! Since the data in the ghost cells is spurious anyway and overwritten during
-! subsequent send receives, do not compute any value here as this will
-! mess up the total mass value that is computed below to ensure mass conservation
-! between Lagrangian and continuum representations
-                  DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) = &
-                     DES_ROP_S(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk), M) + &
-                     DES_ROP_DENSITY*VOL
-               ENDIF
-            ENDDO  ! end do (ii=i1,i2)
-            ENDDO  ! end do (jj=j1,j2)
-            ENDDO  ! end do (kk=k1,k2)
+                        IF(1.eq.flag(II,JJ,KK,1)) THEN
+                           EPs(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk)) = &
+                              EPs(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk)) + &
+                              TEMP1*VOL
+                        ENDIF
+                     ENDDO
+                  ENDDO
+               ENDDO
+            ENDDO
          ENDDO
-      ENDDO   ! end do (i=istart2,iend1)
-      ENDDO   ! end do (j=jstart2,jend1)
-      ENDDO   ! end do (k=kstart2,kend1)
+      ENDDO
 
 !-----------------------------------------------------------------<<<
 
-
+      OoVOL = 1.0d0/VOL
       DO llK = kstart3, kend3
-      DO llJ = jstart3, jend3
-      DO llI = istart3, iend3
-         IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
+         DO llJ = jstart3, jend3
+            DO llI = istart3, iend3
+               IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
 
-         DO M = 1, MMAX
-            IF(DES_ROP_S(lli,llj,llk, M).GT.ZERO) THEN
-
-! Divide by scalar cell volume to obtain the bulk density
-               DES_ROP_S(lli,llj,llk, M) = DES_ROP_S(lli,llj,llk, M)/VOL
-
-            ENDIF
-         ENDDO   ! end loop over M=1,MMAX
-      ENDDO
-      ENDDO
+! ! Divide by scalar cell volume to obtain the bulk density
+               ep_g(lli,llj,llk) = 1.0d0 - EPs(lli,llj,llk)*OoVOL
+            ENDDO
+         ENDDO
       ENDDO
 
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,&
-                        des_radius,des_rop_s,des_usr_var,iglobal_id,flag,pinc)
-
-! turn on the below statements to check if the mass is conserved
-! between discrete and continuum representations. Should be turned to
-! false for any production runs.
-      IF(DES_REPORT_MASS_INTERP) THEN
-
-      DO llK = kstart3, kend3
-        DO llJ = jstart3, jend3
-         DO llI = istart3, iend3
-
-! It is important to check for fluid
-            IF(.NOT.1.eq.flag(lli,llj,llk,1)) CYCLE
-
-            MASS_SOL2 = MASS_SOL2 + sum(DES_ROP_S(lli,llj,llk,1:MMAX))*VOL
-         ENDDO
-         ENDDO
-         ENDDO
 
 
-         mass_sol1_all = mass_sol1
-         ! CALL GLOBAL_SUM(MASS_SOL1, MASS_SOL1_ALL)
-         mass_sol2_all = mass_sol2
-         ! CALL GLOBAL_SUM(MASS_SOL2, MASS_SOL2_ALL)
-         if(myPE.eq.pe_IO) THEN
-            WRITE(*,'(/,5x,A,4(2x,g17.8),/)') &
-                 'SOLIDS MASS DISCRETE AND CONTINUUM =  ', &
-                 MASS_SOL1_ALL, MASS_SOL2_ALL
-         ENDIF
-      ENDIF
       END SUBROUTINE COMP_MEAN_FIELDS0
 
 

@@ -15,13 +15,12 @@ module des_time_march_module
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
          pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
          neighbor_index, neighbor_index_old, &
-         des_radius, des_rop_s, ro_sol, pvol, pmass, omoi, des_usr_var, &
+         des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          fc, tow, wall_collision_pft, flag, vol_surr, pinc)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
-      use calc_epg_des_module, only: calc_epg_des
       use calc_force_dem_module, only: calc_force_dem
       use calc_pg_grad_module, only: calc_pg_grad
       use cfnewvalues_module, only: cfnewvalues
@@ -74,7 +73,6 @@ module des_time_march_module
 
       DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), INTENT(INOUT) :: des_rop_s
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, fc, tow
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
@@ -153,7 +151,7 @@ module des_time_march_module
          IF(DES_EXPLICITLY_COUPLED) THEN
             CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
                flag, pijk, particle_state, pvol, des_vel_new, fc, &
-               des_radius, des_rop_s, particle_phase)
+               des_radius,  particle_phase)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc, flag)
       ENDIF
@@ -182,7 +180,7 @@ module des_time_march_module
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
             fc,drag_fc,pvol, &
-            des_pos_new,des_vel_new,des_radius,des_rop_s,particle_phase,flag,pinc)
+            des_pos_new,des_vel_new,des_radius,particle_phase,flag,pinc)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -227,7 +225,7 @@ module des_time_march_module
 ! Calculate mean fields (EPg).
             CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
                particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
-               des_radius,des_rop_s,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+               des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
          ENDIF
 
 ! Update time to reflect changes
@@ -253,9 +251,6 @@ module des_time_march_module
 !-----------------------------------------------------------------<<<
 
       IF(CALL_USR) CALL USR3_DES(des_pos_new, des_vel_new, omega_new)
-
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_rop_s,&
-                        des_usr_var,iglobal_id,flag,pinc)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN

@@ -1,10 +1,7 @@
 module comp_mean_fields_module
 
-   use calc_epg_des_module, only: calc_epg_des
    use comp_mean_fields0_module, only: comp_mean_fields0
-   use comp_mean_fields1_module, only: comp_mean_fields1
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-   use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
    use discretelement, only: max_pip
    use geometry, only: vol
    use param1, only: zero
@@ -24,14 +21,13 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,&
-        pmass,pvol, &
-        des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
+        particle_phase, pmass, pvol, des_pos_new,des_vel_new, &
+        des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:,:,:), INTENT(INOUT) :: des_rop_s
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
@@ -55,22 +51,13 @@ module comp_mean_fields_module
 !......................................................................!
 
 ! Calculate field variables from particle data:
-      IF(DES_INTERP_MEAN_FIELDS) THEN
-         SELECT CASE(DES_INTERP_SCHEME_ENUM)
-         CASE(DES_INTERP_NONE) ; CALL COMP_MEAN_FIELDS_ZERO_ORDER
-         CASE(DES_INTERP_GARG) ; &
-            CALL COMP_MEAN_FIELDS0(ep_g,ro_g,rop_g,particle_phase,pmass,pvol, &
-            des_pos_new,des_vel_new,des_radius,des_rop_s,des_usr_var,vol_surr,iglobal_id,flag,pinc)
-         CASE DEFAULT          ; &
-            CALL COMP_MEAN_FIELDS1(particle_state,particle_phase,pvol,flag,des_rop_s)
-         END SELECT
+      IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG) then
+         CALL COMP_MEAN_FIELDS0(ep_g, ro_g, rop_g, particle_phase, pmass,&
+            pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, &
+            vol_surr, iglobal_id, flag, pinc)
       ELSE
          CALL COMP_MEAN_FIELDS_ZERO_ORDER
       ENDIF
-
-! Calculate the gas phase volume fraction from DES_ROP_s.
-      CALL CALC_EPG_DES(ep_g,ro_g,rop_g,des_pos_new,des_vel_new,des_radius,des_rop_s,&
-                        des_usr_var,iglobal_id,flag,pinc)
 
       RETURN
 
@@ -84,6 +71,9 @@ module comp_mean_fields_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
 
+      use discretelement, only: nonexistent, normal_ghost
+      use discretelement, only: entering_ghost, exiting_ghost
+
       IMPLICIT NONE
 
 !-----------------------------------------------
@@ -94,11 +84,12 @@ module comp_mean_fields_module
 ! Fluid cell index
       INTEGER :: I,J,K
 ! Total Mth solids phase volume in IJK
-      DOUBLE PRECISION :: SOLVOLINC(istart3:iend3, jstart3:jend3, kstart3:kend3, MMAX)
-! PVOL times statistical weight
-      DOUBLE PRECISION :: VOL_WT
+      DOUBLE PRECISION :: SOLVOLINC&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+! One over cell volume
+      double precision :: OoVol
 
-      SOLVOLINC(:,:,:,:) = ZERO
+      SOLVOLINC(:,:,:) = ZERO
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
@@ -107,42 +98,32 @@ module comp_mean_fields_module
             ENTERING_GHOST==PARTICLE_STATE(NP) .or. &
             EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
-         VOL_WT = PVOL(NP)
 ! Fluid cell containing the particle
          I = PIJK(NP,1)
          J = PIJK(NP,2)
          K = PIJK(NP,3)
 ! Particle phase for data binning.
-         M = particle_phase(NP)
 ! Accumulate total solids volume (by phase)
-         SOLVOLINC(I,J,K,M) = SOLVOLINC(I,J,K,M) + VOL_WT
+         SOLVOLINC(I,J,K) = SOLVOLINC(I,J,K) + PVOL(NP)
 ! Accumulate total solids momenum-ish (by phase)
       ENDDO
 
 ! Calculate the cell average solids velocity, the bulk density,
 ! and the void fraction.
 !----------------------------------------------------------------//
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
-
-         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
-
-! calculating the cell average solids velocity for each solids phase
-         DO M = 1, MMAX
-
-! calculating the bulk density of solids phase m based on the total
-! number of particles having their center in the cell
-            DES_ROP_S(i,j,k,M) = RO_S0(M)*SOLVOLINC(I,J,K,M)/VOL
-
-         ENDDO   ! end loop over M=1,MMAX
-
-      ENDDO
-      ENDDO
+      OoVol = 1.0d0/VOL
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
+               IF(flag(i,j,k,1) == 1) then
+                  ep_g(i,j,k) = 1.0d0 - solvolinc(i,j,k)*OoVol
+               endif
+            ENDDO
+         ENDDO
       ENDDO
 
 ! Halo exchange of solids volume fraction data.
-      ! CALL SEND_RECV(DES_ROP_S,2)
+      ! CALL SEND_RECV(EP_G,2)
 
       RETURN
       END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER

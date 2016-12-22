@@ -82,7 +82,6 @@ set(F90_sources
   model/deprecated.f90
   model/des/calc_collision_wall_mod.f90
   model/des/calc_drag_des.f90
-  model/des/calc_epg_des.f90
   model/des/calc_force_dem.f90
   model/des/calc_grad_des.f90
   model/des/calc_pg_grad.f90
@@ -94,7 +93,6 @@ set(F90_sources
   model/des/check_cell_movement.f90
   model/des/comp_mean_fields.f90
   model/des/comp_mean_fields0.f90
-  model/des/comp_mean_fields1.f90
   model/des/des_allocate_mod.f90
   model/des/des_bc_mod.f90
   model/des/des_init_namelist.f90

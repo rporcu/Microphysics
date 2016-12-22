@@ -21,7 +21,7 @@ module des_drag_gp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g, f_gp, pijk, &
-                             des_radius, des_rop_s, pvol, particle_phase)
+                             des_radius,  pvol, particle_phase)
 
 !-----------------------------------------------
 ! Modules
@@ -40,7 +40,6 @@ module des_drag_gp_module
       IMPLICIT NONE
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
-      DOUBLE PRECISION, INTENT(IN) :: des_rop_s(:,:,:,:)
       INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 !-----------------------------------------------
@@ -135,17 +134,19 @@ module des_drag_gp_module
             FLUID_VEL(1), FLUID_VEL(2), FLUID_VEL(3))
 
       CASE DEFAULT
+! HACK HACK HACK
+! Avoid des_rop_s
 
 ! calculate the average particle diameter and particle ratio
-         tSUM = ZERO
-         DO lM = 1,MMAX
-            IF(PHIS > ZERO) THEN
-               tSUM = tSUM + DES_ROP_S(i,j,k,lM) / &
-                  (PHIS*RO_S0(lM)*D_p0(lM))
-             ELSE
-               tSUM = tSUM + ONE/D_p0(lM)
-             ENDIF
-         ENDDO
+         ! tSUM = ZERO
+         ! DO lM = 1,MMAX
+         !    IF(PHIS > ZERO) THEN
+         !       tSUM = tSUM + DES_ROP_S(i,j,k,lM) / &
+         !          (PHIS*RO_S0(lM)*D_p0(lM))
+         !     ELSE
+         !       tSUM = tSUM + ONE/D_p0(lM)
+         !     ENDIF
+         ! ENDDO
 
          DPA = ONE / tSUM
          Y_i = DPM * tSUM
