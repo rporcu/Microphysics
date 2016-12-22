@@ -15,7 +15,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm, &
+                drag_am, drag_bm, pinc_in, &
                 flag, vol_surr, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
@@ -52,7 +52,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use set_ic_module, only: set_ic
       use set_ps_module, only: set_ps
       use set_ro_g_module, only: set_ro_g
-      use time_march_module, only: time_march
       use write_out0_module, only: write_out0
       use write_out1_module, only: write_out1
       use write_out3_module, only: write_out3
@@ -151,6 +150,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: drag_bm&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,3)
 
+      integer, intent(inout) :: pinc_in&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer, intent(inout) :: pijk(max_pip,3)
       integer, intent(inout) :: dg_pijk(max_pip)
@@ -190,12 +191,10 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       INTEGER :: II, lb, ub
 
-
 !---------------------------------------------------------------------//
       flag_mod = flag
+      pinc     = pinc_in
 !-----------------------------------------------
-
-
 
       ! This is now called from main.cpp
       ! call set_domain(flag)

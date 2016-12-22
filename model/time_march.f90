@@ -21,7 +21,7 @@ module time_march_module
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm, &
+                drag_am, drag_bm, pinc_in, &
                 flag, vol_surr, &
                 pijk, dg_pijk, dg_pijkprv, iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
@@ -31,7 +31,7 @@ module time_march_module
       USE check_batch_queue_end_module, only: check_batch_queue_end
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE compar, only: myPE
-      USE discretelement, only: des_continuum_coupled, max_pip
+      USE discretelement, only: des_continuum_coupled, max_pip, pinc
       USE error_manager, only: err_msg, flush_err_msg
       USE fld_const, only: mu_g0
       USE param1, only: undefined, small_number, zero
@@ -136,6 +136,9 @@ module time_march_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      integer         , INTENT(INOUT) :: pinc_in&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer, intent(inout) :: pijk(max_pip,3)

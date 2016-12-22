@@ -33,7 +33,7 @@ module des_time_march_module
       use des_bc, only: DEM_BCMI, DEM_BCMO
       use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
-      use discretelement, only: drag_fc
+      use discretelement, only: drag_fc, pinc
       use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
@@ -64,6 +64,8 @@ module des_time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+!     DOUBLE PRECISION, INTENT(IN) :: pinc&
+!        (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer         , INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
       DOUBLE PRECISION, INTENT(IN) :: vol_surr&

@@ -60,8 +60,6 @@ CONTAINS
 ! allocate variables related to ghost particles
       allocate(ighost_updated(max_pip))
 
-
-
       Allocate(  wall_collision_facet_id (COLLISION_ARRAY_MAX, MAX_PIP) )
       wall_collision_facet_id(:,:) = -1
 
@@ -85,10 +83,6 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
-
-! Particles in a computational fluid cell (for volume fraction)
-      Allocate(  PINC (istart3:iend3, jstart3:jend3, kstart3:kend3))
-
 
 ! Explicit drag force acting on a particle.
       Allocate(DRAG_FC (MAX_PIP,DIMN) )
@@ -272,21 +266,17 @@ CONTAINS
 
       NEIGHBOR_INDEX(:) = 0
 
-! DES grid bin information
-      DG_PIJK(LB:UB) = -1
-      DG_PIJKPRV(LB:UB) = -1
+      ! DES grid bin information
       IGHOST_UPDATED(LB:UB) = .false.
 
-! Collision data
+      ! Collision data
       WALL_COLLISION_FACET_ID(:,LB:UB) = -1
 
-! Particle center drag coefficient and explicit drag force
+      ! Particle center drag coefficient and explicit drag force
       DRAG_FC(LB:UB,:) = ZERO
-
 
       RETURN
       END SUBROUTINE DES_INIT_PARTICLE_ARRAYS
-
 
       END SUBROUTINE PARTICLE_GROW
 

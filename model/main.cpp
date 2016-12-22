@@ -184,6 +184,8 @@ int main (int argc, char* argv[])
   drag_bm.setVal(0.);
   int nparticles = 5000;
 
+  iMultiFab pinc(ba,1,nghost);
+
   Array<int>    pijk        (3*nparticles);
   Array<int>  dg_pijk       (  nparticles);
   Array<int>  dg_pijkprv    (  nparticles);
@@ -219,10 +221,10 @@ int main (int argc, char* argv[])
                rop_gE[mfi].dataPtr(),  rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
                d_e[mfi].dataPtr(),     d_n[mfi].dataPtr(),      d_t[mfi].dataPtr(),
                tau_u_g[mfi].dataPtr(), tau_v_g[mfi].dataPtr(),  tau_w_g[mfi].dataPtr(),
-               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(), flux_gT[mfi].dataPtr(),
+               flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
-               f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),     b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
+               f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
                pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(),
@@ -247,7 +249,7 @@ int main (int argc, char* argv[])
                flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
                pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(), particle_phase.dataPtr(),
