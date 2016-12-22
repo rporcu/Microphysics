@@ -6,17 +6,20 @@
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L)
+      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
 
+      use discretelement, only: max_pip
       use run, only: TIME
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: L
-
+      double precision, intent(in) :: des_pos_new(max_pip,3)
+      double precision, intent(in) :: des_vel_new(max_pip,3)
+      double precision, intent(in) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_TEST_DATA
+      CASE(1); CALL WRITE_TEST_DATA(des_vel_new)
       END SELECT
 
       RETURN
@@ -27,15 +30,14 @@
 !                                                                      !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE WRITE_TEST_DATA
+      SUBROUTINE WRITE_TEST_DATA(des_vel_new)
 
       use run, only: time
       use discretelement, only: max_pip
-      use discretelement, only: des_vel_new
-      use discretelement, only: normal_particle, particle_state
 
       implicit none
 
+      double precision, intent(in) :: des_vel_new(max_pip,3)
       integer :: lc1, lc2
       double precision :: ltime, gTemp
 
@@ -48,11 +50,11 @@
       lc2 = 0
       gTemp = 0.0d0
       do lc1=1, max_pip
-         if(normal_particle==particle_state(lc1)) then
+      !   if(normal_particle==particle_state(lc1)) then
             gTemp = gTemp + dot_product &
                (des_vel_new(lc1,:),des_vel_new(lc1,:))
             lc2 = lc2 + 1
-         endif
+      !   endif
       enddo
 
       gTemp = gTemp/(3.0d0*DBLE(lc2))

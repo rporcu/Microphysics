@@ -72,6 +72,7 @@
       IMPLICIT NONE
 
       integer, parameter :: pCount = 1222
+      integer, parameter :: fUnit = 2227
 
       double precision :: ru1, ru2, ru3, ru4, rand3(3)
 
@@ -80,6 +81,8 @@
       double precision :: lRad, lDp
       double precision :: lPos(3), lVel(3), meanVel(3), vScale
 
+      double precision :: des_pos_new(pCount,3)
+      double precision :: des_vel_new(pCount,3)
       integer :: lc1, fail
 
       double precision :: gTemp, ldist(3), ldmag
@@ -126,8 +129,6 @@
          enddo
 
          pip = pip+1
-         call particle_grow(pip)
-         particle_state(pip) = normal_particle
 
          call random_number(ru1)
          call random_number(ru2)
@@ -140,11 +141,6 @@
 
          des_pos_new(pip,:) = lPos
          des_vel_new(pip,:) = lVel
-
-         omega_new(pip,:) = 0.0d0
-
-         des_radius(pip) = lRad
-         ro_sol(pip) = RO_s0(1)
 
          meanVel = meanVel + lVel
 
@@ -184,6 +180,14 @@
       enddo
       gTemp = gTemp/(3.0d0*DBLE(pip))
       meanVel = meanVel / dble(pip)
+
+! Generate particle_input.dat
+      open(unit=fUnit, file='particle_input.dat', status='unknown')
+      do lc1 = 1, pip
+         write(fUnit,"(8(1x,es13.6))") des_pos_new(lc1,:), &
+            lRad, RO_s0(1), des_vel_new(lc1,:)
+      enddo
+      close(funit)
 
       RETURN
       END SUBROUTINE GEN_PARTICLES

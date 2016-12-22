@@ -29,7 +29,7 @@
 
   DRAG_TYPE = 'KOCH_HILL'
 
-  DES_INTERP_ON = .T.
+  DES_INTERP_ON = .F.
 
   DES_INTERP_SCHEME = 'GARG_2012'
 
@@ -69,6 +69,7 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
+  Particles = 2500
 
 ! Friction coefficient. (1)
   MEW =   0.0                ! particle-particle
