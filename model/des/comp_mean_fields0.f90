@@ -40,11 +40,13 @@ module comp_mean_fields0_module
       INTEGER,          INTENT(inout) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
+      double precision, intent(in) :: des_radius(:)
+      double precision, intent(in) :: pmass(:), pvol(:)
+      double precision, intent(in) :: des_vel_new(:,:)
+      double precision, intent(in) :: des_pos_new(:,:)
+      double precision, intent(in) :: des_usr_var(:,:)
+      integer, intent(in) :: particle_phase(:)
+      integer, intent(in) :: iglobal_id(:)
 
 !-----------------------------------------------
 ! Local variables
@@ -63,8 +65,6 @@ module comp_mean_fields0_module
 ! set_interpolation_stencil
       INTEGER :: ONEW
 ! constant whose value depends on dimension of system
-! avg_factor=0.250 (in 3D) or =0.50 (in 2D)
-      DOUBLE PRECISION :: AVG_FACTOR
 ! index of solid phase that particle NP belongs to
       INTEGER :: llI, llJ, llK
 ! particle number index, used for looping
@@ -72,27 +72,20 @@ module comp_mean_fields0_module
 
       DOUBLE PRECISION :: TEMP1, TEMP2
 
-      INTEGER :: COUNT_NODES_OUTSIDE, &
-                 COUNT_NODES_INSIDE_MAX
-!Handan Liu added on Jan 17 2013
-      DOUBLE PRECISION, DIMENSION(2,2,2,3) :: gst_tmp
-      DOUBLE PRECISION, DIMENSION(2,2,2) :: weight_ft
+      DOUBLE PRECISION :: gst_tmp(2,2,2,3)
+      DOUBLE PRECISION :: weight_ft(2,2,2)
 
       double precision :: OoVOL
+
       double precision :: PVOL_NODE&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision :: EPs&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 
-! avg_factor=0.25 (in 3D) or =0.5 (in 2D)
-      AVG_FACTOR = 0.25D0
-
-! cartesian_grid related quantities
-      COUNT_NODES_INSIDE_MAX =8
-
 ! Initialize entire arrays to zero
-      PVOL_NODE = ZERO
+      PVOL_NODE = 0.0d0
+      EPs = 0.0d0
 
 ! sets several quantities including interp_scheme, scheme, and
 ! order and allocates arrays necessary for interpolation
@@ -116,7 +109,6 @@ module comp_mean_fields0_module
                CALL SET_INTERPOLATION_STENCIL(PCELL, IW, IE, JS, JN, KB, KTP,&
                   INTERP_SCHEME, DIMN, ORDERNEW=ONEW)
 
-               COUNT_NODES_OUTSIDE = 0
 ! Computing/setting the geometric stencil
                DO K=1, ONEW
                   DO J=1, ONEW
@@ -130,7 +122,6 @@ module comp_mean_fields0_module
                   ENDDO
                ENDDO
 
-
 !----------------------------------------------------------------->>>
 
 ! looping through particles in the cell
@@ -143,14 +134,13 @@ module comp_mean_fields0_module
                      DO J = 1, ONEW
                         DO I = 1, ONEW
 ! shift loop index to new variables for manipulation
-                           II = IMAP_C(IW + I-1)
-                           JJ = JMAP_C(JS + J-1)
-                           KK = KMAP_C(KB + K-1)
+                           II = IW + I-1
+                           JJ = JS + J-1
+                           KK = KB + K-1
 
                            TEMP1 = WEIGHT_FT(I,J,K)*PVOL(NP)
 
-                           PVOL_NODE(II,JJ,KK) = &
-                              PVOL_NODE(II,JJ,KK) + TEMP1
+                           PVOL_NODE(II,JJ,KK) = PVOL_NODE(II,JJ,KK) + TEMP1
 
                         ENDDO
                      ENDDO
@@ -186,21 +176,20 @@ module comp_mean_fields0_module
 ! vol_sur is the sum of all the scalar cell volumes that have this node
 ! as the common node.
 !---------------------------------------------------------------------//
+
       DO K = KSTART2, KEND1
          DO J = JSTART2, JEND1
             DO I = ISTART2, IEND1
                if (vol_surr(i,j,k).eq.ZERO) CYCLE
 
-               TEMP1 = PVOL_NODE(i,j,k)/vol_surr(i,j,k)
+               TEMP1 = VOL*(PVOL_NODE(i,j,k)/vol_surr(i,j,k))
 
                DO KK = K, K+1
                   DO JJ = J, J+1
                      DO II = I, I+1
 
                         IF(1.eq.flag(II,JJ,KK,1)) THEN
-                           EPs(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk)) = &
-                              EPs(IMAP_C(ii), JMAP_C(jj), KMAP_C(kk)) + &
-                              TEMP1*VOL
+                           EPs(ii,jj,kk) = EPs(ii,jj,kk) + TEMP1
                         ENDIF
                      ENDDO
                   ENDDO

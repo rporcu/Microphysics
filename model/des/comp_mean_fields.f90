@@ -27,13 +27,15 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pmass, pvol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
+      DOUBLE PRECISION, INTENT(IN) :: des_radius(:)
+      DOUBLE PRECISION, INTENT(IN) :: pmass(:), pvol(:)
+      DOUBLE PRECISION, INTENT(IN) :: des_vel_new(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: des_pos_new(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: des_usr_var(:,:)
+      integer, intent(in) :: particle_state(:)
+      integer, intent(in) :: particle_phase(:)
+      integer, intent(in) :: iglobal_id(:)
+      integer, intent(in) :: pijk(:,:)
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
