@@ -187,6 +187,9 @@ int main (int argc, char* argv[])
   iMultiFab pinc(ba,1,nghost);
   pinc.setVal(0);
 
+  int mmax = 100;
+  MultiFab des_rop_s(ba,mmax,nghost);
+
   Array<int>    pijk        (3*nparticles);
   Array<int>  dg_pijk       (  nparticles);
   Array<int>  dg_pijkprv    (  nparticles);
@@ -226,7 +229,7 @@ int main (int argc, char* argv[])
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
                drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
-               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(), des_rop_s[mfi].dataPtr(),
                pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
@@ -251,7 +254,7 @@ int main (int argc, char* argv[])
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
                drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
-               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(), des_rop_s[mfi].dataPtr(),
                pijk.dataPtr(), dg_pijk.dataPtr(), dg_pijkprv.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(), particle_phase.dataPtr(),
                des_radius.dataPtr(), ro_sol.dataPtr(),

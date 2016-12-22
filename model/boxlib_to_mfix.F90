@@ -23,7 +23,7 @@ contains
       flux_ge, flux_gn, flux_gt, &
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, &
-      pinc, flag, vol_surr, &
+      pinc, flag, vol_surr, des_rop_s, &
       pijk, dg_pijk, dg_pijkprv, iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
@@ -32,6 +32,7 @@ contains
 
       use discretelement, only: max_pip
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use constant, only: mmax
 
     integer         , intent(inout) :: flag&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -110,6 +111,9 @@ contains
     integer         , intent(inout) :: pinc&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
+    double precision, intent(inout) :: des_rop_s&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3,mmax)
+
     integer, intent(inout) :: pijk(max_pip,3)
     integer, intent(inout) :: dg_pijk(max_pip)
     integer, intent(inout) :: dg_pijkprv(max_pip)
@@ -146,7 +150,7 @@ contains
               f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
               flag, vol_surr, &
        pijk, dg_pijk, dg_pijkprv, iglobal_id, &
-       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
+       particle_state, particle_phase, des_radius, des_rop_s, ro_sol, pvol, pmass, &
        omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
        rot_acc_old, fc, tow, wall_collision_pft)
 
@@ -163,7 +167,7 @@ contains
       flux_ge, flux_gn, flux_gt, &
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
-      flag, vol_surr, &
+      flag, vol_surr, des_rop_s, &
       pijk, dg_pijk, dg_pijkprv, iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
@@ -172,6 +176,7 @@ contains
 
       use discretelement, only: max_pip
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use constant, only: mmax
       use time_march_module, only: time_march
 
     integer         , intent(inout) :: flag&
@@ -251,6 +256,9 @@ contains
     integer         , intent(inout) :: pinc&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
+    double precision, intent(inout) :: des_rop_s&
+       (istart3:iend3,jstart3:jend3,kstart3:kend3,mmax)
+
     integer, intent(inout) :: pijk(max_pip,3)
     integer, intent(inout) :: dg_pijk(max_pip)
     integer, intent(inout) :: dg_pijkprv(max_pip)
@@ -283,7 +291,7 @@ contains
        rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
        tau_u_g, tau_v_g, tau_w_g,&
        flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-       f_gds, A_m, b_m, drag_am, drag_bm, pinc, flag, vol_surr, &
+       f_gds, A_m, b_m, drag_am, drag_bm, pinc, flag, vol_surr, des_rop_s, &
        pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
        des_radius, ro_sol, pvol, pmass, omoi, &
        ppos, des_pos_new, des_vel_new, des_usr_var, &
