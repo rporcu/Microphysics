@@ -296,14 +296,13 @@ foreach( testdir ${TESTS})
   STRING(REPLACE "/" "_" TEST_NAME ${testdir} )
 
   FILE(GLOB USR_OVERRIDES ${testdir}/*.f90)
-  set(local_includes ${CXX_includes} ${FPP_includes})
-  set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
-
-
 
   set(TEST_EXE mfix_${TEST_NAME})
 
   add_executable(${TEST_EXE} EXCLUDE_FROM_ALL model/main.cpp ${USR_OVERRIDES})
+
+  target_include_directories(${TEST_EXE} PUBLIC ${testdir} ${CMAKE_Fortran_MODULE_DIRECTORY})
+  set_target_properties(${TEST_EXE} PROPERTIES Fortran_MODULE_DIRECTORY ${testdir})
 
   add_test(NAME ${TEST_NAME}
     COMMAND ${CMAKE_COMMAND}
