@@ -1,3 +1,5 @@
+MODULE CHECK_NUMERICS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_NUMERICS                                          !
@@ -57,3 +59,4 @@
       RETURN
 
       END SUBROUTINE CHECK_NUMERICS
+END MODULE CHECK_NUMERICS_MODULE

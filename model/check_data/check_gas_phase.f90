@@ -1,3 +1,5 @@
+MODULE CHECK_GAS_PHASE_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Module name: CHECK_GAS_PHASE                                        !
@@ -23,7 +25,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants
-      use param1, only: UNDEFINED, ZERO
+      use param1, only: IS_UNDEFINED, IS_DEFINED, ZERO
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -56,8 +58,8 @@
 ! compressible, verify that the user provided average molecular weight
 ! has a physical value. (This does not include the case where MW_AVG
 ! is UNDEFINED.)
-      IF (RO_G0 == UNDEFINED) THEN
-         IF (MW_AVG == UNDEFINED) THEN
+      IF (IS_UNDEFINED(RO_G0)) THEN
+         IF (IS_UNDEFINED(MW_AVG)) THEN
             WRITE(ERR_MSG, 1001) 'MW_AVG', iVal(MW_AVG)
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -69,7 +71,7 @@
          ENDIF
 ! Incompressible simulations do not need MW_AVG. Notify the user that
 ! the provided data is ignored.
-         IF (MW_AVG /= UNDEFINED)THEN
+         IF (IS_DEFINED(MW_AVG))THEN
             WRITE(ERR_MSG, 1100) 'RO_g0 is specified'
             CALL FLUSH_ERR_MSG
          ENDIF
@@ -90,3 +92,4 @@
  1100 FORMAT('Message 2000: MW_AVG is not needed when ',A,'.')
 
       END SUBROUTINE CHECK_GAS_PHASE
+END MODULE CHECK_GAS_PHASE_MODULE

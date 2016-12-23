@@ -159,7 +159,7 @@ MODULE SET_FLAGS_MODULE
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param1   , only: undefined_i
+      USE param1   , only: is_undefined
       USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3
       USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
@@ -226,27 +226,27 @@ MODULE SET_FLAGS_MODULE
 ! ---------------------------------------------------------------->>>
 
             IF ( flag(iminus(i,j,k),j,k,1) < 100 .AND. &
-               FLAG(iminus(i,j,k),j,k,2)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(iminus(i,j,k),j,k,2))) &
                FLAG(iminus(i,j,k),j,k,2) = 2000 + FLAG(iminus(i,j,k),j,k,1)
 
             IF ( flag(iplus(i,j,k),j,k,1) < 100 .AND. &
-               FLAG(i,j,k,2)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(i,j,k,2))) &
                FLAG(i,j,k,2) = 2000 + FLAG(iplus(i,j,k),j,k,1)
 
             IF ( flag(i,jminus(i,j,k),k,1) < 100 .AND. &
-               FLAG(i,jminus(i,j,k),k,3)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(i,jminus(i,j,k),k,3))) &
                FLAG(i,jminus(i,j,k),k,3) = 2000 + FLAG(i,jminus(i,j,k),k,1)
 
             IF ( flag(i,jplus(i,j,k),k,1) < 100 .AND. &
-               FLAG(i,j,k,3)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(i,j,k,3))) &
                FLAG(i,j,k,3) = 2000 + FLAG(i,jplus(i,j,k),k,1)
 
             IF ( flag(i,j,kminus(i,j,k),1) < 100 .AND. &
-               FLAG(i,j,kminus(i,j,k),4)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(i,j,kminus(i,j,k),4))) &
                FLAG(i,j,kminus(i,j,k),4) = 2000 + FLAG(i,j,kminus(i,j,k),1)
 
             IF ( flag(i,j,kplus(i,j,k),1) < 100 .AND. &
-               FLAG(i,j,k,4)==UNDEFINED_I) &
+               IS_UNDEFINED(FLAG(i,j,k,4))) &
                FLAG(i,j,k,4) = 2000 + FLAG(i,j,kplus(i,j,k),1)
 
 
@@ -260,9 +260,9 @@ MODULE SET_FLAGS_MODULE
      do k = kstart3, kend3
          do j = jstart3, jend3
             do i = istart3, iend3
-               if(flag(i,j,k,2) == UNDEFINED_I) flag(i,j,k,2) = 0
-               if(flag(i,j,k,3) == UNDEFINED_I) flag(i,j,k,3) = 0
-               if(flag(i,j,k,4) == UNDEFINED_I) flag(i,j,k,4) = 0
+               if(IS_UNDEFINED(flag(i,j,k,2))) flag(i,j,k,2) = 0
+               if(IS_UNDEFINED(flag(i,j,k,3))) flag(i,j,k,3) = 0
+               if(IS_UNDEFINED(flag(i,j,k,4))) flag(i,j,k,4) = 0
                write(1200,"(4(i4),3(I11))") i,j,k,flag(i,j,k,:)
             end do
          end do

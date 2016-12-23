@@ -1,3 +1,8 @@
+MODULE CHECK_BC_OUTFLOW_MODULE
+
+      use param1, only: one, undefined, zero, is_undefined, is_defined
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_BC_OUTFLOW                                         !
@@ -12,7 +17,6 @@
 ! Modules
 ! --------------------------------------------------------------------//
       use bc, only: bc_ep_g, bc_rop_s
-      use param1, only: one, undefined, zero
       use constant, only: ro_s0
       use run, only: solids_model
       use toleranc, only: compare
@@ -42,7 +46,7 @@
 ! data consistency checks and, when appropriate, provide the user with
 ! a warning about their chosen settings.
 
-      IF (BC_EP_G(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_EP_G(BCV))) THEN
 
          SUM_EP = BC_EP_G(BCV)
          DO M = 1, M_TOT
@@ -53,7 +57,7 @@
                FLAG_WARNING = .FALSE.
             ENDIF
 
-            IF(BC_ROP_S(BCV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
 
                IF(BC_EP_G(BCV) == ONE) THEN
 ! what does it mean to force the bulk density to zero at the
@@ -91,7 +95,7 @@
 
          SUM_EP = ZERO
          DO M = 1, M_TOT
-            IF(BC_ROP_S(BCV,M) /= UNDEFINED) THEN
+            IF(IS_DEFINED(BC_ROP_S(BCV,M))) THEN
                IF(SOLIDS_MODEL(M) /= 'TFM') THEN
                   WRITE(ERR_MSG, 1101) trim(iVar('BC_ROP_s',BCV,M))
                   CALL FLUSH_ERR_MSG
@@ -140,8 +144,6 @@
 
 ! Modules
 ! --------------------------------------------------------------------//
-      USE param1   , only: UNDEFINED
-      USE param1   , only: ZERO
       use fld_const, only: RO_g0
       use bc       , only: BC_P_g
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -156,11 +158,11 @@
 
       CALL INIT_ERR_MSG("CHECK_BC_P_OUTFLOW")
 
-      IF (BC_P_G(BCV) == UNDEFINED) THEN
+      IF (IS_UNDEFINED(BC_P_G(BCV))) THEN
          WRITE(ERR_MSG,1000) trim(iVar('BC_P_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
-      ELSEIF (BC_P_G(BCV)<=ZERO .AND. RO_G0==UNDEFINED) THEN
+      ELSEIF (BC_P_G(BCV)<=ZERO .AND. IS_UNDEFINED(RO_G0)) THEN
          WRITE(ERR_MSG, 1100) BCV, trim(iVal(BC_P_G(BCV)))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -208,7 +210,6 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
 
       use fld_const, only: ro_g0
-      use param1   , only: undefined, zero
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
       IMPLICIT NONE
 
@@ -224,14 +225,14 @@
 
       CALL INIT_ERR_MSG("CHECK_BC_MASS_OUTFLOW")
 
-      IF(BC_DT_0(BCV) == UNDEFINED) THEN
+      IF(IS_UNDEFINED(BC_DT_0(BCV))) THEN
          WRITE(ERR_MSG, 1000) trim(iVar('BC_DT_0',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF(BC_MASSFLOW_G(BCV) /= UNDEFINED .OR. &
-         BC_VOLFLOW_G(BCV) /= UNDEFINED) THEN
-         IF (BC_EP_G(BCV) == UNDEFINED) THEN
+      IF(IS_DEFINED(BC_MASSFLOW_G(BCV)) .OR. &
+         IS_DEFINED(BC_VOLFLOW_G(BCV))) THEN
+         IF (IS_UNDEFINED(BC_EP_G(BCV))) THEN
             WRITE(ERR_MSG,1101) trim(iVar('BC_EP_G',BCV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -241,8 +242,8 @@
       ENDIF
 
       DO M = 1, M_TOT
-         IF(BC_MASSFLOW_S(BCV,M) /= UNDEFINED .OR. &
-            BC_VOLFLOW_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_MASSFLOW_S(BCV,M)) .OR. &
+            IS_DEFINED(BC_VOLFLOW_S(BCV,M))) THEN
             WRITE(ERR_MSG,1102) trim(iVar('BC_MASSFLOW_S',BCV,M)), &
                trim(iVar('BC_VOLFLOW_S',BCV,M))
  1102 FORMAT('Warning 1102: ', A,' and/or ', A,' have been defined',/&
@@ -250,7 +251,7 @@
          'rate may not be ',/'physically achievable depending on the ',&
          'system and simulation ',/'setup.')
 
-             IF (BC_ROP_S(BCV,M) == UNDEFINED) THEN
+             IF (IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
                 WRITE(ERR_MSG,1103) trim(iVar('BC_ROP_S',BCV,M))
                 CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
              ENDIF
@@ -262,21 +263,21 @@
       ENDDO
 
 ! This check probably needs changed.
-      IF(RO_G0 == UNDEFINED .AND. (BC_P_G(BCV) == UNDEFINED .OR.       &
-         BC_T_G(BCV) == UNDEFINED) .AND.BC_MASSFLOW_G(BCV) /= ZERO) THEN
+      IF(IS_UNDEFINED(RO_G0) .AND. (IS_UNDEFINED(BC_P_G(BCV)) .OR.       &
+         BC_T_G(BCV) == UNDEFINED) .AND.ABS(BC_MASSFLOW_G(BCV)) > ZERO) THEN
 
          IF(BC_PLANE(BCV)=='W' .OR. BC_PLANE(BCV)=='E') THEN
-            IF(BC_U_G(BCV) /= ZERO) THEN
+            IF(ABS(BC_U_G(BCV)) > ZERO) THEN
                WRITE(ERR_MSG, 1100) BCV, 'BC_U_g'
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
          ELSEIF(BC_PLANE(BCV)=='N' .OR. BC_PLANE(BCV)=='S') THEN
-            IF(BC_V_G(BCV) /= ZERO) THEN
+            IF(ABS(BC_V_G(BCV)) > ZERO) THEN
                WRITE(ERR_MSG, 1100) BCV, 'BC_V_g'
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
          ELSEIF (BC_PLANE(BCV)=='T' .OR. BC_PLANE(BCV)=='B') THEN
-            IF(BC_W_G(BCV) /= ZERO) THEN
+            IF(ABS(BC_W_G(BCV)) > ZERO) THEN
                WRITE(ERR_MSG, 1100)  BCV, 'BC_W_g'
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
@@ -296,3 +297,4 @@
          'correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_BC_MASS_OUTFLOW
+END MODULE CHECK_BC_OUTFLOW_MODULE

@@ -3,7 +3,7 @@ module source_v_g_module
    use bc, only: bc_hw_g, bc_vw_g
    use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
    use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
-   use param1, only: zero, half, one, undefined
+   use param1, only: zero, half, one, undefined, is_undefined, small_number
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -48,7 +48,6 @@ module source_v_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param1, only: zero, one
       USE run, only: momentum_y_eq, odt
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
@@ -455,7 +454,7 @@ module source_v_g_module
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
                         IF (1.eq.flag(ieast(i,j,k),j,k,1)) then
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,E) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_VW_G(L)
@@ -465,7 +464,7 @@ module source_v_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
                            ENDIF
                         ELSEIF (1.eq.flag(iwest(i,j,k),j,k,1)) then
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,W) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_VW_G(L)
@@ -475,7 +474,7 @@ module source_v_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
                            ENDIF
                         ELSEIF (1.eq.flag(i,j,ktop(i,j,k),1)) then
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,T) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_VW_G(L)
@@ -485,7 +484,7 @@ module source_v_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
                            ENDIF
                         ELSEIF (1.eq.flag(i,j,kbot(i,j,k),1)) then
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,B) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_VW_G(L)
@@ -656,7 +655,6 @@ module source_v_g_module
       SUBROUTINE POINT_SOURCE_V_G(A_M, B_M, flag)
 
       use geometry, only: vol
-      use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 

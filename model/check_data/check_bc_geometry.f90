@@ -3,6 +3,10 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use calc_cell_module, only: calc_loc, calc_cell
       use check_plane_module, only: check_plane
 
+! Global Parameters:
+!---------------------------------------------------------------------//
+      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C, IS_UNDEFINED, IS_DEFINED, ZERO
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -30,8 +34,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 !---------------------------------------------------------------------//
 ! The max number of BCs.
       use param, only: DIMENSION_BC
-! Parameter constants
-      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -69,18 +71,18 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       L50: DO BCV = 1, DIMENSION_BC
 
          BC_DEFINED(BCV) = .FALSE.
-         IF(BC_X_W(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_X_E(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_Y_S(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_Y_N(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_Z_B(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_Z_T(BCV) /= UNDEFINED)   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_I_W(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_I_E(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_J_S(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_J_N(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_K_B(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_K_T(BCV) /= UNDEFINED_I) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_X_W(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_X_E(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Y_S(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Y_N(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Z_B(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Z_T(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_I_W(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_I_E(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_J_S(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_J_N(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_K_B(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_K_T(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(BC_TYPE(BCV) == 'CG_NSW')   BC_DEFINED(BCV) = .TRUE.
          IF(BC_TYPE(BCV) == 'CG_FSW')   BC_DEFINED(BCV) = .TRUE.
          IF(BC_TYPE(BCV) == 'CG_PSW')   BC_DEFINED(BCV) = .TRUE.
@@ -110,32 +112,32 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          IF(.NOT.BC_DEFINED(BCV)) CYCLE
          IF(BC_TYPE(BCV)(1:2) == 'CG') CYCLE
 
-         IF(BC_X_W(BCV)==UNDEFINED .AND. BC_I_W(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_X_W(BCV)) .AND. IS_UNDEFINED(BC_I_W(BCV))) THEN
             WRITE(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_X_E(BCV)==UNDEFINED .AND. BC_I_E(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_X_E(BCV)) .AND. IS_UNDEFINED(BC_I_E(BCV))) THEN
             WRITE(ERR_MSG, 1101) BCV, 'BC_X_e and BC_I_e'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_Y_S(BCV)==UNDEFINED .AND. BC_J_S(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_Y_S(BCV)) .AND. IS_UNDEFINED(BC_J_S(BCV))) THEN
             WRITE(ERR_MSG, 1101) BCV, 'BC_Y_s and BC_J_s'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_Y_N(BCV)==UNDEFINED .AND. BC_J_N(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_Y_N(BCV)) .AND. IS_UNDEFINED(BC_J_N(BCV))) THEN
             WRITE(ERR_MSG, 1101) BCV, 'BC_Y_n and BC_J_n'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_Z_B(BCV)==UNDEFINED .AND. BC_K_B(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_Z_B(BCV)) .AND. IS_UNDEFINED(BC_K_B(BCV))) THEN
             WRITE(ERR_MSG, 1101) BCV, 'BC_Z_b and BC_K_b'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_Z_T(BCV)==UNDEFINED .AND. BC_K_T(BCV)==UNDEFINED_I) THEN
+         IF(IS_UNDEFINED(BC_Z_T(BCV)) .AND. IS_UNDEFINED(BC_K_T(BCV))) THEN
             WRITE(ERR_MSG, 1101) BCV, 'BC_Z_t and BC_K_t'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -193,10 +195,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! Function to compare two values
       use toleranc, only: COMPARE
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-      use param1, only: ZERO, UNDEFINED_I, UNDEFINED
-
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -223,7 +221,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       CALL INIT_ERR_MSG("CHECK_BC_GEOMETRY_WALL")
 
-      IF(BC_X_W(BCV)/=UNDEFINED .AND. BC_X_E(BCV)/=UNDEFINED) THEN
+      IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
 
 ! setting indices to 1 if there is no variation in the i (x) direction
          CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
@@ -252,7 +250,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       ENDIF
 
 
-      IF(BC_Y_S(BCV)/=UNDEFINED .AND. BC_Y_N(BCV)/=UNDEFINED) THEN
+      IF(IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
 ! setting indices to 1 if there is no variation in the j (y) direction
          CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
          J_S = J_S + 1
@@ -278,7 +276,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          ENDIF
       ENDIF
 
-      IF(BC_Z_B(BCV)/=UNDEFINED .AND. BC_Z_T(BCV)/=UNDEFINED) THEN
+      IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
 ! setting indices to 1 if there is no variation in the k (z) direction
          CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
          K_B = K_B + 1
@@ -359,10 +357,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use geometry, only: DY, JMAX, JMAX2
       use geometry, only: DZ, KMAX, KMAX2
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-      use param1, only: UNDEFINED_I, UNDEFINED
-
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -398,7 +392,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       Y_CONSTANT = .TRUE.
       Z_CONSTANT = .TRUE.
 
-      IF (BC_X_W(BCV)/=UNDEFINED .AND. BC_X_E(BCV)/=UNDEFINED) THEN
+      IF (IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
          CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
          CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
          IF (BC_X_W(BCV) /= BC_X_E(BCV)) THEN
@@ -419,7 +413,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          IF(BC_X_W(BCV) /= BC_X_E(BCV)) X_CONSTANT = .FALSE.
       ENDIF
 
-      IF (BC_Y_S(BCV)/=UNDEFINED .AND. BC_Y_N(BCV)/=UNDEFINED) THEN
+      IF (IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
          CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
          CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
          IF(BC_Y_S(BCV) /= BC_Y_N(BCV)) THEN
@@ -440,7 +434,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          IF (BC_Y_S(BCV) /= BC_Y_N(BCV)) Y_CONSTANT = .FALSE.
       ENDIF
 
-      IF(BC_Z_B(BCV)/=UNDEFINED .AND. BC_Z_T(BCV)/=UNDEFINED) THEN
+      IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
          CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
          CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
          IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) THEN
@@ -463,8 +457,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! Check whether the boundary is a plane parallel to one of the three
 ! coordinate planes
-      IF(BC_X_W(BCV)/=UNDEFINED .AND. BC_Y_S(BCV)/=UNDEFINED .AND. &
-         BC_Z_B(BCV)/=UNDEFINED) CALL CHECK_PLANE (X_CONSTANT, &
+      IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_Y_S(BCV)) .AND. &
+         IS_DEFINED(BC_Z_B(BCV))) CALL CHECK_PLANE (X_CONSTANT, &
          Y_CONSTANT, Z_CONSTANT, BCV, 'BC')
 
 

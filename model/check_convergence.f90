@@ -21,7 +21,7 @@ MODULE CHECK_CONVERGENCE_MODULE
       SUBROUTINE CHECK_CONVERGENCE(NIT, u_g, v_g, w_g, ep_g, errorpercent, MUSTIT, flag)
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE param1, only: zero, undefined_i
+      USE param1, only: zero, undefined_i, is_undefined
       USE residual, only: max_resid_index, nresid, resid_p, resid_ro, resid_u, resid_v, resid_w
       USE residual, only: resid, resid_index, resid_string, resid_x, sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
       USE run, only: detect_stall, momentum_x_eq, momentum_y_eq, momentum_z_eq
@@ -83,7 +83,7 @@ MODULE CHECK_CONVERGENCE_MODULE
 
 ! find the variable with maximum residual
       MAXM = 0
-      IF (RESID_INDEX(MAX_RESID_INDEX,1) == UNDEFINED_I) THEN
+      IF (IS_UNDEFINED(RESID_INDEX(MAX_RESID_INDEX,1))) THEN
          MAXRES = ZERO
          DO L = 1, NRESID
             IF (RESID(L) >= MAXRES) THEN
@@ -96,7 +96,7 @@ MODULE CHECK_CONVERGENCE_MODULE
                ENDIF
             ENDIF
          ENDDO
-         IF (MAXN == UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(MAXN)) THEN
             WRITE (RESID_STRING(MAX_RESID_INDEX), '(A1,I1)') &
                RESID_PREFIX(MAXL), MAXM
          ELSE

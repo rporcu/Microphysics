@@ -1,4 +1,5 @@
 MODULE SET_BC0_MODULE
+   use param1, only: is_defined
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -101,7 +102,6 @@ MODULE SET_BC0_MODULE
       use bc, only: bc_ep_g
 
 
-      use param1, only: undefined
       use scales, only: scale_pressure
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -127,7 +127,7 @@ MODULE SET_BC0_MODULE
       DO J = BC_J_S(BCV), BC_J_N(BCV)
       DO I = BC_I_W(BCV), BC_I_E(BCV)
          P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
-         IF (BC_EP_G(BCV) /= UNDEFINED) EP_G(I,J,K) = BC_EP_G(BCV)
+         IF (IS_DEFINED(BC_EP_G(BCV))) EP_G(I,J,K) = BC_EP_G(BCV)
 
       ENDDO   ! do i
       ENDDO   ! do j
@@ -160,10 +160,10 @@ MODULE SET_BC0_MODULE
 !--------------------------------------------------------------------//
 
       BC_JET_G(BCV) = UNDEFINED
-      IF (BC_DT_0(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_DT_0(BCV))) THEN
          BC_TIME(BCV) = TIME + BC_DT_0(BCV)
          BC_JET_G(BCV) = BC_JET_G0(BCV)
-         IF (BC_JET_G(BCV) /= UNDEFINED) THEN
+         IF (IS_DEFINED(BC_JET_G(BCV))) THEN
             SELECT CASE (TRIM(BC_PLANE(BCV)))
             CASE ('W', 'E')
                BC_U_G(BCV) = BC_JET_G(BCV)
@@ -289,7 +289,7 @@ MODULE SET_BC0_MODULE
 !--------------------------------------------------------------------//
 
 ! initializing for time dependent outflow reporting calculation
-      IF (BC_DT_0(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_DT_0(BCV))) THEN
          BC_TIME(BCV) = TIME + BC_DT_0(BCV)
          BC_OUT_N(BCV) = 0
          BC_MOUT_G(BCV) = ZERO
@@ -331,8 +331,7 @@ MODULE SET_BC0_MODULE
 
 ! MFIX Runtime parameters:
       use param, only: DIMENSION_BC
-      use param1, only: UNDEFINED
-      use param1, only: UNDEFINED_I
+      use param1, only: UNDEFINED_I, is_undefined
 
       use compar, only: mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: UNIT_LOG
@@ -366,11 +365,11 @@ MODULE SET_BC0_MODULE
       IJK_P_G = UNDEFINED_I
 
 ! This is not needed for compressible cases.
-      IF(RO_G0 == UNDEFINED) THEN
+      IF(IS_UNDEFINED(RO_G0)) THEN
          IF(dFlag) write(*,"(3x,A)")                                   &
             'Compressible: IJK_P_g remaining undefined.'
          return
-      ELSEIF(RO_G0 == 0.0d0) THEN
+      ELSEIF(ABS(RO_G0) < EPSILON(0.0d0)) THEN
          IF(dFlag) write(*,"(3x,A)")                                   &
             'No gas phase: IJK_P_g remaining undefined.'
          return
@@ -422,7 +421,7 @@ MODULE SET_BC0_MODULE
 
 ! No cyclic boundaries or pressure outflows. The IJ plane is used in
 ! this case to maximize search region for 2D problems.
-      IF(l3 == UNDEFINED_I) THEN
+      IF(IS_UNDEFINED(l3)) THEN
          Map = 'KIJ_MAP'
          l3 = max((KMAX1-KMIN1)/2+1,2)
          l2 = IMIN1;  u2 = IMAX1
@@ -505,7 +504,7 @@ MODULE SET_BC0_MODULE
 !--------------------------------------------------------------------//
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
-      use param1, only: undefined_i
+      use param1, only: undefined_i, is_undefined
       use compar, only: numpes, mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       implicit none
 
@@ -634,10 +633,10 @@ MODULE SET_BC0_MODULE
 
 ! Verify that one fluid cell was detected. Otherwise flag the possible
 ! errors and return.
-      if(IJK_P_G(1) == UNDEFINED_I) then
+      if(IS_UNDEFINED(IJK_P_G(1))) then
          iErr = 2001
          return
-      elseif(IJK_Pg_Owner == UNDEFINED_I) then
+      elseif(IS_UNDEFINED(IJK_Pg_Owner)) then
          iErr = 2002
          return
       endif

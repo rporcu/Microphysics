@@ -1,3 +1,9 @@
+MODULE CHECK_DES_SOLIDS_MODULE
+
+! Parameter constants
+      USE param1, only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_DES_SOLIDS                                        !
@@ -49,8 +55,6 @@
       USE discretelement, only: HERTZIAN
 ! Particle and wall friction coeff.
       USE discretelement, only: MEW, MEW_W
-! Parameter constatns.
-      USE param1, only: ONE, ZERO, UNDEFINED
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
@@ -60,7 +64,7 @@
       CALL INIT_ERR_MSG("CHECK_SOLIDS_DEM_COLLISION")
 
 ! Check coefficient friction
-      IF(MEW == UNDEFINED) THEN
+      IF(IS_UNDEFINED(MEW)) THEN
          WRITE(ERR_MSG,1000) 'MEW'
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ELSEIF (MEW < ZERO .OR. MEW_W > ONE) THEN
@@ -68,7 +72,7 @@
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF(MEW_W == UNDEFINED) THEN
+      IF(IS_UNDEFINED(MEW_W)) THEN
          WRITE(ERR_MSG,1000) 'MEW_W'
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ELSEIF(MEW_w < ZERO .OR. MEW_W > ONE) THEN
@@ -153,9 +157,6 @@
       use run, only: DT
       use constant, only: MMAX
 
-! Parameter constatns.
-      USE param1, only: ZERO, HALF, ONE, UNDEFINED
-
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
       IMPLICIT NONE
@@ -181,13 +182,13 @@
       TCOLL = UNDEFINED
 
 ! Check for particle-particle normal spring constants.
-      IF(KN == UNDEFINED) THEN
+      IF(IS_UNDEFINED(KN)) THEN
          WRITE(ERR_MSG, 1000) 'KN'
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check for particle-particle tangential spring constant factors.
-      IF(KT_FAC == UNDEFINED) THEN
+      IF(IS_UNDEFINED(KT_FAC)) THEN
          WRITE (ERR_MSG, 2100) 'KT_FAC'
          CALL FLUSH_ERR_MSG()
          KT_FAC = 2.0d0/7.0d0
@@ -199,13 +200,13 @@
       KT = KT_FAC*KN
 
 ! Check for particle-wall normal spring constants.
-      IF(KN_W == UNDEFINED) THEN
+      IF(IS_UNDEFINED(KN_W)) THEN
          WRITE(ERR_MSG, 1000) 'KN_W'
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check for particle-wall tangential spring constant factors.
-      IF(KT_W_FAC == UNDEFINED) THEN
+      IF(IS_UNDEFINED(KT_W_FAC)) THEN
          WRITE (ERR_MSG, 2100) 'KT_W_FAC'
          CALL FLUSH_ERR_MSG()
          KT_W_FAC = 2.0d0/7.0d0
@@ -220,7 +221,7 @@
          'specified in mfix.dat.',/'Setting to default: (2/7).')
 
 ! Check for particle-particle tangential damping coefficients
-      IF(DES_ETAT_FAC == UNDEFINED) THEN
+      IF(IS_UNDEFINED(DES_ETAT_FAC)) THEN
          WRITE (ERR_MSG, 2101) 'DES_ETAT_FAC'
          CALL FLUSH_ERR_MSG
          DES_ETAT_FAC = HALF
@@ -230,7 +231,7 @@
       ENDIF
 
 ! Check for particle-wall tangential damping coefficients
-      IF(DES_ETAT_W_FAC == UNDEFINED) THEN
+      IF(IS_UNDEFINED(DES_ETAT_W_FAC)) THEN
          WRITE (ERR_MSG, 2101) 'DES_ETAT_W_FAC'
          CALL FLUSH_ERR_MSG
          DES_ETAT_W_FAC = HALF
@@ -254,7 +255,7 @@
             LC = LC+1
 
 ! Check particle-particle normal restitution coefficient
-            IF(DES_EN_INPUT(LC) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(DES_EN_INPUT(LC))) THEN
                WRITE(ERR_MSG,1000) trim(iVar('DES_EN_INPUT',LC))
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ELSEIF(DES_EN_INPUT(LC) > ONE .OR.                         &
@@ -270,7 +271,7 @@
             MASS_EFF = MASS_M*MASS_L/(MASS_M+MASS_L)
 
 ! Calculate the M-L normal and tangential damping coefficients.
-            IF(EN .NE. ZERO) THEN
+            IF(ABS(EN) > ZERO) THEN
                DES_ETAN(M,L) = 2.0D0*SQRT(KN*MASS_EFF) * ABS(LOG(EN))
                DES_ETAN(M,L) = DES_ETAN(M,L)/SQRT(PI*PI + (LOG(EN)**2))
             ELSE
@@ -291,7 +292,7 @@
 
 ! Particle-Wall Collision Parameters ---------------------------------->
 ! Check particle-wall normal restitution coefficient.
-         IF(DES_EN_WALL_INPUT(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(DES_EN_WALL_INPUT(M))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('DES_EN_WALL_INPUT',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ELSEIF(DES_EN_WALL_INPUT(M) > ONE .OR.                        &
@@ -306,7 +307,7 @@
          MASS_EFF = MASS_M
 
 ! Calculate the M-Wall normal and tangential damping coefficients.
-         IF(EN .NE. ZERO) THEN
+         IF(ABS(EN) > ZERO) THEN
             DES_ETAN_WALL(M) = 2.d0*SQRT(KN_W*MASS_EFF)*ABS(LOG(EN))
             DES_ETAN_WALL(M) = DES_ETAN_WALL(M)/SQRT(PI*PI+(LOG(EN))**2)
          ELSE
@@ -323,7 +324,7 @@
 ! if following are assigned warn user they are discarded
       FLAG_WARN = .FALSE.
       DO M = 1, MMAX+MMAX*(MMAX-1)/2
-         IF(DES_ET_INPUT(M) .NE. UNDEFINED) FLAG_WARN = .TRUE.
+         IF(IS_DEFINED(DES_ET_INPUT(M))) FLAG_WARN = .TRUE.
       ENDDO
       IF (FLAG_WARN) THEN
          WRITE(ERR_MSG,2102) 'DES_ET_INPUT'
@@ -332,7 +333,7 @@
 
       FLAG_WARN = .FALSE.
       DO M = 1, MMAX
-         IF(DES_ET_WALL_INPUT(M) .NE. UNDEFINED) FLAG_WARN = .TRUE.
+         IF(IS_DEFINED(DES_ET_WALL_INPUT(M))) FLAG_WARN = .TRUE.
       ENDDO
       IF (FLAG_WARN)THEN
          WRITE(ERR_MSG,2102) 'DES_ET_WALL_INPUT'
@@ -405,8 +406,6 @@
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
       use run, only: DT
-! Parameter constants.
-      USE param1, only: ZERO, ONE, UNDEFINED
 ! Maximum number of solids
       USE param, only: DIM_M
 
@@ -438,13 +437,13 @@
       TCOLL = UNDEFINED
 
 ! check young's modulus and poisson ratio
-      IF(Ew_YOUNG == UNDEFINED ) THEN
+      IF(IS_UNDEFINED(Ew_YOUNG)) THEN
          MSG='Wall value for Youngs modulus'
          WRITE(ERR_MSG,1002) 'Ew_YOUNG', MSG
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
-      IF(Vw_POISSON == UNDEFINED) THEN
+      IF(IS_UNDEFINED(Vw_POISSON)) THEN
          MSG='Wall value for Poissons ratio'
          WRITE(ERR_MSG,1002) 'Vw_POISSON', MSG
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -457,12 +456,12 @@
 
       DO M=1,MMAX
 
-         IF(E_YOUNG(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(E_YOUNG(M))) THEN
             MSG=''; WRITE(MSG,"('Phase ',I2,' Youngs modulus')") M
             WRITE(ERR_MSG,1002) 'E_YOUNG', MSG
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(V_POISSON(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(V_POISSON(M))) THEN
             MSG=''; WRITE(MSG,"('Phase ',I2,' Poissons ratio')") M
             WRITE(ERR_MSG,1002) 'V_POISSON', MSG
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -487,7 +486,7 @@
             LC = LC+1
 
 ! Check particle-particle normal restitution coefficient
-            IF(DES_EN_INPUT(LC) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(DES_EN_INPUT(LC))) THEN
                WRITE(ERR_MSG,1000) trim(iVar('DES_EN_INPUT',LC))
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
@@ -500,7 +499,7 @@
             EN = DES_EN_INPUT(LC)
 
 ! Check particle-particle tangential restitution coefficient
-            IF(DES_ET_INPUT(M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(DES_ET_INPUT(M))) THEN
                WRITE(ERR_MSG,1000) trim(iVar('DES_ET_INPUT',M))
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ELSEIF(DES_ET_INPUT(M) > ONE .OR.                          &
@@ -534,7 +533,7 @@
             HERT_KT(L,M) = HERT_KT(M,L)
 
 ! Calculate the normal coefficient.
-            IF(EN .NE. ZERO) THEN
+            IF(ABS(EN) > ZERO) THEN
                DES_ETAN(M,L) = 2.d0*SQRT(HERT_KN(M,L)*MASS_EFF)*       &
                   ABS(LOG(EN))
                DES_ETAN(M,L) = DES_ETAN(M,L)/                          &
@@ -545,7 +544,7 @@
             DES_ETAN(L,M) = DES_ETAN(M,L)
 
 ! Calculate the tangential coefficients.
-            IF(ET .NE. ZERO) THEN
+            IF(ABS(ET) > ZERO) THEN
                DES_ETAT(M,L) = 2.d0*SQRT(HERT_KT(M,L)*RED_MASS_EFF)*   &
                   ABS(LOG(ET))
                DES_ETAT(M,L) = DES_ETAT(M,L)/ SQRT(PI*PI + (LOG(ET))**2)
@@ -561,7 +560,7 @@
 
 ! Particle-Wall Collision Parameters ---------------------------------->
 ! Check particle-wall normal restitution coefficient.
-         IF(DES_EN_WALL_INPUT(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(DES_EN_WALL_INPUT(M))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('DES_EN_WALL_INPUT',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ELSEIF(DES_EN_WALL_INPUT(M) > ONE .OR.                        &
@@ -573,7 +572,7 @@
          EN = DES_EN_WALL_INPUT(M)
 
 ! Check particle-wall tangential restitution coefficient
-         IF(DES_ET_WALL_INPUT(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(DES_ET_WALL_INPUT(M))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('DES_ET_WALL_INPUT',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ELSEIF(DES_ET_WALL_INPUT(M) > ONE .OR.                        &
@@ -601,7 +600,7 @@
          HERT_Kwt(M) = 8.0*SQRT(R_EFF)*G_MOD_EFF
 
 ! Calculate the tangential coefficients.
-         IF(EN /= ZERO) THEN
+         IF(ABS(EN) > ZERO) THEN
             DES_ETAN_WALL(M) = 2.d0*SQRT(HERT_Kwn(M)*MASS_EFF)*&
                ABS(LOG(EN))
             DES_ETAN_WALL(M) = DES_ETAN_WALL(M)/&
@@ -610,7 +609,7 @@
             DES_ETAN_WALL(M) = 2.d0*SQRT(HERT_Kwn(M)*MASS_EFF)
          ENDIF
 
-         IF(ET /= ZERO) THEN
+         IF(ABS(ET) > ZERO) THEN
             DES_ETAT_WALL(M) = 2.d0*SQRT(HERT_Kwt(M)*RED_MASS_EFF)*    &
                 ABS(LOG(ET))
             DES_ETAT_WALL(M) = DES_ETAT_WALL(M)/SQRT(PI*PI+(LOG(ET))**2)
@@ -625,27 +624,27 @@
 
 
 ! If following are assigned warn user they are discarded.
-       IF(KN .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(KN)) THEN
           WRITE(ERR_MSG, 2200) 'KN'
           CALL FLUSH_ERR_MSG
        ENDIF
-       IF(KN_W .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(KN_W)) THEN
           WRITE(ERR_MSG, 2200) 'KN_W'
           CALL FLUSH_ERR_MSG
        ENDIF
-       IF(KT_FAC .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(KT_FAC)) THEN
           WRITE(ERR_MSG, 2200) 'KT_FAC'
           CALL FLUSH_ERR_MSG
        ENDIF
-       IF(KT_W_FAC .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(KT_W_FAC)) THEN
           WRITE(ERR_MSG, 2200) 'KT_W_FAC'
           CALL FLUSH_ERR_MSG
        ENDIF
-       IF(DES_ETAT_FAC .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(DES_ETAT_FAC)) THEN
           WRITE(ERR_MSG, 2200) 'DES_ETAT_FAC'
           CALL FLUSH_ERR_MSG
        ENDIF
-       IF(DES_ETAT_W_FAC .NE. UNDEFINED) THEN
+       IF(IS_DEFINED(DES_ETAT_W_FAC)) THEN
           WRITE(ERR_MSG, 2200) 'DES_ETAT_W_FAC'
           CALL FLUSH_ERR_MSG
        ENDIF
@@ -674,3 +673,4 @@
          'Description:',A,/'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_SOLIDS_DEM_COLL_HERTZ
+END MODULE CHECK_DES_SOLIDS_MODULE

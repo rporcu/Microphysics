@@ -1,4 +1,7 @@
 module source_u_g_module
+
+   use param1, only: zero, half, one, undefined, is_undefined, small_number
+
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -43,7 +46,6 @@ module source_u_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE param1, only: zero, one, half
       USE run, only: momentum_x_eq
       USE run, only: odt
       USE scales, only: p_scale
@@ -214,7 +216,6 @@ module source_u_g_module
       USE geometry  , only: jmax2, kmax2
       USE geometry  , only: ody, odz
       USE matrix, only: e, w, s, n, t, b
-      USE param1, only: zero, one, half, undefined
 
       IMPLICIT NONE
 
@@ -455,7 +456,7 @@ module source_u_g_module
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
                         if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,N) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_UW_G(L)
@@ -465,7 +466,7 @@ module source_u_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,S) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_UW_G(L)
@@ -475,7 +476,7 @@ module source_u_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,T) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_UW_G(L)
@@ -485,7 +486,7 @@ module source_u_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,B) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_UW_G(L)
@@ -654,7 +655,6 @@ module source_u_g_module
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use geometry , only: vol
-      use param1   , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 

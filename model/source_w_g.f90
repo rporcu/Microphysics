@@ -3,7 +3,7 @@ module source_w_g_module
    use bc, only: bc_hw_g, bc_ww_g
    use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
    use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
-   use param1, only: zero, half, one, undefined
+   use param1, only: zero, half, one, undefined, is_undefined
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -466,7 +466,7 @@ module source_w_g_module
                         A_M(I,J,K,0) = -ONE
                         B_M(I,J,K) = ZERO
                         if (1.eq.flag(ieast(i,j,k),j,k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,E) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_WW_G(L)
@@ -476,7 +476,7 @@ module source_w_g_module
                                  B_M(I,J,K) = -BC_HW_G(L)*BC_WW_G(L)
                            ENDIF
                         else if (1.eq.flag(iwest(i,j,k),j,k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,W) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_WW_G(L)
@@ -486,7 +486,7 @@ module source_w_g_module
                                  B_M(I,J,K) = -BC_HW_G(L)*BC_WW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,N) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_WW_G(L)
@@ -496,7 +496,7 @@ module source_w_g_module
                               B_M(I,J,K) = -BC_HW_G(L)*BC_WW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
-                           IF (BC_HW_G(L) == UNDEFINED) THEN
+                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_M(I,J,K,S) = -HALF
                               A_M(I,J,K,0) = -HALF
                               B_M(I,J,K) = -BC_WW_G(L)

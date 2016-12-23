@@ -1,3 +1,13 @@
+MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
+
+   use check_bc_dem_module, only: check_bc_dem
+   use check_bc_inflow_module, only: check_bc_inflow, check_bc_mass_inflow, check_bc_p_inflow
+   use check_bc_outflow_module, only: check_bc_outflow, check_bc_mass_outflow, check_bc_p_outflow
+
+! Parameter constants
+   use param1, only: ZERO, ONE, UNDEFINED, IS_DEFINED, IS_UNDEFINED
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_BOUNDARY_CONDITIONS                               !
@@ -32,8 +42,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Parameter constants
-      use param1, only: ZERO, ONE, UNDEFINED
 ! Maximum number of BCs
       use param, only: DIMENSION_BC
 ! Maximum number of disperse phases
@@ -72,7 +80,7 @@
             SKIP=(BC_ROP_S(BCV,:)==UNDEFINED.OR.BC_ROP_S(BCV,:)==ZERO) &
                .AND.(BC_EP_S(BCV,:)==UNDEFINED.OR.BC_EP_S(BCV,:)==ZERO)
 
-            IF(MMAX == 1 .AND. BC_EP_g(BCV)/=ONE) SKIP(1) = .FALSE.
+            IF(MMAX == 1 .AND. ABS(BC_EP_g(BCV)+ONE) < EPSILON(ZERO)) SKIP(1) = .FALSE.
 
             SELECT CASE (TRIM(BC_TYPE(BCV)))
 
@@ -156,8 +164,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Parameter constant for unspecified values.
-      use param1, only: UNDEFINED
 ! Maximum number of disperse phases.
       use param, only: DIM_M
 ! Maximum number of species gas/solids
@@ -189,33 +195,33 @@
 
 
 ! Check gas phase variables.
-      IF(BC_U_G(BCV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(BC_U_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_U_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
-      IF(BC_V_G(BCV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(BC_V_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_V_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
-      IF (BC_W_G(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_W_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_W_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
-      IF (BC_EP_G(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_EP_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_EP_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
-      IF (BC_P_G(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_P_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_P_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
-      IF (BC_T_G(BCV) /= UNDEFINED) THEN
+      IF (IS_DEFINED(BC_T_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_T_g',BCV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       DO N = 1, DIMENSION_N_G
-         IF(BC_X_G(BCV,N) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_X_G(BCV,N))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_X_g',BCV,N))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -223,34 +229,34 @@
 
 ! Check solids phase variables.
       DO M = 1, DIM_M
-         IF(BC_ROP_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_ROP_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_ROP_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(BC_EP_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_EP_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_EP_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(BC_U_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_U_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_U_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(BC_V_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_V_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_V_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(BC_W_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_W_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_W_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
-         IF(BC_T_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_T_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_T_s',BCV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          DO N = 1, DIMENSION_N_S
-            IF(BC_X_S(BCV,M,N) /= UNDEFINED) THEN
+            IF(IS_DEFINED(BC_X_S(BCV,M,N))) THEN
                WRITE(ERR_MSG,1100) trim(iVar('BC_X_s',BCV,M,N))
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
@@ -269,3 +275,4 @@
       END SUBROUTINE CHECK_BC_RANGE
 
    END SUBROUTINE CHECK_BOUNDARY_CONDITIONS
+END MODULE CHECK_BOUNDARY_CONDITIONS_MODULE

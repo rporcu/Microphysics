@@ -8,7 +8,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       use bc, only: bc_area, bc_u_g, bc_v_g, bc_w_g
       use exit_mod, only: mfix_exit
       use param, only: DIM_M
-      use param1, only: UNDEFINED, ZERO, ONE
+      use param1, only: UNDEFINED, ZERO, ONE, IS_DEFINED, IS_UNDEFINED
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       use toleranc, only: compare
 
@@ -59,23 +59,23 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       CALL INIT_ERR_MSG("FLOW_TO_VEL_NEW")
 
 ! Mass flows rates are converted to volumetric flow rates.
-      IF(BC_MASSFLOW_G(BCV) /= UNDEFINED) &
+      IF(IS_DEFINED(BC_MASSFLOW_G(BCV))) &
          CALL GAS_MASSFLOW_TO_VOLFLOW(BCV)
 
       DO M=1,M_TOT
-         IF(BC_MASSFLOW_S(BCV,M) /= UNDEFINED) &
+         IF(IS_DEFINED(BC_MASSFLOW_S(BCV,M))) &
             CALL SOLIDS_MASSFLOW_TO_VOLFLOW(BCV,M,SKIP(M))
       ENDDO
 
 ! Volumetric flow rates are converted to velocities.
-      IF(BC_VOLFLOW_G(BCV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(BC_VOLFLOW_G(BCV))) THEN
          CALL GAS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK, BCV)
 ! Set the conversion flag.
          CONVERTED = .TRUE.
       ENDIF
 
       DO M=1,M_TOT
-         IF(BC_VOLFLOW_S(BCV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(BC_VOLFLOW_S(BCV,M))) THEN
             CALL SOLIDS_VOLFLOW_TO_VELOCITY(DO_VEL_CHECK,BCV,M,SKIP(M))
 ! Set the conversion flag.
             CONVERTED = .TRUE.
@@ -116,7 +116,6 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       use bc, only: BC_VOLFLOW_g
       use eos, only: EOSG
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      use param1   , only: zero, undefined
       use fld_const, only: mw_avg, ro_g0
       use scales   , only: P_REF
 
@@ -136,11 +135,11 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          VOLFLOW = ZERO
 
 ! Incompressible gas BC.
-      ELSEIF(RO_G0 /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(RO_G0)) THEN
          VOLFLOW = BC_MASSFLOW_G(BCV)/RO_G0
 
 ! Well-defined compresible gas BC.
-      ELSEIF(BC_P_G(BCV)/=UNDEFINED .AND. BC_T_G(BCV)/=UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(BC_P_G(BCV)) .AND. IS_DEFINED(BC_T_G(BCV))) THEN
          MW = mw_avg
          VOLFLOW = BC_MASSFLOW_G(BCV) / &
             EOSG(MW,(BC_P_G(BCV)-P_REF),BC_T_G(BCV))
@@ -157,7 +156,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       ENDIF
 
 ! Check that a specified volumetric flow matches the calculated value.
-      IF(BC_VOLFLOW_G(BCV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(BC_VOLFLOW_G(BCV))) THEN
          IF(.NOT.COMPARE(VOLFLOW,BC_VOLFLOW_G(BCV))) THEN
             WRITE(ERR_MSG,1101) trim(iVar('BC_MASSFLOW_g',BCV)), BCV,  &
                VOLFLOW, BC_VOLFLOW_g(BCV)
@@ -196,7 +195,6 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 
       USE bc, only: BC_MASSFLOW_s
       USE bc, only: BC_VOLFLOW_s
-      USE param1, only: UNDEFINED
       USE constant, only: RO_s0
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
@@ -225,7 +223,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       VOLFLOW = BC_MASSFLOW_S(BCV,M)/RO_S0(M)
 
 ! If volumetric flow is also specified compare both
-      IF(BC_VOLFLOW_S(BCV,M) /= UNDEFINED) THEN
+      IF(IS_DEFINED(BC_VOLFLOW_S(BCV,M))) THEN
          IF(.NOT.COMPARE(VOLFLOW,BC_VOLFLOW_S(BCV,M))) THEN
             WRITE(ERR_MSG,1101) trim(iVar('BC_MASSFLOW_S',BCV,M)), BCV, &
                VOLFLOW, BC_VOLFLOW_S(BCV,M)
@@ -307,7 +305,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 ! calculated value. otherwise do nothing.
       IF(BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV)== 'E') THEN
 
-         IF(BC_U_G(BCV) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_U_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_U_G(BCV))) THEN
                WRITE(ERR_MSG,1100) BCV, VEL, 'BC_U_g', BC_U_G(BCV)
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -319,7 +317,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          ENDIF
 
       ELSEIF(BC_PLANE(BCV) == 'S' .OR. BC_PLANE(BCV)== 'N') THEN
-         IF(BC_V_G(BCV) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_V_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_V_G(BCV))) THEN
                WRITE(ERR_MSG, 1100) BCV, VEL, 'BC_V_g', BC_V_G(BCV)
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -331,7 +329,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          ENDIF
 
       ELSEIF(BC_PLANE(BCV) == 'B' .OR. BC_PLANE(BCV)== 'T') THEN
-         IF(BC_W_G(BCV) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_W_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL, BC_W_G(BCV))) THEN
                WRITE(ERR_MSG, 1100) BCV, VEL, 'BC_W_g', BC_W_G(BCV)
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -415,10 +413,10 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       CASE ('B'); SGN = -SGN
       END SELECT
 
-      IF(BC_EP_S(BCV,M) /= ZERO) THEN
+      IF(ABS(BC_EP_S(BCV,M)) > ZERO) THEN
          VEL = SGN * BC_VOLFLOW_S(BCV,M)/(BC_AREA(BCV)*BC_EP_S(BCV,M))
       ELSE
-         IF(BC_VOLFLOW_S(BCV,M) == ZERO) THEN
+         IF(ABS(BC_VOLFLOW_S(BCV,M)) > ZERO) THEN
             VEL = ZERO
          ELSE
             IF(DMP_LOG)WRITE (UNIT_LOG, 1101) BCV, M
@@ -430,7 +428,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          'specified with BC_ROP_s', I1,' = 0.')
 
       IF(BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV)== 'E') THEN
-         IF(BC_U_S(BCV,M) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_U_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL, BC_U_S(BCV,M))) THEN
               WRITE(ERR_MSG, 1300) BCV, (-VEL), 'BC_U_s', M, BC_U_S(BCV,M)
               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -442,7 +440,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          ENDIF
 
       ELSEIF(BC_PLANE(BCV) == 'S' .OR. BC_PLANE(BCV)== 'N') THEN
-         IF(BC_V_S(BCV,M) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_V_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_V_S(BCV,M))) THEN
                WRITE(ERR_MSG,1300) BCV, VEL, 'BC_V_s', M, BC_V_S(BCV,M)
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -454,7 +452,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
          ENDIF
 
       ELSEIF(BC_PLANE(BCV) == 'B' .OR. BC_PLANE(BCV)== 'T') THEN
-         IF(BC_W_S(BCV,M) /= UNDEFINED .AND. DO_VEL_CHECK) THEN
+         IF(IS_DEFINED(BC_W_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_W_S(BCV,M))) THEN
                WRITE(ERR_MSG, 1300) BCV, VEL, 'BC_W_s', M, BC_W_S(BCV,M)
                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)

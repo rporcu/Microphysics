@@ -24,4 +24,36 @@
       DOUBLE PRECISION, PARAMETER :: HALF = 0.5d0
       DOUBLE PRECISION, PARAMETER :: ONE  = 1.0d0
 
+      interface is_defined
+         module procedure is_defined_db
+         module procedure is_defined_i
+      end interface is_defined
+
+      interface is_undefined
+         module procedure is_undefined_db
+         module procedure is_undefined_i
+      end interface is_undefined
+
+   CONTAINS
+
+      PURE LOGICAL FUNCTION IS_DEFINED_DB(x)
+         DOUBLE PRECISION, INTENT(IN) :: x
+         IS_DEFINED_DB = (x /= UNDEFINED)
+      END FUNCTION IS_DEFINED_DB
+
+      PURE LOGICAL FUNCTION IS_DEFINED_I(x)
+         INTEGER, INTENT(IN) :: x
+         IS_DEFINED_I = (x /= UNDEFINED_I)
+      END FUNCTION IS_DEFINED_I
+
+      PURE LOGICAL FUNCTION IS_UNDEFINED_DB(x)
+         DOUBLE PRECISION, INTENT(IN) :: x
+         IS_UNDEFINED_DB = (x == UNDEFINED)
+      END FUNCTION IS_UNDEFINED_DB
+
+      PURE LOGICAL FUNCTION IS_UNDEFINED_I(x)
+         INTEGER, INTENT(IN) :: x
+         IS_UNDEFINED_I = (x == UNDEFINED_I)
+      END FUNCTION IS_UNDEFINED_I
+
       END MODULE param1

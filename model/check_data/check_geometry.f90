@@ -72,7 +72,7 @@ MODULE CHECK_GEOMETRY_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: UNDEFINED_I
+      use param1, only: IS_UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -98,7 +98,7 @@ MODULE CHECK_GEOMETRY_MODULE
       WIDTH = 3.0d0*(max_diam)
 
 ! Calculate and/or verify the grid in the X-axial direction.
-      IF(DESGRIDSEARCH_IMAX == UNDEFINED_I) THEN
+      IF(IS_UNDEFINED(DESGRIDSEARCH_IMAX)) THEN
          DESGRIDSEARCH_IMAX = max(int(XLENGTH/WIDTH), 1)
       ELSEIF((XLENGTH/dble(DESGRIDSEARCH_IMAX)) < MAX_DIAM) THEN
          WRITE(ERR_MSG, 1100) 'X', MAX_DIAM,                           &
@@ -107,7 +107,7 @@ MODULE CHECK_GEOMETRY_MODULE
       ENDIF
 
 ! Calculate and/or verify the grid in the Y-axial direction.
-      IF(DESGRIDSEARCH_JMAX == UNDEFINED_I) THEN
+      IF(IS_UNDEFINED(DESGRIDSEARCH_JMAX)) THEN
          DESGRIDSEARCH_JMAX = max(int(YLENGTH/WIDTH), 1)
       ELSEIF((YLENGTH/dble(DESGRIDSEARCH_JMAX)) < MAX_DIAM) THEN
          WRITE(ERR_MSG, 1100) 'Y', MAX_DIAM,                           &
@@ -116,7 +116,7 @@ MODULE CHECK_GEOMETRY_MODULE
       ENDIF
 
 ! Calculate and/or verify the grid in the Z-axial direction.
-      IF(DESGRIDSEARCH_KMAX == UNDEFINED_I) THEN
+      IF(IS_UNDEFINED(DESGRIDSEARCH_KMAX)) THEN
          DESGRIDSEARCH_KMAX = max(int(ZLENGTH/WIDTH), 1)
       ELSEIF((ZLENGTH/dble(DESGRIDSEARCH_KMAX)) < MAX_DIAM) THEN
          WRITE(ERR_MSG, 1100) 'Z', MAX_DIAM,                           &

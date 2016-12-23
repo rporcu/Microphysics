@@ -39,7 +39,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use set_domain_module, only: set_domain
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
-      use param1 , only: undefined, zero
+      use param1 , only: zero, is_defined, is_undefined, undefined
       use read_res1_mod, only: read_res1
       use run, only: call_usr, run_type, dem_solids, nstep
       use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev
@@ -299,7 +299,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       END SELECT
 
-      IF (DT_TMP /= UNDEFINED) THEN
+      IF (IS_DEFINED(DT_TMP)) THEN
          DT = MAX(DT_MIN,MIN(DT_MAX,DT))
       ELSE
          DT = DT_TMP
@@ -368,7 +368,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
          f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius,  pinc)
 
-      IF(MU_g0 == UNDEFINED) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
+      IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
 ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0

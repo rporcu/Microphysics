@@ -37,7 +37,7 @@ MODULE WRITE_OUT0_MODULE
       USE machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
       USE output, only: out_dt, res_dt
       USE param, only: dimension_c, dimension_ic, dimension_bc
-      USE param1, only: half, undefined, zero
+      USE param1, only: half, undefined, zero, is_defined
       USE particle_filter, only: des_interp_mean_fields, des_interp_on
       USE constant, only: mmax, ro_s0, d_p0
       USE run, only: description, id_version, call_usr, dem_solids, dt_fac, dt, dt_min, dt_max, run_name, run_type, tstop, time
@@ -97,7 +97,7 @@ MODULE WRITE_OUT0_MODULE
       WRITE (UNIT_OUT, 1110) RUN_NAME
       WRITE (UNIT_OUT, 1120) DESCRIPTION
       WRITE (UNIT_OUT, 1130) UNITS
-      IF (DT /= UNDEFINED) THEN
+      IF (IS_DEFINED(DT)) THEN
          WRITE (UNIT_OUT, 1135) TIME, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC
       ELSE
          WRITE (UNIT_OUT, 1136)
@@ -140,7 +140,7 @@ MODULE WRITE_OUT0_MODULE
                           DISCR_NAME(DISCRETIZE(L)),L=1,9)
 
       DO L = 1, DIMENSION_C
-         IF (C(L) /= UNDEFINED) WRITE (UNIT_OUT, 1190) C_NAME(L), L, C(L)
+         IF (IS_DEFINED(C(L))) WRITE (UNIT_OUT, 1190) C_NAME(L), L, C(L)
       END DO
 
 ! Geometry and Discretization.
@@ -190,9 +190,9 @@ MODULE WRITE_OUT0_MODULE
 !  Gas Section
 !
       WRITE (UNIT_OUT, 1300)
-      IF (RO_G0 /= UNDEFINED) WRITE (UNIT_OUT, 1305) RO_G0
-      IF (MU_G0 /= UNDEFINED) WRITE (UNIT_OUT, 1310) MU_G0
-      IF (MW_AVG /= UNDEFINED) WRITE (UNIT_OUT, 1320) MW_AVG
+      IF (IS_DEFINED(RO_G0)) WRITE (UNIT_OUT, 1305) RO_G0
+      IF (IS_DEFINED(MU_G0)) WRITE (UNIT_OUT, 1310) MU_G0
+      IF (IS_DEFINED(MW_AVG)) WRITE (UNIT_OUT, 1320) MW_AVG
 !
 !  Particle Section
 
@@ -305,7 +305,7 @@ MODULE WRITE_OUT0_MODULE
             WRITE (UNIT_OUT, 1530) IC_I_W(L), IC_I_E(L), IC_J_S(L), IC_J_N(L), &
                IC_K_B(L), IC_K_T(L)
             WRITE (UNIT_OUT, 1540) IC_EP_G(L)
-            IF (IC_P_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1541) IC_P_G(L)
+            IF (IS_DEFINED(IC_P_G(L))) WRITE (UNIT_OUT, 1541) IC_P_G(L)
 !
             WRITE (UNIT_OUT, 1550) IC_U_G(L), IC_V_G(L), IC_W_G(L)
             DO M = 1, MMAX_TOT
@@ -357,31 +357,31 @@ MODULE WRITE_OUT0_MODULE
             ENDIF
             WRITE (UNIT_OUT,1635)  BC_AREA(L)
 
-            IF (BC_EP_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1640) BC_EP_G(L)
-            IF (BC_P_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1641) BC_P_G(L)
-            IF (BC_T_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1642) BC_T_G(L)
-            IF (BC_MASSFLOW_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1648) &
+            IF (IS_DEFINED(BC_EP_G(L))) WRITE (UNIT_OUT, 1640) BC_EP_G(L)
+            IF (IS_DEFINED(BC_P_G(L))) WRITE (UNIT_OUT, 1641) BC_P_G(L)
+            IF (IS_DEFINED(BC_T_G(L))) WRITE (UNIT_OUT, 1642) BC_T_G(L)
+            IF (IS_DEFINED(BC_MASSFLOW_G(L))) WRITE (UNIT_OUT, 1648) &
                BC_MASSFLOW_G(L)
-            IF (BC_VOLFLOW_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1649) &
+            IF (IS_DEFINED(BC_VOLFLOW_G(L))) WRITE (UNIT_OUT, 1649) &
                BC_VOLFLOW_G(L)
-            IF (BC_U_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1650) BC_U_G(L)
-            IF (BC_V_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1651) BC_V_G(L)
-            IF (BC_W_G(L) /= UNDEFINED) WRITE (UNIT_OUT, 1652) BC_W_G(L)
+            IF (IS_DEFINED(BC_U_G(L))) WRITE (UNIT_OUT, 1650) BC_U_G(L)
+            IF (IS_DEFINED(BC_V_G(L))) WRITE (UNIT_OUT, 1651) BC_V_G(L)
+            IF (IS_DEFINED(BC_W_G(L))) WRITE (UNIT_OUT, 1652) BC_W_G(L)
             DO M = 1, MMAX_TOT
-               IF (BC_ROP_S(L,M) /= UNDEFINED) THEN
+               IF (IS_DEFINED(BC_ROP_S(L,M))) THEN
                   WRITE (UNIT_OUT, "(' ')")
                   WRITE (UNIT_OUT, 1660) M, BC_ROP_S(L,M)
                ENDIF
             END DO
             DO M = 1, MMAX_TOT
                WRITE (UNIT_OUT, "(' ')")
-               IF (BC_MASSFLOW_S(L,M) /= UNDEFINED) WRITE (UNIT_OUT, 1668) M, &
+               IF (IS_DEFINED(BC_MASSFLOW_S(L,M))) WRITE (UNIT_OUT, 1668) M, &
                   BC_MASSFLOW_S(L,M)
-               IF (BC_VOLFLOW_S(L,M) /= UNDEFINED) WRITE (UNIT_OUT, 1669) M, &
+               IF (IS_DEFINED(BC_VOLFLOW_S(L,M))) WRITE (UNIT_OUT, 1669) M, &
                   BC_VOLFLOW_S(L,M)
-               IF(BC_U_S(L,M)/=UNDEFINED)WRITE(UNIT_OUT,1670)M,BC_U_S(L,M)
-               IF(BC_V_S(L,M)/=UNDEFINED)WRITE(UNIT_OUT,1671)M,BC_V_S(L,M)
-               IF(BC_W_S(L,M)/=UNDEFINED)WRITE(UNIT_OUT,1672)M,BC_W_S(L,M)
+               IF(IS_DEFINED(BC_U_S(L,M))) WRITE(UNIT_OUT,1670)M,BC_U_S(L,M)
+               IF(IS_DEFINED(BC_V_S(L,M))) WRITE(UNIT_OUT,1671)M,BC_V_S(L,M)
+               IF(IS_DEFINED(BC_W_S(L,M))) WRITE(UNIT_OUT,1672)M,BC_W_S(L,M)
             END DO
             IF (BC_TYPE(L) == 'PAR_SLIP_WALL') THEN
                WRITE (UNIT_OUT, 1675) BC_HW_G(L), BC_UW_G(L), BC_VW_G(L), &

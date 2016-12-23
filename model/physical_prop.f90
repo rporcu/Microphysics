@@ -31,7 +31,7 @@ MODULE PHYSICAL_PROP_MODULE
       SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
 
       use funits, only: unit_log
-      use param1, only: undefined, zero
+      use param1, only: is_undefined, zero
 
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE compar, only: myPE, PE_IO, numPEs
@@ -73,7 +73,7 @@ MODULE PHYSICAL_PROP_MODULE
 ! Calculate density only. This is invoked several times within iterate,
 ! making it the most frequently called.
       if(LEVEL == 0) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
+         if(IS_UNDEFINED(RO_G0)) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
 
 ! Calculate everything except density. This is called at the start of
 ! each iteration.
@@ -83,7 +83,7 @@ MODULE PHYSICAL_PROP_MODULE
 ! the initialization (before starting the time march) and at the start
 ! of each step step thereafter.
       elseif(LEVEL == 2) then
-         if(RO_G0 == UNDEFINED) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
+         if(IS_UNDEFINED(RO_G0)) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
       endif
 
 

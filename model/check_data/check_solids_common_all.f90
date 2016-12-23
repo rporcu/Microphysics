@@ -1,3 +1,6 @@
+MODULE CHECK_SOLIDS_COMMON_ALL_MODULE
+   use param1, only: is_undefined, is_defined
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_SOLIDS_COMMON_ALL                                 !
@@ -30,7 +33,7 @@
 ! Maximum number of solids phases.
       use param, only: DIM_M
 ! Parameter constants
-      use param1, only: UNDEFINED, ZERO
+      use param1, only: ZERO
 
 
 ! Global Module procedures:
@@ -57,7 +60,7 @@
 
 ! Check D_p0
       DO M = 1, MMAX_L
-         IF(D_P0(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(D_P0(M))) THEN
             WRITE(ERR_MSG, 1000) trim(iVar('D_p0',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ELSEIF(D_P0(M) <= ZERO)THEN
@@ -67,7 +70,7 @@
       ENDDO
 
       DO M = MMAX_L+1, DIM_M
-         IF(D_P0(M) /= UNDEFINED)THEN
+         IF(IS_DEFINED(D_P0(M)))THEN
             WRITE(ERR_MSG,1002) trim(iVar('D_p0',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -190,7 +193,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: UNDEFINED
 ! Maximum number of solids phases.
       use param, only: DIM_M
 
@@ -222,7 +224,7 @@
       DO M = 1, MMAX_LL
 
 ! Verify that one -and only one- solids density model is in use.
-         IF(RO_S0(M) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(RO_S0(M))) THEN
             WRITE(ERR_MSG, 1100) M
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
 
@@ -235,7 +237,7 @@
 
 ! Check for input overflow.
       DO M = MMAX_LL+1, DIM_M
-         IF(RO_S0(M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(RO_S0(M))) THEN
             WRITE(ERR_MSG,1002) trim(iVar('RO_s0',M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -250,3 +252,4 @@
          'Please correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_SOLIDS_DENSITY
+END MODULE CHECK_SOLIDS_COMMON_ALL_MODULE

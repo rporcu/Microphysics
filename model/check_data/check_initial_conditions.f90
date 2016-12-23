@@ -1,3 +1,9 @@
+MODULE CHECK_INITIAL_CONDITIONS_MODULE
+
+! Parameter constants
+      use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO, ONE
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_INITIAL_CONDITIONS                                !
@@ -105,8 +111,6 @@
 !---------------------------------------------------------------------//
 ! The max number of ICs.
       use param, only: DIMENSION_IC
-! Parameter constants
-      use param1, only: UNDEFINED, UNDEFINED_I
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -132,18 +136,18 @@
       DO ICV = 1, DIMENSION_IC
 
          IC_DEFINED(ICV) = .FALSE.
-         IF (IC_X_W(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_X_E(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_Y_S(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_Y_N(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_Z_B(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_Z_T(ICV) /= UNDEFINED)   IC_DEFINED(ICV) = .TRUE.
-         IF (IC_I_W(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
-         IF (IC_I_E(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
-         IF (IC_J_S(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
-         IF (IC_J_N(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
-         IF (IC_K_B(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
-         IF (IC_K_T(ICV) /= UNDEFINED_I) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_X_W(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_X_E(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_Y_S(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_Y_N(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_Z_B(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_Z_T(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_I_W(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_I_E(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_J_S(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_J_N(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_K_B(ICV))) IC_DEFINED(ICV) = .TRUE.
+         IF (IS_DEFINED(IC_K_T(ICV))) IC_DEFINED(ICV) = .TRUE.
 
 ! An IC is defined for restart runs only if it is a 'PATCH'.
          IF(RUN_TYPE /= 'NEW' .AND. IC_TYPE(ICV) /= 'PATCH') &
@@ -157,32 +161,32 @@
 
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
-         IF (IC_X_W(ICV)==UNDEFINED .AND. IC_I_W(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_X_W(ICV)) .AND. IS_UNDEFINED(IC_I_W(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_X_w and IC_I_w'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_X_E(ICV)==UNDEFINED .AND. IC_I_E(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_X_E(ICV)) .AND. IS_UNDEFINED(IC_I_E(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_X_e and IC_I_e'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_Y_S(ICV)==UNDEFINED .AND. IC_J_S(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_Y_S(ICV)) .AND. IS_UNDEFINED(IC_J_S(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_Y_s and IC_J_s'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_Y_N(ICV)==UNDEFINED .AND. IC_J_N(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_Y_N(ICV)) .AND. IS_UNDEFINED(IC_J_N(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_Y_n and IC_J_n'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_Z_B(ICV)==UNDEFINED .AND. IC_K_B(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_Z_B(ICV)) .AND. IS_UNDEFINED(IC_K_B(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_Z_b and IC_K_b'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_Z_T(ICV)==UNDEFINED .AND. IC_K_T(ICV)==UNDEFINED_I) THEN
+         IF (IS_UNDEFINED(IC_Z_T(ICV)) .AND. IS_UNDEFINED(IC_K_T(ICV))) THEN
             WRITE(ERR_MSG, 1100) ICV, 'IC_Z_t and IC_K_t'
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -199,7 +203,7 @@
 ! Skip this check if the IC region is not specified.
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
-         IF (IC_X_W(ICV)/=UNDEFINED .AND. IC_X_E(ICV)/=UNDEFINED) THEN
+         IF (IS_DEFINED(IC_X_W(ICV)).AND. IS_DEFINED(IC_X_E(ICV))) THEN
             CALL CALC_CELL (IC_X_W(ICV), DX, IMAX, I_W)
             I_W = I_W + 1
             CALL CALC_CELL (IC_X_E(ICV), DX, IMAX, I_E)
@@ -231,7 +235,7 @@
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF (IC_Y_S(ICV)/=UNDEFINED .AND. IC_Y_N(ICV)/=UNDEFINED) THEN
+         IF (IS_DEFINED(IC_Y_S(ICV)) .AND. IS_DEFINED(IC_Y_N(ICV))) THEN
             CALL CALC_CELL (IC_Y_S(ICV), DY, JMAX, J_S)
             J_S = J_S + 1
             CALL CALC_CELL (IC_Y_N(ICV), DY, JMAX, J_N)
@@ -262,7 +266,7 @@
          ENDIF
 
 
-         IF (IC_Z_B(ICV)/=UNDEFINED .AND. IC_Z_T(ICV)/=UNDEFINED) THEN
+         IF (IS_DEFINED(IC_Z_B(ICV)) .AND. IS_DEFINED(IC_Z_T(ICV))) THEN
             CALL CALC_CELL (IC_Z_B(ICV), DZ, KMAX, K_B)
             K_B = K_B + 1
             CALL CALC_CELL (IC_Z_T(ICV), DZ, KMAX, K_T)
@@ -326,11 +330,6 @@
 ! Specified constant gas density and viscosity.
       use fld_const, only: ro_g0
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Parameter constants
-      use param1, only: ZERO, UNDEFINED
-
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
@@ -355,17 +354,17 @@
 
 ! Check that gas phase velocity components are initialized.
       IF(BASIC_IC) THEN
-         IF(IC_U_G(ICV) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(IC_U_G(ICV))) THEN
             WRITE(ERR_MSG, 1000) trim(iVar('IC_U_g',ICV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(IC_V_G(ICV) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(IC_V_G(ICV))) THEN
             WRITE(ERR_MSG, 1000) trim(iVar('IC_V_g',ICV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
-         IF(IC_W_G(ICV) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(IC_W_G(ICV))) THEN
             WRITE(ERR_MSG, 1000) trim(iVar('IC_W_g',ICV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -374,15 +373,15 @@
 ! Check that gas phase void fraction is initialized. Patched ICs may
 ! have an undefined volume fration. A second check is preformed on
 ! the solids.
-      IF(IC_EP_G(ICV) == UNDEFINED .AND. BASIC_IC) THEN
+      IF(IS_UNDEFINED(IC_EP_G(ICV)) .AND. BASIC_IC) THEN
          WRITE(ERR_MSG, 1000) trim(iVar('IC_EP_g',ICV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
 ! Check that if the gas phase pressure is initialized and the gas is
 ! compressible that the gas phase pressure is not zero or negative
-      IF(IC_P_G(ICV) /= UNDEFINED) THEN
-         IF(RO_G0==UNDEFINED .AND. IC_P_G(ICV)<=ZERO) THEN
+      IF(IS_DEFINED(IC_P_G(ICV))) THEN
+         IF(IS_UNDEFINED(RO_G0).AND. IC_P_G(ICV)<=ZERO) THEN
             WRITE(ERR_MSG, 1100) trim(iVar('IC_P_g',ICV)),             &
                iVal(IC_P_G(ICV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -435,8 +434,6 @@
 !---------------------------------------------------------------------//
 ! Maximum number of solids species.
       use param, only: DIM_M
-! Parameter constants
-      use param1, only: ZERO, ONE, UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -469,18 +466,18 @@
       BASIC_IC = (IC_TYPE(ICV) /= 'PATCH')
 
 ! Calculate EP_s from EP_g if there is only one solids phase.
-      IF(MMAX == 1 .AND. IC_EP_S(ICV,1) == UNDEFINED) THEN
-         IF(IC_EP_g(ICV) /= UNDEFINED) IC_EP_S(ICV,1) = ONE-IC_EP_g(ICV)
+      IF(MMAX == 1 .AND. IS_DEFINED(IC_EP_S(ICV,1))) THEN
+         IF(IS_DEFINED(IC_EP_g(ICV))) IC_EP_S(ICV,1) = ONE-IC_EP_g(ICV)
       ENDIF
 
 ! Bulk density or solids volume fraction must be explicitly defined
 ! if there are more than one solids phase.
       IF(MMAX > 1 .AND. .NOT.COMPARE(IC_EP_g(ICV),ONE)) THEN
 ! IC_EP_g may be undefined for PATCH IC regions.
-         IF(IC_EP_g(ICV) /= UNDEFINED) THEN
+         IF(IS_DEFINED(IC_EP_g(ICV))) THEN
             DO M = 1, MMAX
-               IF(IC_ROP_S(ICV,M) == UNDEFINED .AND. &
-                  IC_EP_S(ICV,M) == UNDEFINED) THEN
+               IF(IS_DEFINED(IC_ROP_S(ICV,M)) .AND. &
+                  IS_DEFINED(IC_EP_S(ICV,M))) THEN
                   WRITE(ERR_MSG, 1400) M, ICV, 'IC_ROP_s and IC_EP_s'
                   CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
                ENDIF
@@ -489,8 +486,8 @@
 ! If IC_EP_G is undefined, then ROP_s and EP_s should be too.
          ELSE
             DO M = 1, MMAX
-               IF(IC_ROP_S(ICV,M) /= UNDEFINED .AND. &
-                  IC_EP_S(ICV,M) /= UNDEFINED) THEN
+               IF(IS_DEFINED(IC_ROP_S(ICV,M)) .AND. &
+                  IS_DEFINED(IC_EP_S(ICV,M))) THEN
                   WRITE(ERR_MSG, 1400) M, ICV, 'IC_ROP_s and IC_EP_s'
                   CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
                ENDIF
@@ -504,17 +501,17 @@
 
 ! Determine which solids phases are present.
       DO M = 1, MMAX
-         SKIP(M)=(IC_ROP_S(ICV,M)==UNDEFINED.OR.IC_ROP_S(ICV,M)==ZERO) &
-            .AND.(IC_EP_S(ICV,M)==UNDEFINED .OR.IC_EP_S(ICV,M)==ZERO)
+         SKIP(M)=(IS_UNDEFINED(IC_ROP_S(ICV,M)).OR.ABS(IC_ROP_S(ICV,M))<EPSILON(ZERO)) &
+            .AND.(IS_UNDEFINED(IC_EP_S(ICV,M)) .OR.ABS(IC_EP_S(ICV,M))<EPSILON(ZERO))
       ENDDO
 
-      IF(MMAX == 1 .AND. IC_EP_g(ICV)/=ONE) SKIP(1) = .FALSE.
+      IF(MMAX == 1 .AND. ABS(IC_EP_g(ICV)-ONE)>ZERO) SKIP(1) = .FALSE.
 
       DO M=1, MMAX
 
 ! check that solids phase m velocity components are initialized
          IF(BASIC_IC) THEN
-            IF(IC_U_S(ICV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(IC_U_S(ICV,M))) THEN
                IF (SKIP(M)) THEN
                   IC_U_S(ICV,M) = ZERO
                ELSE
@@ -523,7 +520,7 @@
                ENDIF
             ENDIF
 
-            IF(IC_V_S(ICV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(IC_V_S(ICV,M))) THEN
                IF(SKIP(M)) THEN
                   IC_V_S(ICV,M) = ZERO
                ELSE
@@ -532,7 +529,7 @@
                ENDIF
             ENDIF
 
-            IF(IC_W_S(ICV,M) == UNDEFINED) THEN
+            IF(IS_UNDEFINED(IC_W_S(ICV,M))) THEN
                IF(SKIP(M)) THEN
                   IC_W_S(ICV,M) = ZERO
                ELSE
@@ -560,12 +557,12 @@
             IC_ROP_S(ICV,M) = ZERO
 
 ! Leave everything undefined for PATCH ICs that are not specifed.
-         ELSEIF(.NOT.BASIC_IC .AND. (IC_ROP_S(ICV,M) == UNDEFINED      &
-            .AND. IC_EP_S(ICV,M) == UNDEFINED)) THEN
+         ELSEIF(.NOT.BASIC_IC .AND. (IS_UNDEFINED(IC_ROP_S(ICV,M))      &
+            .AND. IS_UNDEFINED(IC_EP_S(ICV,M)))) THEN
 
 ! If both input parameters are defined. Make sure they are equivalent.
-         ELSEIF(IC_ROP_S(ICV,M) /= UNDEFINED .AND.                     &
-            IC_EP_S(ICV,M) /= UNDEFINED) THEN
+         ELSEIF(IS_DEFINED(IC_ROP_S(ICV,M)) .AND.                     &
+            IS_DEFINED(IC_EP_S(ICV,M))) THEN
 
             IF(.NOT.COMPARE(IC_EP_S(ICV,M)*IC_ROs(M),                  &
                IC_ROP_S(ICV,M))) THEN
@@ -603,11 +600,11 @@
 
 
 ! Compute IC_EP_s from IC_ROP_s
-         ELSEIF(IC_EP_S(ICV,M) == UNDEFINED)THEN
+         ELSEIF(IS_UNDEFINED(IC_EP_S(ICV,M)))THEN
             IC_EP_S(ICV,M) = IC_ROP_S(ICV,M) / IC_ROs(M)
 
 ! Compute IC_ROP_s from IC_EP_s and IC_ROs
-         ELSEIF(IC_ROP_S(ICV,M) == UNDEFINED) THEN
+         ELSEIF(IS_UNDEFINED(IC_ROP_S(ICV,M))) THEN
             IC_ROP_S(ICV,M) = IC_EP_S(ICV,M) * IC_ROs(M)
 ! This is a sanity check.
          ELSE
@@ -666,8 +663,6 @@
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Parameter constant
-      use param1, only: UNDEFINED
 ! Maximum number of solids phases
       use param, only: DIM_M
 
@@ -695,16 +690,16 @@
 
 ! GAS PHASE quantities
 ! -------------------------------------------->>>
-      IF(IC_U_G(ICV) /= UNDEFINED) THEN
+      IF(IS_DEFINED(IC_U_G(ICV))) THEN
           WRITE(ERR_MSG, 1010) trim(iVar('IC_U_g',ICV))
           CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(IC_V_G(ICV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(IC_V_G(ICV))) THEN
          WRITE(ERR_MSG, 1010) trim(iVar('IC_V_g',ICV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(IC_W_G(ICV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(IC_W_G(ICV))) THEN
          WRITE(ERR_MSG, 1010) trim(iVar('IC_W_g',ICV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(IC_EP_G(ICV) /= UNDEFINED) THEN
+      ELSEIF(IS_DEFINED(IC_EP_G(ICV))) THEN
          WRITE(ERR_MSG, 1010) trim(iVar('IC_EP_g',ICV))
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
@@ -714,16 +709,16 @@
 ! SOLIDS PHASE quantities
 ! -------------------------------------------->>>
       DO M=1, DIM_M
-         IF(IC_ROP_S(ICV,M) /= UNDEFINED) THEN
+         IF(IS_DEFINED(IC_ROP_S(ICV,M))) THEN
             WRITE(ERR_MSG, 1010) trim(iVar('IC_ROP_s',ICV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_U_S(ICV,M) /= UNDEFINED) THEN
+         ELSEIF(IS_DEFINED(IC_U_S(ICV,M))) THEN
             WRITE(ERR_MSG, 1010) trim(iVar('IC_U_s',ICV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_V_S(ICV,M) /= UNDEFINED) THEN
+         ELSEIF(IS_DEFINED(IC_V_S(ICV,M))) THEN
             WRITE(ERR_MSG, 1010) trim(iVar('IC_V_s',ICV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_W_S(ICV,M) /= UNDEFINED) THEN
+         ELSEIF(IS_DEFINED(IC_W_S(ICV,M))) THEN
             WRITE(ERR_MSG, 1010) trim(iVar('IC_W_s',ICV,M))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -738,3 +733,4 @@
       END SUBROUTINE CHECK_IC_OVERFLOW
 
 END SUBROUTINE CHECK_INITIAL_CONDITIONS
+END MODULE CHECK_INITIAL_CONDITIONS_MODULE

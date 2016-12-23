@@ -62,7 +62,7 @@
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants.
-      use param1, only: UNDEFINED
+      use param1, only: IS_UNDEFINED
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -82,13 +82,13 @@
 
 ! The wall velocities are not needed for no-slip or free-slip
       IF(BC_TYPE(BCV) == 'PAR_SLIP_WALL') THEN
-         IF(BC_UW_G(BCV) == UNDEFINED) THEN
+         IF(IS_UNDEFINED(BC_UW_G(BCV))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('BC_Uw_g',BCV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(BC_VW_G(BCV) == UNDEFINED) THEN
+         ELSEIF(IS_UNDEFINED(BC_VW_G(BCV))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('BC_Vw_g',BCV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(BC_WW_G(BCV) == UNDEFINED) THEN
+         ELSEIF(IS_UNDEFINED(BC_WW_G(BCV))) THEN
             WRITE(ERR_MSG,1000) trim(iVar('BC_Ww_g',BCV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
