@@ -86,6 +86,14 @@
 
       do lcurpar =1,max_pip
 
+         if (neighbor_index(lcurpar) .eq. 0) then
+            if (lcurpar .eq. 1) then
+               neighbor_index(lcurpar) = 1
+            else
+               neighbor_index(lcurpar) = neighbor_index(lcurpar-1)
+            endif
+         endif
+
          if (nonexistent==particle_state(lcurpar) .or.&
             entering_particle==particle_state(lcurpar) .or. &
             entering_ghost==particle_state(lcurpar) .or.  &
@@ -135,7 +143,6 @@
             ltotpic =pinc(li,lj,lk)
             do lpicloc = 1,ltotpic
                lneigh = pic(li,lj,lk)%p(lpicloc)
-
                tmp_neigh(lpicloc) = 0
 ! Only skip real particles otherwise collisions with ghost, entering,
 ! and exiting particles are missed.
