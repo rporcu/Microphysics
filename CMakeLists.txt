@@ -110,7 +110,6 @@ set(F90_sources
   model/des/make_arrays_des.f90
   model/des/mass_inflow_dem.f90
   model/des/mass_outflow_dem.f90
-  model/des/mpi_init_des_mod.f90
   model/des/neighbour.f90
   model/des/particle_filter_mod.f90
   model/des/particles_in_cell.f90

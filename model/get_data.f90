@@ -17,7 +17,6 @@ MODULE GET_DATA_MODULE
       USE get_bc_area_module, only: get_bc_area
       USE gridmap        , only: gridmap_init
       USE init_namelist_module, only: init_namelist
-      USE mpi_init_des   , only: desmpi_init
       USE open_files_mod, only: open_files
       USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
