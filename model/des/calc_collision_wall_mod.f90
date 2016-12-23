@@ -19,7 +19,7 @@
       USE discretelement, only: kn_w, kt_w, mew_w, dtsolid
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE param1, only: small_number, zero
-      USE stl, only: facets_at_dg, vertex, norm_face
+
       USE stl_functions_des, only: closestptpointtriangle
       use discretelement, only: normal_particle
 
@@ -36,9 +36,13 @@
 !                                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state, dg_pijk, &
-            des_radius, &
-            des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft)
+         SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
+            particle_state,  des_radius, des_pos_new, &
+            des_vel_new, omega_new, fc, tow, wall_collision_pft)
+
+      use geometry, only: imax1, jmax1, kmax1
+      use geometry, only: xlength, ylength, zlength
+      use param1, only: zero, one
 
       IMPLICIT NONE
 
@@ -48,7 +52,6 @@
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
       INTEGER :: LL
       INTEGER :: NF
@@ -74,13 +77,54 @@
 ! extended plane detects an overlap
 
       DOUBLE PRECISION :: MAX_DISTSQ
-      INTEGER :: MAX_NF, axis
+      INTEGER :: MAX_NF
       DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
-
+      integer :: i,j,k
+!     Vertex Coordinates X ,Y and Z
+      DOUBLE PRECISION, DIMENSION(3,3,6) :: VERTEX
+!     Face normal vector (normalized)
+      DOUBLE PRECISION, DIMENSION(3,6) :: NORM_FACE
 
 ! Skip this routine if the system is fully periodic.
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
          (DES_PERIODIC_WALLS_Z)) RETURN
+
+
+! West Face
+      VERTEX(1,:,1) = (/ZERO, ZERO, ZERO/)
+      VERTEX(2,:,1) = (/ZERO, 2*YLENGTH, ZERO/)
+      VERTEX(3,:,1) = (/ZERO, ZERO, 2*ZLENGTH/)
+      NORM_FACE(:,1) = (/ONE, ZERO, ZERO/)
+
+! East Face
+      VERTEX(1,:,2) = (/XLENGTH, ZERO, ZERO/)
+      VERTEX(2,:,2) = (/XLENGTH, 2*YLENGTH, ZERO/)
+      VERTEX(3,:,2) = (/XLENGTH, ZERO, 2*ZLENGTH/)
+      NORM_FACE(:,2) = (/-ONE, ZERO, ZERO/)
+
+! South Face
+      VERTEX(1,:,3) = (/ZERO, ZERO, ZERO/)
+      VERTEX(2,:,3) = (/2*XLENGTH, ZERO, ZERO/)
+      VERTEX(3,:,3) = (/ZERO, ZERO, 2*ZLENGTH/)
+      NORM_FACE(:,3) = (/ZERO, ONE, ZERO/)
+
+! North Face
+      VERTEX(1,:,4) = (/ZERO, YLENGTH, ZERO/)
+      VERTEX(2,:,4) = (/2*XLENGTH, YLENGTH, ZERO/)
+      VERTEX(3,:,4) = (/ZERO, YLENGTH, 2*ZLENGTH/)
+      NORM_FACE(:,4) = (/ZERO, -ONE, ZERO/)
+
+! Bottom Face
+      VERTEX(1,:,5) = (/ZERO, ZERO, ZERO/)
+      VERTEX(2,:,5) = (/2*XLENGTH, ZERO, ZERO/)
+      VERTEX(3,:,5) = (/ZERO, 2*YLENGTH, ZERO/)
+      NORM_FACE(:,5) = (/ZERO, ZERO, ONE/)
+
+! Top Face
+      VERTEX(1,:,6) = (/ZERO, ZERO, ZLENGTH/)
+      VERTEX(2,:,6) = (/2*XLENGTH, ZERO, ZLENGTH/)
+      VERTEX(3,:,6) = (/ZERO, 2*YLENGTH, ZLENGTH/)
+      NORM_FACE(:,6) = (/ZERO, ZERO, -ONE/)
 
       DO LL = 1, size(des_radius)
 
@@ -89,10 +133,10 @@
 ! or is already marked as a potential exiting particle
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(LL)) CYCLE
 
-         CELL_ID = DG_PIJK(LL)
-
 ! If no neighboring facet in the surrounding 27 cells, then exit
-         IF(facets_at_dg(CELL_ID)%COUNT < 1) THEN
+         if(i > 2 .and. i<imax1 .and. &
+            j > 2 .and. j<jmax1 .and. &
+            k > 2 .and. k<kmax1) then
             WALL_COLLISION_FACET_ID(:,LL) = -1
             WALL_COLLISION_PFT(:,:,LL) = 0.0d0
             CYCLE
@@ -104,23 +148,41 @@
          particle_max(:) = des_pos_new(LL,:) + des_radius(LL)
          particle_min(:) = des_pos_new(LL,:) - des_radius(LL)
 
-         DO CELL_COUNT = 1, facets_at_dg(cell_id)%count
+         DO NF = 1, 6
 
-            axis = facets_at_dg(cell_id)%dir(cell_count)
+            if(nf==1 .and. i==2) then
+               if(des_pos_new(ll,1) > des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
+            elseif(nf==2 .and. i==imax1) then
+               if(des_pos_new(ll,1) < xlength - des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
+            elseif(nf==3 .and. j==2) then
+               if(des_pos_new(ll,2) > des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
+            elseif(nf==4 .and. j==jmax1) then
+               if(des_pos_new(ll,2) < ylength - des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
 
-            NF = facets_at_dg(cell_id)%id(cell_count)
-
-            if (facets_at_dg(cell_id)%min(cell_count) >    &
-               particle_max(axis)) then
-               call remove_collision(LL, nf, wall_collision_facet_id)
-               cycle
+            elseif(nf==5 .and. k==2) then
+               if(des_pos_new(ll,3) > des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
+            elseif(nf==6 .and. k==kmax1) then
+               if(des_pos_new(ll,3) < zlength - des_radius(LL)) then
+                  wall_collision_PFT(:,nf,LL) = 0.0d0
+                  cycle
+               endif
             endif
 
-            if (facets_at_dg(cell_id)%max(cell_count) <    &
-               particle_min(axis)) then
-               call remove_collision(LL, nf, wall_collision_facet_id)
-               cycle
-            endif
 
 ! Checking all the facets is time consuming due to the expensive
 ! separating axis test. Remove this facet from contention based on
@@ -168,7 +230,7 @@
 ! However, if the orthogonal projection shows no overlap, then
 ! that is a big fat negative and overlaps are not possible.
             if((line_t.le.-1.0001d0*des_radius(LL))) then  ! no overlap
-               call remove_collision(LL,nf,wall_collision_facet_id)
+               wall_collision_PFT(:,nf,LL) = 0.0d0
                CYCLE
             ENDIF
 
@@ -180,7 +242,7 @@
             DISTSQ = DOT_PRODUCT(DIST, DIST)
 
             IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) THEN !No overlap exists
-               call remove_collision(LL,nf,wall_collision_facet_id)
+               wall_collision_PFT(:,nf,LL) = 0.0d0
                CYCLE
             ENDIF
 
@@ -228,8 +290,7 @@
                ETAN_DES_W * V_REL_TRANS_NORM * NORMAL(:))
 
 ! Calculate the tangential displacement.
-            OVERLAP_T(:) = DTSOLID*VREL_T(:) + GET_COLLISION(LL,       &
-               NF, WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT, dg_pijk)
+            OVERLAP_T(:) = DTSOLID*VREL_T(:) + wall_collision_PFT(:,nf,LL)
             MAG_OVERLAP_T = sqrt(DOT_PRODUCT(OVERLAP_T, OVERLAP_T))
 
 ! Check for Coulombs friction law and limit the maximum value of the
@@ -254,9 +315,7 @@
             FTAN = FTAN - ETAT_DES_W*VREL_T(:)
 
 ! Save the tangential displacement.
-            CALL UPDATE_COLLISION(OVERLAP_T, LL, NF,                   &
-               WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT)
-
+            wall_collision_PFT(:,nf,LL) = OVERLAP_T(:)
 ! Add the collision force to the total forces acting on the particle.
             FC(LL,:) = FC(LL,:) + FNORM(:) + FTAN(:)
 
@@ -268,163 +327,6 @@
       ENDDO
 
       RETURN
-
-       contains
-
-!......................................................................!
-!  Function: GET_COLLISION                                             !
-!                                                                      !
-!  Purpose: Return the integrated (t0->t) tangential displacement.     !
-!......................................................................!
-      FUNCTION GET_COLLISION(LLL,FACET_ID,WALL_COLLISION_FACET_ID,     &
-          WALL_COLLISION_PFT, dg_pijk)
-
-      use stl_dbg_des, only: write_this_stl
-
-      IMPLICIT NONE
-
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
-
-      DOUBLE PRECISION :: GET_COLLISION(DIMN)
-      INTEGER, INTENT(IN) :: LLL,FACET_ID
-      INTEGER, INTENT(INOUT) :: WALL_COLLISION_FACET_ID(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: WALL_COLLISION_PFT(:,:,:)
-      INTEGER :: CC, FREE_INDEX, LC, dgIJK
-
-
-      free_index = -1
-
-      do cc = 1, COLLISION_ARRAY_MAX
-         if (facet_id == wall_collision_facet_id(cc,LLL)) then
-            get_collision(:) = wall_collision_PFT(:,cc,LLL)
-            return
-         else if (-1 == wall_collision_facet_id(cc,LLL)) then
-            free_index = cc
-         endif
-      enddo
-
-! Overwrite old data. This is needed because a particle moving from
-! one dg cell to another may no longer 'see' an STL before it moved
-! out of contact range. Therefore, the 'remove_collision' function
-! does not get called to cleanup the stale data.
-      if(-1 == free_index) then
-         dgIJK=DG_PIJK(LLL)
-         cc_lp: do cc=1, COLLISION_ARRAY_MAX
-            do lc=1, facets_at_dg(dgIJK)%count
-               if(wall_collision_facet_id(cc,LLL) == &
-                  facets_at_dg(dgIJK)%id(LC))  cycle cc_lp
-            enddo
-            free_index = cc
-            exit cc_lp
-         enddo cc_lp
-      endif
-
-! Last resort... grow the collision array
-      if(-1 == free_index) then
-         free_index=COLLISION_ARRAY_MAX+1
-         COLLISION_ARRAY_MAX = 2*COLLISION_ARRAY_MAX
-         CALL GROW_WALL_COLLISION(COLLISION_ARRAY_MAX)
-      endif
-
-      wall_collision_facet_id(free_index,LLL) = facet_id
-      wall_collision_PFT(:,free_index,LLL) = ZERO
-      get_collision(:) = wall_collision_PFT(:,free_index,LLL)
-      return
-
-      END FUNCTION GET_COLLISION
-
-
-!......................................................................!
-!  Subroutine: GROW_WALL_COLLISION                                     !
-!                                                                      !
-!  Purpose: Return the integrated (t0->t) tangential displacement.     !
-!......................................................................!
-      SUBROUTINE GROW_WALL_COLLISION(NEW_SIZE)
-
-      use stl_dbg_des, only: write_this_stl
-
-      IMPLICIT NONE
-
-      INTEGER, INTENT(IN) :: NEW_SIZE
-
-
-      write(*,*) 'death in grow_wall_collision'
-      stop 33223
-      ! lSIZE1 = size(wall_collision_facet_id,1)
-      ! lSIZE2 = size(wall_collision_facet_id,2)
-
-      ! allocate(tmpI2(NEW_SIZE, lSIZE2))
-      ! tmpI2(1:lSIZE1,:) = WALL_COLLISION_FACET_ID(1:lSIZE1,:)
-      ! call move_alloc(tmpI2, WALL_COLLISION_FACET_ID)
-      ! WALL_COLLISION_FACET_ID(lSIZE1+1:NEW_SIZE,:) = -1
-
-      ! lSIZE1 = size(wall_collision_pft,1)
-      ! lSIZE2 = size(wall_collision_pft,2)
-      ! lSIZE3 = size(wall_collision_pft,3)
-
-      ! allocate(tmpR3(lSIZE1, NEW_SIZE, lSIZE3))
-      ! tmpR3(:,1:lSIZE2,:) = WALL_COLLISION_PFT(:,1:lSIZE2,:)
-      ! call move_alloc(tmpR3, WALL_COLLISION_PFT)
-
-      RETURN
-      END SUBROUTINE GROW_WALL_COLLISION
-
-
-
-
-!......................................................................!
-!  Function: UPDATE_COLLISION                                          !
-!                                                                      !
-!  Purpose: Update the integrated (t0->t) tangential displacement.     !
-!......................................................................!
-      SUBROUTINE UPDATE_COLLISION(PFT, LLL, FACET_ID,                  &
-         WALL_COLLISION_FACET_ID, WALL_COLLISION_PFT)
-
-      implicit none
-
-      DOUBLE PRECISION, INTENT(IN) :: PFT(DIMN)
-      INTEGER, INTENT(IN) :: LLL,FACET_ID
-      INTEGER, INTENT(IN) :: WALL_COLLISION_FACET_ID(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: WALL_COLLISION_PFT(:,:,:)
-      INTEGER :: CC
-
-      do cc = 1, COLLISION_ARRAY_MAX
-         if (facet_id == wall_collision_facet_id(cc,LLL)) then
-            wall_collision_PFT(:,cc,LLL) = PFT(:)
-            return
-         endif
-      enddo
-
-      CALL INIT_ERR_MSG("CALC_COLLISION_WALL_MOD: UPDATE_COLLISION")
-      WRITE(ERR_MSG, 1100)
-      CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 1100 FORMAT('Error: COLLISION_ARRAY_MAX too small. ')
-
-      END SUBROUTINE UPDATE_COLLISION
-
-!......................................................................!
-!  Function: REMOVE_COLLISION                                          !
-!                                                                      !
-!  Purpose: Clear the integrated (t0->t) tangential displacement once  !
-!  the collision is over (contact ended).                              !
-!......................................................................!
-      SUBROUTINE REMOVE_COLLISION(LLL,FACET_ID,WALL_COLLISION_FACET_ID)
-
-      IMPLICIT NONE
-
-      INTEGER, INTENT(IN) :: LLL,FACET_ID
-      INTEGER, INTENT(INOUT) :: WALL_COLLISION_FACET_ID(:,:)
-      INTEGER :: CC
-
-      DO CC = 1, COLLISION_ARRAY_MAX
-         IF (FACET_ID == WALL_COLLISION_FACET_ID(CC,LLL)) THEN
-            WALL_COLLISION_FACET_ID(CC,LLL) = -1
-            RETURN
-         ENDIF
-      ENDDO
-
-      END SUBROUTINE REMOVE_COLLISION
 
       END SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL
 

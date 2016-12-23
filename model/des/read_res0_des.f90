@@ -6,7 +6,7 @@ MODULE READ_RES0_DES_MODULE
 !  Purpose : Reads either single restart file or multiple restart      !
 !  fles (based on bdist_io) flag.                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_RES0_DES(dg_pijk, dg_pijkprv, iglobal_id, particle_state, &
+      SUBROUTINE READ_RES0_DES(  iglobal_id, particle_state, &
          des_radius, ro_sol, des_usr_var, &
          des_pos_new, des_vel_new, omega_new)
 
@@ -22,8 +22,7 @@ MODULE READ_RES0_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
+      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
 
       INTEGER :: LC1, LC2
       INTEGER :: lDIMN, lNEXT_REC

@@ -12,7 +12,6 @@ MODULE GET_DATA_MODULE
       SUBROUTINE GET_DATA
 
       USE check_geometry_module, only: check_geometry, check_geometry_des
-      USE desgrid        , only: desgrid_init
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area
       USE gridmap        , only: gridmap_init
@@ -26,7 +25,7 @@ MODULE GET_DATA_MODULE
       USE set_geometry_des_module, only: set_geometry_des
       USE set_icbc_flags_module, only: set_icbc_flag
       USE set_max2_module, only: set_max2
-      USE stl_preproc_des, only: DES_STL_PREPROCESSING
+
       USE write_header_module, only: write_header
 
       IMPLICIT NONE

@@ -104,7 +104,6 @@ set(F90_sources
   model/des/drag_gs_des0.f90
   model/des/drag_gs_des1.f90
   model/des/gas_drag.f90
-  model/des/generate_particles_mod.f90
   model/des/interpolation_mod.f90
   model/des/layout_mi_dem.f90
   model/des/make_arrays_des.f90
@@ -117,16 +116,10 @@ set(F90_sources
   model/des/read_particle_input.f90
   model/des/read_res0_des.f90
   model/des/read_res1_des_mod.f90
-  model/des/set_bc_dem.f90
-  model/des/set_bc_dem_mi.f90
-  model/des/set_bc_dem_mo.f90
   model/des/set_filter_des.f90
   model/des/set_geometry_des.f90
   model/des/set_phase_index.f90
-  model/des/stl_dbg_des_mod.f90
   model/des/stl_functions_des_mod.f90
-  model/des/stl_mod.f90
-  model/des/stl_preproc_des_mod.f90
   model/des/vtp_mod.f90
   model/des/write_des_data.f90
   model/des/write_res0_des.f90

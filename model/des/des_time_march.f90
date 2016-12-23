@@ -13,7 +13,7 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+         pijk,   iglobal_id, particle_state, particle_phase, &
          neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
@@ -29,7 +29,6 @@ module des_time_march_module
       use compar, only: istart3, jstart3, kstart3
       use compar, only: numpes
       use des_bc, only: DEM_BCMI, DEM_BCMO
-      use desgrid, only: desgrid_pic
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
       use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
@@ -74,8 +73,7 @@ module des_time_march_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
+      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
@@ -172,7 +170,7 @@ module des_time_march_module
          ENDIF
 
 ! Calculate forces acting on particles (collisions, drag, etc).
-         CALL CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
+         CALL CALC_FORCE_DEM(particle_phase, particle_state,  &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
@@ -190,7 +188,7 @@ module des_time_march_module
          DO_NSEARCH = (NN == 1 .OR. MOD(NN,NEIGHBOR_SEARCH_N) == 0)
 
 ! Add/Remove particles to the system via flow BCs.
-         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, particle_phase, DG_PIJK, &
+         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, particle_phase,  &
             iglobal_id, PARTICLE_STATE, &
             DES_RADIUS, OMOI, PMASS, PVOL, RO_SOL, &
             DES_VEL_NEW, DES_POS_NEW, PPOS, OMEGA_NEW, DRAG_FC)
@@ -199,31 +197,21 @@ module des_time_march_module
             des_radius, omoi, pmass, pvol, ro_sol, &
             des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
 
-! Call exchange particles - this will exchange particle crossing
-! boundaries as well as updates ghost particles information
-         IF (DO_NSEARCH .OR. (numPEs>1) .OR. DES_PERIODIC_WALLS) THEN
-            CALL DESGRID_PIC(.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
-               des_pos_new=des_pos_new, particle_state=particle_state)
-!            CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-!               des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
-         ENDIF
-
-         IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius,&
-            des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
 ! Explicitly coupled simulations do not need to rebin particles to
 ! the fluid grid every time step. However, this implies that the
 ! fluid cell information and interpolation weights become stale.
-         IF(DES_CONTINUUM_COUPLED .AND. &
-            .NOT.DES_EXPLICITLY_COUPLED) THEN
 ! Bin particles to fluid grid.
-            CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
-               des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
+         CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
+            des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 ! Calculate mean fields (EPg).
-            CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
-               particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
-               des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
-         ENDIF
+         CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
+            particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
+            des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+
+         IF(DO_NSEARCH) CALL NEIGHBOUR(pijk, pinc, particle_state, des_radius,&
+            des_pos_new, ppos, neighbor_index, neighbor_index_old)
+
 
 ! Update time to reflect changes
          S_TIME = S_TIME + DTSOLID

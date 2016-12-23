@@ -34,8 +34,7 @@ MODULE set_domain_module
       use get_bc_area_module, only: get_bc_area
       use set_bc_flow_module, only: set_bc_flow
       use set_flags_module, only: set_flags
-      use desgrid        , only: desgrid_init
-      use stl_preproc_des, only: des_stl_preprocessing
+
 
       use param1, only: one, undefined
 
@@ -82,10 +81,6 @@ MODULE set_domain_module
 ! Set the flags for identifying computational cells
       CALL SET_FLAGS(flag)
 
-      IF(DEM_SOLIDS) THEN
-         CALL DESGRID_INIT
-         CALL DES_STL_PREPROCESSING
-      ENDIF
 
       end subroutine set_domain
 end module set_domain_module

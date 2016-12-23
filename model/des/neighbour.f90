@@ -15,7 +15,7 @@ MODULE NEIGHBOUR_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE NEIGHBOUR(dg_pijk, particle_state, des_radius, &
+      SUBROUTINE NEIGHBOUR(pijk, pinc, particle_state, des_radius, &
          des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
       USE discretelement, only: pft_neighbor_old, do_nsearch, max_pip, neighbors_old
@@ -24,18 +24,22 @@ MODULE NEIGHBOUR_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
-      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, ppos
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
+      integer, intent(in) :: pijk(:,:)
+      integer, intent(in) :: pinc(:,:,:)
+      integer, intent(inout) :: particle_state(:)
+      integer, intent(inout) :: neighbor_index(:)
+      integer, intent(inout) :: neighbor_index_old(:)
+
+      double precision, intent(inout) :: des_radius(:)
+      double precision, intent(in   ) :: des_pos_new(:,:)
+      double precision, intent(inout) :: ppos(:,:)
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 
-INTEGER :: cc,ll,cc_start,cc_end,cc_start_old,cc_end_old,cc_old
-LOGICAL :: found
+      INTEGER :: cc,ll,cc_start,cc_end,cc_start_old,cc_end_old,cc_old
+      LOGICAL :: found
 
 !-----------------------------------------------
 ! Reset PPOS and NEIGHBOURS back to initialized values
@@ -49,7 +53,8 @@ LOGICAL :: found
 
       NEIGHBOR_INDEX(:) = 0
 
-      CALL DESGRID_NEIGH_BUILD(des_pos_new, dg_pijk, particle_state, des_radius, neighbor_index)
+      call desgrid_neigh_build(des_pos_new, pijk, pinc, particle_state, &
+         des_radius, neighbor_index)
 
       do ll = 1, max_pip
 

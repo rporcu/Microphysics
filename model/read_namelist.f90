@@ -40,7 +40,7 @@ MODULE read_namelist_module
       USE usr
       USE utilities, ONLY: blank_line, line_too_big, seek_comment
       USE utilities, ONLY: make_upper_case, replace_tab
-      Use stl
+
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE

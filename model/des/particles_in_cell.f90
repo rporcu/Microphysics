@@ -8,7 +8,6 @@ MODULE PARTICLES_IN_CELL_MODULE
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
       USE error_manager, only: init_err_msg, finl_err_msg
-      USE desgrid, only: desgrid_pic
       USE geometry, only: imin2, jmin2, kmin2
       USE geometry, only: imax2, jmax2, kmax2
 
@@ -46,17 +45,20 @@ CONTAINS
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
-                                   des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
+         des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      DOUBLE PRECISION, INTENT(IN) :: des_vel_new(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: des_pos_new(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: des_usr_var(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: des_radius(:)
 
-      INTEGER, DIMENSION(:,:,:), INTENT(INOUT) :: pinc
+      INTEGER, INTENT(OUT) :: particle_state(:)
+      INTEGER, INTENT(OUT) :: iglobal_id(:)
+      INTEGER, INTENT(OUT) :: pijk(:,:)
+
+      INTEGER, INTENT(INOUT) :: pinc(:,:,:)
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -148,12 +150,15 @@ CONTAINS
          PIJK(L,3) = K
 
 ! Increment the number of particles in cell IJK
-         IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
-            .NOT.EXITING_GHOST==PARTICLE_STATE(L)) PINC(i,j,k) = PINC(i,j,k) + 1
+         IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(L) .AND. &
+            .NOT.ENTERING_GHOST==PARTICLE_STATE(L) .AND. &
+            .NOT.EXITING_GHOST==PARTICLE_STATE(L)) &
+            PINC(i,j,k) = PINC(i,j,k) + 1
 
       ENDDO
 
-      CALL CHECK_CELL_MOVEMENT(pijk, particle_state, iglobal_id, des_vel_new, des_pos_new, des_radius, des_usr_var)
+      CALL CHECK_CELL_MOVEMENT(pijk, particle_state, iglobal_id, &
+         des_vel_new, des_pos_new, des_radius, des_usr_var)
 
 ! Assigning the variable PIC(IJK)%p(:). For each computational fluid
 ! cell compare the number of current particles in the cell to what was
@@ -218,7 +223,7 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
+      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state,   &
          des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
 
       IMPLICIT NONE
@@ -226,8 +231,6 @@ CONTAINS
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
       INTEGER, DIMENSION(:,:,:), INTENT(INOUT) :: pinc
@@ -245,12 +248,6 @@ CONTAINS
 ! following quantities are reset every call to particles_in_cell
       PINC(:,:,:) = 0
 
-! Bin the particles to the DES grid.
-      CALL DESGRID_PIC(.TRUE., dg_pijkprv, dg_pijk, particle_state, des_pos_new)
-! Call exchange particles - this will exchange particle crossing
-! boundaries as well as updates ghost particles information
-!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
 ! Assigning PIJK(L,1), PIJK(L,2) and PIJK(L,3) the i, j, k indices
 ! of particle L (locating particle on fluid grid). Also determine
@@ -282,13 +279,6 @@ CONTAINS
             .NOT.EXITING_GHOST==PARTICLE_STATE(L)) PINC(i,j,k) = PINC(i,j,k) + 1
       ENDDO
 
-! Bin the particles to the DES grid.
-      CALL DESGRID_PIC(.TRUE., dg_pijkprv, dg_pijk, particle_state, des_pos_new)
-! Calling exchange particles - this will exchange particle crossing
-! boundaries as well as updates ghost particles information
-! unclear why this needs to be called again.
-!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
       CALL FINL_ERR_MSG
 

@@ -17,7 +17,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 f_gds, A_m, b_m, &
                 drag_am, drag_bm, pinc, &
                 flag, vol_surr,  &
-                pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+                pijk,   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
@@ -45,7 +45,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
-      use set_bc_dem_module, only: set_bc_dem
       use set_constprop_module, only: set_constprop
       use set_flags_module, only: set_flags1
       use set_fluidbed_p_module, only: set_fluidbed_p
@@ -154,8 +153,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer, intent(inout) :: pijk(max_pip,3)
-      integer, intent(inout) :: dg_pijk(max_pip)
-      integer, intent(inout) :: dg_pijkprv(max_pip)
       integer, intent(inout) :: iglobal_id(max_pip)
       integer, intent(inout) :: particle_state(max_pip)
       integer, intent(inout) :: particle_phase(max_pip)
@@ -228,8 +225,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
          NEIGHBOR_INDEX(:) = 0
 
 ! DES grid bin information
-         DG_PIJK(LB:UB) = -1
-         DG_PIJKPRV(LB:UB) = -1
          IGHOST_UPDATED(LB:UB) = .false.
 
 ! Fluid cell bin information
@@ -352,13 +347,10 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         flag, vol_surr, pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+         flag, vol_surr, pijk,   iglobal_id, &
          particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
-
-! Set the inflow/outflow BCs for DEM solids
-      IF(DEM_SOLIDS) CALL SET_BC_DEM(flag)
 
 
 ! ######################## Moved here from time march

@@ -8,7 +8,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, vol_surr, &
-         pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state,&
+         pijk,   iglobal_id, particle_state,&
          particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
@@ -19,13 +19,11 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: numpes, mype
       USE constant, only: pi
-      USE desgrid, only: desgrid_pic
       USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
       USE discretelement, only: gener_part_config, print_des_data, s_time
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1
-      USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE geometry, only: vol
       USE neighbour_module, only: neighbour
       USE param1, only: zero
@@ -35,7 +33,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE run, only: run_type, time
       USE set_filter_des_module, only: set_filter_des
       USE set_phase_index_module, only: set_phase_index
-      USE stl_preproc_des, only: add_facet
+
       USE write_des_data_module, only: write_des_data
 
       IMPLICIT NONE
@@ -59,7 +57,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk, iglobal_id, dg_pijkprv
+      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
@@ -111,22 +109,14 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
 ! Set the initial particle data.
       IF(RUN_TYPE == 'NEW') THEN
-         IF(PARTICLES /= 0) THEN
-            IF(GENER_PART_CONFIG) THEN
-               CALL GENERATE_PARTICLE_CONFIG(flag, pijk, particle_state, particle_phase, &
-                  des_radius, ro_sol, &
-                  des_pos_new, des_vel_new, omega_new)
-
-            ELSE
-               CALL READ_PAR_INPUT(particle_state, des_radius, ro_sol, des_pos_new, des_vel_new)
-            ENDIF
-         ENDIF
+         IF(PARTICLES /= 0) CALL READ_PAR_INPUT(particle_state, &
+            des_radius, ro_sol, des_pos_new, des_vel_new)
 
 ! Set the global ID for the particles and set the ghost cnt
          ighost_cnt = 0
          lpip_all = 0
          lpip_all(mype) = pip
-         ! call global_all_sum(lpip_all)
+! call global_all_sum(lpip_all)
          lglobal_id = sum(lpip_all(0:mype-1))
          imax_global_id = 0
          do lcurpar  = 1,pip
@@ -134,7 +124,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
             iglobal_id(lcurpar) = lglobal_id
             imax_global_id = iglobal_id(pip)
          end do
-         ! call global_all_max(imax_global_id)
+! call global_all_max(imax_global_id)
 
 ! Initialize old values
          omega_new(:,:)   = zero
@@ -142,7 +132,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! Read the restart file.
       ELSEIF(RUN_TYPE == 'RESTART_1' .OR. RUN_TYPE == 'RESTART_2') THEN
 
-         CALL READ_RES0_DES(dg_pijk, dg_pijkprv, iglobal_id, particle_state, &
+         CALL READ_RES0_DES(  iglobal_id, particle_state, &
             des_radius, ro_sol, des_usr_var, &
             des_pos_new, des_vel_new, omega_new)
          imax_global_id = maxval(iglobal_id(1:pip))
@@ -162,29 +152,31 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! have been identified
       DO L = 1, MAX_PIP
 ! Skip 'empty' locations when populating the particle property arrays.
-         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
-         IF(NORMAL_GHOST==PARTICLE_STATE(L) .OR. ENTERING_GHOST==PARTICLE_STATE(L) .OR. EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
-         PVOL(L) = (4.0D0/3.0D0)*PI*DES_RADIUS(L)**3
-         PMASS(L) = PVOL(L)*RO_SOL(L)
-         OMOI(L) = 2.5D0/(PMASS(L)*DES_RADIUS(L)**2) !ONE OVER MOI
+         if(nonexistent==particle_state(l) .or. &
+            normal_ghost==particle_state(l) .or. &
+            entering_ghost==particle_state(l) .or. &
+            exiting_ghost==particle_state(l)) cycle
+         pvol(l) = (4.0d0/3.0d0)*pi*des_radius(l)**3
+         pmass(l) = pvol(l)*ro_sol(l)
+         omoi(l) = 2.5d0/(pmass(l)*des_radius(l)**2) !one over moi
       ENDDO
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
-      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, dg_pijk, dg_pijkprv, &
+      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state,   &
          des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
 ! Bin the particles to the DES grid.
-      CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
-         des_pos_new=des_pos_new, particle_state=particle_state)
-!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+!      CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv= dg_pijk= &
+!         des_pos_new=des_pos_new, particle_state=particle_state)
+!      CALL DES_PAR_EXCHANGE(pijk, particle_state,   &
 !         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
          des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
-      CALL NEIGHBOUR(dg_pijk, particle_state, des_radius, des_pos_new, ppos, &
-         neighbor_index, neighbor_index_old)
+      CALL NEIGHBOUR(pijk, pinc, particle_state, des_radius, des_pos_new, &
+         ppos, neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &

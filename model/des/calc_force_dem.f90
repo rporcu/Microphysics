@@ -11,7 +11,7 @@ MODULE CALC_FORCE_DEM_MODULE
 !           accounting for the wall properties                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state, dg_pijk, &
+      SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state,  &
          des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
@@ -35,7 +35,6 @@ MODULE CALC_FORCE_DEM_MODULE
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
       INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijk
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -81,7 +80,7 @@ MODULE CALC_FORCE_DEM_MODULE
 
 !-----------------------------------------------
 
-      CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state, dg_pijk, &
+      CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
          des_radius(1:MAX_PIP), &
          des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
          omega_new(1:MAX_PIP, :), fc(1:MAX_PIP, :), tow(1:MAX_PIP, :), wall_collision_pft)

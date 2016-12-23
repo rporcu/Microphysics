@@ -24,7 +24,7 @@ contains
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, &
       pinc, flag, vol_surr,  &
-      pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+      pijk,   iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow, wall_collision_pft)  &
@@ -113,8 +113,6 @@ contains
 
 
     integer, intent(inout) :: pijk(max_pip,3)
-    integer, intent(inout) :: dg_pijk(max_pip)
-    integer, intent(inout) :: dg_pijkprv(max_pip)
     integer, intent(inout) :: iglobal_id(max_pip)
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
@@ -148,7 +146,7 @@ contains
               trd_g, lambda_g, mu_g,  &
               f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
               flag, vol_surr, &
-       pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+       pijk,   iglobal_id, &
        particle_state, particle_phase, des_radius,  ro_sol, pvol, pmass, &
        omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
        rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
@@ -167,7 +165,7 @@ contains
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
       flag, vol_surr,  &
-      pijk, dg_pijk, dg_pijkprv, iglobal_id, &
+      pijk,   iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow, wall_collision_pft)  &
@@ -257,8 +255,6 @@ contains
 
 
     integer, intent(inout) :: pijk(max_pip,3)
-    integer, intent(inout) :: dg_pijk(max_pip)
-    integer, intent(inout) :: dg_pijkprv(max_pip)
     integer, intent(inout) :: iglobal_id(max_pip)
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
@@ -290,7 +286,7 @@ contains
        tau_u_g, tau_v_g, tau_w_g,&
        flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
        f_gds, A_m, b_m, drag_am, drag_bm, pinc, flag, vol_surr,  &
-       pijk, dg_pijk, dg_pijkprv, iglobal_id, particle_state, particle_phase, &
+       pijk,   iglobal_id, particle_state, particle_phase, &
        des_radius, ro_sol, pvol, pmass, omoi, &
        ppos, des_pos_new, des_vel_new, des_usr_var, &
        omega_new, des_acc_old, rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
