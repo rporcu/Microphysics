@@ -36,7 +36,6 @@ module des_time_march_module
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
       use mass_inflow_dem_module, only: mass_inflow_dem
-      use mpi_funs_des, only: DES_PAR_EXCHANGE
       use output_manager_module, only: output_manager
       use param1, only: zero
       use run, only: CALL_USR
@@ -205,8 +204,8 @@ module des_time_march_module
          IF (DO_NSEARCH .OR. (numPEs>1) .OR. DES_PERIODIC_WALLS) THEN
             CALL DESGRID_PIC(.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
                des_pos_new=des_pos_new, particle_state=particle_state)
-            CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-               des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+!            CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+!               des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
          ENDIF
 
          IF(DO_NSEARCH) CALL NEIGHBOUR(dg_pijk, particle_state, des_radius,&

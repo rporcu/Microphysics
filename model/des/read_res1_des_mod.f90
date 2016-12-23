@@ -8,8 +8,6 @@
       use exit_mod, only: mfix_exit
       use in_binary_512, only: in_bin_512
       use in_binary_512i, only: in_bin_512i
-      use mpi_comm_des, only: DESMPI_GATHERV
-      use mpi_comm_des, only: DESMPI_SCATTERV
       use run, only: bDist_IO
 
       IMPLICIT NONE
@@ -20,8 +18,6 @@
       PUBLIC :: FINL_READ_RES_DES
 
       PUBLIC :: READ_PAR_POS
-      PUBLIC :: READ_PAR_COL
-
       PUBLIC :: READ_RES_DES
       PUBLIC :: READ_RES_pARRAY
       PUBLIC :: READ_RES_cARRAY
@@ -107,82 +103,43 @@
       allocate(cDISPLS(0:numPEs-1))
 
 
-      IF(bDIST_IO) THEN
+      WRITE(lFNAME,'(A,A)') BASE//'_DES.RES'
+      OPEN(UNIT=RDES_UNIT, FILE=lFNAME,     &
+         FORM='UNFORMATTED', STATUS='UNKNOWN', ACCESS='DIRECT',  &
+         RECL=OPEN_N1)
 
-         WRITE(lFNAME,'(A,I4.4,A)') BASE//'_DES_',myPE,'.RES'
-         OPEN(UNIT=RDES_UNIT, FILE=lFNAME,        &
-            FORM='UNFORMATTED', STATUS='UNKNOWN', ACCESS='DIRECT',     &
-            RECL=OPEN_N1)
+      READ(RDES_UNIT, REC=1) pIN_COUNT
 
-         READ(RDES_UNIT, REC=1) lVERSION
-         READ(RDES_UNIT, REC=2) pIN_COUNT
-         READ(RDES_UNIT, REC=3) iGHOST_CNT
-         READ(RDES_UNIT, REC=4) cIN_COUNT
+      READ(RDES_UNIT, REC=1) lVERSION
+      READ(RDES_UNIT, REC=2) pIN_COUNT
+!     READ(RDES_UNIT, REC=3) -NOTHING-
+      READ(RDES_UNIT, REC=4) cIN_COUNT
 
-         IF(PIP > MAX_PIP) THEN
-            write(*,*) "From des_read_restart:"
-            write(*,*) "Error: The pip is grater than current max_pip"
-            write(*,*) "pip=" ,pip,"; max_pip =", max_pip
 
-         ENDIF
-
-         PIP = pIN_COUNT
-         NEIGH_NUM = cIN_COUNT
-
-         IF (NEIGH_NUM > NEIGH_MAX) THEN
-            STOP 13320
-         ENDIF
-         IF (NEIGH_NUM > MAX_PIP) THEN
-            STOP 13620
-         ENDIF
-
-      ELSE
-
-         IF(myPE == PE_IO) THEN
-            WRITE(lFNAME,'(A,A)') BASE//'_DES.RES'
-            OPEN(UNIT=RDES_UNIT, FILE=lFNAME,     &
-               FORM='UNFORMATTED', STATUS='UNKNOWN', ACCESS='DIRECT',  &
-               RECL=OPEN_N1)
-
-            READ(RDES_UNIT, REC=1) pIN_COUNT
-
-            READ(RDES_UNIT, REC=1) lVERSION
-            READ(RDES_UNIT, REC=2) pIN_COUNT
-!           READ(RDES_UNIT, REC=3) -NOTHING-
-            READ(RDES_UNIT, REC=4) cIN_COUNT
-
-         ELSE
-            pIN_COUNT = 10
-         ENDIF
-
-         IER = 0
+      IER = 0
 
 ! Allocate the particle restart map. This is used in determining were
 ! particle data is sent. Only process zero needs this array.
-         allocate( pRestartMap(pIN_COUNT), STAT=IER)
-         IF(IER/=0) THEN
-            WRITE(ERR_MSG, 1200) 'pRestartMap', trim(iVAL(pIN_COUNT))
-            CALL FLUSH_ERR_MSG
-         ENDIF
-
-         ! !CALL BCAST(lVERSION, PE_IO)
+      allocate( pRestartMap(pIN_COUNT), STAT=IER)
+      IF(IER/=0) THEN
+         WRITE(ERR_MSG, 1200) 'pRestartMap', trim(iVAL(pIN_COUNT))
+         CALL FLUSH_ERR_MSG
+      ENDIF
 
 ! Allocate the collision restart map array. All ranks allocatet this
 ! array so that mapping the collision data can be done in parallel.
-         ! !CALL BCAST(cIN_COUNT, PE_IO)
-         allocate( cRestartMap(cIN_COUNT), STAT=IER)
-         IF(IER/=0) THEN
-            WRITE(ERR_MSG, 1200) 'cRestartMap', trim(iVAL(cIN_COUNT))
-            CALL FLUSH_ERR_MSG
-         ENDIF
+      allocate( cRestartMap(cIN_COUNT), STAT=IER)
+      IF(IER/=0) THEN
+         WRITE(ERR_MSG, 1200) 'cRestartMap', trim(iVAL(cIN_COUNT))
+         CALL FLUSH_ERR_MSG
+      ENDIF
 
  1200 FORMAT('Error 1200: Unable to allocate sufficient memory to ',&
          'read in DES',/'restart file. size(',A,') = ',A)
 
-         ! CALL GLOBAL_ALL_SUM(IER)
-         IF(IER/=0) CALL MFIX_EXIT(myPE)
+! CALL GLOBAL_ALL_SUM(IER)
+      IF(IER/=0) CALL MFIX_EXIT(myPE)
 
-      ENDIF
 
       lNEXT_REC = 5
 
@@ -198,7 +155,7 @@
       SUBROUTINE FINL_READ_RES_DES
 
 
-      IF(bDIST_IO .OR. myPE == PE_IO) close(RDES_UNIT)
+      close(RDES_UNIT)
 
       IF(allocated(dPROCBUF)) deallocate(dPROCBUF)
       IF(allocated(dROOTBUF)) deallocate(dROOTBUF)
@@ -246,509 +203,14 @@
 
 !-----------------------------------------------
 
-      CALL INIT_ERR_MSG("READ_PAR_POS")
-
-      lDIMN = 3
-
-
 ! All process read positions for distributed IO restarts.
-      IF(bDIST_IO) THEN
-         DO LC1 = 1, lDIMN
- !           CALL READ_RES_DES(lNEXT_REC, DES_POS_NEW(:,LC1))
-         ENDDO
-         RETURN
-      ENDIF
-
-      allocate( dPAR_POS(pIN_COUNT, lDIMN))
-
-! Only the IO proccess reads positions.
-      IF(myPE == PE_IO) THEN
-         DO LC1=1, 3
-            CALL IN_BIN_512(RDES_UNIT, dPAR_POS(:,LC1),                &
-               pIN_COUNT, lNEXT_REC)
-         ENDDO
-      ENDIF
-
-! Use the particle postions and the domain coverage of each process
-! to determine which processor each particle belongs.
-      CALL MAP_pARRAY_TO_PROC(PAR_CNT)
-
-! Send the particle position data to the individual ranks.
-      CALL SCATTER_PAR_POS(PAR_CNT)
-
-! Set up the read/scatter arrary information.
-      pPROCCNT = PIP
-      pROOTCNT = pIN_COUNT
-
-! Set the recv count for this process.
-      pRECV = PIP
-
-! Construct an array for the Root process that states the number of
-! (real) particles on each process.
-      lScatterCnts(:) = 0; lScatterCnts(mype) = PIP
-      pSCATTER = lScatterCnts
-      ! CALL GLOBAL_SUM(lScatterCnts,pSCATTER)
-
-! Calculate the displacements for each process in the global array.
-      pDispls(0) = 0
-      DO lPROC = 1, NUMPEs-1
-         pDispls(lPROC) = pDispls(lPROC-1) + pSCATTER(lPROC-1)
+      DO LC1 = 1, lDIMN
+!         CALL READ_RES_DES(lNEXT_REC, DES_POS_NEW(:,LC1))
       ENDDO
-
-      IF(allocated(dPAR_POS)) deallocate(dPAR_POS)
-
-      CALL FINL_ERR_MSG
-
       RETURN
       END SUBROUTINE READ_PAR_POS
 
 
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: MAP_pARRAY_TO_PROC                                       !
-!                                                                      !
-! Purpose: Use the particle positions to determine which processor     !
-! they live on and count the number of particles on each process.      !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE MAP_pARRAY_TO_PROC(lPAR_CNT)
-
-      use discretelement, only: PIP, MAX_PIP
-      use discretelement, only: XE, YN, ZT
-      use geometry, only: IMIN1, IMAX1
-      use geometry, only: JMIN1, JMAX1
-      use geometry, only: KMIN1, KMAX1
-      use compar, only: numPEs
-      use compar, only: ISTART1_ALL, IEND1_ALL
-      use compar, only: JSTART1_ALL, JEND1_ALL
-      use compar, only: KSTART1_ALL, KEND1_ALL
-
-
-      implicit none
-
-      INTEGER, INTENT(OUT) :: lPAR_CNT(0:numPEs-1)
-
-! Data dimensionality flag.
-      INTEGER :: lDIMN
-! Loop counters.
-      INTEGER :: LC1, lPROC
-! Error flag.
-      INTEGER :: IER(0:numPEs-1)
-! The X/Y/Z bounds of the physical space "owned" by each process.
-      DOUBLE PRECISION :: lxmin(0:NUMPEs-1), lxmax(0:NUMPEs-1)
-      DOUBLE PRECISION :: lymin(0:NUMPEs-1), lymax(0:NUMPEs-1)
-      DOUBLE PRECISION :: lzmin(0:NUMPEs-1), lzmax(0:NUMPEs-1)
-!-----------------------------------------------
-
-      CALL INIT_ERR_MSG("MAP_pARRAY_TO_PROC")
-
-! Initialize the error flag.
-      IER = 0
-
-      lDIMN = 3
-
-! set the domain range for each processor
-      DO lPROC= 0, NUMPEs-1
-         lxmin(lproc) = xe(istart1_all(lproc)-1)
-         lxmax(lproc) = xe(iend1_all(lproc))
-         lymin(lproc) = yn(jstart1_all(lproc)-1)
-         lymax(lproc) = yn(jend1_all(lproc))
-         lzmin(lproc) = zt(kstart1_all(lproc)-1)
-         lzmax(lproc) = zt(kend1_all(lproc))
-
-! modify the range for mass inlet and outlet, as particles injected
-! can lie outside the domain and not ghost particles
-         IF(istart1_all(lproc).eq.imin1) &
-            lxmin(lproc) = xe(istart1_all(lproc)-2)
-         IF(iend1_all(lproc).eq.imax1) &
-            lxmax(lproc) = xe(iend1_all(lproc)+1)
-         IF(jstart1_all(lproc).eq.jmin1) &
-            lymin(lproc) = yn(jstart1_all(lproc)-2)
-         IF(jend1_all(lproc).eq.jmax1)  &
-            lymax(lproc) = yn(jend1_all(lproc)+1)
-         IF(kstart1_all(lproc).eq.kmin1) &
-            lzmin(lproc) = zt(kstart1_all(lproc)-2)
-         IF(kend1_all(lproc).eq.kmax1) &
-            lzmax(lproc) = zt(kend1_all(lproc)+1)
-      ENDDO
-
-! build the send buffer in PE_IO proc
-! first pass to get the count of particles
-      IER = 0
-      pRestartMap(:) = -1
-      lPAR_CNT(:) = 0
-      IF(myPE == PE_IO) THEN
-         DO LC1 = 1, pIN_COUNT
-            DO lPROC=0, NUMPEs-1
-               IF(dPAR_POS(LC1,1) >= lxmin(lproc) .AND. &
-                  dPAR_POS(LC1,1) <  lxmax(lproc) .AND. &
-                  dPAR_POS(LC1,2) >= lymin(lproc) .AND. &
-                  dPAR_POS(LC1,2) <  lymax(lproc)) THEN
-                  IF(dPAR_POS(LC1,3) >= lzmin(lproc) .AND. &
-                     dPAR_POS(LC1,3) <  lzmax(lproc)) THEN
-                     lPAR_CNT(lPROC) = lPAR_CNT(lPROC) + 1
-                     pRestartMap(LC1) = lproc
-                     EXIT
-                  ENDIF
-               ENDIF
-            ENDDO  ! Loop over processes
-            IF (pRestartMap(LC1) == -1) then
-               IER(myPE) = -1
-               WRITE(ERR_MSG,1000) trim(iVal(LC1))
-               CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-               WRITE(ERR_MSG,1002) dPAR_POS(LC1,1:3)
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE.)
-            ENDIF
-         ENDDO  ! Loop over particles
-      ENDIF
-
- 1000 FORMAT('Error 1000: Unable to locate particle inside domain:',/&
-         3x,'Particle Number:',A)
- 1002 FORMAT(3x,'X POS: ',g12.5,/3x,'Y POS: ',g12.5,/3x,'Z POS: ',g12.5)
-
-! Send out the error flag and exit if needed.
-      ! !CALL BCAST(IER, PE_IO)
-      IF(IER(PE_IO) /= 0) CALL MFIX_EXIT(myPE)
-
-! PE_IO sends out the number of particles for each process.
-      ! !CALL BCAST(lPAR_CNT(0:NUMPES-1), PE_IO)
-
-! Each process stores the number of particles-on-its-process. The error
-! flag is set if that number exceeds the maximum.
-      PIP = lPAR_CNT(myPE)
-      IF (PIP>MAX_PIP) STOP 41731
-
-! Global collection of error flags to abort it the max was exceeded.
-      ! CALL GLOBAL_ALL_SUM(IER)
-      IF(sum(IER) /= 0) THEN
-         WRITE(ERR_MSG,1100)
-         CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-         DO LC1=0, numPEs-1
-            IF(IER(LC1) /= 0) THEN
-               WRITE(ERR_MSG,"(3(2x,I10))")LC1,IER(LC1)-1,lPAR_CNT(LC1)
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-            ENDIF
-         ENDDO
-         WRITE(ERR_MSG,"('Aborting.')")
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE.,ABORT=.TRUE.)
-      ENDIF
-
- 1100 FORMAT('Error 1100: Maximum number of particles exceeded.',2/    &
-         5x,'Process',5x,'Maximum',7x,'Count')
-
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE MAP_pARRAY_TO_PROC
-
-
-
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: DES_RESTART_MAP                                          !
-!                                                                      !
-! Purpose: Generates the mapping used by the scatter routines to send  !
-! read data to the correct rank.                                       !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE SCATTER_PAR_POS(lPAR_CNT)
-
-      use compar, only: numPEs
-
-!      use discretelement, only: DES_POS_NEW
-      use discretelement, only: PIP
-
-      implicit none
-
-! Number of particles on each process.
-      INTEGER, INTENT(INOUT) :: lPAR_CNT(0:numPEs-1)
-! Dimensionality flag.
-      INTEGER :: lDIMN
-! Loop counters.
-      INTEGER :: LC1, lPROC, lBuf
-
-      lDIMN = 3
-
-! Set up the recv count and allocate the local process buffer.
-      iSCR_RECVCNT = PIP*lDIMN
-      allocate (dProcBuf(iscr_recvcnt))
-! Allocate the buffer for the root.
-      IF (myPE == PE_IO) THEN
-         allocate (dRootBuf(pIN_COUNT*lDIMN))
-      ELSE
-         allocate (dRootBuf(10))
-      ENDIF
-
-! The IO processor builds drootbuffer and iDISLS
-      IF(myPE == PE_IO) THEN
-! Determine the offsets for each process and the amount of data that
-! is to be scattered to each.
-         iDISPLS(0) = 0
-         iScatterCnts(0) = lPAR_CNT(0)*lDIMN
-         DO lProc = 1, NUMPES-1
-            iDispls(lproc) = iDispls(lproc-1) + iScatterCnts(lproc-1)
-            iScatterCnts(lproc) = lPAR_CNT(lProc)*lDIMN
-         ENDDO
-! Copy the position data into the root buffer, mapped to the owner
-! process.
-         lPAR_CNT(:) = 0
-         DO LC1 = 1,pIN_COUNT
-            lPROC = pRestartMap(LC1)
-            lbuf = iDispls(lProc) + lPAR_CNT(lProc)*lDIMN+1
-            dRootBuf(lBuf:lBuf+lDIMN-1) = dPAR_POS(LC1,1:lDIMN)
-            lBuf = lBuf + lDIMN
-            lPAR_CNT(lProc) = lPAR_CNT(lProc) + 1
-         ENDDO
-      ENDIF
-      CALL DESMPI_SCATTERV(pTYPE=2)
-
-! Unpack the particle data.
-      DO LC1 = 1, PIP
-         lBuf = (LC1-1)*lDIMN+1
-         !DES_POS_NEW(LC1,1:lDIMN) = dProcBuf(lBuf:lBuf+lDIMN-1)
-         lBuf = lBuf + lDIMN
-         PARTICLE_STATE(LC1) = NORMAL_PARTICLE
-      ENDDO
-
-      IF(allocated(dRootBuf)) deallocate(dRootBuf)
-      IF(allocated(dProcBuf)) deallocate(dProcBuf)
-      IF(allocated(dPAR_POS)) deallocate(dPAR_POS)
-
-      RETURN
-      END SUBROUTINE SCATTER_PAR_POS
-
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: READ_PAR_COL                                             !
-!                                                                      !
-! Purpose: Generates the mapping used by the scatter routines to send  !
-! read data to the correct rank.                                       !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE READ_PAR_COL(lNEXT_REC, dg_pijk, dg_pijkprv, des_pos_new, iglobal_id)
-
-      use discretelement, only: NEIGHBORS, NEIGH_NUM
-      use compar, only: numPEs
-
-      use mpi_init_des, only: DES_RESTART_GHOST
-
-      implicit none
-
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: dg_pijk
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:), INTENT(OUT) :: dg_pijkprv
-      INTEGER, INTENT(INOUT) :: lNEXT_REC
-
-      INTEGER :: LC1, lPROC
-      INTEGER :: lScatterCNTS(0:NUMPEs-1)
-! The number of particles on each process.
-      INTEGER :: COL_CNT(0:NUMPEs-1)
-
-!-----------------------------------------------
-
-      CALL INIT_ERR_MSG("READ_PAR_COL")
-
-! All process read positions for distributed IO restarts.
-      IF(bDIST_IO) THEN
-         CALL READ_RES_DES(lNEXT_REC, NEIGHBORS(:))
-      ENDIF
-
-      CALL DES_RESTART_GHOST(particle_state, dg_pijk, dg_pijkprv, des_pos_new)
-
-      allocate(iPAR_COL(2, cIN_COUNT))
-      iPAR_COL = 0
-
-! Only the IO proccess reads positions.
-      IF(myPE == PE_IO) THEN
-         DO LC1=1, 2
-            CALL IN_BIN_512i(RDES_UNIT, iPAR_COL(LC1,:),               &
-               cIN_COUNT, lNEXT_REC)
-         ENDDO
-      ENDIF
-
-! Broadcast collision data to all the other processes.
-       ! CALL GLOBAL_ALL_SUM(iPAR_COL)
-
-! Determine which process owns the neighbor datasets. This is done either
-! through matching global ids or a search. The actual method depends
-! on the ability to allocate a large enough array.
-      CALL MAP_cARRAY_TO_PROC(COL_CNT,iglobal_id)
-
-! Send the particle position data to the individual ranks.
-      CALL GLOBAL_TO_LOC_COL(iglobal_id)
-
-! Set up the read/scatter arrary information.
-      cPROCCNT = NEIGH_NUM
-      cROOTCNT = cIN_COUNT
-
-! Set the recv count for this process.
-      cRECV = NEIGH_NUM
-
-! Construct an array for the Root process that states the number of
-! (real) particles on each process.
-      lScatterCnts(:) = 0; lScatterCnts(mype) = NEIGH_NUM
-      ! CALL GLOBAL_SUM(lScatterCnts,cSCATTER)
-
-! Calculate the displacements for each process in the global array.
-      cDispls(0) = 0
-      DO lPROC = 1, NUMPEs-1
-         cDispls(lPROC) = cDispls(lPROC-1) + cSCATTER(lPROC-1)
-      ENDDO
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE READ_PAR_COL
-
-
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: MAP_cARRAY_TO_PROC                                       !
-!                                                                      !
-! Purpose: Use the particle positions to determine which processor     !
-! they live on and count the number of particles on each process.      !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE MAP_cARRAY_TO_PROC(lCOL_CNT, iglobal_id)
-
-      use compar, only: numPEs, myPE
-      use discretelement, only: PIP
-      use discretelement, only: NEIGH_MAX, NEIGH_NUM, MAX_PIP
-
-      implicit none
-
-      INTEGER, INTENT(OUT) :: lCOL_CNT(0:numPEs-1)
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-
-! Loop counters.
-      INTEGER :: LC1, LC2
-! Error flag.
-      INTEGER :: IER
-! Max global id.
-      INTEGER :: MAX_ID, lSTAT
-
-      INTEGER, ALLOCATABLE :: lGLOBAL_OWNER(:)
-
-!-----------------------------------------------
-
-      CALL INIT_ERR_MSG("MAP_cARRAY_TO_PROC")
-
-! Initialize the error flag.
-      IER = 0
-
-      MAX_ID = maxval(IGLOBAL_ID(1:PIP))
-      ! CALL GLOBAL_ALL_MAX(MAX_ID)
-
-      allocate(lGLOBAL_OWNER(MAX_ID), STAT=lSTAT)
-      ! CALL GLOBAL_ALL_SUM(lSTAT)
-
-! All ranks successfully allocated the array. This permits a crude
-! but much faster collision owner detection.
-      IF(lSTAT == 0) THEN
-
-         WRITE(ERR_MSG,"('Matching DES neighbor data by global owner.')")
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE.,FOOTER=.FALSE.)
-
-         lGLOBAL_OWNER = 0
-         DO LC1=1, PIP
-            IF(.NOT.NORMAL_GHOST==PARTICLE_STATE(LC1) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(LC1) &
-               .AND. .NOT.EXITING_GHOST==PARTICLE_STATE(LC1)) &
-               lGLOBAL_OWNER(iGLOBAL_ID(LC1)) = myPE + 1
-         ENDDO
-
-! Loop over the neighbor list and match the read global ID to
-! one of the global IDs.
-         lCOL_CNT = 0
-         cRestartMap = 0
-         DO LC1=1, cIN_COUNT
-            IF(lGLOBAL_OWNER(iPAR_COL(1,LC1)) == myPE + 1) THEN
-               cRestartMap(LC1) = myPE + 1
-               lCOL_CNT(myPE) = lCOL_CNT(myPE) + 1
-            ENDIF
-         ENDDO
-! One or more ranks could not allocate the memory needed to do the
-! quick and dirty match so do a search instead.
-      ELSE
-
-         WRITE(ERR_MSG,"('Matching DES neighbor data by search.')")
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE.,FOOTER=.FALSE.)
-
-! Loop over the neighbor list and match the read global ID to
-! one of the global IDs.
-         lCOL_CNT = 0
-         cRestartMap = 0
-         LC1_LP: DO LC1=1, cIN_COUNT
-            DO LC2=1, PIP!-iGHOST_CNT
-               IF(iPAR_COL(1,LC1) == iGLOBAL_ID(LC2)) THEN
-                  cRestartMap(LC1) = myPE + 1
-                  lCOL_CNT(myPE) = lCOL_CNT(myPE) + 1
-                  CYCLE LC1_LP
-               ENDIF
-            ENDDO
-         ENDDO LC1_LP
-
-      ENDIF
-
-! Clean up the large array as it is no longer needed.
-      IF(allocated(lGLOBAL_OWNER)) deallocate(lGLOBAL_OWNER)
-
-! Calculate the number of matched collisions over all processes. Throw
-! and error if it doesn't match the number of read collisions.
-      ! CALL GLOBAL_ALL_SUM(lCOL_CNT)
-      IF(sum(lCOL_CNT) /= cIN_COUNT) THEN
-         WRITE(ERR_MSG,1000) cIN_COUNT, sum(lCOL_CNT)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
-1000 FORMAT('Error 1000: Unable to establish the own of all read ',    &
-         'collision data.',/3x,'Number of Collisions: ',I10,/3x,       &
-         'Matched Collisions:   ',I10)
-
-! Sync the collision restart map arcross all ranks.
-      ! CALL GLOBAL_ALL_SUM(cRestartMap)
-
-! Error checking and cleanup.
-      DO LC1 = 1, cIN_COUNT
-! Verify that each collision is owned by a rank.
-         IF (cRestartMap(LC1) == 0) THEN
-            IER = -1
-            WRITE(ERR_MSG,1100) trim(iVal(LC1)), trim(iVal(            &
-               iPAR_COL(1,LC1))), trim(iVal(iPAR_COL(2,LC1)))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 1100 FORMAT('Error 1100: Unable to locate process neighbor owner:',/  &
-         3x,'Neighbor Number:',A,/3x,'Particles: ',A,' and ',A)
-
-         ELSEIF(cRestartMap(LC1) > numPEs) THEN
-
-            IER = -1
-            WRITE(ERR_MSG,1101) trim(iVal(LC1)), trim(iVal(            &
-              iPAR_COL(1,LC1))), trim(iVal(iPAR_COL(2,LC1)))
-             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 1101 FORMAT('Error 1101: More than one process neighbor owner:',/     &
-         3x,'Neighbor Number:',A,/3x,'Particles: ',A,' and ',A)
-
-! Shift the rank ID to the correct value.
-         ELSE
-            cRestartMap(LC1) = cRestartMap(LC1) - 1
-         ENDIF
-      ENDDO
-
-! Send out the error flag and exit if needed.
-      ! CALL GLOBAL_ALL_SUM(IER, PE_IO)
-      IF(IER /= 0) CALL MFIX_EXIT(myPE)
-
-! Each process stores the number of particles-on-its-process. The error
-! flag is set if that number exceeds the maximum.
-      NEIGH_NUM = lCOL_CNT(myPE)
-
-      IF (NEIGH_NUM > NEIGH_MAX) THEN
-         STOP 74118
-      ENDIF
-
-      IF (NEIGH_NUM > MAX_PIP) THEN
-         STOP 7451800
-      ENDIF
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE MAP_cARRAY_TO_PROC
 
 
 !``````````````````````````````````````````````````````````````````````!
@@ -1072,32 +534,7 @@
       iScr_RecvCNT = pRECV
       iScatterCNTS = pSCATTER
 
-      IF(bDIST_IO) THEN
-         CALL IN_BIN_512i(RDES_UNIT, OUTPUT_I, pIN_COUNT, lNEXT_REC)
-      ELSE
-
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_I(pIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512i(RDES_UNIT, lBUF_I, pIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, pIN_COUNT
-               lPROC = pRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               iRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_I(LC1)
-            ENDDO
-
-            deallocate(lBUF_I)
-            deallocate(lCOUNT)
-         ENDIF
-         CALL DESMPI_SCATTERV(ptype=1)
-         DO LC1=1, PIP
-            OUTPUT_I(LC1) = iProcBuf(LC1)
-         ENDDO
-
-      ENDIF
+      CALL IN_BIN_512i(RDES_UNIT, OUTPUT_I, pIN_COUNT, lNEXT_REC)
 
       deallocate(iPROCBUF)
       deallocate(iROOTBUF)
@@ -1140,30 +577,7 @@
       iScr_RecvCNT = pRECV
       iScatterCNTS = pSCATTER
 
-      IF(bDIST_IO) THEN
-         CALL IN_BIN_512(RDES_UNIT, OUTPUT_D, pIN_COUNT, lNEXT_REC)
-      ELSE
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_D(pIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512(RDES_UNIT, lBUF_D, pIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, pIN_COUNT
-               lPROC = pRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               dRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_D(LC1)
-            ENDDO
-
-            deallocate(lBUF_D)
-            deallocate(lCOUNT)
-         ENDIF
-         CALL DESMPI_SCATTERV(ptype=2)
-         DO LC1=1, PIP
-            OUTPUT_D(LC1) = dProcBuf(LC1)
-         ENDDO
-      ENDIF
+      CALL IN_BIN_512(RDES_UNIT, OUTPUT_D, pIN_COUNT, lNEXT_REC)
 
       deallocate(dPROCBUF)
       deallocate(dROOTBUF)
@@ -1204,43 +618,16 @@
       iScr_RecvCNT = pRECV
       iScatterCNTS = pSCATTER
 
-      IF(bDIST_IO) THEN
-         allocate(lBUF_I(pIN_COUNT))
-         CALL IN_BIN_512i(RDES_UNIT, lBUF_I, pIN_COUNT, lNEXT_REC)
-         DO LC1=1,pIN_COUNT
-            IF(lBUF_I(LC1) == 1) THEN
-               OUTPUT_L(LC1) = .TRUE.
-            ELSE
-               OUTPUT_L(LC1) = .FALSE.
-            ENDIF
-         ENDDO
-         deallocate(lBUF_I)
-      ELSE
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_I(pIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512i(RDES_UNIT, lBUF_I, pIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, pIN_COUNT
-               lPROC = pRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               iRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_I(LC1)
-            ENDDO
-
-            deallocate(lBUF_I)
-            deallocate(lCOUNT)
+      allocate(lBUF_I(pIN_COUNT))
+      CALL IN_BIN_512i(RDES_UNIT, lBUF_I, pIN_COUNT, lNEXT_REC)
+      DO LC1=1,pIN_COUNT
+         IF(lBUF_I(LC1) == 1) THEN
+            OUTPUT_L(LC1) = .TRUE.
+         ELSE
+            OUTPUT_L(LC1) = .FALSE.
          ENDIF
-         CALL DESMPI_SCATTERV(ptype=1)
-         DO LC1=1, PIP
-            IF(iProcBuf(LC1) == 1) THEN
-               OUTPUT_L(LC1) = .TRUE.
-            ELSE
-               OUTPUT_L(LC1) = .FALSE.
-            ENDIF
-         ENDDO
-      ENDIF
+      ENDDO
+      deallocate(lBUF_I)
 
       deallocate(iPROCBUF)
       deallocate(iROOTBUF)
@@ -1282,30 +669,7 @@
       iScr_RecvCNT = cRECV
       iScatterCNTS = cSCATTER
 
-      IF(bDIST_IO) THEN
-         CALL IN_BIN_512i(RDES_UNIT, OUTPUT_I, cIN_COUNT, lNEXT_REC)
-      ELSE
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_I(cIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512i(RDES_UNIT, lBUF_I, cIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, cIN_COUNT
-               lPROC = cRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               iRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_I(LC1)
-            ENDDO
-
-            deallocate(lBUF_I)
-            deallocate(lCOUNT)
-         ENDIF
-         CALL DESMPI_SCATTERV(ptype=1)
-         DO LC1=1, NEIGH_NUM
-            OUTPUT_I(LC1) = iProcBuf(LC1)
-         ENDDO
-      ENDIF
+      CALL IN_BIN_512i(RDES_UNIT, OUTPUT_I, cIN_COUNT, lNEXT_REC)
 
       deallocate(iPROCBUF)
       deallocate(iROOTBUF)
@@ -1348,30 +712,7 @@
       iScatterCNTS = cSCATTER
 
 
-      IF(bDIST_IO) THEN
-         CALL IN_BIN_512(RDES_UNIT, OUTPUT_D, cIN_COUNT, lNEXT_REC)
-      ELSE
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_D(cIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512(RDES_UNIT, lBUF_D, cIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, cIN_COUNT
-               lPROC = cRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               dRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_D(LC1)
-            ENDDO
-
-            deallocate(lBUF_D)
-            deallocate(lCOUNT)
-         ENDIF
-         CALL DESMPI_SCATTERV(ptype=2)
-         DO LC1=1, NEIGH_NUM
-            OUTPUT_D(LC1) = dProcBuf(LC1)
-         ENDDO
-      ENDIF
+      CALL IN_BIN_512(RDES_UNIT, OUTPUT_D, cIN_COUNT, lNEXT_REC)
 
       deallocate(dPROCBUF)
       deallocate(dROOTBUF)
@@ -1412,43 +753,16 @@
       iScr_RecvCNT = cRECV
       iScatterCNTS = cSCATTER
 
-      IF(bDIST_IO) THEN
-         allocate(lBUF_I(cIN_COUNT))
-         CALL IN_BIN_512i(RDES_UNIT, lBUF_I, cIN_COUNT, lNEXT_REC)
-         DO LC1=1,cIN_COUNT
-            IF(lBUF_I(LC1) == 1) THEN
-               OUTPUT_L(LC1) = .TRUE.
-            ELSE
-               OUTPUT_L(LC1) = .FALSE.
-            ENDIF
-         ENDDO
-         deallocate(lBUF_I)
-      ELSE
-         IF(myPE == PE_IO) THEN
-            allocate(lBUF_I(cIN_COUNT))
-            allocate(lCOUNT(0:NUMPEs-1))
-
-            CALL IN_BIN_512i(RDES_UNIT, lBUF_I, cIN_COUNT, lNEXT_REC)
-
-            lCOUNT = 0
-            DO LC1=1, cIN_COUNT
-               lPROC = cRestartMap(LC1)
-               lCOUNT(lPROC) = lCOUNT(lPROC) + 1
-               iRootBuf(iDispls(lPROC) + lCOUNT(lPROC)) = lBUF_I(LC1)
-            ENDDO
-
-            deallocate(lBUF_I)
-            deallocate(lCOUNT)
+      allocate(lBUF_I(cIN_COUNT))
+      CALL IN_BIN_512i(RDES_UNIT, lBUF_I, cIN_COUNT, lNEXT_REC)
+      DO LC1=1,cIN_COUNT
+         IF(lBUF_I(LC1) == 1) THEN
+            OUTPUT_L(LC1) = .TRUE.
+         ELSE
+            OUTPUT_L(LC1) = .FALSE.
          ENDIF
-         CALL DESMPI_SCATTERV(ptype=1)
-         DO LC1=1, NEIGH_NUM
-            IF(iProcBuf(LC1) == 1) THEN
-               OUTPUT_L(LC1) = .TRUE.
-            ELSE
-               OUTPUT_L(LC1) = .FALSE.
-            ENDIF
-         ENDDO
-      ENDIF
+      ENDDO
+      deallocate(lBUF_I)
 
       deallocate(iPROCBUF)
       deallocate(iROOTBUF)

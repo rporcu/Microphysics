@@ -219,7 +219,6 @@ module drag_gs_des0_module
       use interpolation , only: set_interpolation_stencil, set_interpolation_scheme
       use param1  , only: zero, one
       use functions     , only: ip1,jp1,kp1
-      use mpi_node_des, only: des_addnodevalues
 
       use des_drag_gp_module, only: des_drag_gp
       use discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
@@ -424,7 +423,6 @@ module drag_gs_des0_module
 ! at the junction. drag_am are drag_bm are altered by the
 ! routine when periodic boundaries are invoked. so both
 ! quantities are needed at the time of this call.
-      call des_addnodevalues(drag_am, drag_bm)
 !-----------------------------------------------------------------<<<
 ! Calculate/update the cell centered drag coefficient F_GDS for use
 ! in the pressure correction equation

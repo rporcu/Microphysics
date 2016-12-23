@@ -1,8 +1,7 @@
       MODULE vtp
 
-      use desmpi, only: dprocbuf, drootbuf, iprocbuf, irootbuf, idispls, igathercnts, igath_sendcnt
-      use mpi_comm_des, only: numpes, mype, pe_io, s_time, vtp_findex, des_gather
-      use mpi_comm_des, only: ighost_cnt, pip
+      use compar, only: numpes, mype, pe_io
+      use discretelement, only: s_time, vtp_findex, ighost_cnt, pip
       use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
       IMPLICIT NONE
@@ -40,20 +39,11 @@
 
       INTEGER :: LC
 
-         allocate (dProcBuf(LOCAL_CNT) )
-         allocate (dRootBuf(GLOBAL_CNT))
-
-         CALL DES_GATHER(DATA)
-
-         IF(myPE == PE_IO) THEN
-            WRITE(DES_UNIT,1000) NAME
-            DO LC=1, GLOBAL_CNT
-               WRITE(DES_UNIT,1001,ADVANCE="NO") real(drootbuf(LC))
-            ENDDO
-            WRITE(DES_UNIT,1002)
-         ENDIF
-
-         deallocate(dProcBuf, dRootBuf)
+      WRITE(DES_UNIT,1000) NAME
+      DO LC=1, GLOBAL_CNT
+         WRITE(DES_UNIT,1001,ADVANCE="NO") real(data(LC))
+      ENDDO
+      WRITE(DES_UNIT,1002)
 
  1000 FORMAT('<DataArray type="Float32" Name="',A,'" format="ascii">')
  1001 FORMAT(ES14.6,1X)
@@ -73,8 +63,6 @@
       CHARACTER(len=*), INTENT(in) :: NAME
       DOUBLE PRECISION, INTENT(in) :: DATA(:,:)
 
-      DOUBLE PRECISION, ALLOCATABLE :: ltemp_array(:,:)
-
       CHARACTER(len=16) :: NOC
       INTEGER :: LB, UB
       INTEGER :: LC1, LC2
@@ -83,28 +71,15 @@
       UB = UBOUND(DATA,2)
       NOC=''; WRITE(NOC,*) (UB-LB)+1
 
-
-      allocate (dProcBuf(LOCAL_CNT) )
-      allocate (dRootBuf(GLOBAL_CNT))
-      allocate (ltemp_array((UB-LB)+1,GLOBAL_CNT))
-
-      DO LC1 = LB, UB
-         CALL DES_GATHER(DATA(:,LC1))
-         ltemp_array(LC1,:) = drootbuf(:)
-      ENDDO
-
-      IF(myPE == PE_IO) THEN
-         WRITE(DES_UNIT,1000) NAME, trim(adjustl(NOC))
-         DO LC1=1, GLOBAL_CNT
-            DO LC2=LB, UB
-               WRITE(DES_UNIT,1001,ADVANCE="NO") &
-                  real(ltemp_array(LC2,LC1))
-            ENDDO
+      WRITE(DES_UNIT,1000) NAME, trim(adjustl(NOC))
+      DO LC1=1, GLOBAL_CNT
+         DO LC2=LB, UB
+            WRITE(DES_UNIT,1001,ADVANCE="NO") &
+               real(data(LC1,LC2))
          ENDDO
-         WRITE(DES_UNIT,1002)
-      ENDIF
+      ENDDO
+      WRITE(DES_UNIT,1002)
 
-      deallocate (dProcBuf, dRootBuf, ltemp_array )
 
  1000 FORMAT('<DataArray type="Float32" Name="',A,'" NumberOf',        &
          'Components="',A,'" format="ascii">')
@@ -130,20 +105,13 @@
       INTEGER :: LC
 
 
-         allocate (iProcBuf(LOCAL_CNT) )
-         allocate (iRootBuf(GLOBAL_CNT))
-
-         CALL DES_GATHER(DATA)
-
-         IF(myPE == PE_IO) THEN
-            WRITE(DES_UNIT,1000) NAME
-            DO LC=1, GLOBAL_CNT
-               WRITE(DES_UNIT,1001,ADVANCE="NO") irootbuf(LC)
-            ENDDO
-            WRITE(DES_UNIT,1002)
-         ENDIF
-
-         deallocate(iProcBuf, iRootBuf)
+      IF(myPE == PE_IO) THEN
+         WRITE(DES_UNIT,1000) NAME
+         DO LC=1, GLOBAL_CNT
+            WRITE(DES_UNIT,1001,ADVANCE="NO") data(LC)
+         ENDDO
+         WRITE(DES_UNIT,1002)
+      ENDIF
 
 
  1000 FORMAT('<DataArray type="Float32" Name="',A,'" format="ascii">')
@@ -203,30 +171,13 @@
       CHARACTER(LEN=8) :: STATUS_VTP
 
 ! Initial the global count.
-      GLOBAL_CNT = 10
 ! Calculate the number of 'real' particles on the local process.
-      LOCAL_CNT = PIP - iGHOST_CNT
+      LOCAL_CNT = PIP
 
 ! Calculate the total number of particles system-wide.
       global_cnt = local_cnt
-      ! call global_sum(LOCAL_CNT, GLOBAL_CNT)
       NumberOfPoints = GLOBAL_CNT
       WRITE(NoPc,"(I10.10)") NumberOfPoints
-
-! Set the send count from the local process.
-      igath_sendcnt = LOCAL_CNT
-
-! Collect the number of particles on each rank.all ranks.
-      lgathercnts = 0
-      lgathercnts(myPE) = LOCAL_CNT
-      igathercnts = lgathercnts
-      ! call global_sum(lgathercnts,igathercnts)
-
-! Calculate the rank displacements.
-      idispls(0) = 0
-      DO lPROC = 1,NUMPEs-1
-         idispls(lproc) = idispls(lproc-1) + igathercnts(lproc-1)
-      ENDDO
 
 ! set the file name and unit number and open file
       WRITE(fname_vtp,'(A,"_DES_",I5.5,".vtp")') &
@@ -257,8 +208,6 @@
             IF(IOS /= 0) IER = 2
          ENDIF
       ENDIF
-
-      ! CALL GLOBAL_ALL_MAX(IER)
 
       IF(IER /= 0) THEN
          CALL INIT_ERR_MSG("VTP_MOD --> OPEN_VTP")

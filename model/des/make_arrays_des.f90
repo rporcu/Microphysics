@@ -27,7 +27,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE functions, only: ip1, jp1, kp1
       USE generate_particles, only: GENERATE_PARTICLE_CONFIG
       USE geometry, only: vol
-      USE mpi_funs_des, only: DES_PAR_EXCHANGE
       USE neighbour_module, only: neighbour
       USE param1, only: zero
       USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
@@ -179,8 +178,8 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! Bin the particles to the DES grid.
       CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv=dg_pijkprv, dg_pijk=dg_pijk, &
          des_pos_new=des_pos_new, particle_state=particle_state)
-      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
       CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
          des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 

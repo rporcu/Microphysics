@@ -13,7 +13,6 @@ MODULE SET_PHASE_INDEX_MODULE
       USE discretelement, only: MAX_PIP
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
-      USE mpi_funs_des, only: des_par_exchange
       USE open_files_mod, only: open_pe_log
       USE param1, only: small_number
       USE constant, only: MMAX, D_P0, RO_s0

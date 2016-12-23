@@ -19,7 +19,6 @@ module comp_mean_fields0_module
       USE interpolation, only: set_interpolation_scheme
       USE geometry, only: vol
       USE interpolation, only: set_interpolation_stencil
-      USE mpi_node_des, only: des_addnodevalues_mean_fields
       USE param1, only: zero
 
       IMPLICIT NONE

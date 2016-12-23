@@ -1,7 +1,6 @@
 MODULE PARTICLES_IN_CELL_MODULE
 
       use discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
-      use mpi_funs_des, only: des_par_exchange
 
       use check_cell_movement_module, only: check_cell_movement
 
@@ -23,10 +22,10 @@ MODULE PARTICLES_IN_CELL_MODULE
       use discretelement, only: XE, YN, ZT
 
       ! The Upper and Loper indices covered by the current process.
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3 
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       ! Fluid grid cell dimensions and mesh size
-      use geometry, only: imin2,imax2,jmin2,jmax2,kmin2,kmax2 
+      use geometry, only: imin2,imax2,jmin2,jmax2,kmin2,kmax2
 
       ! Fixed array sizes in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
@@ -250,8 +249,8 @@ CONTAINS
       CALL DESGRID_PIC(.TRUE., dg_pijkprv, dg_pijk, particle_state, des_pos_new)
 ! Call exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
-      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
 ! Assigning PIJK(L,1), PIJK(L,2) and PIJK(L,3) the i, j, k indices
 ! of particle L (locating particle on fluid grid). Also determine
@@ -288,8 +287,8 @@ CONTAINS
 ! Calling exchange particles - this will exchange particle crossing
 ! boundaries as well as updates ghost particles information
 ! unclear why this needs to be called again.
-      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
+!      CALL DES_PAR_EXCHANGE(pijk, particle_state, dg_pijk, dg_pijkprv, &
+!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
 
       CALL FINL_ERR_MSG
 

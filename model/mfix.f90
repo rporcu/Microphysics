@@ -206,8 +206,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
          lb = 1
          ub = MAX_PIP
 
-         write(*,*)"....",ubound(iglobal_id)
-         write(*,*)"....",lbound(iglobal_id)
          IGLOBAL_ID(LB:UB) = 0
          PARTICLE_STATE(LB:UB) = NONEXISTENT
 

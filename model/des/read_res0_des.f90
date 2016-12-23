@@ -14,7 +14,6 @@ MODULE READ_RES0_DES_MODULE
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
       use discretelement, only: tecplot_findex, des_usr_var_size, vtp_findex, dtsolid
       use error_manager, only: err_msg, flush_err_msg
-      use mpi_init_des, only: DES_RESTART_GHOST
       use read_res1_des, only: init_read_res_des, finl_read_res_des, read_par_pos, read_res_des, read_res_parray
       use run, only: run_name, run_type, time
 
@@ -63,8 +62,6 @@ MODULE READ_RES0_DES_MODULE
             CALL READ_RES_pARRAY(lNEXT_REC, DES_USR_VAR(:,LC1))
          ENDDO
       ENDIF
-
-      CALL DES_RESTART_GHOST(particle_state, dg_pijk, dg_pijkprv, des_pos_new)
 
 ! RES2 does not need the collision of BC information.
       IF(RUN_TYPE == 'RESTART_2') RETURN
