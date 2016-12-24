@@ -12,13 +12,12 @@ MODULE CALC_FORCE_DEM_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state,  &
-         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, &
-         neighbor_index)
+         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
          USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
-         USE discretelement, only: des_etan, des_etat, hert_kt, &
-            hert_kn, neighbors, s_time, des_crossprdct
+         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn
+         USE discretelement, only: s_time, des_crossprdct
          USE discretelement, only: max_pip, pip
          USE discretelement, only: kn, kt, mew, hertzian
          USE discretelement, only: nonexistent
@@ -31,7 +30,6 @@ MODULE CALC_FORCE_DEM_MODULE
 
       integer, intent(in) :: particle_state(:)
       integer, intent(in) :: particle_phase(:)
-      integer, intent(inout) :: neighbor_index(:)
 
       double precision, intent(in) :: des_radius(:)
       double precision, intent(in) :: des_pos_new(:,:)

@@ -12,7 +12,7 @@ module comp_mean_fields_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,particle_state,&
         particle_phase, pmass, pvol, des_pos_new,des_vel_new, &
-        des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+        des_radius,des_usr_var,flag,vol_surr)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
@@ -34,7 +34,7 @@ module comp_mean_fields_module
       DOUBLE PRECISION, INTENT(IN) :: des_usr_var(:,:)
       integer, intent(in) :: particle_state(:)
       integer, intent(in) :: particle_phase(:)
-      integer, intent(in) :: iglobal_id(:)
+
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -44,8 +44,6 @@ module comp_mean_fields_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      INTEGER         , INTENT(INOUT) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 

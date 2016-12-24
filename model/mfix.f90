@@ -15,11 +15,10 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm, pinc, &
+                drag_am, drag_bm,  &
                 flag, vol_surr,  &
-                   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-                omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+                omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
 
 !-----------------------------------------------
@@ -29,7 +28,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use check_data_20_module, only: check_data_20
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
-      use des_allocate, only: des_allocate_arrays
       use discretelement, only: max_pip
       use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
@@ -59,9 +57,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use output_manager_module, only: init_output_vars
       use calc_coeff_module, only: calc_coeff
 
-      use discretelement, only: neighbor_index, wall_collision_facet_id
-      use discretelement, only: des_usr_var_size, neighbor_index_old
-      use discretelement, only: nonexistent, do_old, ighost_updated
+      use discretelement, only: des_usr_var_size
+      use discretelement, only: nonexistent, do_old
 
       IMPLICIT NONE
 
@@ -149,10 +146,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: drag_bm&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,3)
 
-      integer, intent(inout) :: pinc&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      integer, intent(inout) :: iglobal_id(max_pip)
       integer, intent(inout) :: particle_state(max_pip)
       integer, intent(inout) :: particle_phase(max_pip)
 
@@ -162,7 +156,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: pmass(max_pip)
       double precision, intent(inout) :: omoi(max_pip)
 
-      double precision, intent(inout) :: ppos(max_pip,3)
       double precision, intent(inout) :: des_pos_new(max_pip,3)
       double precision, intent(inout) :: des_vel_new(max_pip,3)
       double precision, intent(inout) :: des_usr_var(max_pip,1)
@@ -183,7 +176,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Temporary storage for DT
       DOUBLE PRECISION :: DT_tmp
 
-      INTEGER :: II, lb, ub
+      INTEGER :: II
 
 !---------------------------------------------------------------------//
       flag_mod = flag
@@ -192,58 +185,40 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       ! This is now called from main.cpp
       ! call set_domain(flag)
 
-      IF(DEM_SOLIDS) CALL DES_ALLOCATE_ARRAYS
-
       IF (DEM_SOLIDS) THEN
 
-         lb = 1
-         ub = MAX_PIP
-
-         IGLOBAL_ID(LB:UB) = 0
-         PARTICLE_STATE(LB:UB) = NONEXISTENT
+! Particle state flag
+         PARTICLE_STATE(:) = NONEXISTENT
 
 ! Physical properties:
-         DES_RADIUS(LB:UB) = ZERO
-         RO_Sol(LB:UB) = ZERO
-         PVOL(LB:UB) = ZERO
-         PMASS(LB:UB) = ZERO
-         OMOI(LB:UB) = ZERO
+         DES_RADIUS(:) = ZERO
+         RO_Sol(:) = ZERO
+         PVOL(:) = ZERO
+         PMASS(:) = ZERO
+         OMOI(:) = ZERO
 
 ! Particle position, velocity, etc
-         DES_POS_NEW(LB:UB,:) = ZERO
-         DES_VEL_NEW(LB:UB,:) = ZERO
-         OMEGA_NEW(LB:UB,:) = ZERO
-
-! Particle state flag
-         DO II = LB, UB
-            particle_state(II) = nonexistent
-         ENDDO
-         NEIGHBOR_INDEX(:) = 0
-
-! DES grid bin information
-         IGHOST_UPDATED(LB:UB) = .false.
+         DES_POS_NEW(:,:) = ZERO
+         DES_VEL_NEW(:,:) = ZERO
+         OMEGA_NEW(:,:) = ZERO
 
 ! Translation and rotational forces
-         FC(LB:UB,:) = ZERO
-         TOW(LB:UB,:) = ZERO
+         FC(:,:) = ZERO
+         TOW(:,:) = ZERO
 
 ! Initializing user defined array
-         IF(DES_USR_VAR_SIZE > 0) &
-            DES_USR_VAR(LB:UB,:) = ZERO
+         DES_USR_VAR(:,:) = ZERO
 
 ! Particle center drag coefficient and explicit drag force
-         DRAG_FC(LB:UB,:) = ZERO
+         DRAG_FC(:,:) = ZERO
 
 ! Higher order time integration variables.
-         IF (DO_OLD) THEN
-            DES_ACC_OLD(LB:UB,:) = ZERO
-            ROT_ACC_OLD(LB:UB,:) = ZERO
-         ENDIF
+         DES_ACC_OLD(:,:) = ZERO
+         ROT_ACC_OLD(:,:) = ZERO
       ENDIF
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0
-!     CALL WRITE_FLAGS
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
@@ -336,10 +311,9 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         flag, vol_surr,    iglobal_id, &
-         particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+         flag, vol_surr, particle_state, particle_phase,  &
          des_radius,  ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
+         des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
 
 ! ######################## Moved here from time march
@@ -355,7 +329,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_am, drag_bm,  particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius,  pinc)
+         pvol, des_pos_new, des_vel_new, des_radius)
 
       IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 

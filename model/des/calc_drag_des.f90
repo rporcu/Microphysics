@@ -23,7 +23,7 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_DRAG_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg,&
          particle_state, fc, drag_fc, pvol, des_pos_new, &
-        des_vel_new, des_radius, particle_phase, flag, pinc)
+        des_vel_new, des_radius, particle_phase, flag)
 
       IMPLICIT NONE
 
@@ -43,8 +43,6 @@ module calc_drag_des_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      integer         , intent(inout) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer         , intent(in   ) :: particle_phase(:)
       integer         , intent(in   ) :: particle_state(:)
@@ -93,8 +91,7 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          flag, f_gds, drag_am, drag_bm,  particle_state, &
-         particle_phase, pvol, des_pos_new, des_vel_new, des_radius, &
-         pinc)
+         particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
 
       IMPLICIT NONE
 
@@ -117,8 +114,6 @@ module calc_drag_des_module
       double precision, intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      integer         , intent(inout) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
@@ -153,9 +148,9 @@ module calc_drag_des_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(flag, vol_surr, ep_g, u_g, v_g, w_g, ro_g, &
-         rop_g, mu_g, f_gds, drag_bm,  particle_phase, iglobal_id, &
+         rop_g, mu_g, f_gds, drag_bm,  particle_phase,  &
          particle_state, pmass, pvol, des_pos_new, des_vel_new, &
-         des_radius, des_usr_var, pinc)
+         des_radius, des_usr_var)
 
       IMPLICIT NONE
 
@@ -182,11 +177,8 @@ module calc_drag_des_module
       double precision, intent(in   ) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      integer,          intent(inout) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
       integer, intent(in   ) :: particle_state(:)
-      integer, intent(in   ) :: iglobal_id(:)
+
       integer, intent(in   ) :: particle_phase(:)
 
       double precision, intent(in   ) :: pvol(:)
@@ -200,7 +192,7 @@ module calc_drag_des_module
 ! Calculate mean fields (EPg).
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,particle_state,particle_phase,pmass,pvol, &
          des_pos_new,des_vel_new,des_radius,&
-         des_usr_var,flag,vol_surr,iglobal_id,pinc)
+         des_usr_var,flag,vol_surr)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) &

@@ -61,9 +61,9 @@
   YLENGTH = 0.10   JMAX  =  20
   ZLENGTH = 0.01   KMAX  =   5
 
-  DESGRIDSEARCH_IMAX = 1
-  DESGRIDSEARCH_JMAX = 1
-  DESGRIDSEARCH_KMAX = 1
+
+
+
 
 
 #_______________________________________________________________________

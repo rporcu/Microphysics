@@ -6,13 +6,12 @@ MODULE READ_RES0_DES_MODULE
 !  Purpose : Reads either single restart file or multiple restart      !
 !  fles (based on bdist_io) flag.                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_RES0_DES(  iglobal_id, particle_state, &
+      SUBROUTINE READ_RES0_DES(   particle_state, &
          des_radius, ro_sol, des_usr_var, &
          des_pos_new, des_vel_new, omega_new)
 
-      use des_allocate, only: allocate_dem_mi
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
-      use discretelement, only: tecplot_findex, des_usr_var_size, vtp_findex, dtsolid
+      use discretelement, only: des_usr_var_size, vtp_findex, dtsolid
       use error_manager, only: err_msg, flush_err_msg
       use read_res1_des, only: init_read_res_des, finl_read_res_des, read_par_pos, read_res_des, read_res_parray
       use run, only: run_name, run_type, time
@@ -22,7 +21,7 @@ MODULE READ_RES0_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
+
 
       INTEGER :: LC1, LC2
       INTEGER :: lDIMN, lNEXT_REC
@@ -34,13 +33,10 @@ MODULE READ_RES0_DES_MODULE
       CALL INIT_READ_RES_DES(trim(RUN_NAME), VERSION, lNEXT_REC)
 
       CALL READ_RES_DES(lNEXT_REC, VTP_FINDEX)
-      CALL READ_RES_DES(lNEXT_REC, TECPLOT_FINDEX)
       CALL READ_RES_DES(lNEXT_REC, DTSOLID)
 
 ! Position data is read and used to setup pARRAY reads.
       CALL READ_PAR_POS(lNEXT_REC)
-
-      CALL READ_RES_pARRAY(lNEXT_REC, iGLOBAL_ID)
 
       CALL READ_RES_pARRAY(lNEXT_REC, particle_state)
 
@@ -69,10 +65,6 @@ MODULE READ_RES0_DES_MODULE
 ! Save the number of BCMI's read from input file, then read the
 ! value from the restart file.
       CALL READ_RES_DES(lNEXT_REC, DEM_BCMI)
-
-! Allocation of MIs is done here to ignore changes to the mfix.dat
-! file during RES1.
-      IF(DEM_BCMI > 0) CALL ALLOCATE_DEM_MI
 
 ! Only save the number of mass inflows for RESTART_1. This allows
 ! for mass inflows to be added/removed with RESTART_2.

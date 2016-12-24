@@ -3,7 +3,8 @@
       use compar, only: PE_IO
       use compar, only: myPE
       use desmpi, only: dprocbuf, iprocbuf, drootbuf, irootbuf, dpar_pos, idispls, iscr_recvcnt, iscattercnts
-      use discretelement, only: entering_ghost, particle_state, exiting_ghost, normal_particle, normal_ghost
+      use discretelement, only: normal_particle
+      use discretelement, only: entering_ghost, exiting_ghost, normal_ghost
       use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg, ival
       use exit_mod, only: mfix_exit
       use in_binary_512, only: in_bin_512
@@ -77,8 +78,6 @@
       SUBROUTINE INIT_READ_RES_DES(BASE, lVERSION, lNEXT_REC)
 
       use discretelement, only: MAX_PIP, PIP
-      use discretelement, only: iGHOST_CNT
-      use discretelement, only: NEIGH_MAX,NEIGH_NUM
 
       use compar, only: numPEs
       use machine, only: OPEN_N1
@@ -209,116 +208,6 @@
       ENDDO
       RETURN
       END SUBROUTINE READ_PAR_POS
-
-
-
-
-!``````````````````````````````````````````````````````````````````````!
-! Subroutine: GLOBAL_TO_LOC_COL                                        !
-!                                                                      !
-! Purpose: Generates the mapping used by the scatter routines to send  !
-! read data to the correct rank.                                       !
-!``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE GLOBAL_TO_LOC_COL(iglobal_id)
-
-      use discretelement, only: PIP
-
-
-      use funits, only: DMP_LOG
-
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-
-      implicit none
-
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-
-! Loop counters.
-      INTEGER :: LC1, LC2, LC3, IER
-      INTEGER :: UNMATCHED
-      INTEGER, ALLOCATABLE :: iLOCAL_ID(:)
-
-! Max global id.
-      INTEGER :: MAX_ID, lSTAT
-! Debug flags.
-      LOGICAL :: dFlag
-      LOGICAL, parameter :: setDBG = .FALSE.
-
-      CALL INIT_ERR_MSG("GLOBAL_TO_LOC_COL")
-
-! Initialize the error flag.
-      IER = 0
-
-! Set the local debug flag.
-      dFlag = (DMP_LOG .AND. setDBG)
-
-      MAX_ID = maxval(IGLOBAL_ID(1:PIP))
-      ! CALL GLOBAL_ALL_MAX(MAX_ID)
-
-      allocate(iLOCAL_ID(MAX_ID), STAT=lSTAT)
-      ! CALL GLOBAL_ALL_SUM(lSTAT)
-
-! All ranks successfully allocated the array. This permits a crude
-! but much faster collision owner detection.
-      IF(lSTAT /= 0) THEN
-         WRITE(ERR_MSG,1000)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
- 1000 FORMAT('Error 1000: Unable to allocate sufficient memory to ',&
-         'generate the',/'map from global to local particle IDs.')
-
-      iLOCAL_ID = 0
-      DO LC1=1, PIP
-         iLOCAL_ID(iGLOBAL_ID(LC1)) = LC1
-      ENDDO
-
-! Store the particle data.
-      LC3 = 1
-      LC2 = 0
-      UNMATCHED = 0
-
-! FIXME Fix Restart
-!      LP1: DO LC1 = 1, cIN_COUNT
-!          IF(cRestartMap(LC1) == myPE) THEN
-!             LC2 = LC2 + 1
-!             NEIGHBORS(LC2) = iLOCAL_ID(iPAR_COL(1,LC1))
-!             NEIGHBORS(2,LC2) = iLOCAL_ID(iPAR_COL(2,LC1))
-! ! Verify that the local indices are valid. If they do not match it is
-! ! likely because one of the neighbor was removed via an outlet at the time
-! ! the RES file was written but the ghost data wasn't updated.
-!             IF(NEIGHBORS(1,LC2) == 0 .OR. NEIGHBORS(2,LC2) == 0) THEN
-!                UNMATCHED = UNMATCHED + 1
-!                IF(dFLAG) THEN
-!                   WRITE(ERR_MSG,1100) iPAR_COL(1,LC1), NEIGHBORS(1,LC2),   &
-!                      iPAR_COL(2,LC1), NEIGHBORS(2,LC2)
-!                   CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
-!                ENDIF
-!                DO WHILE(PEA(LC3,1))
-!                   LC3 = LC3 + 1
-!                ENDDO
-!                NEIGHBORS(2,LC2) = LC3
-!             ENDIF
-!          ENDIF
-!       ENDDO LP1
-
-! 1100 FORMAT('Error 1100: Particle neighbor local indices are invalid.',/  &
-!         5x,'Global-ID    Local-ID',/' 1:  ',2(3x,I9),/' 2:  ',2(3x,I9))
-
-      ! CALL GLOBAL_ALL_SUM(UNMATCHED)
-      IF(UNMATCHED /= 0) THEN
-         WRITE(ERR_MSG,1101) trim(iVal(UNMATCHED))
-         CALL FLUSH_ERR_MSG
-      ENDIF
-
- 1101 FORMAT(' Warning: 1101: ',A,' particle neighbor datasets were ',&
-         'not matched',/' during restart.')
-
-      IF(allocated(iLOCAL_ID)) deallocate(iLOCAL_ID)
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE GLOBAL_TO_LOC_COL
 
 
 
@@ -646,7 +535,6 @@
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
       use compar, only: numPEs
-      use discretelement, only: NEIGH_NUM
 
       IMPLICIT NONE
 
@@ -686,7 +574,6 @@
       SUBROUTINE READ_RES_cARRAY_1D(lNEXT_REC, OUTPUT_D)
 
       use compar, only: numPEs
-      use discretelement, only: NEIGH_NUM
       use desmpi, only: dRootBuf
       use desmpi, only: dProcBuf
 
@@ -729,7 +616,6 @@
       SUBROUTINE READ_RES_cARRAY_1L(lNEXT_REC, OUTPUT_L)
 
       use compar, only: numPEs
-      use discretelement, only: NEIGH_NUM
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
 

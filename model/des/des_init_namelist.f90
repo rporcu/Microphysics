@@ -23,12 +23,33 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       SUBROUTINE DES_INIT_NAMELIST
 
-      USE discretelement, only: des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, e_young, v_poisson
-      USE discretelement, only: des_continuum_coupled, des_coll_model, des_etat_w_fac, des_intg_method
-      USE discretelement, only: desgridsearch_imax, desgridsearch_jmax, desgridsearch_kmax
-      USE discretelement, only: des_etat_fac, des_explicitly_coupled, des_oneway_coupled, ew_young, factor_rlm
-      USE discretelement, only: gener_part_config, kn, kn_w, dim_m, kt_fac, kt_w_fac, mew, mew_w, neighbor_search_n
-      USE discretelement, only: neighbor_search_rad_ratio, particles, print_des_data, des_usr_var_size, vw_poisson, vtp_findex
+      USE discretelement, only: des_intg_method
+      usE discretelement, only: des_coll_model
+
+      USE discretelement, only: des_continuum_coupled
+      USE discretelement, only: des_explicitly_coupled
+      USE discretelement, only: des_oneway_coupled
+
+      USE discretelement, only: kn, kn_w
+      USE discretelement, only: kt_fac, kt_w_fac
+
+      USE discretelement, only: mew, mew_w
+
+      USE discretelement, only: des_en_input, des_en_wall_input
+      USE discretelement, only: des_et_input, des_et_wall_input
+
+      USE discretelement, only: e_young, ew_young
+      USE discretelement, only: v_poisson, vw_poisson
+
+      USE discretelement, only: des_etat_fac, des_etat_w_fac
+
+      USE discretelement, only: particles
+      USE discretelement, only: des_usr_var_size
+
+      USE discretelement, only: print_des_data
+      USE discretelement, only: vtp_findex
+
+      USE discretelement, only: dim_m
       USE param1, only: undefined_i, undefined
 
 
@@ -95,21 +116,6 @@ MODULE DES_INIT_NAMELIST_MODULE
       PARTICLES = UNDEFINED_I
 !</keyword>
 
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Automatically generate the initial particle position and velocity
-!    data based on the parameters specified for each initial condition
-!    (IC) region.
-!  </description>
-!  <valid value=".TRUE." note="Generate particle configuration based
-!    on the initial condition parameters. Data provided in the
-!    particle_input.dat file, if present, is ignored. "/>
-!  <valid value=".FALSE." note="Particle position and velocity data are
-!    provided in the particle_input.dat file. A runtime error occurs if
-!    this file is not provided."/>
-      GENER_PART_CONFIG = .FALSE.
-!</keyword>
 
 !<keyword category="Discrete Element Simulation" required="false"
 !  dem="true" pic="true">
@@ -150,94 +156,6 @@ MODULE DES_INIT_NAMELIST_MODULE
       DES_USR_VAR_SIZE = 0
 !</keyword>
 
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Number of des grid cells in the I-direction. If left undefined,
-!    then it is set by MFIX such that its size equals three times the
-!    maximum particle diameter with a minimum of 1 cell.
-!  </description>
-      DESGRIDSEARCH_IMAX = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Number of des grid cells in the J-direction. If left undefined,
-!    then it is set by MFIX such that its size equals three times
-!    the maximum particle diameter with a minimum of 1 cell.
-!  </description>
-      DESGRIDSEARCH_JMAX = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Number of des grid cells in the K-direction. If left undefined,
-!    then it is set by MFIX such that its size equals three times
-!    the maximum particle diameter with a minimum of 1 cell.
-!  </description>
-      DESGRIDSEARCH_KMAX = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Specify the scheme used to map data to/from a particle's position
-!    and the Eulerian grid. This keyword is required when
-!    DES_INTERP_MEAN_FIELDS and/or DES_INTERP_ON are specified. A
-!    graphical representation of the schemes is shown below.
-!  </description>
-!  <valid value="NONE" note="Do not use interpolation."/>
-
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    The length used in interpolating data to/from a particle's position
-!    and the Eulerian grid. The interpolation width is only applicable
-!    to the DPVM_SQUARE and DPVM_GAUSS interpolation schemes as the
-!    GARG_2012 scheme's interpolation width is determined by the
-!    Eulerian grid dimensions.
-!    o The interpolation half-width cannot exceed the minimum cell
-!      dimension because interpolation is restricted to the 27-cell
-!      neighborhood surrounding a particle (9-cell neighborhood in 2D).
-!    o It is recommend that the DES_INTERP_WIDTH be set equal to the
-!      maximum particle diameter when using STL defined boundaries.
-!  </description>
-
-!</keyword>
-
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Enables/Disables interpolation of field quantities to a particle's
-!    position. This is used in calculating gas-particle interactions,
-!    such as the drag force.
-!  </description>
-!  <valid value=".FALSE." note="Use fluid values from the cell containing
-!    the particle's center."/>
-!  <valid value=".TRUE." note="Interpolate fluid values from the 27-cell
-!    neighborhood to a particle's position."/>
-
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Enables/Disables interpolation of particle data (e.g., solids
-!    volume and drag force) from a particle's position to the
-!    Eulerian grid.
-!  </description>
-!  <valid value=".FALSE." note="Assign particle data to the fluid
-!    grid cell containing the particle's center."/>
-!  <valid value=".TRUE." note="Interpolate particle data from the
-!    particle's position to the 27-cell neighborhood surrounding
-!    the particle."/>
-
-!</keyword>
-
 
 !<keyword category="Discrete Element Simulation" required="false" dem="true">
 !  <description>
@@ -262,37 +180,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !#####################################################################!
 ! DEM ONLY:            Discrete Element Model                         !
 !#####################################################################!
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Maximum number of steps through a DEM loop before a neighbor
-!    search will be performed. The search may be called earlier
-!    based on other logic.
-!  </description>
-!  <range min="0.0" max="+Inf" />
-      NEIGHBOR_SEARCH_N = 25
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Ratio of the distance (imaginary sphere radius) to particle radius
-!    that is allowed before a neighbor search is performed. This works
-!    in conjunction with the logic imposed by NEIGHBOR_SEARCH_N in
-!    deciding calls to the neighbor search algorithm.
-!  </description>
-      NEIGHBOR_SEARCH_RAD_RATIO = 1.0D0
-!</keyword>
-
-
-!<keyword category="Discrete Element Model" required="false">
-!  <description>
-!    Effectively increase the radius of a particle (multiple of the sum
-!    of particle radii) during the building of particle neighbor list.
-!  </description>
-      FACTOR_RLM = 1.2
-!</keyword>
-
 
 !<keyword category="Discrete Element Model" required="false">
 !  <description>

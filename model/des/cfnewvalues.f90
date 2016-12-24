@@ -8,28 +8,37 @@ MODULE CFNEWVALUES_MODULE
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos, des_pos_new, des_vel_new, omega_new, fc, tow, &
+      SUBROUTINE CFNEWVALUES(particle_state, des_radius, pmass, omoi, &
+         des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
       USE discretelement, only: do_nsearch, dtsolid
-      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth, neighbor_search_rad_ratio
-      USE discretelement, only: entering_particle, entering_ghost, nonexistent, exiting_ghost
+      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth
+      USE discretelement, only: entering_particle, entering_ghost
+      USE discretelement, only: nonexistent, exiting_ghost
       USE discretelement, only: normal_ghost
       USE param1, only: zero
       use constant, only: gravity
 
       IMPLICIT NONE
 
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, omoi, pmass
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: ppos
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new, des_vel_new, omega_new, fc, tow, des_acc_old, rot_acc_old
+      INTEGER         , INTENT(IN   ) :: particle_state(:)
+      DOUBLE PRECISION, INTENT(IN   ) :: des_radius(:)
+      DOUBLE PRECISION, INTENT(IN   ) :: omoi(:)
+      DOUBLE PRECISION, INTENT(IN   ) :: pmass(:)
+      DOUBLE PRECISION, INTENT(INOUT) :: des_pos_new(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: des_vel_new(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: omega_new(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: fc(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: tow(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: des_acc_old(:,:)
+      DOUBLE PRECISION, INTENT(INOUT) :: rot_acc_old(:,:)
 
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
       INTEGER :: L
-      DOUBLE PRECISION :: DD(3), NEIGHBOR_SEARCH_DIST
+      DOUBLE PRECISION :: DD(3)
       LOGICAL, SAVE :: FIRST_PASS = .TRUE.
 
       DOUBLE PRECISION :: lVELo(3), lPOSo(3)
@@ -86,17 +95,6 @@ MODULE CFNEWVALUES_MODULE
             DES_POS_NEW(L,:) = lPOSo(:) + DD(:)
             DES_ACC_OLD(L,:) = FC(L,:)
             ROT_ACC_OLD(L,:) = TOW(L,:)*OMOI(L)
-         ENDIF
-
-
-! Check if the particle has moved a distance greater than or equal to
-! its radius since the last time a neighbor search was called. if so,
-! make sure that neighbor is called in des_time_march
-         IF(.NOT.DO_NSEARCH) THEN
-            DD(:) = DES_POS_NEW(L,:) - PPOS(L,:)
-            NEIGHBOR_SEARCH_DIST = NEIGHBOR_SEARCH_RAD_RATIO*&
-               DES_RADIUS(L)
-            IF(dot_product(DD,DD).GE.NEIGHBOR_SEARCH_DIST**2) DO_NSEARCH = .TRUE.
          ENDIF
 
 ! Reset total contact force and torque

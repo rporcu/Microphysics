@@ -9,11 +9,11 @@ MODULE WRITE_RES0_DES_MODULE
 !  Purpose : Reads either single restart file or multiple restart files
 !            (based on bdist_io) flag
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^c
-      SUBROUTINE WRITE_RES0_DES(iglobal_id, particle_state, &
+      SUBROUTINE WRITE_RES0_DES( particle_state, &
          des_radius, ro_sol, des_usr_var, &
          des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: des_usr_var_size, dtsolid, tecplot_findex, vtp_findex
+      use discretelement, only: des_usr_var_size, dtsolid, vtp_findex
       use run, only: run_name
       use des_bc, only: dem_mi, dem_bcmi, dem_mi_time
 
@@ -24,7 +24,7 @@ MODULE WRITE_RES0_DES_MODULE
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: iglobal_id
+
 
 !-----------------------------------------------
 ! local variables
@@ -44,14 +44,11 @@ MODULE WRITE_RES0_DES_MODULE
       CALL INIT_WRITE_RES_DES(trim(RUN_NAME), VERSION, lNEXT_REC)
 
       CALL WRITE_RES_DES(lNEXT_REC, VTP_FINDEX)
-      CALL WRITE_RES_DES(lNEXT_REC, TECPLOT_FINDEX)
       CALL WRITE_RES_DES(lNEXT_REC, DTSOLID)
 
       DO LC1 = 1, lDIMN
          CALL WRITE_RES_pARRAY(lNEXT_REC, DES_POS_NEW(:,LC1))
       ENDDO
-
-      CALL WRITE_RES_pARRAY(lNEXT_REC, iGLOBAL_ID)
 
       CALL WRITE_RES_pARRAY(lNEXT_REC, particle_state)
 

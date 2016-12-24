@@ -1,7 +1,7 @@
       MODULE vtp
 
       use compar, only: numpes, mype, pe_io
-      use discretelement, only: s_time, vtp_findex, ighost_cnt, pip
+      use discretelement, only: s_time, vtp_findex, pip
       use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
       IMPLICIT NONE

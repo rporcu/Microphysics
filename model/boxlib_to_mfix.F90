@@ -23,10 +23,9 @@ contains
       flux_ge, flux_gn, flux_gt, &
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, &
-      pinc, flag, vol_surr,  &
-         iglobal_id, &
+       flag, vol_surr,  &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-      omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+      omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow)  &
       bind(C, name="mfix_MAIN")
 
@@ -108,11 +107,9 @@ contains
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
     double precision, intent(inout) :: drag_bm&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1:3)
-    integer         , intent(inout) :: pinc&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 
-    integer, intent(inout) :: iglobal_id(max_pip)
+
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
 
@@ -122,7 +119,6 @@ contains
     double precision, intent(inout) :: pmass(max_pip)
     double precision, intent(inout) :: omoi(max_pip)
 
-    double precision, intent(inout) :: ppos(max_pip,3)
     double precision, intent(inout) :: des_pos_new(max_pip,3)
     double precision, intent(inout) :: des_vel_new(max_pip,3)
     double precision, intent(inout) :: des_usr_var(max_pip,1)
@@ -141,11 +137,10 @@ contains
               tau_u_g, tau_v_g, tau_w_g,&
               flux_ge, flux_gn, flux_gt, &
               trd_g, lambda_g, mu_g,  &
-              f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
+              f_gds, A_m, b_m, drag_am, drag_bm,  &
               flag, vol_surr, &
-          iglobal_id, &
        particle_state, particle_phase, des_radius,  ro_sol, pvol, pmass, &
-       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+       omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
        rot_acc_old, drag_fc, fc, tow)
 
   end subroutine mfix_MAIN
@@ -160,11 +155,10 @@ contains
       tau_u_g ,tau_v_g, tau_w_g,&
       flux_ge, flux_gn, flux_gt, &
       trD_g, lambda_g, mu_g, &
-      f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
+      f_gds, A_m, b_m, drag_am, drag_bm,  &
       flag, vol_surr,  &
-         iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-      omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+      omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow)  &
       bind(C, name="mfix_time_march")
 
@@ -247,11 +241,9 @@ contains
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
     double precision, intent(inout) :: drag_bm&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1:3)
-    integer         , intent(inout) :: pinc&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 
-    integer, intent(inout) :: iglobal_id(max_pip)
+
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
 
@@ -261,7 +253,6 @@ contains
     double precision, intent(inout) :: pmass(max_pip)
     double precision, intent(inout) :: omoi(max_pip)
 
-    double precision, intent(inout) :: ppos(max_pip,3)
     double precision, intent(inout) :: des_pos_new(max_pip,3)
     double precision, intent(inout) :: des_vel_new(max_pip,3)
     double precision, intent(inout) :: des_usr_var(max_pip,1)
@@ -281,10 +272,10 @@ contains
        rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, &
        tau_u_g, tau_v_g, tau_w_g,&
        flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
-       f_gds, A_m, b_m, drag_am, drag_bm, pinc, flag, vol_surr,  &
-          iglobal_id, particle_state, particle_phase, &
+       f_gds, A_m, b_m, drag_am, drag_bm,  flag, vol_surr,  &
+           particle_state, particle_phase, &
        des_radius, ro_sol, pvol, pmass, omoi, &
-       ppos, des_pos_new, des_vel_new, des_usr_var, &
+       des_pos_new, des_vel_new, des_usr_var, &
        omega_new, des_acc_old, rot_acc_old, drag_fc, fc, tow)
 
   end subroutine mfix_time_march

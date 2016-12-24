@@ -8,10 +8,9 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, vol_surr, &
-            iglobal_id, particle_state,&
-         particle_phase, neighbor_index, neighbor_index_old, &
+             particle_state, particle_phase, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
+         des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -19,13 +18,12 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE compar, only: istart2, jstart2, kstart2
       USE compar, only: numpes, mype
       USE constant, only: pi
-      USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
+      USE discretelement, only: do_nsearch, pip, particles, max_pip, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
-      USE discretelement, only: gener_part_config, print_des_data, s_time
+      USE discretelement, only: print_des_data, s_time
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1
       USE geometry, only: vol
-      USE neighbour_module, only: neighbour
       USE param1, only: zero
 
       USE read_par_input_module, only: read_par_input
@@ -48,17 +46,21 @@ MODULE MAKE_ARRAYS_DES_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      integer, intent(inout) :: pinc &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
-      INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
+      double precision, intent(  out) :: pvol(:)
+      double precision, intent(  out) :: pmass(:)
+      double precision, intent(  out) :: des_radius(:)
+      double precision, intent(  out) :: ro_sol(:)
+      double precision, intent(  out) :: omoi(:)
+
+      double precision, intent(inout) :: fc(:,:)
+      double precision, intent(  out) :: des_vel_new(:,:)
+      double precision, intent(  out) :: des_pos_new(:,:)
+      double precision, intent(  out) :: omega_new(:,:)
+      double precision, intent(  out) :: des_usr_var(:,:)
+      integer         , intent(  out) :: particle_state(:)
+      integer         , intent(  out) :: particle_phase(:)
 
 !-----------------------------------------------
 ! Local variables
@@ -70,56 +72,10 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")
 
-      vol_surr(:,:,:) = ZERO
-
-      ! Initialize vol_surr array
-      DO K = KSTART2, KEND1
-         DO J = JSTART2, JEND1
-            DO I = ISTART2, IEND1
-
-               I1 = I
-               I2 = ip1(i)
-               J1 = J
-               J2 = jp1(j)
-               K1 = K
-               K2 = kp1(k)
-
-               ! Looping over stencil points (node values)
-               count = 0
-               if(1.eq.flag(i1,j1,k1,1)) count = count + 1
-               if(1.eq.flag(i2,j1,k1,1)) count = count + 1
-               if(1.eq.flag(i1,j2,k1,1)) count = count + 1
-               if(1.eq.flag(i2,j2,k1,1)) count = count + 1
-               if(1.eq.flag(i1,j1,k2,1)) count = count + 1
-               if(1.eq.flag(i2,j1,k2,1)) count = count + 1
-               if(1.eq.flag(i1,j2,k2,1)) count = count + 1
-               if(1.eq.flag(i2,j2,k2,1)) count = count + 1
-               vol_surr(i,j,k) = dble(count) * vol
-
-            ENDDO
-         ENDDO
-      ENDDO
-
-
-
 ! Set the initial particle data.
       IF(RUN_TYPE == 'NEW') THEN
          IF(PARTICLES /= 0) CALL READ_PAR_INPUT(particle_state, &
             des_radius, ro_sol, des_pos_new, des_vel_new)
-
-! Set the global ID for the particles and set the ghost cnt
-         ighost_cnt = 0
-         lpip_all = 0
-         lpip_all(mype) = pip
-! call global_all_sum(lpip_all)
-         lglobal_id = sum(lpip_all(0:mype-1))
-         imax_global_id = 0
-         do lcurpar  = 1,pip
-            lglobal_id = lglobal_id + 1
-            iglobal_id(lcurpar) = lglobal_id
-            imax_global_id = iglobal_id(pip)
-         end do
-! call global_all_max(imax_global_id)
 
 ! Initialize old values
          omega_new(:,:)   = zero
@@ -127,11 +83,9 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! Read the restart file.
       ELSEIF(RUN_TYPE == 'RESTART_1' .OR. RUN_TYPE == 'RESTART_2') THEN
 
-         CALL READ_RES0_DES(  iglobal_id, particle_state, &
+         CALL READ_RES0_DES(   particle_state, &
             des_radius, ro_sol, des_usr_var, &
             des_pos_new, des_vel_new, omega_new)
-         imax_global_id = maxval(iglobal_id(1:pip))
-         ! call global_all_max(imax_global_id)
 
       ELSE
 
@@ -161,12 +115,11 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
 
-      CALL NEIGHBOUR( pinc, particle_state, des_radius, des_pos_new, &
-         ppos, neighbor_index, neighbor_index_old)
+!      CALL NEIGHBOUR(  particle_state, des_radius, des_pos_new)
 
 ! Calculate mean fields using either interpolation or cell averaging.
       CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

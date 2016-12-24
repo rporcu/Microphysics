@@ -12,7 +12,7 @@ module output_manager_module
 !                                                                      !
 !----------------------------------------------------------------------!
      SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-        iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, &
+         particle_state, des_radius, ro_sol, des_pos_new, &
         des_vel_new, des_usr_var, omega_new, exit_signal, finished)
 
 ! Global Variables:
@@ -61,7 +61,7 @@ module output_manager_module
       double precision, intent(in) :: des_usr_var(max_pip,1)
       double precision, intent(in) :: omega_new(max_pip,3)
 
-      integer, intent(inout) :: iglobal_id(max_pip)
+
       integer, intent(inout) :: particle_state(max_pip)
 
 ! Dummy Arguments:
@@ -106,7 +106,7 @@ module output_manager_module
          CALL NOTIFY_USER('.RES;')
 
          IF(DEM_SOLIDS) THEN
-            CALL WRITE_RES0_DES(iglobal_id, particle_state, &
+            CALL WRITE_RES0_DES( particle_state, &
                des_radius, ro_sol, des_usr_var, &
                des_pos_new, des_vel_new, omega_new)
             CALL NOTIFY_USER('DES.RES;')
