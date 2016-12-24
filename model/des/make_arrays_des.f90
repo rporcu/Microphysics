@@ -8,7 +8,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, vol_surr, &
-         pijk,   iglobal_id, particle_state,&
+            iglobal_id, particle_state,&
          particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
@@ -27,7 +27,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE geometry, only: vol
       USE neighbour_module, only: neighbour
       USE param1, only: zero
-      USE particles_in_cell_module, only: init_particles_in_cell, particles_in_cell, pic_search
+
       USE read_par_input_module, only: read_par_input
       USE read_res0_des_module, only: read_res0_des
       USE run, only: run_type, time
@@ -59,7 +59,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
       INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
       INTEGER, DIMENSION(:), INTENT(OUT) :: neighbor_index, neighbor_index_old
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 !-----------------------------------------------
 ! Local variables
@@ -158,24 +157,15 @@ MODULE MAKE_ARRAYS_DES_MODULE
       ENDDO
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
-      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state,   &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
-! Bin the particles to the DES grid.
-!      CALL DESGRID_PIC(PLOCATE=.TRUE., dg_pijkprv= dg_pijk= &
-!         des_pos_new=des_pos_new, particle_state=particle_state)
-!      CALL DES_PAR_EXCHANGE(pijk, particle_state,   &
-!         des_usr_var, des_pos_new, des_vel_new, omega_new, fc)
-      CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
-         des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 
-      CALL NEIGHBOUR(pijk, pinc, particle_state, des_radius, des_pos_new, &
+      CALL NEIGHBOUR( pinc, particle_state, des_radius, des_pos_new, &
          ppos, neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
+      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,particle_state,particle_phase,pmass,pvol, &
          des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN

@@ -189,7 +189,6 @@ int main (int argc, char* argv[])
 
   int mmax = 1;
 
-  Array<int>    pijk        (3*nparticles);
   Array<int> iglobal_id     (  nparticles);
   Array<int> particle_state (  nparticles);
   Array<int> particle_phase (  nparticles);
@@ -226,7 +225,6 @@ int main (int argc, char* argv[])
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
                drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
-               pijk.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
@@ -250,7 +248,6 @@ int main (int argc, char* argv[])
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
                drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
-               pijk.dataPtr(),
                iglobal_id.dataPtr(), particle_state.dataPtr(), particle_phase.dataPtr(),
                des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),

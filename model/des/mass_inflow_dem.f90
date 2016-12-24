@@ -24,7 +24,7 @@ MODULE MASS_INFLOW_DEM_MODULE
 !  particles entering the system.                                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MASS_INFLOW_DEM(pijk, particle_phase,  iglobal_id, particle_state, &
+      SUBROUTINE MASS_INFLOW_DEM( particle_phase,  iglobal_id, particle_state, &
          des_radius, omoi, pmass, pvol, ro_sol, &
          des_vel_new, des_pos_new, ppos, omega_new, drag_fc)
 
@@ -34,7 +34,6 @@ MODULE MASS_INFLOW_DEM_MODULE
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, drag_fc
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
       INTEGER :: IP, LS, M, NP, IJK, LC

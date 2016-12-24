@@ -24,7 +24,7 @@ contains
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, &
       pinc, flag, vol_surr,  &
-      pijk,   iglobal_id, &
+         iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow)  &
@@ -112,7 +112,6 @@ contains
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 
-    integer, intent(inout) :: pijk(max_pip,3)
     integer, intent(inout) :: iglobal_id(max_pip)
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
@@ -144,7 +143,7 @@ contains
               trd_g, lambda_g, mu_g,  &
               f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
               flag, vol_surr, &
-       pijk,   iglobal_id, &
+          iglobal_id, &
        particle_state, particle_phase, des_radius,  ro_sol, pvol, pmass, &
        omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
        rot_acc_old, drag_fc, fc, tow)
@@ -163,7 +162,7 @@ contains
       trD_g, lambda_g, mu_g, &
       f_gds, A_m, b_m, drag_am, drag_bm, pinc, &
       flag, vol_surr,  &
-      pijk,   iglobal_id, &
+         iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
       rot_acc_old, drag_fc, fc, tow)  &
@@ -252,7 +251,6 @@ contains
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 
-    integer, intent(inout) :: pijk(max_pip,3)
     integer, intent(inout) :: iglobal_id(max_pip)
     integer, intent(inout) :: particle_state(max_pip)
     integer, intent(inout) :: particle_phase(max_pip)
@@ -284,7 +282,7 @@ contains
        tau_u_g, tau_v_g, tau_w_g,&
        flux_ge, flux_gn, flux_gt, trd_g, lambda_g, mu_g, &
        f_gds, A_m, b_m, drag_am, drag_bm, pinc, flag, vol_surr,  &
-       pijk,   iglobal_id, particle_state, particle_phase, &
+          iglobal_id, particle_state, particle_phase, &
        des_radius, ro_sol, pvol, pmass, omoi, &
        ppos, des_pos_new, des_vel_new, des_usr_var, &
        omega_new, des_acc_old, rot_acc_old, drag_fc, fc, tow)

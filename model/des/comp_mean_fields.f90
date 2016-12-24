@@ -1,12 +1,5 @@
 module comp_mean_fields_module
 
-   use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-   use discretelement, only: max_pip
-   use geometry, only: vol
-   use param1, only: zero
-
-   use constant, only:MMAX, RO_S0
-
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -17,9 +10,16 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,particle_state,&
         particle_phase, pmass, pvol, des_pos_new,des_vel_new, &
         des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+
+      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
+      use discretelement, only: max_pip
+      use geometry, only: dx, dy, dz, vol
+      use param1, only: zero
+
+      use constant, only:MMAX, RO_S0
 
 
       use discretelement, only: nonexistent, normal_ghost
@@ -35,7 +35,6 @@ module comp_mean_fields_module
       integer, intent(in) :: particle_state(:)
       integer, intent(in) :: particle_phase(:)
       integer, intent(in) :: iglobal_id(:)
-      integer, intent(in) :: pijk(:,:)
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -61,9 +60,13 @@ module comp_mean_fields_module
       DOUBLE PRECISION :: SOLVOLINC&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! One over cell volume
-      double precision :: OoVol
+      double precision :: OoVol, Oodx, Oody, Oodz
 
       SOLVOLINC(:,:,:) = ZERO
+
+      Oodx = 1.0d0/dx
+      Oody = 1.0d0/dy
+      Oodz = 1.0d0/dz
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
@@ -73,9 +76,10 @@ module comp_mean_fields_module
             EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Fluid cell containing the particle
-         I = PIJK(NP,1)
-         J = PIJK(NP,2)
-         K = PIJK(NP,3)
+         i = floor(des_pos_new(np,1)*Oodx) + 1
+         j = floor(des_pos_new(np,2)*Oody) + 1
+         k = floor(des_pos_new(np,3)*Oodz) + 1
+
 ! Particle phase for data binning.
 ! Accumulate total solids volume (by phase)
          SOLVOLINC(I,J,K) = SOLVOLINC(I,J,K) + PVOL(NP)

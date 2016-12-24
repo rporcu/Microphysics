@@ -17,7 +17,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 f_gds, A_m, b_m, &
                 drag_am, drag_bm, pinc, &
                 flag, vol_surr,  &
-                pijk,   iglobal_id, &
+                   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
@@ -152,7 +152,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       integer, intent(inout) :: pinc&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      integer, intent(inout) :: pijk(max_pip,3)
       integer, intent(inout) :: iglobal_id(max_pip)
       integer, intent(inout) :: particle_state(max_pip)
       integer, intent(inout) :: particle_phase(max_pip)
@@ -223,9 +222,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! DES grid bin information
          IGHOST_UPDATED(LB:UB) = .false.
-
-! Fluid cell bin information
-         PIJK(LB:UB,:) = 0
 
 ! Translation and rotational forces
          FC(LB:UB,:) = ZERO
@@ -340,7 +336,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         flag, vol_surr, pijk,   iglobal_id, &
+         flag, vol_surr,    iglobal_id, &
          particle_state, particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
@@ -358,7 +354,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
+         f_gds, drag_am, drag_bm,  particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius,  pinc)
 
       IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)

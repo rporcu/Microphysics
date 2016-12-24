@@ -20,8 +20,8 @@ module des_drag_gp_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g, f_gp, pijk, &
-                             des_radius,  pvol, particle_phase)
+     SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g,&
+        f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
 !-----------------------------------------------
 ! Modules
@@ -41,8 +41,10 @@ module des_drag_gp_module
 
       IMPLICIT NONE
 
+! indices, associated with current particle
+      INTEGER, intent(in   ) :: I, J, K
+
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
-      INTEGER, DIMENSION(:,:), INTENT(IN) :: pijk
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -66,8 +68,6 @@ module des_drag_gp_module
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! indices, associated with current particle
-      INTEGER :: I, J, K
 ! solids phase index, associated with current particle
       INTEGER :: M
 ! Slip velocity and its magnitude
@@ -91,11 +91,6 @@ module des_drag_gp_module
       DOUBLE PRECISION :: ROg, ROPg, DPM
 !-----------------------------------------------
 
-
-! values based on current particle
-      I = PIJK(NP,1)
-      J = PIJK(NP,2)
-      K = PIJK(NP,3)
 ! solids phase index of current particle
       M = particle_phase(NP)
 ! Gas material and bulk densities

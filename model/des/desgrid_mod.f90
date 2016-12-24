@@ -47,7 +47,7 @@
 ! Purpose          : This particles build the neigh list for the particles
 !                    currently active in the system
 !------------------------------------------------------------------------
-      subroutine desgrid_neigh_build(des_pos_new, pijk, pinc, particle_state,&
+      subroutine desgrid_neigh_build(des_pos_new,  pinc, particle_state,&
          des_radius, neighbor_index)
 
          use geometry, only: dx, dy, dz
@@ -58,7 +58,6 @@
       double precision, intent(in) :: des_pos_new(:,:)
       integer, intent(inout) :: neighbor_index(:)
       integer, intent(in) :: particle_state(:)
-      integer, intent(in) :: pijk(:,:)
       integer, intent(in) :: pinc(:,:,:)
 
 !-----------------------------------------------
@@ -100,9 +99,9 @@
             normal_ghost==particle_state(lcurpar) .or. &
             exiting_ghost==particle_state(lcurpar)) cycle
 
-         lic = PIJK(lcurpar,1)
-         ljc = PIJK(lcurpar,2)
-         lkc = PIJK(lcurpar,3)
+         lic = floor(des_pos_new(lcurpar,1)*Oodx) + 1
+         ljc = floor(des_pos_new(lcurpar,2)*Oody) + 1
+         lkc = floor(des_pos_new(lcurpar,3)*Oodz) + 1
 
          il_off = 1
          iu_off = 1

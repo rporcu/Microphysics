@@ -15,7 +15,7 @@ MODULE NEIGHBOUR_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE NEIGHBOUR(pijk, pinc, particle_state, des_radius, &
+      SUBROUTINE NEIGHBOUR( pinc, particle_state, des_radius, &
          des_pos_new, ppos, neighbor_index, neighbor_index_old)
 
       USE discretelement, only: do_nsearch, max_pip, neighbors_old
@@ -24,7 +24,6 @@ MODULE NEIGHBOUR_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(in) :: pijk(:,:)
       integer, intent(in) :: pinc(:,:,:)
       integer, intent(inout) :: particle_state(:)
       integer, intent(inout) :: neighbor_index(:)
@@ -54,7 +53,7 @@ MODULE NEIGHBOUR_MODULE
 
       NEIGHBOR_INDEX(:) = 0
 
-      call desgrid_neigh_build(des_pos_new, pijk, pinc, particle_state, &
+      call desgrid_neigh_build(des_pos_new,  pinc, particle_state, &
          des_radius, neighbor_index)
 
       do ll = 1, max_pip

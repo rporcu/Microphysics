@@ -16,7 +16,7 @@ module iterate_module
                          flux_ge, flux_gn, flux_gt, mu_g,&
                          f_gds, A_m, b_m, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_phase, particle_state, pvol, &
+                          particle_phase, particle_state, pvol, &
                          des_radius,  des_pos_new, des_vel_new, flag, pinc, IER, NIT)
 
       USE calc_mflux_module, only: calc_mflux
@@ -118,7 +118,6 @@ module iterate_module
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -214,7 +213,7 @@ module iterate_module
 
 ! Calculate coefficients, excluding density and reactions.
       CALL CALC_COEFF(flag, 1, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
+         f_gds, drag_am, drag_bm,  particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius,  pinc)
       IF (IER_MANAGER()) goto 1000
 

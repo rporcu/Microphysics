@@ -12,7 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
          LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, vol_surr, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
-            f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+            f_gds, drag_am, drag_bm,  particle_phase, iglobal_id, &
             particle_state, pinc, pmass, pvol, des_radius,  &
             des_pos_new, des_vel_new, des_usr_var, IER, NIT)
 
@@ -91,7 +91,6 @@
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
@@ -192,7 +191,7 @@
 
             ! Recalculate all coefficients
             CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-               f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+               f_gds, drag_am, drag_bm,  particle_phase, iglobal_id, &
                particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius,  &
                des_usr_var, flag, vol_surr, pinc)
 ! Iterate again with new dt

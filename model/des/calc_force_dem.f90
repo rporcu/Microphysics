@@ -15,7 +15,6 @@ MODULE CALC_FORCE_DEM_MODULE
          des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, &
          neighbor_index)
 
-         USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
          USE discretelement, only: des_etan, des_etat, hert_kt, &
@@ -24,7 +23,7 @@ MODULE CALC_FORCE_DEM_MODULE
          USE discretelement, only: kn, kt, mew, hertzian
          USE discretelement, only: nonexistent
 
-         USE drag_gs_des1_module, only: drag_gs_des1
+         USE drag_gs_des1_module, only: drag_gs_des
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
          USE param1, only: small_number, zero
 
@@ -83,9 +82,6 @@ MODULE CALC_FORCE_DEM_MODULE
       DOUBLE PRECISION :: FNMD, MAG_OVERLAP_T, TANGENT(3)
 
 !-----------------------------------------------
-
-      CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
-         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
 ! Check particle LL neighbor contacts
 !---------------------------------------------------------------------//

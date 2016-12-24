@@ -58,7 +58,7 @@ MODULE SET_GEOMETRY_DES_MODULE
 
 ! Each loop starts at 2 and goes to max+2 (i.e., imin1=2, imax2=imax+2)
 ! However, the indices range to include ghost cells (0-imax2) to avoid
-! multiple if statements in particles_in_cell
+
       XE(IMIN2-1) = ZERO-DX
       DO I = IMIN2, IMAX2
          XE(I) = XE(I-1) + DX

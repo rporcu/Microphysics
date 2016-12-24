@@ -90,7 +90,6 @@ set(F90_sources
   model/des/cfnewvalues.f90
   model/des/cfrelvel.f90
   model/des/cfslide.f90
-  model/des/check_cell_movement.f90
   model/des/comp_mean_fields.f90
   model/des/des_allocate_mod.f90
   model/des/des_bc_mod.f90
@@ -107,7 +106,6 @@ set(F90_sources
   model/des/mass_inflow_dem.f90
   model/des/mass_outflow_dem.f90
   model/des/neighbour.f90
-  model/des/particles_in_cell.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90
   model/des/read_res0_des.f90

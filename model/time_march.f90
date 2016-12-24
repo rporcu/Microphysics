@@ -23,7 +23,7 @@ module time_march_module
                 f_gds, A_m, b_m, &
                 drag_am, drag_bm, pinc, &
                 flag, vol_surr,  &
-                pijk,   iglobal_id, &
+                   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
@@ -140,7 +140,6 @@ module time_march_module
       integer         , INTENT(INOUT) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      integer, intent(inout) :: pijk(max_pip,3)
       integer, intent(inout) :: iglobal_id(max_pip)
       integer, intent(inout) :: particle_state(max_pip)
       integer, intent(inout) :: particle_phase(max_pip)
@@ -222,7 +221,7 @@ module time_march_module
 
 ! Calculate coefficients
          CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-            f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+            f_gds, drag_am, drag_bm,  particle_phase, iglobal_id, &
             particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, &
             des_usr_var, flag, vol_surr, pinc)
 
@@ -247,12 +246,12 @@ module time_march_module
             flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
             A_m, b_m, drag_am, drag_bm,&
             tau_u_g,tau_v_g,tau_w_g,&
-            pijk, particle_phase, particle_state, pvol, &
+             particle_phase, particle_state, pvol, &
             des_radius,  des_pos_new, des_vel_new, flag, pinc, IER, NIT)
 
          DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, vol_surr, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
-            drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
+            drag_am, drag_bm,  particle_phase, iglobal_id, &
             particle_state, pinc, pmass, pvol, des_radius,  &
             des_pos_new, des_vel_new, des_usr_var, IER, NIT))
 
@@ -261,7 +260,7 @@ module time_march_module
                flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
                A_m, b_m, drag_am, drag_bm,&
                tau_u_g,tau_v_g,tau_w_g,&
-               pijk, particle_phase, particle_state, pvol, &
+                particle_phase, particle_state, pvol, &
                des_radius,  des_pos_new, des_vel_new, flag, pinc, IER, NIT)
          ENDDO
 
@@ -275,7 +274,7 @@ module time_march_module
 ! Other solids model implementations
          IF(DEM_SOLIDS) THEN
             call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-               pijk,   iglobal_id, particle_state, particle_phase, &
+                  iglobal_id, particle_state, particle_phase, &
                neighbor_index, neighbor_index_old, des_radius,  ro_sol, pvol, pmass,&
                omoi, des_usr_var, ppos, des_pos_new, des_vel_new, omega_new, &
                des_acc_old, rot_acc_old, drag_fc, fc, tow, &
