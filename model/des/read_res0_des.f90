@@ -65,12 +65,6 @@ MODULE READ_RES0_DES_MODULE
 ! RES2 does not need the collision of BC information.
       IF(RUN_TYPE == 'RESTART_2') RETURN
 
-! Collision/neighbor data is read and used to setup cARRAY reads.
-!      CALL READ_PAR_COL(lNEXT_REC)
-!
-!      DO LC1=1, lDIMN
-!         CALL READ_RES_cARRAY(lNEXT_REC, PFT_NEIGHBOR(LC1,:))
-!      ENDDO
 
 ! Save the number of BCMI's read from input file, then read the
 ! value from the restart file.

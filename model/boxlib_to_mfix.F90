@@ -27,7 +27,7 @@ contains
       pijk,   iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-      rot_acc_old, drag_fc, fc, tow, wall_collision_pft)  &
+      rot_acc_old, drag_fc, fc, tow)  &
       bind(C, name="mfix_MAIN")
 
       use discretelement, only: max_pip
@@ -135,8 +135,6 @@ contains
     double precision, intent(inout) :: fc(max_pip,3)
     double precision, intent(inout) :: tow(max_pip,3)
 
-    double precision, intent(inout) :: wall_collision_pft(3,8,max_pip)
-
     call mfix(u_g, v_g, w_g, u_go, v_go, w_go, &
               p_g, p_go, pp_g, ep_g, ep_go, &
               ro_g, ro_go, rop_g, rop_go, &
@@ -149,7 +147,7 @@ contains
        pijk,   iglobal_id, &
        particle_state, particle_phase, des_radius,  ro_sol, pvol, pmass, &
        omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-       rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
+       rot_acc_old, drag_fc, fc, tow)
 
   end subroutine mfix_MAIN
 
@@ -168,7 +166,7 @@ contains
       pijk,   iglobal_id, &
       particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
       omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-      rot_acc_old, drag_fc, fc, tow, wall_collision_pft)  &
+      rot_acc_old, drag_fc, fc, tow)  &
       bind(C, name="mfix_time_march")
 
       use discretelement, only: max_pip
@@ -277,7 +275,7 @@ contains
     double precision, intent(inout) :: fc(max_pip,3)
     double precision, intent(inout) :: tow(max_pip,3)
 
-    double precision, intent(inout) :: wall_collision_pft(3,8,max_pip)
+
 
     call time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
        p_g, p_go, pp_g, ep_g, ep_go, &
@@ -289,7 +287,7 @@ contains
        pijk,   iglobal_id, particle_state, particle_phase, &
        des_radius, ro_sol, pvol, pmass, omoi, &
        ppos, des_pos_new, des_vel_new, des_usr_var, &
-       omega_new, des_acc_old, rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
+       omega_new, des_acc_old, rot_acc_old, drag_fc, fc, tow)
 
   end subroutine mfix_time_march
 

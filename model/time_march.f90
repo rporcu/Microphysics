@@ -26,7 +26,7 @@ module time_march_module
                 pijk,   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
+                rot_acc_old, drag_fc, fc, tow)
 
       USE check_batch_queue_end_module, only: check_batch_queue_end
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -163,8 +163,6 @@ module time_march_module
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 
-      double precision, intent(inout) :: wall_collision_pft(3,8,max_pip)
-
 !      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
 
 !-----------------------------------------------
@@ -280,7 +278,7 @@ module time_march_module
                pijk,   iglobal_id, particle_state, particle_phase, &
                neighbor_index, neighbor_index_old, des_radius,  ro_sol, pvol, pmass,&
                omoi, des_usr_var, ppos, des_pos_new, des_vel_new, omega_new, &
-               des_acc_old, rot_acc_old, drag_fc, fc, tow, wall_collision_pft, &
+               des_acc_old, rot_acc_old, drag_fc, fc, tow, &
                flag, vol_surr, pinc)
             IF(.NOT.DES_CONTINUUM_COUPLED) return
          ENDIF

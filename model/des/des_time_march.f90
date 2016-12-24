@@ -17,7 +17,7 @@ module des_time_march_module
          neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-         drag_fc, fc, tow, wall_collision_pft, flag, vol_surr, pinc)
+         drag_fc, fc, tow, flag, vol_surr, pinc)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -67,15 +67,31 @@ module des_time_march_module
       INTEGER        , INTENT(INOUT) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
-      DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: pvol, pmass, des_radius, ro_sol, omoi
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_acc_old, rot_acc_old, drag_fc, fc, tow
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
-      INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      double precision, intent(inout) :: pvol(:)
+      double precision, intent(inout) :: pmass(:)
+      double precision, intent(inout) :: des_radius(:)
+      double precision, intent(inout) :: ro_sol(:)
+      double precision, intent(inout) :: omoi(:)
+
+      double precision, intent(inout) :: des_pos_new(:,:)
+      double precision, intent(inout) :: des_vel_new(:,:)
+
+      double precision, intent(inout) :: des_acc_old(:,:)
+      double precision, intent(inout) :: rot_acc_old(:,:)
+      double precision, intent(inout) :: drag_fc(:,:)
+      double precision, intent(inout) :: fc(:,:)
+      double precision, intent(inout) :: tow(:,:)
+
+      double precision, intent(inout) :: ppos(:,:)
+      double precision, intent(inout) :: omega_new(:,:)
+      double precision, intent(inout) :: des_usr_var(:,:)
+
+      integer, intent(inout) :: particle_state(:)
+      integer, intent(inout) :: neighbor_index(:)
+      integer, intent(inout) :: neighbor_index_old(:)
+      integer, intent(  out) :: iglobal_id(:)
+      integer, intent(  out) :: particle_phase(:)
+      integer, intent(  out) :: pijk(:,:)
 
 !------------------------------------------------
 ! Local variables
@@ -171,7 +187,7 @@ module des_time_march_module
 
 ! Calculate forces acting on particles (collisions, drag, etc).
          CALL CALC_FORCE_DEM(particle_phase, particle_state,  &
-            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
+            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, neighbor_index)
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
             fc,drag_fc,pvol, &

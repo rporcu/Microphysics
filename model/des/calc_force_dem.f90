@@ -12,29 +12,32 @@ MODULE CALC_FORCE_DEM_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state,  &
-         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, wall_collision_pft, neighbor_index)
+         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, &
+         neighbor_index)
 
          USE calc_collision_wall, only: calc_dem_force_with_wall_stl
          USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
-         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn, neighbors, s_time, des_crossprdct
+         USE discretelement, only: des_etan, des_etat, hert_kt, &
+            hert_kn, neighbors, s_time, des_crossprdct
          USE discretelement, only: kn, kt, max_pip, mew, hertzian
          USE discretelement, only: nonexistent
-         USE discretelement, only: pft_neighbor
 
          USE drag_gs_des1_module, only: drag_gs_des1
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
          USE param1, only: small_number, zero
 
-      IMPLICIT NONE
+         IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX
+      integer, intent(in) :: particle_state(:)
+      integer, intent(in) :: particle_phase(:)
+      integer, intent(inout) :: neighbor_index(:)
+
+      double precision, intent(in) :: des_radius(:)
+      double precision, intent(in) :: des_pos_new(:,:)
+      double precision, intent(in) :: des_vel_new(:,:)
+      double precision, intent(in) :: omega_new(:,:)
+      double precision, intent(inout) :: fc(:,:), tow(:,:)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -76,14 +79,12 @@ MODULE CALC_FORCE_DEM_MODULE
 
       LOGICAL, PARAMETER :: report_excess_overlap = .FALSE.
 
-      DOUBLE PRECISION :: FNMD, FTMD, MAG_OVERLAP_T, TANGENT(3)
+      DOUBLE PRECISION :: FNMD, MAG_OVERLAP_T, TANGENT(3)
 
 !-----------------------------------------------
 
       CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
-         des_radius(1:MAX_PIP), &
-         des_pos_new(1:MAX_PIP, :), des_vel_new(1:MAX_PIP, :), &
-         omega_new(1:MAX_PIP, :), fc(1:MAX_PIP, :), tow(1:MAX_PIP, :), wall_collision_pft)
+         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
 ! Check particle LL neighbor contacts
 !---------------------------------------------------------------------//
@@ -107,10 +108,7 @@ MODULE CALC_FORCE_DEM_MODULE
 
             FC_TMP(:) = ZERO
 
-            IF(DIST_MAG > (R_LM - SMALL_NUMBER)**2) THEN
-               PFT_NEIGHBOR(:,CC) = 0.0
-               CYCLE
-            ENDIF
+            IF(DIST_MAG > (R_LM - SMALL_NUMBER)**2) CYCLE
 
             IF(abs(DIST_MAG) < epsilon(dist_mag)) THEN
                WRITE(*,8550) LL, I
@@ -155,33 +153,20 @@ MODULE CALC_FORCE_DEM_MODULE
                ETAN_DES * V_REL_TRANS_NORM * NORMAL(:))
 
 ! Calcuate the tangential overlap
-            OVERLAP_T(:) = DTSOLID*VREL_T(:) + PFT_NEIGHBOR(:,CC)
+            OVERLAP_T(:) = DTSOLID*VREL_T(:)
             MAG_OVERLAP_T = sqrt(dot_product(OVERLAP_T,OVERLAP_T))
 
 ! Calculate the tangential contact force.
             IF(MAG_OVERLAP_T > 0.0) THEN
-! Tangential froce from spring.
-               FTMD = KT_DES*MAG_OVERLAP_T
 ! Max force before the on set of frictional slip.
                FNMD = MEW*sqrt(dot_product(FN,FN))
 ! Direction of tangential force.
                TANGENT = OVERLAP_T/MAG_OVERLAP_T
 ! Frictional slip
-               IF(FTMD > FNMD) THEN
-                  FT = -FNMD * TANGENT
-                  OVERLAP_T = (FNMD/KT_DES) * TANGENT
-               ELSE
-                  FT = -FTMD * TANGENT
-               ENDIF
+               FT = -FNMD * TANGENT
             ELSE
                FT = 0.0
             ENDIF
-
-! Add in the tangential dashpot damping force
-            FT = FT - ETAT_DES * VREL_T(:)
-
-! Save tangential displacement history
-            PFT_NEIGHBOR(:,CC) = OVERLAP_T(:)
 
 ! calculate the distance from the particles' centers to the contact point,
 ! which is taken as the radical line

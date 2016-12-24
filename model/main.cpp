@@ -210,8 +210,6 @@ int main (int argc, char* argv[])
   Array<Real> fc            (3*nparticles);
   Array<Real> tow           (3*nparticles);
 
-  Array<Real> wall_collision_pft(3*8*nparticles);
-
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_MAIN(
                u_g[mfi].dataPtr(),     v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
@@ -234,8 +232,7 @@ int main (int argc, char* argv[])
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
-               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr(),
-               wall_collision_pft.dataPtr());
+               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_time_march(
@@ -259,8 +256,7 @@ int main (int argc, char* argv[])
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
-               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr(),
-               wall_collision_pft.dataPtr());
+               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
 
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_usr3(u_g[mfi].dataPtr(),    v_g[mfi].dataPtr(),

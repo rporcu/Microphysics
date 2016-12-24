@@ -38,7 +38,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
          SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
             particle_state,  des_radius, des_pos_new, &
-            des_vel_new, omega_new, fc, tow, wall_collision_pft)
+            des_vel_new, omega_new, fc, tow)
 
       use geometry, only: imax1, jmax1, kmax1
       use geometry, only: xlength, ylength, zlength
@@ -46,7 +46,6 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(INOUT) :: wall_collision_pft
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
@@ -60,13 +59,13 @@
       DOUBLE PRECISION :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
 ! local normal and tangential forces
       DOUBLE PRECISION :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
-      DOUBLE PRECISION, DIMENSION(DIMN) :: FTAN, FNORM, OVERLAP_T
+      DOUBLE PRECISION, DIMENSION(DIMN) :: FT, FN, OVERLAP_T
 
       INTEGER :: CELL_ID, cell_count
       INTEGER :: PHASELL
 
       DOUBLE PRECISION :: TANGENT(DIMN)
-      DOUBLE PRECISION :: FTMD, FNMD
+      DOUBLE PRECISION :: FNMD
 ! local values used spring constants and damping coefficients
       DOUBLE PRECISION ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
 
@@ -137,8 +136,6 @@
          if(i > 2 .and. i<imax1 .and. &
             j > 2 .and. j<jmax1 .and. &
             k > 2 .and. k<kmax1) then
-            WALL_COLLISION_FACET_ID(:,LL) = -1
-            WALL_COLLISION_PFT(:,:,LL) = 0.0d0
             CYCLE
          ENDIF
 
@@ -151,36 +148,17 @@
          DO NF = 1, 6
 
             if(nf==1 .and. i==2) then
-               if(des_pos_new(ll,1) > des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
+               if(des_pos_new(ll,1) > des_radius(LL)) cycle
             elseif(nf==2 .and. i==imax1) then
-               if(des_pos_new(ll,1) < xlength - des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
+               if(des_pos_new(ll,1) < xlength - des_radius(LL)) cycle
             elseif(nf==3 .and. j==2) then
-               if(des_pos_new(ll,2) > des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
+               if(des_pos_new(ll,2) > des_radius(LL)) cycle
             elseif(nf==4 .and. j==jmax1) then
-               if(des_pos_new(ll,2) < ylength - des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
-
+               if(des_pos_new(ll,2) < ylength - des_radius(LL)) cycle
             elseif(nf==5 .and. k==2) then
-               if(des_pos_new(ll,3) > des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
+               if(des_pos_new(ll,3) > des_radius(LL)) cycle
             elseif(nf==6 .and. k==kmax1) then
-               if(des_pos_new(ll,3) < zlength - des_radius(LL)) then
-                  wall_collision_PFT(:,nf,LL) = 0.0d0
-                  cycle
-               endif
+               if(des_pos_new(ll,3) < zlength - des_radius(LL)) cycle
             endif
 
 
@@ -229,10 +207,7 @@
 ! when the particle does not overlap the triangle.
 ! However, if the orthogonal projection shows no overlap, then
 ! that is a big fat negative and overlaps are not possible.
-            if((line_t.le.-1.0001d0*des_radius(LL))) then  ! no overlap
-               wall_collision_PFT(:,nf,LL) = 0.0d0
-               CYCLE
-            ENDIF
+            if((line_t.le.-1.0001d0*des_radius(LL))) CYCLE
 
             POS_TMP = DES_POS_NEW(LL,:)
             CALL ClosestPtPointTriangle(POS_TMP, &
@@ -241,10 +216,7 @@
             DIST(:) = CLOSEST_PT(:) - DES_POS_NEW(LL,:)
             DISTSQ = DOT_PRODUCT(DIST, DIST)
 
-            IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) THEN !No overlap exists
-               wall_collision_PFT(:,nf,LL) = 0.0d0
-               CYCLE
-            ENDIF
+            IF(DISTSQ .GE. RADSQ - SMALL_NUMBER) CYCLE
 
             MAX_DISTSQ = DISTSQ
             MAX_NF = NF
@@ -286,41 +258,30 @@
             ENDIF
 
 ! Calculate the normal contact force
-            FNORM(:) = -(KN_DES_W * OVERLAP_N * NORMAL(:) + &
+            FN(:) = -(KN_DES_W * OVERLAP_N * NORMAL(:) + &
                ETAN_DES_W * V_REL_TRANS_NORM * NORMAL(:))
 
 ! Calculate the tangential displacement.
-            OVERLAP_T(:) = DTSOLID*VREL_T(:) + wall_collision_PFT(:,nf,LL)
+            OVERLAP_T(:) = DTSOLID*VREL_T(:)
             MAG_OVERLAP_T = sqrt(DOT_PRODUCT(OVERLAP_T, OVERLAP_T))
 
 ! Check for Coulombs friction law and limit the maximum value of the
 ! tangential force on a particle in contact with a wall.
             IF(MAG_OVERLAP_T > 0.0) THEN
-! Tangential froce from spring.
-               FTMD = KT_DES_W*MAG_OVERLAP_T
 ! Max force before the on set of frictional slip.
-               FNMD = MEW_W*sqrt(DOT_PRODUCT(FNORM,FNORM))
+               FNMD = MEW_W*sqrt(DOT_PRODUCT(FN,FN))
 ! Direction of tangential force.
                TANGENT = OVERLAP_T/MAG_OVERLAP_T
-               IF(FTMD < FNMD) THEN
-                  FTAN = -FTMD * TANGENT
-               ELSE
-                  FTAN = -FNMD * TANGENT
-                  OVERLAP_T = (FNMD/KT_DES_W) * TANGENT
-               ENDIF
+               FT = -FNMD * TANGENT
             ELSE
-               FTAN = 0.0
+               FT = 0.0
             ENDIF
-! Add in the tangential dashpot damping force
-            FTAN = FTAN - ETAT_DES_W*VREL_T(:)
 
-! Save the tangential displacement.
-            wall_collision_PFT(:,nf,LL) = OVERLAP_T(:)
 ! Add the collision force to the total forces acting on the particle.
-            FC(LL,:) = FC(LL,:) + FNORM(:) + FTAN(:)
+            FC(LL,:) = FC(LL,:) + FN(:) + FT(:)
 
 ! Add the torque force to the toal torque acting on the particle.
-            TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FTAN)
+            TOW(LL,:) = TOW(LL,:) + DISTMOD*DES_CROSSPRDCT(NORMAL,FT)
 
          ENDDO
 

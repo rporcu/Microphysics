@@ -5,9 +5,6 @@ module comp_mean_fields_module
    use geometry, only: vol
    use param1, only: zero
 
-
-
-
    use constant, only:MMAX, RO_S0
 
   contains

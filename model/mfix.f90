@@ -20,7 +20,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 pijk,   iglobal_id, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, drag_fc, fc, tow, wall_collision_pft)
+                rot_acc_old, drag_fc, fc, tow)
 
 !-----------------------------------------------
 ! Modules
@@ -175,9 +175,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 
-      double precision, intent(inout) :: wall_collision_pft(3,8,max_pip)
-
-
 !---------------------------------------------------------------------//
 !-----------------------------------------------
 ! Local variables
@@ -233,10 +230,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Translation and rotational forces
          FC(LB:UB,:) = ZERO
          TOW(LB:UB,:) = ZERO
-
-! Collision data
-         WALL_COLLISION_FACET_ID(:,LB:UB) = -1
-         WALL_COLLISION_PFT(:,:,LB:UB) = ZERO
 
 ! Initializing user defined array
          IF(DES_USR_VAR_SIZE > 0) &
