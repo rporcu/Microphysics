@@ -42,7 +42,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use param1 , only: zero, is_defined, is_undefined, undefined
       use read_res1_mod, only: read_res1
       use run, only: call_usr, run_type, dem_solids, nstep
-      use run, only: dt, dt_min, dt_max, time, tstop, use_dt_prev
+      use run, only: dt, dt_min, dt_max, time
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_constprop_module, only: set_constprop
@@ -59,7 +59,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use output_manager_module, only: init_output_vars
       use calc_coeff_module, only: calc_coeff
 
-      use discretelement, only: neighbor_index, wall_collision_facet_id
+      use discretelement, only: neighbor_index
       use discretelement, only: des_usr_var_size, neighbor_index_old
       use discretelement, only: nonexistent, do_old, ighost_updated
 
@@ -339,11 +339,11 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
-      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, &
-         flag, vol_surr, pijk,   iglobal_id, &
-         particle_state, particle_phase, neighbor_index, neighbor_index_old, &
+      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g, flag, vol_surr, &
+         pijk,   iglobal_id, particle_state,&
+         particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, pinc)
 
 
 ! ######################## Moved here from time march
@@ -358,8 +358,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! Calculate all the coefficients once before entering the time loop
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm, pijk, particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius,  pinc)
+         f_gds, drag_bm, pijk, particle_phase, particle_state, &
+         pvol, des_vel_new, des_radius)
 
       IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 

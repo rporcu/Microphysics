@@ -7,11 +7,11 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !  Purpose: DES - allocating DES arrays
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MAKE_ARRAYS_DES(ep_g,ro_g,rop_g, flag, vol_surr, &
+      SUBROUTINE MAKE_ARRAYS_DES(ep_g, flag, vol_surr, &
          pijk,   iglobal_id, particle_state,&
          particle_phase, neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
-         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, fc, pinc)
+         ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, pinc)
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -21,7 +21,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE constant, only: pi
       USE discretelement, only: do_nsearch, imax_global_id, pip, particles, max_pip, ighost_cnt, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
-      USE discretelement, only: gener_part_config, print_des_data, s_time
+      USE discretelement, only: print_des_data, s_time
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1
       USE geometry, only: vol
@@ -39,10 +39,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(inout) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
       DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
@@ -53,7 +49,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: pvol, pmass, des_radius, ro_sol, omoi
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
       DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new, ppos, omega_new, des_usr_var
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) ::  iglobal_id
@@ -158,8 +153,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       ENDDO
 
       CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
-      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state,   &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
+      CALL INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new, pinc)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
@@ -175,8 +169,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
          ppos, neighbor_index, neighbor_index_old)
 
 ! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,particle_phase,pmass,pvol, &
-         des_pos_new,des_vel_new,des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+      CALL COMP_MEAN_FIELDS(ep_g, pijk, particle_state, pvol, flag)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = TIME

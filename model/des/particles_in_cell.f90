@@ -223,13 +223,11 @@ CONTAINS
 !     - For parallel processing indices are altered                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state,   &
-         des_usr_var, des_pos_new, des_vel_new, omega_new, fc, pinc)
+      SUBROUTINE INIT_PARTICLES_IN_CELL(pijk, particle_state, des_pos_new, pinc)
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_vel_new, des_pos_new, omega_new, des_usr_var
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: des_pos_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
       INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
 

@@ -222,9 +222,9 @@ module time_march_module
 
 ! Calculate coefficients
          CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-            f_gds, drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-            particle_state, pmass, pvol, des_pos_new, des_vel_new, des_radius, &
-            des_usr_var, flag, vol_surr, pinc)
+            f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
+            particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
+            des_usr_var, flag, pinc)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
          CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -242,27 +242,31 @@ module time_march_module
          MAX_INLET_VEL = MAX_INLET_VEL * MAX_INLET_VEL_FAC
 
 ! Advance the solution in time by iteratively solving the equations
-         call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
-            rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-            flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
-            A_m, b_m, drag_am, drag_bm,&
-            tau_u_g,tau_v_g,tau_w_g,&
-            pijk, particle_phase, particle_state, pvol, &
-            des_radius,  des_pos_new, des_vel_new, flag, pinc, IER, NIT)
+         call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
+                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
+                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
+                         flux_ge, flux_gn, flux_gt, mu_g,&
+                         f_gds, A_m, b_m, drag_am, drag_bm, &
+                         tau_u_g, tau_v_g, tau_w_g, &
+                         pijk, particle_phase, particle_state, pvol, &
+                         des_radius, des_vel_new, flag, IER, NIT)
 
-         DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, vol_surr, &
+         DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
-            drag_am, drag_bm, pijk, particle_phase, iglobal_id, &
-            particle_state, pinc, pmass, pvol, des_radius,  &
+            drag_bm, pijk, particle_phase, iglobal_id, &
+            particle_state, pinc, pvol, des_radius,  &
             des_pos_new, des_vel_new, des_usr_var, IER, NIT))
 
-            call iterate(u_g,v_g,w_g,u_go,v_go,w_go,p_g,pp_g,ep_g,ro_g,rop_g,rop_go,&
-               rop_ge,rop_gn,rop_gt,d_e,d_n,d_t,&
-               flux_ge,flux_gn,flux_gt,mu_g,f_gds, &
-               A_m, b_m, drag_am, drag_bm,&
-               tau_u_g,tau_v_g,tau_w_g,&
-               pijk, particle_phase, particle_state, pvol, &
-               des_radius,  des_pos_new, des_vel_new, flag, pinc, IER, NIT)
+
+
+         call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
+                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
+                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
+                         flux_ge, flux_gn, flux_gt, mu_g,&
+                         f_gds, A_m, b_m, drag_am, drag_bm, &
+                         tau_u_g, tau_v_g, tau_w_g, &
+                         pijk, particle_phase, particle_state, pvol, &
+                         des_radius, des_vel_new, flag, IER, NIT)
          ENDDO
 
          IF(DT < DT_MIN) THEN
@@ -279,7 +283,7 @@ module time_march_module
                neighbor_index, neighbor_index_old, des_radius,  ro_sol, pvol, pmass,&
                omoi, des_usr_var, ppos, des_pos_new, des_vel_new, omega_new, &
                des_acc_old, rot_acc_old, drag_fc, fc, tow, &
-               flag, vol_surr, pinc)
+               flag, pinc)
             IF(.NOT.DES_CONTINUUM_COUPLED) return
          ENDIF
 

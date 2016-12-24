@@ -17,7 +17,7 @@ module des_time_march_module
          neighbor_index, neighbor_index_old, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-         drag_fc, fc, tow, flag, vol_surr, pinc)
+         drag_fc, fc, tow, flag, pinc)
 
       USE neighbour_module, only: neighbour
       use calc_drag_des_module, only: calc_drag_des
@@ -29,7 +29,7 @@ module des_time_march_module
       use compar, only: istart3, jstart3, kstart3
       use compar, only: numpes
       use des_bc, only: DEM_BCMI, DEM_BCMO
-      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, des_periodic_walls, dtsolid, ighost_cnt
+      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, dtsolid, ighost_cnt
       use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
       use drag_gs_des1_module, only: drag_gs_des1
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
@@ -61,8 +61,6 @@ module des_time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER        , INTENT(INOUT) :: pinc&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -189,9 +187,8 @@ module des_time_march_module
          CALL CALC_FORCE_DEM(particle_phase, particle_state,  &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, neighbor_index)
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,pijk,particle_state,&
-            fc,drag_fc,pvol, &
-            des_pos_new,des_vel_new,des_radius,particle_phase,flag,pinc)
+         CALL CALC_DRAG_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, &
+            fc, drag_fc, pvol, des_vel_new, des_radius, particle_phase, flag)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
@@ -221,9 +218,7 @@ module des_time_march_module
          CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
             des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 ! Calculate mean fields (EPg).
-         CALL COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
-            particle_phase,pmass,pvol,des_pos_new,des_vel_new,&
-            des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+         CALL COMP_MEAN_FIELDS(ep_g, pijk, particle_state, pvol, flag)
 
          IF(DO_NSEARCH) CALL NEIGHBOUR(pijk, pinc, particle_state, des_radius,&
             des_pos_new, ppos, neighbor_index, neighbor_index_old)

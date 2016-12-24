@@ -204,7 +204,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_RESID_VEL(vel, vels1, vels2, A_M, B_M, M, NUM, DEN, &
+      SUBROUTINE CALC_RESID_VEL(vel, vels1, vels2, A_M, B_M, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
@@ -239,8 +239,6 @@
 
       INTEGER, INTENT(in) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-! Phase index
-      INTEGER, INTENT(IN) :: M
 ! Numerator and denominator
       DOUBLE PRECISION, INTENT(OUT) :: NUM, DEN
 ! Average value of Residual

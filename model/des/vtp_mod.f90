@@ -157,9 +157,6 @@
 
       INTEGER :: NumberOfPoints
 
-! Variables related to gather
-      integer lgathercnts(0:numpes-1), lproc
-
 ! check whether an error occurs in opening a file
       INTEGER :: IOS
 ! Integer error flag.

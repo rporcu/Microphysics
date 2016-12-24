@@ -147,7 +147,7 @@ module solve_vel_star_module
          CALL GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
 
       IF (MOMENTUM_X_EQ(0)) THEN
-         CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, 0, &
+         CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, &
             NUM_RESID(RESID_U), DEN_RESID(RESID_U), &
             RESID(RESID_U), MAX_RESID(RESID_U), &
             i_resid(RESID_U),j_resid(RESID_U),k_resid(RESID_U), flag)
@@ -189,7 +189,7 @@ module solve_vel_star_module
       IF (MOMENTUM_Y_EQ(0)) THEN
          ! Note we pass V first since that is the primary velocity component
          !   The order of the other two components doesn't matter
-         CALL CALC_RESID_VEL (V_G, W_G, U_G, A_M, B_M, 0, &
+         CALL CALC_RESID_VEL (V_G, W_G, U_G, A_M, B_M, &
             NUM_RESID(RESID_V), DEN_RESID(RESID_V), &
             RESID(RESID_V), MAX_RESID(RESID_V), &
             i_resid(RESID_V),j_resid(RESID_V),k_resid(RESID_V), flag)
@@ -229,7 +229,7 @@ module solve_vel_star_module
 
       IF (MOMENTUM_Z_EQ(0)) THEN
             ! Note we pass W first since that is the primary velocity component
-         CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, 0, &
+         CALL CALC_RESID_VEL (W_G, U_G, V_G, A_M, B_M, &
             NUM_RESID(RESID_W), DEN_RESID(RESID_W), &
             RESID(RESID_W), MAX_RESID(RESID_W), &
             i_resid(RESID_W),j_resid(RESID_W),k_resid(RESID_W),flag)

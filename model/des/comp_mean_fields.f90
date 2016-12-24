@@ -17,9 +17,7 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
-        particle_phase, pmass, pvol, des_pos_new,des_vel_new, &
-        des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g, pijk, particle_state, pvol, flag)
 
 
       use discretelement, only: nonexistent, normal_ghost
@@ -27,28 +25,14 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN) :: des_radius(:)
-      DOUBLE PRECISION, INTENT(IN) :: pmass(:), pvol(:)
-      DOUBLE PRECISION, INTENT(IN) :: des_vel_new(:,:)
-      DOUBLE PRECISION, INTENT(IN) :: des_pos_new(:,:)
-      DOUBLE PRECISION, INTENT(IN) :: des_usr_var(:,:)
+      DOUBLE PRECISION, INTENT(IN) :: pvol(:)
       integer, intent(in) :: particle_state(:)
-      integer, intent(in) :: particle_phase(:)
-      integer, intent(in) :: iglobal_id(:)
       integer, intent(in) :: pijk(:,:)
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      INTEGER         , INTENT(INOUT) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------
 ! Local variables
