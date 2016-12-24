@@ -46,6 +46,8 @@ MODULE NEIGHBOUR_MODULE
       PPOS(:,:) = DES_POS_NEW(:,:)
       neighbor_index_old(:) = neighbor_index(:)
 
+      return
+
       do cc=1, size(neighbors)
          neighbors_old(cc) = neighbors(cc)
       enddo
