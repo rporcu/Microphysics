@@ -242,6 +242,8 @@ module time_march_module
          MAX_INLET_VEL = MAX_INLET_VEL * MAX_INLET_VEL_FAC
 
 ! Advance the solution in time by iteratively solving the equations
+         DO
+
          call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
                          p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
                          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
@@ -251,22 +253,11 @@ module time_march_module
                          pijk, particle_phase, particle_state, pvol, &
                          des_radius, des_vel_new, flag, IER, NIT)
 
-         DO WHILE (ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
+         IF (.NOT.ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
             drag_bm, pijk, particle_phase, iglobal_id, &
             particle_state, pinc, pvol, des_radius,  &
-            des_pos_new, des_vel_new, des_usr_var, IER, NIT))
-
-
-
-         call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
-                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
-                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
-                         flux_ge, flux_gn, flux_gt, mu_g,&
-                         f_gds, A_m, b_m, drag_am, drag_bm, &
-                         tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_phase, particle_state, pvol, &
-                         des_radius, des_vel_new, flag, IER, NIT)
+            des_pos_new, des_vel_new, des_usr_var, IER, NIT)) EXIT
          ENDDO
 
          IF(DT < DT_MIN) THEN
