@@ -38,7 +38,6 @@ MODULE WRITE_OUT0_MODULE
       USE output, only: out_dt, res_dt
       USE param, only: dimension_c, dimension_ic, dimension_bc
       USE param1, only: half, undefined, zero, is_defined
-      USE particle_filter, only: des_interp_mean_fields, des_interp_on
       USE constant, only: mmax, ro_s0, d_p0
       USE run, only: description, id_version, call_usr, dem_solids, dt_fac, dt, dt_min, dt_max, run_name, run_type, tstop, time
       USE run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
@@ -223,15 +222,7 @@ MODULE WRITE_OUT0_MODULE
                WRITE(UNIT_OUT,"(/7X,'Gas/Solids NOT coupled.')")
             ELSE
                WRITE(UNIT_OUT,"(/7X,'Gas/Solids Coupling Information:')")
-
-               IF(DES_INTERP_ON) THEN
-                  WRITE(UNIT_OUT,1440) 'interpolation'
-               ELSE
-                  WRITE(UNIT_OUT,1440) 'cell averaging'
-               ENDIF
-
-               IF(DES_INTERP_MEAN_FIELDS) THEN
-               ENDIF
+               WRITE(UNIT_OUT,1440) 'cell averaging'
             ENDIF
 
  1440 FORMAT(10X,'Use ',A,' to calculate gas/particle drag.')

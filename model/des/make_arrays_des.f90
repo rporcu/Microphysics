@@ -31,7 +31,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
       USE read_par_input_module, only: read_par_input
       USE read_res0_des_module, only: read_res0_des
       USE run, only: run_type, time
-      USE set_filter_des_module, only: set_filter_des
       USE set_phase_index_module, only: set_phase_index
 
       USE write_des_data_module, only: write_des_data
@@ -71,9 +70,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
       INTEGER :: lcurpar, lpip_all(0:numpes-1), lglobal_id
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")
-
-! Check interpolation input.
-      CALL SET_FILTER_DES(flag)
 
       vol_surr(:,:,:) = ZERO
 

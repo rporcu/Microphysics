@@ -17,10 +17,10 @@ MODULE DES_ALLOCATE
       USE discretelement
       USE error_manager, only: err_msg, ival, flush_err_msg, finl_err_msg, init_err_msg
       USE param1, only: undefined_i
-      USE particle_filter, only: DES_INTERP_DPVM
-      USE particle_filter, only: DES_INTERP_GARG
-      USE particle_filter, only: DES_INTERP_GAUSS
-      USE particle_filter, only: DES_INTERP_SCHEME_ENUM
+
+
+
+
       USE constant, only: mmax
 
   PUBLIC:: DES_ALLOCATE_ARRAYS, ADD_PAIR, PARTICLE_GROW, ALLOCATE_DEM_MI

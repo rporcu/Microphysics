@@ -16,7 +16,7 @@ MODULE GAS_DRAG_MODULE
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Runtime Flag: Interpolate DES values
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
+
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
 ! Volume of X-momentum cell
@@ -70,52 +70,23 @@ MODULE GAS_DRAG_MODULE
 
 
 ! Average the interpoalted drag force from the cell corners to the cell face.
-      IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG)THEN
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
 
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
+               IF(flag(i,j,k,2)>= 2000 .and. &
+                  flag(i,j,k,2)<=2011) then
 
-                  IF(flag(i,j,k,2)>= 2000 .and. &
-                     flag(i,j,k,2)<=2011) then
+                  A_M(I,J,K,0) = A_M(I,J,K,0) - 0.5d0*VOL * &
+                     (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
 
-                     IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-                     IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-                     IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
+                  B_M(I,J,K) = B_M(I,J,K) - 0.5d0* VOL *&
+                     (DRAG_BM(i,j,k,1) + DRAG_BM(ieast(i,j,k),j,k,1))
 
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - VOL*0.25d0*(&
-                        DRAG_AM(i,j,k) + DRAG_AM(I, J-1, K) + &
-                        DRAG_AM(I, J, K-1) + DRAG_AM(I, J-1, K-1))
-
-                     B_M(I,J,K) = B_M(I,J,K) - VOL*0.25d0*(&
-                        DRAG_BM(i,j,k,1) + DRAG_BM(I, J-1, K,1) + &
-                        DRAG_BM(I, J, K-1,1) + DRAG_BM(I, J-1, K-1,1))
-
-                  endif
-               ENDDO
+               ENDIF
             ENDDO
          ENDDO
-
-      ELSE
-
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
-
-                  IF(flag(i,j,k,2)>= 2000 .and. &
-                     flag(i,j,k,2)<=2011) then
-
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - 0.5d0*VOL * &
-                        (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
-
-                     B_M(I,J,K) = B_M(I,J,K) - 0.5d0* VOL *&
-                        (DRAG_BM(i,j,k,1) + DRAG_BM(ieast(i,j,k),j,k,1))
-
-                  ENDIF
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+      ENDDO
 
       END SUBROUTINE GAS_DRAG_U
 
@@ -135,7 +106,7 @@ MODULE GAS_DRAG_MODULE
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Runtime Flag: Interpolate DES values
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
+
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
 ! Volume of Y-momentum cell
@@ -187,50 +158,19 @@ MODULE GAS_DRAG_MODULE
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG)THEN
-
-         AVG_FACTOR = 0.25d0
-
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
-
-                  IF(flag(i,j,k,3) >= 2000 .and. &
-                     flag(i,j,k,3) <= 2011) then
-
-                     IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-                     IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-                     IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
-
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.25d0 *(&
-                        DRAG_AM(i,j,k) + DRAG_AM(I-1,J,K) + &
-                        DRAG_AM(I,J,K-1) + DRAG_AM(I-1,J,K-1))
-
-                     B_M(I,J,K) = B_M(I,J,K) - VOL * 0.25d0*(&
-                        DRAG_BM(i,j,k,2) + DRAG_BM(I-1,J,K,2) + &
-                        DRAG_BM(I,J,K-1,2) + DRAG_BM(I-1,J,K-1,2))
-
-                  endif
-               ENDDO
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
+               IF(flag(i,j,k,3) >= 2000 .and. &
+                  flag(i,j,k,3) <= 2011) then
+                  A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
+                     (F_GDS(I,J,K) + F_GDS(i,jnorth(i,j,k),k))
+                  B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
+                     (DRAG_BM(i,j,k,2)+DRAG_BM(i,jnorth(i,j,k),k,2))
+               ENDIF
             ENDDO
          ENDDO
-
-      ELSE
-
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
-                  IF(flag(i,j,k,3) >= 2000 .and. &
-                     flag(i,j,k,3) <= 2011) then
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
-                        (F_GDS(I,J,K) + F_GDS(i,jnorth(i,j,k),k))
-                     B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
-                        (DRAG_BM(i,j,k,2)+DRAG_BM(i,jnorth(i,j,k),k,2))
-                  ENDIF
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+      ENDDO
 
       END SUBROUTINE GAS_DRAG_V
 
@@ -249,7 +189,7 @@ MODULE GAS_DRAG_MODULE
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Runtime Flag: Interpolate DES values
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM, DES_INTERP_GARG
+
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
 ! Volume of Z-momentum cell
@@ -298,48 +238,19 @@ MODULE GAS_DRAG_MODULE
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG)THEN
-
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
-
-                  IF(flag(i,j,k,4) >= 2000 .and. &
-                     flag(i,j,k,4) <= 2011) then
-
-                     IF (I.LT.ISTART2 .OR. I.GT.IEND2) CYCLE
-                     IF (J.LT.JSTART2 .OR. J.GT.JEND2) CYCLE
-                     IF (K.LT.KSTART2 .OR. K.GT.KEND2) CYCLE
-
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - 0.25d0*VOL*(&
-                        DRAG_AM(i,j,k) + DRAG_AM(I-1,J,K) +    &
-                        DRAG_AM(I,J-1,K) + DRAG_AM(I-1,J-1,K))
-
-                     B_M(I,J,K) = B_M(I,J,K) - 0.25d0*VOL*(&
-                        DRAG_BM(i,j,k,3) + DRAG_BM(I-1,J,K,3) + &
-                        DRAG_BM(I,J-1,K,3) + DRAG_BM(I-1,J-1,K,3))
-
-                  endif
-               ENDDO
+      DO K = kstart3, kend3
+         DO J = jstart3, jend3
+            DO I = istart3, iend3
+               IF(flag(i,j,k,4) >= 2000 .and. &
+                  flag(i,j,k,4) <= 2011) then
+                  A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
+                     (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
+                  B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
+                     (DRAG_BM(i,j,k,3) + DRAG_BM(i,j,ktop(i,j,k),3))
+               ENDIF
             ENDDO
          ENDDO
-
-      ELSE
-
-         DO K = kstart3, kend3
-            DO J = jstart3, jend3
-               DO I = istart3, iend3
-                  IF(flag(i,j,k,4) >= 2000 .and. &
-                     flag(i,j,k,4) <= 2011) then
-                     A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
-                        (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
-                     B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
-                        (DRAG_BM(i,j,k,3) + DRAG_BM(i,j,ktop(i,j,k),3))
-                  ENDIF
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+      ENDDO
 
       RETURN
       END SUBROUTINE GAS_DRAG_W

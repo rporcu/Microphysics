@@ -115,9 +115,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 
       DO_OLD = INTG_ADAMS_BASHFORTH
 
-! Check interpolation input.
-      CALL CHECK_SOLIDS_COMMON_DISCRETE_INTERP
-
 ! Check geometry constrains.
       CALL CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY
 
@@ -186,107 +183,4 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 
       END SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_SOLIDS_COMMON_DISCRETE_INTERP                     !
-!  Author: J.Musser                                   Date: 25-Nov-14  !
-!                                                                      !
-!  Purpose:                                                            !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_INTERP
-
-! Runtime Flag: Invoke gas/solids coupled simulation.
-      use discretelement, only: DES_CONTINUUM_COUPLED
-! User input for DES interpolation scheme.
-      use particle_filter, only: DES_INTERP_SCHEME
-! Enumerated interpolation scheme for faster access
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_NONE
-      use particle_filter, only: DES_INTERP_GARG
-      use particle_filter, only: DES_INTERP_DPVM
-      use particle_filter, only: DES_INTERP_GAUSS
-! User specified filter width
-      use particle_filter, only: DES_INTERP_WIDTH
-! Flag: Interpolate continuum fields
-      use particle_filter, only: DES_INTERP_MEAN_FIELDS
-! Flag: Interplate variables for drag calculation.
-      use particle_filter, only: DES_INTERP_ON
-
-      use param1, only: IS_DEFINED
-
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
-
-      IMPLICIT NONE
-
-!......................................................................!
-
-
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_INTERP")
-
-! Set the interpolation ENUM value.
-      SELECT CASE(trim(adjustl(DES_INTERP_SCHEME)))
-      CASE ('NONE')
-         DES_INTERP_SCHEME_ENUM = DES_INTERP_NONE
-! Cannot use interpolation when no scheme is selected.
-         IF(DES_INTERP_ON)THEN
-            WRITE(ERR_MSG,2001) 'DES_INTERP_ON'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(DES_INTERP_MEAN_FIELDS)THEN
-            WRITE(ERR_MSG,2001) 'DES_INTERP_MEAN_FIELDS'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-         ELSEIF(DES_CONTINUUM_COUPLED) THEN
-         ENDIF
-
-      CASE ('GARG_2012')
-         DES_INTERP_SCHEME_ENUM = DES_INTERP_GARG
-
-      CASE ('SQUARE_DPVM')
-         DES_INTERP_SCHEME_ENUM = DES_INTERP_DPVM
-
-      CASE ('GAUSS_DPVM')
-         DES_INTERP_SCHEME_ENUM = DES_INTERP_GAUSS
-
-      CASE DEFAULT
-         WRITE(ERR_MSG,2000) trim(adjustl(DES_INTERP_SCHEME))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      END SELECT
-
- 2000 FORMAT('Error 2000: Invalid DES_INTERP_SCHEME: ',A,/'Please ',   &
-         'correct the mfix.dat file.')
-
- 2001 FORMAT('Error 2001: No interpolation scheme specified when ',A,/ &
-         'is enabled. Please correct the mfix.dat file.')
-
-      SELECT CASE(DES_INTERP_SCHEME_ENUM)
-
-      CASE(DES_INTERP_NONE)
-
-         IF(IS_DEFINED(DES_INTERP_WIDTH)) THEN
-            WRITE(ERR_MSG,2100) trim(adjustl(DES_INTERP_SCHEME))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
- 2100 FORMAT('Error 2100: The selected interpolation scheme (',A,') ', &
-         'does',/'not support an adjustable interpolation width.',/    &
-         'Please correct the input file.')
-
-
-      CASE(DES_INTERP_GARG)
-         DES_INTERP_MEAN_FIELDS= .TRUE.
-
-         IF(IS_DEFINED(DES_INTERP_WIDTH)) THEN
-            WRITE(ERR_MSG,2100) trim(adjustl(DES_INTERP_SCHEME))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
-
-      END SELECT
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_INTERP
 END MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE

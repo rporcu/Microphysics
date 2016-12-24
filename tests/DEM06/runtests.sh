@@ -10,13 +10,7 @@ fi
 rm -f POST_* &> /dev/null
 
 rm -f ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} DES_ONEWAY_COUPLED=.F. \
-    DES_INTERP_ON=.F. DES_INTERP_MEAN_FIELDS=.F.
-
-rm -f ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} DES_ONEWAY_COUPLED=.F. \
-    DES_INTERP_ON=.T. DES_INTERP_MEAN_FIELDS=.T. \
-    DES_INTERP_SCHEME=\'GARG_2012\'
+time -p ${MFIX} DES_ONEWAY_COUPLED=.F.
 
 post_dats=AUTOTEST/POST*.dat
 

@@ -7,9 +7,9 @@ MODULE CALC_INTERP_WEIGHTS_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_INTERP_WEIGHTS
 
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
-      use particle_filter, only: DES_INTERP_DPVM
-      use particle_filter, only: DES_INTERP_GAUSS
+
+
+
 
 
       RETURN

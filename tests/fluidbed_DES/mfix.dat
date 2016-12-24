@@ -29,8 +29,8 @@
 
   DRAG_TYPE = 'GIDASPOW'
 
-  DES_INTERP_ON = .T.
-  DES_INTERP_SCHEME = 'GARG_2012'
+
+
 
 #_______________________________________________________________________
 # NUMERICAL SECTION

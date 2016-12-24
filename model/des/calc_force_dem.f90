@@ -21,7 +21,7 @@ MODULE CALC_FORCE_DEM_MODULE
          USE discretelement, only: kn, kt, max_pip, mew, hertzian
          USE discretelement, only: nonexistent
          USE discretelement, only: pft_neighbor
-         USE drag_gs_des0_module, only: drag_gs_des0
+
          USE drag_gs_des1_module, only: drag_gs_des1
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
          USE param1, only: small_number, zero

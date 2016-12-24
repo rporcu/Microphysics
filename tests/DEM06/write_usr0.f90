@@ -31,10 +31,6 @@
 
       use discretelement, only: DES_ONEWAY_COUPLED
       use discretelement, only: DES_EXPLICITLY_COUPLED
-      use particle_filter, only: DES_INTERP_ON
-      use particle_filter, only: DES_INTERP_SCHEME
-      use particle_filter, only: DES_INTERP_MEAN_FIELDS
-      use particle_filter, only: DES_INTERP_WIDTH
 
       use run, only: DESCRIPTION
 
@@ -60,20 +56,6 @@
 
       WRITE(fUNIT, 1100) DES_ONEWAY_COUPLED
 
-      WRITE(fUNIT, 1110, ADVANCE='NO') DES_INTERP_ON
-      IF(DES_INTERP_ON) THEN
-         WRITE(fUNIT, 1111, ADVANCE='YES') DES_INTERP_SCHEME
-      ELSE
-         WRITE(fUNIT, *) '   '
-      ENDIF
-
-      WRITE(fUNIT, 1120, ADVANCE='NO') DES_INTERP_MEAN_FIELDS
-      IF(DES_INTERP_WIDTH /= UNDEFINED) THEN
-         WRITE(fUNIT, 1121, ADVANCE='YES') DES_INTERP_WIDTH
-      ELSE
-         WRITE(fUNIT, *) '   '
-      ENDIF
-
       WRITE(fUNIT, 1140, ADVANCE='YES') DES_EXPLICITLY_COUPLED
 
       WRITE(fUNIT, 1250) VAR, VAR
@@ -81,12 +63,6 @@
  1000 FORMAT(2/,25x,A)
 
  1100 FORMAT(2/,7x,'DES_ONEWAY_COUPLED =',6x,L1)
-
- 1110 FORMAT(7x,'DES_INTERP_ON =',11x,L1)
- 1111 FORMAT(5x,'DES_INTERP_SCHEME = ',A)
-
- 1120 FORMAT(7x,'DES_INTERP_MEAN_FIELDS =',2x,L1)
- 1121 FORMAT(5x,'DES_INTERP_WIDTH =  ',F9.6)
 
  1140 FORMAT(7x,'DES_EXPLICITLY_COUPLED =',2x,L1)
 

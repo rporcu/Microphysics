@@ -30,7 +30,7 @@ MODULE DES_INIT_NAMELIST_MODULE
       USE discretelement, only: gener_part_config, kn, kn_w, dim_m, kt_fac, kt_w_fac, mew, mew_w, neighbor_search_n
       USE discretelement, only: neighbor_search_rad_ratio, particles, print_des_data, des_usr_var_size, vw_poisson, vtp_findex
       USE param1, only: undefined_i, undefined
-      USE particle_filter, only: des_interp_mean_fields, des_interp_on, des_interp_scheme, des_interp_width, des_report_mass_interp
+
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -66,17 +66,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !                          Output Control                             !
 !#####################################################################!
 
-!<keyword category="Output Control" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Reports mass based on Lagrangian particles and continuum
-!    representation. Useful to ensure mass conservation between
-!    Lagrangian and continuum representations. Recommended use for
-!    debugging purposes.
-!  </description>
-!  <dependent keyword="DES_INTERP_MEAN_FIELDS" value=".TRUE."/>
-      DES_REPORT_MASS_INTERP = .FALSE.
-!</keyword>
 
 !<keyword category="Output Control" required="false"
 !  dem="true" pic="true">
@@ -200,16 +189,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    graphical representation of the schemes is shown below.
 !  </description>
 !  <valid value="NONE" note="Do not use interpolation."/>
-!  <valid value="GARG_2012" note="Interpolate to/from a particle's
-!    position using the corners (nodes) of the fluid cells. This was
-!    the default behavior prior to the 2015-1 Release.
-!    See Garg et al. (2012) Documentation of the open-souce MFIX-DEM
-!    software for gas-solids flows."/>
-!  <valid value="SQUARE_DPVM" note="Divided Particle Volume Method:
-!    Information is interpolated to/from a particles position using
-!    a square filter of size DES_INTERP_WIDTH. This scheme is not
-!    available to MFIX-PIC simulations."/>
-      DES_INTERP_SCHEME = 'NONE'
+
 !</keyword>
 
 !<keyword category="Discrete Element Simulation" required="false" dem="true">
@@ -225,7 +205,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    o It is recommend that the DES_INTERP_WIDTH be set equal to the
 !      maximum particle diameter when using STL defined boundaries.
 !  </description>
-      DES_INTERP_WIDTH = UNDEFINED
+
 !</keyword>
 
 
@@ -240,7 +220,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    the particle's center."/>
 !  <valid value=".TRUE." note="Interpolate fluid values from the 27-cell
 !    neighborhood to a particle's position."/>
-      DES_INTERP_ON = .FALSE.
+
 !</keyword>
 
 !<keyword category="Discrete Element Simulation" required="false"
@@ -255,7 +235,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !  <valid value=".TRUE." note="Interpolate particle data from the
 !    particle's position to the 27-cell neighborhood surrounding
 !    the particle."/>
-      DES_INTERP_MEAN_FIELDS = .FALSE.
+
 !</keyword>
 
 

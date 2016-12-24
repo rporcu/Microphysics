@@ -5,10 +5,10 @@ module calc_drag_des_module
       use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DES_EXPLICITLY_COUPLED
       use discretelement, only: NORMAL_PARTICLE
-      use drag_gs_des0_module, only: drag_gs_des0, drag_gs_gas0
+
       use drag_gs_des1_module, only: drag_gs_des1, drag_gs_gas1
-      use particle_filter, only: DES_INTERP_GARG
-      use particle_filter, only: DES_INTERP_SCHEME_ENUM
+
+
       use particles_in_cell_module, only: particles_in_cell
 
   contains
@@ -69,14 +69,9 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force on particle
          IF(DES_CONTINUUM_COUPLED) THEN
-            if(des_interp_scheme_enum == des_interp_garg) then
-               CALL DRAG_GS_DES0(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-                  flag, pijk,particle_phase,particle_state,des_radius,&
-                  pvol,des_pos_new,des_vel_new,fc,pinc)
-            else
-               CALL DRAG_GS_DES1(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg, &
-                  flag,pijk,particle_state,pvol,des_vel_new,fc,des_radius,particle_phase)
-            endif
+            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+               gradPg, flag, pijk, particle_state, pvol, des_vel_new,&
+               fc, des_radius, particle_phase)
          ENDIF
 
       ENDIF
@@ -131,15 +126,9 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
-         if(des_interp_scheme_enum == des_interp_garg) then
-            CALL DRAG_GS_GAS0(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               flag, f_gds, drag_am, drag_bm, pijk, des_radius,  &
-               pvol, des_pos_new, des_vel_new,particle_phase,particle_state, pinc)
-         else
-            CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               f_gds, drag_bm, pijk, particle_phase, particle_state, pvol, &
-               des_vel_new, des_radius)
-         endif
+         CALL DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+            f_gds, drag_bm, pijk, particle_phase, particle_state, pvol, &
+            des_vel_new, des_radius)
       ENDIF
 
       RETURN

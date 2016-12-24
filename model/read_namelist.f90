@@ -28,7 +28,7 @@ MODULE read_namelist_module
       USE ic
       USE leqsol
       USE output
-      USE particle_filter, only: des_interp_mean_fields, des_interp_on, des_interp_scheme, des_interp_width, des_report_mass_interp
+
       USE ps
       USE remove_comment_module, only: remove_comment
       USE remove_comment_module, only: remove_par_blanks

@@ -1,14 +1,13 @@
 module comp_mean_fields_module
 
-   use comp_mean_fields0_module, only: comp_mean_fields0
    use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
    use discretelement, only: max_pip
    use geometry, only: vol
    use param1, only: zero
-   use particle_filter, only: DES_INTERP_GARG
-   use particle_filter, only: DES_INTERP_MEAN_FIELDS
-   use particle_filter, only: DES_INTERP_NONE
-   use particle_filter, only: DES_INTERP_SCHEME_ENUM
+
+
+
+
    use constant, only:MMAX, RO_S0
 
   contains
@@ -24,6 +23,10 @@ module comp_mean_fields_module
      SUBROUTINE COMP_MEAN_FIELDS(ep_g,ro_g,rop_g,pijk,particle_state,&
         particle_phase, pmass, pvol, des_pos_new,des_vel_new, &
         des_radius,des_usr_var,flag,vol_surr,iglobal_id,pinc)
+
+
+      use discretelement, only: nonexistent, normal_ghost
+      use discretelement, only: entering_ghost, exiting_ghost
 
       IMPLICIT NONE
 
@@ -49,34 +52,6 @@ module comp_mean_fields_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: vol_surr&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-!......................................................................!
-
-! Calculate field variables from particle data:
-      IF(DES_INTERP_SCHEME_ENUM == DES_INTERP_GARG) then
-         CALL COMP_MEAN_FIELDS0(ep_g, ro_g, rop_g, particle_phase, pmass,&
-            pvol, des_pos_new, des_vel_new, des_radius, des_usr_var, &
-            vol_surr, iglobal_id, flag, pinc)
-      ELSE
-         CALL COMP_MEAN_FIELDS_ZERO_ORDER
-      ENDIF
-
-      RETURN
-
-      CONTAINS
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
-
-      use discretelement, only: nonexistent, normal_ghost
-      use discretelement, only: entering_ghost, exiting_ghost
-
-      IMPLICIT NONE
 
 !-----------------------------------------------
 ! Local variables
@@ -128,7 +103,6 @@ module comp_mean_fields_module
       ! CALL SEND_RECV(EP_G,2)
 
       RETURN
-      END SUBROUTINE COMP_MEAN_FIELDS_ZERO_ORDER
 
       END SUBROUTINE COMP_MEAN_FIELDS
 

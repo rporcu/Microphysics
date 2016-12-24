@@ -92,7 +92,6 @@ set(F90_sources
   model/des/cfslide.f90
   model/des/check_cell_movement.f90
   model/des/comp_mean_fields.f90
-  model/des/comp_mean_fields0.f90
   model/des/des_allocate_mod.f90
   model/des/des_bc_mod.f90
   model/des/des_init_namelist.f90
@@ -101,22 +100,18 @@ set(F90_sources
   model/des/desmpi_mod.f90
   model/des/discretelement_mod.f90
   model/des/drag_gp_des.f90
-  model/des/drag_gs_des0.f90
-  model/des/drag_gs_des1.f90
+  model/des/drag_gs_des.f90
   model/des/gas_drag.f90
-  model/des/interpolation_mod.f90
   model/des/layout_mi_dem.f90
   model/des/make_arrays_des.f90
   model/des/mass_inflow_dem.f90
   model/des/mass_outflow_dem.f90
   model/des/neighbour.f90
-  model/des/particle_filter_mod.f90
   model/des/particles_in_cell.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90
   model/des/read_res0_des.f90
   model/des/read_res1_des_mod.f90
-  model/des/set_filter_des.f90
   model/des/set_geometry_des.f90
   model/des/set_phase_index.f90
   model/des/stl_functions_des_mod.f90
