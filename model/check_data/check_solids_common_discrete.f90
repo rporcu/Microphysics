@@ -13,8 +13,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Runtime Flag: Generate initial particle configuration.
-      USE discretelement, only: GENER_PART_CONFIG
 ! Runtime Flag: Store DES_*_OLD arrays.
       USE discretelement, only: DO_OLD
 ! Number of solids phases.
@@ -42,7 +40,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
       USE run, only: MOMENTUM_Z_EQ
 
       use run, only: RUN_TYPE
-      use discretelement, only: GENER_PART_CONFIG
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -89,10 +86,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 
       DES_PERIODIC_WALLS = (DES_PERIODIC_WALLS_X .OR.                  &
         DES_PERIODIC_WALLS_Y .OR. DES_PERIODIC_WALLS_Z)
-
-
-! Overwrite for restart cases.
-      IF(TRIM(RUN_TYPE) .NE. 'NEW') GENER_PART_CONFIG = .FALSE.
 
 ! Check for valid integration method
       SELECT CASE(trim(DES_INTG_METHOD))

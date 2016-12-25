@@ -12,7 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE CALC_COLLISION_WALL
 
-      USE discretelement, only: des_coll_model_enum, wall_collision_facet_id, collision_array_max
+      USE discretelement, only: des_coll_model_enum
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
       USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
       USE discretelement, only: dimn, des_crossprdct

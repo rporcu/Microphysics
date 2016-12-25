@@ -11,8 +11,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_IC_COMMON_DISCRETE
 
-! Runtime Flag: Generate initial particle configuration.
-      USE discretelement, only : gener_part_config
 ! Simulation dimension (2D/3D)
       USE discretelement, only: DIMN
 ! Flag indicating that the IC region is defined.
@@ -45,8 +43,6 @@
       DOUBLE PRECISION :: IC_MIN, IC_MAX, IC2_MIN, IC2_MAX , TOL_IC_REG
 
       LOGICAL :: SEP_AXIS, first_ic_ok
-
-      IF (.NOT.GENER_PART_CONFIG) RETURN
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_IC_COMMON_DISCRETE")

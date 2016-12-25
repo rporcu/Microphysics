@@ -58,9 +58,9 @@
   YLENGTH =  200   JMAX = 200
 
 ! Search grid for DEM
-  DESGRIDSEARCH_IMAX =  64
-  DESGRIDSEARCH_KMAX =  64
-  DESGRIDSEARCH_JMAX = 200
+
+
+
 
 
 #_______________________________________________________________________

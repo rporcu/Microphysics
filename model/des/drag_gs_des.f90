@@ -41,33 +41,40 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, flag, &
-        pijk, particle_state, pvol, des_vel_new, fc, des_radius,  particle_phase)
+     SUBROUTINE DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
+        flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
+        des_radius,  particle_phase)
+
+
+      use geometry, only: dx, dy, dz
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      double precision, intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      double precision, intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      double precision, intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      double precision, intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      double precision, intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      double precision, intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: gradPg&
+      double precision, intent(in   ) :: gradpg&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+      integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      double precision, intent(in   ) :: pvol(:)
+      double precision, intent(in   ) :: des_radius(:)
+      double precision, intent(in   ) :: des_pos_new(:,:)
+      double precision, intent(in   ) :: des_vel_new(:,:)
+      double precision, intent(inout) :: fc(:,:)
+
+      integer         , intent(in   ) :: particle_state(:)
+      integer         , intent(in   ) :: particle_phase(:)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -79,19 +86,25 @@ module drag_gs_des1_module
       DOUBLE PRECISION :: D_FORCE(3), f_gp
 ! Loop bound for filter
       integer :: i,j,k
+! One over cell volume
+      double precision :: Oodx, Oody, Oodz
 !......................................................................!
+
+      Oodx = 1.0d0/dx
+      Oody = 1.0d0/dy
+      Oodz = 1.0d0/dz
 
 ! Calculate the gas phase forces acting on each particle.
       DO NP=1,size(pvol)
-         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP)) CYCLE
-! Avoid drag calculations in cells without fluid (cut-cell)
-         i = pijk(np,1)
-         j = pijk(np,2)
-         k = pijk(np,3)
-         if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
-         lEPG = ZERO
-         VELFP = ZERO
+         IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP)) CYCLE
+
+         i = floor(des_pos_new(np,1)*Oodx) + 1
+         j = floor(des_pos_new(np,2)*Oody) + 1
+         k = floor(des_pos_new(np,3)*Oodz) + 1
+
+! Avoid drag calculations in cells without fluid (cut-cell)
+         if (flag(i,j,k,1)/=1) CYCLE
 
 ! Calculate the gas volume fraction, velocity, and pressure force at
 ! the particle's position.
@@ -104,8 +117,8 @@ module drag_gs_des1_module
 ! gas phase drag calculations.
 
 ! Calculate the drag coefficient.
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, pijk, &
-                          des_radius,  pvol, particle_phase)
+         call des_drag_gp(np, des_vel_new(np,:), velfp, lepg, ro_g, mu_g, &
+            f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
 ! Calculate the gas-solids drag force on the particle
          D_FORCE = F_GP*(VELFP - DES_VEL_NEW(NP,:))
@@ -117,7 +130,7 @@ module drag_gs_des1_module
       ENDDO
 
       RETURN
-      END SUBROUTINE DRAG_GS_DES1
+      END SUBROUTINE DRAG_GS_DES
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -136,34 +149,38 @@ module drag_gs_des1_module
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_GAS1(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_bm, pijk, particle_phase, particle_state, &
-         pvol, des_vel_new, des_radius)
+      SUBROUTINE DRAG_GS_GAS(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+         f_gds, drag_bm, particle_phase, particle_state, &
+         pvol, des_pos_new, des_vel_new, des_radius)
+
+      use geometry, only: dx, dy, dz
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      double precision, intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      double precision, intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      double precision, intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      double precision, intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      double precision, intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      double precision, intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+      double precision, intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+      double precision, intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+      double precision, intent(in   ) :: pvol(:)
+      double precision, intent(in   ) :: des_radius(:)
+      double precision, intent(in   ) :: des_pos_new(:,:)
+      double precision, intent(in   ) :: des_vel_new(:,:)
+
+      integer         , intent(in   ) :: particle_state(:)
+      integer         , intent(in   ) :: particle_phase(:)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -177,30 +194,35 @@ module drag_gs_des1_module
       DOUBLE PRECISION :: f_gp
 ! Drag sources for fluid (intermediate calculation)
       DOUBLE PRECISION :: lDRAG_BM(3)
+! One over cell volume
+      double precision :: Oodx, Oody, Oodz
 !......................................................................!
 
 ! Initialize fluid cell values.
       F_GDS = ZERO
       DRAG_BM = ZERO
 
+      Oodx = 1.0d0/dx
+      Oody = 1.0d0/dy
+      Oodz = 1.0d0/dz
+
 ! Calculate the gas phase forces acting on each particle.
 
       DO NP=1,size(pvol)
+
          IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
 
 ! The drag force is not calculated on entering or exiting particles
 ! as their velocities are fixed and may exist in 'non fluid' cells.
-         IF(ENTERING_PARTICLE==PARTICLE_STATE(NP) .OR. &
-            EXITING_PARTICLE==PARTICLE_STATE(NP) .OR. &
-            ENTERING_GHOST==PARTICLE_STATE(NP) .OR. &
-            EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
+         if(entering_particle==particle_state(np) .or. &
+            exiting_particle==particle_state(np) .or. &
+            entering_ghost==particle_state(np) .or. &
+            exiting_ghost==particle_state(np)) cycle
 
-         lEPG = ZERO
-         VELFP = ZERO
 ! This avoids FP exceptions for some ghost particles.
-         I = PIJK(NP,1)
-         J = PIJK(NP,2)
-         K = PIJK(NP,3)
+         i = floor(des_pos_new(np,1)*Oodx) + 1
+         j = floor(des_pos_new(np,2)*Oody) + 1
+         k = floor(des_pos_new(np,3)*Oodz) + 1
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
@@ -212,8 +234,8 @@ module drag_gs_des1_module
          IF(lEPg < EPSILON(lEPg)) lEPG = EP_g(I,J,K)
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g, f_gp, pijk, &
-                         des_radius,  pvol, particle_phase)
+         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g,&
+            f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
          lDRAG_BM = f_gp*DES_VEL_NEW(NP,:)
 
@@ -232,5 +254,5 @@ module drag_gs_des1_module
       ! CALL SEND_RECV(DRAG_BM, 2)
 
       RETURN
-      END SUBROUTINE DRAG_GS_GAS1
+      END SUBROUTINE DRAG_GS_GAS
 end module drag_gs_des1_module

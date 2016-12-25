@@ -48,16 +48,13 @@
 ! from the list.
 
 ! GHOST, ENTERING_GHOST, EXITING_GHOST: for ghost particles
-
-      INTEGER, DIMENSION(:), ALLOCATABLE :: PARTICLE_STATE ! (PARTICLES)
-
-      INTEGER, PARAMETER :: nonexistent=0
-      INTEGER, PARAMETER :: normal_particle=1
-      INTEGER, PARAMETER :: entering_particle=2
-      INTEGER, PARAMETER :: exiting_particle=3
-      INTEGER, PARAMETER :: normal_ghost=4
-      INTEGER, PARAMETER :: entering_ghost=5
-      INTEGER, PARAMETER :: exiting_ghost=6
+      integer, parameter :: nonexistent=0
+      integer, parameter :: normal_particle=1
+      integer, parameter :: entering_particle=2
+      integer, parameter :: exiting_particle=3
+      integer, parameter :: normal_ghost=4
+      integer, parameter :: entering_ghost=5
+      integer, parameter :: exiting_ghost=6
 
 ! PARALLEL PROCESSING: explanation of variables in parallel architecture
 ! pip - particles in each processor (includes the ghost particles)
@@ -73,19 +70,7 @@
 ! End particle tracking quantities
 !-----------------------------------------------------------------<<<
 
-! For parallel processing: global id of particles
-      INTEGER, DIMENSION(:), ALLOCATABLE :: IGLOBAL_ID
-! Ghost count of particles on each processor
-      INTEGER :: IGHOST_CNT
-! Maximum global id, new particles global id will be assigned based
-! on this value
-      Integer :: imax_global_id
 
-! If gener_part_config is true, then the particle_input.dat file does
-! not need to be supplied nor does the total number of particles as
-! these are determined based on the specified volume fraction (vol_frac)
-! in the specified domain
-      LOGICAL :: GENER_PART_CONFIG
 
 ! Output/debug controls
 !----------------------------------------------------------------->>>
@@ -97,7 +82,7 @@
 ! Output file count for .vtp type files and for tecplot files;
 ! for vtp output used to label .vtp file names in sequential order
 ! and is saved so restarts begin at the correct count
-      INTEGER VTP_FINDEX, TECPLOT_FINDEX
+      INTEGER :: VTP_FINDEX
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
@@ -133,34 +118,16 @@
 ! Neighbor search related quantities
 !----------------------------------------------------------------->>>
 ! Quantities used to determine whether neighbor search should be called
-      INTEGER :: NEIGHBOR_SEARCH_N
-      DOUBLE PRECISION :: NEIGHBOR_SEARCH_RAD_RATIO
+
       LOGICAL :: DO_NSEARCH
 
 ! Flag on whether to have DES_*_OLD arrays, if either Adams Bashforth or PIC is used
       LOGICAL :: DO_OLD
 
-! Factor muliplied by sum of radii in grid based neighbor search and
-! nsquare search method.  increases the effective radius of a particle
-! for detecting particle contacts
-      DOUBLE PRECISION :: FACTOR_RLM
-
-! Stores number of neighbors based on neighbor search
-      INTEGER, DIMENSION(:), ALLOCATABLE :: NEIGHBOR_INDEX
-      INTEGER, DIMENSION(:), ALLOCATABLE :: NEIGHBOR_INDEX_OLD
-      INTEGER, DIMENSION(:), ALLOCATABLE :: NEIGHBORS
-      INTEGER, DIMENSION(:), ALLOCATABLE :: NEIGHBORS_OLD
-
-      INTEGER :: NEIGH_NUM,NEIGH_MAX
-
 ! Quantities used for reporting: max no. neighbors and max overlap
 ! that exists during last solid time step of dem simulation
       DOUBLE PRECISION :: OVERLAP_MAX
 
-! The number of i, j, k divisions in the grid used to perform the
-! cell based neighbor search
-      INTEGER :: DESGRIDSEARCH_IMAX, DESGRIDSEARCH_JMAX, &
-                 DESGRIDSEARCH_KMAX
 
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<
@@ -177,10 +144,10 @@
 
 
 ! Periodic wall BC
-      LOGICAL DES_PERIODIC_WALLS
-      LOGICAL DES_PERIODIC_WALLS_X
-      LOGICAL DES_PERIODIC_WALLS_Y
-      LOGICAL DES_PERIODIC_WALLS_Z
+      LOGICAL :: DES_PERIODIC_WALLS
+      LOGICAL :: DES_PERIODIC_WALLS_X
+      LOGICAL :: DES_PERIODIC_WALLS_Y
+      LOGICAL :: DES_PERIODIC_WALLS_Z
 
 ! Particle-particle and Particle-wall collision model parameters
 !----------------------------------------------------------------->>>
@@ -199,8 +166,8 @@
       DOUBLE PRECISION :: DES_ETAN(DIM_M, DIM_M), DES_ETAN_WALL(DIM_M)
       DOUBLE PRECISION :: DES_ETAT(DIM_M, DIM_M), DES_ETAT_WALL(DIM_M)
 
-! Friction coeficients
-      DOUBLE PRECISION MEW, MEW_W
+! Friction coefficients
+      DOUBLE PRECISION :: MEW, MEW_W
 
 ! coeff of restituion input in one D array, solid solid
 ! Tangential rest. coef. are used for hertzian collision model but not linear
@@ -229,51 +196,14 @@
 ! Defining user defined allocatable array
       INTEGER :: DES_USR_VAR_SIZE = 0
 
-
-! Dynamic information related to computational (eulerian) fluid grid
-!----------------------------------------------------------------->>>
-! Dynamic variable. for each ijk computational fluid cell store the
-! total number of particles and the id's of the particles in that cell
-      TYPE iap1
-         INTEGER, DIMENSION(:), POINTER:: p
-      END TYPE iap1
-
-! particle can collide with at most COLLISION_ARRAY_MAX facets simultaneously
-      INTEGER :: COLLISION_ARRAY_MAX = 8
-
-! -1 value indicates no collision
-      INTEGER, ALLOCATABLE :: wall_collision_facet_id(:,:)
-
-! in order to facilitate the parallel processing the PIC is defined
-! as single array IJK
-      TYPE(iap1), DIMENSION(:,:,:), ALLOCATABLE:: pic
-
 !-----------------------------------------------------------------<<<
 
-! Explicitly calculated fluid-particle drag force.
-      ! DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: DRAG_FC !(PARTICLES,3)
-
-! quantities are set in subroutine set_interpolation_scheme
-! order = order of the interpolation method, ob2l = (order+1)/2,
-! ob2r = order/2
-      CHARACTER(LEN=7):: scheme, interp_scheme
-      INTEGER:: order, ob2l, ob2r
 
 ! END of interpolation related data
 !-----------------------------------------------------------------<<<
 
-! Volume of each node. Used to obtain Eulerian fields
-      double precision, allocatable, dimension(:,:,:) :: des_vol_node
-
-! Bulk density of particles in fluid cell
-!     DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE :: DES_ROP_S
-
       LOGICAL :: DES_EXPLICITLY_COUPLED
 
-
-! variable to clean the ghost cells
-      logical,dimension(:),allocatable :: ighost_updated
-      integer :: max_isize
 
       CONTAINS
 

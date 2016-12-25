@@ -1,8 +1,5 @@
 module des_time_march_module
 
-   use particles_in_cell_module, only: particles_in_cell
-   use mass_outflow_dem_module, only: mass_outflow_dem
-
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -13,13 +10,12 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-         pijk,   iglobal_id, particle_state, particle_phase, &
-         neighbor_index, neighbor_index_old, &
-         des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
-         ppos, des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-         drag_fc, fc, tow, flag, pinc)
+             particle_state, particle_phase, &
+             des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
+             des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
+             drag_fc, fc, tow, flag)
 
-      USE neighbour_module, only: neighbour
+      USE calc_collision_wall, only: calc_dem_force_with_wall_stl
       use calc_drag_des_module, only: calc_drag_des
       use calc_force_dem_module, only: calc_force_dem
       use calc_pg_grad_module, only: calc_pg_grad
@@ -28,13 +24,12 @@ module des_time_march_module
       use compar, only: iend3, jend3, kend3
       use compar, only: istart3, jstart3, kstart3
       use compar, only: numpes
-      use des_bc, only: DEM_BCMI, DEM_BCMO
-      use discretelement, only: des_continuum_coupled, des_explicitly_coupled, dtsolid, ighost_cnt
-      use discretelement, only: pip, s_time, do_nsearch, neighbor_search_n
-      use drag_gs_des1_module, only: drag_gs_des1
+      use discretelement, only: des_continuum_coupled, des_explicitly_coupled
+      use discretelement, only: dtsolid
+      use discretelement, only: pip, s_time, do_nsearch
+      use drag_gs_des1_module, only: drag_gs_des
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
-      use mass_inflow_dem_module, only: mass_inflow_dem
       use output_manager_module, only: output_manager
       use param1, only: zero
       use run, only: CALL_USR
@@ -62,8 +57,6 @@ module des_time_march_module
       integer         , INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
-      INTEGER        , INTENT(INOUT) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       double precision, intent(inout) :: pvol(:)
       double precision, intent(inout) :: pmass(:)
@@ -80,16 +73,11 @@ module des_time_march_module
       double precision, intent(inout) :: fc(:,:)
       double precision, intent(inout) :: tow(:,:)
 
-      double precision, intent(inout) :: ppos(:,:)
       double precision, intent(inout) :: omega_new(:,:)
       double precision, intent(inout) :: des_usr_var(:,:)
 
       integer, intent(inout) :: particle_state(:)
-      integer, intent(inout) :: neighbor_index(:)
-      integer, intent(inout) :: neighbor_index_old(:)
-      integer, intent(  out) :: iglobal_id(:)
       integer, intent(  out) :: particle_phase(:)
-      integer, intent(  out) :: pijk(:,:)
 
 !------------------------------------------------
 ! Local variables
@@ -136,12 +124,12 @@ module des_time_march_module
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
          CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-            iglobal_id, particle_state, des_radius, ro_sol, des_pos_new,&
+             particle_state, des_radius, ro_sol, des_pos_new,&
             des_vel_new, des_usr_var, omega_new, &
          .FALSE., .FALSE.)
       ENDIF   ! end if/else (des_continuum_coupled)
 
-      NP = PIP - IGHOST_CNT
+      NP = PIP
       ! CALL GLOBAL_ALL_SUM(NP)
 
       IF(DES_CONTINUUM_COUPLED) THEN
@@ -158,11 +146,12 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES1(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
-               flag, pijk, particle_state, pvol, des_vel_new, fc, &
+            CALL DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
+               flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
                des_radius,  particle_phase)
          ENDIF
-         CALL CALC_PG_GRAD(p_g, gradPg, pijk, particle_state, pvol, drag_fc, flag)
+         CALL CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new, &
+            pvol, drag_fc, flag)
       ENDIF
 
 
@@ -183,45 +172,38 @@ module des_time_march_module
             ENDIF
          ENDIF
 
-! Calculate forces acting on particles (collisions, drag, etc).
+! Calculate forces from particle-wall collisions
+         CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
+            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
+
+! Calculate forces from particle-particle collisions
          CALL CALC_FORCE_DEM(particle_phase, particle_state,  &
-            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow, neighbor_index)
+            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
+
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, pijk, particle_state, &
-            fc, drag_fc, pvol, des_vel_new, des_radius, particle_phase, flag)
+         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,particle_state,&
+            fc,drag_fc,pvol, &
+            des_pos_new,des_vel_new,des_radius,particle_phase,flag)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, ppos,&
+         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
 ! Set DO_NSEARCH before calling DES_PAR_EXCHANGE.
-         DO_NSEARCH = (NN == 1 .OR. MOD(NN,NEIGHBOR_SEARCH_N) == 0)
+         DO_NSEARCH = .TRUE.
 
 ! Add/Remove particles to the system via flow BCs.
-         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM(PIJK, particle_phase,  &
-            iglobal_id, PARTICLE_STATE, &
-            DES_RADIUS, OMOI, PMASS, PVOL, RO_SOL, &
-            DES_VEL_NEW, DES_POS_NEW, PPOS, OMEGA_NEW, DRAG_FC)
-         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM(DO_NSEARCH, &
-            particle_phase, iglobal_id, particle_state, &
-            des_radius, omoi, pmass, pvol, ro_sol, &
-            des_vel_new, des_pos_new, ppos, omega_new, fc, tow)
+!         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM
+!         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
 
-
-! Explicitly coupled simulations do not need to rebin particles to
-! the fluid grid every time step. However, this implies that the
-! fluid cell information and interpolation weights become stale.
-! Bin particles to fluid grid.
-         CALL PARTICLES_IN_CELL(pijk, iglobal_id, particle_state, &
-            des_pos_new, des_vel_new, des_radius, des_usr_var, pinc)
 ! Calculate mean fields (EPg).
-         CALL COMP_MEAN_FIELDS(ep_g, pijk, particle_state, pvol, flag)
+         CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
 
-         IF(DO_NSEARCH) CALL NEIGHBOUR(pijk, pinc, particle_state, des_radius,&
-            des_pos_new, ppos, neighbor_index, neighbor_index_old)
+         ! IF(DO_NSEARCH) CALL NEIGHBOUR(  particle_state, des_radius,&
+         !    des_pos_new, neighbor_index, neighbor_index_old)
 
 
 ! Update time to reflect changes
@@ -234,7 +216,7 @@ module des_time_march_module
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
             CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-               iglobal_id, particle_state, des_radius, ro_sol, &
+                particle_state, des_radius, ro_sol, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, &
                .FALSE., .FALSE.)
          ENDIF  ! end if (.not.des_continuum_coupled)

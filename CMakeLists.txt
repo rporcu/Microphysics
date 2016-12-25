@@ -85,18 +85,14 @@ set(F90_sources
   model/des/calc_force_dem.f90
   model/des/calc_grad_des.f90
   model/des/calc_pg_grad.f90
-  model/des/cfassign.f90
   model/des/cffctowall.f90
   model/des/cfnewvalues.f90
   model/des/cfrelvel.f90
   model/des/cfslide.f90
-  model/des/check_cell_movement.f90
   model/des/comp_mean_fields.f90
-  model/des/des_allocate_mod.f90
   model/des/des_bc_mod.f90
   model/des/des_init_namelist.f90
   model/des/des_time_march.f90
-  model/des/desgrid_mod.f90
   model/des/desmpi_mod.f90
   model/des/discretelement_mod.f90
   model/des/drag_gp_des.f90
@@ -104,10 +100,6 @@ set(F90_sources
   model/des/gas_drag.f90
   model/des/layout_mi_dem.f90
   model/des/make_arrays_des.f90
-  model/des/mass_inflow_dem.f90
-  model/des/mass_outflow_dem.f90
-  model/des/neighbour.f90
-  model/des/particles_in_cell.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90
   model/des/read_res0_des.f90
@@ -265,10 +257,10 @@ set(TESTS
   tests/DEM06
   #tests/DEM07
   #benchmarks/DEM01
-  benchmarks/DEM02
-  benchmarks/DEM03
-  benchmarks/DEM04
-  benchmarks/FLD01
+  #benchmarks/DEM02
+  #benchmarks/DEM03
+  #benchmarks/DEM04
+  #benchmarks/FLD01
   )
 
 set (BUILD_TEST build_test)

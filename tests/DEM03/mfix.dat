@@ -76,11 +76,11 @@
   DES_ETAT_FAC = 1.0           ! inter-particle
   DES_ETAT_W_FAC = 1.0         ! particle-wall
 
-  NEIGHBOR_SEARCH_N   = 99     ! Steps between neighbor search
 
-  DESGRIDSEARCH_IMAX = 1
-  DESGRIDSEARCH_JMAX = 1
-  DESGRIDSEARCH_KMAX = 1
+
+
+
+
 
 !......................................................................!
 ! The following keywords are required inputs for the simulation. They  !

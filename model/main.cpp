@@ -184,13 +184,8 @@ int main (int argc, char* argv[])
   drag_bm.setVal(0.);
   int nparticles = 5000;
 
-  iMultiFab pinc(ba,1,nghost);
-  pinc.setVal(0);
-
   int mmax = 1;
 
-  Array<int>    pijk        (3*nparticles);
-  Array<int> iglobal_id     (  nparticles);
   Array<int> particle_state (  nparticles);
   Array<int> particle_phase (  nparticles);
 
@@ -199,7 +194,6 @@ int main (int argc, char* argv[])
   Array<Real> pvol          (  nparticles);
   Array<Real> pmass         (  nparticles);
   Array<Real> omoi          (  nparticles);
-  Array<Real> ppos          (3*nparticles);
   Array<Real> des_pos_new   (3*nparticles);
   Array<Real> des_vel_new   (3*nparticles);
   Array<Real> des_usr_var   (  nparticles);
@@ -224,13 +218,12 @@ int main (int argc, char* argv[])
                flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
-               pijk.dataPtr(),
-               iglobal_id.dataPtr(), particle_state.dataPtr(),
+               particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
-               ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+               des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
                rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
 
@@ -248,13 +241,12 @@ int main (int argc, char* argv[])
                flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),  pinc[mfi].dataPtr(),
+               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
                flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
-               pijk.dataPtr(),
-               iglobal_id.dataPtr(), particle_state.dataPtr(), particle_phase.dataPtr(),
+               particle_state.dataPtr(), particle_phase.dataPtr(),
                des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
-               ppos.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+               des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
                rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
 

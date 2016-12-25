@@ -21,11 +21,10 @@ module time_march_module
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm, pinc, &
-                flag, vol_surr,  &
-                pijk,   iglobal_id, &
+                drag_am, drag_bm,  &
+                flag, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-                omoi, ppos, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+                omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
 
       USE check_batch_queue_end_module, only: check_batch_queue_end
@@ -56,94 +55,84 @@ module time_march_module
       use des_time_march_module, only: des_time_march
       use output_manager_module, only: output_manager
 
-! HACK: defer to global arrays
-      use discretelement, only: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      double precision, intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      double precision, intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      double precision, intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_go&
+      double precision, intent(inout) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_go&
+      double precision, intent(inout) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_go&
+      double precision, intent(inout) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      double precision, intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_go&
+      double precision, intent(inout) :: p_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      double precision, intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_go&
+      double precision, intent(inout) :: ep_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+      double precision, intent(inout) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      double precision, intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_go&
+      double precision, intent(inout) :: ro_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      double precision, intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_go&
+      double precision, intent(inout) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+      double precision, intent(inout) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+      double precision, intent(inout) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+      double precision, intent(inout) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+      double precision, intent(inout) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+      double precision, intent(inout) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+      double precision, intent(inout) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+      double precision, intent(inout) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+      double precision, intent(inout) :: tau_v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
+      double precision, intent(inout) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+      double precision, intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+      double precision, intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+      double precision, intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+      double precision, intent(inout) :: trd_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+      double precision, intent(inout) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+      double precision, intent(inout) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: f_gds&
+      double precision, intent(inout) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      double precision, intent(inout) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: b_m&
+      double precision, intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      DOUBLE PRECISION, INTENT(INOUT) :: drag_am&
+      double precision, intent(inout) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: drag_bm&
+      double precision, intent(inout) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-
-      integer         , INTENT(INOUT) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      integer, intent(inout) :: pijk(max_pip,3)
-      integer, intent(inout) :: iglobal_id(max_pip)
-      integer, intent(inout) :: particle_state(max_pip)
-      integer, intent(inout) :: particle_phase(max_pip)
+      integer         , intent(inout) :: particle_state(max_pip)
+      integer         , intent(inout) :: particle_phase(max_pip)
 
       double precision, intent(inout) :: des_radius(max_pip)
       double precision, intent(inout) :: ro_sol(max_pip)
@@ -151,7 +140,6 @@ module time_march_module
       double precision, intent(inout) :: pmass(max_pip)
       double precision, intent(inout) :: omoi(max_pip)
 
-      double precision, intent(inout) :: ppos(max_pip,3)
       double precision, intent(inout) :: des_pos_new(max_pip,3)
       double precision, intent(inout) :: des_vel_new(max_pip,3)
       double precision, intent(inout) :: des_usr_var(max_pip,1)
@@ -196,7 +184,7 @@ module time_march_module
                        flux_ge, flux_gn, flux_gt, flag)
 
          CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-            iglobal_id, particle_state, des_radius, ro_sol, des_pos_new, &
+             particle_state, des_radius, ro_sol, des_pos_new, &
             des_vel_new, des_usr_var, omega_new, EXIT_SIGNAL, FINISH)
 
          IF (DT == UNDEFINED) THEN
@@ -221,10 +209,10 @@ module time_march_module
          W_go =  W_g
 
 ! Calculate coefficients
-         CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-            f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
-            particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
-            des_usr_var, flag, pinc)
+         CALL CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+            mu_g, f_gds, drag_bm,  particle_phase,  &
+            particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
+            flag)
 
 ! Calculate the stress tensor trace and cross terms for all phases.
          CALL CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
@@ -250,14 +238,14 @@ module time_march_module
                          flux_ge, flux_gn, flux_gt, mu_g,&
                          f_gds, A_m, b_m, drag_am, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
-                         pijk, particle_phase, particle_state, pvol, &
-                         des_radius, des_vel_new, flag, IER, NIT)
+                          particle_phase, particle_state, pvol, &
+                         des_radius,  des_pos_new, des_vel_new, flag,  IER, NIT)
 
          IF (.NOT.ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
-            rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, f_gds, &
-            drag_bm, pijk, particle_phase, iglobal_id, &
-            particle_state, pinc, pvol, des_radius,  &
-            des_pos_new, des_vel_new, des_usr_var, IER, NIT)) EXIT
+            rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
+            f_gds, drag_bm,  particle_phase,  &
+            particle_state,  pvol, des_radius,  &
+            des_pos_new, des_vel_new, IER, NIT)) EXIT
          ENDDO
 
          IF(DT < DT_MIN) THEN
@@ -270,11 +258,10 @@ module time_march_module
 ! Other solids model implementations
          IF(DEM_SOLIDS) THEN
             call des_time_march(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-               pijk,   iglobal_id, particle_state, particle_phase, &
-               neighbor_index, neighbor_index_old, des_radius,  ro_sol, pvol, pmass,&
-               omoi, des_usr_var, ppos, des_pos_new, des_vel_new, omega_new, &
-               des_acc_old, rot_acc_old, drag_fc, fc, tow, &
-               flag, pinc)
+               particle_state, particle_phase, &
+               des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
+               des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
+               drag_fc, fc, tow, flag)
             IF(.NOT.DES_CONTINUUM_COUPLED) return
          ENDIF
 

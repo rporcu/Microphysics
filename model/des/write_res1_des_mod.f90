@@ -2,7 +2,7 @@
 
       use compar, only: PE_IO
       use compar, only: myPE
-      use discretelement, only: nonexistent, particle_state
+      use discretelement, only: nonexistent
       use out_bin_512_mod, only: out_bin_512
       use out_bin_512i_mod, only: out_bin_512i
       use run, only: bDist_IO
@@ -77,8 +77,7 @@
 
       use compar, only: numPEs
 
-      use discretelement, only: PIP, iGHOST_CNT
-      use discretelement, only: NEIGHBORS, NEIGHBOR_INDEX, NEIGH_NUM
+      use discretelement, only: PIP
 
       CHARACTER(len=*), INTENT(IN)  :: BASE
       DOUBLE PRECISION, INTENT(IN) :: lVERSION
@@ -99,17 +98,10 @@
       pROOTCNT = PIP
       pPROCCNT = pROOTCNT
 
-      lGHOST_CNT = iGHOST_CNT
-
-      cROOTCNT = NEIGH_NUM
-      cPROCCNT = cROOTCNT
-
 ! Write out the initial data.
       lNEXT_REC = 1
       CALL WRITE_RES_DES(lNEXT_REC, lVERSION)    ! RES file version
       CALL WRITE_RES_DES(lNEXT_REC, pROOTCNT)    ! Number of Particles
-      CALL WRITE_RES_DES(lNEXT_REC, lGHOST_CNT)  ! Number of Ghosts
-      CALL WRITE_RES_DES(lNEXT_REC, cROOTCNT)    ! Number of neighbors
 
       RETURN
       END SUBROUTINE INIT_WRITE_RES_DES
@@ -256,7 +248,6 @@
 
       use desmpi, only: iProcBuf
       use discretelement, only: MAX_PIP, PIP
-      use discretelement, only: iGLOBAL_ID
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       INTEGER, INTENT(IN) :: INPUT_I(:)

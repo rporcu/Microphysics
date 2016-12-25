@@ -2,13 +2,9 @@
 
 ! USE discretelement
         DES_ONEWAY_COUPLED, DES_INTG_METHOD,  PARTICLES, &
-        GENER_PART_CONFIG, NEIGHBOR_SEARCH_N,&
-        FACTOR_RLM, NEIGHBOR_SEARCH_RAD_RATIO, DES_USR_VAR_SIZE,&
+        DES_USR_VAR_SIZE,&
 
         DES_EXPLICITLY_COUPLED, &
-
-! Used for grid/cell based search methods
-        DESGRIDSEARCH_IMAX, DESGRIDSEARCH_JMAX, DESGRIDSEARCH_KMAX, &
 
 ! Particle properties
         KN, KN_W, KT_FAC, KT_W_FAC, MEW, MEW_W, &

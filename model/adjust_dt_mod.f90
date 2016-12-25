@@ -12,9 +12,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
          LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
             rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
-            f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
-            particle_state, pinc, pvol, des_radius,  &
-            des_pos_new, des_vel_new, des_usr_var, IER, NIT)
+            f_gds, drag_bm,  particle_phase,  &
+            particle_state,  pvol, des_radius,  &
+            des_pos_new, des_vel_new, IER, NIT)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -80,14 +80,11 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , INTENT(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      integer         , INTENT(inout) :: pinc&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(OUT) :: iglobal_id
-      INTEGER, DIMENSION(:,:), INTENT(OUT) :: pijk
+
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
 ! Integer flag: 0=Good, 100=initialize, otherwise bad.
@@ -187,10 +184,10 @@
             W_g =  W_go
 
             ! Recalculate all coefficients
-            CALL CALC_COEFF_ALL (ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g,&
-               f_gds, drag_bm, pijk, particle_phase, iglobal_id, &
+            CALL CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+               mu_g, f_gds, drag_bm,  particle_phase,  &
                particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-               des_usr_var, flag, pinc)
+               flag)
 ! Iterate again with new dt
             ADJUSTDT = .TRUE.
 
