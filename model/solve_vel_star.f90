@@ -11,7 +11,7 @@ module solve_vel_star_module
       SUBROUTINE SOLVE_VEL_STAR(u_g, v_g, w_g, u_go, v_go, w_go,    &
          p_g, ro_g, rop_g, rop_go, ep_g, tau_u_g, tau_v_g, tau_w_g, &
          d_e, d_n, d_t, flux_ge, flux_gn, flux_gt ,mu_g, &
-         f_gds, A_m, b_m, drag_am, drag_bm, flag, IER)
+         f_gds, A_m, b_m, drag_bm, flag, IER)
 
       USE adjust_a  , only: adjust_a_g
       USE adjust_leq_module, only: adjust_leq
@@ -85,8 +85,6 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       DOUBLE PRECISION, INTENT(inout) :: A_m&
@@ -144,7 +142,7 @@ module solve_vel_star_module
 ! calculate modifications to the A matrix center coefficient and B
 ! source vector for treating DEM drag terms
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+         CALL GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag, IER)
 
       IF (MOMENTUM_X_EQ(0)) THEN
          CALL CALC_RESID_VEL (U_G, V_G, W_G, A_M, B_M, &
@@ -184,7 +182,7 @@ module solve_vel_star_module
       IF (MOMENTUM_Y_EQ(0)) CALL adjust_a_g('V',A_M, B_M, ROP_G)
 
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_V(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+         CALL GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag, IER)
 
       IF (MOMENTUM_Y_EQ(0)) THEN
          ! Note we pass V first since that is the primary velocity component
@@ -225,7 +223,7 @@ module solve_vel_star_module
       IF (MOMENTUM_Z_EQ(0)) CALL adjust_a_g('W',A_M, B_M, ROP_G)
 
       IF(DES_CONTINUUM_COUPLED) &
-         CALL GAS_DRAG_W(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+         CALL GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag, IER)
 
       IF (MOMENTUM_Z_EQ(0)) THEN
             ! Note we pass W first since that is the primary velocity component

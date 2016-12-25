@@ -11,7 +11,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag, IER)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -45,8 +45,6 @@ MODULE GAS_DRAG_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
@@ -100,7 +98,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag, IER)
 
 
 ! Global Variables:
@@ -134,8 +132,6 @@ MODULE GAS_DRAG_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
@@ -184,7 +180,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_am, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag, IER)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -216,8 +212,6 @@ MODULE GAS_DRAG_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: drag_am&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       DOUBLE PRECISION, INTENT(IN   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)

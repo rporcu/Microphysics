@@ -21,7 +21,7 @@ module time_march_module
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm,  &
+                drag_bm,  &
                 flag, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
@@ -124,8 +124,6 @@ module time_march_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      double precision, intent(inout) :: drag_am&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(inout) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer, intent(in   ) :: flag&
@@ -236,7 +234,7 @@ module time_march_module
                          p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
                          rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
                          flux_ge, flux_gn, flux_gt, mu_g,&
-                         f_gds, A_m, b_m, drag_am, drag_bm, &
+                         f_gds, A_m, b_m, drag_bm, &
                          tau_u_g, tau_v_g, tau_w_g, &
                           particle_phase, particle_state, pvol, &
                          des_radius,  des_pos_new, des_vel_new, flag,  IER, NIT)

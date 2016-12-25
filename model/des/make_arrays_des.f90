@@ -7,7 +7,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 !  Purpose: DES - allocating DES arrays
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MAKE_ARRAYS_DES(ep_g, flag, vol_surr, &
+      SUBROUTINE MAKE_ARRAYS_DES(ep_g, flag, &
              particle_state, particle_phase, &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
@@ -38,10 +38,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(inout) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
-      DOUBLE PRECISION, INTENT(INOUT) :: vol_surr&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-
 
       double precision, intent(  out) :: pvol(:)
       double precision, intent(  out) :: pmass(:)

@@ -15,8 +15,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
                 flux_ge, flux_gn, flux_gt, &
                 trD_g, lambda_g, mu_g, &
                 f_gds, A_m, b_m, &
-                drag_am, drag_bm,  &
-                flag, vol_surr,  &
+                drag_bm,  &
+                flag, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
@@ -64,8 +64,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       integer         , intent(inout) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-      double precision, intent(inout) :: vol_surr&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       double precision, intent(inout) :: A_m&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,7)
@@ -141,11 +139,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
       double precision, intent(inout) :: f_gds&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: drag_am&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: drag_bm&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,3)
-
 
       integer, intent(inout) :: particle_state(max_pip)
       integer, intent(inout) :: particle_phase(max_pip)
@@ -309,7 +304,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
       IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g, &
-         flag, vol_surr, particle_state, particle_phase,  &
+         flag, particle_state, particle_phase,  &
          des_radius,  ro_sol, pvol, pmass, omoi, &
          des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
 
@@ -324,8 +319,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       IF (CALL_USR) CALL USR0
 
 ! Calculate all the coefficients once before entering the time loop
-      CALL CALC_COEFF(flag, 2, ro_g, p_g, rop_g, u_g, v_g, w_g, mu_g, &
-         f_gds, drag_am, drag_bm,  particle_phase, particle_state, &
+      CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
+         w_g, mu_g, f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius)
 
       IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)

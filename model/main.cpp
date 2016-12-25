@@ -81,10 +81,6 @@ int main (int argc, char* argv[])
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_set_domain(flag[mfi].dataPtr());
 
-  // Total volume of cell's DES stencil neighbors
-  MultiFab vol_surr(ba,1,nghost);
-  vol_surr.setVal(0.);
-
   // Matrix and rhs vector
   MultiFab A_m(ba,7,nghost);
   MultiFab b_m(ba,1,nghost);
@@ -177,10 +173,8 @@ int main (int argc, char* argv[])
 
   //
   MultiFab f_gds  (ba,1,nghost);
-  MultiFab drag_am(ba,1,nghost);
   MultiFab drag_bm(ba,3,nghost);
   f_gds.setVal(0.);
-  drag_am.setVal(0.);
   drag_bm.setVal(0.);
   int nparticles = 5000;
 
@@ -218,8 +212,8 @@ int main (int argc, char* argv[])
                flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
-               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               drag_bm[mfi].dataPtr(),
+               flag[mfi].dataPtr(),
                particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
@@ -241,8 +235,8 @@ int main (int argc, char* argv[])
                flux_gE[mfi].dataPtr(), flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
                trD_g[mfi].dataPtr(),   lambda_g[mfi].dataPtr(), mu_g[mfi].dataPtr(),
                f_gds[mfi].dataPtr(),   A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
-               drag_am[mfi].dataPtr(), drag_bm[mfi].dataPtr(),
-               flag[mfi].dataPtr(),    vol_surr[mfi].dataPtr(),
+               drag_bm[mfi].dataPtr(),
+               flag[mfi].dataPtr(),
                particle_state.dataPtr(), particle_phase.dataPtr(),
                des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
