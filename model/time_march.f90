@@ -27,34 +27,24 @@ module time_march_module
                 omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
                 rot_acc_old, drag_fc, fc, tow)
 
-      USE check_batch_queue_end_module, only: check_batch_queue_end
-      USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      USE compar, only: myPE
-      USE discretelement, only: des_continuum_coupled, max_pip
-      USE error_manager, only: err_msg, flush_err_msg
-      USE param1, only: undefined, small_number, zero
-      USE run, only: call_usr, dem_solids
-      USE run, only: dem_solids
-      USE run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
-      USE toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
-
-      ! Use function MAX_VEL_INLET to compute max. velocity at inlet
-      USE utilities, ONLY: MAX_VEL_INLET
-
       use adjust_dt, only: adjustdt
-
+      use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
+      use check_batch_queue_end_module, only: check_batch_queue_end
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      use compar, only: myPE
+      use des_time_march_module, only: des_time_march
+      use discretelement, only: des_continuum_coupled, max_pip
+      use error_manager, only: err_msg, flush_err_msg
       use exit_mod      , only: mfix_exit
       use iterate_module, only: iterate
-
-      use des_time_march_module, only: des_time_march
-      use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
-      use set_bc1_module, only: set_bc1
-      use run, only: chk_batchq_end
-      USE check_batch_queue_end_module, only: check_batch_queue_end
-      USE discretelement, only: des_continuum_coupled
-      use des_time_march_module, only: des_time_march
       use output_manager_module, only: output_manager
-
+      use param1, only: undefined, small_number, zero
+      use run, only: call_usr, dem_solids
+      use run, only: chk_batchq_end
+      use run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
+      use set_bc1_module, only: set_bc1
+      use toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
+      use utilities, only: max_vel_inlet
 
       implicit none
 
@@ -149,7 +139,6 @@ module time_march_module
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 
-!      INTEGER, DIMENSION(:), INTENT(INOUT) :: NEIGHBOR_INDEX, NEIGHBOR_INDEX_OLD
 
 !-----------------------------------------------
 ! Local variables

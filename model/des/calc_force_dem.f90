@@ -11,30 +11,28 @@ MODULE CALC_FORCE_DEM_MODULE
 !           accounting for the wall properties                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM(particle_phase, particle_state,  &
-         des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
+      SUBROUTINE CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
          USE cfrelvel_module, only: cfrelvel
          USE discretelement, only: des_coll_model_enum, dtsolid
          USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn
          USE discretelement, only: s_time, des_crossprdct
-         USE discretelement, only: max_pip, pip
          USE discretelement, only: kn, kt, mew, hertzian
-         USE discretelement, only: nonexistent
 
          USE drag_gs_des1_module, only: drag_gs_des
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
-         USE param1, only: small_number, zero
+         USE param1, only: zero
 
          IMPLICIT NONE
 
-      integer, intent(in) :: particle_state(:)
       integer, intent(in) :: particle_phase(:)
 
       double precision, intent(in) :: des_radius(:)
       double precision, intent(in) :: des_pos_new(:,:)
       double precision, intent(in) :: des_vel_new(:,:)
       double precision, intent(in) :: omega_new(:,:)
+      integer, intent(in) :: pairs(:,:)
+      integer, intent(in) :: pair_count
       double precision, intent(inout) :: fc(:,:), tow(:,:)
 
 ! Local variables
@@ -42,7 +40,7 @@ MODULE CALC_FORCE_DEM_MODULE
 ! percent of particle radius when excess overlap will be flagged
       DOUBLE PRECISION, PARAMETER :: flag_overlap = 0.20d0
 ! particle no. indices
-      INTEGER :: I, LL, cc, CC_START, CC_END
+      INTEGER :: I, LL, cc
 ! the overlap occuring between particle-particle or particle-wall
 ! collision in the normal direction
       DOUBLE PRECISION :: OVERLAP_N, OVERLAP_T(3)
@@ -84,22 +82,17 @@ MODULE CALC_FORCE_DEM_MODULE
 ! Check particle LL neighbor contacts
 !---------------------------------------------------------------------//
 
-      DO LL = 1, PIP-1
+      DO cc = 1, pair_count
 
-         IF(NONEXISTENT==PARTICLE_STATE(LL)) CYCLE
+         ll = pairs(cc, 1)
+         i = pairs(cc, 2)
+
          pos = DES_POS_NEW(LL,:)
          rad = DES_RADIUS(LL)
-
-         DO I = LL+1, PIP
-            IF(NONEXISTENT==PARTICLE_STATE(I)) CYCLE
 
             R_LM = rad + DES_RADIUS(I)
             DIST(:) = DES_POS_NEW(I,:) - POS(:)
             DIST_MAG = dot_product(DIST,DIST)
-
-            FC_TMP(:) = ZERO
-
-            IF(DIST_MAG > (R_LM - SMALL_NUMBER)**2) CYCLE
 
             IF(abs(DIST_MAG) < epsilon(dist_mag)) THEN
                WRITE(*,8550) LL, I
@@ -173,7 +166,7 @@ MODULE CALC_FORCE_DEM_MODULE
 
 ! Calculate the total force FC of a collision pair
 ! total contact force
-            FC_TMP(:) = FC_TMP(:) + FN(:) + FT(:)
+            FC_TMP(:) = FN(:) + FT(:)
 
             FC(LL,:) = FC(LL,:) + FC_TMP(:)
 
@@ -188,7 +181,6 @@ MODULE CALC_FORCE_DEM_MODULE
             TOW(I,2)  = TOW(I,2)  + TOW_TMP(2,2)
             TOW(I,3)  = TOW(I,3)  + TOW_TMP(3,2)
 
-         ENDDO
       ENDDO
 
       RETURN

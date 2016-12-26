@@ -79,6 +79,9 @@ module des_time_march_module
       integer, intent(inout) :: particle_state(:)
       integer, intent(  out) :: particle_phase(:)
 
+      integer, dimension(6*PIP, 2) :: pairs
+      INTEGER :: pair_count
+
 !------------------------------------------------
 ! Local variables
 !------------------------------------------------
@@ -176,9 +179,11 @@ module des_time_march_module
          CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
+! Calculate pairs of colliding particles
+         CALL CALC_COLLISIONS(pairs, pair_count, particle_state, des_radius, des_pos_new)
+
 ! Calculate forces from particle-particle collisions
-         CALL CALC_FORCE_DEM(particle_phase, particle_state,  &
-            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
+         CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
          CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,particle_state,&
@@ -260,6 +265,50 @@ module des_time_march_module
  9000 FORMAT('    NITs/SEC = ',A)
 
       ENDIF
+
+
+   CONTAINS
+
+      SUBROUTINE CALC_COLLISIONS(pairs, pair_count, particle_state, des_radius, des_pos_new)
+
+         USE discretelement, only: nonexistent
+         USE param1, only: small_number
+
+         IMPLICIT NONE
+
+      integer, intent(out), dimension(6*PIP, 2) :: pairs
+      integer, intent(out) :: pair_count
+
+      double precision, intent(in) :: des_pos_new(:,:)
+      double precision, intent(in) :: des_radius(:)
+      integer, intent(in) :: particle_state(:)
+
+      INTEGER :: i, ll
+      double precision :: rad
+      double precision :: DIST(3), DIST_MAG, POS(3)
+
+      pair_count = 0
+
+      DO LL = 1, PIP-1
+
+         IF(NONEXISTENT==PARTICLE_STATE(LL)) CYCLE
+         pos = DES_POS_NEW(LL,:)
+         rad = DES_RADIUS(LL)
+
+         DO I = LL+1, PIP
+            IF(NONEXISTENT==PARTICLE_STATE(I)) CYCLE
+
+            DIST(:) = DES_POS_NEW(I,:) - POS(:)
+            DIST_MAG = dot_product(DIST,DIST)
+
+            IF(DIST_MAG < (rad + DES_RADIUS(I) - SMALL_NUMBER)**2) THEN
+               pair_count = pair_count + 1
+               pairs(pair_count, 1) = ll
+               pairs(pair_count, 2) = i
+            ENDIF
+         ENDDO
+      ENDDO
+      END SUBROUTINE CALC_COLLISIONS
 
       END SUBROUTINE DES_TIME_MARCH
 
