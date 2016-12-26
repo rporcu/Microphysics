@@ -21,7 +21,6 @@ MODULE CALC_FORCE_DEM_MODULE
 
          USE drag_gs_des1_module, only: drag_gs_des
          USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
-         USE param1, only: zero
 
          IMPLICIT NONE
 

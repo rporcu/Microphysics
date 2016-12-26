@@ -13,7 +13,7 @@ module des_time_march_module
              particle_state, particle_phase, &
              des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
              des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-             drag_fc, fc, tow, flag)
+             drag_fc, fc, tow, pairs, pair_count, flag)
 
       USE calc_collision_wall, only: calc_dem_force_with_wall_stl
       use calc_drag_des_module, only: calc_drag_des
@@ -23,7 +23,6 @@ module des_time_march_module
       use comp_mean_fields_module, only: comp_mean_fields
       use compar, only: iend3, jend3, kend3
       use compar, only: istart3, jstart3, kstart3
-      use compar, only: numpes
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled
       use discretelement, only: dtsolid
       use discretelement, only: pip, s_time, do_nsearch
@@ -79,8 +78,8 @@ module des_time_march_module
       integer, intent(inout) :: particle_state(:)
       integer, intent(  out) :: particle_phase(:)
 
-      integer, dimension(6*PIP, 2) :: pairs
-      INTEGER :: pair_count
+      integer, intent(inout) :: pairs(:,:)
+      integer, intent(inout) :: pair_count
 
 !------------------------------------------------
 ! Local variables
@@ -276,7 +275,7 @@ module des_time_march_module
 
          IMPLICIT NONE
 
-      integer, intent(out), dimension(6*PIP, 2) :: pairs
+      integer, intent(out), dimension(:,:) :: pairs
       integer, intent(out) :: pair_count
 
       double precision, intent(in) :: des_pos_new(:,:)

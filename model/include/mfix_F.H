@@ -70,7 +70,8 @@ extern "C"
                  Real* rot_acc_old,
                  Real* drag_fc,
                  Real* fc,
-                 Real* tow);
+                 Real* tow,
+                 int* pairs);
 
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);

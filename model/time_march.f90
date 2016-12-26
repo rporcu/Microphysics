@@ -25,7 +25,7 @@ module time_march_module
                 flag, &
                 particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
                 omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, drag_fc, fc, tow)
+                rot_acc_old, drag_fc, fc, tow, pairs, pair_count)
 
       use adjust_dt, only: adjustdt
       use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
@@ -38,7 +38,7 @@ module time_march_module
       use exit_mod      , only: mfix_exit
       use iterate_module, only: iterate
       use output_manager_module, only: output_manager
-      use param1, only: undefined, small_number, zero
+      use param1, only: small_number, is_defined, is_undefined
       use run, only: call_usr, dem_solids
       use run, only: chk_batchq_end
       use run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
@@ -139,6 +139,8 @@ module time_march_module
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 
+      integer, intent(inout) :: pairs(:,:)
+      integer, intent(inout) :: pair_count
 
 !-----------------------------------------------
 ! Local variables
@@ -174,7 +176,7 @@ module time_march_module
              particle_state, des_radius, ro_sol, des_pos_new, &
             des_vel_new, des_usr_var, omega_new, EXIT_SIGNAL, FINISH)
 
-         IF (DT == UNDEFINED) THEN
+         IF (IS_UNDEFINED(DT)) THEN
             IF (FINISH) THEN
                return
             ELSE
@@ -248,12 +250,12 @@ module time_march_module
                particle_state, particle_phase, &
                des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
                des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-               drag_fc, fc, tow, flag)
+               drag_fc, fc, tow, pairs, pair_count, flag)
             IF(.NOT.DES_CONTINUUM_COUPLED) return
          ENDIF
 
-         IF(DT /= UNDEFINED)THEN
-            IF(USE_DT_PREV)THEN
+         IF(IS_DEFINED(DT)) THEN
+            IF(USE_DT_PREV) THEN
                TIME = TIME + DT_PREV
             ELSE
                TIME = TIME + DT
