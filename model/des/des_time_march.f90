@@ -127,8 +127,7 @@ module des_time_march_module
          DT = DTSOLID
          CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
              particle_state, des_radius, ro_sol, des_pos_new,&
-            des_vel_new, des_usr_var, omega_new, &
-         .FALSE., .FALSE.)
+            des_vel_new, des_usr_var, omega_new, 0, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
       NP = PIP
@@ -221,8 +220,7 @@ module des_time_march_module
 ! Call the output manager to write RES data.
             CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
                 particle_state, des_radius, ro_sol, &
-               des_pos_new, des_vel_new, des_usr_var, omega_new, &
-               .FALSE., .FALSE.)
+               des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
          IF(CALL_USR) CALL USR2_DES(des_pos_new, des_vel_new, omega_new)

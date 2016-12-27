@@ -13,7 +13,8 @@ module output_manager_module
 !----------------------------------------------------------------------!
      SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
          particle_state, des_radius, ro_sol, des_pos_new, &
-        des_vel_new, des_usr_var, omega_new, exit_signal, finished)
+         des_vel_new, des_usr_var, omega_new, exit_signal, finished)&
+         bind(C, name="mfix_output_manager")
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -67,9 +68,9 @@ module output_manager_module
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Flag that the the user specified batch time (plus buffer) is met.
-      LOGICAL, INTENT(IN) :: EXIT_SIGNAL
+      integer, intent(in) :: exit_signal
 ! Flag that a steady state case is completed.
-      LOGICAL, INTENT(IN) :: FINISHED
+      integer, intent(in) :: finished
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -99,7 +100,7 @@ module output_manager_module
       ENDIF
 
 ! Write restart file, if needed
-      IF(CHECK_TIME(RES_TIME) .OR. EXIT_SIGNAL) THEN
+      IF(CHECK_TIME(RES_TIME) .OR. EXIT_SIGNAL == 1) THEN
 
          RES_TIME = NEXT_TIME(RES_DT)
          CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
@@ -161,7 +162,7 @@ module output_manager_module
       DOUBLE PRECISION, INTENT(IN) :: lTIME
 
       IF(IS_UNDEFINED(DT)) THEN
-         CHECK_TIME = FINISHED
+         CHECK_TIME = (FINISHED == 1)
       ELSE
          CHECK_TIME = (TIME+0.1d0*DT>=lTIME).OR.(TIME+0.1d0*DT>=TSTOP)
       ENDIF

@@ -40,6 +40,24 @@ extern "C"
                  Real* fc,
                  Real* tow);
 
+  void mfix_set_bc1(
+                 Real* p_g,      Real* ep_g,
+                 Real* ro_g,     Real* rop_g,
+                 Real* u_g,      Real* v_g,      Real* w_g,
+                 Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+                 int* flag);
+
+  void mfix_output_manager(
+                 Real* ep_g,    Real* p_g,
+                 Real* ro_g,    Real* rop_g,
+                 Real* u_g,     Real* v_g,
+                 Real* w_g,
+                 int* particle_state,    Real* des_radius,
+                 Real* ro_sol,           Real* des_pos_new,
+                 Real* des_vel_new,      Real* des_usr_var,
+                 Real* omega_new,
+                 int* estatus, int* finsh);
+
   void mfix_time_march(
                  Real* u_g,     Real* v_g,      Real* w_g,
                  Real* u_go,    Real* v_go,     Real* w_go,
@@ -71,7 +89,9 @@ extern "C"
                  Real* drag_fc,
                  Real* fc,
                  Real* tow,
-                 int* pairs);
+                 int* pairs, int* finish);
+
+  void mfix_usr1();
 
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);

@@ -13,19 +13,20 @@ module time_march_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
      subroutine time_march(u_g, v_g, w_g, u_go, v_go, w_go, &
-                p_g, p_go, pp_g, ep_g, ep_go, &
-                ro_g, ro_go, rop_g, rop_go, &
-                rop_ge, rop_gn, rop_gt, &
-                d_e, d_n, d_t, &
-                tau_u_g ,tau_v_g, tau_w_g,&
-                flux_ge, flux_gn, flux_gt, &
-                trD_g, lambda_g, mu_g, &
-                f_gds, A_m, b_m, &
-                drag_bm,  &
-                flag, &
-                particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-                omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, drag_fc, fc, tow, pairs, pair_count)
+        p_g, p_go, pp_g, ep_g, ep_go, &
+        ro_g, ro_go, rop_g, rop_go, &
+        rop_ge, rop_gn, rop_gt, &
+        d_e, d_n, d_t, &
+        tau_u_g ,tau_v_g, tau_w_g,&
+        flux_ge, flux_gn, flux_gt, &
+        trD_g, lambda_g, mu_g, &
+        f_gds, A_m, b_m, &
+        drag_bm,  &
+        flag, &
+        particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
+        omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+        rot_acc_old, drag_fc, fc, tow, pairs, finish)&
+        bind(C, name="mfix_time_march")
 
       use adjust_dt, only: adjustdt
       use calc_coeff_module    , only: calc_coeff, calc_coeff_all, calc_trd_and_tau
@@ -139,52 +140,53 @@ module time_march_module
       double precision, intent(inout) :: fc(max_pip,3)
       double precision, intent(inout) :: tow(max_pip,3)
 
-      integer, intent(inout) :: pairs(:,:)
-      integer, intent(inout) :: pair_count
+      integer, intent(inout) :: pairs(6*max_pip,2)
+
+! Flag to indicate one pass through iterate for steady
+! state conditions.
+      integer, intent(inout) :: finish
+
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
+      integer :: pair_count
 
 ! Error index
       INTEGER :: IER
 ! Number of iterations
       INTEGER :: NIT
-! Flag to indicate one pass through iterate for steady
-! state conditions.
-      LOGICAL :: FINISH
+
 ! Flag to save results and cleanly exit.
-      LOGICAL :: EXIT_SIGNAL = .FALSE.
+      integer :: EXIT_SIGNAL = 0
 
 !-----------------------------------------------
 
-      FINISH  = .FALSE.
+!      FINISH  = .FALSE.
       IER = 0
-
 ! Time march
-      do
-! Terminate MFIX normally before batch queue terminates.
-         IF (CHK_BATCHQ_END) CALL CHECK_BATCH_QUEUE_END(EXIT_SIGNAL)
+!      do
 
-         IF (CALL_USR) CALL USR1
-
+!         IF (CALL_USR) CALL USR1
+!
 ! Set wall boundary conditions and transient flow b.c.'s
-         CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g,w_g, &
-                       flux_ge, flux_gn, flux_gt, flag)
-
-         CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-             particle_state, des_radius, ro_sol, des_pos_new, &
-            des_vel_new, des_usr_var, omega_new, EXIT_SIGNAL, FINISH)
+!         CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g,w_g, &
+!            flux_ge, flux_gn, flux_gt, flag)
+!
+!         CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+!             particle_state, des_radius, ro_sol, des_pos_new, &
+!             des_vel_new, des_usr_var, omega_new, EXIT_SIGNAL, FINISH)
 
          IF (IS_UNDEFINED(DT)) THEN
-            IF (FINISH) THEN
+            IF (FINISH == 1) THEN
                return
             ELSE
-               FINISH = .TRUE.
-            ENDIF
+               finish = 1
+            endif
 
 ! Mechanism to terminate MFIX normally before batch queue terminates.
-         ELSEIF (TIME + 0.1d0*DT >= TSTOP .OR. EXIT_SIGNAL) THEN
+         ELSEIF (TIME + 0.1d0*DT >= TSTOP .OR. EXIT_SIGNAL == 1) THEN
+            finish = 1
             return
          ENDIF
 
@@ -221,20 +223,20 @@ module time_march_module
 ! Advance the solution in time by iteratively solving the equations
          DO
 
-         call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
-                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
-                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
-                         flux_ge, flux_gn, flux_gt, mu_g,&
-                         f_gds, A_m, b_m, drag_bm, &
-                         tau_u_g, tau_v_g, tau_w_g, &
-                          particle_phase, particle_state, pvol, &
-                         des_radius,  des_pos_new, des_vel_new, flag,  IER, NIT)
+            call iterate(u_g, v_g, w_g, u_go, v_go, w_go,&
+               p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
+               rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
+               flux_ge, flux_gn, flux_gt, mu_g,&
+               f_gds, A_m, b_m, drag_bm, &
+               tau_u_g, tau_v_g, tau_w_g, &
+               particle_phase, particle_state, pvol, &
+               des_radius,  des_pos_new, des_vel_new, flag,  IER, NIT)
 
-         IF (.NOT.ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
-            rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
-            f_gds, drag_bm,  particle_phase,  &
-            particle_state,  pvol, des_radius,  &
-            des_pos_new, des_vel_new, IER, NIT)) EXIT
+            IF (.NOT.ADJUSTDT(ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
+               rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
+               f_gds, drag_bm,  particle_phase,  &
+               particle_state,  pvol, des_radius,  &
+               des_pos_new, des_vel_new, IER, NIT)) EXIT
          ENDDO
 
          IF(DT < DT_MIN) THEN
@@ -251,7 +253,10 @@ module time_march_module
                des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
                des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
                drag_fc, fc, tow, pairs, pair_count, flag)
-            IF(.NOT.DES_CONTINUUM_COUPLED) return
+            IF(.NOT.DES_CONTINUUM_COUPLED) then
+               finish = 1
+               return
+            endif
          ENDIF
 
          IF(IS_DEFINED(DT)) THEN
@@ -264,7 +269,7 @@ module time_march_module
             NSTEP = NSTEP + 1
          ENDIF
 
-      enddo
+!      enddo
 
 
       END SUBROUTINE TIME_MARCH

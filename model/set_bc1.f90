@@ -10,7 +10,8 @@ module set_bc1_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
      SUBROUTINE SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-                         flux_ge, flux_gn, flux_gt, flag)
+        flux_ge, flux_gn, flux_gt, flag) &
+       bind(C, name="mfix_set_bc1")
 
 ! Modules
 !---------------------------------------------------------------------//
