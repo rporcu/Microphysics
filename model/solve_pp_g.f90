@@ -1,83 +1,73 @@
 module solve_pp_module
    contains
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOLVE_Pp_g
-!  Purpose: Solve fluid pressure correction equation                   C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 19-JUN-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOLVE_PP_G(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-         ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, &
-         flag, NORMG, RESG, IER)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOLVE_Pp_g                                              !
+!  Purpose: Solve fluid pressure correction equation                   !
+!                                                                      !
+!  Author: M. Syamlal                                 Date: 19-JUN-96  !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine solve_pp_g(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
+      ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
+      flag, normg, resg, ier)
 
-      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE conv_pp_g_module, only: conv_pp_g
-      USE leqsol  , only: leq_method, leq_it, leq_sweep, leq_tol, leq_pc
-      USE matrix  , only: init_ab_m, lock_ambm, unlock_ambm
-      USE param1  , only: zero, one
-      USE ps, only: point_source
-      USE residual, only: i_resid, j_resid,k_resid, den_resid, max_resid
-      USE residual, only: resid_p, resid, num_resid
-      USE solve_lin_eq_module, only: solve_lin_eq
-      USE source_pp_module, only: source_pp_g
-      use residual, only: CALC_RESID_PP
+! Module procedures ..................................................//
+      use matrix  , only: init_ab_m
+      use conv_pp_g_module, only: conv_pp_g
+      use source_pp_module, only: source_pp_g
+      use residual, only: calc_resid_pp
+
+! Global data .........................................................//
+! Fluid array bounds
+      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+! Flag for existence of point sources
+      use ps, only: point_source
+! Global data arrays for residuals
+      use residual, only: resid_p, resid, max_resid
+      use residual, only: num_resid, den_resid
+      use residual, only: i_resid, j_resid, k_resid
+! parameters, 0.0 and 1.0
+      use param1, only: zero, one
 
       IMPLICIT NONE
-!-----------------------------------------------
-! Local parameters
-!-----------------------------------------------
-! Parameter to make tolerance for residual scaled with max value
-! compatible with residual scaled with first iteration residual.
-! Increase it to tighten convergence.
-      DOUBLE PRECISION, PARAMETER :: DEN = 1.0D1   !5.0D2
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+! Dummy arguments ....................................................//
+      double precision, intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      double precision, intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      double precision, intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      double precision, intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      double precision, intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+      double precision, intent(  out) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      double precision, intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
+      double precision, intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      double precision, intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_ge&
+      double precision, intent(in   ) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_gn&
+      double precision, intent(in   ) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_gt&
+      double precision, intent(in   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_e&
+      double precision, intent(in   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN  ) :: d_n&
+      double precision, intent(in   ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN  ) :: d_t&
+      double precision, intent(in   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(inout) :: A_m&
+      double precision, intent(  out) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      DOUBLE PRECISION, INTENT(inout) :: b_m&
+      double precision, intent(  out) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Normalization factor for gas pressure correction residual.
@@ -85,67 +75,53 @@ module solve_pp_module
 ! normalized) or a user defined value given by norm_g.  If norm_g
 ! was set to zero then the normalization is based on dominate
 ! term in the equation
-      DOUBLE PRECISION, INTENT(IN) :: NORMg
+      double precision, intent(in) :: normg
 ! gas pressure correction residual
-      DOUBLE PRECISION, INTENT(OUT) :: RESg
-! Error index
-      INTEGER, INTENT(INOUT) :: IER
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
+      double precision, intent(out) :: resg
+! error index
+      integer, intent(inout) :: ier
+
+! Local parameters ...................................................//
+! Parameter to make tolerance for residual scaled with max value
+! compatible with residual scaled with first iteration residual.
+! Increase it to tighten convergence.
+      DOUBLE PRECISION, PARAMETER :: DEN = 1.0D1   !5.0D2
 ! Normalization factor for gas pressure correction residual
       DOUBLE PRECISION :: NORMGloc
-! linear equation solver method and iterations
-      INTEGER :: LEQM, LEQI
-
-! temporary use of global arrays:
-! arraym1 (locally b_mmax)
-! vector b_m based on dominate term in correction equation
-!-----------------------------------------------
-! Vector b_m
+! dominate term in correction equation max(am,bm)
       DOUBLE PRECISION, allocatable :: B_MMAX(:,:,:)
+!.....................................................................//
 
       ALLOCATE(B_MMAX(istart3:iend3, jstart3:jend3, kstart3:kend3))
 
-      call lock_ambm
-
 ! initializing
-      PP_G = 0.0d0
-      CALL INIT_AB_M (A_m, b_m)
+      pp_g = 0.0d0
+      call init_ab_m (a_m, b_m)
 
 ! Forming the sparse matrix equation.
-      CALL CONV_PP_G (A_m, rop_ge, rop_gn, rop_gt, flag)
+      call conv_pp_g (a_m, rop_ge, rop_gn, rop_gt, flag)
 
-      call source_pp_g(A_m, b_m, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(a_m, b_m, b_mmax, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
-      IF(POINT_SOURCE) CALL POINT_SOURCE_PP_G (b_m, B_MMAX, flag)
+      if(point_source) call point_source_pp_g (b_m, b_mmax, flag)
 
 ! Find average residual, maximum residual and location
-      NORMGloc = NORMG
-      IF(abs(NORMG) < epsilon(ZERO)) THEN
+      normgloc = normg
+      if(abs(normg) < epsilon(zero)) then
 ! calculating the residual based on dominate term in correction equation
 ! and use this to form normalization factor
-        CALL CALC_RESID_PP (B_MMAX, ONE, NUM_RESID(RESID_P), &
-         DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
+        call calc_resid_pp (b_mmax, one, num_resid(resid_p), &
+         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
-         NORMGloc = RESID(RESID_P)/DEN
-      ENDIF
-      CALL CALC_RESID_PP (b_m, NORMGloc, NUM_RESID(RESID_P),  &
-         DEN_RESID(RESID_P), RESID(RESID_P), MAX_RESID(RESID_P), &
+         normgloc = resid(resid_p)/den
+      endif
+
+      call calc_resid_pp (b_m, normgloc, num_resid(resid_p),  &
+         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
-      RESG = RESID(RESID_P)
+      resg = resid(resid_p)
 
-! Solve P_g_prime equation
-       LEQI = LEQ_IT(1)
-       LEQM = LEQ_METHOD(1)
-
-      CALL SOLVE_LIN_EQ ('Pp_g', 1, PP_G, A_m, b_m, 0, LEQI, LEQM, &
-                         LEQ_SWEEP(1), LEQ_TOL(1), LEQ_PC(1), IER)
-
-!      call out_array(Pp_g, 'Pp_g')
-
-      call unlock_ambm
 
       RETURN
       END SUBROUTINE SOLVE_PP_G
@@ -169,7 +145,8 @@ module solve_pp_module
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use geometry, only: vol
       use param1  , only: small_number
-      use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume, ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
+      use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
+         ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
 
       IMPLICIT NONE
 !-----------------------------------------------

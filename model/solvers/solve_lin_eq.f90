@@ -15,9 +15,8 @@ MODULE SOLVE_LIN_EQ_MODULE
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SOLVE_LIN_EQ(VNAME, Vno, VAR, A_M, B_M, M, ITMAX,&
-                              METHOD, SWEEP, TOL1, PC, IER)
+      SUBROUTINE SOLVE_LIN_EQ(VNAME, Vno, VAR, A_M, B_M, ITMAX,&
+         METHOD, SWEEP, TOL1, PC, IER)
 
          use compar, only: istart3, iend3
          use compar, only: jstart3, jend3
@@ -52,8 +51,6 @@ MODULE SOLVE_LIN_EQ_MODULE
 ! vector b_m
       DOUBLE PRECISION, INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! phase index
-      INTEGER, INTENT(IN) :: M
 ! maximum number of iterations (generally leq_it)
       INTEGER, INTENT(IN) :: ITMAX
 ! linear equation solver method (generally leq_method)

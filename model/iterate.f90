@@ -39,12 +39,17 @@ module iterate_module
       USE vavg_mod, ONLY: vavg_g
 
       USE solve_pp_module, only: solve_pp_g
-      USE solve_vel_star_module, only: solve_vel_star
+      USE solve_vel_star_module, only: solve_u_g_star
+      USE solve_vel_star_module, only: solve_v_g_star
+      USE solve_vel_star_module, only: solve_w_g_star
       USE calc_coeff_module, only: calc_coeff
       USE set_bc1_module, only: set_bc1
 
+      USE run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
       USE error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       USE tunit_module, only: get_tunit
+      USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
+      USE solve_lin_eq_module, only: solve_lin_eq
 
       implicit none
 
@@ -146,6 +151,10 @@ module iterate_module
 ! Error Message
       CHARACTER(LEN=32) :: lMsg
 
+      DOUBLE PRECISION, allocatable :: U_gtmp(:,:,:)
+      DOUBLE PRECISION, allocatable :: V_gtmp(:,:,:)
+      DOUBLE PRECISION, allocatable :: W_gtmp(:,:,:)
+
 ! initializations
       DT_prev = DT
       NIT = 0
@@ -212,12 +221,53 @@ module iterate_module
          pvol, des_pos_new, des_vel_new, des_radius)
       IF (IER_MANAGER()) goto 1000
 
+
+
+      allocate(U_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(V_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+      allocate(W_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+
+      if(momentum_y_eq(0)) U_gtmp = U_g
+      if(momentum_y_eq(0)) V_gtmp = V_g
+      if(momentum_y_eq(0)) W_gtmp = W_g
+
 ! Solve starred velocity components
-      call solve_vel_star(u_g,v_g,w_g,u_go,v_go,w_go,&
-                          p_g,ro_g,rop_g,rop_go,ep_g,&
-                          tau_u_g,tau_v_g,tau_w_g,&
-                          d_e,d_n,d_t,flux_ge,flux_gn,flux_gt,mu_g,&
-                          f_gds, A_m, b_m, drag_bm, flag, IER)
+      if(momentum_x_eq(0)) then
+         call solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
+         rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g, &
+         f_gds, a_m, b_m, drag_bm, flag, ier)
+
+         call solve_lin_eq ('u_g', 3, u_gtmp, a_m, b_m, leq_it(3), &
+            leq_method(3), leq_sweep(3), leq_tol(3),  leq_pc(3), ier)
+      endif
+
+      if(momentum_y_eq(0)) then
+         call solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
+            rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
+            f_gds, a_m, b_m, drag_bm, flag, ier)
+
+         call solve_lin_eq ('v_g', 4, v_gtmp, a_m, b_m, leq_it(4), &
+            leq_method(4), leq_sweep(4), leq_tol(4),  leq_pc(4), ier)
+      endif
+
+      if(momentum_z_eq(0)) then
+         call solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
+            rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
+            f_gds, a_m, b_m, drag_bm, flag, ier)
+
+         call solve_lin_eq ('w_g', 5, w_gtmp, a_m, b_m, leq_it(5), &
+            leq_method(5), leq_sweep(5), leq_tol(5), leq_pc(5), ier)
+      endif
+
+! Now update all velocity components
+      if(momentum_y_eq(0)) U_g = U_gtmp
+      if(momentum_y_eq(0)) V_g = V_gtmp
+      if(momentum_y_eq(0)) W_g = W_gtmp
+
+      deallocate(U_gtmp)
+      deallocate(V_gtmp)
+      deallocate(W_gtmp)
+
 
 ! Calculate densities.
       CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
@@ -230,6 +280,10 @@ module iterate_module
 ! Solve fluid pressure correction equation
          CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
             rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, NORMG, RESG, IER)
+
+! Solve P_g_prime equation
+         call solve_lin_eq ('pp_g', 1, pp_g, a_m, b_m, leq_it(1), &
+            leq_method(1), leq_sweep(1), leq_tol(1), leq_pc(1), ier)
 
 ! Correct pressure, velocities, and density
          CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)
