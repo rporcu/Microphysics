@@ -144,8 +144,6 @@ MODULE GAS_DRAG_MODULE
 !---------------------------------------------------------------------//
 ! Grid cell indices
       INTEGER :: I, J, K
-! Averaging factor
-      DOUBLE PRECISION :: AVG_FACTOR
 !......................................................................!
 
 ! Initialize error flag.
@@ -199,9 +197,6 @@ MODULE GAS_DRAG_MODULE
       use functions, only: ktop
 ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
-! Domain index bounds.
-      use compar, only: ISTART2, JSTART2, KSTART2
-      use compar, only: IEND2, JEND2, KEND2
 
       IMPLICIT NONE
 

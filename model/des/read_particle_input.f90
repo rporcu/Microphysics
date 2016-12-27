@@ -11,11 +11,10 @@ MODULE READ_PAR_INPUT_MODULE
          des_pos_new, des_vel_new)
 
       use compar, only: myPE, pe_io
-      use desmpi, only: dpar_pos, dpar_vel, dpar_rad, dpar_den
       use discretelement, only: normal_particle,  pip, particles
       use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
       use exit_mod, only: mfix_exit
-      use funits, only: dmp_log, unit_log
+      use funits, only: unit_log
       use run, only: bdist_io
 
       implicit none

@@ -57,7 +57,6 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use output_manager_module, only: init_output_vars
       use calc_coeff_module, only: calc_coeff
 
-      use discretelement, only: des_usr_var_size
       use discretelement, only: nonexistent, do_old
 
       IMPLICIT NONE

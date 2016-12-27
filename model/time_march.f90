@@ -40,111 +40,111 @@ module time_march_module
       use iterate_module, only: iterate
       use output_manager_module, only: output_manager
       use param1, only: small_number, is_defined, is_undefined
-      use run, only: call_usr, dem_solids
-      use run, only: chk_batchq_end
+      use run, only: dem_solids
       use run, only: time, tstop, nstep, dt, dt_min, dt_prev, use_dt_prev, units
       use set_bc1_module, only: set_bc1
       use toleranc , only: max_allowed_vel, max_inlet_vel_fac, max_inlet_vel
       use utilities, only: max_vel_inlet
+      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      double precision, intent(inout) :: u_g&
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: v_g&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: w_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: u_go&
+      real(c_double), intent(inout) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: v_go&
+      real(c_double), intent(inout) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: w_go&
+      real(c_double), intent(inout) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: p_g&
+      real(c_double), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: p_go&
+      real(c_double), intent(inout) :: p_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: ep_go&
+      real(c_double), intent(inout) :: ep_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: pp_g&
+      real(c_double), intent(inout) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: ro_g&
+      real(c_double), intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: ro_go&
+      real(c_double), intent(inout) :: ro_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
+      real(c_double), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: rop_go&
+      real(c_double), intent(inout) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: rop_ge&
+      real(c_double), intent(inout) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: rop_gn&
+      real(c_double), intent(inout) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: rop_gt&
+      real(c_double), intent(inout) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: d_e&
+      real(c_double), intent(inout) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: d_n&
+      real(c_double), intent(inout) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: d_t&
+      real(c_double), intent(inout) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: tau_u_g&
+      real(c_double), intent(inout) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: tau_v_g&
+      real(c_double), intent(inout) :: tau_v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: tau_w_g&
+      real(c_double), intent(inout) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: flux_ge&
+      real(c_double), intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: flux_gn&
+      real(c_double), intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: flux_gt&
+      real(c_double), intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: trd_g&
+      real(c_double), intent(inout) :: trd_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: lambda_g&
+      real(c_double), intent(inout) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: mu_g&
+      real(c_double), intent(inout) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: f_gds&
+      real(c_double), intent(inout) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: a_m&
+      real(c_double), intent(inout) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: b_m&
+      real(c_double), intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      double precision, intent(inout) :: drag_bm&
+      real(c_double), intent(inout) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      integer, intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      integer         , intent(inout) :: particle_state(max_pip)
-      integer         , intent(inout) :: particle_phase(max_pip)
+      integer(c_int)         , intent(inout) :: particle_state(max_pip)
+      integer(c_int)         , intent(inout) :: particle_phase(max_pip)
 
-      double precision, intent(inout) :: des_radius(max_pip)
-      double precision, intent(inout) :: ro_sol(max_pip)
-      double precision, intent(inout) :: pvol(max_pip)
-      double precision, intent(inout) :: pmass(max_pip)
-      double precision, intent(inout) :: omoi(max_pip)
+      real(c_double), intent(inout) :: des_radius(max_pip)
+      real(c_double), intent(inout) :: ro_sol(max_pip)
+      real(c_double), intent(inout) :: pvol(max_pip)
+      real(c_double), intent(inout) :: pmass(max_pip)
+      real(c_double), intent(inout) :: omoi(max_pip)
 
-      double precision, intent(inout) :: des_pos_new(max_pip,3)
-      double precision, intent(inout) :: des_vel_new(max_pip,3)
-      double precision, intent(inout) :: des_usr_var(max_pip,1)
-      double precision, intent(inout) :: omega_new(max_pip,3)
+      real(c_double), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_double), intent(inout) :: des_vel_new(max_pip,3)
+      real(c_double), intent(inout) :: des_usr_var(max_pip,1)
+      real(c_double), intent(inout) :: omega_new(max_pip,3)
 
-      double precision, intent(inout) :: des_acc_old(max_pip,3)
-      double precision, intent(inout) :: rot_acc_old(max_pip,3)
-      double precision, intent(inout) :: drag_fc(max_pip,3)
-      double precision, intent(inout) :: fc(max_pip,3)
-      double precision, intent(inout) :: tow(max_pip,3)
+      real(c_double), intent(inout) :: des_acc_old(max_pip,3)
+      real(c_double), intent(inout) :: rot_acc_old(max_pip,3)
+      real(c_double), intent(inout) :: drag_fc(max_pip,3)
+      real(c_double), intent(inout) :: fc(max_pip,3)
+      real(c_double), intent(inout) :: tow(max_pip,3)
 
-      integer, intent(inout) :: pairs(6*max_pip,2)
+      integer(c_int), intent(inout) :: pairs(6*max_pip,2)
 
 ! Flag to indicate one pass through iterate for steady
 ! state conditions.
-      integer, intent(inout) :: finish
+      integer(c_int), intent(inout) :: finish
 
 
 !-----------------------------------------------

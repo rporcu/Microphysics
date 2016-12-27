@@ -39,8 +39,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
       USE run, only: MOMENTUM_Y_EQ
       USE run, only: MOMENTUM_Z_EQ
 
-      use run, only: RUN_TYPE
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: undefined

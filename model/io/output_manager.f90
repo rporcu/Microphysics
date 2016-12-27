@@ -1,6 +1,9 @@
 module output_manager_module
-   use write_out1_module, only: write_out1
+
+   use iso_c_binding, only: c_double, c_int
    use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
+   use write_out1_module, only: write_out1
+
   contains
 !----------------------------------------------------------------------!
 !                                                                      !
@@ -39,38 +42,38 @@ module output_manager_module
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_double), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      real(c_double), INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      real(c_double), INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      real(c_double), INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_double), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_double), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_double), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      double precision, intent(in) :: des_radius(max_pip)
-      double precision, intent(in) :: ro_sol(max_pip)
+      real(c_double), intent(in) :: des_radius(max_pip)
+      real(c_double), intent(in) :: ro_sol(max_pip)
 
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: des_usr_var(max_pip,1)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      real(c_double), intent(in) :: des_pos_new(max_pip,3)
+      real(c_double), intent(in) :: des_vel_new(max_pip,3)
+      real(c_double), intent(in) :: des_usr_var(max_pip,1)
+      real(c_double), intent(in) :: omega_new(max_pip,3)
 
 
-      integer, intent(inout) :: particle_state(max_pip)
+      integer(c_int), intent(inout) :: particle_state(max_pip)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Flag that the the user specified batch time (plus buffer) is met.
-      integer, intent(in) :: exit_signal
+      integer(c_int), intent(in) :: exit_signal
 ! Flag that a steady state case is completed.
-      integer, intent(in) :: finished
+      integer(c_int), intent(in) :: finished
 
 ! Local Variables:
 !---------------------------------------------------------------------//

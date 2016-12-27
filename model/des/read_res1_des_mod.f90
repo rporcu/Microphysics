@@ -66,8 +66,6 @@
       INTEGER, allocatable :: cSCATTER(:)
       INTEGER, allocatable :: cDISPLS(:)
 
-      INTEGER, ALLOCATABLE :: iPAR_COL(:,:)
-
       CONTAINS
 
 !``````````````````````````````````````````````````````````````````````!
@@ -77,7 +75,7 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE INIT_READ_RES_DES(BASE, lVERSION, lNEXT_REC)
 
-      use discretelement, only: MAX_PIP, PIP
+      use discretelement, only: MAX_PIP
 
       use compar, only: numPEs
       use machine, only: OPEN_N1
@@ -186,8 +184,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_PAR_POS(lNEXT_REC)
 
-      use discretelement, only: PIP
-!      use discretelement, only: DES_POS_NEW
       use compar, only: numPEs
 
       implicit none
@@ -195,10 +191,7 @@
       INTEGER, INTENT(INOUT) :: lNEXT_REC
 
       INTEGER :: lDIMN
-      INTEGER :: LC1, lPROC
-      INTEGER :: lScatterCNTS(0:NUMPEs-1)
-! The number of particles on each process.
-      INTEGER :: PAR_CNT(0:NUMPEs-1)
+      INTEGER :: LC1
 
 !-----------------------------------------------
 
@@ -395,8 +388,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_pARRAY_1I(lNEXT_REC, OUTPUT_I)
 
-      use discretelement, only: PIP
-
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
 
@@ -406,15 +397,6 @@
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       INTEGER, INTENT(OUT) :: OUTPUT_I(:)
-
-! Loop counters
-      INTEGER :: LC1
-
-      INTEGER :: lPROC
-
-      INTEGER, ALLOCATABLE :: lBUF_I(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
-
 
       allocate(iPROCBUF(pPROCCNT))
       allocate(iROOTBUF(pROOTCNT))
@@ -440,7 +422,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_pARRAY_1D(lNEXT_REC, OUTPUT_D)
 
-      use discretelement, only: PIP
       use desmpi, only: dRootBuf
       use desmpi, only: dProcBuf
       use compar, only: numPEs
@@ -449,15 +430,6 @@
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       DOUBLE PRECISION, INTENT(OUT) :: OUTPUT_D(:)
-
-! Loop counters
-      INTEGER :: LC1
-
-      INTEGER :: lPROC
-
-      DOUBLE PRECISION, ALLOCATABLE :: lBUF_D(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
-
 
       allocate(dPROCBUF(pPROCCNT))
       allocate(dROOTBUF(pROOTCNT))
@@ -482,7 +454,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE READ_RES_pARRAY_1L(lNEXT_REC, OUTPUT_L)
 
-      use discretelement, only: PIP
       use desmpi, only: iRootBuf
       use desmpi, only: iProcBuf
       use compar, only: numPEs
@@ -495,10 +466,7 @@
 ! Loop counters
       INTEGER :: LC1
 
-      INTEGER :: lPROC
-
       INTEGER, ALLOCATABLE :: lBUF_I(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
 
       allocate(iPROCBUF(pPROCCNT))
       allocate(iROOTBUF(pROOTCNT))
@@ -541,15 +509,6 @@
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       INTEGER, INTENT(OUT) :: OUTPUT_I(:)
 
-! Loop counters
-      INTEGER :: LC1
-
-      INTEGER :: lPROC
-
-      INTEGER, ALLOCATABLE :: lBUF_I(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
-
-
       allocate(iPROCBUF(cPROCCNT))
       allocate(iROOTBUF(cROOTCNT))
 
@@ -581,15 +540,6 @@
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       DOUBLE PRECISION, INTENT(OUT) :: OUTPUT_D(:)
-
-! Loop counters
-      INTEGER :: LC1
-
-      INTEGER :: lPROC
-
-      DOUBLE PRECISION, ALLOCATABLE :: lBUF_D(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
-
 
       allocate(dPROCBUF(cPROCCNT))
       allocate(dROOTBUF(cROOTCNT))
@@ -627,10 +577,7 @@
 ! Loop counters
       INTEGER :: LC1
 
-      INTEGER :: lPROC
-
       INTEGER, ALLOCATABLE :: lBUF_I(:)
-      INTEGER, ALLOCATABLE :: lCOUNT(:)
 
       allocate(iPROCBUF(cPROCCNT))
       allocate(iROOTBUF(cROOTCNT))

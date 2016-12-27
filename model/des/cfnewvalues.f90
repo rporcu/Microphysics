@@ -12,7 +12,7 @@ MODULE CFNEWVALUES_MODULE
          des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
-      USE discretelement, only: do_nsearch, dtsolid
+      USE discretelement, only: dtsolid
       USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth
       USE discretelement, only: entering_particle, entering_ghost
       USE discretelement, only: nonexistent, exiting_ghost

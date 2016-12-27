@@ -35,11 +35,6 @@
 
 ! Send/Recv parameters for Particle arrays:
       INTEGER :: pROOTCNT, pPROCCNT
-      INTEGER :: pSEND
-
-! Send/Recv parameters for Collision/Neighbor arrays:
-      INTEGER :: cROOTCNT, cPROCCNT
-      INTEGER :: cSEND
 
       CONTAINS
 
@@ -82,15 +77,6 @@
       CHARACTER(len=*), INTENT(IN)  :: BASE
       DOUBLE PRECISION, INTENT(IN) :: lVERSION
       INTEGER, INTENT(OUT) :: lNEXT_REC
-
-! Number of real particles on local rank
-      INTEGER :: lPROC
-! Total number of real particles.
-      INTEGER :: lGHOST_CNT
-! Local gather counts for send/recv
-      INTEGER :: lGatherCnts(0:NUMPEs-1)
-! Loop counters
-      INTEGER :: LC1,part
 
       CALL OPEN_RES_DES(BASE)
 
@@ -246,7 +232,6 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE WRITE_RES_PARRAY_1I(lNEXT_REC, INPUT_I, pLOC2GLB)
 
-      use desmpi, only: iProcBuf
       use discretelement, only: MAX_PIP, PIP
 
       INTEGER, INTENT(INOUT) :: lNEXT_REC
@@ -254,8 +239,6 @@
       LOGICAL, INTENT(IN), OPTIONAL :: pLOC2GLB
 
       LOGICAL :: lLOC2GLB
-! Loop counters
-      INTEGER :: LC1, LC2
 
       lLOC2GLB = .FALSE.
       IF(present(pLOC2GLB)) lLOC2GLB = pLOC2GLB
@@ -281,9 +264,6 @@
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       DOUBLE PRECISION, INTENT(IN) :: INPUT_D(:)
 
-! Loop counters
-      INTEGER :: LC1, LC2
-
       CALL OUT_BIN_512(RDES_UNIT, INPUT_D(:pip), pip, lNEXT_REC)
 
       RETURN
@@ -296,14 +276,8 @@
 !``````````````````````````````````````````````````````````````````````!
       SUBROUTINE WRITE_RES_PARRAY_1L(lNEXT_REC, INPUT_L)
 
-      use desmpi, only: iProcBuf
-      use discretelement, only: MAX_PIP, PIP
-
       INTEGER, INTENT(INOUT) :: lNEXT_REC
       LOGICAL, INTENT(IN) :: INPUT_L(:)
-
-! Loop counters
-      INTEGER :: LC1, LC2
 
       write(6,*)'death in write res parray 1l'
       stop 8832

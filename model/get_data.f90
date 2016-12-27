@@ -24,7 +24,6 @@ MODULE GET_DATA_MODULE
       USE open_files_mod, only: open_files
       USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
-      USE run, only: dem_solids
       USE set_bc_flow_module, only: set_bc_flow
       USE set_flags_module, only: set_flags
       USE set_geometry_des_module, only: set_geometry_des

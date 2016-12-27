@@ -14,15 +14,13 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       USE comp_mean_fields_module, only: comp_mean_fields
       USE compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE compar, only: istart2, jstart2, kstart2
       USE compar, only: numpes, mype
       USE constant, only: pi
-      USE discretelement, only: do_nsearch, pip, particles, max_pip, vtp_findex
+      USE discretelement, only: do_nsearch, particles, max_pip, vtp_findex
       USE discretelement, only: entering_ghost, exiting_ghost, nonexistent, normal_ghost
       USE discretelement, only: print_des_data, s_time
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg, finl_err_msg
       USE functions, only: ip1, jp1, kp1
-      USE geometry, only: vol
       USE param1, only: zero
 
       USE read_par_input_module, only: read_par_input
@@ -57,7 +55,6 @@ MODULE MAKE_ARRAYS_DES_MODULE
 ! Local variables
 !-----------------------------------------------
       INTEGER :: L
-      INTEGER :: lcurpar, lpip_all(0:numpes-1), lglobal_id
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")
 

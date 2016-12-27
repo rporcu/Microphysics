@@ -6,6 +6,7 @@ module calc_coeff_module
       use calc_tau_w_g_module, only: calc_tau_w_g
       use calc_trd_g_module, only: calc_trd_g
       use physical_prop_module, only: physical_prop
+      use iso_c_binding, only: c_double, c_int
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -39,39 +40,39 @@ module calc_coeff_module
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      real(c_double), INTENT(INOUT) :: ro_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) ::  p_g&
+      real(c_double), INTENT(IN   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_double), INTENT(INOUT) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_double), INTENT(INOUT) :: rop_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_double), INTENT(IN   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_double), INTENT(IN   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_double), INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+      real(c_double), INTENT(INOUT) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+      real(c_double), INTENT(OUT  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+      real(c_double), INTENT(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
 
-      integer, intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
-      double precision, intent(in   ) :: pvol(max_pip)
-      double precision, intent(in   ) :: des_radius(max_pip)
+      real(c_double), intent(in   ) :: pvol(max_pip)
+      real(c_double), intent(in   ) :: des_radius(max_pip)
 
-      double precision, intent(in   ) :: des_pos_new(max_pip,3)
-      double precision, intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
 
-      integer         , intent(in   ) :: particle_state(max_pip)
-      integer         , intent(in   ) :: particle_phase(max_pip)
+      integer(c_int)         , intent(in   ) :: particle_state(max_pip)
+      integer(c_int)         , intent(in   ) :: particle_phase(max_pip)
 
 
 !-----------------------------------------------------------------------
@@ -199,28 +200,28 @@ module calc_coeff_module
       implicit none
 
       ! Stress tensor cross terms.
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+      real(c_double), INTENT(INOUT) :: tau_u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+      real(c_double), INTENT(INOUT) :: tau_v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
+      real(c_double), INTENT(INOUT) :: tau_w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+      real(c_double), INTENT(INOUT) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_double), INTENT(IN   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_double), INTENT(IN   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_double), INTENT(IN   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_double), INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+      real(c_double), INTENT(IN   ) :: lambda_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_double), INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer(c_int), INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)

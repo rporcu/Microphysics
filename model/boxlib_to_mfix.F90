@@ -31,98 +31,98 @@ contains
       use discretelement, only: max_pip
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    integer         , intent(inout) :: flag&
+    integer(c_int)         , intent(inout) :: flag&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-    double precision, intent(inout) :: A_m&
+    real(c_double), intent(inout) :: A_m&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,-3:3)
-    double precision, intent(inout) :: b_m&
+    real(c_double), intent(inout) :: b_m&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: ep_g&
+    real(c_double), intent(inout) :: ep_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: ep_go&
+    real(c_double), intent(inout) :: ep_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: p_g&
+    real(c_double), intent(inout) :: p_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: p_go&
+    real(c_double), intent(inout) :: p_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: ro_g&
+    real(c_double), intent(inout) :: ro_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: ro_go&
+    real(c_double), intent(inout) :: ro_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: rop_g&
+    real(c_double), intent(inout) :: rop_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: rop_go&
+    real(c_double), intent(inout) :: rop_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: u_g&
+    real(c_double), intent(inout) :: u_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: u_go&
+    real(c_double), intent(inout) :: u_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: v_g&
+    real(c_double), intent(inout) :: v_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: v_go&
+    real(c_double), intent(inout) :: v_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: w_g&
+    real(c_double), intent(inout) :: w_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: w_go&
+    real(c_double), intent(inout) :: w_go&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: pp_g&
+    real(c_double), intent(inout) :: pp_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: d_e&
+    real(c_double), intent(inout) :: d_e&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: d_t&
+    real(c_double), intent(inout) :: d_t&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: d_n&
+    real(c_double), intent(inout) :: d_n&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: mu_g&
+    real(c_double), intent(inout) :: mu_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: lambda_g&
+    real(c_double), intent(inout) :: lambda_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: trD_g&
+    real(c_double), intent(inout) :: trD_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: tau_u_g&
+    real(c_double), intent(inout) :: tau_u_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: tau_v_g&
+    real(c_double), intent(inout) :: tau_v_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: tau_w_g&
+    real(c_double), intent(inout) :: tau_w_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: flux_gE&
+    real(c_double), intent(inout) :: flux_gE&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: flux_gN&
+    real(c_double), intent(inout) :: flux_gN&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: flux_gT&
+    real(c_double), intent(inout) :: flux_gT&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: rop_gE&
+    real(c_double), intent(inout) :: rop_gE&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: rop_gN&
+    real(c_double), intent(inout) :: rop_gN&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: rop_gT&
+    real(c_double), intent(inout) :: rop_gT&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: f_gds&
+    real(c_double), intent(inout) :: f_gds&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1)
-    double precision, intent(inout) :: drag_bm&
+    real(c_double), intent(inout) :: drag_bm&
        (istart3:iend3,jstart3:jend3,kstart3:kend3,1:3)
 
 
 
-    integer, intent(inout) :: particle_state(max_pip)
-    integer, intent(inout) :: particle_phase(max_pip)
+    integer(c_int), intent(inout) :: particle_state(max_pip)
+    integer(c_int), intent(inout) :: particle_phase(max_pip)
 
-    double precision, intent(inout) :: des_radius(max_pip)
-    double precision, intent(inout) :: ro_sol(max_pip)
-    double precision, intent(inout) :: pvol(max_pip)
-    double precision, intent(inout) :: pmass(max_pip)
-    double precision, intent(inout) :: omoi(max_pip)
+    real(c_double), intent(inout) :: des_radius(max_pip)
+    real(c_double), intent(inout) :: ro_sol(max_pip)
+    real(c_double), intent(inout) :: pvol(max_pip)
+    real(c_double), intent(inout) :: pmass(max_pip)
+    real(c_double), intent(inout) :: omoi(max_pip)
 
-    double precision, intent(inout) :: des_pos_new(max_pip,3)
-    double precision, intent(inout) :: des_vel_new(max_pip,3)
-    double precision, intent(inout) :: des_usr_var(max_pip,1)
-    double precision, intent(inout) :: omega_new(max_pip,3)
+    real(c_double), intent(inout) :: des_pos_new(max_pip,3)
+    real(c_double), intent(inout) :: des_vel_new(max_pip,3)
+    real(c_double), intent(inout) :: des_usr_var(max_pip,1)
+    real(c_double), intent(inout) :: omega_new(max_pip,3)
 
-    double precision, intent(inout) :: des_acc_old(max_pip,3)
-    double precision, intent(inout) :: rot_acc_old(max_pip,3)
-    double precision, intent(inout) :: drag_fc(max_pip,3)
-    double precision, intent(inout) :: fc(max_pip,3)
-    double precision, intent(inout) :: tow(max_pip,3)
+    real(c_double), intent(inout) :: des_acc_old(max_pip,3)
+    real(c_double), intent(inout) :: rot_acc_old(max_pip,3)
+    real(c_double), intent(inout) :: drag_fc(max_pip,3)
+    real(c_double), intent(inout) :: fc(max_pip,3)
+    real(c_double), intent(inout) :: tow(max_pip,3)
 
     call mfix(u_g, v_g, w_g, u_go, v_go, w_go, &
               p_g, p_go, pp_g, ep_g, ep_go, &
@@ -153,7 +153,7 @@ contains
     use geometry, only: imax, jmax, kmax
     use run     , only: dem_solids
 
-    integer imax_to_c, jmax_to_c, kmax_to_c, dem_solids_to_c
+    integer(c_int) imax_to_c, jmax_to_c, kmax_to_c, dem_solids_to_c
 
     call get_data()
 
@@ -181,7 +181,7 @@ contains
 
     use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+    integer(c_int), intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
     call set_domain(flag)
 
@@ -208,13 +208,13 @@ contains
 
     use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    double precision, intent(inout) :: u_g&
+    real(c_double), intent(inout) :: u_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    double precision, intent(inout) :: v_g&
+    real(c_double), intent(inout) :: v_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    double precision, intent(inout) :: w_g&
+    real(c_double), intent(inout) :: w_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    double precision, intent(inout) :: p_g&
+    real(c_double), intent(inout) :: p_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
     call usr3(u_g, v_g, w_g, p_g)

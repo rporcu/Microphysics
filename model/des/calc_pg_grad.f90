@@ -60,7 +60,7 @@ MODULE CALC_PG_GRAD_MODULE
 ! mean pressure gradient for the case of periodic boundaries
       DOUBLE PRECISION :: cPG(3)
 ! One over cell volume
-      double precision :: OoVol, Oodx, Oody, Oodz
+      double precision :: Oodx, Oody, Oodz
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
