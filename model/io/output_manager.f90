@@ -14,10 +14,10 @@ module output_manager_module
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     SUBROUTINE OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-         particle_state, des_radius, ro_sol, des_pos_new, &
-         des_vel_new, des_usr_var, omega_new, exit_signal, finished)&
-         bind(C, name="mfix_output_manager")
+     SUBROUTINE OUTPUT_MANAGER(time, dt, nstep, ep_g, p_g, ro_g, rop_g,&
+        u_g, v_g, w_g, particle_state, des_radius, ro_sol, des_pos_new,&
+        des_vel_new, des_usr_var, omega_new, exit_signal, finished)&
+        bind(C, name="mfix_output_manager")
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -32,7 +32,7 @@ module output_manager_module
       use output, only: USR_TIME, USR_DT
       use output, only: VTP_TIME, VTP_DT
       use param, only: DIMENSION_USR
-      use run, only: TIME, DT, TSTOP
+      use run, only: tstop
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
       use write_des_data_module, only: write_des_data
@@ -41,6 +41,9 @@ module output_manager_module
       use discretelement, only: max_pip
 
       IMPLICIT NONE
+
+      real(c_double), INTENT(IN   ) :: time, dt
+      integer(c_int), intent(in   ) :: nstep
 
       real(c_double), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -106,7 +109,7 @@ module output_manager_module
       IF(CHECK_TIME(RES_TIME) .OR. EXIT_SIGNAL == 1) THEN
 
          RES_TIME = NEXT_TIME(RES_DT)
-         CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
+         CALL WRITE_RES1(dt, nstep, time, ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
          CALL NOTIFY_USER('.RES;')
 
          IF(DEM_SOLIDS) THEN
@@ -121,7 +124,7 @@ module output_manager_module
 ! Write standard output, if needed
       IF(CHECK_TIME(OUT_TIME)) THEN
          OUT_TIME = NEXT_TIME(OUT_DT)
-         CALL WRITE_OUT1(ep_g,p_g,ro_g)
+         CALL WRITE_OUT1(time, ep_g,p_g,ro_g)
 
          CALL NOTIFY_USER('.OUT;')
       ENDIF
@@ -131,7 +134,7 @@ module output_manager_module
       DO LC = 1, DIMENSION_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            CALL WRITE_USR1 (LC, des_pos_new, des_vel_new, omega_new)
+            CALL WRITE_USR1 (LC, time, dt, des_pos_new, des_vel_new, omega_new)
             CALL NOTIFY_USER('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
@@ -272,7 +275,6 @@ module output_manager_module
       use machine, only: wall_time
       use output, only: FULL_LOG
       use output, only: NLOG
-      use run, only: TIME, NSTEP
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
 
@@ -343,7 +345,7 @@ module output_manager_module
 ! Purpose: Initialize variables used for controling ouputs of the      !
 ! various files.                                                       !
 !----------------------------------------------------------------------!
-      SUBROUTINE INIT_OUTPUT_VARS
+      SUBROUTINE INIT_OUTPUT_VARS(time, dt)
 
       use machine, only: wall_time
       use output, only: OUT_TIME, OUT_DT
@@ -354,7 +356,6 @@ module output_manager_module
       use output, only: RES_BACKUPS
       use param, only: DIMENSION_USR
       use run, only: RUN_TYPE
-      use run, only: TIME, DT
       use time_cpu, only: CPU_IO
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
@@ -363,7 +364,7 @@ module output_manager_module
       use funits, only: CREATE_DIR
 
       IMPLICIT NONE
-
+      double precision, intent(in) :: dt, time
 ! Loop counter
       INTEGER :: LC
 

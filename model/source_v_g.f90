@@ -26,7 +26,7 @@ module source_v_g_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_V_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+      SUBROUTINE SOURCE_V_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                             v_g, v_go, tau_v_g,flag)
 
 
@@ -48,7 +48,7 @@ module source_v_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE run, only: momentum_y_eq, odt
+      USE run, only: momentum_y_eq
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
 
@@ -82,6 +82,8 @@ module source_v_g_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      double precision, intent(in   ) :: dt
+
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -100,8 +102,10 @@ module source_v_g_module
       DOUBLE PRECISION :: V0, Vbf
 ! jackson terms: local stress tensor quantity
       DOUBLE PRECISION :: ltau_v_g
+      double precision :: odt
 !---------------------------------------------------------------------//
 
+      odt = 1.0d0/dt
 ! Set reference phase to gas
       M = 0
 

@@ -16,7 +16,8 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
+      SUBROUTINE CONV_DIF_W_G(A_M, MU_G, u_g, v_g, w_g, &
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -51,6 +52,7 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
@@ -58,7 +60,8 @@ module w_g_conv_dif
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
          CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt, flag)
       ELSE
-         CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,flag)
+         CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, &
+            flux_ge, flux_gn, flux_gt,flag, dt)
       ENDIF
 
       END SUBROUTINE CONV_DIF_W_G
@@ -429,7 +432,8 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
+      SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, &
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -471,6 +475,7 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -502,7 +507,7 @@ module w_g_conv_dif
 ! shear indicator:
       incr=0
       CALL CALC_XSI (DISCRETIZE(5), W_G, U, V, WW, XSI_E, XSI_N,&
-         XSI_T, incr)
+         XSI_T, incr,dt)
 
       DO K = kstart3, kend3
          DO J = jstart3, jend3

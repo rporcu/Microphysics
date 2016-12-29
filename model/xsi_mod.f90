@@ -14,7 +14,7 @@
       CONTAINS
 
 
-      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr)
+      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -39,8 +39,6 @@
 
       USE param1, only: zero
 
-      USE run, only: dt
-
       USE error_manager, only: err_msg, init_err_msg, finl_err_msg
       USE error_manager, only: ival, flush_err_msg
       IMPLICIT NONE
@@ -62,7 +60,7 @@
 
 ! shear indicator
       INTEGER, INTENT(IN) :: incr
-
+      double precision, intent(in   ) :: dt
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices

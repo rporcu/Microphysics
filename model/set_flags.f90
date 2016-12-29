@@ -263,7 +263,6 @@ MODULE SET_FLAGS_MODULE
                if(IS_UNDEFINED(flag(i,j,k,2))) flag(i,j,k,2) = 0
                if(IS_UNDEFINED(flag(i,j,k,3))) flag(i,j,k,3) = 0
                if(IS_UNDEFINED(flag(i,j,k,4))) flag(i,j,k,4) = 0
-               write(1200,"(4(i4),3(I11))") i,j,k,flag(i,j,k,:)
             end do
          end do
       end do

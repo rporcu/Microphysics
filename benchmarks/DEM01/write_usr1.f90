@@ -6,15 +6,15 @@
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, des_pos_new, des_vel_new, omega_new)
+      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
 
       use discretelement, only: max_pip
-      use run, only: TIME
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: L
 
+      double precision, intent(in) :: time, dt
       double precision, intent(in) :: des_pos_new(max_pip,3)
       double precision, intent(in) :: des_vel_new(max_pip,3)
       double precision, intent(in) :: omega_new(max_pip,3)

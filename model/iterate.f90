@@ -11,13 +11,14 @@ module iterate_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE ITERATE(u_g, v_g, w_g, u_go, v_go, w_go,&
-                         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
-                         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
-                         flux_ge, flux_gn, flux_gt, mu_g,&
-                         f_gds, A_m, b_m, drag_bm, &
-                         tau_u_g, tau_v_g, tau_w_g, &
-                          particle_phase, particle_state, pvol, &
-                         des_radius,  des_pos_new, des_vel_new, flag,  IER, NIT)
+         p_g, pp_g, ep_g, ro_g, rop_g, rop_go,&
+         rop_ge, rop_gn, rop_gt, d_e, d_n, d_t,&
+         flux_ge, flux_gn, flux_gt, mu_g,&
+         f_gds, A_m, b_m, drag_bm, &
+         tau_u_g, tau_v_g, tau_w_g, &
+         particle_phase, particle_state, pvol, &
+         des_radius,  des_pos_new, des_vel_new, flag, time, dt, nstep,  IER, NIT)&
+         bind(C, name="mfix_iterate")
 
       USE calc_mflux_module, only: calc_mflux
       USE check_convergence_module, only: check_convergence
@@ -33,7 +34,7 @@ module iterate_module
       USE param1   , only: small_number, undefined, zero, one
       USE physical_prop_module, only: physical_prop
       USE residual , only: resid, resid_p
-      USE run, only: call_usr, dt, dt_prev, nstep, time, tstop
+      USE run, only: call_usr, tstop
       USE time_cpu, only: cpuos, cpu_nlog, cpu0, time_nlog
       USE toleranc, only: norm_g
       USE vavg_mod, ONLY: vavg_g
@@ -50,74 +51,82 @@ module iterate_module
       USE tunit_module, only: get_tunit
       USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
       USE solve_lin_eq_module, only: solve_lin_eq
+      use discretelement, only: max_pip
+      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_go&
+      real(c_double), intent(in   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_go&
+      real(c_double), intent(in   ) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_go&
+      real(c_double), intent(in   ) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      real(c_double), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: pp_g&
+      real(c_double), intent(inout) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      real(c_double), intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_double), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
+      real(c_double), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+      real(c_double), intent(inout) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+      real(c_double), intent(inout) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+      real(c_double), intent(inout) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_e&
+      real(c_double), intent(inout) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_n&
+      real(c_double), intent(inout) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: d_t&
+      real(c_double), intent(inout) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+      real(c_double), intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+      real(c_double), intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+      real(c_double), intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+      real(c_double), intent(inout) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_u_g&
+      real(c_double), intent(inout) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_v_g&
+      real(c_double), intent(inout) :: tau_v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: tau_w_g&
+      real(c_double), intent(inout) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: f_gds&
+      real(c_double), intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: A_m&
+      real(c_double), intent(out  ) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: b_m&
+      real(c_double), intent(out  ) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT  ) :: drag_bm&
+      real(c_double), intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      real(c_double), intent(inout) :: pvol(max_pip)
+      real(c_double), intent(inout) :: des_radius(max_pip)
+      real(c_double), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_double), intent(inout) :: des_vel_new(max_pip,3)
+
+      integer(c_int), intent(inout) :: particle_state(max_pip)
+      integer(c_int), intent(inout) :: particle_phase(max_pip)
+
+      real(c_double), intent(inout) :: time, dt
+      integer(c_int), intent(in   ) :: nstep
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -155,8 +164,6 @@ module iterate_module
       DOUBLE PRECISION, allocatable :: V_gtmp(:,:,:)
       DOUBLE PRECISION, allocatable :: W_gtmp(:,:,:)
 
-! initializations
-      DT_prev = DT
       NIT = 0
       MUSTIT = 0
       GSMF = 0
@@ -188,10 +195,11 @@ module iterate_module
       ENDIF   ! if(full_log)
 
       ! Calculate the face values of densities and mass fluxes
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
-         flux_ge, flux_gn, flux_gt,flag)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
+         flux_ge, flux_gn, flux_gt, flag)
+      CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
+         flux_ge, flux_gn, flux_gt, flag)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
@@ -235,7 +243,7 @@ module iterate_module
       if(momentum_x_eq(0)) then
          call solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g, &
-         f_gds, a_m, b_m, drag_bm, flag, ier)
+         f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
          call solve_lin_eq ('u_g', 3, u_gtmp, a_m, b_m, leq_it(3), &
             leq_method(3), leq_sweep(3), leq_tol(3),  leq_pc(3), ier)
@@ -244,7 +252,7 @@ module iterate_module
       if(momentum_y_eq(0)) then
          call solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
             rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-            f_gds, a_m, b_m, drag_bm, flag, ier)
+            f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
          call solve_lin_eq ('v_g', 4, v_gtmp, a_m, b_m, leq_it(4), &
             leq_method(4), leq_sweep(4), leq_tol(4),  leq_pc(4), ier)
@@ -253,7 +261,7 @@ module iterate_module
       if(momentum_z_eq(0)) then
          call solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
             rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-            f_gds, a_m, b_m, drag_bm, flag, ier)
+            f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
          call solve_lin_eq ('w_g', 5, w_gtmp, a_m, b_m, leq_it(5), &
             leq_method(5), leq_sweep(5), leq_tol(5), leq_pc(5), ier)
@@ -274,12 +282,13 @@ module iterate_module
       IF (IER_MANAGER()) goto 1000
 
 ! Calculate the face values of densities.
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
+      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
 
       IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
-         CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, pp_g, &
-            rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, NORMG, RESG, IER)
+         CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, &
+            pp_g, rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, &
+            dt, NORMG, RESG, IER)
 
 ! Solve P_g_prime equation
          call solve_lin_eq ('pp_g', 1, pp_g, a_m, b_m, leq_it(1), &
@@ -303,7 +312,8 @@ module iterate_module
 ! Calculate the face values of mass fluxes
       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
          flux_ge, flux_gn, flux_gt, flag)
-      CALL SET_BC1(p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
+      CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
+         flux_ge, flux_gn, flux_gt, flag)
 
 ! User-defined linear equation solver parameters may be adjusted after
 ! the first iteration

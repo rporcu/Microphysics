@@ -19,16 +19,18 @@ MODULE READ_RES1_MOD
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
+      SUBROUTINE READ_RES1(dt, nstep, time, ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
 
       USE funits, only: unit_res
       USE geometry, only: ijkmax2, ijkmax3
       USE compar, only: pe_io, mype
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE param1, only: one
-      USE run, only: dt, dt_fac, nstep, time
+      USE run, only: dt_fac
 
       implicit none
+      double precision, intent(  out) :: dt, time
+      integer, intent(  out) :: nstep
 
       DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)

@@ -9,7 +9,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
 !          J.Musser                                   Date: 31-JAN-14  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_RUN_CONTROL
+      SUBROUTINE CHECK_RUN_CONTROL(time, dt)
 
 
 ! Global Variables:
@@ -21,9 +21,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
 ! Simulation units: SI, CGS
       USE run, only: UNITS
 ! Simulation start/stop times.
-      USE run, only: TIME, TSTOP
-! Time step size, one over time step size.
-      USE run, only: DT, ODT
+      USE run, only: TSTOP
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -32,14 +30,15 @@ MODULE CHECK_RUN_CONTROL_MODULE
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
+      use error_manager, only: ivar, ival, err_msg
 
       IMPLICIT NONE
 
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-
+      double precision, intent(inout) :: time, dt
 
 !......................................................................!
 
@@ -67,13 +66,10 @@ MODULE CHECK_RUN_CONTROL_MODULE
 
 ! Steady-state simulation.
       ELSEIF(IS_UNDEFINED(DT) .OR. IS_UNDEFINED(DT)) THEN
-         ODT = ZERO
          TIME = ZERO
 
 ! Transient simulation.
       ELSE
-! Calculate one over the initial timestep.
-         ODT = ONE/DT
 ! Verify the remaining time settings.
          IF (IS_UNDEFINED(TIME)) THEN
             WRITE(ERR_MSG,1000) 'TIME'

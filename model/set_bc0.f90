@@ -52,16 +52,12 @@ MODULE SET_BC0_MODULE
             CASE ('NO_SLIP_WALL')
             CASE ('PAR_SLIP_WALL')
             CASE ('P_OUTFLOW')
-               CALL SET_BC0_INIT_BCDT_CALCS(L)
                CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
             CASE ('MASS_OUTFLOW')
-               CALL SET_BC0_INIT_BCDT_CALCS(L)
                CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
-               CALL SET_BC0_INIT_BCDT_CALCS(L)
                CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
             CASE ('MASS_INFLOW')
-               CALL SET_BC0_INIT_JET(L)
                CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
@@ -134,50 +130,6 @@ MODULE SET_BC0_MODULE
       ENDDO   ! do k
 
       END SUBROUTINE SET_BC0_OUTFLOW
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc0_init_jet                                        C
-!  Purpose: initializing time dependent jet conditions                 C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_INIT_JET(BCV)
-
-! Modules
-!--------------------------------------------------------------------//
-      use bc, only: bc_plane
-      use bc, only: bc_jet_g, bc_jet_g0
-      use bc, only: bc_dt_0, bc_time
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use param1, only: undefined
-      use run, only: time
-      IMPLICIT NONE
-
-! Dummy arguments
-!--------------------------------------------------------------------//
-! index of boundary
-      INTEGER, INTENT(IN) :: BCV
-!--------------------------------------------------------------------//
-
-      BC_JET_G(BCV) = UNDEFINED
-      IF (IS_DEFINED(BC_DT_0(BCV))) THEN
-         BC_TIME(BCV) = TIME + BC_DT_0(BCV)
-         BC_JET_G(BCV) = BC_JET_G0(BCV)
-         IF (IS_DEFINED(BC_JET_G(BCV))) THEN
-            SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W', 'E')
-               BC_U_G(BCV) = BC_JET_G(BCV)
-            CASE ('S', 'N')
-               BC_V_G(BCV) = BC_JET_G(BCV)
-            CASE ('B', 'T')
-               BC_W_G(BCV) = BC_JET_G(BCV)
-            END SELECT
-         ENDIF
-      ELSE
-         BC_TIME(BCV) = UNDEFINED
-      ENDIF
-      RETURN
-      END SUBROUTINE SET_BC0_INIT_JET
 
 
 
@@ -259,47 +211,6 @@ MODULE SET_BC0_MODULE
 
       RETURN
       END SUBROUTINE SET_BC0_INFLOW
-
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc0_init_bcdt_calcs                                 C
-!  Purpose: initializing time dependent outflow calculations for       C
-!  modifying outflow conditions (MO type) or simple reporting          C
-!  outflow conditions (PO or O types)                                  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_INIT_BCDT_CALCS(BCV)
-
-! Modules
-!--------------------------------------------------------------------//
-      use bc, only: bc_dt_0, bc_time
-      use bc, only: bc_mout_g
-      use bc, only: bc_out_n
-      use bc, only: bc_vout_g
-      use param1, only: undefined, zero
-      use run, only: time
-      IMPLICIT NONE
-! Dummy arguments
-!--------------------------------------------------------------------//
-! index of boundary
-      INTEGER, INTENT(IN) :: BCV
-!--------------------------------------------------------------------//
-
-! initializing for time dependent outflow reporting calculation
-      IF (IS_DEFINED(BC_DT_0(BCV))) THEN
-         BC_TIME(BCV) = TIME + BC_DT_0(BCV)
-         BC_OUT_N(BCV) = 0
-         BC_MOUT_G(BCV) = ZERO
-         BC_VOUT_G(BCV) = ZERO
-      ELSE
-         BC_TIME(BCV) = UNDEFINED
-      ENDIF
-      RETURN
-      END SUBROUTINE SET_BC0_INIT_BCDT_CALCS
-
 
 
 

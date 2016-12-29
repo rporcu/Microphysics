@@ -10,7 +10,7 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
-      flag, normg, resg, ier)
+      flag, dt, normg, resg, ier)
 
 ! Module procedures ..................................................//
       use matrix  , only: init_ab_m
@@ -70,6 +70,8 @@ module solve_pp_module
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      double precision, intent(in   ) :: dt
+
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
 ! normalized) or a user defined value given by norm_g.  If norm_g
@@ -101,7 +103,7 @@ module solve_pp_module
 ! Forming the sparse matrix equation.
       call conv_pp_g (a_m, rop_ge, rop_gn, rop_gt, flag)
 
-      call source_pp_g(a_m, b_m, b_mmax, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
       if(point_source) call point_source_pp_g (b_m, b_mmax, flag)

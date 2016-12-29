@@ -9,7 +9,7 @@ MODULE GET_DATA_MODULE
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA
+      SUBROUTINE GET_DATA(time, dt)
 
       USE check_gas_phase_module, only: check_gas_phase
       USE check_geometry_module, only: check_geometry
@@ -34,6 +34,7 @@ MODULE GET_DATA_MODULE
 
       IMPLICIT NONE
 
+      double precision, intent(  out) :: time, dt
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -43,7 +44,7 @@ MODULE GET_DATA_MODULE
 ! This module call routines to initialize the namelist variables.
       CALL INIT_NAMELIST
 ! Read in the namelist variables from the ascii input file.
-      CALL READ_NAMELIST(0)
+      CALL READ_NAMELIST(time, dt)
 
 ! Initialize the error manager. This call occurs after the mfix.dat
 ! is read so that message verbosity can be set and the .LOG file
@@ -71,7 +72,7 @@ MODULE GET_DATA_MODULE
 ! Check the minimum solids phase requirements.
       CALL CHECK_SOLIDS_MODEL_PREREQS
 
-      CALL CHECK_RUN_CONTROL
+      CALL CHECK_RUN_CONTROL(time, dt)
       CALL CHECK_NUMERICS
       CALL CHECK_OUTPUT_CONTROL
 

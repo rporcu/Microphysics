@@ -17,7 +17,8 @@ module u_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_U_G(A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
+      SUBROUTINE CONV_DIF_U_G(A_M, mu_g, u_g, v_g, w_g, &
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -52,6 +53,7 @@ module u_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
 
       IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
@@ -59,7 +61,7 @@ module u_g_conv_dif
       IF (DISCRETIZE(3) == 0) THEN
          CALL STORE_A_U_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt, flag)
       ELSE
-         CALL STORE_A_U_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag)
+         CALL STORE_A_U_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt, flag,dt)
       ENDIF
 
       END SUBROUTINE CONV_DIF_U_G
@@ -415,7 +417,7 @@ module u_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_U_G1(A_U_G, MU_G, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag)
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -455,6 +457,7 @@ module u_g_conv_dif
       DOUBLE PRECISION, INTENT(INOUT) :: A_U_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
+      double precision, intent(in   ) :: dt
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -485,7 +488,7 @@ module u_g_conv_dif
 
 ! shear indicator:
       incr=1
-      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr)
+      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, dt)
 
       DO K = kstart3, kend3
          DO J = jstart3, jend3

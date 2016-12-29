@@ -17,7 +17,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
-         f_gds, a_m, b_m, drag_bm, flag, ier)
+         f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
 ! Module procedures ..................................................//
       USE matrix, only: init_ab_m
@@ -86,16 +86,18 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 !.....................................................................//
 
 ! initialize matrix and vector
       call init_ab_m (a_m, b_m)
 
 ! calculate the convection-diffusion terms
-      call conv_dif_u_g (a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
+      call conv_dif_u_g (a_m, mu_g, u_g, v_g, w_g, &
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_u_g(a_m, b_m, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_u_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          u_g, u_go, tau_u_g, flag)
 
 ! add in point sources
@@ -132,7 +134,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, ier)
+      f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
 
 ! Module procedures ...................................................//
@@ -202,16 +204,18 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 !.....................................................................//
 
 ! initialize matrix and vector
       call init_ab_m (a_m, b_m)
 
 ! calculate the convection-diffusion terms
-      call conv_dif_v_g (a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
+      call conv_dif_v_g (a_m, mu_g, u_g, v_g, w_g, &
+         flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_v_g(a_m, b_m, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_v_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          v_g, v_go, tau_v_g, flag)
 
 ! add in point sources
@@ -247,7 +251,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, ier)
+      f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
 ! Module procedures ..................................................//
       USE matrix, only: init_ab_m
@@ -316,16 +320,17 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dt
 !.....................................................................//
 
 ! initialize matrix and vector
       call init_ab_m(a_m, b_m)
 
 ! calculate the convection-diffusion terms
-      call conv_dif_w_g(a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag)
+      call conv_dif_w_g(a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag, dt)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_w_g(a_m, b_m, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_w_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          w_g, w_go, tau_w_g, flag)
 
 ! add in point sources

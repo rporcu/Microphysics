@@ -28,7 +28,7 @@ module source_w_g_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_W_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
+      SUBROUTINE SOURCE_W_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                             w_g, w_go, tau_w_g, flag)
 
 ! Modules
@@ -49,7 +49,7 @@ module source_w_g_module
       use matrix, only: e, w, s, n, t, b
 
       USE param1, only: zero, one
-      USE run, only: momentum_z_eq, odt
+      USE run, only: momentum_z_eq
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
 
@@ -82,6 +82,7 @@ module source_w_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      DOUBLE PRECISION, INTENT(IN   ) :: dt
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -101,8 +102,10 @@ module source_w_g_module
       DOUBLE PRECISION V0, Vbf
 ! jackson terms: local stress tensor quantity
       DOUBLE PRECISION :: ltau_w_g
+      double precision :: odt
 !---------------------------------------------------------------------//
 
+      odt = 1.0d0/dt
 ! Set reference phase to gas
       M = 0
 

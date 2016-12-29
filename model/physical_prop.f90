@@ -176,7 +176,6 @@ MODULE PHYSICAL_PROP_MODULE
 
               IF(RO_G(I,J,K) < ZERO) THEN
                  Err_l(myPE) = 100
-                 IF(REPORT_NEG_DENSITY)CALL ROgErr_LOG(ro_g, p_g, i, j, k, wHeader)
               ENDIF
             ENDIF
 
@@ -190,78 +189,6 @@ MODULE PHYSICAL_PROP_MODULE
 
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: ROgErr_LOG
-!  Purpose: Record information about the location and conditions that  C
-!           resulted in a negative gas phase density.                  C
-!                                                                      C
-!  Author: J. Musser                                  Date: 28-JUN-13  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE ROgErr_LOG(ro_g, p_g, i, j, k, tHeader)
-
-      ! Simulation time
-      use run, only: TIME
-
-      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-
-      implicit none
-
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      INTEGER, intent(in) :: i, j, k
-      LOGICAL, intent(inout) :: tHeader
-
-      LOGICAL :: lExists
-      CHARACTER(LEN=255) :: lFile
-      INTEGER, parameter :: lUnit = 4868
-      LOGICAL, save :: fHeader = .TRUE.
-
-
-      lFile = '';
-      if(numPEs > 1) then
-         write(lFile,"('ROgErr_',I4.4,'.log')") myPE
-      else
-         write(lFile,"('ROgErr.log')")
-      endif
-      inquire(file=trim(lFile),exist=lExists)
-      if(lExists) then
-         open(lUnit,file=trim(adjustl(lFile)),                         &
-            status='old', position='append')
-      else
-         open(lUnit,file=trim(adjustl(lFile)), status='new')
-      endif
-
-      if(fHeader) then
-         write(lUnit,1000)
-         fHeader = .FALSE.
-      endif
-
-      if(tHeader) then
-         write(lUnit,"(/2x,'Simulation time: ',g12.5)") TIME
-         tHeader = .FALSE.
-      endif
-
-      write(lUnit,1001)  i, j, k
-      write(lUnit,"(6x,A,1X,g12.5)",ADVANCE='NO') 'RO_g:', RO_g(i,j,k)
-      write(lUnit,"(2x,A,1X,g12.5)",ADVANCE='NO') 'P_g:', P_g(i,j,k)
-
-      close(lUnit)
-
-      RETURN
-
- 1000 FORMAT(2X,'One or more cells have reported a negative gas',      &
-         ' density (RO_g(i,j,k)). If',/2x,'this is a persistent issue,', &
-         ' lower UR_FAC(1) in mfix.dat.')
-
- 1001 FORMAT(/4X,'I: ',I4,'  J: ',I4,'  K: ',I4)
-
-      END SUBROUTINE ROgErr_LOG
 
 
 

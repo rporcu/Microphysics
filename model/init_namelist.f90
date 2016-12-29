@@ -89,29 +89,10 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Run Control" required="false">
 !  <description>
-!    Simulation start time. This is typically zero.
-!  </description>
-!  <range min="0.0" max="+Inf" />
-      TIME = UNDEFINED
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
 !    Simulation stop time.
 !  </description>
 !  <range min="0.0" max="+Inf" />
       TSTOP = UNDEFINED
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Initial time step size. If left undefined, a steady-state
-!    calculation is performed.
-!  </description>
-!  <dependent keyword="TIME" value="DEFINED"/>
-!  <dependent keyword="TSTOP" value="DEFINED"/>
-!  <range min="0.0" max="+Inf" />
-      DT = UNDEFINED
 !</keyword>
 
 !<keyword category="Run Control" required="false">
@@ -143,13 +124,6 @@ MODULE INIT_NAMELIST_MODULE
       DT_FAC = 0.9D0
 !</keyword>
 
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Flag to restart the code when DT < DT_MIN.
-!  </description>
-      AUTO_RESTART = .FALSE.
-!</keyword>
 
 !<keyword category="Run Control" required="false">
 !  <description>

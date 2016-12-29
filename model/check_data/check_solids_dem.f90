@@ -154,10 +154,10 @@ MODULE CHECK_DES_SOLIDS_MODULE
 ! Flag for coupled Fluid/DES simulation
       use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
-      use run, only: DT
       use constant, only: MMAX
 
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+      use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
+      use error_manager, only: ivar, ival, err_msg
 
       IMPLICIT NONE
 
@@ -346,7 +346,6 @@ MODULE CHECK_DES_SOLIDS_MODULE
 ! Store the smalled calculated collision time scale. This value is used
 ! in time-marching the DEM solids.
       DTSOLID = TCOLL/50.d0
-      IF(.NOT.DES_CONTINUUM_COUPLED) DT = DTSOLID
 
       CALL FINL_ERR_MSG
 
@@ -404,8 +403,6 @@ MODULE CHECK_DES_SOLIDS_MODULE
       use constant, only: PI
 ! Flag for coupled Fluid/DES simulation
       use discretelement, only: DES_CONTINUUM_COUPLED
-! Fluid solver (global) time step size
-      use run, only: DT
 ! Maximum number of solids
       USE param, only: DIM_M
 
@@ -656,7 +653,6 @@ MODULE CHECK_DES_SOLIDS_MODULE
 ! Store the smalled calculated collision time scale. This value is used
 ! in time-marching the DEM solids.
       DTSOLID = TCOLL/50.d0
-      IF(.NOT.DES_CONTINUUM_COUPLED) DT = DTSOLID
 
 
       CALL FINL_ERR_MSG

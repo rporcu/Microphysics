@@ -8,7 +8,7 @@ MODULE WRITE_OUT0_MODULE
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_OUT0
+      SUBROUTINE WRITE_OUT0(time, dt)
 
       USE bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -39,7 +39,7 @@ MODULE WRITE_OUT0_MODULE
       USE param, only: dimension_c, dimension_ic, dimension_bc
       USE param1, only: half, undefined, zero, is_defined
       USE constant, only: mmax, ro_s0, d_p0
-      USE run, only: description, id_version, call_usr, dem_solids, dt_fac, dt, dt_min, dt_max, run_name, run_type, tstop, time
+      USE run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
       USE run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
       USE run, only: units, discretize, solids_model
       USE scales, only: p_scale, p_ref
@@ -48,6 +48,8 @@ MODULE WRITE_OUT0_MODULE
       USE write_table_mod, only: write_table
 
       IMPLICIT NONE
+
+      double precision, intent(in   ) :: time, dt
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------

@@ -10,7 +10,8 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag)
+      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, &
+         flag, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -34,7 +35,11 @@ MODULE CONV_ROP_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer         , intent(in   ) :: flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+
+
+      double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
@@ -42,7 +47,7 @@ MODULE CONV_ROP_MODULE
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &
                          flag, rop_g, u_g, v_g, w_g, &
-                         rop_ge, rop_gn, rop_gt)
+                         rop_ge, rop_gn, rop_gt, dt)
       ENDIF
 
       RETURN
@@ -165,7 +170,7 @@ MODULE CONV_ROP_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP1(DISC, flag, &
                            rop, u, v, w, &
-                           rop_e, rop_n, rop_t)
+                           rop_e, rop_n, rop_t, dt)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -182,17 +187,27 @@ MODULE CONV_ROP_MODULE
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(in) :: rop(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(in) :: rop&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: u(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: v(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: w(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: u&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: v&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(IN) :: w&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_e(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_n(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_t(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_e&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_n&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      DOUBLE PRECISION, INTENT(OUT) :: rop_t&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer, intent(in   ) :: flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+
+      double precision, intent(in) :: dt
 !
 ! Local variables
 !---------------------------------------------------------------------//
@@ -209,7 +224,7 @@ MODULE CONV_ROP_MODULE
 
 ! Calculate factors
       incr=0
-      CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr)
+      CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr, dt)
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3

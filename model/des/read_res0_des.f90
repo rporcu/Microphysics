@@ -14,7 +14,7 @@ MODULE READ_RES0_DES_MODULE
       use discretelement, only: des_usr_var_size, vtp_findex, dtsolid
       use error_manager, only: err_msg, flush_err_msg
       use read_res1_des, only: init_read_res_des, finl_read_res_des, read_par_pos, read_res_des, read_res_parray
-      use run, only: run_name, run_type, time
+      use run, only: run_name, run_type
 
       implicit none
 
@@ -91,9 +91,6 @@ MODULE READ_RES0_DES_MODULE
 
       CALL FINL_READ_RES_DES
 
-
-      WRITE(ERR_MSG,"('DES restart file read at Time = ',g12.5)") TIME
-      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
       RETURN
       END SUBROUTINE READ_RES0_DES

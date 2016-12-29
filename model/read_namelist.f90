@@ -14,7 +14,7 @@ MODULE read_namelist_module
 !     Purpose: Read in the NAMELIST variables                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE READ_NAMELIST(READ_ACTION)
+      SUBROUTINE READ_NAMELIST(time, dt)
 
       USE bc
       USE compar
@@ -47,8 +47,7 @@ MODULE read_namelist_module
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-! Specify how much of the input to process.
-      INTEGER, INTENT(IN) :: READ_ACTION
+      double precision, intent(  out) :: time, dt
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -75,27 +74,15 @@ MODULE read_namelist_module
 ! Flags restricting what data from the mfix.dat to process
       LOGICAL :: READ_LOCKED, READ_FULL
 
-! Local Parameters:
-!---------------------------------------------------------------------//
-      INTEGER, PARAMETER :: READ_MFIX = 0
-      INTEGER, PARAMETER :: READ_POST = 1
-      INTEGER, PARAMETER :: READ_INIT = 2
-
       E = UNDEFINED
       READ_FLAG = .TRUE.
       LINE_NO = 0
 
-      SELECT CASE(READ_ACTION)
-      CASE(READ_MFIX)
-         READ_LOCKED = .TRUE.
-         READ_FULL = .TRUE.
-      CASE(READ_POST)
-         READ_LOCKED = .TRUE.
-         READ_FULL = .FALSE.
-      CASE(READ_INIT)
-         READ_LOCKED = .FALSE.
-         READ_FULL = .TRUE.
-      END SELECT
+      READ_LOCKED = .TRUE.
+      READ_FULL = .TRUE.
+
+      time = undefined
+      dt = undefined
 
 ! Open the mfix.dat file. Report errors if the file is not located or
 ! there is difficulties opening it.

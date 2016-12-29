@@ -9,31 +9,34 @@ MODULE WRITE_RES1_MOD
 !  Purpose: write out the time-dependent restart records               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
+      SUBROUTINE WRITE_RES1(dt, nstep, time, &
+         ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
 
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar  , only: mype, pe_io
       USE funits  , only: unit_res
       USE geometry, only: ijkmax2, ijkmax3
-      USE run, only     : dt, nstep, time
       USE out_bin_512_mod, only: out_bin_512
       USE in_binary_512, only: in_bin_512, convert_to_io_dp
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      double precision, intent(in   ) :: dt, time
+      integer, intent(in   ) :: nstep
+
+      double precision, intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      double precision, intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      double precision, intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      double precision, intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      double precision, intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      double precision, intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      double precision, intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------

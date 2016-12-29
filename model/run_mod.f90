@@ -26,7 +26,7 @@
 ! Brief description of the problem.
       CHARACTER(LEN=60) :: DESCRIPTION
 
-! Units for data input and output: CGS.
+! Units for data input and output: SI.
       CHARACTER(LEN=16) :: UNITS
 
 ! Type of run: NEW, RESTART
@@ -41,20 +41,8 @@
 ! version.release of software
       CHARACTER(LEN=10) :: ID_VERSION
 
-! Start-time of the run.
-      DOUBLE PRECISION :: TIME
-
 ! Stop-time of the run.
       DOUBLE PRECISION :: TSTOP
-
-! Time step.
-      REAL(C_DOUBLE), bind(C, name="simulation_time") :: DT
-
-! 1./Time step.
-      DOUBLE PRECISION :: oDT
-
-! Number of times steps completed.
-      INTEGER :: NSTEP
 
 ! Discretization scheme for different equations
       INTEGER :: DISCRETIZE(DIM_EQS)
@@ -112,9 +100,6 @@
 !    save all .RES .SP files and trigger shutdown
       DOUBLE PRECISION :: TERM_BUFFER
 
-! If .TRUE. code will automatically restart for DT < DT_MIN
-      LOGICAL :: AUTO_RESTART
-
 ! parameters for dynamically adjusting time step
 ! +1 -> increase dt; -1 decrease dt
       INTEGER :: DT_dir = -1
@@ -128,14 +113,6 @@
 ! Time step adjustment factor (<1.0)
       DOUBLE PRECISION :: DT_FAC
 
-! The previous time step used in iterate (before it is
-! changed by adjust_dt)
-      DOUBLE PRECISION :: DT_prev
-
-! in case iterations converged and DT modified, use old dt
-! to advance time in time_march.
-      LOGICAL :: use_DT_prev
-
 ! If .TRUE. reduce time step when residuals do not decrease
       LOGICAL :: DETECT_STALL
 
@@ -145,8 +122,6 @@
 
 ! Generate log files when negative gas density is detected.
       LOGICAL :: REPORT_NEG_DENSITY
-
-       common /run_dp/ time      !for Linux
 
 
 ! Flags indicating variable solids density.

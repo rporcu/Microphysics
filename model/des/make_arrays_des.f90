@@ -25,7 +25,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
 
       USE read_par_input_module, only: read_par_input
       USE read_res0_des_module, only: read_res0_des
-      USE run, only: run_type, time
+      USE run, only: run_type
       USE set_phase_index_module, only: set_phase_index
 
       USE write_des_data_module, only: write_des_data
@@ -107,7 +107,7 @@ MODULE MAKE_ARRAYS_DES_MODULE
       CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
 
       IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
-         S_TIME = TIME
+         S_TIME = 0.0d0 !TIME
          CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
       ENDIF
 

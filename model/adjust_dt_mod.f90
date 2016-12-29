@@ -1,6 +1,6 @@
-      MODULE ADJUST_DT
+module adjust_dt
 
-      CONTAINS
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -10,11 +10,10 @@
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-         LOGICAL FUNCTION ADJUSTDT (ep_g, ep_go, p_g, p_go, ro_g, ro_go, flag, &
-            rop_g, rop_go, U_g,  U_go, V_g, V_go,  W_g,  W_go, mu_g, &
-            f_gds, drag_bm,  particle_phase,  &
-            particle_state,  pvol, des_radius,  &
-            des_pos_new, des_vel_new, IER, NIT)
+   integer function adjustdt (ier, nit) &
+      bind(C, name="mfix_adjustdt")
+
+      use iso_c_binding, only: c_double, c_int
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -22,10 +21,8 @@
       use leqsol, only: MAX_NIT
 ! User defined: min, max DT and adjustment factor
       use run, only: DT_MIN, DT_MAX, DT_FAC
-! Flag: Use stored DT value for advancing TIME
-      use run, only: USE_DT_PREV
 ! Current DT (1/DT) and direction of last change (+/-)
-      use run, only: DT, oDT, DT_DIR
+      use run, only: DT_DIR
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
@@ -36,7 +33,8 @@
 ! Module proceedures:
 !---------------------------------------------------------------------//
 ! Routine to break successive time step reductions.
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
+      use error_manager, only: finl_err_msg, err_msg, flush_err_msg
+      use error_manager, only: init_err_msg, ival
 
       use calc_coeff_module, only: calc_coeff_all
 
@@ -44,53 +42,10 @@
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(  OUT) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(  OUT) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      integer         , INTENT(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: pvol, des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
-
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
-
-! Integer flag: 0=Good, 100=initialize, otherwise bad.
-      INTEGER, INTENT(INOUT) :: IER
-! Number of iterations for current time step
-      INTEGER, INTENT(IN) :: NIT
+! integer flag: 0=good, 100=initialize, otherwise bad.
+      integer(c_int), intent(inout) :: ier
+! number of iterations for current time step
+      integer(c_int), intent(in) :: nit
 
 
 ! Local Variables:
@@ -107,9 +62,15 @@
       DOUBLE PRECISION :: NITOS_NEW
 !......................................................................!
 
+
+
+      double precision :: dt, odt
+
+
+
+
 ! Initialize the function result.
-      ADJUSTDT = .FALSE.
-      USE_DT_PREV = .FALSE.
+      ADJUSTDT = 0
 
 ! Steady-state simulation.
       IF (DT==UNDEFINED .OR. DT<ZERO) RETURN
@@ -131,9 +92,6 @@
                DT = DT*DT_FAC
             ENDIF
 
-! DT was modified. Use the stored DT should be used to update TIME.
-            USE_DT_PREV = .TRUE.
-
 ! Write the convergence stats to the screen/log file.
             WRITE(ERR_MSG,"('DT=',g11.4,3x,'NIT/s=',A)")  &
                DT, trim(iVal(nint(NITOS)))
@@ -145,7 +103,7 @@
             NIT_TOT = NIT_TOT + NIT
          ENDIF
 ! No need to iterate again
-         ADJUSTDT = .FALSE.
+         ADJUSTDT = 0
 
 ! Iterate failed to converge.
 !---------------------------------------------------------------------//
@@ -175,27 +133,27 @@
             WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
-            ep_g = ep_go
-            p_g =  p_go
-            ro_g = ro_go
-            rop_g = rop_go
-            U_g =  U_go
-            V_g =  V_go
-            W_g =  W_go
+!             ep_g = ep_go
+!             p_g =  p_go
+!             ro_g = ro_go
+!             rop_g = rop_go
+!             U_g =  U_go
+!             V_g =  V_go
+!             W_g =  W_go
 
-            ! Recalculate all coefficients
-            CALL CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
-               mu_g, f_gds, drag_bm,  particle_phase,  &
-               particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-               flag)
+! ! Recalculate all coefficients
+!             CALL CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+!                mu_g, f_gds, drag_bm,  particle_phase,  &
+!                particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
+!                flag)
 ! Iterate again with new dt
-            ADJUSTDT = .TRUE.
+            ADJUSTDT = 1
 
 ! Set the return flag stop iterating.
          ELSE
 
 ! Prevent DT from dropping below DT_MIN.
-            ADJUSTDT = .FALSE.
+            ADJUSTDT = 0
          ENDIF
 
       ENDIF

@@ -8,16 +8,18 @@ MODULE WRITE_OUT1_MODULE
 !  Purpose: write out the field variables to standard output           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_OUT1(ep_g,p_g,ro_g)
+      SUBROUTINE WRITE_OUT1(time, ep_g,p_g,ro_g)
 
       USE compar, only: iend3, jend3, kend3
       USE compar, only: istart3, jstart3, kstart3
       USE compar, only: mype, pe_io
       USE funits, only: unit_out
       USE out_array_mod, only: out_array
-      USE run, only: time, call_usr
+      USE run, only: call_usr
 
       IMPLICIT NONE
+
+      DOUBLE PRECISION, INTENT(IN) :: time
 
       DOUBLE PRECISION, INTENT(IN) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)

@@ -6,20 +6,21 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
-                p_g, p_go, pp_g, ep_g, ep_go, &
-                ro_g, ro_go, rop_g, rop_go, &
-                rop_ge, rop_gn, rop_gt, &
-                d_e, d_n, d_t, &
-                tau_u_g ,tau_v_g, tau_w_g,&
-                flux_ge, flux_gn, flux_gt, &
-                trD_g, lambda_g, mu_g, &
-                f_gds, A_m, b_m, &
-                drag_bm,  &
-                flag, &
-                particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
-                omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
-                rot_acc_old, drag_fc, fc, tow)
+subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
+   p_g, p_go, pp_g, ep_g, ep_go, &
+   ro_g, ro_go, rop_g, rop_go, &
+   rop_ge, rop_gn, rop_gt, &
+   d_e, d_n, d_t, &
+   tau_u_g ,tau_v_g, tau_w_g,&
+   flux_ge, flux_gn, flux_gt, &
+   trD_g, lambda_g, mu_g, &
+   f_gds, A_m, b_m, &
+   drag_bm,  &
+   flag, &
+   particle_state, particle_phase, des_radius, ro_sol, pvol, pmass, &
+   omoi, des_pos_new, des_vel_new, des_usr_var, omega_new, des_acc_old,&
+   rot_acc_old, drag_fc, fc, tow)&
+   bind(C, name="mfix_MAIN")
 
 !-----------------------------------------------
 ! Modules
@@ -39,8 +40,8 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use make_arrays_des_module, only: make_arrays_des
       use param1 , only: zero, is_defined, is_undefined, undefined
       use read_res1_mod, only: read_res1
-      use run, only: call_usr, run_type, dem_solids, nstep
-      use run, only: dt, dt_min, dt_max, time
+      use run, only: call_usr, run_type, dem_solids
+      use run, only: dt_min, dt_max
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_constprop_module, only: set_constprop
@@ -60,6 +61,9 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       use discretelement, only: nonexistent, do_old
 
       IMPLICIT NONE
+
+      integer         , intent(inout) :: nstep
+      double precision, intent(inout) :: time, dt
 
       integer         , intent(inout) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -210,7 +214,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       ENDIF
 
 ! Write the initial part of the standard output file
-      CALL WRITE_OUT0
+      CALL WRITE_OUT0(time, dt)
 
 ! Write the initial part of the special output file(s)
       CALL WRITE_USR0
@@ -226,14 +230,14 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
        CASE ('RESTART_1')
 ! Read the time-dependent part of the restart file
-         CALL READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
+          CALL READ_RES1(dt, nstep, time,ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
          WRITE(ERR_MSG, 1010) TIME, NSTEP
          CALL FLUSH_ERR_MSG()
 
       CASE ('RESTART_2')
          TIME_SAVE = TIME
 
-         CALL READ_RES1(ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
+         CALL READ_RES1(dt, nstep, time,ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
          TIME = TIME_SAVE
 
          WRITE(ERR_MSG, 1010) TIME, NSTEP
@@ -245,7 +249,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 ! This will be done after the cell re-indexing is done later in this file.
 ! This allows restarting independently of the re-indexing setting between
 ! the previous and current run.
-         CALL WRITE_RES1(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
+         CALL WRITE_RES1(dt, nstep, time,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
 
       CASE DEFAULT
          IF(DMP_LOG)WRITE (UNIT_LOG, *) &
@@ -296,7 +300,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
       IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g,flag)
 
 ! Initialize time dependent boundary conditions
-      CALL SET_BC1(p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
+      CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
                     flux_ge, flux_gn, flux_gt, flag)
 
 ! Check the field variable data and report errors.
@@ -309,7 +313,7 @@ subroutine MFIX(u_g, v_g, w_g, u_go, v_go, w_go, &
 
 ! ######################## Moved here from time march
 
-      CALL INIT_OUTPUT_VARS
+      CALL INIT_OUTPUT_VARS(time, dt)
 
 ! Parse residual strings
       CALL PARSE_RESID_STRING ()

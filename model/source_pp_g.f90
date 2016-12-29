@@ -25,7 +25,7 @@ module source_pp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
+subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G
@@ -34,7 +34,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       USE fld_const, ONLY: RO_G0
       USE geometry, ONLY: VOL
       USE matrix, ONLY: E, W, N, S, T, B
-      USE run, ONLY: ODT, UNDEFINED_I
+      USE run, ONLY: UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
       USE write_error_module, only: write_error
 
@@ -53,6 +53,8 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
 ! maximum term in b_m expression
       DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      double precision, intent(in   ) :: dt
 
       DOUBLE PRECISION, INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -89,8 +91,10 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, u_g, v_g, w_g, p_g, ep_g,&
       DOUBLE PRECISION bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
       CHARACTER(LEN=80) :: LINE(1)
-
+      double precision :: oDT
 !-----------------------------------------------
+
+      odt = 1.0d0/dt
 
 ! Calculate convection-diffusion fluxes through each of the faces
 

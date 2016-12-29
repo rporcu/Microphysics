@@ -25,8 +25,8 @@ module source_u_g_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_U_G(A_M, B_M, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            u_g, u_go, tau_u_g, flag)
+      SUBROUTINE SOURCE_U_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+         u_g, u_go, tau_u_g, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -47,29 +47,30 @@ module source_u_g_module
       use matrix, only: e, w, s, n, t, b
 
       USE run, only: momentum_x_eq
-      USE run, only: odt
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      double precision, intent(in   ) :: dt
+
+      double precision, intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      double precision, intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      double precision, intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      double precision, intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
+      double precision, intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      double precision, intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_go&
+      double precision, intent(in   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: tau_u_g&
+      double precision, intent(in   ) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag &
+      integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Dummy arguments
@@ -99,7 +100,10 @@ module source_u_g_module
       DOUBLE PRECISION :: V0, Vbf
 ! local stress tensor quantity
       DOUBLE PRECISION :: ltau_u_g
+      double precision :: odt
 !---------------------------------------------------------------------//
+
+      odt = 1.0d0/dt
 
 ! Set reference phase to gas
       M = 0

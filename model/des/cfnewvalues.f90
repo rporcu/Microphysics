@@ -48,23 +48,26 @@ MODULE CFNEWVALUES_MODULE
 ! Adams-Bashforth defaults to Euler for the first time step.
       IF(FIRST_PASS .AND. INTG_ADAMS_BASHFORTH) THEN
          DO L =1, MAX_PIP
-            IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE                       ! Only real particles
-            IF(ENTERING_PARTICLE==PARTICLE_STATE(L).or.ENTERING_GHOST==PARTICLE_STATE(L)) CYCLE  ! Only non-entering
-            IF(NORMAL_GHOST==PARTICLE_STATE(L)) CYCLE                             ! Skip ghost particles
+            IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
+            IF(ENTERING_PARTICLE==PARTICLE_STATE(L).or.&
+               ENTERING_GHOST==PARTICLE_STATE(L)) CYCLE  ! Only non-entering
+            IF(NORMAL_GHOST==PARTICLE_STATE(L)) CYCLE
             DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
             ROT_ACC_OLD(L,:) = TOW(L,:)
          ENDDO
       ENDIF
       DO L = 1, MAX_PIP
 ! only process particles that exist
-         IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
-! skip ghost particles
-         IF(NORMAL_GHOST==PARTICLE_STATE(L).or.ENTERING_GHOST==PARTICLE_STATE(L).or.EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
+         IF(NONEXISTENT==PARTICLE_STATE(L) .or.      &
+            NORMAL_GHOST==PARTICLE_STATE(L).or.      &
+            ENTERING_GHOST==PARTICLE_STATE(L).or.    &
+            EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
 
 ! If a particle is classified as new, then forces are ignored.
 ! Classification from new to existing is performed in routine
 ! des_check_new_particle.f
-         IF(.NOT.ENTERING_PARTICLE==PARTICLE_STATE(L) .AND. .NOT.ENTERING_GHOST==PARTICLE_STATE(L))THEN
+         IF(.NOT.ENTERING_PARTICLE==PARTICLE_STATE(L) .AND. &
+            .NOT.ENTERING_GHOST==PARTICLE_STATE(L))THEN
             FC(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
          ELSE
             FC(L,:) = ZERO
@@ -72,12 +75,13 @@ MODULE CFNEWVALUES_MODULE
          ENDIF
 
 ! Advance particle position, velocity
-        IF (INTG_EULER) THEN
+         IF (INTG_EULER) THEN
 ! first-order method
-           DES_VEL_NEW(L,:) = DES_VEL_NEW(L,:) + FC(L,:)*DTSOLID
-           DD(:) = DES_VEL_NEW(L,:)*DTSOLID
-           DES_POS_NEW(L,:) = DES_POS_NEW(L,:) + DD(:)
+            DES_VEL_NEW(L,:) = DES_VEL_NEW(L,:) + FC(L,:)*DTSOLID
+            DD(:) = DES_VEL_NEW(L,:)*DTSOLID
+            DES_POS_NEW(L,:) = DES_POS_NEW(L,:) + DD(:)
             OMEGA_NEW(L,:)   = OMEGA_NEW(L,:) + TOW(L,:)*OMOI(L)*DTSOLID
+
          ELSEIF (INTG_ADAMS_BASHFORTH) THEN
 
             lVELo = DES_VEL_NEW(L,:)

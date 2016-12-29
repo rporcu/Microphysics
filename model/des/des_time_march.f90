@@ -13,7 +13,8 @@ module des_time_march_module
              particle_state, particle_phase, &
              des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
              des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-             drag_fc, fc, tow, pairs, pair_count, flag)
+             drag_fc, fc, tow, pairs, pair_count, flag, time, dt, nstep) &
+             bind(C, name="mfix_des_time_march")
 
       USE calc_collision_wall, only: calc_dem_force_with_wall_stl
       use calc_drag_des_module, only: calc_drag_des
@@ -32,54 +33,57 @@ module des_time_march_module
       use output_manager_module, only: output_manager
       use param1, only: zero
       use run, only: CALL_USR
-      use run, only: NSTEP
-      use run, only: TIME, TSTOP, DT
+      use run, only: TSTOP
+      use discretelement, only: max_pip
+      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: p_g&
+      real(c_double), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: u_g&
+      real(c_double), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: v_g&
+      real(c_double), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: w_g&
+      real(c_double), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: ro_g&
+      real(c_double), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_double), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_double), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer         , INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
+      real(c_double), intent(inout) :: time, dt
+      integer(c_int), intent(inout) :: nstep
 
-      double precision, intent(inout) :: pvol(:)
-      double precision, intent(inout) :: pmass(:)
-      double precision, intent(inout) :: des_radius(:)
-      double precision, intent(inout) :: ro_sol(:)
-      double precision, intent(inout) :: omoi(:)
+      real(c_double), intent(inout) :: pvol(max_pip)
+      real(c_double), intent(inout) :: pmass(max_pip)
+      real(c_double), intent(inout) :: des_radius(max_pip)
+      real(c_double), intent(inout) :: ro_sol(max_pip)
+      real(c_double), intent(inout) :: omoi(max_pip)
 
-      double precision, intent(inout) :: des_pos_new(:,:)
-      double precision, intent(inout) :: des_vel_new(:,:)
+      real(c_double), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_double), intent(inout) :: des_vel_new(max_pip,3)
 
-      double precision, intent(inout) :: des_acc_old(:,:)
-      double precision, intent(inout) :: rot_acc_old(:,:)
-      double precision, intent(inout) :: drag_fc(:,:)
-      double precision, intent(inout) :: fc(:,:)
-      double precision, intent(inout) :: tow(:,:)
+      real(c_double), intent(inout) :: des_acc_old(max_pip,3)
+      real(c_double), intent(inout) :: rot_acc_old(max_pip,3)
+      real(c_double), intent(inout) :: drag_fc(max_pip,3)
+      real(c_double), intent(inout) :: fc(max_pip,3)
+      real(c_double), intent(inout) :: tow(max_pip,3)
 
-      double precision, intent(inout) :: omega_new(:,:)
-      double precision, intent(inout) :: des_usr_var(:,:)
+      real(c_double), intent(inout) :: omega_new(max_pip,3)
+      real(c_double), intent(inout) :: des_usr_var(max_pip,1)
 
-      integer, intent(inout) :: particle_state(:)
-      integer, intent(  out) :: particle_phase(:)
+      integer(c_int), intent(inout) :: particle_state(max_pip)
+      integer(c_int), intent(inout) :: particle_phase(max_pip)
 
-      integer, intent(inout) :: pairs(:,:)
-      integer, intent(inout) :: pair_count
+      integer(c_int), intent(inout) :: pairs(6*max_pip,2)
+      integer(c_int), intent(inout) :: pair_count
 
 !------------------------------------------------
 ! Local variables
@@ -125,7 +129,7 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+         CALL OUTPUT_MANAGER(time, dt, nstep,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
              particle_state, des_radius, ro_sol, des_pos_new,&
             des_vel_new, des_usr_var, omega_new, 0, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
@@ -218,7 +222,7 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
+            CALL OUTPUT_MANAGER(time, dt, nstep,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
                 particle_state, des_radius, ro_sol, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
