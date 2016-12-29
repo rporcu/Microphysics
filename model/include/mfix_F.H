@@ -80,15 +80,6 @@ extern "C"
          Real* lambda_g, Real* mu_g,
          int* flag);
 
-  void mfix_time_march(
-         Real* u_g,     Real* v_g,      Real* w_g,
-         Real* u_go,    Real* v_go,     Real* w_go,
-         Real* p_g,     Real* p_go,
-         Real* ep_g,    Real* ep_go,
-         Real* ro_g,    Real* ro_go,
-         Real* rop_g,   Real* rop_go,
-         Real* time,    Real* dt);
-
   void mfix_iterate(
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* u_go,           Real* v_go,           Real* w_go,
@@ -107,6 +98,8 @@ extern "C"
          int* flag,
          Real* time,           Real* dt,             int* nstep,
          int* ier,             int* nit);
+
+  int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
   void  mfix_des_time_march(
           Real* ep_g,           Real* p_g,

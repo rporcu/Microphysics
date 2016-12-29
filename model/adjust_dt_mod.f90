@@ -10,7 +10,7 @@ contains
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   integer function adjustdt (ier, nit) &
+   integer function adjustdt (ier, nit, dt) &
       bind(C, name="mfix_adjustdt")
 
       use iso_c_binding, only: c_double, c_int
@@ -46,7 +46,8 @@ contains
       integer(c_int), intent(inout) :: ier
 ! number of iterations for current time step
       integer(c_int), intent(in) :: nit
-
+! fluid solver time-step size
+      real(c_double), intent(inout) :: dt
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -62,35 +63,28 @@ contains
       DOUBLE PRECISION :: NITOS_NEW
 !......................................................................!
 
-
-
-      double precision :: dt, odt
-
-
-
-
 ! Initialize the function result.
-      ADJUSTDT = 0
+      adjustdt = 0
 
 ! Steady-state simulation.
-      IF (DT==UNDEFINED .OR. DT<ZERO) RETURN
+      if (dt==undefined .or. dt<=zero) return
 
 ! Iterate successfully converged.
 !---------------------------------------------------------------------//
-      IF(IER == 0) THEN
+      if(ier == 0) then
 
 ! Calculate a new DT every STEPS_MIN time steps.
-         IF(STEPS_TOT >= STEPS_MIN) THEN
-            NITOS_NEW = DBLE(NIT_TOT)/(STEPS_TOT*DT)
-            IF (NITOS_NEW > NITOS) DT_DIR = DT_DIR*(-1)
-            STEPS_TOT = 0
-            NITOS = NITOS_NEW
-            NIT_TOT = 0
-            IF (DT_DIR > 0) THEN
-               IF(NIT < MAX_NIT) DT = MIN(DT_MAX,DT/DT_FAC)
-            ELSE
-               DT = DT*DT_FAC
-            ENDIF
+         if(steps_tot >= steps_min) then
+            nitos_new = dble(nit_tot)/(steps_tot*dt)
+            if (nitos_new > nitos) dt_dir = dt_dir*(-1)
+            steps_tot = 0
+            nitos = nitos_new
+            nit_tot = 0
+            if (dt_dir > 0) then
+               if(nit < max_nit) dt = min(dt_max,dt/dt_fac)
+            else
+               dt = dt*dt_fac
+            endif
 
 ! Write the convergence stats to the screen/log file.
             WRITE(ERR_MSG,"('DT=',g11.4,3x,'NIT/s=',A)")  &
@@ -98,40 +92,40 @@ contains
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., &
                FOOTER=.FALSE., LOG=.FALSE.)
 
-         ELSE
-            STEPS_TOT = STEPS_TOT + 1
-            NIT_TOT = NIT_TOT + NIT
-         ENDIF
+         else
+            steps_tot = steps_tot + 1
+            nit_tot = nit_tot + nit
+         endif
 ! No need to iterate again
-         ADJUSTDT = 0
+         adjustdt = 0
 
 ! Iterate failed to converge.
 !---------------------------------------------------------------------//
-      ELSE
+      else
 
 ! Clear the error flag.
          IER = 0
 
 ! Reset counters.
-         STEPS_TOT = 0
-         NITOS = 0.
-         NIT_TOT = 0
+         steps_tot = 0
+         nitos = 0.
+         nit_tot = 0
 
 ! Reduce the step size.
-         DT = DT*DT_FAC
+         dt = dt*dt_fac
 
 ! The step size has decreased to the minimum.
-         IF (DT_FAC >= ONE) THEN
+         if (dt_fac >= one) then
 
-            WRITE(ERR_MSG,"(3X,A)") &
+            write(err_msg,"(3x,a)") &
                'DT_FAC >= 1. Recovery not possible!'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE., &
-               HEADER=.FALSE., FOOTER=.FALSE.)
+            call flush_err_msg(abort=.true., &
+               header=.false., footer=.false.)
 
-         ELSEIF (DT > DT_MIN) THEN
+         elseif (dt > dt_min) then
 
             WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
-            CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+            call flush_err_msg(header=.false., footer=.false.)
 
 !             ep_g = ep_go
 !             p_g =  p_go
@@ -147,19 +141,16 @@ contains
 !                particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
 !                flag)
 ! Iterate again with new dt
-            ADJUSTDT = 1
+            adjustdt = 1
 
 ! Set the return flag stop iterating.
          ELSE
 
 ! Prevent DT from dropping below DT_MIN.
-            ADJUSTDT = 0
+            adjustdt = 0
          ENDIF
 
       ENDIF
-
-      ! Update ONE/DT variable.
-      ODT = ONE/DT
 
       RETURN
       END FUNCTION ADJUSTDT
