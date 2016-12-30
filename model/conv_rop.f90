@@ -10,39 +10,43 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, &
-         flag, dt)
+      SUBROUTINE CONV_ROP(lo, hi, u_g, v_g, w_g, rop_g, &
+         rop_ge, rop_gn, rop_gt, &
+         flag, dt) bind(C, name="conv_rop")
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE run, only: discretize
+      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      integer(c_int), intent(in   ) :: lo(3), hi(3)
+
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_double), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_ge&
+      real(c_double), intent(inout) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gn&
+      real(c_double), intent(inout) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_gt&
+      real(c_double), intent(inout) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      integer         , intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-
-      double precision, intent(in   ) :: dt
+      real(c_double), intent(in   ) :: dt
 !---------------------------------------------------------------------//
 
-      IF (DISCRETIZE(1) == 0) THEN               ! 0 & 1 => first order upwinding
+
+      IF (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
          CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &

@@ -10,35 +10,36 @@ MODULE CALC_MFLUX_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_MFLUX (u, v, w, rop_e, rop_n, rop_t, &
-                             flux_e, flux_n, flux_t, flag)
+         flux_e, flux_n, flux_t, flag) bind(C, name="calc_mflux")
 
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: ayz, axz, axy
+      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u&
+      real(c_double), intent(in   ) :: u&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v&
+      real(c_double), intent(in   ) :: v&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w&
+      real(c_double), intent(in   ) :: w&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_e&
+      real(c_double), intent(in   ) :: rop_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_n&
+      real(c_double), intent(in   ) :: rop_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_t&
+      real(c_double), intent(in   ) :: rop_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_e&
+      real(c_double), intent(inout) :: flux_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_n&
+      real(c_double), intent(inout) :: flux_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_t&
+      real(c_double), intent(inout) :: flux_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER, intent(IN) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 ! Local variables

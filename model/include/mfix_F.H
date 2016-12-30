@@ -6,7 +6,8 @@ extern "C"
 
   void mfix_get_data(int* imax, int* jmax, int* kmax, int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
-                     Real* tstop, Real* time);
+                     Real* tstop, Real* time, int* max_nit,
+                     Real* normg, int* set_normg);
 
   void mfix_set_domain(int* flag);
 
@@ -43,7 +44,7 @@ extern "C"
                  Real* fc,
                  Real* tow);
 
-  void mfix_set_bc1(
+  void set_bc1(
          Real* time,     Real* dt,
          Real* p_g,      Real* ep_g,
          Real* ro_g,     Real* rop_g,
@@ -63,7 +64,7 @@ extern "C"
          Real* omega_new,
          int* estatus, int* finsh);
 
-  void mfix_calc_coeff_all(
+  void calc_coeff_all(
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
          Real* u_g,  Real* v_g,   Real* w_g,
@@ -73,12 +74,54 @@ extern "C"
          Real* des_vel_new, Real* des_radius,
          int* flag);
 
-  void mfix_calc_trd_and_tau(
+  void calc_coeff_all(
+         Real* ro_g, Real* p_g,
+         Real* ep_g, Real* rop_g,
+         Real* u_g,  Real* v_g,   Real* w_g,
+         Real* mu_g, Real* f_gds, Real* drag_bm,
+         int* particle_phase,  int* particle_state,
+         Real* pvol, Real* des_pos_new,
+         Real* des_vel_new, Real* des_radius,
+         int* flag);
+
+  void calc_coeff(
+         int* flag, int* level,
+         Real* ro_g, Real* p_g,
+         Real* ep_g, Real* rop_g,
+         Real* u_g,  Real* v_g,   Real* w_g,
+         Real* mu_g, Real* f_gds, Real* drag_bm,
+         int* particle_phase,  int* particle_state,
+         Real* pvol, Real* des_pos_new,
+         Real* des_vel_new, Real* des_radius);
+
+  void calc_trd_and_tau(
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
          Real* trd_g,    Real* ep_g,
          Real* u_g,      Real* v_g,     Real* w_g,
          Real* lambda_g, Real* mu_g,
          int* flag);
+
+  void conv_rop(const int* lo, const int* hi,
+         Real* u_g,            Real* v_g,            Real* w_g,
+         Real* rop_g,
+         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
+         int* flag,            Real* dt);
+
+  void calc_mflux(
+         Real* u_g,            Real* v_g,            Real* w_g,
+         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
+         Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
+         int* flag);
+
+  void calc_coeff(
+         int* flag, int* level,
+         Real* ro_g, Real* p_g,
+         Real* ep_g, Real* rop_g,
+         Real* u_g,  Real* v_g,   Real* w_g,
+         Real* mu_g, Real* f_gds, Real* drag_bm,
+         int* particle_phase,  int* particle_state,
+         Real* pvol, Real* des_pos_new,
+         Real* des_vel_new, Real* des_radius);
 
   void mfix_iterate(
          Real* u_g,            Real* v_g,            Real* w_g,
@@ -97,7 +140,11 @@ extern "C"
          Real* des_pos_new,    Real* des_vel_new,
          int* flag,
          Real* time,           Real* dt,             int* nstep,
-         int* ier,             int* nit);
+         int* ier,             int* nit,
+         int* mustit, int* gsmf,
+         Real* delP_MF, Real* lMFlux, Real* resg,
+         Real* lnormg, int* lset_normg);
+
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
@@ -117,6 +164,8 @@ extern "C"
           Real* time,           Real* dt,             int* nstep);
 
   void mfix_usr1();
+
+  void mfix_usr2();
 
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);

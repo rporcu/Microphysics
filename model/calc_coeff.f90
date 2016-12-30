@@ -28,7 +28,7 @@ module calc_coeff_module
      SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-        flag) bind(C, name="mfix_calc_coeff_all")
+        flag) bind(C, name="calc_coeff_all")
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -110,7 +110,8 @@ module calc_coeff_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_COEFF(flag, pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
          w_g, mu_g, f_gds, drag_bm,  particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)
+         pvol, des_pos_new, des_vel_new, des_radius)&
+        bind(C, name="calc_coeff")
 
       use fld_const, only: ro_g0
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -126,37 +127,38 @@ module calc_coeff_module
 ! 0) Only density
 ! 1) Everything but density
 ! 2) All physical properties
-      INTEGER, intent(in) :: pLevel
-      double precision, intent(inout) :: ro_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::  p_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) :: ep_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: mu_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(out  ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      integer         , intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: plevel
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      double precision, intent(in   ) :: pvol(max_pip)
-      double precision, intent(in   ) :: des_radius(max_pip)
-      double precision, intent(in   ) :: des_pos_new(max_pip,3)
-      double precision, intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_double), intent(inout) :: ro_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) ::  p_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: ep_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: rop_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: u_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: v_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: w_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: mu_g&
+            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(out  ) :: f_gds&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_double), intent(out  ) :: drag_bm&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      integer         , intent(in   ) :: particle_state(max_pip)
-      integer         , intent(in   ) :: particle_phase(max_pip)
+      real(c_double), intent(in   ) :: pvol(max_pip)
+      real(c_double), intent(in   ) :: des_radius(max_pip)
+      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
+
+      integer(c_int), intent(in   ) :: particle_state(max_pip)
+      integer(c_int), intent(in   ) :: particle_phase(max_pip)
 
 
 !-----------------------------------------------------------------------
@@ -193,7 +195,7 @@ module calc_coeff_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
          ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag) &
-        bind(C, name="mfix_calc_trd_and_tau")
+        bind(C, name="calc_trd_and_tau")
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 

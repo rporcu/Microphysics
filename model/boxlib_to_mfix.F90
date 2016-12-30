@@ -15,8 +15,9 @@ contains
 !                                                                          !
 !**************************************************************************!
   subroutine mfix_get_data(imax_to_c, jmax_to_c, kmax_to_c, fluid, dem, &
-     steady_state, dt, dt_minC, dt_maxC, tstopC, time) &
-       bind(C, name="mfix_get_data")
+     steady_state, dt, dt_minC, dt_maxC, tstopC, time, max_nitC, &
+     normg, set_normg) &
+     bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
     use geometry, only: imax, jmax, kmax
@@ -24,6 +25,8 @@ contains
     use run, only: dt_min, dt_max, tstop
     use param1, only: is_undefined
     use fld_const, only: ro_g0
+    use toleranc, only: norm_g
+    use leqsol, only: max_nit
 
     implicit none
 
@@ -31,6 +34,9 @@ contains
     integer, intent(out) :: fluid, dem, steady_state
     double precision, intent(out) :: dt_minC, dt_maxC, tstopC
     double precision, intent(out) :: dt, time
+    integer, intent(out) :: max_nitC
+    double precision, intent(out) :: normg
+    integer, intent(out) :: set_normg
     call get_data(time, dt)
 
     imax_to_c = imax
@@ -41,9 +47,13 @@ contains
     dem   =  merge(1,0,dem_solids)
     steady_state = merge(1,0,is_undefined(dt))
 
-    dt_minC = dt_min
-    dt_maxC = dt_max
-    tstopC  = tstop
+    dt_minC  = dt_min
+    dt_maxC  = dt_max
+    tstopC   = tstop
+    max_nitC = max_nit
+
+    normg = norm_g
+    set_normg = merge(1,0,norm_g /= 1.0d0)
 
   end subroutine mfix_get_data
 
@@ -74,7 +84,19 @@ contains
 
     call usr1
 
-  end subroutine mfix_usr1
+ end subroutine mfix_usr1
+
+
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
+  subroutine mfix_usr2() &
+       bind(C, name="mfix_usr2")
+
+    call usr2
+
+  end subroutine mfix_usr2
 
 
 !**************************************************************************!

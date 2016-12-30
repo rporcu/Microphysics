@@ -17,7 +17,9 @@ module iterate_module
          f_gds, A_m, b_m, drag_bm, &
          tau_u_g, tau_v_g, tau_w_g, &
          particle_phase, particle_state, pvol, &
-         des_radius,  des_pos_new, des_vel_new, flag, time, dt, nstep,  IER, NIT)&
+         des_radius,  des_pos_new, des_vel_new, flag, &
+         time, dt, nstep,  IER, NIT, &
+         mustit, gsmf, delp_mf, lmflux, resg, normg, set_normg)&
          bind(C, name="mfix_iterate")
 
       USE calc_mflux_module, only: calc_mflux
@@ -55,6 +57,29 @@ module iterate_module
       use iso_c_binding, only: c_double, c_int
 
       implicit none
+
+
+
+! Error index
+      integer(c_int), intent(inout) :: ier
+! Number of iterations
+      integer(c_int), intent(inout) :: nit
+
+! flag indicating convergence status with MUSTIT = 0,1,2 implying
+! complete convergence, non-covergence and divergence respectively
+      integer(c_int), intent(inout) :: mustit
+! Number of outer iterations goalSeekMassFlux
+      integer(c_int), intent(inout) :: gsmf
+      real(c_double), intent(inout) :: delP_MF
+      real(c_double), intent(inout) :: lMFlux
+! gas & solids pressure residual
+      real(c_double), intent(inout) :: RESg
+! Normalization factor for gas & solids pressure residual
+      real(c_double), intent(inout) :: NORMg
+! Set normalization factor for gas and solids pressure residual
+      integer(c_int) :: Set_Normg
+
+
 
       real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -129,34 +154,15 @@ module iterate_module
       integer(c_int), intent(in   ) :: nstep
 
 !-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! Error index
-      INTEGER, INTENT(INOUT) :: IER
-! Number of iterations
-      INTEGER, INTENT(OUT) :: NIT
-!-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! current cpu time used
       DOUBLE PRECISION :: CPU_NOW
 ! cpu time left
       DOUBLE PRECISION :: TLEFT
-! flag indicating convergence status with MUSTIT = 0,1,2 implying
-! complete convergence, non-covergence and divergence respectively
-      INTEGER :: MUSTIT
-! Normalization factor for gas & solids pressure residual
-      DOUBLE PRECISION :: NORMg
-! Set normalization factor for gas and solids pressure residual
-      LOGICAL :: SETg
-! gas & solids pressure residual
-      DOUBLE PRECISION :: RESg
 ! average velocity
       DOUBLE PRECISION :: Vavg
       CHARACTER(LEN=4) :: TUNIT
-! Number of outer iterations goalSeekMassFlux
-      INTEGER :: GSMF
-      DOUBLE PRECISION :: delP_MF, lMFlux
 ! Error Message
       CHARACTER(LEN=32) :: lMsg
 
@@ -164,314 +170,210 @@ module iterate_module
       DOUBLE PRECISION, allocatable :: V_gtmp(:,:,:)
       DOUBLE PRECISION, allocatable :: W_gtmp(:,:,:)
 
-      NIT = 0
-      MUSTIT = 0
-      GSMF = 0
-      delP_MF = 0.
-      lMFlux = 0.
+      integer :: lo(3), hi(3)
 
-      RESG = ZERO
-
-      SETG = (NORM_G /= ONE)
-      NORMG = NORM_G
-
-      LEQ_ADJUST = .FALSE.
+      lo = -1
+      hi =  1
 
 ! Initialize residuals
       RESID = ZERO
 
-! CPU time left
-      IF (FULL_LOG) THEN
-         TLEFT = (TSTOP - TIME)*CPUOS
-         CALL GET_TUNIT (TLEFT, TUNIT)
 
-         IF (DT == UNDEFINED) THEN
-         ELSE
-            IF(myPE.eq.PE_IO) THEN
-               WRITE (*, '(/A,G12.5, A,G12.5, A,F9.3,1X,A)') &
-                  ' Time = ', TIME, '  Dt = ', DT
-            ENDIF
-         ENDIF   ! if/else(dt==undefined)
-      ENDIF   ! if(full_log)
+! ! CPU time left
+!       IF (FULL_LOG) THEN
+!          TLEFT = (TSTOP - TIME)*CPUOS
+!          CALL GET_TUNIT (TLEFT, TUNIT)
 
-      ! Calculate the face values of densities and mass fluxes
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
-      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
-         flux_ge, flux_gn, flux_gt, flag)
-      CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
-         flux_ge, flux_gn, flux_gt, flag)
+!          IF (DT == UNDEFINED) THEN
+!          ELSE
+!             IF(myPE.eq.PE_IO) THEN
+!                WRITE (*, '(/A,G12.5, A,G12.5, A,F9.3,1X,A)') &
+!                   ' Time = ', TIME, '  Dt = ', DT
+!             ENDIF
+!          ENDIF   ! if/else(dt==undefined)
+!       ENDIF   ! if(full_log)
+
+! ! Calculate the face values of densities and mass fluxes
+!       CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
+
+!       CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
+!          flux_ge, flux_gn, flux_gt, flag)
+
+!       CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
+!          flux_ge, flux_gn, flux_gt, flag)
 
 ! Default/Generic Error message
       lMsg = 'Run diverged/stalled'
 
+
 ! Begin iterations
 !-----------------------------------------------------------------
-   50 CONTINUE
-      MUSTIT = 0
-      NIT = NIT + 1
+!      do while(mustit == 1 .and. NIT < MAX_NIT)
+
+         NIT = NIT + 1
 ! mechanism to set the normalization factor for the correction
 ! after the first iteration to the corresponding residual found
 ! in the first iteration
-      IF (.NOT.SETG) THEN
-         IF (RESG > SMALL_NUMBER) THEN
-            NORMG = RESG
-            SETG = .TRUE.
+         IF(SET_NORMG==0) THEN
+            IF (RESG > SMALL_NUMBER) THEN
+               NORMG = RESG
+               SET_NORMG = 1
+            ENDIF
          ENDIF
-      ENDIF
 
 ! Call user-defined subroutine to set quantities that need to be updated
 ! every iteration
-      IF (CALL_USR) CALL USR2
+!          IF (CALL_USR) CALL USR2
 
-! Calculate coefficients, excluding density and reactions.
-      CALL CALC_COEFF(flag, 1, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
-         w_g, mu_g, f_gds, drag_bm,  particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)
-      IF (IER_MANAGER()) goto 1000
+! ! Calculate coefficients, excluding density and reactions.
+!          CALL CALC_COEFF(flag, 1, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
+!             w_g, mu_g, f_gds, drag_bm,  particle_phase, particle_state, &
+!             pvol, des_pos_new, des_vel_new, des_radius)
 
+         allocate(U_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+         allocate(V_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
+         allocate(W_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
 
-
-      allocate(U_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
-      allocate(V_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
-      allocate(W_gtmp (istart3:iend3, jstart3:jend3, kstart3:kend3))
-
-      if(momentum_y_eq(0)) U_gtmp = U_g
-      if(momentum_y_eq(0)) V_gtmp = V_g
-      if(momentum_y_eq(0)) W_gtmp = W_g
+         if(momentum_y_eq(0)) U_gtmp = U_g
+         if(momentum_y_eq(0)) V_gtmp = V_g
+         if(momentum_y_eq(0)) W_gtmp = W_g
 
 ! Solve starred velocity components
-      if(momentum_x_eq(0)) then
-         call solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
-         rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g, &
-         f_gds, a_m, b_m, drag_bm, flag, dt, ier)
+         if(momentum_x_eq(0)) then
+            call solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
+               rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g, &
+               f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
-         call solve_lin_eq ('u_g', 3, u_gtmp, a_m, b_m, leq_it(3), &
-            leq_method(3), leq_sweep(3), leq_tol(3),  leq_pc(3), ier)
-      endif
+            call solve_lin_eq ('u_g', 3, u_gtmp, a_m, b_m, leq_it(3), &
+               leq_method(3), leq_sweep(3), leq_tol(3),  leq_pc(3), ier)
+         endif
 
-      if(momentum_y_eq(0)) then
-         call solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
-            rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-            f_gds, a_m, b_m, drag_bm, flag, dt, ier)
+         if(momentum_y_eq(0)) then
+            call solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
+               rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
+               f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
-         call solve_lin_eq ('v_g', 4, v_gtmp, a_m, b_m, leq_it(4), &
-            leq_method(4), leq_sweep(4), leq_tol(4),  leq_pc(4), ier)
-      endif
+            call solve_lin_eq ('v_g', 4, v_gtmp, a_m, b_m, leq_it(4), &
+               leq_method(4), leq_sweep(4), leq_tol(4),  leq_pc(4), ier)
+         endif
 
-      if(momentum_z_eq(0)) then
-         call solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
-            rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-            f_gds, a_m, b_m, drag_bm, flag, dt, ier)
+         if(momentum_z_eq(0)) then
+            call solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
+               rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
+               f_gds, a_m, b_m, drag_bm, flag, dt, ier)
 
-         call solve_lin_eq ('w_g', 5, w_gtmp, a_m, b_m, leq_it(5), &
-            leq_method(5), leq_sweep(5), leq_tol(5), leq_pc(5), ier)
-      endif
+            call solve_lin_eq ('w_g', 5, w_gtmp, a_m, b_m, leq_it(5), &
+               leq_method(5), leq_sweep(5), leq_tol(5), leq_pc(5), ier)
+         endif
 
 ! Now update all velocity components
-      if(momentum_y_eq(0)) U_g = U_gtmp
-      if(momentum_y_eq(0)) V_g = V_gtmp
-      if(momentum_y_eq(0)) W_g = W_gtmp
+         if(momentum_y_eq(0)) U_g = U_gtmp
+         if(momentum_y_eq(0)) V_g = V_gtmp
+         if(momentum_y_eq(0)) W_g = W_gtmp
 
-      deallocate(U_gtmp)
-      deallocate(V_gtmp)
-      deallocate(W_gtmp)
-
+         deallocate(U_gtmp)
+         deallocate(V_gtmp)
+         deallocate(W_gtmp)
 
 ! Calculate densities.
-      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
-      IF (IER_MANAGER()) goto 1000
+         CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
 
 ! Calculate the face values of densities.
-      CALL CONV_ROP(u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
+         CALL CONV_ROP(lo,hi,u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, flag, dt)
 
-      IF (RO_G0 /= ZERO) THEN
+         IF (RO_G0 /= ZERO) THEN
 ! Solve fluid pressure correction equation
-         CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, &
-            pp_g, rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, &
-            dt, NORMG, RESG, IER)
+            CALL solve_pp_g (u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, &
+               pp_g, rop_ge, rop_gn, rop_gt, d_e, d_n, d_t, A_m, b_m, flag, &
+               dt, NORMG, RESG, IER)
 
 ! Solve P_g_prime equation
-         call solve_lin_eq ('pp_g', 1, pp_g, a_m, b_m, leq_it(1), &
-            leq_method(1), leq_sweep(1), leq_tol(1), leq_pc(1), ier)
+            call solve_lin_eq ('pp_g', 1, pp_g, a_m, b_m, leq_it(1), &
+               leq_method(1), leq_sweep(1), leq_tol(1), leq_pc(1), ier)
 
 ! Correct pressure, velocities, and density
-         CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)
+            CALL CORRECT_0 (p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)
 
-      ENDIF
+         ENDIF
 
 ! Recalculate densities.
-      CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
-      IF (IER_MANAGER()) goto 1000
+         CALL PHYSICAL_PROP(IER, 0, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
 
 ! Update wall velocities:
 ! modified by sof to force wall functions so even when NSW or FSW are
 ! declared, default wall BC will still be treated as NSW and no wall
 ! functions will be used
-      CALL SET_WALL_BC (u_g,v_g,w_g, flag)
+         CALL SET_WALL_BC (u_g,v_g,w_g, flag)
 
 ! Calculate the face values of mass fluxes
-      CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
-         flux_ge, flux_gn, flux_gt, flag)
-      CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
-         flux_ge, flux_gn, flux_gt, flag)
-
-! User-defined linear equation solver parameters may be adjusted after
-! the first iteration
-      IF (.NOT.CYCLIC) LEQ_ADJUST = .TRUE.
-
+         CALL CALC_MFLUX (u_g, v_g, w_g, rop_ge, rop_gn, rop_gt, &
+            flux_ge, flux_gn, flux_gt, flag)
+         CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g,&
+            flux_ge, flux_gn, flux_gt, flag)
 
 ! Check for convergence
-      CALL ACCUM_RESID ! Accumulating residuals from all the processors
-      RESG = RESID(RESID_P)
-      CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT,flag)
+         CALL ACCUM_RESID ! Accumulating residuals from all the processors
+         RESG = RESID(RESID_P)
 
-      IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
-         CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, flux_ge, flux_gn, flux_gt, flag)
+         CALL CHECK_CONVERGENCE (NIT, u_g, v_g, w_g, ep_g, 0.0d+0, MUSTIT,flag)
 
-
-!  If not converged continue iterations; else exit subroutine.
- 1000 CONTINUE
-!-----------------------------------------------------------------
+         IF(CYCLIC .AND. (MUSTIT==0 .OR. NIT >= MAX_NIT)) &
+            CALL GoalSeekMassFlux(NIT, MUSTIT, GSMF, delP_MF, lMFlux, &
+            flux_ge, flux_gn, flux_gt, flag)
 
 ! Display residuals
-      CALL DISPLAY_RESID (NIT)
+         CALL DISPLAY_RESID (NIT)
 
-! Determine course of simulation: converge, non-converge, diverge?
+!      enddo
+
+
+
+
       IF (MUSTIT == 0) THEN
-! ---------------------------------------------------------------->>>
-         IF (DT==UNDEFINED .AND. NIT==1) GOTO 50   !Iterations converged
 
-         IF(CYCLIC .AND. GSMF > 0) THEN
-            Write(ERR_MSG,5500) GSMF, delP_MF, lMFlux
-            CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-         ENDIF
+!          IF(CYCLIC .AND. GSMF > 0) THEN
+!             Write(ERR_MSG,5500) GSMF, delP_MF, lMFlux
+!             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+!          ENDIF
 
+! 5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
+!       G12.5, ' Gas Flux=', G12.5)
 
 ! Perform checks and dump to screen every NLOG time steps
-         IF (MOD(NSTEP,NLOG) == 0) THEN
-            CALL CPU_TIME (CPU_NOW)
-            CPUOS = (CPU_NOW - CPU_NLOG)/(TIME - TIME_NLOG)
-            CPU_NLOG = CPU_NOW
-            TIME_NLOG = TIME
-            CPU_NOW = CPU_NOW - CPU0
-
-            WRITE(ERR_MSG,5001) TIME, DT, NIT, 0.0, CPU_NOW
-            CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-
- 5001 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,' NIT=',I3,' Sm=',G12.5, &
-         T84,'CPU=',F8.0,' s')
-
-            IF (.NOT.FULL_LOG) THEN
-               TLEFT = (TSTOP - TIME)*CPUOS
-               CALL GET_TUNIT (TLEFT, TUNIT)
-               IF(DMP_LOG)WRITE (UNIT_LOG, '(46X,A,F9.3,1X,A)')
-            ENDIF
-
-
-5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
-      G12.5, ' Gas Flux=', G12.5)
-
-            IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
-               Vavg = VAVG_G(U_G, EP_G, VOL, flag)
-               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
-               Vavg = VAVG_G(V_G, EP_G, VOL, flag)
-               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
-               Vavg = VAVG_G(W_G, EP_G, VOL, flag)
-               IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
-            ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
-
-         ENDIF   ! end IF (MOD(NSTEP,NLOG) == 0)
+         ! IF (MOD(NSTEP,NLOG) == 0) THEN
+         !    IF (CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z) THEN
+         !       Vavg = VAVG_G(U_G, EP_G, VOL, flag)
+         !       IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'U_g = ', Vavg
+         !       Vavg = VAVG_G(V_G, EP_G, VOL, flag)
+         !       IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'V_g = ',  Vavg
+         !       Vavg = VAVG_G(W_G, EP_G, VOL, flag)
+         !       IF(DMP_LOG)WRITE (UNIT_LOG, 5050) 'W_g = ', Vavg
+         !    ENDIF   ! end if cyclic_x, cyclic_y or cyclic_z
+         ! ENDIF   ! end IF (MOD(NSTEP,NLOG) == 0)
+! 5050 FORMAT(5X,'Average ',A,G12.5)
 
          IER = 0
-         RETURN   ! for if mustit =0 (converged)
 ! end converged: go back to time_march
 ! ----------------------------------------------------------------<<<
 
 ! diverged
-      ELSEIF (MUSTIT==2 .AND. DT/=UNDEFINED) THEN
-! ---------------------------------------------------------------->>>
+      ELSEIF (MUSTIT==2 .AND. DT/=UNDEFINED .or. NIT >= MAX_NIT) THEN
          IF (FULL_LOG) THEN
             WRITE(ERR_MSG,5200) TIME, DT, NIT, 0.0, trim(adjustl(lMsg))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
          ENDIF
-
-         IER = 1
-         RETURN  ! for if mustit =2 (diverged)
-      ENDIF
-! end diverged: go back to time_march, decrease time step, try again
-! ----------------------------------------------------------------<<<
-
-! not converged (mustit = 1, !=0,2 )
-! ---------------------------------------------------------------->>>
-      IF(NIT < MAX_NIT) THEN
-         MUSTIT = 0
-         GOTO 50
-      ENDIF ! continue iterate
-! ----------------------------------------------------------------<<<
-
-      WRITE(ERR_MSG, 5100) TIME, DT, NIT, 0.0
-      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-
-! SOF: MFIX will not go the next time step if MAX_NIT is reached,
-! instead it will decrease the time step. (IER changed from 0 to 1)
-      IER = 1
-      RETURN
-
- 5050 FORMAT(5X,'Average ',A,G12.5)
- 5100 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,&
-         ' NIT>',I3,' Sm= ',G12.5, 'MbErr%=', G11.4)
  5200 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,' NIT=',&
       I3,'MbErr%=', G11.4, ': ',A,' :-(')
 
-      contains
-
-!----------------------------------------------------------------------!
-! Function: IER_Manager                                                !
-!                                                                      !
-! Purpose: Identify and account for errors from called subroutines.    !
-!          Returns .TRUE. for lErr >= 100, otherwise .FALSE.           !
-!                                                                      !
-! Reserved Error Blocks:                                               !
-!                                                                      !
-! [ 100,  109]: PHYSICAL_PROP                                          !
-!                                                                      !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION IER_MANAGER()
-
-! Default case: do nothing.
-      IF(IER < 100) THEN
-         IER_MANAGER = .FALSE.
-         return
-      ENDIF
-
-! Errors with an index greater than 100 will force an exit from iterate
-! and in turn, reduce the step-size, and restart the time-step.
-      IER_MANAGER = .TRUE.
-      MUSTIT = 2
-
-! Errors reported from PHYSICAL_PROP
-!```````````````````````````````````````````````````````````````````````
-      IF(IER <  110) THEN
-         IF(IER ==  100) THEN
-            lMsg = 'Negative gas density detected'
-         ELSEIF(IER ==  101) THEN
-            lMsg = 'Negative solids density detected'
-         ELSE
-            lMsg = 'UCE in PHYSICAL_PROP'
-         ENDIF
-
-
-! Unclassified Errors
-!```````````````````````````````````````````````````````````````````````
-      ELSE
-         lMsg = 'Run diverged/stalled with UCE'
+         IER = 1
       ENDIF
 
 
-      IF(DT == UNDEFINED) IER_MANAGER = .FALSE.
+ 5100 FORMAT(1X,'t=',F11.4,' Dt=',G11.4,&
+         ' NIT>',I3,' Sm= ',G12.5, 'MbErr%=', G11.4)
 
-      return
-      END FUNCTION IER_MANAGER
+
+      RETURN
 
       END SUBROUTINE ITERATE
 

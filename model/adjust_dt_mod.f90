@@ -127,19 +127,6 @@ contains
             WRITE(ERR_MSG,"(3X,'Recovered: Dt=',G12.5,' :-)')") DT
             call flush_err_msg(header=.false., footer=.false.)
 
-!             ep_g = ep_go
-!             p_g =  p_go
-!             ro_g = ro_go
-!             rop_g = rop_go
-!             U_g =  U_go
-!             V_g =  V_go
-!             W_g =  W_go
-
-! ! Recalculate all coefficients
-!             CALL CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
-!                mu_g, f_gds, drag_bm,  particle_phase,  &
-!                particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-!                flag)
 ! Iterate again with new dt
             adjustdt = 1
 
