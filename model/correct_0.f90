@@ -3,44 +3,38 @@ MODULE CORRECT_0_MODULE
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CORRECT_0                                               C
+!  Author: M. Syamlal                                 Date: 24-JUN-96  C
+!                                                                      C
 !  Purpose: Correct the fluid pressure and gas velocities              C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 24-JUN-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)
+      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)&
+         bind(C, name="correct0")
 
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, jnorth, ktop
       USE ur_facs  , only: ur_fac
+      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      real(c_double), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: pp_g&
+      real(c_double), intent(in   ) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_e&
+      real(c_double), intent(in   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_n&
+      real(c_double), intent(in   ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_t&
+      real(c_double), intent(in   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
 

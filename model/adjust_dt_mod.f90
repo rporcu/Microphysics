@@ -4,13 +4,13 @@ contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Module name: ADJUST_DT(IER, NIT)                                    !
+!  Module name: ADJUST_DT                                              !
 !  Author: M. Syamlal                                 Date: FEB-10-97  !
 !                                                                      !
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   integer function adjustdt (ier, nit, dt) &
+   integer function adjustdt (converged, nit, dt) &
       bind(C, name="mfix_adjustdt")
 
       use iso_c_binding, only: c_double, c_int
@@ -43,9 +43,9 @@ contains
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! integer flag: 0=good, 100=initialize, otherwise bad.
-      integer(c_int), intent(inout) :: ier
+      integer(c_int), intent(in   ) :: converged
 ! number of iterations for current time step
-      integer(c_int), intent(in) :: nit
+      integer(c_int), intent(in   ) :: nit
 ! fluid solver time-step size
       real(c_double), intent(inout) :: dt
 
@@ -71,7 +71,7 @@ contains
 
 ! Iterate successfully converged.
 !---------------------------------------------------------------------//
-      if(ier == 0) then
+      if(converged == 1) then
 
 ! Calculate a new DT every STEPS_MIN time steps.
          if(steps_tot >= steps_min) then
@@ -102,9 +102,6 @@ contains
 ! Iterate failed to converge.
 !---------------------------------------------------------------------//
       else
-
-! Clear the error flag.
-         IER = 0
 
 ! Reset counters.
          steps_tot = 0

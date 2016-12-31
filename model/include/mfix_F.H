@@ -4,10 +4,13 @@ extern "C"
 {
   void mfix_add_argument(char* fname, int* nlen);
 
-  void mfix_get_data(int* imax, int* jmax, int* kmax, int* fluid, int* dem,
+  void mfix_get_data(int* imax, int* jmax, int* kmax,
+                     int* fluid, int* mom_x, int* mom_y, int* mom_z,
+                     int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
                      Real* tstop, Real* time, int* max_nit,
-                     Real* normg, int* set_normg);
+                     Real* normg, int* set_normg,
+                     int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf);
 
   void mfix_set_domain(int* flag);
 
@@ -123,6 +126,61 @@ extern "C"
          Real* pvol, Real* des_pos_new,
          Real* des_vel_new, Real* des_radius);
 
+  void physical_prop(int* level, Real* ro_g, Real* p_g,
+         Real* ep_g, Real* rop_g, int* flag);
+
+  void solve_u_g_star(
+          Real* u_g,      Real* v_g,      Real* w_g,
+          Real* u_go,     Real* p_g,      Real* ro_g,
+          Real* rop_g,    Real* rop_go,   Real* ep_g,
+          Real* tau_u_g,  Real* d_e,
+          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* mu_g,     Real* f_gds,
+          Real* A_m,      Real* b_m,      Real* drag_bm,
+          int* flag,     Real* dt);
+
+  void solve_v_g_star(
+          Real* u_g,      Real* v_g,      Real* w_g,
+          Real* v_go,     Real* p_g,      Real* ro_g,
+          Real* rop_g,    Real* rop_go,   Real* ep_g,
+          Real* tau_v_g,  Real* d_n,
+          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* mu_g,     Real* f_gds,
+          Real* A_m,      Real* b_m,      Real* drag_bm,
+          int* flag,     Real* dt);
+
+  void solve_w_g_star(
+          Real* u_g,      Real* v_g,      Real* w_g,
+          Real* w_go,     Real* p_g,      Real* ro_g,
+          Real* rop_g,    Real* rop_go,   Real* ep_g,
+          Real* tau_w_g,  Real* d_t,
+          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* mu_g,     Real* f_gds,
+          Real* A_m,      Real* b_m,      Real* drag_bm,
+          int*  flag,     Real* dt);
+
+
+  void solve_pp_g(
+          Real* u_g,      Real* v_g,      Real* w_g,
+          Real* p_g,      Real* ep_g,
+          Real* rop_g,    Real* rop_go,
+          Real* ro_g,     Real* pp_g,
+          Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
+          Real* d_e,      Real* d_n,      Real* d_t,
+          Real* A_m,      Real* b_m,
+          int*  flag,     Real* dt,
+          Real* lnormg,   Real* resg);
+
+  void correct0(
+          Real* p_g,      Real* pp_g,
+          Real* u_g,      Real* v_g,      Real* w_g,
+          Real* d_e,      Real* d_n,      Real* d_t,
+          int*  flag);
+
+  void set_wall_bc(
+          Real* u_g,      Real* v_g,      Real* w_g,
+          int*  flag);
+
   void mfix_iterate(
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* u_go,           Real* v_go,           Real* w_go,
@@ -145,6 +203,12 @@ extern "C"
          Real* delP_MF, Real* lMFlux, Real* resg,
          Real* lnormg, int* lset_normg);
 
+  void display_resid(int* nit);
+
+  int check_convergence(int* nit);
+
+  int goal_seek_mFlux(int*nit, int* gsmf, Real* delP_MF, Real* lMFlux,
+              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag);
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
@@ -170,4 +234,5 @@ extern "C"
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);
 
+  void mfix_solve_lin_eq(int* vno, Real* var, Real* A_m, Real* b_m);
 }

@@ -6,14 +6,16 @@
 !  Purpose: Display residuals                                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DISPLAY_RESID(NIT)
+      SUBROUTINE DISPLAY_RESID(NIT)&
+         bind(C, name="display_resid")
 
-      USE residual, only: GROUP_RESID
+      use residual, only: group_resid
+      use iso_c_binding, only: c_int
 
       IMPLICIT NONE
 
 ! iteration number
-      INTEGER, INTENT(IN) :: NIT
+      integer(c_int), intent(in) :: nit
 
 ! Print Location of Max_Resid
 !      LOGICAL,PARAMETER:: Print_ijk=.FALSE.

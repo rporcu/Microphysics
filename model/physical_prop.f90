@@ -28,7 +28,8 @@ MODULE PHYSICAL_PROP_MODULE
 !  Local variables: None                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PHYSICAL_PROP(IER, LEVEL, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
+      SUBROUTINE PHYSICAL_PROP(LEVEL, ro_g, p_g, ep_g, rop_g, flag)&
+        bind(C, name="physical_prop")
 
       use funits, only: unit_log
       use param1, only: is_undefined, zero
@@ -36,26 +37,27 @@ MODULE PHYSICAL_PROP_MODULE
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE compar, only: myPE, PE_IO, numPEs
       USE exit_mod, only: mfix_exit
+      use fld_const, only: ro_g0
+      use iso_c_binding, only: c_double, c_int
 
       implicit none
-
-      double precision, intent(inout) ::  ro_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(out) :: rop_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in) ::   p_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in) ::  ep_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) :: ro_g0
-      integer, intent(in   ) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Dummy arguments
 !-----------------------------------------------------------------------
 ! Global error Flag.
-      INTEGER, intent(inout) :: IER
-      INTEGER, intent(in) :: LEVEL
+      integer(c_int), intent(in   ) :: level
+
+      real(c_double), intent(inout) :: ro_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(  out) :: rop_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: p_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(in   ) :: ep_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      integer(c_int), intent(in   ) :: flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
 ! Local variables
 !-----------------------------------------------------------------------
@@ -66,6 +68,7 @@ MODULE PHYSICAL_PROP_MODULE
 ! 900 - Invalid temperature in calc_CpoR
       INTEGER :: Err_l(0:numPEs-1)  ! local
       INTEGER :: Err_g(0:numPEs-1)  ! global
+      INTEGER :: IER
 
 ! Initialize error flags.
       Err_l = 0
@@ -73,7 +76,8 @@ MODULE PHYSICAL_PROP_MODULE
 ! Calculate density only. This is invoked several times within iterate,
 ! making it the most frequently called.
       if(LEVEL == 0) then
-         if(IS_UNDEFINED(RO_G0)) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
+         if(IS_UNDEFINED(RO_G0)) &
+            CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
 
 ! Calculate everything except density. This is called at the start of
 ! each iteration.
@@ -83,7 +87,8 @@ MODULE PHYSICAL_PROP_MODULE
 ! the initialization (before starting the time march) and at the start
 ! of each step step thereafter.
       elseif(LEVEL == 2) then
-         if(IS_UNDEFINED(RO_G0)) CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
+         if(IS_UNDEFINED(RO_G0)) &
+            CALL PHYSICAL_PROP_ROg(ro_g, p_g, ep_g, rop_g, flag)
       endif
 
 
@@ -99,13 +104,13 @@ MODULE PHYSICAL_PROP_MODULE
 !-----------------------------------------------------------------------
 ! An invalid temperature was found by calc_CpoR. This is a fatal run-
 ! time error and forces a call to MFIX_EXIT.
-      IF(IER == 901 .OR. IER == 902) then
+      !IF(IER == 901 .OR. IER == 902) then
          if(myPE == PE_IO) then
             write(*,2000) IER
             write(UNIT_LOG,2000) IER
          endif
          CALL MFIX_EXIT(myPE)
-      ENDIF
+      !ENDIF
 
       return
 

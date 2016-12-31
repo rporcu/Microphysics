@@ -6,8 +6,8 @@
 !  Purpose: Set wall boundary conditions                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g, flag)
+      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g, flag)&
+         bind(C, name="set_wall_bc")
 
 !-----------------------------------------------
 ! Modules
@@ -15,16 +15,17 @@
       USE bc, only: bc_defined, bc_type, dimension_bc
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
+      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 !-----------------------------------------------
 ! Dummy arguments

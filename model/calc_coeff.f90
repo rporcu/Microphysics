@@ -165,7 +165,7 @@ module calc_coeff_module
       integer IER
 
 ! Calculate physical properties: (density, specific heat, diameter)
-      CALL PHYSICAL_PROP(IER, pLevel, ro_g, p_g, ep_g, rop_g, ro_g0, flag)
+      CALL PHYSICAL_PROP(pLevel, ro_g, p_g, ep_g, rop_g, flag)
 
 ! Calculate interphase coeffs: (momentum and energy)
       IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &

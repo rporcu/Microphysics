@@ -32,7 +32,6 @@ project(MFIXEXA)
 set(CXX_sources model/main.cpp  )
 set(CXX_includes model/include/mfix_F.H)
 set(F90_sources
-  model/accum_resid.f90
   model/adjust_a_g.f90
   model/adjust_dt_mod.f90
   model/adjust_leq.f90
@@ -127,6 +126,7 @@ set(F90_sources
   model/get_data.f90
   model/get_ps.f90
   model/get_tunit.f90
+  model/goal_seek_mflux.f90
   model/ic_mod.f90
   model/init_namelist.f90
   model/io/funits_mod.f90
@@ -153,7 +153,6 @@ set(F90_sources
   model/io/write_res0.f90
   model/io/write_res1.f90
   model/io/write_table.f90
-  model/iterate.f90
   model/location_check.f90
   model/machine_mod.f90
   model/matrix_mod.f90

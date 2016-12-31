@@ -11,7 +11,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -50,8 +50,6 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-! Error index
-      INTEGER, INTENT(INOUT) :: IER
 
 
 ! Local Variables:
@@ -59,9 +57,6 @@ MODULE GAS_DRAG_MODULE
 ! Grid cell indices
       INTEGER :: I, J, K
 !......................................................................!
-
-! Initialize error flag.
-      IER = 0
 
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
@@ -98,7 +93,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag)
 
 
 ! Global Variables:
@@ -137,8 +132,6 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-! Error index
-      INTEGER, INTENT(INOUT) :: IER
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -146,8 +139,6 @@ MODULE GAS_DRAG_MODULE
       INTEGER :: I, J, K
 !......................................................................!
 
-! Initialize error flag.
-      IER = 0
 
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
@@ -178,7 +169,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag, IER)
+      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -212,8 +203,6 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-! Error index
-      INTEGER, INTENT(INOUT) :: IER
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -221,8 +210,6 @@ MODULE GAS_DRAG_MODULE
       INTEGER :: I, J, K
 !......................................................................!
 
-! Initialize error flag.
-      IER = 0
 
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN

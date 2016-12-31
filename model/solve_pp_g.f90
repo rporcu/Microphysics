@@ -10,7 +10,8 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
-      flag, dt, normg, resg, ier)
+      flag, dt, normg, resg)&
+      bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
       use matrix  , only: init_ab_m
@@ -29,59 +30,58 @@ module solve_pp_module
       use residual, only: i_resid, j_resid, k_resid
 ! parameters, 0.0 and 1.0
       use param1, only: zero, one
+      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      double precision, intent(in   ) :: u_g&
+      real(c_double), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_double), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_double), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: p_g&
+      real(c_double), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ep_g&
+      real(c_double), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(  out) :: pp_g&
+      real(c_double), intent(  out) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_g&
+      real(c_double), intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_go&
+      real(c_double), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_double), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_ge&
+      real(c_double), intent(in   ) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_gn&
+      real(c_double), intent(in   ) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_gt&
+      real(c_double), intent(in   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: d_e&
+      real(c_double), intent(in   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: d_n&
+      real(c_double), intent(in   ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: d_t&
+      real(c_double), intent(in   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(  out) :: a_m&
+      real(c_double), intent(  out) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      double precision, intent(  out) :: b_m&
+      real(c_double), intent(  out) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer         , intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      double precision, intent(in   ) :: dt
+      real(c_double), intent(in   ) :: dt
 
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
 ! normalized) or a user defined value given by norm_g.  If norm_g
 ! was set to zero then the normalization is based on dominate
 ! term in the equation
-      double precision, intent(in) :: normg
+      real(c_double), intent(in) :: normg
 ! gas pressure correction residual
-      double precision, intent(out) :: resg
-! error index
-      integer, intent(inout) :: ier
+      real(c_double), intent(out) :: resg
 
 ! Local parameters ...................................................//
 ! Parameter to make tolerance for residual scaled with max value
@@ -92,6 +92,8 @@ module solve_pp_module
       DOUBLE PRECISION :: NORMGloc
 ! dominate term in correction equation max(am,bm)
       DOUBLE PRECISION, allocatable :: B_MMAX(:,:,:)
+! error index
+      integer :: ier
 !.....................................................................//
 
       ALLOCATE(B_MMAX(istart3:iend3, jstart3:jend3, kstart3:kend3))

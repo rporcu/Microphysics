@@ -37,8 +37,6 @@
       DOUBLE PRECISION :: NUM_RESID(NRESID)
 ! Residual Denominator
       DOUBLE PRECISION :: DEN_RESID(NRESID)
-! Residual Packing for Global Operations
-      DOUBLE PRECISION :: RESID_PACK(2*NRESID)
 
 ! (i,j,k) location of maximum residual
       integer :: i_resid(nresid)

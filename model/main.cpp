@@ -24,14 +24,22 @@ int main (int argc, char* argv[])
   // Size of the entire domain
   int imax,jmax,kmax;
   int max_nit;
-  int steady_state, solve_fluid, solve_dem;
+  int solve_fluid, momentum_x, momentum_y, momentum_z;
+  int solve_dem;
+  int steady_state;
   Real dt, dt_min, dt_max, tstop, time;
   int nstep=0;  // Number of time steps
   Real normg;
   int set_normg;
-  mfix_get_data(&imax, &jmax, &kmax, &solve_fluid, &solve_dem, &steady_state,
-                &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
-                &normg, &set_normg);
+  int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
+  mfix_get_data(
+    &imax, &jmax, &kmax,
+    &solve_fluid, &momentum_x, &momentum_y, &momentum_z,
+    &solve_dem,
+    &steady_state,
+    &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
+    &normg, &set_normg,
+    &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf);
 
   IntVect dom_lo(IntVect(D_DECL(0,0,0)));
   IntVect dom_hi(IntVect(D_DECL(imax-1, jmax-1, kmax-1)));
@@ -123,18 +131,21 @@ int main (int argc, char* argv[])
   // X-axis gas velocity
   MultiFab u_g (ba,1,nghost);
   MultiFab u_go(ba,1,nghost);
+  MultiFab u_gt(ba,1,nghost);
   u_g.setVal(0.);
   u_go.setVal(0.);
 
   // Y-axis gas velocity
   MultiFab v_g (ba,1,nghost);
   MultiFab v_go(ba,1,nghost);
+  MultiFab v_gt(ba,1,nghost);
   v_g.setVal(0.);
   v_go.setVal(0.);
 
   // Z-axis gas velocity
   MultiFab w_g (ba,1,nghost);
   MultiFab w_go(ba,1,nghost);
+  MultiFab w_gt(ba,1,nghost);
   w_g.setVal(0.);
   w_go.setVal(0.);
 
@@ -301,7 +312,6 @@ int main (int argc, char* argv[])
       // Loop over iterate for auto time-step size adjustment
       int reiterate;
       do {
-        int ier=0;
         prev_dt = dt;
 
         // Calculate bulk density (epg*ro_g) at cell faces
@@ -333,7 +343,7 @@ int main (int argc, char* argv[])
             flag[mfi].dataPtr());
 
 
-        int mustit=1;       // flag to iterate
+        int converged=0;
         int nit=0;          // number of iterations
         int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
         Real delP_MF=0.0L;  // actual GSMF pressure drop
@@ -345,6 +355,7 @@ int main (int argc, char* argv[])
 
         ///////////////// ---- call to iterate -------- /////////////////
         do {
+          nit++;
 
           // User hooks
           for (MFIter mfi(flag); mfi.isValid(); ++mfi)
@@ -363,29 +374,163 @@ int main (int argc, char* argv[])
               pvol.dataPtr(), des_pos_new.dataPtr(),
               des_vel_new.dataPtr(), des_radius.dataPtr());
 
+          // Solve U-Momentum equation
+          if(momentum_x==1){
+            MultiFab::Copy(u_gt, u_g, 0, 0, 1, nghost);
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              solve_u_g_star(
+                u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+                u_go[mfi].dataPtr(),     p_g[mfi].dataPtr(),      ro_g[mfi].dataPtr(),
+                rop_g[mfi].dataPtr(),    rop_go[mfi].dataPtr(),   ep_g[mfi].dataPtr(),
+                tau_u_g[mfi].dataPtr(),  d_e[mfi].dataPtr(),
+                flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
+                mu_g[mfi].dataPtr(),     f_gds[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),      drag_bm[mfi].dataPtr(),
+                flag[mfi].dataPtr(),     &dt);
+
+            int eq_id=3;
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, u_gt[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
+          }
+
+          // Solve V-Momentum equation
+          if(momentum_y==1){
+            MultiFab::Copy(v_gt, v_g, 0, 0, 1, nghost);
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              solve_v_g_star(
+                u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+                v_go[mfi].dataPtr(),     p_g[mfi].dataPtr(),      ro_g[mfi].dataPtr(),
+                rop_g[mfi].dataPtr(),    rop_go[mfi].dataPtr(),   ep_g[mfi].dataPtr(),
+                tau_v_g[mfi].dataPtr(),  d_n[mfi].dataPtr(),
+                flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
+                mu_g[mfi].dataPtr(),     f_gds[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),      drag_bm[mfi].dataPtr(),
+                flag[mfi].dataPtr(),     &dt);
+
+            int eq_id=4;
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, v_gt[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
+          }
+
+          // Solve W-Momentum equation
+          if(momentum_z==1){
+            MultiFab::Copy(w_gt, w_g, 0, 0, 1, nghost);
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              solve_w_g_star(
+                u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+                w_go[mfi].dataPtr(),     p_g[mfi].dataPtr(),      ro_g[mfi].dataPtr(),
+                rop_g[mfi].dataPtr(),    rop_go[mfi].dataPtr(),   ep_g[mfi].dataPtr(),
+                tau_w_g[mfi].dataPtr(),  d_t[mfi].dataPtr(),
+                flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
+                mu_g[mfi].dataPtr(),     f_gds[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),      drag_bm[mfi].dataPtr(),
+                flag[mfi].dataPtr(),     &dt);
+
+            int eq_id=5;
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, w_gt[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
+          }
+
+          if(momentum_x==1) MultiFab::Copy(u_g, u_gt, 0, 0, 1, nghost);
+          if(momentum_y==1) MultiFab::Copy(v_g, v_gt, 0, 0, 1, nghost);
+          if(momentum_z==1) MultiFab::Copy(w_g, w_gt, 0, 0, 1, nghost);
+
+          // Calculate transport coefficients
+          level=0;
           for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-            mfix_iterate(
+            physical_prop(&level,
+              ro_g[mfi].dataPtr(), p_g[mfi].dataPtr(),
+              ep_g[mfi].dataPtr(), rop_g[mfi].dataPtr(),
+              flag[mfi].dataPtr());
+
+          // Calculate bulk density (epg*ro_g) at cell faces
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi){
+            const Box& bx=mfi.validbox();
+            conv_rop(bx.loVect(), bx.hiVect(),
               u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
-              u_go[mfi].dataPtr(),     v_go[mfi].dataPtr(),     w_go[mfi].dataPtr(),
-              p_g[mfi].dataPtr(),      pp_g[mfi].dataPtr(),
-              ep_g[mfi].dataPtr(),     ro_g[mfi].dataPtr(),
+              rop_g[mfi].dataPtr(),
+              rop_gE[mfi].dataPtr(),   rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
+              flag[mfi].dataPtr(),     &dt);
+          }
+
+          // Solve the pressure correction equation
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            solve_pp_g(
+              u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+              p_g[mfi].dataPtr(),      ep_g[mfi].dataPtr(),
               rop_g[mfi].dataPtr(),    rop_go[mfi].dataPtr(),
+              ro_g[mfi].dataPtr(),     pp_g[mfi].dataPtr(),
               rop_gE[mfi].dataPtr(),   rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
               d_e[mfi].dataPtr(),      d_n[mfi].dataPtr(),      d_t[mfi].dataPtr(),
+              A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),
+              flag[mfi].dataPtr(),     &dt,
+              &lnormg,                 &resg);
+
+            int eq_id=1;
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id,  pp_g[mfi].dataPtr(),
+                A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
+
+          // Correct fluid pressure and velocities
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            correct0(
+              p_g[mfi].dataPtr(),      pp_g[mfi].dataPtr(),
+              u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+              d_e[mfi].dataPtr(),      d_n[mfi].dataPtr(),      d_t[mfi].dataPtr(),
+              flag[mfi].dataPtr());
+
+          // Update fluid density
+          level=0;
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            physical_prop(&level,
+              ro_g[mfi].dataPtr(), p_g[mfi].dataPtr(),
+              ep_g[mfi].dataPtr(), rop_g[mfi].dataPtr(),
+              flag[mfi].dataPtr());
+
+          // Update wall velocities
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            set_wall_bc(
+              u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+              flag[mfi].dataPtr());
+
+          // Calculate face mass fluxes
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            calc_mflux(
+              u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+              rop_gE[mfi].dataPtr(),   rop_gN[mfi].dataPtr(),   rop_gT[mfi].dataPtr(),
               flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
-              mu_g[mfi].dataPtr(),     f_gds[mfi].dataPtr(),
-              A_m[mfi].dataPtr(),      b_m[mfi].dataPtr(),      drag_bm[mfi].dataPtr(),
-              tau_u_g[mfi].dataPtr(),  tau_v_g[mfi].dataPtr(),  tau_w_g[mfi].dataPtr(),
-              particle_phase.dataPtr(),particle_state.dataPtr(),
-              pvol.dataPtr(),          des_radius.dataPtr(),
-              des_pos_new.dataPtr(),   des_vel_new.dataPtr(),
-              flag[mfi].dataPtr(),
-              &time, &dt, &nstep, &ier,   &nit,
-              &mustit, &gsmf, &delP_MF, &lMFlux, &resg, &lnormg, &lset_normg);
-        } while(mustit==1 && nit<max_nit && ier==0);
+              flag[mfi].dataPtr());
+
+          // Update boundary conditions
+          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            set_bc1(
+              &time,                   &dt,
+              p_g[mfi].dataPtr(),      ep_g[mfi].dataPtr(),
+              ro_g[mfi].dataPtr(),     rop_g[mfi].dataPtr(),
+              u_g[mfi].dataPtr(),      v_g[mfi].dataPtr(),      w_g[mfi].dataPtr(),
+              flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
+              flag[mfi].dataPtr());
+
+          // Display current iteration residuals
+          display_resid(&nit);
+
+          // Check for convergence
+          converged = check_convergence(&nit);
+
+          // Iterate over cyclic mass flux bc
+          if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
+            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+              converged = goal_seek_mFlux(&nit, &gsmf, &delP_MF, &lMFlux,
+                flux_gE[mfi].dataPtr(),  flux_gN[mfi].dataPtr(),  flux_gT[mfi].dataPtr(),
+                flag[mfi].dataPtr());
+
+        } while(converged==0 && nit<max_nit);
 
         // Adjust time step if iteration failed.
-        reiterate = mfix_adjustdt(&ier, &nit, &dt);
+        reiterate = mfix_adjustdt(&converged, &nit, &dt);
         if(reiterate == 1) {
 
           // Reset the field variables
