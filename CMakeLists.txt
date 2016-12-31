@@ -22,6 +22,7 @@ find_package(CCSE REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CCSE_INCLUDE_DIR})
+include_directories(model)
 include_directories(model/include)
 link_directories(${CCSE_LIBRARY_DIR})
 
@@ -29,8 +30,12 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRE
 
 project(MFIXEXA)
 
-set(CXX_sources model/main.cpp  )
-set(CXX_includes model/include/mfix_F.H)
+set(CXX_sources 
+  model/main.cpp  
+  model/mfix_level.cpp  )
+set(CXX_includes 
+  model/mfix_level.H    
+  model/include/mfix_F.H) 
 set(F90_sources
   model/adjust_a_g.f90
   model/adjust_dt_mod.f90
