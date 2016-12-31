@@ -21,7 +21,6 @@ module v_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: momentum_y_eq
       USE run, only: discretize
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
@@ -55,8 +54,6 @@ module v_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
-
-      IF (.NOT.MOMENTUM_Y_EQ(0)) RETURN
 
 ! DO NOT USE DEFERRED CORRECTION TO SOLVE V_G
       IF (DISCRETIZE(4) == 0) THEN               ! 0 & 1 => FOUP

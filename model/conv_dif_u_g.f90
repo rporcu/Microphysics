@@ -22,7 +22,6 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: momentum_x_eq
       USE run, only: discretize
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
@@ -55,8 +54,6 @@ module u_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
-
-      IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
 
       IF (DISCRETIZE(3) == 0) THEN
          CALL STORE_A_U_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt, flag)

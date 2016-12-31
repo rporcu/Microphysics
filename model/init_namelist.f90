@@ -124,42 +124,6 @@ MODULE INIT_NAMELIST_MODULE
       DT_FAC = 0.9D0
 !</keyword>
 
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Flag to enable/disable solving the X-momentum equations.
-!  </description>
-!  <arg index="1" id="Phase" min="0" max="DIM_M"/>
-!  <valid value=".TRUE." note="Solve X-momentum equations."/>
-!  <valid value=".FALSE." note="The X velocity initial conditions
-!   persist throughout the simulation."/>
-      MOMENTUM_X_EQ(:DIM_M) = .TRUE.
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Flag to enable/disable solving the Y-momentum equations.
-! </description>
-!  <arg index="1" id="Phase" min="0" max="DIM_M"/>
-!  <valid value=".TRUE." note="Solve Y-momentum equations."/>
-!  <valid value=".FALSE." note="The Y velocity initial conditions
-!   persist throughout the simulation."/>
-      MOMENTUM_Y_EQ(:DIM_M) = .TRUE.
-!</keyword>
-
-!<keyword category="Run Control" required="false">
-!  <description>
-!    Flag to enable/disable solving the Z-momentum equations.
-!  </description>
-!  <arg index="1" id="Phase" min="0" max="DIM_M"/>
-!  <valid value=".TRUE." note="Solve Z-momentum equations."/>
-!  <valid value=".FALSE." note="The Z velocity initial conditions
-!   persist throughout the simulation."/>
-      MOMENTUM_Z_EQ(:DIM_M) = .TRUE.
-!</keyword>
-
-
-
 !<keyword category="Run Control" required="false">
 !  <description>
 !     Available gas-solids drag models.

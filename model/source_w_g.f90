@@ -49,7 +49,6 @@ module source_w_g_module
       use matrix, only: e, w, s, n, t, b
 
       USE param1, only: zero, one
-      USE run, only: momentum_z_eq
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
 
@@ -108,8 +107,6 @@ module source_w_g_module
       odt = 1.0d0/dt
 ! Set reference phase to gas
       M = 0
-
-      IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

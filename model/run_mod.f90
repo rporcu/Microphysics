@@ -47,15 +47,6 @@
 ! Discretization scheme for different equations
       INTEGER :: DISCRETIZE(DIM_EQS)
 
-! If .TRUE. solve X momentum equations
-      LOGICAL :: MOMENTUM_X_EQ(0:DIM_M)
-
-! If .TRUE. solve Y momentum equations
-      LOGICAL :: MOMENTUM_Y_EQ(0:DIM_M)
-
-! If .TRUE. solve Z momentum equations
-      LOGICAL :: MOMENTUM_Z_EQ(0:DIM_M)
-
 ! If .TRUE. call user-defined subroutines
       LOGICAL :: CALL_USR
 

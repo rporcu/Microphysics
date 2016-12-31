@@ -15,14 +15,13 @@ contains
 !                                                                          !
 !**************************************************************************!
   subroutine mfix_get_data(imax_to_c, jmax_to_c, kmax_to_c, fluid, &
-     mom_x, mom_y, mom_z, dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
+     dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
      time, max_nitC, normg, set_normg, &
      cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf) &
      bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
     use geometry, only: imax, jmax, kmax
-    use run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
     use run, only: dem_solids
     use run, only: dt_min, dt_max, tstop
     use param1, only: is_undefined
@@ -36,7 +35,7 @@ contains
     implicit none
 
     integer, intent(out) :: imax_to_c, jmax_to_c, kmax_to_c
-    integer, intent(out) :: fluid, mom_x, mom_y, mom_z
+    integer, intent(out) :: fluid
     integer, intent(out) :: dem
     integer, intent(out) :: steady_state
     double precision, intent(out) :: dt_minC, dt_maxC, tstopC
@@ -54,9 +53,6 @@ contains
 
 ! Flags for fluid setup
     fluid =  merge(1,0,ro_g0 /= 0.0d0)
-    mom_x = merge(1,0,momentum_x_eq(0))
-    mom_y = merge(1,0,momentum_y_eq(0))
-    mom_z = merge(1,0,momentum_z_eq(0))
 
     dem   =  merge(1,0,dem_solids)
 

@@ -5,8 +5,7 @@ extern "C"
   void mfix_add_argument(char* fname, int* nlen);
 
   void mfix_get_data(int* imax, int* jmax, int* kmax,
-                     int* fluid, int* mom_x, int* mom_y, int* mom_z,
-                     int* dem,
+                     int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
                      Real* tstop, Real* time, int* max_nit,
                      Real* normg, int* set_normg,

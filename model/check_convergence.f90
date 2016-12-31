@@ -17,7 +17,7 @@ MODULE CHECK_CONVERGENCE_MODULE
       use residual, only: resid_p, resid_u, resid_v, resid_w
       USE residual, only: resid, resid_index, resid_string, resid_x
       use residual, only: sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
-      USE run, only: detect_stall, momentum_x_eq, momentum_y_eq, momentum_z_eq
+      USE run, only: detect_stall
       USE toleranc, only: tol_resid, tol_diverge
       USE utilities, ONLY: check_vel_bound
       use iso_c_binding, only: c_double, c_int

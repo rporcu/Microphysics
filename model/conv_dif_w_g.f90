@@ -21,7 +21,6 @@ module w_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: momentum_z_eq
       USE run, only: discretize
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
@@ -54,8 +53,6 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       double precision, intent(in   ) :: dt
 !---------------------------------------------------------------------//
-
-      IF (.NOT.MOMENTUM_Z_EQ(0)) RETURN
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
          CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt, flag)

@@ -40,7 +40,6 @@ MODULE WRITE_OUT0_MODULE
       USE param1, only: half, undefined, zero, is_defined
       USE constant, only: mmax, ro_s0, d_p0
       USE run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
-      USE run, only: momentum_x_eq, momentum_y_eq, momentum_z_eq
       USE run, only: units, discretize, solids_model
       USE scales, only: p_scale, p_ref
       USE toleranc, only: tol_com, zero_ep_s
@@ -109,21 +108,11 @@ MODULE WRITE_OUT0_MODULE
       ELSE IF (RUN_TYPE == 'RESTART_1') THEN
          WRITE (UNIT_OUT, 1139)
       ENDIF
-      IF (MOMENTUM_X_EQ(0)) THEN
-         WRITE (UNIT_OUT, 1140) 'X', ' '
-      ELSE
-         WRITE (UNIT_OUT, 1140) 'X', ' NOT '
-      ENDIF
-      IF (MOMENTUM_Y_EQ(0)) THEN
-         WRITE (UNIT_OUT, 1140) 'Y', ' '
-      ELSE
-         WRITE (UNIT_OUT, 1140) 'Y', ' NOT '
-      ENDIF
-      IF (MOMENTUM_Z_EQ(0)) THEN
-         WRITE (UNIT_OUT, 1140) 'Z', ' '
-      ELSE
-         WRITE (UNIT_OUT, 1140) 'Z', ' NOT '
-      ENDIF
+
+      WRITE (UNIT_OUT, 1140) 'X', ' '
+      WRITE (UNIT_OUT, 1140) 'Y', ' '
+      WRITE (UNIT_OUT, 1140) 'Z', ' '
+
       IF (CALL_USR) THEN
          WRITE (UNIT_OUT, 1149) ' '
       ELSE

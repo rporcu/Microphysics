@@ -46,7 +46,6 @@ module source_u_g_module
 
       use matrix, only: e, w, s, n, t, b
 
-      USE run, only: momentum_x_eq
       USE scales, only: p_scale
       USE toleranc, only: dil_ep_s
 
@@ -107,8 +106,6 @@ module source_u_g_module
 
 ! Set reference phase to gas
       M = 0
-
-      IF (.NOT.MOMENTUM_X_EQ(0)) RETURN
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

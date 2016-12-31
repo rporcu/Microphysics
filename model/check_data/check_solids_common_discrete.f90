@@ -35,10 +35,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 ! Subroutine access.
       use constant, only: MMAX
 
-      USE run, only: MOMENTUM_X_EQ
-      USE run, only: MOMENTUM_Y_EQ
-      USE run, only: MOMENTUM_Z_EQ
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: undefined
@@ -69,13 +65,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
          MAX_RADIUS = MAX(MAX_RADIUS, 0.5d0*D_P0(lM))
          MIN_RADIUS = MIN(MIN_RADIUS, 0.5d0*D_P0(lM))
       ENDDO
-
-
-! Turn off the 'continuum' equations for discrete solids if the user
-! specified them.  We could make use of these flags.
-      MOMENTUM_X_EQ((MMAX+1):DIM_M) = .FALSE.
-      MOMENTUM_Y_EQ((MMAX+1):DIM_M) = .FALSE.
-      MOMENTUM_Z_EQ((MMAX+1):DIM_M) = .FALSE.
 
 ! Derive periodicity from cyclic boundary flags.
       DES_PERIODIC_WALLS_X = CYCLIC_X .OR. CYCLIC_X_PD

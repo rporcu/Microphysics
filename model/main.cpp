@@ -6,6 +6,7 @@
 #include <VisMF.H>
 #include <iMultiFab.H>
 
+#include <mfix_level.H>
 #include <mfix_F.H>
 
 int main (int argc, char* argv[])
@@ -24,7 +25,7 @@ int main (int argc, char* argv[])
   // Size of the entire domain
   int imax,jmax,kmax;
   int max_nit;
-  int solve_fluid, momentum_x, momentum_y, momentum_z;
+  int solve_fluid;
   int solve_dem;
   int steady_state;
   Real dt, dt_min, dt_max, tstop, time;
@@ -32,9 +33,10 @@ int main (int argc, char* argv[])
   Real normg;
   int set_normg;
   int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
+
   mfix_get_data(
     &imax, &jmax, &kmax,
-    &solve_fluid, &momentum_x, &momentum_y, &momentum_z,
+    &solve_fluid, 
     &solve_dem,
     &steady_state,
     &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
@@ -73,133 +75,28 @@ int main (int argc, char* argv[])
     is_periodic[i] = 0;
   }
 
+#if 0
   // This defines a Geometry object
   Geometry geom;
   geom.define(domain,&real_box,coord,is_periodic);
+#endif
+
+  int max_level = 0;
+  int lev = 0;
+  Array<int> n_cell(3);
+  n_cell[0] = imax;
+  n_cell[1] = jmax;
+  n_cell[2] = kmax;
+
+  // Note that the constructor constructs the Geometry object now.
+  mfix_level my_mfix(&real_box,max_level,n_cell,coord);
+
+  my_mfix.Init();
 
   // define dx[]
-  const Real* dx = geom.CellSize();
+  // const Real* dx = mfix_level.geom.CellSize();
 
-  int nghost;
-  if (ParallelDescriptor::NProcs() == 1) {
-     nghost = 1;
-  } else {
-     nghost = 2;
-  }
-
-  // Define and allocate the integer MultiFab on BoxArray ba with
-  // 4 components and nghost ghost cells.
-  iMultiFab flag(ba,4,nghost);
-  flag.setVal(0);
-
-  // Call set_domain for each subdomain
-  // Read input data, check data, do computations for IC and BC locations
-  // and flows, and set geometry parameters such as X, X_E, DToDX, etc.
-  for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-     mfix_set_domain(flag[mfi].dataPtr());
-
-  // Matrix and rhs vector
-  MultiFab A_m(ba,7,nghost);
-  MultiFab b_m(ba,1,nghost);
-  A_m.setVal(0.);
-  b_m.setVal(0.);
-
-  // Void fraction
-  MultiFab ep_g (ba,1,nghost);
-  MultiFab ep_go(ba,1,nghost);
-  ep_g.setVal(0.);
-  ep_go.setVal(0.);
-
-  // Gas pressure fraction
-  MultiFab p_g (ba,1,nghost);
-  MultiFab p_go(ba,1,nghost);
-  p_g.setVal(0.);
-  p_go.setVal(0.);
-
-  // Gas density
-  MultiFab ro_g (ba,1,nghost);
-  MultiFab ro_go(ba,1,nghost);
-  ro_g.setVal(0.);
-  ro_go.setVal(0.);
-
-  // Gas bulk density
-  MultiFab rop_g (ba,1,nghost);
-  MultiFab rop_go(ba,1,nghost);
-  rop_g.setVal(0.);
-  rop_go.setVal(0.);
-
-  // X-axis gas velocity
-  MultiFab u_g (ba,1,nghost);
-  MultiFab u_go(ba,1,nghost);
-  MultiFab u_gt(ba,1,nghost);
-  u_g.setVal(0.);
-  u_go.setVal(0.);
-
-  // Y-axis gas velocity
-  MultiFab v_g (ba,1,nghost);
-  MultiFab v_go(ba,1,nghost);
-  MultiFab v_gt(ba,1,nghost);
-  v_g.setVal(0.);
-  v_go.setVal(0.);
-
-  // Z-axis gas velocity
-  MultiFab w_g (ba,1,nghost);
-  MultiFab w_go(ba,1,nghost);
-  MultiFab w_gt(ba,1,nghost);
-  w_g.setVal(0.);
-  w_go.setVal(0.);
-
-  // Pressure correction equation
-  MultiFab pp_g(ba,1,nghost);
-  MultiFab d_e (ba,1,nghost);
-  MultiFab d_n (ba,1,nghost);
-  MultiFab d_t (ba,1,nghost);
-  pp_g.setVal(0.);
-  d_e.setVal(0.);
-  d_n.setVal(0.);
-  d_t.setVal(0.);
-
-  // Molecular viscosity
-  MultiFab mu_g (ba,1,nghost);
-  mu_g.setVal(0.);
-
-  //
-  MultiFab lambda_g (ba,1,nghost);
-  MultiFab trD_g (ba,1,nghost);
-  lambda_g.setVal(0.);
-  trD_g.setVal(0.);
-
-  //
-  MultiFab tau_u_g (ba,1,nghost);
-  MultiFab tau_v_g (ba,1,nghost);
-  MultiFab tau_w_g (ba,1,nghost);
-  tau_u_g.setVal(0.);
-  tau_v_g.setVal(0.);
-  tau_w_g.setVal(0.);
-
-  MultiFab flux_gE (ba,1,nghost);
-  MultiFab flux_gN (ba,1,nghost);
-  MultiFab flux_gT (ba,1,nghost);
-  flux_gE.setVal(0.);
-  flux_gN.setVal(0.);
-  flux_gT.setVal(0.);
-
-  MultiFab rop_gE (ba,1,nghost);
-  MultiFab rop_gN (ba,1,nghost);
-  MultiFab rop_gT (ba,1,nghost);
-  rop_gE.setVal(0.);
-  rop_gN.setVal(0.);
-  rop_gT.setVal(0.);
-
-  //
-  MultiFab f_gds  (ba,1,nghost);
-  MultiFab drag_bm(ba,3,nghost);
-  f_gds.setVal(0.);
-  drag_bm.setVal(0.);
-  int nparticles = 5000;
-
-  int mmax = 1;
-
+#if 0
   Array<int> particle_state (  nparticles);
   Array<int> particle_phase (  nparticles);
 
@@ -218,8 +115,12 @@ int main (int argc, char* argv[])
   Array<Real> fc            (3*nparticles);
   Array<Real> tow           (3*nparticles);
   Array<int> pairs          (12*nparticles);
+#endif
+
   int pair_count=0;
 
+  my_mfix.call_main(0);
+#if 0
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_MAIN(
                &time, &dt, &nstep,
@@ -243,6 +144,7 @@ int main (int argc, char* argv[])
                des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
                rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
+#endif
 
   int finish, estatus;
   finish = 0;
@@ -250,6 +152,9 @@ int main (int argc, char* argv[])
 
   Real prev_dt; // Actual dt used to solve fluid
 
+  my_mfix.output(lev,estatus,finish);
+
+#if 0
   // Call to output before entering time march loop
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
     mfix_output_manager(
@@ -262,7 +167,10 @@ int main (int argc, char* argv[])
       ro_sol.dataPtr(), des_pos_new.dataPtr(),
       des_vel_new.dataPtr(), des_usr_var.dataPtr(),
       omega_new.dataPtr(), &estatus, &finish);
+#endif
 
+  my_mfix.evolve(0,estatus,finish);
+#if 0
   do {
     for (MFIter mfi(flag); mfi.isValid(); ++mfi)
       mfix_usr1();
@@ -375,7 +283,7 @@ int main (int argc, char* argv[])
               des_vel_new.dataPtr(), des_radius.dataPtr());
 
           // Solve U-Momentum equation
-          if(momentum_x==1){
+          {
             MultiFab::Copy(u_gt, u_g, 0, 0, 1, nghost);
             for (MFIter mfi(flag); mfi.isValid(); ++mfi)
               solve_u_g_star(
@@ -395,7 +303,7 @@ int main (int argc, char* argv[])
           }
 
           // Solve V-Momentum equation
-          if(momentum_y==1){
+          {
             MultiFab::Copy(v_gt, v_g, 0, 0, 1, nghost);
             for (MFIter mfi(flag); mfi.isValid(); ++mfi)
               solve_v_g_star(
@@ -415,7 +323,7 @@ int main (int argc, char* argv[])
           }
 
           // Solve W-Momentum equation
-          if(momentum_z==1){
+          {
             MultiFab::Copy(w_gt, w_g, 0, 0, 1, nghost);
             for (MFIter mfi(flag); mfi.isValid(); ++mfi)
               solve_w_g_star(
@@ -434,9 +342,9 @@ int main (int argc, char* argv[])
                 A_m[mfi].dataPtr(),      b_m[mfi].dataPtr());
           }
 
-          if(momentum_x==1) MultiFab::Copy(u_g, u_gt, 0, 0, 1, nghost);
-          if(momentum_y==1) MultiFab::Copy(v_g, v_gt, 0, 0, 1, nghost);
-          if(momentum_z==1) MultiFab::Copy(w_g, w_gt, 0, 0, 1, nghost);
+          MultiFab::Copy(u_g, u_gt, 0, 0, 1, nghost);
+          MultiFab::Copy(v_g, v_gt, 0, 0, 1, nghost);
+          MultiFab::Copy(w_g, w_gt, 0, 0, 1, nghost);
 
           // Calculate transport coefficients
           level=0;
@@ -597,13 +505,14 @@ int main (int argc, char* argv[])
        (solve_dem && !solve_fluid)) finish = 1;
 
   }while (finish==0);
+#endif
 
-
-
-
+  my_mfix.usr3(0);
+#if 0
   for (MFIter mfi(flag); mfi.isValid(); ++mfi)
      mfix_usr3(u_g[mfi].dataPtr(),    v_g[mfi].dataPtr(),
                w_g[mfi].dataPtr(),    p_g[mfi].dataPtr());
+#endif
 
   Real end_time = ParallelDescriptor::second() - strt_time;
 
