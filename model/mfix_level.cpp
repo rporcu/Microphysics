@@ -1,4 +1,3 @@
-
 #include <ParmParse.H>
 
 #include <mfix_F.H>
@@ -22,7 +21,7 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev) {
-	nsubsteps[lev] = MaxRefRatio(lev-1);
+  nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 
     t_new.resize(nlevs_max, 0.0);
@@ -91,7 +90,7 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 
     particle_state.resize(  nparticles);
     particle_phase.resize(  nparticles);
- 
+
     des_radius.resize    (  nparticles);
     ro_sol.resize        (  nparticles);
     pvol.resize          (  nparticles);
@@ -114,28 +113,28 @@ mfix_level::ReadParameters ()
 {
 #if 0
     {
-	ParmParse pp;  // Traditionally, max_step and stop_time do not have prefix.
-	pp.query("max_step", max_step);
-	pp.query("stop_time", stop_time);
+  ParmParse pp;  // Traditionally, max_step and stop_time do not have prefix.
+  pp.query("max_step", max_step);
+  pp.query("stop_time", stop_time);
     }
 
     {
-	ParmParse pp("amr"); // Traditionally, these have prefix, amr.
+  ParmParse pp("amr"); // Traditionally, these have prefix, amr.
 
-	pp.query("check_file", check_file);
-	pp.query("check_int", check_int);
+  pp.query("check_file", check_file);
+  pp.query("check_int", check_int);
 
-	pp.query("plot_file", plot_file);
-	pp.query("plot_int", plot_int);
+  pp.query("plot_file", plot_file);
+  pp.query("plot_int", plot_int);
 
-	pp.query("restart", restart_chkfile);
+  pp.query("restart", restart_chkfile);
     }
 
     {
-	ParmParse pp("warpx");
-	
-	pp.query("cfl", cfl);
-	pp.query("verbose", verbose);
+  ParmParse pp("warpx");
+
+  pp.query("cfl", cfl);
+  pp.query("verbose", verbose);
     }
 #endif
 }
@@ -146,17 +145,17 @@ mfix_level::Init()
     BL_ASSERT(max_level == 0);
 
     const Real time = 0.0;
-    
+
     // define coarse level BoxArray and DistributionMap
     {
-	finest_level = 0;
+  finest_level = 0;
 
-	const BoxArray& ba = MakeBaseGrids();
-	DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+  const BoxArray& ba = MakeBaseGrids();
+  DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-	MakeNewLevel(0, time, ba, dm);
+  MakeNewLevel(0, time, ba, dm);
 
-	InitLevelData(0);
+  InitLevelData(0);
     }
 
     // if max_level > 0, define fine levels
@@ -169,8 +168,13 @@ mfix_level::Init()
 }
 
 void
+mfix_level::InitLevelData(int lev) {
+  return;
+}
+
+void
 mfix_level::MakeNewLevel (int lev, Real time,
-		          const BoxArray& new_grids, const DistributionMapping& new_dmap)
+              const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     SetBoxArray(lev, new_grids);
     SetDistributionMap(lev, new_dmap);
@@ -191,7 +195,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // 4 components and nghost ghost cells.
     flag[lev].reset(new iMultiFab(grids[lev],4,nghost,dmap[lev],Fab_allocate));
     flag[lev]->setVal(0);
- 
+
     // Call set_domain for each subdomain
     // Read input data, check data, do computations for IC and BC locations
     // and flows, and set geometry parameters such as X, X_E, DToDX, etc.
@@ -315,7 +319,7 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::evolve(int lev, int estatus, int finish) 
+mfix_level::evolve(int lev, int estatus, int finish)
 {
 #if 0
   do {
