@@ -1,0 +1,7 @@
+f90EXE_sources += BLAS.f90
+f90EXE_sources += DGTSV.f90
+f90EXE_sources += dgtsl.f90
+f90EXE_sources += leq_bicgs.f90
+f90EXE_sources += leqsol_mod.f90
+f90EXE_sources += solve_lin_eq.f90
+f90EXE_sources += xerbla.f90

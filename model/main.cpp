@@ -46,17 +46,7 @@ int main (int argc, char* argv[])
   IntVect dom_lo(IntVect(D_DECL(0,0,0)));
   IntVect dom_hi(IntVect(D_DECL(imax-1, jmax-1, kmax-1)));
 
-  Box domain(dom_lo, dom_hi);
-
-  // Initialize the boxarray "ba" from the single box "bx"
-  BoxArray ba;
-  ba.define(domain);
-
   int max_grid_size = 1024;
-
-  // Break up boxarray "ba" into chunks no larger than
-  // "max_grid_size" along a direction.
-  ba.maxSize(max_grid_size);
 
   // This defines the physical size of the box.
   // Right now the box is [0,1] in each direction.

@@ -1,0 +1,2 @@
+f90EXE_sources += compar_mod.f90
+f90EXE_sources += gridmap_mod.f90
