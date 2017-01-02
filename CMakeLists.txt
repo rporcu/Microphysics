@@ -242,10 +242,12 @@ set(local_includes ${CXX_includes} ${FPP_includes})
 set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
 
 add_executable(mfix model/main.cpp ${USR_OVERRIDES})
+set_property(TARGET mfix PROPERTY CXX_STANDARD 11)
+
 add_library(model STATIC ${local_sources} ${local_includes})
+set_property(TARGET model PROPERTY CXX_STANDARD 11)
 
 target_link_libraries(mfix model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
-
 
 enable_testing()
 
