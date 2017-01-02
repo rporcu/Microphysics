@@ -1,0 +1,105 @@
+# BOXLIB_HOME defines the directory in which we will find all the BoxLib code -- if this is already defined
+#    then the line below will be ignored
+BOXLIB_HOME ?= ../../..
+
+MODEL_HOME ?= ../../model
+
+# If you try to build with USE_MPI = TRUE and the make system can not find your mpi files, it may be because
+#    MPI_HOME is not already defined on your machine.  In that case, you may need to set
+#    the following variables according to the path of MPI on your particular machine.  
+#    These lines are included here as example -- please uncomment and modify as appropriate.
+#    We also recommend the CPPFLAG below.
+#    MPI_HOME=/usr/local/mpich2
+#    LIBRARY_LOCATIONS += $(MPI_HOME)/lib
+#    INCLUDE_LOCATIONS += $(MPI_HOME)/include
+#    CPPFLAGS += -DMPICH_SKIP_MPICXX
+
+include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
+
+include $(MODEL_HOME)/check_data/Make.package  
+include $(MODEL_HOME)/des/Make.package  
+include $(MODEL_HOME)/dmp_modules/Make.package  
+include $(MODEL_HOME)/io/Make.package  
+include $(MODEL_HOME)/solvers/Make.package  
+include $(MODEL_HOME)/usr/Make.package
+include $(MODEL_HOME)/Make.package
+
+vpathdir += $(MODEL_HOME)
+vpathdir += $(MODEL_HOME)/check_data
+vpathdir += $(MODEL_HOME)/des
+vpathdir += $(MODEL_HOME)/dmp_modules
+vpathdir += $(MODEL_HOME)/include
+vpathdir += $(MODEL_HOME)/io
+vpathdir += $(MODEL_HOME)/solvers
+vpathdir += $(MODEL_HOME)/usr
+
+INCLUDE_LOCATIONS += $(MODEL_HOME)
+INCLUDE_LOCATIONS += $(MODEL_HOME)/check_data
+INCLUDE_LOCATIONS += $(MODEL_HOME)/des
+INCLUDE_LOCATIONS += $(MODEL_HOME)/dmp_modules
+INCLUDE_LOCATIONS += $(MODEL_HOME)/include
+INCLUDE_LOCATIONS += $(MODEL_HOME)/io
+INCLUDE_LOCATIONS += $(MODEL_HOME)/solvers
+INCLUDE_LOCATIONS += $(MODEL_HOME)/usr
+
+VPATH_LOCATIONS += $(MODEL_HOME)
+VPATH_LOCATIONS += $(MODEL_HOME)/check_data
+VPATH_LOCATIONS += $(MODEL_HOME)/des
+VPATH_LOCATIONS += $(MODEL_HOME)/dmp_modules
+VPATH_LOCATIONS += $(MODEL_HOME)/include
+VPATH_LOCATIONS += $(MODEL_HOME)/io
+VPATH_LOCATIONS += $(MODEL_HOME)/solvers
+VPATH_LOCATIONS += $(MODEL_HOME)/usr
+
+include $(BOXLIB_HOME)/Src/C_AmrCoreLib/Make.package
+include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
+include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
+
+INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BoundaryLib
+vpathdir += $(BOXLIB_HOME)/Src/C_BoundaryLib
+
+INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BaseLib
+vpathdir += $(BOXLIB_HOME)/Src/C_BaseLib
+
+INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_AmrCoreLib
+vpathdir += $(BOXLIB_HOME)/Src/C_AmrCoreLib
+
+ifeq ($(USE_F90_SOLVERS), TRUE)
+  include $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package
+  INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG
+  vpathdir          += $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG
+
+  include $(BOXLIB_HOME)/Src/LinearSolvers/F_MG/FParallelMG.mak
+  INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/LinearSolvers/F_MG
+  vpathdir          += $(BOXLIB_HOME)/Src/LinearSolvers/F_MG
+
+  include $(BOXLIB_HOME)/Src/F_BaseLib/FParallelMG.mak
+  INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/F_BaseLib
+  vpathdir          += $(BOXLIB_HOME)/Src/F_BaseLib
+
+  DEFINES += -DUSE_F90_SOLVERS
+endif
+
+vpath %.c   : . $(vpathdir)
+vpath %.h   : . $(vpathdir)
+vpath %.cpp : . $(vpathdir)
+vpath %.H   : . $(vpathdir)
+vpath %.F   : . $(vpathdir)
+vpath %.f   : . $(vpathdir)
+vpath %.f90 : . $(vpathdir)
+
+# The HPGMG hooks in Make.defs populate VPATH_LOCATIONS, not vpathdir, so we
+# need to grab these too. In fact everything in Make.defs uses VPATH_LOCATIONS
+# instead of vpathdir. Perhaps they should be consolidated ...
+vpath %.c   : . $(VPATH_LOCATIONS)
+vpath %.h   : . $(VPATH_LOCATIONS)
+vpath %.cpp : . $(VPATH_LOCATIONS)
+vpath %.H   : . $(VPATH_LOCATIONS)
+vpath %.F   : . $(VPATH_LOCATIONS)
+vpath %.f   : . $(VPATH_LOCATIONS)
+vpath %.f90 : . $(VPATH_LOCATIONS)
+
+all: $(executable)
+	@echo SUCCESS
+
+include $(BOXLIB_HOME)/Tools/C_mk/Make.rules
