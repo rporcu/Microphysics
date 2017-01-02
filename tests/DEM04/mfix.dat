@@ -26,10 +26,6 @@
 
   DT = 1.0d-4
 
-  MOMENTUM_X_EQ(1) = .FALSE.
-  MOMENTUM_Y_EQ(1) = .FALSE.
-  MOMENTUM_Z_EQ(1) = .FALSE.
-
   CALL_USR = .T.
 
 #_______________________________________________________________________

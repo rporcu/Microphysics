@@ -27,10 +27,6 @@
 
   DT = 1.0d-4
 
-  MOMENTUM_X_EQ(0:2) = .F. .F. .F.
-  MOMENTUM_Y_EQ(0:2) = .F. .F. .F.
-  MOMENTUM_Z_EQ(0:2) = .F. .F. .F.
-
 ! No gravity
   GRAVITY(1:3) = 3*0.0
 

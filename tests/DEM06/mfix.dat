@@ -33,10 +33,6 @@
   DT =     1.00d-3
   DT_MAX = 1.00d-3
 
-  MOMENTUM_X_EQ(1) = .F.
-  MOMENTUM_Y_EQ(1) = .F.
-  MOMENTUM_Z_EQ(1) = .F.
-
   CALL_USR = .TRUE.
 
   DRAG_TYPE = 'USER_DRAG'

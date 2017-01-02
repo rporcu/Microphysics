@@ -23,14 +23,7 @@
   DT =     5.0d-4
   DT_MAX = 1.0d-3
 
-  MOMENTUM_X_EQ(1) = .F.
-  MOMENTUM_Y_EQ(1) = .F.
-  MOMENTUM_Z_EQ(1) = .F.
-
   DRAG_TYPE = 'GIDASPOW'
-
-
-
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
