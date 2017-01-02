@@ -12,7 +12,7 @@ set(BL_SPACEDIM 3 CACHE INT "Dimension of BoxLib build")
 set(ENABLE_MPI 0 CACHE INT "Enable build with MPI")
 set(ENABLE_OpenMP 0 CACHE INT "Enable build with OpenMP")
 set(BL_PRECISION "DOUBLE" CACHE INT "Precision of BoxLib build")
-set(BL_USE_PARTICLES 0 CACHE INT "Include Particles classes in BoxLib build")
+set(BL_USE_PARTICLES 1 CACHE INT "Include Particles classes in BoxLib build")
 set(ENABLE_PROFILING 0 CACHE INT "Include profiling information in BoxLib build")
 set(ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in BoxLib build")
 
