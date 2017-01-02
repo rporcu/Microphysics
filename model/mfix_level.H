@@ -26,15 +26,16 @@ public:
 
     int Verbose () const { return verbose; }
 
-    void Init();
+    void Init(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit);
 
     void usr3 (int lev);
 
-    void output (int lev, int estatus, int finish);
+    void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
 
-    void call_main (int lev);
+    void call_main (int lev, int nstep, Real dt, Real time);
 
-    void evolve (int lev, int estatus, int finish);
+    void evolve (int lev, int nstep, int estatus, int finish, int set_normg, 
+                 Real dt, Real dt_min, Real dt_max, Real tstop, Real time, Real normg); 
 
 protected:
     virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
@@ -156,6 +157,12 @@ private:
     // runtime parameters
 
     int verbose = 1;
+
+    int solve_fluid;
+    int solve_dem;
+    int steady_state;
+    int cyclic_mf;
+    int max_nit;
 
 //  int max_step   = std::numeric_limits<int>::max();
 //  Real stop_time = std::numeric_limits<Real>::max();

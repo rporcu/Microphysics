@@ -17,7 +17,6 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 
     int nlevs_max = maxLevel() + 1;
 #if 0
-
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev) {
@@ -140,7 +139,8 @@ mfix_level::ReadParameters ()
 }
 
 void
-mfix_level::Init()
+mfix_level::Init(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
+                 int max_nit_in)
 {
     BL_ASSERT(max_level == 0);
 
@@ -148,14 +148,14 @@ mfix_level::Init()
 
     // define coarse level BoxArray and DistributionMap
     {
-  finest_level = 0;
+      finest_level = 0;
 
-  const BoxArray& ba = MakeBaseGrids();
-  DistributionMapping dm(ba, ParallelDescriptor::NProcs());
+      const BoxArray& ba = MakeBaseGrids();
+      DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-  MakeNewLevel(0, time, ba, dm);
+      MakeNewLevel(0, time, ba, dm);
 
-  InitLevelData(0);
+      InitLevelData(0);
     }
 
     // if max_level > 0, define fine levels
@@ -164,7 +164,12 @@ mfix_level::Init()
     mypc->AllocData();
     mypc->InitData();
 #endif
-
+ 
+   solve_fluid  = solve_fluid_in;
+   solve_dem    = solve_dem_in;
+   steady_state = steady_state_in;
+   cyclic_mf    = cyclic_mf_in;
+   max_nit      = max_nit_in;
 }
 
 void
@@ -319,54 +324,56 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::evolve(int lev, int estatus, int finish)
+mfix_level::evolve(int lev, int nstep, int estatus, int finish, int set_normg, 
+                   Real dt, Real dt_min, Real dt_max, Real tstop, Real time, Real normg)
 {
-#if 0
+  Real prev_dt;
   do {
-    for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
       mfix_usr1();
 
     if(solve_fluid) {
 
       // Update boundary conditions
-      for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         set_bc1(
           &time,                   &dt,
-          p_g[lev][mfi].dataPtr(),      ep_g[lev][mfi].dataPtr(),
-          ro_g[lev][mfi].dataPtr(),     rop_g[lev][mfi].dataPtr(),
-          u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-          flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-          flag[lev][mfi].dataPtr());
+          (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+          (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
+          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+          (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+          (*flag[lev])[mfi].dataPtr());
 
       // Calculate transport coefficients
-      for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         calc_coeff_all(
-          ro_g[lev][mfi].dataPtr(), p_g[lev][mfi].dataPtr(),
-          ep_g[lev][mfi].dataPtr(), rop_g[lev][mfi].dataPtr(),
-          u_g[lev][mfi].dataPtr(),  v_g[lev][mfi].dataPtr(),   w_g[lev][mfi].dataPtr(),
-          mu_g[lev][mfi].dataPtr(), f_gds[lev][mfi].dataPtr(), drag_bm[lev][mfi].dataPtr(),
+          (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+          (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+          (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
+          (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
           particle_phase.dataPtr(),  particle_state.dataPtr(),
           pvol.dataPtr(), des_pos_new.dataPtr(),
           des_vel_new.dataPtr(), des_radius.dataPtr(),
-          flag[mfi].dataPtr());
+          (*flag[lev])[mfi].dataPtr());
 
       // Calculate the stress tensor trace and cross terms for all phases.
-      for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         calc_trd_and_tau(
-          tau_u_g[lev][mfi].dataPtr(),  tau_v_g[lev][mfi].dataPtr(), tau_w_g[lev][mfi].dataPtr(),
-          trD_g[lev][mfi].dataPtr(),    ep_g[lev][mfi].dataPtr(),
-          u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),     w_g[lev][mfi].dataPtr(),
-          lambda_g[lev][mfi].dataPtr(), mu_g[lev][mfi].dataPtr(),
-          flag[lev][mfi].dataPtr());
+          (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
+          (*trD_g[lev])[mfi].dataPtr(),    (*ep_g[lev])[mfi].dataPtr(),
+          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
+          (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
+          (*flag[lev])[mfi].dataPtr());
 
       // Backup field variable to old
-      MultiFab::Copy(ep_go[lev],  ep_g[lev],  0, 0, 1, nghost);
-      MultiFab::Copy(p_go[lev],   p_g[lev],   0, 0, 1, nghost);
-      MultiFab::Copy(ro_go[lev],  ro_g[lev],  0, 0, 1, nghost);
-      MultiFab::Copy(rop_go[lev], rop_g[lev], 0, 0, 1, nghost);
-      MultiFab::Copy(u_go[lev],   u_g[lev],   0, 0, 1, nghost);
-      MultiFab::Copy(v_go[lev],   v_g[lev],   0, 0, 1, nghost);
-      MultiFab::Copy(w_go[lev],   w_g[lev],   0, 0, 1, nghost);
+      int nghost = ep_go[lev]->nGrow();
+      MultiFab::Copy(*ep_go[lev],  *ep_g[lev],  0, 0, 1, nghost);
+      MultiFab::Copy(*p_go[lev],   *p_g[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*ro_go[lev],  *ro_g[lev],  0, 0, 1, nghost);
+      MultiFab::Copy(*rop_go[lev], *rop_g[lev], 0, 0, 1, nghost);
+      MultiFab::Copy(*u_go[lev],   *u_g[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*v_go[lev],   *v_g[lev],   0, 0, 1, nghost);
+      MultiFab::Copy(*w_go[lev],   *w_g[lev],   0, 0, 1, nghost);
 
       // Loop over iterate for auto time-step size adjustment
       int reiterate;
@@ -374,33 +381,32 @@ mfix_level::evolve(int lev, int estatus, int finish)
         prev_dt = dt;
 
         // Calculate bulk density (epg*ro_g) at cell faces
-        for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi){
+        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
           const Box& bx=mfi.validbox();
           conv_rop(bx.loVect(), bx.hiVect(),
-            u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-            rop_g[lev][mfi].dataPtr(),
-            rop_gE[lev][mfi].dataPtr(),   rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-            flag[lev][mfi].dataPtr(),     &dt);
+            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+            (*rop_g[lev])[mfi].dataPtr(),
+            (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+            (*flag[lev])[mfi].dataPtr(),     &dt);
         }
 
         // Calculate face mass fluxes
-        for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi){
+        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) 
           calc_mflux(
-            u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-            rop_gE[lev][mfi].dataPtr(),   rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-            flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-            flag[lev][mfi].dataPtr());
+            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+            (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+            (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+            (*flag[lev])[mfi].dataPtr());
 
         // Update boundary conditions
-        for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi){
+        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) 
           set_bc1(
             &time,                   &dt,
-            p_g[lev][mfi].dataPtr(),      ep_g[lev][mfi].dataPtr(),
-            ro_g[lev][mfi].dataPtr(),     rop_g[lev][mfi].dataPtr(),
-            u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-            flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-            flag[lev][mfi].dataPtr());
-
+            (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+            (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
+            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+            (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+            (*flag[lev])[mfi].dataPtr());
 
         int converged=0;
         int nit=0;          // number of iterations
@@ -417,161 +423,161 @@ mfix_level::evolve(int lev, int estatus, int finish)
           nit++;
 
           // User hooks
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             mfix_usr2();
 
           // Calculate transport coefficients
           int level=1;
-          for (MFIter mfi(flag[]evl); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             calc_coeff(
-              flag[]evl[mfi].dataPtr(), &level,
-              ro_g[]evl[mfi].dataPtr(), p_g[]evl[mfi].dataPtr(),
-              ep_g[]evl[mfi].dataPtr(), rop_g[]evl[mfi].dataPtr(),
-              u_g[]evl[mfi].dataPtr(),  v_g[]evl[mfi].dataPtr(),   w_g[]evl[mfi].dataPtr(),
-              mu_g[]evl[mfi].dataPtr(), f_gds[]evl[mfi].dataPtr(), drag_bm[]evl[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr(), &level,
+              (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+              (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
               particle_phase.dataPtr(),  particle_state.dataPtr(),
               pvol.dataPtr(), des_pos_new.dataPtr(),
               des_vel_new.dataPtr(), des_radius.dataPtr());
 
           // Solve U-Momentum equation
           {
-            MultiFab::Copy(u_gt[lev], u_g[lev], 0, 0, 1, nghost);
-            for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+            MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
               solve_u_g_star(
-                u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-                u_go[lev][mfi].dataPtr(),     p_g[lev][mfi].dataPtr(),      ro_g[lev][mfi].dataPtr(),
-                rop_g[lev][mfi].dataPtr(),    rop_go[lev][mfi].dataPtr(),   ep_g[lev][mfi].dataPtr(),
-                tau_u_g[lev][mfi].dataPtr(),  d_e[lev][mfi].dataPtr(),
-                flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-                mu_g[lev][mfi].dataPtr(),     f_gds[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr(),      drag_bm[lev][mfi].dataPtr(),
-                flag[lev][mfi].dataPtr(),     &dt);
+                (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+                (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+                (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
+                (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+                (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+                (*flag[lev])[mfi].dataPtr(),     &dt);
 
             int eq_id=3;
-            for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
-              mfix_solve_lin_eq(&eq_id, u_gt[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, (*u_gt[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
           }
 
           // Solve V-Momentum equation
           {
-            MultiFab::Copy(v_gt, v_g, 0, 0, 1, nghost);
-            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
               solve_v_g_star(
-                u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-                v_go[lev][mfi].dataPtr(),     p_g[lev][mfi].dataPtr(),      ro_g[lev][mfi].dataPtr(),
-                rop_g[lev][mfi].dataPtr(),    rop_go[lev][mfi].dataPtr(),   ep_g[lev][mfi].dataPtr(),
-                tau_v_g[lev][mfi].dataPtr(),  d_n[lev][mfi].dataPtr(),
-                flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-                mu_g[lev][mfi].dataPtr(),     f_gds[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr(),      drag_bm[lev][mfi].dataPtr(),
-                flag[lev][mfi].dataPtr(),     &dt);
+                (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+                (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+                (*tau_v_g[lev])[mfi].dataPtr(),  (*d_n[lev])[mfi].dataPtr(),
+                (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+                (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+                (*flag[lev])[mfi].dataPtr(),     &dt);
 
             int eq_id=4;
-            for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
-              mfix_solve_lin_eq(&eq_id, v_gt[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, (*v_gt[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
           }
 
           // Solve W-Momentum equation
           {
-            MultiFab::Copy(w_gt[lev], w_g[lev], 0, 0, 1, nghost);
-            for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+            MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
               solve_w_g_star(
-                u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-                w_go[lev][mfi].dataPtr(),     p_g[lev][mfi].dataPtr(),      ro_g[lev][mfi].dataPtr(),
-                rop_g[lev][mfi].dataPtr(),    rop_go[lev][mfi].dataPtr(),   ep_g[lev][mfi].dataPtr(),
-                tau_w_g[lev][mfi].dataPtr(),  d_t[lev][mfi].dataPtr(),
-                flux_g[lev]E[mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-                mu_g[lev][mfi].dataPtr(),     f_gds[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr(),      drag_bm[lev][mfi].dataPtr(),
-                flag[lev][mfi].dataPtr(),     &dt);
+                (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
+                (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
+                (*tau_w_g[lev])[mfi].dataPtr(),  (*d_t[lev])[mfi].dataPtr(),
+                (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+                (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+                (*flag[lev])[mfi].dataPtr(),     &dt);
 
             int eq_id=5;
-            for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
-              mfix_solve_lin_eq(&eq_id, w_gt[lev][mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id, (*w_gt[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
           }
 
-          MultiFab::Copy(u_g[lev], u_gt[lev], 0, 0, 1, nghost);
-          MultiFab::Copy(v_g[lev], v_gt[lev], 0, 0, 1, nghost);
-          MultiFab::Copy(w_g[lev], w_gt[lev], 0, 0, 1, nghost);
+          MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, nghost);
+          MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, nghost);
+          MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, nghost);
 
           // Calculate transport coefficients
           level=0;
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             physical_prop(&level,
-              ro_g[lev][mfi].dataPtr(), p_g[lev][mfi].dataPtr(),
-              ep_g[lev][mfi].dataPtr(), rop_g[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+              (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Calculate bulk density (epg*ro_g) at cell faces
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi){
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
             const Box& bx=mfi.validbox();
             conv_rop(bx.loVect(), bx.hiVect(),
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              rop_g[lev][mfi].dataPtr(),
-              rop_gE[lev][mfi].dataPtr(),   rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr(),     &dt);
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*rop_g[lev])[mfi].dataPtr(),
+              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr(),     &dt);
           }
 
           // Solve the pressure correction equation
-          for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             solve_pp_g(
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              p_g[lev][mfi].dataPtr(),      ep_g[lev][mfi].dataPtr(),
-              rop_g[lev][mfi].dataPtr(),    rop_go[lev][mfi].dataPtr(),
-              ro_g[lev][mfi].dataPtr(),     pp_g[lev][mfi].dataPtr(),
-              rop_gE[lev][mfi].dataPtr(),   rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-              d_e[lev][mfi].dataPtr(),      d_n[lev][mfi].dataPtr(),      d_t[lev][mfi].dataPtr(),
-              A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr(),     &dt,
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+              (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
+              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+              (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+              (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr(),     &dt,
               &lnormg,                 &resg);
 
             int eq_id=1;
-            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
-              mfix_solve_lin_eq(&eq_id,  pp_g[mfi].dataPtr(),
-                A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr());
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+              mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
+                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
 
           // Correct fluid pressure and velocities
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             correct0(
-              p_g[lev][mfi].dataPtr(),      pp_g[lev][mfi].dataPtr(),
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              d_e[lev][mfi].dataPtr(),      d_n[lev][mfi].dataPtr(),      d_t[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Update fluid density
           level=0;
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             physical_prop(&level,
-              ro_g[lev][mfi].dataPtr(), p_g[lev][mfi].dataPtr(),
-              ep_g[lev][mfi].dataPtr(), rop_g[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+              (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Update wall velocities
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             set_wall_bc(
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Calculate face mass fluxes
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             calc_mflux(
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              rop_gE[lev][mfi].dataPtr(),   rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-              flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+              (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Update boundary conditions
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             set_bc1(
               &time,                   &dt,
-              p_g[lev][mfi].dataPtr(),      ep_g[lev][mfi].dataPtr(),
-              ro_g[lev][mfi].dataPtr(),     rop_g[lev][mfi].dataPtr(),
-              u_g[lev][mfi].dataPtr(),      v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-              flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr());
 
           // Display current iteration residuals
           display_resid(&nit);
@@ -581,10 +587,10 @@ mfix_level::evolve(int lev, int estatus, int finish)
 
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
-            for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
               converged = goal_seek_mFlux(&nit, &gsmf, &delP_MF, &lMFlux,
-                flux_gE[lev][mfi].dataPtr(),  flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-                flag[lev][mfi].dataPtr());
+                (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+                (*flag[lev])[mfi].dataPtr());
 
         } while(converged==0 && nit<max_nit);
 
@@ -593,35 +599,37 @@ mfix_level::evolve(int lev, int estatus, int finish)
         if(reiterate == 1) {
 
           // Reset the field variables
-          MultiFab::Copy(ep_g,  ep_go,  0, 0, 1, nghost);
-          MultiFab::Copy(p_g,   p_go,   0, 0, 1, nghost);
-          MultiFab::Copy(ro_g,  ro_go,  0, 0, 1, nghost);
-          MultiFab::Copy(rop_g, rop_go, 0, 0, 1, nghost);
-          MultiFab::Copy(u_g,   u_go,   0, 0, 1, nghost);
-          MultiFab::Copy(v_g,   v_go,   0, 0, 1, nghost);
-          MultiFab::Copy(w_g,   w_go,   0, 0, 1, nghost);
+          MultiFab::Copy(*ep_g[lev],  *ep_go[lev],  0, 0, 1, nghost);
+          MultiFab::Copy(*p_g[lev],   *p_go[lev],   0, 0, 1, nghost);
+          MultiFab::Copy(*ro_g[lev],  *ro_go[lev],  0, 0, 1, nghost);
+          MultiFab::Copy(*rop_g[lev], *rop_go[lev], 0, 0, 1, nghost);
+          MultiFab::Copy(*u_g[lev],   *u_go[lev],   0, 0, 1, nghost);
+          MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
+          MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
 
           // Recalculate all coefficients (JM: not sure why)
-          for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             calc_coeff_all(
-              ro_g[lev][mfi].dataPtr(), p_g[lev][mfi].dataPtr(),
-              ep_g[lev][mfi].dataPtr(), rop_g[lev][mfi].dataPtr(),
-              u_g[lev][mfi].dataPtr(),  v_g[lev][mfi].dataPtr(),   w_g[lev][mfi].dataPtr(),
-              mu_g[lev][mfi].dataPtr(), f_gds[lev][mfi].dataPtr(), drag_bm[lev][mfi].dataPtr(),
+              (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+              (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+              (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
+              (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
               particle_phase.dataPtr(),  particle_state.dataPtr(),
               pvol.dataPtr(), des_pos_new.dataPtr(),
               des_vel_new.dataPtr(), des_radius.dataPtr(),
-              flag[lev][mfi].dataPtr());
+              (*flag[lev])[mfi].dataPtr());
         }
       }while (reiterate==1);
     }
 
+    int pair_count = 0;
+
     if(solve_dem) {
-      for (MFIter mfi(flag); mfi.isValid(); ++mfi)
+      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_des_time_march(
-          ep_g[lev][mfi].dataPtr(),      p_g[lev][mfi].dataPtr(),
-          u_g[lev][mfi].dataPtr(),       v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-          ro_g[lev][mfi].dataPtr(),      rop_g[lev][mfi].dataPtr(),    mu_g[lev][mfi].dataPtr(),
+          (*ep_g[lev])[mfi].dataPtr(),      (*p_g[lev])[mfi].dataPtr(),
+          (*u_g[lev])[mfi].dataPtr(),       (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+          (*ro_g[lev])[mfi].dataPtr(),      (*rop_g[lev])[mfi].dataPtr(),    (*mu_g[lev])[mfi].dataPtr(),
           particle_state.dataPtr(), particle_phase.dataPtr(),
           des_radius.dataPtr(),     ro_sol.dataPtr(),
           pvol.dataPtr(),           pmass.dataPtr(),
@@ -630,7 +638,7 @@ mfix_level::evolve(int lev, int estatus, int finish)
           des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
           drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
           pairs.dataPtr(),          &pair_count,
-          flag[mfi].dataPtr(),
+          (*flag[lev])[mfi].dataPtr(),
           &time, &dt, &nstep);
     }
 
@@ -639,76 +647,56 @@ mfix_level::evolve(int lev, int estatus, int finish)
       nstep++;
     }
 
-    output(lev,estatus,finish);
-#if 0
-    for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
-      mfix_output_manager(
-        &time, &dt, &nstep,
-        ep_g[lev][mfi].dataPtr(),    p_g[lev][mfi].dataPtr(),
-        ro_g[lev][mfi].dataPtr(),   rop_g[lev][mfi].dataPtr(),
-        u_g[lev][mfi].dataPtr(),    v_g[lev][mfi].dataPtr(),
-        w_g[lev][mfi].dataPtr(),
-        particle_state.dataPtr(), des_radius.dataPtr(),
-        ro_sol.dataPtr(), des_pos_new.dataPtr(),
-        des_vel_new.dataPtr(), des_usr_var.dataPtr(),
-        omega_new.dataPtr(), &estatus, &finish);
-#endif
+    output(lev,estatus,finish,nstep,dt,time);
 
     // Mechanism to terminate MFIX normally.
     if(steady_state || time + 0.1L*dt >= tstop ||
        (solve_dem && !solve_fluid)) finish = 1;
 
-   }while (finish==0);
-  }
- }
-#endif
+ } while (finish==0);
 }
 
 void
-mfix_level::output(int lev, int estatus, int finish)
+mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
-#if 0
   // Call to output before entering time march loop
-  for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     mfix_output_manager(
       &time, &dt, &nstep,
-      ep_g[lev][mfi].dataPtr(),    p_g[lev][mfi].dataPtr(),
-      ro_g[lev][mfi].dataPtr(),   rop_g[lev][mfi].dataPtr(),
-      u_g[lev][mfi].dataPtr(),    v_g[lev][mfi].dataPtr(),
-      w_g[lev][mfi].dataPtr(),
+      (*ep_g[lev])[mfi].dataPtr(),   (*p_g[lev])[mfi].dataPtr(),
+      (*ro_g[lev])[mfi].dataPtr(),   (*rop_g[lev])[mfi].dataPtr(),
+      (*u_g[lev])[mfi].dataPtr(),    (*v_g[lev])[mfi].dataPtr(),
+      (*w_g[lev])[mfi].dataPtr(),
       particle_state.dataPtr(), des_radius.dataPtr(),
       ro_sol.dataPtr(), des_pos_new.dataPtr(),
       des_vel_new.dataPtr(), des_usr_var.dataPtr(),
       omega_new.dataPtr(), &estatus, &finish);
-#endif
 }
 
 void
-mfix_level::call_main(int lev)
+mfix_level::call_main(int lev, int nstep, Real dt, Real time)
 {
-#if 0
-  for (MFIter mfi(flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      mfix_MAIN(
                &time, &dt, &nstep,
-               u_g[lev][mfi].dataPtr(),     v_g[lev][mfi].dataPtr(),      w_g[lev][mfi].dataPtr(),
-               u_go[lev][mfi].dataPtr(),    v_go[lev][mfi].dataPtr(),     w_go[lev][mfi].dataPtr(),
-               p_g[lev][mfi].dataPtr(),     p_go[lev][mfi].dataPtr(),     pp_g[lev][mfi].dataPtr(),
-               ep_g[lev][mfi].dataPtr(),    ep_go[lev][mfi].dataPtr(),
-               ro_g[lev][mfi].dataPtr(),    ro_go[lev][mfi].dataPtr(),
-               rop_g[lev][mfi].dataPtr(),   rop_go[lev][mfi].dataPtr(),
-               rop_gE[lev][mfi].dataPtr(),  rop_gN[lev][mfi].dataPtr(),   rop_gT[lev][mfi].dataPtr(),
-               d_e[lev][mfi].dataPtr(),     d_n[lev][mfi].dataPtr(),      d_t[lev][mfi].dataPtr(),
-               tau_u_g[lev][mfi].dataPtr(), tau_v_g[lev][mfi].dataPtr(),  tau_w_g[lev][mfi].dataPtr(),
-               flux_gE[lev][mfi].dataPtr(), flux_gN[lev][mfi].dataPtr(),  flux_gT[lev][mfi].dataPtr(),
-               trD_g[lev][mfi].dataPtr(),   lambda_g[lev][mfi].dataPtr(), mu_g[lev][mfi].dataPtr(),
-               f_gds[lev][mfi].dataPtr(),   A_m[lev][mfi].dataPtr(),      b_m[lev][mfi].dataPtr(),
-               drag_bm[[lev]mfi].dataPtr(),
-               flag[lev][mfi].dataPtr(),
+               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+               (*u_go[lev])[mfi].dataPtr(),    (*v_go[lev])[mfi].dataPtr(),     (*w_go[lev])[mfi].dataPtr(),
+               (*p_g[lev])[mfi].dataPtr(),     (*p_go[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
+               (*ep_g[lev])[mfi].dataPtr(),    (*ep_go[lev])[mfi].dataPtr(),
+               (*ro_g[lev])[mfi].dataPtr(),    (*ro_go[lev])[mfi].dataPtr(),
+               (*rop_g[lev])[mfi].dataPtr(),   (*rop_go[lev])[mfi].dataPtr(),
+               (*rop_gE[lev])[mfi].dataPtr(),  (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+               (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+               (*tau_u_g[lev])[mfi].dataPtr(), (*tau_v_g[lev])[mfi].dataPtr(),  (*tau_w_g[lev])[mfi].dataPtr(),
+               (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+               (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
+               (*f_gds[lev])[mfi].dataPtr(),   (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+               (*drag_bm[lev])[mfi].dataPtr(),
+               (*flag[lev])[mfi].dataPtr(),
                particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
                rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
-#endif
 }
