@@ -21,16 +21,16 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= maxLevel(); ++lev) {
-  nsubsteps[lev] = MaxRefRatio(lev-1);
+       nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 
     t_new.resize(nlevs_max, 0.0);
     t_old.resize(nlevs_max, -1.e100);
     dt.resize(nlevs_max, 1.e100);
+#endif
 
     // Particle Container
     mypc = std::unique_ptr<MyParticleContainer> (new MyParticleContainer(this));
-#endif
 
     flag.resize(nlevs_max);
 

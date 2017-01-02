@@ -32,9 +32,13 @@ project(MFIXEXA)
 
 set(CXX_sources
   model/main.cpp
-  model/mfix_level.cpp  )
+  model/mfix_level.cpp  
+  model/ParticleContainer.cpp
+  model/ParticleIterator.cpp )
 set(CXX_includes
   model/mfix_level.H
+  model/ParticleContainer.H
+  model/ParticleIterator.H
   model/include/mfix_F.H)
 set(F90_sources
   model/adjust_a_g.f90

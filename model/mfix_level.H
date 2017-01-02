@@ -11,9 +11,8 @@
 #include <AmrCore.H>
 #include <iMultiFab.H>
 #include <BLProfiler.H>
-#if 0
+
 #include <ParticleContainer.H>
-#endif
 
 class mfix_level
     : public AmrCore
@@ -53,9 +52,6 @@ private:
     void ComputeDt ();
 
     void WritePlotFile () const;
-    static void PackPlotDataPtrs (std::vector<MultiFab*>& pmf,
-				  const Array<std::unique_ptr<MultiFab> >& data);
-    static void Copy (MultiFab& dstmf, int dcomp, int ncomp, const MultiFab& srcmf, int scomp);
 
     Array<int> istep;      // which step?
     Array<int> nsubsteps;  // how many substeps on each level?
@@ -63,10 +59,10 @@ private:
     Array<Real> t_new;
     Array<Real> t_old;
     Array<Real> dt;
+#endif
 
     // Particle container
     std::unique_ptr<MyParticleContainer> mypc;
-#endif
 
     Array< std::unique_ptr<iMultiFab> > flag;
 
