@@ -300,6 +300,6 @@ foreach( rel_testdir ${TESTS})
     PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/${TEST_EXE}"
     )
 
-  target_link_libraries(${TEST_EXE} ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
+  target_link_libraries(${TEST_EXE} model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
 
 endforeach( rel_testdir ${TESTS})
