@@ -66,9 +66,6 @@ int main (int argc, char* argv[])
     real_box.setHi(n, 1.0);
   }
 
-  // This says we are using Cartesian coordinates
-  int coord = 0;
-
   // This sets the boundary conditions to be doubly or triply periodic
   int is_periodic[BL_SPACEDIM];
   for (int i = 0; i < BL_SPACEDIM; i++) {
@@ -83,6 +80,9 @@ int main (int argc, char* argv[])
   n_cell[2] = kmax;
 
   const RealBox* rb_ptr = &real_box;
+
+  // This says we are using Cartesian coordinates
+  int coord = 0;
 
   // Note that the constructor constructs the Geometry object now.
   mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);

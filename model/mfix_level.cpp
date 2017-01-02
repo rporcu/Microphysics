@@ -7,10 +7,11 @@ mfix_level::~mfix_level ()
 {};
 
 mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
+ : AmrCore(rb,max_level_in,n_cell_in,coord)          
 {
 //  ReadParameters();
 
-    // Geometry on all levels has been defined already in the constructor
+    // Geometry on all levels has been defined already in the AmrCore constructor
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
