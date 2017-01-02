@@ -30,12 +30,12 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRE
 
 project(MFIXEXA)
 
-set(CXX_sources 
-  model/main.cpp  
+set(CXX_sources
+  model/main.cpp
   model/mfix_level.cpp  )
-set(CXX_includes 
-  model/mfix_level.H    
-  model/include/mfix_F.H) 
+set(CXX_includes
+  model/mfix_level.H
+  model/include/mfix_F.H)
 set(F90_sources
   model/adjust_a_g.f90
   model/adjust_dt_mod.f90
@@ -244,7 +244,7 @@ set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
 add_executable(mfix model/main.cpp ${USR_OVERRIDES})
 add_library(model STATIC ${local_sources} ${local_includes})
 
-target_link_libraries(mfix ${CCSE_LIBRARIES} ${MPI_LIBRARIES} model)
+target_link_libraries(mfix model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
 
 
 enable_testing()
