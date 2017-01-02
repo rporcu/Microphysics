@@ -31,7 +31,7 @@ MODULE SET_CONSTPROP_MODULE
       DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -44,31 +44,23 @@ MODULE SET_CONSTPROP_MODULE
 ! domain to zero. Then, set these to their specified value
 ! (if defined) in fluid cells. Some are also set in flow cells.
 ! NOTE: DO NOT simply zero existing field variables.
+
       RO_g = ZERO
       MU_g = ZERO
       LAMBDA_G = ZERO
 
 ! Set specified constant physical properties values
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
 
-           IF (flag(i,j,k,1)<100) THEN
-! Fluid and inflow/outflow cells: FLAG < 100
-            IF (RO_G0 /= UNDEFINED) RO_G(I,J,K) = RO_G0
-           ENDIF
+      if (ro_g0 /= undefined) then
+         ! Fluid and inflow/outflow cells: FLAG < 100
+         where (flag < 100) ro_g = ro_g0
+      end if
 
-           IF(flag(i,j,k,1)==1) THEN
-! Strictly Fluid cells: FLAG = 1
-            IF (MU_G0 /= UNDEFINED) THEN
-               MU_G(i,j,k) = MU_G0
-               LAMBDA_G(i,j,k) = -(2.0d0/3.0d0)*MU_G0
-              ENDIF
-           ENDIF
-
-          end do
-        end do
-      end do
-
+      if (mu_g0 /= undefined) then
+         ! Strictly Fluid cells: FLAG = 1
+         where (flag .eq. 1) mu_g = mu_g0
+         where (flag .eq. 1) lambda_g = -(2.0d0/3.0d0)*mu_g0
+      end if
+         
       END SUBROUTINE SET_CONSTPROP
 END MODULE SET_CONSTPROP_MODULE

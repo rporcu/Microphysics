@@ -162,6 +162,9 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       DOUBLE PRECISION :: DT_tmp
 
 !---------------------------------------------------------------------//
+ 1010 FORMAT('Message 1010: Read in data from .RES file for TIME = ',&
+         G12.5,/'Time step number (NSTEP) =',I7)
+!---------------------------------------------------------------------//
       flag_mod = flag
 !-----------------------------------------------
 
@@ -268,7 +271,7 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       flag_mod = flag
 
 ! Set constant physical properties
-      CALL SET_CONSTPROP(ro_g, lambda_g, mu_g, flag)
+      CALL set_constprop(ro_g, lambda_g, mu_g, flag(:,:,:,1))
 
 ! Set initial conditions
       CALL SET_IC(ep_g, p_g, u_g, v_g, w_g, flag)
@@ -313,14 +316,11 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
          w_g, mu_g, f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius)
 
-      IF(IS_UNDEFINED(MU_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
+      IF(IS_UNDEFINED(mu_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
-! Remove undefined values at wall cells for scalars
+      ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
 
       CALL FINL_ERR_MSG
-
- 1010 FORMAT('Message 1010: Read in data from .RES file for TIME = ',&
-         G12.5,/'Time step number (NSTEP) =',I7)
 
       END subroutine MFIX
