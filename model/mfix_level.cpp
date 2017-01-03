@@ -23,10 +23,6 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     for (int lev = 1; lev <= maxLevel(); ++lev) {
        nsubsteps[lev] = MaxRefRatio(lev-1);
     }
-
-    t_new.resize(nlevs_max, 0.0);
-    t_old.resize(nlevs_max, -1.e100);
-    dt.resize(nlevs_max, 1.e100);
 #endif
 
     // Particle Container
@@ -171,20 +167,12 @@ mfix_level::Init()
 
     // if max_level > 0, define fine levels
 
-#if 0
-    mypc->AllocData();
     mypc->InitData();
-#endif
 }
 
 void
 mfix_level::Restart()
 {
-}
-
-void
-mfix_level::InitLevelData(int lev) {
-  return;
 }
 
 void
@@ -663,12 +651,18 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       omega_new.dataPtr(), &estatus, &finish);
 }
 
+
 void
-mfix_level::call_main(int lev, int nstep, Real dt, Real time)
+mfix_level::InitLevelData(int lev) {
+  return;
+}
+
+void
+mfix_level::call_main(int lev, Real dt, Real time)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      mfix_main1(
-               &time, &dt, &nstep,
+               &time, &dt, 
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),    
                (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),   

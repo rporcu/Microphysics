@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, &
+subroutine mfix1(time, dt, u_g, v_g, w_g, &
    p_g, ep_g, ro_g, rop_g, &
    d_e, d_n, d_t, &
    flux_ge, flux_gn, flux_gt, &
@@ -20,17 +20,14 @@ subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, &
       use check_data_20_module, only: check_data_20
       use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
-      use discretelement, only: max_pip
       use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0, mu_g0
       use funits , only: dmp_log, unit_log
       use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag_mod
-      use set_domain_module, only: set_domain
       use machine, only: wall_time
       use param1 , only: zero, is_defined, is_undefined, undefined
-      use run, only: call_usr, run_type, dem_solids
-      use run, only: dt_min, dt_max
+      use run, only: call_usr, run_type
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_constprop_module, only: set_constprop
@@ -50,7 +47,6 @@ subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, &
 
       IMPLICIT NONE
 
-      integer         , intent(inout) :: nstep
       double precision, intent(inout) :: time, dt
 
       integer         , intent(inout) :: flag&

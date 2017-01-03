@@ -79,7 +79,7 @@ int main (int argc, char* argv[])
 
   my_mfix.Init();
 
-  my_mfix.call_main(lev,nstep,dt,time);
+  my_mfix.call_main(lev,dt,time);
 
   int finish  = 0;
   int estatus = 0;

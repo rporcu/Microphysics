@@ -35,7 +35,7 @@ public:
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
 
-    void call_main (int lev, int nstep, Real dt, Real time);
+    void call_main (int lev, Real dt, Real time);
 
     void evolve_fluid (int lev, int nstep, int set_normg, 
                        Real dt, Real& prev_dt, Real time, Real normg); 
@@ -55,16 +55,10 @@ private:
 		       const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
 #if 0
-    void ComputeDt ();
-
     void WritePlotFile () const;
 
     Array<int> istep;      // which step?
     Array<int> nsubsteps;  // how many substeps on each level?
-
-    Array<Real> t_new;
-    Array<Real> t_old;
-    Array<Real> dt;
 #endif
 
     // Particle container

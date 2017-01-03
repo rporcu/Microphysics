@@ -16,9 +16,6 @@ MyParticleContainer::MyParticleContainer (AmrCore* amr_core)
 
     m_particles.reserve(m_gdb->maxLevel()+1);
     m_particles.resize (m_gdb->finestLevel()+1);
-
-    m_partdata.reserve(m_gdb->maxLevel()+1);
-    m_partdata.resize (m_gdb->finestLevel()+1);
 }
 
 void
@@ -41,28 +38,8 @@ MyParticleContainer::ReadStaticParameters ()
 }
 
 void
-MyParticleContainer::AllocData ()
+MyParticleContainer::InitData()
 {
-    m_particles.resize(m_gdb->finestLevel()+1);
-    m_partdata.resize(m_gdb->finestLevel()+1);
-
-    for (int lev = 0; lev <= m_gdb->finestLevel(); ++ lev)
-    {
-	auto& partleveldata = m_partdata[lev];
-	const BoxArray& ba = m_gdb->ParticleBoxArray(lev);
-	const DistributionMapping& dm = m_gdb->ParticleDistributionMap(lev);
-
-	MultiFab foo(ba, 1, 0, dm, Fab_noallocate);
-	for (MFIter mfi(foo); mfi.isValid(); ++mfi)
-	{
-	    int i = mfi.index();
-	    partleveldata[i] = Array<std::unique_ptr<Array<Real> > > (PIdx::npartdata);
-	    for (auto& d : partleveldata[i])
-	    {
-		d.reset(new Array<Real>());
-	    }
-	}
-    }
 }
 
 void

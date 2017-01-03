@@ -10,15 +10,23 @@
 
 struct PIdx
 {
-    enum { // Particle Attributes stored in p.m_data
-	w = 0,  // weight
-	ux, uy, uz,
+    enum { // Particle data stored in p.m_data
+	particle_phase = 0, 
+	particle_state,
+        des_radius,
+        ro_sol,
+        pvol, pmass, omoi,
+        des_pos_new,
+        des_vel_new,
+        des_usr_var,
+        omega_new,
+        des_acc_old,
+        des_rot_old,
+        drag_fc,
+        fc,
+        tow,
+        pairs,
 	nattribs
-    };
-
-    enum { // Particle data stored in partdata
-	Ex=0, Ey, Ez, Bx, By, Bz,
-	npartdata
     };
 };
 
@@ -32,24 +40,11 @@ public:
 
     virtual ~MyParticleContainer() {}
 
-    void AllocData ();
-
     void InitData ();
 
     void Evolve (int lev, Real dt);
 
 private:
-
-    // The outermost Array is for AMR level.
-    // map's key is grid id and value is an Array. The size of map is the size of local grids.
-    // The Array (i.e., the value of the map) has npartdata unique_ptr to another Array.  
-    // The size of the map value Array is npartdata.
-    // The innermost Array holds a particular data (say Ex or gaminv) for particles on a grid.
-    // The size of the innermost array is the number of particles.
-    Array<std::map<int, Array<std::unique_ptr<Array<Real> > > > > m_partdata;
-
-    Real charge;
-    Real mass;
 
     static void ReadStaticParameters ();
 
