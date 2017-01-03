@@ -30,9 +30,11 @@ int main (int argc, char* argv[])
   int steady_state;
   int call_udf;
   Real dt, dt_min, dt_max, tstop, time;
+  Real xlength, ylength, zlength;
   int nstep=0;  // Number of time steps
   Real normg;
   int set_normg;
+  int coord;
   int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
 
   mfix_get_data(
@@ -42,17 +44,18 @@ int main (int argc, char* argv[])
     &steady_state,
     &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
     &normg, &set_normg, &call_udf, 
-    &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf);
+    &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
+    &xlength, &ylength, &zlength, &coord);
 
   int max_grid_size = 1024;
 
-  // This defines the physical size of the box.
-  // Right now the box is [0,1] in each direction.
+  // This defines the physical size of the box using {xlength,ylength,zlength} from mfix.dat
   RealBox real_box;
-  for (int n = 0; n < BL_SPACEDIM; n++) {
+  for (int n = 0; n < BL_SPACEDIM; n++) 
     real_box.setLo(n, 0.0);
-    real_box.setHi(n, 1.0);
-  }
+  real_box.setHi(0, xlength);
+  real_box.setHi(1, ylength);
+  real_box.setHi(2, zlength);
 
   // This sets the boundary conditions to be doubly or triply periodic
   int is_periodic[BL_SPACEDIM];
@@ -68,9 +71,6 @@ int main (int argc, char* argv[])
   n_cell[2] = kmax;
 
   const RealBox* rb_ptr = &real_box;
-
-  // This says we are using Cartesian coordinates
-  int coord = 0;
 
   // Note that the constructor constructs the Geometry object now.
   mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
