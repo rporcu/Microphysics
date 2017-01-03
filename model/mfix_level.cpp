@@ -141,13 +141,14 @@ mfix_level::ReadParameters ()
 
 void
 mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
-                       int max_nit_in, int call_udf)
+                       int max_nit_in, int call_udf_in)
 {
    solve_fluid  = solve_fluid_in;
    solve_dem    = solve_dem_in;
    steady_state = steady_state_in;
    cyclic_mf    = cyclic_mf_in;
    max_nit      = max_nit_in;
+   call_udf     = call_udf_in;
 }
 
 void
@@ -709,6 +710,7 @@ mfix_level::call_main(int lev, int nstep, Real dt, Real time)
                fc.dataPtr(), tow.dataPtr());
 
   // Call user-defined subroutine to set constants, check data, etc.
+  std::cout << "CALL UDF " << call_udf << std::endl;
   if (call_udf) 
       mfix_usr0();
 
