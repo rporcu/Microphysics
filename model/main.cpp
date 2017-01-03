@@ -28,6 +28,7 @@ int main (int argc, char* argv[])
   int solve_fluid;
   int solve_dem;
   int steady_state;
+  int call_udf;
   Real dt, dt_min, dt_max, tstop, time;
   int nstep=0;  // Number of time steps
   Real normg;
@@ -40,7 +41,7 @@ int main (int argc, char* argv[])
     &solve_dem,
     &steady_state,
     &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
-    &normg, &set_normg,
+    &normg, &set_normg, &call_udf, 
     &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf);
 
   IntVect dom_lo(IntVect(D_DECL(0,0,0)));
@@ -77,7 +78,7 @@ int main (int argc, char* argv[])
   // Note that the constructor constructs the Geometry object now.
   mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
 
-  my_mfix.Init(solve_fluid,solve_dem,steady_state,cyclic_mf,max_nit);
+  my_mfix.Init(solve_fluid,solve_dem,steady_state,cyclic_mf,max_nit,call_udf);
 
   // define dx[]
   // const Real* dx = mfix_level.geom.CellSize();

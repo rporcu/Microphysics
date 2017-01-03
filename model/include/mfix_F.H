@@ -7,8 +7,8 @@ extern "C"
   void mfix_get_data(int* imax, int* jmax, int* kmax,
                      int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
-                     Real* tstop, Real* time, int* max_nit,
-                     Real* normg, int* set_normg,
+                     Real* tstop, Real* time, int* max_nit, 
+                     Real* normg, int* set_normg, int* call_udf, 
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf);
 
   void mfix_set_domain(int* flag);
@@ -25,21 +25,10 @@ extern "C"
                  Real* d_e,     Real* d_n,      Real* d_t,
                  Real* flux_gE, Real* flux_gN,  Real* flux_gT,
                  Real* trD_g,   Real* lambda_g, Real* mu_g,
-                 Real* f_gds,   Real* drag_bm,  int* flag);
+                 int* flag);
 
-  void mfix_main2(
-                 Real* time,    Real* dt,       int* nstep,
-                 Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* u_go,    Real* v_go,     Real* w_go,
-                 Real* p_g,     Real* p_go,     Real* pp_g,
-                 Real* ep_g,    Real* ep_go,
-                 Real* ro_g,    Real* ro_go,
-                 Real* rog_g,   Real* rog_go,
-                 Real* rop_gE,  Real* rop_gN,   Real* rop_gT,
-                 Real* d_e,     Real* d_n,      Real* d_t,
-                 Real* flux_gE, Real* flux_gN,  Real* flux_gT,
-                 Real* trD_g,   Real* lambda_g, Real* mu_g,
-                 Real* f_gds,   Real* drag_bm,  int* flag,
+  void mfix_make_arrays_des(
+                 Real* ep_g,    int* flag,
                  int* particle_state,
                  int* particle_phase,
                  Real* des_radius,
@@ -51,9 +40,6 @@ extern "C"
                  Real* des_vel_new,
                  Real* des_usr_var,
                  Real* omega_new,
-                 Real* des_acc_old,
-                 Real* rot_acc_old,
-                 Real* drag_fc,
                  Real* fc,
                  Real* tow);
 
@@ -237,12 +223,16 @@ extern "C"
           int* flag,
           Real* time,           Real* dt,             int* nstep);
 
+  void mfix_usr0();
+
   void mfix_usr1();
 
   void mfix_usr2();
 
   void mfix_usr3(Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g);
+
+  void mfix_finl_err_msg();
 
   void mfix_solve_lin_eq(int* vno, Real* var, Real* A_m, Real* b_m);
 }

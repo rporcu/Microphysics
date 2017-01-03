@@ -141,7 +141,7 @@ mfix_level::ReadParameters ()
 
 void
 mfix_level::Init(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
-                 int max_nit_in)
+                 int max_nit_in, int call_udf)
 {
     BL_ASSERT(max_level == 0);
 
@@ -690,26 +690,36 @@ mfix_level::call_main(int lev, int nstep, Real dt, Real time)
                (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
                (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-               (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),  (*flag[lev])[mfi].dataPtr());
+               (*flag[lev])[mfi].dataPtr());
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     mfix_main2(
-               &time, &dt, &nstep,
-               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*u_go[lev])[mfi].dataPtr(),    (*v_go[lev])[mfi].dataPtr(),     (*w_go[lev])[mfi].dataPtr(),
-               (*p_g[lev])[mfi].dataPtr(),     (*p_go[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
-               (*ep_g[lev])[mfi].dataPtr(),    (*ep_go[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),    (*ro_go[lev])[mfi].dataPtr(),
-               (*rop_g[lev])[mfi].dataPtr(),   (*rop_go[lev])[mfi].dataPtr(),
-               (*rop_gE[lev])[mfi].dataPtr(),  (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-               (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-               (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-               (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-               (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),  (*flag[lev])[mfi].dataPtr(),
+  if (solve_dem) 
+     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+        mfix_make_arrays_des(
+               (*ep_g[lev])[mfi].dataPtr(), (*flag[lev])[mfi].dataPtr(), 
                particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-               des_usr_var.dataPtr(), omega_new.dataPtr(), des_acc_old.dataPtr(),
-               rot_acc_old.dataPtr(), drag_fc.dataPtr(), fc.dataPtr(), tow.dataPtr());
+               des_usr_var.dataPtr(), omega_new.dataPtr(), 
+               fc.dataPtr(), tow.dataPtr());
+
+  // Call user-defined subroutine to set constants, check data, etc.
+  if (call_udf) 
+      mfix_usr0();
+
+  // Calculate all the coefficients once before entering the time loop
+  int calc_flag = 2;
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+      calc_coeff(
+               (*flag[lev])[mfi].dataPtr(),    &calc_flag, 
+               (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
+               (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
+               (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
+               (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
+               particle_phase.dataPtr(), particle_state.dataPtr(),
+               pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+               des_radius.dataPtr());
+
+  mfix_finl_err_msg();
 }

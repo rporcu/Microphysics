@@ -16,13 +16,13 @@ contains
 !**************************************************************************!
   subroutine mfix_get_data(imax_to_c, jmax_to_c, kmax_to_c, fluid, &
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
-     time, max_nitC, normg, set_normg, &
+     time, max_nitC, normg, set_normg, call_udf, &
      cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf) &
      bind(C, name="mfix_get_data")
 
     use get_data_module, only: get_data
     use geometry, only: imax, jmax, kmax
-    use run, only: dem_solids
+    use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
     use param1, only: is_undefined
     use fld_const, only: ro_g0
@@ -36,7 +36,7 @@ contains
 
     integer, intent(out) :: imax_to_c, jmax_to_c, kmax_to_c
     integer, intent(out) :: fluid
-    integer, intent(out) :: dem
+    integer, intent(out) :: dem, call_udf
     integer, intent(out) :: steady_state
     double precision, intent(out) :: dt_minC, dt_maxC, tstopC
     double precision, intent(out) :: dt, time
@@ -54,7 +54,8 @@ contains
 ! Flags for fluid setup
     fluid =  merge(1,0,ro_g0 /= 0.0d0)
 
-    dem   =  merge(1,0,dem_solids)
+    dem      =  merge(1,0,dem_solids)
+    call_udf =  merge(1,0,call_usr)
 
     steady_state = merge(1,0,is_undefined(dt))
 
@@ -96,13 +97,23 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
+  subroutine mfix_usr0() &
+       bind(C, name="mfix_usr0")
+
+    call usr0
+
+  end subroutine mfix_usr0
+
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
   subroutine mfix_usr1() &
        bind(C, name="mfix_usr1")
 
     call usr1
 
- end subroutine mfix_usr1
-
+  end subroutine mfix_usr1
 
 !**************************************************************************!
 !                                                                          !
@@ -114,6 +125,19 @@ contains
     call usr2
 
   end subroutine mfix_usr2
+
+!**************************************************************************!
+!                                                                          !
+!                                                                          !
+!**************************************************************************!
+  subroutine mfix_finl_err_msg() &
+       bind(C, name="mfix_finl_err_msg")
+
+    use error_manager, only: finl_err_msg
+
+    call finl_err_msg
+
+  end subroutine mfix_finl_err_msg
 
 
 !**************************************************************************!

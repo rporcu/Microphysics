@@ -25,7 +25,7 @@ public:
 
     int Verbose () const { return verbose; }
 
-    void Init(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit);
+    void Init(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit, int call_udf);
 
     void usr3 (int lev);
 
@@ -159,6 +159,7 @@ private:
     int steady_state;
     int cyclic_mf;
     int max_nit;
+    int call_udf;
 
 //  int max_step   = std::numeric_limits<int>::max();
 //  Real stop_time = std::numeric_limits<Real>::max();

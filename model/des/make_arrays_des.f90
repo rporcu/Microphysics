@@ -1,5 +1,3 @@
-MODULE MAKE_ARRAYS_DES_MODULE
-CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Module name: MAKE_ARRAYS_DES                                        !
 !  Author: Jay Boyalakuntla                           Date: 12-Jun-04  !
@@ -9,7 +7,8 @@ CONTAINS
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine make_arrays_des(ep_g, flag, particle_state, particle_phase, &
       des_radius,  ro_sol, pvol, pmass, omoi, des_pos_new, des_vel_new,&
-      des_usr_var, omega_new, fc, tow)
+      des_usr_var, omega_new, fc, tow) &
+   bind(C, name="mfix_make_arrays_des")
 
 ! Module procedures .................................................//
       use read_par_input_module, only: read_par_input
@@ -141,4 +140,3 @@ CONTAINS
 
       RETURN
       END SUBROUTINE MAKE_ARRAYS_DES
-END MODULE MAKE_ARRAYS_DES_MODULE
