@@ -44,9 +44,6 @@ int main (int argc, char* argv[])
     &normg, &set_normg, &call_udf, 
     &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf);
 
-  IntVect dom_lo(IntVect(D_DECL(0,0,0)));
-  IntVect dom_hi(IntVect(D_DECL(imax-1, jmax-1, kmax-1)));
-
   int max_grid_size = 1024;
 
   // This defines the physical size of the box.
