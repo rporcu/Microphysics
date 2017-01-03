@@ -335,7 +335,7 @@ mfix_level::usr3(int lev)
 
 void
 mfix_level::evolve_fluid(int lev, int nstep, int set_normg, 
-                         Real dt, Real prev_dt, Real time, Real normg)
+                         Real dt, Real& prev_dt, Real time, Real normg)
 {
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -622,7 +622,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               des_vel_new.dataPtr(), des_radius.dataPtr(),
               (*flag[lev])[mfi].dataPtr());
         }
-      }while (reiterate==1);
+      } while (reiterate==1);
 }
 
 void

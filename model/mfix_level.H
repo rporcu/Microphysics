@@ -38,7 +38,7 @@ public:
     void call_main (int lev, int nstep, Real dt, Real time);
 
     void evolve_fluid (int lev, int nstep, int set_normg, 
-                       Real dt, Real prev_dt, Real time, Real normg); 
+                       Real dt, Real& prev_dt, Real time, Real normg); 
 
     void evolve_dem (int lev, int nstep, Real dt, Real time);
 
