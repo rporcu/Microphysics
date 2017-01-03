@@ -36,7 +36,6 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       use machine, only: wall_time
       use make_arrays_des_module, only: make_arrays_des
       use param1 , only: zero, is_defined, is_undefined, undefined
-      use read_res1_mod, only: read_res1
       use run, only: call_usr, run_type, dem_solids
       use run, only: dt_min, dt_max
       use set_bc0_module, only: set_bc0
@@ -50,7 +49,6 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       use write_out0_module, only: write_out0
       use write_out1_module, only: write_out1
       use write_out3_module, only: write_out3
-      use write_res1_mod, only: write_res1
       use zero_norm_vel_module, only: zero_norm_vel
       use output_manager_module, only: init_output_vars
       use calc_coeff_module, only: calc_coeff
@@ -153,55 +151,7 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: tow(max_pip,3)
 
 !---------------------------------------------------------------------//
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Save TIME in input file for RESTART_2
-      DOUBLE PRECISION :: TIME_SAVE
-! Temporary storage for DT
-      DOUBLE PRECISION :: DT_tmp
-
-!---------------------------------------------------------------------//
- 1010 FORMAT('Message 1010: Read in data from .RES file for TIME = ',&
-         G12.5,/'Time step number (NSTEP) =',I7)
-!---------------------------------------------------------------------//
       flag_mod = flag
-!-----------------------------------------------
-
-      ! This is now called from main.cpp
-      ! call set_domain(flag)
-
-      IF (DEM_SOLIDS) THEN
-
-! Particle state flag
-         PARTICLE_STATE(:) = NONEXISTENT
-
-! Physical properties:
-         DES_RADIUS(:) = ZERO
-         RO_Sol(:) = ZERO
-         PVOL(:) = ZERO
-         PMASS(:) = ZERO
-         OMOI(:) = ZERO
-
-! Particle position, velocity, etc
-         DES_POS_NEW(:,:) = ZERO
-         DES_VEL_NEW(:,:) = ZERO
-         OMEGA_NEW(:,:) = ZERO
-
-! Translation and rotational forces
-         FC(:,:) = ZERO
-         TOW(:,:) = ZERO
-
-! Initializing user defined array
-         DES_USR_VAR(:,:) = ZERO
-
-! Particle center drag coefficient and explicit drag force
-         DRAG_FC(:,:) = ZERO
-
-! Higher order time integration variables.
-         DES_ACC_OLD(:,:) = ZERO
-         ROT_ACC_OLD(:,:) = ZERO
-      ENDIF
 
 ! Write the initial part of the standard output file
       CALL WRITE_OUT0(time, dt)
@@ -210,50 +160,6 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       CALL WRITE_USR0
 
       CALL INIT_ERR_MSG('MFIX')
-
-      DT_TMP = DT
-      SELECT CASE (TRIM(RUN_TYPE))
-
-      CASE ('NEW')
-! Write the initial part of the restart files
-         CALL WRITE_RES0
-
-       CASE ('RESTART_1')
-! Read the time-dependent part of the restart file
-          CALL READ_RES1(dt, nstep, time,ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
-         WRITE(ERR_MSG, 1010) TIME, NSTEP
-         CALL FLUSH_ERR_MSG()
-
-      CASE ('RESTART_2')
-         TIME_SAVE = TIME
-
-         CALL READ_RES1(dt, nstep, time,ep_g,p_g,ro_g,u_g,v_g,w_g,rop_g)
-         TIME = TIME_SAVE
-
-         WRITE(ERR_MSG, 1010) TIME, NSTEP
-         CALL FLUSH_ERR_MSG()
-
-         CALL WRITE_RES0
-
-! Writing the RES1 can only be done here when re-indexing is turned off
-! This will be done after the cell re-indexing is done later in this file.
-! This allows restarting independently of the re-indexing setting between
-! the previous and current run.
-         CALL WRITE_RES1(dt, nstep, time,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
-
-      CASE DEFAULT
-         IF(DMP_LOG)WRITE (UNIT_LOG, *) &
-            ' MFIX: Do not know how to process'
-         IF(DMP_LOG)WRITE (UNIT_LOG, *) ' RUN_TYPE in data file'
-         call mfix_exit(myPE)
-
-      END SELECT
-
-      IF (IS_DEFINED(DT_TMP)) THEN
-         DT = MAX(DT_MIN,MIN(DT_MAX,DT))
-      ELSE
-         DT = DT_TMP
-      ENDIF
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
@@ -289,24 +195,31 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
 ! Initialize densities.
       IF (RUN_TYPE == 'NEW') CALL SET_RO_G(ro_g,rop_g,p_g,ep_g,flag)
 
+! Remove undefined values at wall cells for scalars
+      where(rop_g == undefined) rop_g = 0.0
+
 ! Initialize time dependent boundary conditions
       CALL SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-                    flux_ge, flux_gn, flux_gt, flag)
+         flux_ge, flux_gn, flux_gt, flag)
 
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
-      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g, &
-         flag, particle_state, particle_phase,  &
-         des_radius,  ro_sol, pvol, pmass, omoi, &
-         des_pos_new, des_vel_new, des_usr_var, omega_new, fc)
-
-! ######################## Moved here from time march
+      IF(IS_UNDEFINED(mu_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
       CALL INIT_OUTPUT_VARS(time, dt)
 
 ! Parse residual strings
       CALL PARSE_RESID_STRING ()
+
+
+! First instance of particle data ......................................
+      IF(DEM_SOLIDS) CALL MAKE_ARRAYS_DES(ep_g, &
+         flag, particle_state, particle_phase,  &
+         des_radius,  ro_sol, pvol, pmass, omoi, &
+         des_pos_new, des_vel_new, des_usr_var, omega_new, fc, tow)
+
+
 
 ! Call user-defined subroutine to set constants, check data, etc.
       IF (CALL_USR) CALL USR0
@@ -316,10 +229,7 @@ subroutine MFIX(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
          w_g, mu_g, f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius)
 
-      IF(IS_UNDEFINED(mu_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
 
-      ! Remove undefined values at wall cells for scalars
-      where(rop_g == undefined) rop_g = 0.0
 
       CALL FINL_ERR_MSG
 

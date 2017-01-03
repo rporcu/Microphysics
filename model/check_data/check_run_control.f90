@@ -90,8 +90,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
       ENDIF
 
 ! Verify the run type.
-      IF(.NOT.(RUN_TYPE=='NEW' .OR. RUN_TYPE=='RESTART_1'              &
-         .OR. RUN_TYPE=='RESTART_2')) THEN
+      IF(.NOT.(RUN_TYPE=='NEW')) THEN
          WRITE(ERR_MSG,1001) 'RUN_TYPE', RUN_TYPE
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF

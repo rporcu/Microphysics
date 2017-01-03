@@ -27,8 +27,6 @@ module output_manager_module
 
       use machine, only: wall_time
       use output, only: OUT_TIME, OUT_DT
-      use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
-      use output, only: RES_TIME, RES_DT
       use output, only: USR_TIME, USR_DT
       use output, only: VTP_TIME, VTP_DT
       use param, only: DIMENSION_USR
@@ -36,8 +34,6 @@ module output_manager_module
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
       use write_des_data_module, only: write_des_data
-      use write_res0_des_module, only: write_res0_des
-      use write_res1_mod, only: write_res1
       use discretelement, only: max_pip
 
       IMPLICIT NONE
@@ -98,28 +94,6 @@ module output_manager_module
 
 ! Get the current time before any IO operations begin
       WALL_START = WALL_TIME()
-
-! Create a backup copy of the RES file.
-      IF(TIME+0.1d0*DT>=RES_BACKUP_TIME) THEN
-         RES_BACKUP_TIME = NEXT_TIME(RES_BACKUP_DT)
-         CALL BACKUP_RES
-      ENDIF
-
-! Write restart file, if needed
-      IF(CHECK_TIME(RES_TIME) .OR. EXIT_SIGNAL == 1) THEN
-
-         RES_TIME = NEXT_TIME(RES_DT)
-         CALL WRITE_RES1(dt, nstep, time, ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g)
-         CALL NOTIFY_USER('.RES;')
-
-         IF(DEM_SOLIDS) THEN
-            CALL WRITE_RES0_DES( particle_state, &
-               des_radius, ro_sol, des_usr_var, &
-               des_pos_new, des_vel_new, omega_new)
-            CALL NOTIFY_USER('DES.RES;')
-         ENDIF
-
-      ENDIF
 
 ! Write standard output, if needed
       IF(CHECK_TIME(OUT_TIME)) THEN

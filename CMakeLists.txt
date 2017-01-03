@@ -113,15 +113,11 @@ set(F90_sources
   model/des/make_arrays_des.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90
-  model/des/read_res0_des.f90
-  model/des/read_res1_des_mod.f90
   model/des/set_geometry_des.f90
   model/des/set_phase_index.f90
   model/des/stl_functions_des_mod.f90
   model/des/vtp_mod.f90
   model/des/write_des_data.f90
-  model/des/write_res0_des.f90
-  model/des/write_res1_des_mod.f90
   model/discretization_mod.f90
   model/display_resid.f90
   model/dmp_modules/compar_mod.f90
@@ -154,7 +150,6 @@ set(F90_sources
   model/io/out_bin_512r.f90
   model/io/out_bin_r.f90
   model/io/output_manager.f90
-  model/io/read_res1.f90
   model/io/write_ab_m.f90
   model/io/write_ab_m_var.f90
   model/io/write_error.f90
@@ -162,8 +157,6 @@ set(F90_sources
   model/io/write_out0.f90
   model/io/write_out1.f90
   model/io/write_out3.f90
-  model/io/write_res0.f90
-  model/io/write_res1.f90
   model/io/write_table.f90
   model/location_check.f90
   model/machine_mod.f90

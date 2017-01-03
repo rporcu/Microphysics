@@ -78,12 +78,6 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Type of run.</description>
 !  <valid value="new" note="A new run. There should be no .RES,
 !    .OUT, or .LOG files in the run directory."/>
-!  <valid value="RESTART_1" note="Traditional restart. The run continues
-!    from the last time the .RES file was updated."/>
-!  <valid value="RESTART_2"
-!    note="Start a new run with initial conditions from a .RES file
-!      created from another run. No other data files (VTU/VTP) should be
-!      in the run directory."/>
       RUN_TYPE = UNDEFINED_C
 !</keyword>
 

@@ -70,9 +70,6 @@ MODULE OPEN_FILES_MOD
 
          IF(myPE==PE_IO) THEN
 
-! Open the RES file.
-            CALL OPEN_FILE (RUN_NAME, NB, UNIT_RES, '.RES', FILE_NAME, &
-               'NEW', 'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
 ! Report errors.
             IF (IER(myPE) == 100) THEN
                WRITE(ERR_MSG, 1000)'RES', 'NEW', trim(FILE_NAME)
@@ -93,8 +90,6 @@ MODULE OPEN_FILES_MOD
 
 ! Open the RES file.
          IF(myPE == PE_IO) THEN
-            CALL OPEN_FILE(RUN_NAME, NB, UNIT_RES, '.RES', FILE_NAME,  &
-               'OLD', 'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
 ! Report errors.
             IF (IER(myPE) == 101) THEN
                WRITE(ERR_MSG, 1001)'RES', 'RESTART_1',trim(FILE_NAME)
@@ -116,8 +111,6 @@ MODULE OPEN_FILES_MOD
 ! Open the RES file.
          CSTATUS = 'OLD'
          IF(myPE == PE_IO) THEN
-            CALL OPEN_FILE (RUN_NAME, NB, UNIT_RES, '.RES', FILE_NAME, &
-               CSTATUS,'DIRECT', 'UNFORMATTED', OPEN_N1, IER(myPE))
 ! Report errors.
             IF (IER(myPE) == 101) THEN
                WRITE(ERR_MSG, 1001)'RES', 'RESTART_2',trim(FILE_NAME)
