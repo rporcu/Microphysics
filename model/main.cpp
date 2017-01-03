@@ -56,9 +56,9 @@ int main (int argc, char* argv[])
 
   // This sets the boundary conditions to be doubly or triply periodic
   int is_periodic[BL_SPACEDIM];
-  for (int i = 0; i < BL_SPACEDIM; i++) {
-    is_periodic[i] = 0;
-  }
+  is_periodic[0] = cyclic_x;
+  is_periodic[1] = cyclic_y;
+  is_periodic[2] = cyclic_z;
 
   int max_level = 0;
   int lev = 0;
@@ -75,25 +75,39 @@ int main (int argc, char* argv[])
   // Note that the constructor constructs the Geometry object now.
   mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
 
-  my_mfix.InitParams(solve_fluid,solve_dem,steady_state,cyclic_mf,max_nit,call_udf);
+  my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
 
   my_mfix.Init();
 
-  // define dx[]
-  // const Real* dx = mfix_level.geom.CellSize();
-
   my_mfix.call_main(lev,nstep,dt,time);
 
-  int finish, estatus;
-  finish = 0;
-  estatus = 0;
+  int finish  = 0;
+  int estatus = 0;
 
-  Real prev_dt; // Actual dt used to solve fluid
-
+  // Call to output before entering time march loop
   my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
-  my_mfix.evolve(0,nstep,estatus,finish,set_normg,
-                 dt,tstop,time,normg);
+  Real prev_dt;
+  while (finish == 0)
+  {
+    mfix_usr1();
+
+    if (solve_fluid)
+      my_mfix.evolve_fluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
+
+    if (solve_dem)
+      my_mfix.evolve_dem(lev,nstep,dt,time);
+
+    if(!steady_state) {
+      time += prev_dt;
+      nstep++;
+    }
+
+    my_mfix.output(lev,estatus,finish,nstep,dt,time);
+
+    // Mechanism to terminate MFIX normally.
+    if (steady_state || (time + 0.1L*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
+  }
 
   my_mfix.usr3(0);
 

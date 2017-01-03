@@ -25,7 +25,7 @@ public:
 
     int Verbose () const { return verbose; }
 
-    void InitParams(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int cyclic_mf, int max_nit, int call_udf);
 
     void Init();
 
@@ -37,8 +37,10 @@ public:
 
     void call_main (int lev, int nstep, Real dt, Real time);
 
-    void evolve (int lev, int nstep, int estatus, int finish, int set_normg, 
-                 Real dt, Real tstop, Real time, Real normg); 
+    void evolve_fluid (int lev, int nstep, int set_normg, 
+                       Real dt, Real prev_dt, Real time, Real normg); 
+
+    void evolve_dem (int lev, int nstep, Real dt, Real time);
 
 protected:
     virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
@@ -160,7 +162,6 @@ private:
 
     int solve_fluid;
     int solve_dem;
-    int steady_state;
     int cyclic_mf;
     int max_nit;
     int call_udf;

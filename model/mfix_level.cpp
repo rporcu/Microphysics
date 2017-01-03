@@ -140,12 +140,11 @@ mfix_level::ReadParameters ()
 }
 
 void
-mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
+mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
                        int max_nit_in, int call_udf_in)
 {
    solve_fluid  = solve_fluid_in;
    solve_dem    = solve_dem_in;
-   steady_state = steady_state_in;
    cyclic_mf    = cyclic_mf_in;
    max_nit      = max_nit_in;
    call_udf     = call_udf_in;
@@ -335,16 +334,9 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::evolve(int lev, int nstep, int estatus, int finish, int set_normg, 
-                   Real dt, Real tstop, Real time, Real normg)
+mfix_level::evolve_fluid(int lev, int nstep, int set_normg, 
+                         Real dt, Real prev_dt, Real time, Real normg)
 {
-  Real prev_dt;
-  do {
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-      mfix_usr1();
-
-    if(solve_fluid) {
-
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         set_bc1(
@@ -631,12 +623,14 @@ mfix_level::evolve(int lev, int nstep, int estatus, int finish, int set_normg,
               (*flag[lev])[mfi].dataPtr());
         }
       }while (reiterate==1);
-    }
+}
 
+void
+mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
+{
     int pair_count = 0;
 
-    if(solve_dem) {
-      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_des_time_march(
           (*ep_g[lev])[mfi].dataPtr(),      (*p_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),       (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -651,26 +645,11 @@ mfix_level::evolve(int lev, int nstep, int estatus, int finish, int set_normg,
           pairs.dataPtr(),          &pair_count,
           (*flag[lev])[mfi].dataPtr(),
           &time, &dt, &nstep);
-    }
-
-    if(!steady_state) {
-      time += prev_dt;
-      nstep++;
-    }
-
-    output(lev,estatus,finish,nstep,dt,time);
-
-    // Mechanism to terminate MFIX normally.
-    if(steady_state || time + 0.1L*dt >= tstop ||
-       (solve_dem && !solve_fluid)) finish = 1;
-
- } while (finish==0);
 }
 
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
-  // Call to output before entering time march loop
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     mfix_output_manager(
       &time, &dt, &nstep,
@@ -710,7 +689,6 @@ mfix_level::call_main(int lev, int nstep, Real dt, Real time)
                fc.dataPtr(), tow.dataPtr());
 
   // Call user-defined subroutine to set constants, check data, etc.
-  std::cout << "CALL UDF " << call_udf << std::endl;
   if (call_udf) 
       mfix_usr0();
 
