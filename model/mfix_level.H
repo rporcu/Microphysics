@@ -25,7 +25,11 @@ public:
 
     int Verbose () const { return verbose; }
 
-    void Init(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit, int call_udf);
+    void InitParams(int solve_fluid, int solve_dem, int steady_state, int cyclic_mf, int max_nit, int call_udf);
+
+    void Init();
+
+    void Restart();
 
     void usr3 (int lev);
 

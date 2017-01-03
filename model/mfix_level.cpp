@@ -140,8 +140,18 @@ mfix_level::ReadParameters ()
 }
 
 void
-mfix_level::Init(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
-                 int max_nit_in, int call_udf)
+mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int steady_state_in, int cyclic_mf_in,
+                       int max_nit_in, int call_udf)
+{
+   solve_fluid  = solve_fluid_in;
+   solve_dem    = solve_dem_in;
+   steady_state = steady_state_in;
+   cyclic_mf    = cyclic_mf_in;
+   max_nit      = max_nit_in;
+}
+
+void
+mfix_level::Init()
 {
     BL_ASSERT(max_level == 0);
 
@@ -165,12 +175,11 @@ mfix_level::Init(int solve_fluid_in, int solve_dem_in, int steady_state_in, int 
     mypc->AllocData();
     mypc->InitData();
 #endif
- 
-   solve_fluid  = solve_fluid_in;
-   solve_dem    = solve_dem_in;
-   steady_state = steady_state_in;
-   cyclic_mf    = cyclic_mf_in;
-   max_nit      = max_nit_in;
+}
+
+void
+mfix_level::Restart()
+{
 }
 
 void
