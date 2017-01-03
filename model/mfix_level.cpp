@@ -678,7 +678,22 @@ void
 mfix_level::call_main(int lev, int nstep, Real dt, Real time)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     mfix_MAIN(
+     mfix_main1(
+               &time, &dt, &nstep,
+               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+               (*u_go[lev])[mfi].dataPtr(),    (*v_go[lev])[mfi].dataPtr(),     (*w_go[lev])[mfi].dataPtr(),
+               (*p_g[lev])[mfi].dataPtr(),     (*p_go[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
+               (*ep_g[lev])[mfi].dataPtr(),    (*ep_go[lev])[mfi].dataPtr(),
+               (*ro_g[lev])[mfi].dataPtr(),    (*ro_go[lev])[mfi].dataPtr(),
+               (*rop_g[lev])[mfi].dataPtr(),   (*rop_go[lev])[mfi].dataPtr(),
+               (*rop_gE[lev])[mfi].dataPtr(),  (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+               (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+               (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+               (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
+               (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),  (*flag[lev])[mfi].dataPtr());
+
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+     mfix_main2(
                &time, &dt, &nstep,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*u_go[lev])[mfi].dataPtr(),    (*v_go[lev])[mfi].dataPtr(),     (*w_go[lev])[mfi].dataPtr(),

@@ -13,7 +13,21 @@ extern "C"
 
   void mfix_set_domain(int* flag);
 
-  void mfix_MAIN(
+  void mfix_main1(
+                 Real* time,    Real* dt,       int* nstep,
+                 Real* u_g,     Real* v_g,      Real* w_g,
+                 Real* u_go,    Real* v_go,     Real* w_go,
+                 Real* p_g,     Real* p_go,     Real* pp_g,
+                 Real* ep_g,    Real* ep_go,
+                 Real* ro_g,    Real* ro_go,
+                 Real* rog_g,   Real* rog_go,
+                 Real* rop_gE,  Real* rop_gN,   Real* rop_gT,
+                 Real* d_e,     Real* d_n,      Real* d_t,
+                 Real* flux_gE, Real* flux_gN,  Real* flux_gT,
+                 Real* trD_g,   Real* lambda_g, Real* mu_g,
+                 Real* f_gds,   Real* drag_bm,  int* flag);
+
+  void mfix_main2(
                  Real* time,    Real* dt,       int* nstep,
                  Real* u_g,     Real* v_g,      Real* w_g,
                  Real* u_go,    Real* v_go,     Real* w_go,
