@@ -51,18 +51,22 @@ VPATH_LOCATIONS += $(MODEL_HOME)/io
 VPATH_LOCATIONS += $(MODEL_HOME)/solvers
 VPATH_LOCATIONS += $(MODEL_HOME)/usr
 
-include $(BOXLIB_HOME)/Src/C_AmrCoreLib/Make.package
-include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
-include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
 
+include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BoundaryLib
 vpathdir += $(BOXLIB_HOME)/Src/C_BoundaryLib
 
+include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BaseLib
 vpathdir += $(BOXLIB_HOME)/Src/C_BaseLib
 
+include $(BOXLIB_HOME)/Src/C_AmrCoreLib/Make.package
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_AmrCoreLib
 vpathdir += $(BOXLIB_HOME)/Src/C_AmrCoreLib
+
+include $(BOXLIB_HOME)/Src/C_ParticleLib/Make.package
+INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_ParticleLib
+vpathdir += $(BOXLIB_HOME)/Src/C_ParticleLib
 
 ifeq ($(USE_F90_SOLVERS), TRUE)
   include $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package
