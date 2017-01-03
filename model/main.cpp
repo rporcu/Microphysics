@@ -94,7 +94,7 @@ int main (int argc, char* argv[])
   my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
   my_mfix.evolve(0,nstep,estatus,finish,set_normg,
-                 dt,dt_min,dt_max,tstop,time,normg);
+                 dt,tstop,time,normg);
 
   my_mfix.usr3(0);
 

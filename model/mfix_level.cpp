@@ -326,7 +326,7 @@ mfix_level::usr3(int lev)
 
 void
 mfix_level::evolve(int lev, int nstep, int estatus, int finish, int set_normg, 
-                   Real dt, Real dt_min, Real dt_max, Real tstop, Real time, Real normg)
+                   Real dt, Real tstop, Real time, Real normg)
 {
   Real prev_dt;
   do {
@@ -681,12 +681,8 @@ mfix_level::call_main(int lev, int nstep, Real dt, Real time)
      mfix_main1(
                &time, &dt, &nstep,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*u_go[lev])[mfi].dataPtr(),    (*v_go[lev])[mfi].dataPtr(),     (*w_go[lev])[mfi].dataPtr(),
-               (*p_g[lev])[mfi].dataPtr(),     (*p_go[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
-               (*ep_g[lev])[mfi].dataPtr(),    (*ep_go[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),    (*ro_go[lev])[mfi].dataPtr(),
-               (*rop_g[lev])[mfi].dataPtr(),   (*rop_go[lev])[mfi].dataPtr(),
-               (*rop_gE[lev])[mfi].dataPtr(),  (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+               (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),    
+               (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),   
                (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
                (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),

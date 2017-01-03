@@ -6,10 +6,8 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
-   p_g, p_go, pp_g, ep_g, ep_go, &
-   ro_g, ro_go, rop_g, rop_go, &
-   rop_ge, rop_gn, rop_gt, &
+subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, &
+   p_g, ep_g, ro_g, rop_g, &
    d_e, d_n, d_t, &
    flux_ge, flux_gn, flux_gt, &
    trD_g, lambda_g, mu_g, flag) &
@@ -60,38 +58,20 @@ subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
 
       double precision, intent(inout) :: ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ep_go&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: p_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: p_go&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ro_go&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: rop_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_go&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       double precision, intent(inout) :: u_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: u_go&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
       double precision, intent(inout) :: v_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: v_go&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
       double precision, intent(inout) :: w_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: w_go&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      double precision, intent(inout) :: pp_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: d_e&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: d_t&
@@ -111,13 +91,6 @@ subroutine mfix1(time, dt, nstep, u_g, v_g, w_g, u_go, v_go, w_go, &
       double precision, intent(inout) :: flux_gN&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       double precision, intent(inout) :: flux_gT&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
-      double precision, intent(inout) :: rop_gE&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_gN&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_gT&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 !---------------------------------------------------------------------//

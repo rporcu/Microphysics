@@ -34,7 +34,7 @@ public:
     void call_main (int lev, int nstep, Real dt, Real time);
 
     void evolve (int lev, int nstep, int estatus, int finish, int set_normg, 
-                 Real dt, Real dt_min, Real dt_max, Real tstop, Real time, Real normg); 
+                 Real dt, Real tstop, Real time, Real normg); 
 
 protected:
     virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
