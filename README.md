@@ -30,7 +30,7 @@ git clone https://github.com/BoxLib-Codes/BoxLib
 cd BoxLib
 git checkout 16.12.2
 export BOXLIB_HOME=$PWD
-cmake -DENABLE_MPI:STRING=0 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
+cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
 make -j -k install
 ```
 The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
