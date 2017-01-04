@@ -178,7 +178,7 @@ module calc_drag_des_module
       double precision, intent(in   ) :: des_vel_new(:,:)
 
 ! Calculate mean fields (EPg).
-      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
+      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(des_radius))
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) &

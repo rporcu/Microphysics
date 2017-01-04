@@ -207,7 +207,7 @@ module des_time_march_module
 !         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
 
 ! Calculate mean fields (EPg).
-         CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
+         CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(pvol))
 
          ! IF(DO_NSEARCH) CALL NEIGHBOUR(  particle_state, des_radius,&
          !    des_pos_new, neighbor_index, neighbor_index_old)

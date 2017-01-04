@@ -10,7 +10,7 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag) &
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, nparticles) &
          bind(C, name="mfix_comp_mean_fields")
 
       use iso_c_binding, only: c_double, c_int
@@ -24,9 +24,10 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      real(c_double), intent(in   ) :: pvol(:)
-      real(c_double), intent(in   ) :: des_pos_new(:,:)
-      integer(c_int), intent(in   ) :: particle_state(:)
+      integer(c_int), intent(in   ) :: nparticles
+      integer(c_int), intent(in   ) :: particle_state(nparticles)
+      real(c_double), intent(in   ) :: des_pos_new(nparticles,3)
+      real(c_double), intent(in   ) :: pvol(nparticles)
 
       real(c_double), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
