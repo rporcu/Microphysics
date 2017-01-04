@@ -35,7 +35,7 @@ module des_drag_gp_module
          drag_type_enum, drag_type
       USE run, only: wen_yu, koch_hill, user_drag, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
       USE funits  , only: dmp_log, unit_log
-      USE param1, only: one, zero
+      USE param1, only: one
       USE constant, only: ro_s0
       use constant, only: D_p0
 

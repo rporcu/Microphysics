@@ -24,8 +24,6 @@ contains
 ! Current DT (1/DT) and direction of last change (+/-)
       use run, only: DT_DIR
 
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
       use param1, only: ZERO, ONE, UNDEFINED

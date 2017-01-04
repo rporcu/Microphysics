@@ -32,12 +32,6 @@ MODULE SET_CONSTPROP_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) ::  flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! indices
-      integer :: i,j,k
-!--------------------
 
 ! First, initialize certain transport coefficients, physical
 ! properties, and other variable types everywhere in the

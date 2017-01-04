@@ -113,7 +113,6 @@ module calc_coeff_module
          pvol, des_pos_new, des_vel_new, des_radius)&
         bind(C, name="calc_coeff")
 
-      use fld_const, only: ro_g0
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: max_pip
       use discretelement, only: DES_EXPLICITLY_COUPLED
@@ -160,9 +159,6 @@ module calc_coeff_module
       integer(c_int), intent(in   ) :: particle_state(max_pip)
       integer(c_int), intent(in   ) :: particle_phase(max_pip)
 
-
-!-----------------------------------------------------------------------
-      integer IER
 
 ! Calculate physical properties: (density, specific heat, diameter)
       CALL PHYSICAL_PROP(pLevel, ro_g, p_g, ep_g, rop_g, flag)

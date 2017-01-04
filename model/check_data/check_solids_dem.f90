@@ -151,8 +151,6 @@ MODULE CHECK_DES_SOLIDS_MODULE
       use constant, only: PI
 
       use discretelement, only: DTSOLID
-! Flag for coupled Fluid/DES simulation
-      use discretelement, only: DES_CONTINUUM_COUPLED
 ! Fluid solver (global) time step size
       use constant, only: MMAX
 
@@ -401,8 +399,6 @@ MODULE CHECK_DES_SOLIDS_MODULE
       USE discretelement, only: KT_FAC, KT_W_FAC
 ! The constant PI
       use constant, only: PI
-! Flag for coupled Fluid/DES simulation
-      use discretelement, only: DES_CONTINUUM_COUPLED
 ! Maximum number of solids
       USE param, only: DIM_M
 

@@ -92,8 +92,6 @@ module solve_pp_module
       DOUBLE PRECISION :: NORMGloc
 ! dominate term in correction equation max(am,bm)
       DOUBLE PRECISION, allocatable :: B_MMAX(:,:,:)
-! error index
-      integer :: ier
 !.....................................................................//
 
       ALLOCATE(B_MMAX(istart3:iend3, jstart3:jend3, kstart3:kend3))

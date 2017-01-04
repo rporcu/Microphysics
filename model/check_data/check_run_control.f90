@@ -26,7 +26,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
 ! Global Parameters:
 !---------------------------------------------------------------------//
       USE param1, only: UNDEFINED_C, IS_UNDEFINED
-      USE param1, only: ONE, ZERO
+      USE param1, only: ZERO
 
 ! Global Module procedures:
 !---------------------------------------------------------------------//

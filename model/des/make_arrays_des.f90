@@ -20,7 +20,6 @@
       use error_manager, only: err_msg
 
       use discretelement, only: do_nsearch
-      use compar, only: numpes, mype
       use discretelement, only: nonexistent, normal_ghost
       use discretelement, only: entering_ghost, exiting_ghost
       use constant, only: pi

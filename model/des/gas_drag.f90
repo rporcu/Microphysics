@@ -30,9 +30,6 @@ MODULE GAS_DRAG_MODULE
       use functions, only: ieast
 ! Function for averaging to a scalar cell's east face.
       use functions, only: AVG
-! Domain index bounds.
-      use compar, only: ISTART2, JSTART2, KSTART2
-      use compar, only: IEND2, JEND2, KEND2
 
       IMPLICIT NONE
 
@@ -113,10 +110,6 @@ MODULE GAS_DRAG_MODULE
       use functions, only: jnorth
 ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
-! Domain index bounds.
-      use compar, only: ISTART2, JSTART2, KSTART2
-      use compar, only: IEND2, JEND2, KEND2
-
 
       IMPLICIT NONE
 

@@ -14,7 +14,6 @@ MODULE READ_PAR_INPUT_MODULE
       use discretelement, only: normal_particle,  pip, particles
       use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
       use exit_mod, only: mfix_exit
-      use funits, only: unit_log
       use run, only: bdist_io
 
       implicit none

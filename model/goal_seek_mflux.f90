@@ -20,7 +20,6 @@ contains
       USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
       USE exit_mod, only: mfix_exit
       USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-      USE run     , only: automatic_restart
       USE utilities, ONLY: mfix_isnan
       USE vavg_mod, ONLY: vavg_flux_g
       use iso_c_binding, only: c_double, c_int

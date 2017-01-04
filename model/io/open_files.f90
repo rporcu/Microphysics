@@ -17,8 +17,7 @@ MODULE OPEN_FILES_MOD
       USE compar, only: mype, numPEs, pe_io
       USE error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
       USE exit_mod, only: mfix_exit
-      USE funits, only: unit_out, unit_res
-      USE machine, only: open_n1
+      USE funits, only: unit_out
 
       IMPLICIT NONE
 

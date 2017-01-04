@@ -17,17 +17,19 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
 ! Modules
 !-----------------------------------------------
 
+      use calc_coeff_module, only: calc_coeff
       use check_data_20_module, only: check_data_20
-      use compar, only: myPE, istart3, iend3, jstart3, jend3, kstart3, kend3
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
-      use error_manager, only: err_msg, finl_err_msg, flush_err_msg, init_err_msg
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use fld_const, only: ro_g0, mu_g0
-      use funits , only: dmp_log, unit_log
       use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag_mod
+      use iso_c_binding, only: c_double, c_int
       use machine, only: wall_time
-      use param1 , only: zero, is_defined, is_undefined, undefined
-      use run, only: call_usr, run_type
+      use output_manager_module, only: init_output_vars
+      use param1 , only: is_defined, is_undefined, undefined
+      use run, only: run_type
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
       use set_constprop_module, only: set_constprop
@@ -40,53 +42,49 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
       use write_out1_module, only: write_out1
       use write_out3_module, only: write_out3
       use zero_norm_vel_module, only: zero_norm_vel
-      use output_manager_module, only: init_output_vars
-      use calc_coeff_module, only: calc_coeff
-
-      use discretelement, only: nonexistent, do_old
 
       IMPLICIT NONE
 
-      double precision, intent(inout) :: time, dt
+      real(c_double), intent(inout) :: time, dt
 
-      integer         , intent(inout) :: flag&
+      integer(c_int), intent(inout) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      double precision, intent(inout) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: p_g&
+      real(c_double), intent(inout) :: p_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ro_g&
+      real(c_double), intent(inout) :: ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
-      double precision, intent(inout) :: u_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: v_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: w_g&
+      real(c_double), intent(inout) :: rop_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      double precision, intent(inout) :: d_e&
+      real(c_double), intent(inout) :: u_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: d_t&
+      real(c_double), intent(inout) :: v_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: d_n&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-
-      double precision, intent(inout) :: mu_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: lambda_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: trD_g&
+      real(c_double), intent(inout) :: w_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      double precision, intent(inout) :: flux_gE&
+      real(c_double), intent(inout) :: d_e&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: flux_gN&
+      real(c_double), intent(inout) :: d_t&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: flux_gT&
+      real(c_double), intent(inout) :: d_n&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      real(c_double), intent(inout) :: mu_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: lambda_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: trD_g&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      real(c_double), intent(inout) :: flux_gE&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: flux_gN&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_double), intent(inout) :: flux_gT&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 !---------------------------------------------------------------------//
@@ -152,4 +150,3 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
       CALL PARSE_RESID_STRING ()
 
       end subroutine mfix1
-

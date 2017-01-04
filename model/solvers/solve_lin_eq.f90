@@ -21,9 +21,8 @@ MODULE SOLVE_LIN_EQ_MODULE
          use compar, only: istart3, iend3
          use compar, only: jstart3, jend3
          use compar, only: kstart3, kend3
-         use param, only: dimension_3
-      USE leqsol  , only: leq_it, leq_sweep, leq_method, leq_tol, leq_pc
-      use iso_c_binding, only: c_double, c_int
+         USE leqsol  , only: leq_it, leq_sweep, leq_tol, leq_pc
+         use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -48,8 +47,7 @@ MODULE SOLVE_LIN_EQ_MODULE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      integer :: ier,lc,lc2
-
+      integer :: ier
 
       call leq_bicgs('---', vno, var, a_m, b_m, leq_sweep(vno), &
          leq_tol(vno), leq_pc(vno), leq_it(vno), ier)

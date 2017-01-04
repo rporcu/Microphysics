@@ -136,8 +136,6 @@ MODULE PHYSICAL_PROP_MODULE
       USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
       use fld_const, only: mw_avg
 
-! Run time flag for generating negative gas density log files
-      use run, only: REPORT_NEG_DENSITY
 ! Equation of State - GAS
       use eos, only: EOSG
 
