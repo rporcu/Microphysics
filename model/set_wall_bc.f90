@@ -1,3 +1,5 @@
+MODULE SET_WALL_BC_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: SET_WALL_BC                                             C
@@ -230,3 +232,4 @@
 
       RETURN
       END SUBROUTINE SET_WALL_BC1
+END MODULE SET_WALL_BC_MODULE

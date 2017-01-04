@@ -1,8 +1,7 @@
 module boxlib_to_mfix_module
 ! _________________________________________________________________
 
-  use compar
-  use iso_c_binding
+  use iso_c_binding, only: c_double, c_int
   use bl_fort_module, only : c_real
 
   implicit none
@@ -21,33 +20,33 @@ contains
      xlength_C,ylength_C, zlength_C, coord_C) &
      bind(C, name="mfix_get_data")
 
-    use get_data_module, only: get_data
+    use fld_const, only: ro_g0
+    use geometry, only: coordinates
+    use geometry, only: cyclic_x,    cyclic_y,    cyclic_z
+    use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+    use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
     use geometry, only: imax, jmax, kmax
+    use geometry, only: xlength, ylength, zlength
+    use get_data_module, only: get_data
+    use leqsol, only: max_nit
+    use param1, only: is_undefined
     use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
-    use param1, only: is_undefined
-    use fld_const, only: ro_g0
     use toleranc, only: norm_g
-    use leqsol, only: max_nit
-    use geometry, only: cyclic_x,    cyclic_y,    cyclic_z
-    use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-    use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-    use geometry, only: xlength, ylength, zlength
-    use geometry, only: coordinates
 
     implicit none
 
-    integer, intent(out) :: imax_to_c, jmax_to_c, kmax_to_c
-    integer, intent(out) :: fluid
-    integer, intent(out) :: dem, call_udf
-    integer, intent(out) :: steady_state
-    double precision, intent(out) :: dt_minC, dt_maxC, tstopC
-    double precision, intent(out) :: dt, time
-    double precision, intent(out) :: xlength_C, ylength_C, zlength_C
-    integer         , intent(out) :: max_nitC, coord_C
-    double precision, intent(out) :: normg
-    integer, intent(out) :: set_normg
-    integer, intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
+    integer(c_int), intent(out) :: imax_to_c, jmax_to_c, kmax_to_c
+    integer(c_int), intent(out) :: fluid
+    integer(c_int), intent(out) :: dem, call_udf
+    integer(c_int), intent(out) :: steady_state
+    real(c_double), intent(out) :: dt_minC, dt_maxC, tstopC
+    real(c_double), intent(out) :: dt, time
+    real(c_double), intent(out) :: xlength_C, ylength_C, zlength_C
+    integer(c_int)         , intent(out) :: max_nitC, coord_C
+    real(c_double), intent(out) :: normg
+    integer(c_int), intent(out) :: set_normg
+    integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
 
     call get_data(time, dt)
 

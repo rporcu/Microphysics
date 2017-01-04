@@ -34,8 +34,6 @@
 
       use run, only: DESCRIPTION
 
-      use param1, only: UNDEFINED
-
       IMPLICIT NONE
 
       CHARACTER(len=*) :: FNAME

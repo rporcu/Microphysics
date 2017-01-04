@@ -18,6 +18,7 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
 !-----------------------------------------------
 
       use calc_coeff_module, only: calc_coeff
+      use calc_mu_g_module, only: calc_mu_g
       use check_data_20_module, only: check_data_20
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
@@ -29,6 +30,7 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined, undefined
+      use parse_resid_string_module, only: parse_resid_string
       use run, only: run_type
       use set_bc0_module, only: set_bc0
       use set_bc1_module, only: set_bc1
@@ -142,7 +144,7 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
 ! Check the field variable data and report errors.
       CALL CHECK_DATA_20(ep_g,p_g,ro_g,rop_g,u_g,v_g,w_g,flag)
 
-      IF(IS_UNDEFINED(mu_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0)
+      IF(IS_UNDEFINED(mu_g0)) CALL CALC_MU_G(lambda_g,mu_g,mu_g0,flag)
 
       CALL INIT_OUTPUT_VARS(time, dt)
 

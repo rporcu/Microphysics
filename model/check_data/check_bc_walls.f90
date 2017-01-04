@@ -1,3 +1,5 @@
+MODULE CHECK_BC_WALLS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_BC_WALLS                                           !
@@ -104,3 +106,4 @@
             'correct the mfix.dat file.')
 
       END SUBROUTINE CHECK_BC_WALLS_GAS
+END MODULE CHECK_BC_WALLS_MODULE

@@ -1,3 +1,6 @@
+MODULE CHECK_DMP_PREREQS_MODULE
+CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_DMP_PREREQS                                       !
@@ -142,3 +145,4 @@
 
 
       END SUBROUTINE CHECK_DMP_PREREQS
+END MODULE CHECK_DMP_PREREQS_MODULE

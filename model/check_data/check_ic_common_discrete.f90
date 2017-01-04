@@ -1,3 +1,5 @@
+MODULE CHECK_IC_COMMON_DISCRETE_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_IC_COMMON_DISCRETE                                !
@@ -160,3 +162,4 @@
       RETURN
 
       END SUBROUTINE CHECK_IC_COMMON_DISCRETE
+END MODULE CHECK_IC_COMMON_DISCRETE_MODULE

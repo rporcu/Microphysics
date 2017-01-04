@@ -19,7 +19,7 @@
       use geometry, only: imin1, jmin1, kmin1
       use geometry, only: imax1, jmax1, kmax1
 
-      use param1, only: zero, small_number, half
+      use param1, only: small_number, half
 
       IMPLICIT NONE
 
@@ -34,8 +34,6 @@
 
 ! looping indices
       integer :: i, j, k
-! temporary variable
-      double precision  :: TMPdp
 ! Calculated height of cell center
       double precision  :: yt
 ! Exact and numerical solutions
@@ -74,7 +72,6 @@
       write(fUnit,"(5/)")
       close(fUnit)
 
- 1100 FORMAT(5(3x,es13.6))
  1200 FORMAT(5(3x,es13.6))
 
       RETURN
@@ -92,7 +89,6 @@
       Use geometry, only: HEIGHT => YLENGTH
       Use geometry, only: XLENGTH
       Use geometry, only: CYCLIC_X_PD
-      Use param1, only: zero, small_number, half
 
       implicit none
 

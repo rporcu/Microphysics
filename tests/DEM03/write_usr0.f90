@@ -34,8 +34,6 @@
       use discretelement, only: KN, KN_W
       use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
 
-      use param1, only: UNDEFINED
-
       IMPLICIT NONE
 
       CHARACTER(len=*) :: FNAME
@@ -57,7 +55,7 @@
       WRITE(fUNIT, 1100) trim(adjustl(DES_INTG_METHOD))
 
       WRITE(fUNIT, 1110) KN, KN_W
-      WRITE(fUNIT, 1120) DES_EN_WALL_INPUT(1), DES_EN_WALL_INPUT(1)
+      WRITE(fUNIT, 1120) DES_EN_INPUT(1), DES_EN_WALL_INPUT(1)
 
       WRITE(fUNIT, 1200) VAR, VAR
 

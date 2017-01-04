@@ -123,7 +123,6 @@
 !......................................................................!
       double precision function F12d(x1, x2)
 
-      use discretelement, only: KN
       use discretelement, only: DES_ETAN
       use constant, only: pi
 

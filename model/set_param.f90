@@ -1,3 +1,5 @@
+MODULE SET_PARAMETERS_MODULE
+CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutinee: SET_PARAMETERS                                         !
@@ -63,3 +65,4 @@
 
       RETURN
       END SUBROUTINE SET_PARAMETERS
+END MODULE SET_PARAMETERS_MODULE

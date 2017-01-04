@@ -1,3 +1,5 @@
+MODULE PARSE_RESID_STRING_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: Parse_RESID_string(IER)                                C
@@ -96,3 +98,4 @@
       END DO
       RETURN
       END SUBROUTINE PARSE_RESID_STRING
+END MODULE PARSE_RESID_STRING_MODULE

@@ -32,9 +32,7 @@
       use run, only: DESCRIPTION
       use discretelement, only: DES_INTG_METHOD
       use discretelement, only: KN, KN_W
-      use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
-
-      use param1, only: UNDEFINED
+      use discretelement, only: DES_EN_WALL_INPUT
 
       IMPLICIT NONE
 

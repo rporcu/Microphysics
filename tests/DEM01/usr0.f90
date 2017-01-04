@@ -19,14 +19,9 @@
 
       IMPLICIT NONE
 
-      double precision :: t_r
-
       double precision :: lRad
       double precision :: lMass
       double precision :: lGrav
-
-      double precision :: ly, ldydt
-
 
       if(particles /= 1) then
          write(*,"(3x, 'invalid setup for test case')")

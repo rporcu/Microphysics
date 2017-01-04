@@ -67,10 +67,6 @@
 
 ! Local variables
 !---------------------------------------------------------------------//
-! file name
-      CHARACTER*64 :: FNAME1, FNAME2
-! logical used for testing is the data file already exists
-      LOGICAL :: F_EXISTS1, F_EXISTS2
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: uPos1 = 2030
       INTEGER, PARAMETER :: uPos2 = 2031
@@ -107,7 +103,7 @@
       ENDDO
 
 
-      IF(RK4_DT_LAST .NE. UNDEFINED) THEN
+      IF(IS_DEFINED(RK4_DT_LAST)) THEN
          CALL RK4_V4(RK4_DT_LAST, gY1, gX1, gY2, gX2)
          RK4_TIME = RK4_TIME + RK4_DT_LAST
       ENDIF

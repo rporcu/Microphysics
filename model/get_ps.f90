@@ -1,3 +1,5 @@
+MODULE GET_PS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: GET_PS                                                  !
@@ -140,3 +142,4 @@
 
       RETURN
       END SUBROUTINE GET_PS
+END MODULE GET_PS_MODULE

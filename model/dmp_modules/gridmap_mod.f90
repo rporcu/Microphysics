@@ -121,30 +121,39 @@
 !----------------------------------------------------------------------!
         SUBROUTINE GRIDMAP_INIT
 
-        use functions, only: funijk
+        use compar, only: c0, c1, c2
+        use compar, only: displs, ijkstart3, ijkend3, ijksize3
+        use compar, only: iend, jend, kend
+        use compar, only: iend1, jend1, kend1
+        use compar, only: iend2, jend2, kend2
+        use compar, only: iend3, jend3, kend3
         use compar, only: ijksize3_all, ijkstart3_all, ijkend3_all
-        use compar, only: istart_all, iend_all
-        use compar, only: jstart_all, jend_all
-        use compar, only: kstart_all, kend_all
-        use compar, only: istart2_all, iend2_all
-        use compar, only: jstart2_all, jend2_all
-        use compar, only: kstart2_all, kend2_all
-        use compar, only: istart3_all, iend3_all
-        use compar, only: jstart3_all, jend3_all
-        use compar, only: kstart3_all, kend3_all
         use compar, only: imap, jmap, kmap
         use compar, only: imap_c, jmap_c, kmap_c
         use compar, only: imap_c, jmap_c, kmap_c
-        use compar, only: c0, c1, c2
-        use compar
-        use geometry, only: imin2, jmin2, kmin2
-        use geometry, only: imin3, jmin3, kmin3
-        use geometry, only: imin4, jmin4, kmin4
+        use compar, only: istart, jstart, kstart
+        use compar, only: istart1, jstart1, kstart1
+        use compar, only: istart2, jstart2, kstart2
+        use compar, only: istart2_all, iend2_all
+        use compar, only: istart3, jstart3, kstart3
+        use compar, only: istart3_all, iend3_all
+        use compar, only: istart_all, iend_all
+        use compar, only: jstart2_all, jend2_all
+        use compar, only: jstart3_all, jend3_all
+        use compar, only: jstart_all, jend_all
+        use compar, only: kstart2_all, kend2_all
+        use compar, only: kstart3_all, kend3_all
+        use compar, only: kstart_all, kend_all
+        use compar, only: mype, numpes
+        use functions, only: funijk
+        use geometry, only: cyclic_x, cyclic_y, cyclic_z
+        use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
         use geometry, only: imax2, jmax2, kmax2
         use geometry, only: imax3, jmax3, kmax3
         use geometry, only: imax4, jmax4, kmax4
-        use geometry, only: cyclic_x, cyclic_y, cyclic_z
-        use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+        use geometry, only: imin2, jmin2, kmin2
+        use geometry, only: imin3, jmin3, kmin3
+        use geometry, only: imin4, jmin4, kmin4
 
         implicit none
 

@@ -1,3 +1,5 @@
+MODULE CALC_MU_G_MODULE
+CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CALC_MU_g                                               C
@@ -58,3 +60,4 @@
 
       RETURN
       END SUBROUTINE CALC_MU_G
+END MODULE CALC_MU_G_MODULE

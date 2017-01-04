@@ -1,3 +1,5 @@
+MODULE CHECK_SOLIDS_MODEL_PREREQS_MODULE
+CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_SOLIDS_MODEL_PREREQS                              !
@@ -95,7 +97,7 @@
          & version of MFIX.',/'Please correct the mfix.dat file.')
 
 ! Set flag for coupled simulations
-      DES_CONTINUUM_COUPLED = dem_solids .and. (RO_g0 /= 0.0d0)
+      DES_CONTINUUM_COUPLED = dem_solids .and. (ABS(RO_g0) > 0.0d0)
 
 ! Overwrite user settings if no Lagrangian solids
       IF(.NOT.DEM_SOLIDS) THEN
@@ -109,3 +111,4 @@
       RETURN
 
       END SUBROUTINE CHECK_SOLIDS_MODEL_PREREQS
+END MODULE CHECK_SOLIDS_MODEL_PREREQS_MODULE

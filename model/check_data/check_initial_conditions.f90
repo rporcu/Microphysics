@@ -3,6 +3,8 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 ! Parameter constants
       use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO, ONE
 
+      use check_ic_common_discrete_module, only: check_ic_common_discrete
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

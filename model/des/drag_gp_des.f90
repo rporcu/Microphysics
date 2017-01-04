@@ -41,6 +41,38 @@ module des_drag_gp_module
 
       IMPLICIT NONE
 
+      INTERFACE
+         SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
+            ROs, lUg, lVg, lWg)
+
+! Index of fluid cell:
+            INTEGER, INTENT(IN) :: I,J,K
+! TFM SOLIDS --> Index of phase (M)
+! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
+            INTEGER, INTENT(IN) :: M_NP
+
+! drag coefficient
+            DOUBLE PRECISION, INTENT(OUT) :: lDgA
+! gas volume fraction
+            DOUBLE PRECISION, INTENT(IN) :: EPg
+! gas laminar viscosity
+            DOUBLE PRECISION, INTENT(IN) :: Mug
+! gas density
+            DOUBLE PRECISION, INTENT(IN) :: ROg
+! Magnitude of gas-solids relative velocity
+            DOUBLE PRECISION, INTENT(IN) :: VREL
+! particle diameter of solids phase M or
+! average particle diameter if PCF
+            DOUBLE PRECISION, INTENT(IN) :: DPM
+! particle density of solids phase M
+            DOUBLE PRECISION, INTENT(IN) :: ROs
+! fluid velocity components:
+! o TFM: Averaged from faces to cell center
+! o DES: Interpolated to the particle's position
+            DOUBLE PRECISION, INTENT(IN) :: lUg, lVg, lWg
+         END SUBROUTINE DRAG_USR
+      END INTERFACE
+
 ! indices, associated with current particle
       INTEGER, intent(in   ) :: I, J, K
 

@@ -3,6 +3,8 @@ MODULE CHECK_POINT_SOURCES_MODULE
 ! Parameter constants
       use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO
 
+      use get_ps_module, only: get_ps
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

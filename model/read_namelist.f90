@@ -17,31 +17,46 @@ MODULE read_namelist_module
       SUBROUTINE READ_NAMELIST(time, dt)
 
       USE bc
-      USE compar
+      USE compar, only: mype, pe_io, nodesi, nodesj, nodesk
       USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
       USE deprecated_or_unknown_module, only: deprecated_or_unknown
-      USE discretelement
+      USE discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
+      USE discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
+      USE discretelement, only: des_explicitly_coupled, des_intg_method, des_oneway_coupled, des_usr_var_size, e_young, ew_young
+      USE discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, particles, des_etat_w_fac, print_des_data
+      USE error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
+      USE exit_mod, only: mfix_exit
       USE fld_const, only: mu_g0, mw_avg
       USE fld_const, only: ro_g0
-      USE funits
-      USE geometry
-      USE ic
-      USE leqsol
-      USE output
-
-      USE ps
+      USE funits, only: unit_dat
+      USE geometry, only: coordinates
+      USE geometry, only: cyclic_x, cyclic_y, cyclic_z
+      USE geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      USE geometry, only: imax, jmax, kmax
+      USE geometry, only: xlength, ylength, zlength
+      USE ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
+      USE ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
+      USE ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
+      USE ic, only: ic_x_e, ic_x_g, ic_x_s, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      USE leqsol, only: do_transpose, icheck_bicgs, is_serial, leq_it, leq_method, opt_parallel, use_doloop
+      USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, minimize_dotproducts, solver_statistics, ival
+      USE output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
+      USE output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
+      USE output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
+      USE ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
+      USE ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
+      USE ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
       USE remove_comment_module, only: remove_comment
       USE remove_comment_module, only: remove_par_blanks
       USE residual, only: group_resid, resid_string
-      USE run
+      USE run, only: batch_wallclock, call_usr, chk_batchq_end, debug_resid, description, detect_stall, discretize, tstop, units
+      USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
       USE scales, only: p_ref, p_scale
-      USE toleranc
-      USE ur_facs
+      USE toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
+      USE ur_facs, only: ur_fac
       USE usr
-      USE utilities, ONLY: blank_line, line_too_big, seek_comment
-      USE utilities, ONLY: make_upper_case, replace_tab
-
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
+      USE utilities, only: blank_line, line_too_big, seek_comment
+      USE utilities, only: make_upper_case, replace_tab
 
       IMPLICIT NONE
 

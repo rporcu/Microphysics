@@ -18,8 +18,6 @@
 
       IMPLICIT NONE
 
-      INTEGER :: NP
-
       IF(PIP /= 1) THEN
          write(*,"(3x, 'invalid setup for test case')")
          call mfix_exit(0)

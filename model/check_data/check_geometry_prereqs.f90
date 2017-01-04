@@ -1,3 +1,5 @@
+MODULE CHECK_GEOMETRY_PREREQS_MODULE
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: CHECK_GEOMETRY_PREREQS                                  !
@@ -66,3 +68,4 @@
 
 
       END SUBROUTINE CHECK_GEOMETRY_PREREQS
+END MODULE CHECK_GEOMETRY_PREREQS_MODULE

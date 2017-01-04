@@ -11,11 +11,14 @@ MODULE GET_DATA_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_DATA(time, dt)
 
+      USE check_dmp_prereqs_module, only: check_dmp_prereqs
       USE check_gas_phase_module, only: check_gas_phase
       USE check_geometry_module, only: check_geometry
+      USE check_geometry_prereqs_module, only: check_geometry_prereqs
       USE check_numerics_module, only: check_numerics
       USE check_output_control_module, only: check_output_control
       USE check_run_control_module, only: check_run_control
+      USE check_solids_model_prereqs_module, only: check_solids_model_prereqs
       USE check_solids_phases_module, only: check_solids_phases
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area
@@ -29,7 +32,7 @@ MODULE GET_DATA_MODULE
       USE set_geometry_des_module, only: set_geometry_des
       USE set_icbc_flags_module, only: set_icbc_flag
       USE set_max2_module, only: set_max2
-
+      USE set_parameters_module, only: set_parameters
       USE write_header_module, only: write_header
 
       IMPLICIT NONE
