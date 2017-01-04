@@ -40,6 +40,19 @@ extern "C"
                  Real* fc,
                  Real* tow);
 
+  void mfix_write_des_data( 
+                 Real* des_radius,
+                 Real* des_pos_new,
+                 Real* des_vel_new,
+                 Real* des_usr_var);
+
+  void mfix_comp_mean_fields(
+                 Real* ep_g,    
+                 int* particle_state,
+                 Real* des_pos_new,
+                 Real* pvol,
+                 int* flag);
+ 
   void set_bc1(
          Real* time,     Real* dt,
          Real* p_g,      Real* ep_g,

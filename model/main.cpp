@@ -77,9 +77,7 @@ int main (int argc, char* argv[])
 
   my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
 
-  my_mfix.Init();
-
-  my_mfix.call_main(lev,dt,time);
+  my_mfix.Init(lev,dt,time);
 
   int finish  = 0;
   int estatus = 0;

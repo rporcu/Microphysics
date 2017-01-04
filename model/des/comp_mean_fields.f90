@@ -10,8 +10,10 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag) &
+         bind(C, name="mfix_comp_mean_fields")
 
+      use iso_c_binding, only: c_double, c_int
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
       use geometry, only: dx, dy, dz, vol
@@ -22,14 +24,13 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN) :: pvol(:)
-      DOUBLE PRECISION, INTENT(IN) :: des_pos_new(:,:)
-      integer, intent(in) :: particle_state(:)
+      real(c_double), intent(in   ) :: pvol(:)
+      real(c_double), intent(in   ) :: des_pos_new(:,:)
+      integer(c_int), intent(in   ) :: particle_state(:)
 
-
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER         , INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
 !-----------------------------------------------

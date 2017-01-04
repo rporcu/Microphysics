@@ -147,11 +147,9 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
 }
 
 void
-mfix_level::Init()
+mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
-
-    const Real time = 0.0;
 
     // define coarse level BoxArray and DistributionMap
     {
@@ -162,7 +160,7 @@ mfix_level::Init()
 
       MakeNewLevel(0, time, ba, dm);
 
-      InitLevelData(0);
+      InitLevelData(lev,dt,time);
     }
 
     // if max_level > 0, define fine levels
@@ -651,14 +649,8 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       omega_new.dataPtr(), &estatus, &finish);
 }
 
-
 void
-mfix_level::InitLevelData(int lev) {
-  return;
-}
-
-void
-mfix_level::call_main(int lev, Real dt, Real time)
+mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      mfix_main1(
@@ -672,6 +664,7 @@ mfix_level::call_main(int lev, Real dt, Real time)
                (*flag[lev])[mfi].dataPtr());
 
   if (solve_dem) 
+  {
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_make_arrays_des(
                (*ep_g[lev])[mfi].dataPtr(), (*flag[lev])[mfi].dataPtr(), 
@@ -681,6 +674,20 @@ mfix_level::call_main(int lev, Real dt, Real time)
                des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_usr_var.dataPtr(), omega_new.dataPtr(), 
                fc.dataPtr(), tow.dataPtr());
+
+     // Calculate mean fields using either interpolation or cell averaging.
+#if 0
+     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+        mfix_comp_mean_fields(
+               (*ep_g[lev])[mfi].dataPtr(), 
+               particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
+               (*flag[lev])[mfi].dataPtr());
+#endif
+     
+     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+         mfix_write_des_data(des_radius.dataPtr(),des_pos_new.dataPtr(),
+                             des_vel_new.dataPtr(), des_usr_var.dataPtr());
+  }
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf) 

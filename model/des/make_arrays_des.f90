@@ -5,22 +5,18 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine make_arrays_des(ep_g, flag, particle_state, particle_phase, &
+   subroutine make_arrays_des(particle_state, particle_phase, &
       des_radius,  ro_sol, pvol, pmass, omoi, des_pos_new, des_vel_new,&
       des_usr_var, omega_new, fc, tow) &
    bind(C, name="mfix_make_arrays_des")
 
 ! Module procedures .................................................//
       use read_par_input_module, only: read_par_input
-      use comp_mean_fields_module, only: comp_mean_fields
-      use write_des_data_module, only: write_des_data
-      use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
+      use error_manager, only: init_err_msg, flush_err_msg
 
 ! Global data .......................................................//
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: particles, max_pip
-      use discretelement, only: print_des_data, vtp_findex
-      use discretelement, only: s_time
+      use discretelement, only: vtp_findex
       use error_manager, only: err_msg
 
       use discretelement, only: do_nsearch
@@ -34,11 +30,6 @@
       use set_phase_index_module, only: set_phase_index
 
       IMPLICIT NONE
-
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer, intent(inout) :: flag &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
       double precision, intent(  out) :: pvol(max_pip)
       double precision, intent(  out) :: pmass(max_pip)
@@ -106,16 +97,18 @@
 
       ENDIF
 
-      IF(RUN_TYPE == 'RESTART_2') VTP_FINDEX=0
+      IF(RUN_TYPE == 'RESTART_2') vtp_findex = 0
 
-! setting additional particle properties now that the particles
-! have been identified
+      ! Set additional particle properties now that the particles
+      ! have been identified
       DO L = 1, MAX_PIP
-! Skip 'empty' locations when populating the particle property arrays.
-         if(nonexistent==particle_state(l) .or. &
-            normal_ghost==particle_state(l) .or. &
-            entering_ghost==particle_state(l) .or. &
-            exiting_ghost==particle_state(l)) cycle
+
+         ! Skip 'empty' locations when populating the particle property arrays.
+         if(   nonexistent == particle_state(l) .or. &
+              normal_ghost == particle_state(l) .or. &
+            entering_ghost == particle_state(l) .or. &
+             exiting_ghost == particle_state(l)) cycle
+
          pvol(l) = (4.0d0/3.0d0)*pi*des_radius(l)**3
          pmass(l) = pvol(l)*ro_sol(l)
          omoi(l) = 2.5d0/(pmass(l)*des_radius(l)**2) !one over moi
@@ -128,15 +121,26 @@
 
 !      CALL NEIGHBOUR(  particle_state, des_radius, des_pos_new)
 
-! Calculate mean fields using either interpolation or cell averaging.
-      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag)
+   end subroutine make_arrays_des
 
-      IF(RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
+   subroutine mfix_write_des_data(des_radius, des_pos_new, des_vel_new, des_usr_var) &
+      bind(C, name="mfix_write_des_data")
+
+      use discretelement       , only: max_pip, print_des_data, s_time
+      use error_manager        , only: finl_err_msg
+      use run                  , only: run_type
+      use write_des_data_module, only: write_des_data
+
+      double precision, intent(in   ) :: des_radius (max_pip)
+      double precision, intent(in   ) :: des_pos_new(max_pip,3)
+      double precision, intent(in   ) :: des_vel_new(max_pip,3)
+      double precision, intent(in   ) :: des_usr_var(max_pip,1)
+
+      IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME
          CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
       ENDIF
 
       CALL FINL_ERR_MSG
 
-      RETURN
-      END SUBROUTINE MAKE_ARRAYS_DES
+      end subroutine mfix_write_des_data

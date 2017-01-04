@@ -27,15 +27,13 @@ public:
 
     void InitParams(int solve_fluid, int solve_dem, int cyclic_mf, int max_nit, int call_udf);
 
-    void Init();
+    void Init (int lev, Real dt, Real time);
 
     void Restart();
 
     void usr3 (int lev);
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
-
-    void call_main (int lev, Real dt, Real time);
 
     void evolve_fluid (int lev, int nstep, int set_normg, 
                        Real dt, Real& prev_dt, Real time, Real normg); 
@@ -49,7 +47,7 @@ private:
 
     void ReadParameters ();
 
-    void InitLevelData (int lev);
+    void InitLevelData (int lev, Real dt, Real time);
 
     void MakeNewLevel (int lev, Real time,
 		       const BoxArray& new_grids, const DistributionMapping& new_dmap);
