@@ -89,24 +89,6 @@ contains
 
   end subroutine mfix_get_data
 
-
-!**************************************************************************!
-!                                                                          !
-!                                                                          !
-!**************************************************************************!
-  subroutine mfix_set_domain(flag) &
-       bind(C, name="mfix_set_domain")
-
-    use set_domain_module, only: set_domain
-
-    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-
-    integer(c_int), intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-
-    call set_domain(flag)
-
-  end subroutine mfix_set_domain
-
 !**************************************************************************!
 !                                                                          !
 !                                                                          !

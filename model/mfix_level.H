@@ -52,6 +52,9 @@ private:
     void MakeNewLevel (int lev, Real time,
 		       const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
+    // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
+    BoxArray MakeBaseGrids () const;
+
 #if 0
     void WritePlotFile () const;
 

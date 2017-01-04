@@ -12,9 +12,9 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord); 
 
-  void mfix_set_domain(int* flag);
+  void set_domain(int* slo, int* shi, int* flag, Real* dx, Real* dy, Real* dz);
 
-  void mfix_main1(
+  void mfix_main1(int* slo, int* shi, const int* lo, const int* hi, 
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
                  Real* p_g,     Real* ep_g,     
@@ -58,7 +58,8 @@ extern "C"
          Real* ro_g,     Real* rop_g,
          Real* u_g,      Real* v_g,      Real* w_g,
          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
-         int* flag);
+         int* flag,
+         Real* dx,       Real* dy,       Real* dz);
 
   void mfix_output_manager(
          Real* time, Real* dt, int* nstep,

@@ -17,29 +17,29 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_PS(flag)
+      subroutine set_ps(slo,shi,lo,hi,flag)
 
-      use compar   , only: myPE, PE_IO, numPEs, istart3, iend3, jstart3, jend3, kstart3, kend3
+      use compar  , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
-      use geometry , only: vol
-      use param1, only: zero, small_number
+      use geometry, only: vol
+      use iso_c_binding, only: c_double, c_int
+      use param1  , only: zero, small_number
 
       implicit none
 
-      integer, intent(in) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      INTEGER :: I, J, K
-
-      INTEGER PSV
+      integer :: i,j,k
+      integer :: psv, ps_size
 
       CHARACTER(LEN=64) :: eMsg
-
-      INTEGER :: PS_SIZE
 
       DOUBLE PRECISION, allocatable :: lData_dp(:)
       DOUBLE PRECISION, allocatable :: gData_dp(:)
 
-      LOGICAL, parameter :: dbg_PS = .FALSE.
+      logical, parameter :: dbg_PS = .FALSE.
 
       if(.NOT.POINT_SOURCE) return
 
@@ -64,7 +64,6 @@ MODULE SET_PS_MODULE
              eMsg = ''; write(eMsg,"('Invalid PS size: ', I4)")PS_SIZE
              goto 500
          endif
-
 
          allocate(lData_dp( 0:numPEs-1)); lData_dp = ZERO
          allocate(gData_dp( 0:numPEs-1)); gData_dp = ZERO
@@ -135,7 +134,7 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_PS_VEL_MAG(VEL_MAG, lU, lV, lW)
+      subroutine calc_ps_vel_mag(VEL_MAG, lU, lV, lW)
 
       DOUBLE PRECISION, intent(inout) :: VEL_MAG
       DOUBLE PRECISION, intent(inout) :: lU, lV, lW
@@ -156,11 +155,9 @@ MODULE SET_PS_MODULE
          lW = ZERO
       endif
 
+      end subroutine calc_ps_vel_mag
 
-      END SUBROUTINE CALC_PS_VEL_MAG
-
-
-      END SUBROUTINE SET_PS
+      end subroutine set_ps
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -174,7 +171,7 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DEBUG_PS(lPSV, lPS_SIZE, flag)
+      subroutine debug_ps(lPSV, lPS_SIZE, flag)
 
       use compar  , only: myPE, PE_IO
       use param1  , only: small_number
@@ -264,5 +261,5 @@ MODULE SET_PS_MODULE
       if(allocated(lFlags_i)) deallocate(lFlags_i)
       if(allocated(gFlags_i)) deallocate(gFlags_i)
 
-      END SUBROUTINE DEBUG_PS
-END MODULE SET_PS_MODULE
+      end subroutine debug_ps
+end module set_ps_module

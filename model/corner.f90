@@ -3,7 +3,7 @@ MODULE CORNER_MODULE
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: GET_CORNER_CELLS(IER)                                  C
+!  Module name: get_corner_cells(IER)                                  C
 !  Author: M. Syamlal                                 Date: 08-JUL-98  C
 !                                                                      C
 !  Purpose: Identify wall cells with more than one fulid cell as       C
@@ -11,18 +11,19 @@ MODULE CORNER_MODULE
 !           is allowed to such cells to avoid ambiguity.               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_CORNER_CELLS(flag)
+      subroutine get_corner_cells(slo,shi,lo,hi,flag)
 
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE funits   , only: dmp_log, unit_log
-      USE param1   , only: max_ncorn
-      use matrix   , only: e, w, s, n, t, b
+      use functions    , only: iminus, iplus, jminus, jplus, kminus, kplus
+      use funits       , only: dmp_log, unit_log
+      use iso_c_binding, only: c_double, c_int
+      use param1       , only: max_ncorn
+      use matrix       , only: e, w, s, n, t, b
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !                      Loop index
       INTEGER          L
@@ -47,9 +48,9 @@ MODULE CORNER_MODULE
 
       NCORN = 0
 !
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-            do i = istart3, iend3
+      do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+            do i = slo(1),shi(1)
 
                IF (flag(i,j,k,1)>=100 .AND. flag(i,j,k,1) /= 106 .and. &
                   flag(i,j,k,1) /= 107) then
@@ -184,7 +185,7 @@ MODULE CORNER_MODULE
  1300 FORMAT(/1X,70('*')/)
       CONTAINS
 !
-      SUBROUTINE ADDCORN(NOTCORNER, NCORN)
+      subroutine addcorn(NOTCORNER, NCORN)
 
       USE param1, only: max_ncorn
       USE compar, only: mype
@@ -217,6 +218,8 @@ MODULE CORNER_MODULE
       NOTCORNER = .FALSE.
 !
       RETURN
-      END SUBROUTINE ADDCORN
-      END SUBROUTINE GET_CORNER_CELLS
+
+      end subroutine addcorn
+
+      end subroutine get_corner_cells
 END MODULE CORNER_MODULE

@@ -173,6 +173,20 @@ mfix_level::Restart()
 {
 }
 
+BoxArray
+mfix_level::MakeBaseGrids () const
+{
+    BoxArray ba(geom[0].Domain());
+    ba.maxSize(max_grid_size[0]);
+    if (refine_grid_layout) {
+        ChopGrids(0, ba, ParallelDescriptor::NProcs());
+    }
+    if (ba == grids[0]) {
+        ba = grids[0];  // to avoid dupliates
+    }
+    return ba;
+}
+
 void
 mfix_level::MakeNewLevel (int lev, Real time,
               const BoxArray& new_grids, const DistributionMapping& new_dmap)
@@ -200,8 +214,29 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // Call set_domain for each subdomain
     // Read input data, check data, do computations for IC and BC locations
     // and flows, and set geometry parameters such as X, X_E, DToDX, etc.
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
+
+    Array<int> slo(3);
+    Array<int> shi(3);
+
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-       mfix_set_domain((*flag[lev])[mfi].dataPtr());
+    {
+       const int* sslo = (*flag[lev])[mfi].loVect();
+       const int* sshi = (*flag[lev])[mfi].hiVect();
+
+       slo[0] = sslo[0]+2;
+       slo[1] = sslo[1]+2;
+       slo[2] = sslo[2]+2;
+
+       shi[0] = sshi[0]+2;
+       shi[1] = sshi[1]+2;
+       shi[2] = sshi[2]+2;
+
+       set_domain(slo.dataPtr(),shi.dataPtr(),(*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
+    }
 
     // Matrix and rhs vector
     A_m[lev].reset(new MultiFab(grids[lev],7,nghost,dmap[lev],Fab_allocate));
@@ -323,6 +358,10 @@ void
 mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                          Real dt, Real& prev_dt, Real time, Real normg)
 {
+      Real dx = geom[lev].CellSize(0);
+      Real dy = geom[lev].CellSize(0);
+      Real dz = geom[lev].CellSize(0);
+
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         set_bc1(
@@ -331,7 +370,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-          (*flag[lev])[mfi].dataPtr());
+          (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
       // Calculate transport coefficients
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -395,7 +434,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-            (*flag[lev])[mfi].dataPtr());
+            (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
         int converged=0;
         int nit=0;          // number of iterations
@@ -566,7 +605,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr());
+              (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
           // Display current iteration residuals
           display_resid(&nit);
@@ -652,8 +691,33 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
+
+  Array<int> slo(3);
+  Array<int> shi(3);
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     mfix_main1(
+  {
+     const Box& bx=mfi.validbox();
+     const int* lo = bx.loVect();
+     const int* hi = bx.hiVect();
+
+     const int* sslo = (*flag[lev])[mfi].loVect();
+     const int* sshi = (*flag[lev])[mfi].hiVect();
+
+     slo[0] = sslo[0]+2;
+     slo[1] = sslo[1]+2;
+     slo[2] = sslo[2]+2;
+
+     shi[0] = sshi[0]+2;
+     shi[1] = sshi[1]+2;
+     shi[2] = sshi[2]+2;
+
+     std::cout << "LO = " << lo[0] << " " << lo[1] << " " << lo[2] << std::endl;
+     std::cout << "HI = " << hi[0] << " " << hi[1] << " " << hi[2] << std::endl;
+     std::cout << "SLO = " << slo[0] << " " << slo[1] << " " << slo[2] << std::endl;
+     std::cout << "SHI = " << shi[0] << " " << shi[1] << " " << shi[2] << std::endl;
+
+     mfix_main1(slo.dataPtr(), shi.dataPtr(), lo, hi,
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
@@ -662,6 +726,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr());
+  }
 
   if (solve_dem)
   {

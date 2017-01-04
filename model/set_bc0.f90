@@ -12,26 +12,33 @@ MODULE SET_BC0_MODULE
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0(p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
+      SUBROUTINE SET_BC0(slo, shi, lo, hi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
-      use bc    , only: bc_type, bc_defined
-
-      use param, only: dimension_bc
-
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use bc           , only: bc_type, bc_defined
+      use iso_c_binding, only: c_double, c_int
+      use param        , only: dimension_bc
 
       implicit none
 
-      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      double precision, intent(in   ) :: ro_g0
-      integer         , intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      real(c_double), intent(inout) ::  p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) ::  u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) ::  v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) ::  w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_double), intent(in   ) :: ro_g0
+
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !--------------------------------------------------------------------//

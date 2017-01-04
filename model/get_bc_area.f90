@@ -1,4 +1,7 @@
 MODULE GET_BC_AREA_MODULE
+
+   use iso_c_binding, only: c_double, c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -21,14 +24,15 @@ MODULE GET_BC_AREA_MODULE
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_BC_AREA
+      SUBROUTINE GET_BC_AREA(dx,dy,dz)
 
       USE param, only: dimension_bc
       USE param1, only: zero
-      USE geometry, only: dx, dy, dz
       USE bc, only: bc_defined, bc_area, bc_plane, bc_k_b, bc_k_t, bc_defined, bc_j_n, bc_j_s, bc_i_e, bc_i_w
 
       IMPLICIT NONE
+
+      real(c_double), intent(in) :: dx, dy, dz
 !
 ! BC number
       INTEGER :: BCV

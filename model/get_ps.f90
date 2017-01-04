@@ -1,5 +1,9 @@
 MODULE GET_PS_MODULE
+
+   use iso_c_binding, only: c_double, c_int
+
    CONTAINS
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  SUBROUTINE: GET_PS                                                  !
@@ -8,10 +12,9 @@ MODULE GET_PS_MODULE
 !  Purpose: Find and validate i, j, k locations for PS's               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GET_PS(PSV)
+      subroutine get_ps(PSV,dx,dy,dz)
 
       USE calc_cell_module, only: calc_loc, calc_cell
-      USE geometry, only: dx, dy, dz
       USE geometry, only: imax, jmax, kmax
       USE geometry, only: imax2, jmax2, kmax2
       USE location_check_module, only: location_check
@@ -30,6 +33,7 @@ MODULE GET_PS_MODULE
 !---------------------------------------------------------------------//
 ! Loop/variable indices
       INTEGER, INTENT(in) :: PSV
+      real(c_double), intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -140,6 +144,5 @@ MODULE GET_PS_MODULE
 
       CALL FINL_ERR_MSG
 
-      RETURN
-      END SUBROUTINE GET_PS
+      end subroutine get_ps
 END MODULE GET_PS_MODULE

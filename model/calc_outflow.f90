@@ -1,4 +1,7 @@
 MODULE CALC_OUTFLOW_MODULE
+
+   use iso_c_binding, only: c_double, c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -10,7 +13,7 @@ MODULE CALC_OUTFLOW_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g)
+      SUBROUTINE CALC_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -22,25 +25,25 @@ MODULE CALC_OUTFLOW_MODULE
       use bc, only: bc_mout_g, bc_vout_g
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use geometry, only: dx, dy, dz
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       implicit none
 
 !--------------------------------------------------------------------//
       ! Boundary condition number
-      INTEGER, INTENT(IN) :: L
+      INTEGER, intent(in) :: L
 
-      DOUBLE PRECISION, INTENT(IN) :: u_g&
+      real(c_double), intent(in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: v_g&
+      real(c_double), intent(in) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: w_g&
+      real(c_double), intent(in) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: rop_g&
+      real(c_double), intent(in) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: ep_g&
+      real(c_double), intent(in) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_double), intent(in) :: dx, dy, dz
 
 ! Local variables
 !--------------------------------------------------------------------//

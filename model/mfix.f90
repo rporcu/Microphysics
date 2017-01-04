@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix1(time, dt, u_g, v_g, w_g, &
+subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
    p_g, ep_g, ro_g, rop_g, &
    d_e, d_n, d_t, &
    flux_ge, flux_gn, flux_gt, &
@@ -43,67 +43,77 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
 
       IMPLICIT NONE
 
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_double), intent(inout) :: time, dt
 
       integer(c_int), intent(inout) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_double), intent(inout) :: ep_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: p_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: ro_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: rop_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_double), intent(inout) :: u_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: v_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: w_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_double), intent(inout) :: d_e&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: d_t&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: d_n&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_double), intent(inout) :: mu_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: lambda_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: trD_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_double), intent(inout) :: flux_gE&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: flux_gN&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_double), intent(inout) :: flux_gT&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+!---------------------------------------------------------------------//
+      print *,'ISTART3 ', istart3, slo(1)
+      print *,'JSTART3 ', jstart3, slo(2)
+      print *,'KSTART3 ', kstart3, slo(3)
+      print *,'IEND3   ', iend3  , shi(1)
+      print *,'JEND3   ', jend3  , shi(2)
+      print *,'KEND3   ', kend3  , shi(3)
 
 !---------------------------------------------------------------------//
       flag_mod = flag
 
-      CALL INIT_OUTPUT_VARS(time, dt)
+      call init_output_vars(time, dt)
 
 ! Parse residual strings
-      CALL PARSE_RESID_STRING ()
+      call parse_resid_string ()
 
 ! Write the initial part of the standard output file
-      CALL WRITE_OUT0(time, dt)
+      call write_out0(time, dt)
 
 ! Write the initial part of the special output file(s)
-      CALL WRITE_USR0
+      call write_usr0
 
-      CALL INIT_ERR_MSG('MFIX')
+      call init_err_msg('MFIX')
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      CALL SET_FLAGS1(flag)
+      call set_flags1(flag)
       flag_mod = flag
 
 ! Calculate cell volumes and face areas
@@ -112,24 +122,21 @@ subroutine mfix1(time, dt, u_g, v_g, w_g, &
       AXY = DX*DY
       AXZ = DX*DZ
 
-! Find corner cells and set their face areas to zero
-      CALL GET_CORNER_CELLS(flag)
+      ! Find corner cells and set their face areas to zero
+      call get_corner_cells(slo,shi,lo,hi,flag)
       flag_mod = flag
 
 ! Set point sources.
-      CALL SET_PS(flag)
+      call set_ps(slo,shi,lo,hi,flag)
 
+      ! Set normal velocities to zero as appropriate
+      call zero_norm_vel(slo,shi,lo,hi,u_g,v_g,w_g,flag)
 
-! Initialize fluid variables .........................................
+      ! Set boundary conditions
+      call set_bc0(slo,shi,lo,hi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
 
-! Set boundary conditions
-      CALL ZERO_NORM_VEL(u_g,v_g,w_g, flag)
-      CALL SET_BC0(p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
-
-      call init_fluid(ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-         mu_g, lambda_g, flag)
-
-!.....................................................................
-
+      ! Initialize the fluid
+      call init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+                      mu_g, lambda_g, flag, dx, dy, dz)
 
       end subroutine mfix1

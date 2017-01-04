@@ -34,6 +34,7 @@ module calc_coeff_module
 !-----------------------------------------------------------------------
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: max_pip
+      use iso_c_binding, only: c_double, c_int
 
       ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
@@ -193,6 +194,7 @@ module calc_coeff_module
          ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag) &
         bind(C, name="calc_trd_and_tau")
 
+      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       implicit none

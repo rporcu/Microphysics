@@ -1,8 +1,10 @@
-MODULE set_domain_module
+module set_domain_module
 
    use check_boundary_conditions_module, only: check_boundary_conditions
    use check_initial_conditions_module, only: check_initial_conditions
    use check_point_sources_module, only: check_point_sources
+
+   use iso_c_binding, only: c_double, c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -14,14 +16,15 @@ MODULE set_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_DOMAIN(flag)
+      subroutine set_domain(slo,shi,flag,dx,dy,dz) &
+          bind(C, name="set_domain")
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       ! Domain decomposition and dimensions
-      use geometry, only: DX, oDX
-      use geometry, only: DY, oDZ
-      use geometry, only: DZ, oDY
+      use geometry, only: oDX
+      use geometry, only: oDZ
+      use geometry, only: oDY
 
       ! Cyclic domain flags.
       use geometry, only: CYCLIC
@@ -39,14 +42,15 @@ MODULE set_domain_module
       use set_bc_flow_module, only: set_bc_flow
       use set_flags_module, only: set_flags
 
-
       use param1, only: one, is_defined
 
       use run, only: dem_solids
 
       implicit none
 
-      integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      real(c_double), intent(in   ) :: dx,dy,dz
 
       ! This used to be in set_geometry
 
@@ -71,18 +75,18 @@ MODULE set_domain_module
 
       CALL CHECK_INITIAL_CONDITIONS
       CALL CHECK_BOUNDARY_CONDITIONS
-      CALL CHECK_POINT_SOURCES
+      CALL check_point_sources(dx,dy,dz)
 
 ! This call needs to occur before any of the IC/BC checks.
       CALL SET_ICBC_FLAG(flag)
 
-! Compute area of boundary surfaces.
-      CALL GET_BC_AREA
+      ! Compute area of boundary surfaces.
+      call get_bc_area(dx,dy,dz)
 
-! Convert (mass, volume) flows to velocities.
+      ! Convert (mass, volume) flows to velocities.
       CALL SET_BC_FLOW
 
-! Set the flags for identifying computational cells
+      ! Set the flags for identifying computational cells
       CALL SET_FLAGS(flag)
 
 

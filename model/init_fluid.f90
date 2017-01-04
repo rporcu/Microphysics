@@ -8,39 +8,44 @@ contains
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine init_fluid(ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-      mu_g, lambda_g, flag)
-
-      use compar, only: istart3,jstart3,iend3,jend3,kstart3,kend3
-      use param1, only: is_undefined, undefined
-      use fld_const, only: ro_g0, mu_g0
+   subroutine init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+                         mu_g, lambda_g, flag, dx, dy, dz)
 
       use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
 
+      use param1, only: is_undefined, undefined
+      use fld_const, only: ro_g0, mu_g0
+
+      use iso_c_binding, only: c_double, c_int
+
       implicit none
 
 ! Dummy arguments .....................................................//
-      double precision, intent(inout) :: ep_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ro_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: p_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: u_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: v_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: w_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) :: lambda_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer         , intent(in   ) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+
+      real(c_double), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: lambda_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      real(c_double), intent(in   ) :: dx, dy, dz
 
 ! Local variables .....................................................//
       double precision, parameter :: f2o3 = 2.d0/3.d0
@@ -48,10 +53,10 @@ contains
 !-----------------------------------------------------------------------!
 
 ! Set user specified initial conditions (IC)
-      call set_ic(ep_g, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, lo, hi, ep_g, p_g, u_g, v_g, w_g, flag)
 
 ! Set the initial pressure field
-      call set_p_g(p_g, ep_g, flag)
+      call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
 
 ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
@@ -82,9 +87,8 @@ contains
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(ep_g, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, lo, hi, ep_g, p_g, u_g, v_g, w_g, flag)
 
-      use compar, only: istart3,jstart3,iend3,jend3,kstart3,kend3
       use ic, only: dimension_ic, ic_type, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -93,18 +97,20 @@ contains
 
       IMPLICIT NONE
 
+      integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+
       double precision, intent(inout) :: ep_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       double precision, intent(inout) ::  p_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       double precision, intent(inout) ::  u_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       double precision, intent(inout) ::  v_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       double precision, intent(inout) ::  w_g&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer, intent(in) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -160,22 +166,21 @@ contains
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE set_p_g(p_g, ep_g, flag)
+      SUBROUTINE set_p_g(slo, shi, lo, hi, p_g, ep_g, flag, dx, dy, dz)
 
       USE bc, only: delp_x, delp_y, delp_z
       USE bc, only: dimension_ic
       USE bc, only: dimension_bc, bc_type, bc_p_g, bc_defined
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: myPE
       USE constant , only: gravity
       USE eos, ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
-      USE geometry, only: dx, dy, dz
       USE geometry, only: imax1, jmax1, kmax1
       USE geometry, only: imin1, jmin1, kmin1
       USE geometry, only: jmax2
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
+      use iso_c_binding, only: c_double, c_int
       USE param1   , only: is_defined, zero, undefined, is_undefined
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
@@ -183,12 +188,16 @@ contains
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+
+      real(c_double), intent(inout) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_double), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_double), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -229,7 +238,7 @@ contains
             pj = pj + dpodx*dx
             do k = kmin1, kmax1
                do j = jmin1, jmax1
-                  if (flag(i,j,k,1)==1) p_g(i,j,k) = scale_pressure(pj)
+                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -242,7 +251,7 @@ contains
             pj = pj + dpody*dy
             do k = kmin1, kmax1
                do i = imin1, imax1
-                  if (flag(i,j,k,1)==1) p_g(i,j,k) = scale_pressure(pj)
+                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -255,7 +264,7 @@ contains
             pj = pj + dpodz*dz
             do j = jmin1, jmax1
                do i = imin1, imax1
-                  if (flag(i,j,k,1)==1) p_g(i,j,k) = scale_pressure(pj)
+                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -277,14 +286,9 @@ contains
 ! either a PO was not specified and/or a PO was specified but not the
 ! pressure at the outlet
          if (is_defined(ro_g0)) then
-! If incompressible flow set P_g to zero
-            do k = kstart3, kend3
-               do j = jstart3, jend3
-                  do i = istart3, iend3
-                     if (flag(i,j,k,1)==1) p_g(i,j,k) = zero
-                  enddo
-               enddo
-            enddo
+
+            ! If incompressible flow set P_g to zero
+            where (flag .eq. 1) p_g = zero
             goto 100
 
          else   ! compressible case
@@ -309,7 +313,7 @@ contains
          area = 0.0
          do k = kmin1, kmax1
             do i = imin1, imax1
-               if (flag(i,j,k,1)==1) then
+               if (flag(i,j,k)==1) then
                   darea = dx*dz
                   area = area + darea
                   if (is_undefined(ro_g0)) then
@@ -331,7 +335,7 @@ contains
          PJ = PJ + BED_WEIGHT
          DO K = KMIN1, KMAX1
             DO I = IMIN1, IMAX1
-               IF(flag(i,j,k,1) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
+               IF(flag(i,j,k) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
                   P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)

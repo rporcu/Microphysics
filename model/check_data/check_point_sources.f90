@@ -5,6 +5,8 @@ MODULE CHECK_POINT_SOURCES_MODULE
 
       use get_ps_module, only: get_ps
 
+      use iso_c_binding, only: c_double, c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -14,7 +16,7 @@ MODULE CHECK_POINT_SOURCES_MODULE
 !  Purpose: Check point source specifications.                         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_POINT_SOURCES
+      SUBROUTINE CHECK_POINT_SOURCES(dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -36,6 +38,7 @@ MODULE CHECK_POINT_SOURCES_MODULE
 !---------------------------------------------------------------------//
 ! Loop counter for BCs
       INTEGER :: PSV
+      real(c_double), intent(in) :: dx,dy,dz
 !......................................................................!
 
 
@@ -50,7 +53,7 @@ MODULE CHECK_POINT_SOURCES_MODULE
 
 ! Verify user input for defined defined PS.
          IF(PS_DEFINED(PSV)) THEN
-            CALL GET_PS(PSV)
+            call get_ps(PSV,dx,dy,dz)
             CALL CHECK_PS_GAS_PHASE(PSV)
          ELSE
 ! Verify that no data was defined for unspecified PS.
