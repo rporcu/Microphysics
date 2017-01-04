@@ -667,7 +667,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   {
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_make_arrays_des(
-               (*ep_g[lev])[mfi].dataPtr(), (*flag[lev])[mfi].dataPtr(), 
                particle_state.dataPtr(),
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),

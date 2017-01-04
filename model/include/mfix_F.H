@@ -25,7 +25,6 @@ extern "C"
                  int* flag);
 
   void mfix_make_arrays_des(
-                 Real* ep_g,    int* flag,
                  int* particle_state,
                  int* particle_phase,
                  Real* des_radius,
