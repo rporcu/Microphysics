@@ -12,7 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE USR0
 
-      use usr, only: bounce_count, max_height, yposo, yvelo, h0
+      use usr
 
       IMPLICIT NONE
 
