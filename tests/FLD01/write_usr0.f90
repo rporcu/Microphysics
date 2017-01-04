@@ -34,7 +34,6 @@
 
       use run, only: DESCRIPTION
 
-      use param1, only: UNDEFINED
       use geometry, only: JMAX
       use bc, only: DELP_X
       use toleranc, only: tol_resid
@@ -83,12 +82,6 @@
       SUBROUTINE WRITE_NRM_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-
-      use param1, only: UNDEFINED
-      use geometry, only: JMAX
-      use bc, only: DELP_X
-      use toleranc, only: tol_resid
-      use leqsol, only: max_nit
 
       IMPLICIT NONE
 

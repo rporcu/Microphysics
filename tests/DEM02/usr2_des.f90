@@ -18,8 +18,7 @@
       SUBROUTINE USR2_DES(des_pos_new, des_vel_new, omega_new)
 
       Use discretelement, only: max_pip
-      Use run
-      Use usr
+      Use usr, only: bounce_count, max_bounce, yvelo, yposo, max_height
 
       IMPLICIT NONE
 

@@ -53,10 +53,8 @@
 !......................................................................!
       SUBROUTINE WRITE_DES_Out
 
-      Use discretelement
-      Use run
-      Use usr
-      use compar
+      use compar, only: mype, pe_io
+      Use usr, only: bounce_count, max_height_hs, max_height
 
       IMPLICIT NONE
 

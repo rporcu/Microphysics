@@ -14,11 +14,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE USR3_DES(des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
-      use constant, only: PI
       use compar, only: myPE, PE_IO
-
-      use usr
+      use constant, only: PI
+      use discretelement, only: max_pip
+      use usr, only: init_angle, init_vel_t
 
       IMPLICIT NONE
 

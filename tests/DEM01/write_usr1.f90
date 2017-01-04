@@ -55,9 +55,8 @@
       SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
 
       use discretelement, only: max_pip
-      Use run
-      Use usr
-      use compar
+      Use usr, only: b_r, h0, time_c, time_r, w0_r, y_s1, dydt_s1, y_s3, dydt_s3, y_s2, dydt_s2
+      use compar, only: mype, pe_io
       use constant, only: gravity
 
       IMPLICIT NONE

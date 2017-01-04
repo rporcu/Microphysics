@@ -12,10 +12,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use usr
-      use discretelement
-      use constant
+      use discretelement, only: particles
+      use constant, only: gravity
       use exit_mod, only: mfix_exit
+      use usr, only: f1b, f2b, gx1, gy1, gy2
 
       IMPLICIT NONE
 

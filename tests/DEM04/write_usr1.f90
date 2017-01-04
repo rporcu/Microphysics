@@ -54,11 +54,11 @@
 !......................................................................!
       SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new, omega_new)
 
-      Use discretelement
-      Use run
-      Use usr
-      use toleranc, only: COMPARE
+      Use discretelement, only: max_pip, mew, mew_w
       use constant, only: gravity
+      use param1, only: zero
+      use toleranc, only: COMPARE
+      use usr, only: u0
 
       IMPLICIT NONE
 

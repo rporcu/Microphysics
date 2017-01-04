@@ -30,7 +30,6 @@
 
       use run, only: DESCRIPTION
 
-      use param1, only: UNDEFINED
       use geometry, only: JMAX
       use bc, only: DELP_X
       use toleranc, only: tol_resid

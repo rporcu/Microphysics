@@ -86,7 +86,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
       real(c_double), intent(  out) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer, intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       real(c_double), intent(in   ) :: dt
 !.....................................................................//
@@ -205,7 +205,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
       REAL(C_DOUBLE), INTENT(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      INTEGER(C_INT), INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       real(c_double), intent(in   ) :: dt
 !.....................................................................//
@@ -322,7 +322,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
       REAL(C_DOUBLE), INTENT(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      INTEGER(C_INT), INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
       real(c_double), intent(in   ) :: dt
 !.....................................................................//

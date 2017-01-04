@@ -14,7 +14,7 @@
 
       use discretelement, only: PIP
       use exit_mod, only: mfix_exit
-      use usr
+      use usr, only: rk4_pos, rk4_vel
 
       IMPLICIT NONE
 

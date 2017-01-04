@@ -31,11 +31,9 @@
       SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: DES_INTG_METHOD
-      use discretelement
+      use discretelement, only: des_coll_model_enum, hertzian, kn, kn_w, kt, kt_w, lsd
+      use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etan_wall, des_etat_wall
       use constant, only: MMAX
-
-      use param1, only: UNDEFINED
 
       IMPLICIT NONE
 

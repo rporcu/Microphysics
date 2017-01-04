@@ -33,8 +33,6 @@
       use discretelement, only: KN, KN_W
       use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT
 
-      use param1, only: UNDEFINED
-
       IMPLICIT NONE
 
       CHARACTER(len=*) :: FNAME

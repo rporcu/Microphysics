@@ -12,8 +12,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use usr
-      use discretelement
+      use usr, only: b_r, h0, time_c, time_r, vel_c, vel_r, w0_r, y_s2, dydt_s2
+      use discretelement, only: particles, dtsolid, kn_w, des_etan_wall, des_en_wall_input
       use exit_mod, only: mfix_exit
       use constant, only: gravity, pi
 

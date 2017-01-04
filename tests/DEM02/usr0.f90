@@ -12,8 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE USR0
 
-      use usr
-      use discretelement
+      use usr, only: bounce_count, max_height, yposo, yvelo, h0
 
       IMPLICIT NONE
 

@@ -56,13 +56,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE GEN_PARTICLES()
 
-      use constant
-      use desgrid
-      use des_allocate
-      use discretelement
-      use functions
-      use constant
-
       IMPLICIT NONE
 
       integer, parameter :: pCount = 1222

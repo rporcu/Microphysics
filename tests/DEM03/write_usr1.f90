@@ -53,9 +53,9 @@
 !......................................................................!
       SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
 
-      Use discretelement
-      Use run
-      Use usr
+      Use discretelement, only: max_pip
+      Use usr, only: gx1, gx2, gy1, gy2, rk4_v4
+      Use param1, only: undefined, is_defined
 
       IMPLICIT NONE
 
