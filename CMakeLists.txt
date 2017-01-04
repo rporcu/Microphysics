@@ -54,6 +54,7 @@ set(F90_sources
   model/calc_mflux.f90
   model/calc_mu_g.f90
   model/calc_outflow.f90
+  model/calc_ro_g.f90
   model/calc_trd_g.f90
   model/check_bqend.f90
   model/check_convergence.f90
@@ -136,6 +137,7 @@ set(F90_sources
   model/get_tunit.f90
   model/goal_seek_mflux.f90
   model/ic_mod.f90
+  model/init_fluid.f90
   model/init_namelist.f90
   model/io/funits_mod.f90
   model/io/in_binary_512_mod.f90
@@ -181,14 +183,11 @@ set(F90_sources
   model/set_constprop.f90
   model/set_domain.f90
   model/set_flags.f90
-  model/set_fluidbed_p.f90
-  model/set_ic.f90
   model/set_icbc_flags.f90
   model/set_max2.f90
   model/set_outflow.f90
   model/set_param.f90
   model/set_ps.f90
-  model/set_ro_g.f90
   model/set_wall_bc.f90
   model/solve_pp_g.f90
   model/solve_vel_star.f90

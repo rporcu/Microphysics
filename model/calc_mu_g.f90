@@ -1,63 +1,51 @@
-MODULE CALC_MU_G_MODULE
-CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CALC_MU_g                                               C
-!  Author: W. Sams/M. Syamlal                         Date: 18-JUL-94  C
-!                                                                      C
-!  Purpose: Calculate the molecular viscosity.                         C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_MU_G(lambda_g,mu_g,mu_g0,flag)
+module calc_mu_g_module
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: calc_mu_g                                               !
+!                                                                      !
+!  Purpose: Calculate the molecular viscosity in (Pa.s) using the      !
+!  Sutherland formulation with Sutherland constant (C) given by        !
+!  Vogel's equation C=1.47*Tb.                                         !
+!                                                                      !
+! For air, Tb=74.82 so that mu = 1.71*10-4 poise at T = 273K           !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_mu_g(lambda_g,mu_g,flag)
 
-      USE param1   , only: zero, is_undefined
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use param1, only: zero, is_undefined
+      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      IMPLICIT NONE
+      implicit none
 
-      double precision, intent(inout) :: lambda_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(inout) ::     mu_g (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) ::     mu_g0
-      integer         , intent(in   ) :: flag     (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+! Dummy arguments .....................................................//
+      double precision, intent(  out) :: lambda_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      double precision, intent(  out) :: mu_g&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-!-----------------------------------------------
-! Local parameters
-!-----------------------------------------------
-      DOUBLE PRECISION, PARAMETER :: F2O3 = 2.D0/3.D0
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Cell indices
-      INTEGER :: I,J,K
+      integer         , intent(in   ) :: flag&
+         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-           DO I = istart3, iend3
+! Local variables .....................................................//
+      integer :: i,j,k
+      double precision, parameter :: f2o3 = 2.d0/3.d0
 
-! Gas viscosity   (in Poise or Pa.s)
-! Calculating gas viscosity using Sutherland's formula with
-! Sutherland's constant (C) given by Vogel's equation C = 1.47*Tb.
-! For air  C = 110 (Tb=74.82)
-!         mu = 1.71*10-4 poise at T = 273K
+!-----------------------------------------------------------------------!
 
-         IF (1.eq.flag(i,j,k,1)) THEN
+      do k = kstart3, kend3
+         do j = jstart3, jend3
+            do i = istart3, iend3
 
-            IF (IS_UNDEFINED(mu_g0)) MU_G(I,J,K) = 1.7D-5 * &
-               (293.15d0/273.0D0)**1.5D0 * (383.D0/(293.15d0+110.D0))
+               if(flag(i,j,k,1) == 1) then
+                  mu_g(i,j,k) = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 *&
+                     (383.d0/(293.15d0+110.d0))
+                  lambda_g(i,j,k) = -f2o3*mu_g(i,j,k)
+               endif
+            enddo
+         enddo
+      enddo
 
-            LAMBDA_G(i,j,k) = -F2O3*MU_G(I,J,K)
-
-         ELSE
-
-            MU_G(I,J,K)  = ZERO
-            LAMBDA_G(i,j,k) = ZERO
-
-         ENDIF   ! end if (1.eq.flag(i,j,k))
-
-      ENDDO
-      ENDDO
-      ENDDO
-
-      RETURN
-      END SUBROUTINE CALC_MU_G
-END MODULE CALC_MU_G_MODULE
+      return
+   end subroutine calc_mu_g
+end module calc_mu_g_module
