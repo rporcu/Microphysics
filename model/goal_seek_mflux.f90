@@ -8,7 +8,7 @@ contains
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   integer function goal_seek_mFlux(NIT, gsmf, delp_n, mdot_n, &
+   integer(c_int) function goal_seek_mFlux(NIT, gsmf, delp_n, mdot_n, &
       flux_ge, flux_gn, flux_gt, flag)&
       bind(C, name="goal_seek_mFlux")
 

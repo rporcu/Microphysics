@@ -105,7 +105,7 @@ module set_bc1_module
       use calc_outflow_module, only: calc_outflow
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: dmp_log, unit_log
-      use param1, only: undefined, zero
+      use param1, only: is_undefined, zero
       use run, only: tstop
 
       IMPLICIT NONE
@@ -128,7 +128,7 @@ module set_bc1_module
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
 
-      IF (BC_DT_0(BCV) == UNDEFINED) RETURN
+      IF (IS_UNDEFINED(BC_DT_0(BCV))) RETURN
 
       CALL CALC_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g)
 
@@ -180,7 +180,7 @@ module set_bc1_module
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iminus, jminus, kminus
       use funits, only: dmp_log, unit_log
-      use param1, only: undefined, zero, small_number
+      use param1, only: is_defined, zero, small_number
       use run, only: tstop
 
       IMPLICIT NONE
@@ -226,7 +226,7 @@ module set_bc1_module
 
 ! Now that we know the mass and volume outflow update the bc velocities
 ! (gas phase)
-         IF (BC_MASSFLOW_G(BCV) /= UNDEFINED) THEN
+         IF (IS_DEFINED(BC_MASSFLOW_G(BCV))) THEN
             IF (BC_MOUT_G(BCV) > SMALL_NUMBER) THEN
                SELECT CASE (TRIM(BC_PLANE(BCV)))
                CASE ('W', 'E')
@@ -240,7 +240,7 @@ module set_bc1_module
                      BC_MOUT_G(BCV)
                END SELECT
             ENDIF
-         ELSEIF (BC_VOLFLOW_G(BCV) /= UNDEFINED) THEN
+         ELSEIF (IS_DEFINED(BC_VOLFLOW_G(BCV))) THEN
             IF (BC_VOUT_G(BCV) > SMALL_NUMBER) THEN
                SELECT CASE (TRIM(BC_PLANE(BCV)))
                CASE ('W', 'E')

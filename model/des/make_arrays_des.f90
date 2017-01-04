@@ -27,24 +27,25 @@
 
       use run, only: run_type
       use set_phase_index_module, only: set_phase_index
+      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      double precision, intent(  out) :: pvol(max_pip)
-      double precision, intent(  out) :: pmass(max_pip)
-      double precision, intent(  out) :: des_radius(max_pip)
-      double precision, intent(  out) :: ro_sol(max_pip)
-      double precision, intent(  out) :: omoi(max_pip)
+      real(c_double), intent(  out) :: pvol(max_pip)
+      real(c_double), intent(  out) :: pmass(max_pip)
+      real(c_double), intent(  out) :: des_radius(max_pip)
+      real(c_double), intent(  out) :: ro_sol(max_pip)
+      real(c_double), intent(  out) :: omoi(max_pip)
 
-      double precision, intent(  out) :: des_vel_new(max_pip,3)
-      double precision, intent(  out) :: des_pos_new(max_pip,3)
-      double precision, intent(  out) :: omega_new(max_pip,3)
-      double precision, intent(  out) :: des_usr_var(max_pip,1)
-      integer         , intent(  out) :: particle_state(max_pip)
-      integer         , intent(  out) :: particle_phase(max_pip)
+      real(c_double), intent(  out) :: des_vel_new(max_pip,3)
+      real(c_double), intent(  out) :: des_pos_new(max_pip,3)
+      real(c_double), intent(  out) :: omega_new(max_pip,3)
+      real(c_double), intent(  out) :: des_usr_var(max_pip,1)
+      integer(c_int)  , intent(  out) :: particle_state(max_pip)
+      integer(c_int)  , intent(  out) :: particle_phase(max_pip)
 
-      double precision, intent(  out) :: fc(max_pip,3)
-      double precision, intent(  out) :: tow(max_pip,3)
+      real(c_double), intent(  out) :: fc(max_pip,3)
+      real(c_double), intent(  out) :: tow(max_pip,3)
 
 !-----------------------------------------------
 ! Local variables
@@ -127,13 +128,14 @@
 
       use discretelement       , only: max_pip, print_des_data, s_time
       use error_manager        , only: finl_err_msg
+      use iso_c_binding, only: c_double, c_int
       use run                  , only: run_type
       use write_des_data_module, only: write_des_data
 
-      double precision, intent(in   ) :: des_radius (max_pip)
-      double precision, intent(in   ) :: des_pos_new(max_pip,3)
-      double precision, intent(in   ) :: des_vel_new(max_pip,3)
-      double precision, intent(in   ) :: des_usr_var(max_pip,1)
+      real(c_double), intent(in   ) :: des_radius (max_pip)
+      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_double), intent(in   ) :: des_usr_var(max_pip,1)
 
       IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME

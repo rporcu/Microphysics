@@ -8,10 +8,9 @@ MODULE CHECK_CONVERGENCE_MODULE
 !  Purpose: Monitor convergence                                        C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      integer function check_convergence(nit) &
+      integer(c_int) function check_convergence(nit) &
          bind(C, name="check_convergence")
 
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero, undefined_i, is_undefined
       USE residual, only: max_resid_index, nresid
       use residual, only: resid_p, resid_u, resid_v, resid_w

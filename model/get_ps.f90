@@ -13,7 +13,7 @@
       USE geometry, only: imax, jmax, kmax
       USE geometry, only: imax2, jmax2, kmax2
       USE location_check_module, only: location_check
-      USE param1, only: undefined, undefined_i
+      USE param1, only: undefined_i, is_undefined, is_defined
       USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
       USE ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
       USE ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t
@@ -45,7 +45,7 @@
       Y_CONSTANT = .TRUE.
       Z_CONSTANT = .TRUE.
 
-      IF(PS_X_W(PSV)/=UNDEFINED .AND. PS_X_E(PSV)/=UNDEFINED) THEN
+      IF(IS_DEFINED(PS_X_W(PSV)) .AND. IS_DEFINED(PS_X_E(PSV))) THEN
          CALL CALC_CELL(PS_X_W(PSV), DX, IMAX, I_W)
          CALL CALC_CELL(PS_X_E(PSV), DX, IMAX, I_E)
          IF (PS_X_W(PSV) /= PS_X_E(PSV)) THEN
@@ -68,7 +68,7 @@
       ENDIF
 
 !  If there is no variation in the I direction set indices to 1
-      IF (PS_Y_S(PSV)/=UNDEFINED .AND. PS_Y_N(PSV)/=UNDEFINED) THEN
+      IF (IS_DEFINED(PS_Y_S(PSV)).AND. IS_DEFINED(PS_Y_N(PSV))) THEN
          CALL CALC_CELL(PS_Y_S(PSV), DY, JMAX, J_S)
          CALL CALC_CELL(PS_Y_N(PSV), DY, JMAX, J_N)
          IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) THEN
@@ -90,7 +90,7 @@
          IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) Y_CONSTANT = .FALSE.
       ENDIF
 
-      IF (PS_Z_B(PSV)/=UNDEFINED .AND. PS_Z_T(PSV)/=UNDEFINED) THEN
+      IF (IS_DEFINED(PS_Z_B(PSV)) .AND. IS_DEFINED(PS_Z_T(PSV))) THEN
          CALL CALC_CELL(PS_Z_B(PSV), DZ, KMAX, K_B)
          CALL CALC_CELL(PS_Z_T(PSV), DZ, KMAX, K_T)
          IF (PS_Z_B(PSV) /= PS_Z_T(PSV)) THEN

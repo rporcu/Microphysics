@@ -20,7 +20,7 @@ MODULE SET_CONSTPROP_MODULE
 
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use fld_const, only: ro_g0, mu_g0
-      use param1   , only: zero, undefined
+      use param1   , only: zero, is_defined
 
       implicit none
 
@@ -45,12 +45,12 @@ MODULE SET_CONSTPROP_MODULE
 
 ! Set specified constant physical properties values
 
-      if (ro_g0 /= undefined) then
+      if (IS_DEFINED(ro_g0)) then
          ! Fluid and inflow/outflow cells: FLAG < 100
          where (flag < 100) ro_g = ro_g0
       end if
 
-      if (mu_g0 /= undefined) then
+      if (IS_DEFINED(mu_g0)) then
          ! Strictly Fluid cells: FLAG = 1
          where (flag .eq. 1) mu_g = mu_g0
          where (flag .eq. 1) lambda_g = -(2.0d0/3.0d0)*mu_g0

@@ -88,11 +88,11 @@ MODULE CHECK_DATA_30_MODULE
          if(flag(i,j,k,1) >= 10 .and. flag(i,j,k,1) <= 31) then
 
 ! Turbulent viscosity of fluid phase.
-            IF(MU_g(I,J,K) /= ZERO) CALL REPORT_ERROR                   &
+            IF(ZERO < abs(MU_g(I,J,K))) CALL REPORT_ERROR                   &
                (IER, I, J, K, MU_G(I,J,K), '/=', ZERO, 'MU_G')
 
 ! Granular second coefficient of viscosity.
-            IF(LAMBDA_G(i,j,k) /= ZERO) CALL REPORT_ERROR               &
+            IF(ZERO < abs(LAMBDA_G(i,j,k))) CALL REPORT_ERROR               &
                (IER, I, J, K, LAMBDA_G(i,j,k), '/=', ZERO, 'LAMBDA_G')
 ! Gas conductivity.
 

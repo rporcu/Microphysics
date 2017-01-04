@@ -17,7 +17,7 @@ MODULE SET_RO_g_MODULE
       USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE eos      , only: EOSG
       USE fld_const, only: mw_avg, ro_g0
-      USE param1   , only: UNDEFINED
+      USE param1   , only: IS_UNDEFINED
 
       IMPLICIT NONE
 
@@ -37,7 +37,7 @@ MODULE SET_RO_g_MODULE
 !-----------------------------------------------
       integer :: i,j,k
 !-----------------------------------------------
-      IF (RO_G0 == UNDEFINED) THEN   ! compressible case
+      IF (IS_UNDEFINED(RO_G0)) THEN   ! compressible case
 
          ! Calculate ro_g and rop_g in all fluid and flow boundary cells
          do k = kstart3, kend3

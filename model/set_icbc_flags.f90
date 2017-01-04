@@ -15,7 +15,7 @@ MODULE set_icbc_flags_module
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_
       use ic, only: MINF_, MOUT_, POUT_, OUTF_, PINF_, PSW_
       use mod_bc, only: mod_bc_i, mod_bc_j, mod_bc_k
-      use param1, only: zero, undefined
+      use param1, only: zero, is_defined
       use run, only: run_type
 
    CONTAINS
@@ -395,15 +395,15 @@ MODULE set_icbc_flags_module
             Z_CONSTANT = (BC_Z_B(BCV) == BC_Z_T(BCV))
 
             write(*,*) 'call mod_bc_i',bcv
-            IF(X_CONSTANT .AND. BC_X_W(BCV)/=UNDEFINED)                &
+            IF(X_CONSTANT .AND. IS_DEFINED(BC_X_W(BCV)))                &
                CALL MOD_BC_I(BCV,flag)
 
             write(*,*) 'call mod_bc_j',bcv
-            IF(Y_CONSTANT .AND. BC_Y_S(BCV)/=UNDEFINED)                &
+            IF(Y_CONSTANT .AND. IS_DEFINED(BC_Y_S(BCV)))                &
                CALL MOD_BC_J(BCV,flag)
 
             write(*,*) 'call mod_bc_k',bcv
-            IF(Z_CONSTANT .AND. BC_Z_B(BCV)/=UNDEFINED)                &
+            IF(Z_CONSTANT .AND. IS_DEFINED(BC_Z_B(BCV)))                &
                CALL MOD_BC_K(BCV,flag)
 
 ! Extend the boundaries for cyclic implementation

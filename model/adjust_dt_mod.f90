@@ -10,7 +10,7 @@ contains
 !  Purpose: Automatically adjust time step.                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   integer function adjustdt (converged, nit, dt) &
+   integer(c_int) function adjustdt (converged, nit, dt) &
       bind(C, name="mfix_adjustdt")
 
       use iso_c_binding, only: c_double, c_int
@@ -26,7 +26,7 @@ contains
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, ONE, UNDEFINED
+      use param1, only: ZERO, ONE, IS_UNDEFINED
 
 ! Module proceedures:
 !---------------------------------------------------------------------//
@@ -65,7 +65,7 @@ contains
       adjustdt = 0
 
 ! Steady-state simulation.
-      if (dt==undefined .or. dt<=zero) return
+      if (is_undefined(dt) .or. dt<=zero) return
 
 ! Iterate successfully converged.
 !---------------------------------------------------------------------//

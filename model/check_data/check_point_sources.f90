@@ -222,10 +222,10 @@ MODULE CHECK_POINT_SOURCES_MODULE
             PS_W_g(PSV) = ZERO
          ENDIF
 
-      ELSEIF(PS_MASSFLOW_G(PSV) == ZERO) THEN
-         IF(PS_U_g(PSV) /= ZERO .OR. &
-            PS_V_g(PSV) /= ZERO .OR. &
-            PS_W_g(PSV) /= ZERO) THEN
+      ELSEIF(ABS(PS_MASSFLOW_G(PSV)) < EPSILON(ZERO)) THEN
+         IF(ABS(PS_U_g(PSV)) < EPSILON(ZERO) .OR. &
+            ABS(PS_V_g(PSV)) < EPSILON(ZERO) .OR. &
+            ABS(PS_W_g(PSV)) < EPSILON(ZERO)) THEN
 
             WRITE(ERR_MSG,1101) PSV, trim(iVar('PS_MASSFLOW_G',PSV))
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)

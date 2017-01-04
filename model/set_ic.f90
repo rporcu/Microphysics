@@ -19,7 +19,7 @@ CONTAINS
       USE ic, only: dimension_ic
       USE ic, only: ic_defined, ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_type, ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       USE scales, only: scale_pressure
-      USE param1, only: undefined
+      USE param1, only: undefined, is_defined
 
       IMPLICIT NONE
 
@@ -70,18 +70,18 @@ CONTAINS
             DO I = IC_I_W(L), IC_I_E(L)
 
                IF (flag(i,j,k,1)<100) THEN
-                  IF (EPGX /= UNDEFINED) EP_G(I,J,K) = EPGX
+                  IF (IS_DEFINED(EPGX)) EP_G(I,J,K) = EPGX
 
                   IF (IC_TYPE(L) == 'PATCH') THEN
-                      IF (PGX /= UNDEFINED) P_G(I,J,K) = SCALE_PRESSURE(PGX)
+                      IF (IS_DEFINED(PGX)) P_G(I,J,K) = SCALE_PRESSURE(PGX)
                   ELSE
                      P_G(I,J,K) = merge(SCALE_PRESSURE(PGX), UNDEFINED,           &
-                        PGX /= UNDEFINED)
+                        IS_DEFINED(PGX))
                   ENDIF
 
-                  IF (UGX /= UNDEFINED) U_G(I,J,K) = UGX
-                  IF (VGX /= UNDEFINED) V_G(I,J,K) = VGX
-                  IF (WGX /= UNDEFINED) W_G(I,J,K) = WGX
+                  IF (IS_DEFINED(UGX)) U_G(I,J,K) = UGX
+                  IF (IS_DEFINED(VGX)) V_G(I,J,K) = VGX
+                  IF (IS_DEFINED(WGX)) W_G(I,J,K) = WGX
 
 
 ! end of modifications for GHD theory

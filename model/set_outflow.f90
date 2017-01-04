@@ -48,7 +48,7 @@ module set_outflow_module
       use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use param, only: dimension_m
-      use param1, only: undefined, zero
+      use param1, only: is_undefined, zero
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -152,7 +152,7 @@ module set_outflow_module
 ! directions are modified (needed for PO or O boundaries but not MO or
 ! PI as velocities should be fully specified by this point)
 
-                  IF (U_G(I,J,K) == UNDEFINED) THEN
+                  IF (IS_UNDEFINED(U_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
                         U_G(I,J,K) = ROP_G(ip,j,k)*U_G(ip,j,k)/ROP_G(I,J,K)
                      ELSE
@@ -198,7 +198,7 @@ module set_outflow_module
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,jp,k,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G, RVEL_S)
 
-                  IF (V_G(I,J,K) == UNDEFINED) THEN
+                  IF (IS_UNDEFINED(V_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
                         V_G(I,J,K) = ROP_G(i,jp,k)*V_G(i,jp,k)/ROP_G(I,J,K)
                      ELSE
@@ -245,7 +245,7 @@ module set_outflow_module
                   CALL SET_OUTFLOW_MISC(BCV, I,J,K, i,j,kp,p_g,ro_g)
                   CALL SET_OUTFLOW_EP(BCV,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G,RVEL_S)
 
-                  IF (W_G(I,J,K) == UNDEFINED) THEN
+                  IF (IS_UNDEFINED(W_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
                         W_G(I,J,K) = ROP_G(i,j,kp)*W_G(i,j,kp)/ROP_G(I,J,K)
                      ELSE
@@ -288,7 +288,7 @@ module set_outflow_module
 
 ! Global parameters
 !---------------------------------------------------------------------//
-      use param1, only: undefined
+      use param1, only: is_undefined
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -309,7 +309,7 @@ module set_outflow_module
       IF (BC_TYPE(BCV) /= 'P_OUTFLOW' .AND. &
           BC_TYPE(BCV) /= 'P_INFLOW') P_G(I,J,K) = P_G(FI,FJ,FK)
 
-      IF (RO_G0 == UNDEFINED) RO_G(I,J,K) = &
+      IF (IS_UNDEFINED(RO_G0)) RO_G(I,J,K) = &
          EOSG(mw_avg,P_G(I,J,K),295.15d0)
 
 
@@ -336,7 +336,7 @@ module set_outflow_module
 ! Global parameters
 !---------------------------------------------------------------------//
       use param, only: dimension_m
-      use param1, only: undefined, zero, one
+      use param1, only: is_undefined, zero, one
 
       IMPLICIT NONE
 
@@ -380,7 +380,7 @@ module set_outflow_module
 ! if bc_ep_g undefined, set ep_g accordingly (based on flow condition
 ! or based on bc_rop_s). if bc_ep_g is defined its set value will be
 ! maintained (from set_bc0).
-      IF (BC_EP_G(BCV) == UNDEFINED) EP_G(I,J,K) = ONE
+      IF (IS_UNDEFINED(BC_EP_G(BCV))) EP_G(I,J,K) = ONE
 
 ! now that ep_g in the boundary cell is known, define the bulk density
 ! of the gas phase in the boundary cell

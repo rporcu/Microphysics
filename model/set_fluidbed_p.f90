@@ -23,7 +23,7 @@ MODULE SET_FLUIDBED_P_MODULE
       USE geometry, only: jmax2
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
-      USE param1   , only: undefined, zero
+      USE param1   , only: is_defined, zero, undefined, is_undefined
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
@@ -59,7 +59,7 @@ MODULE SET_FLUIDBED_P_MODULE
 ! calculations.
       DO L = 1, DIMENSION_IC
          IF (IC_DEFINED(L)) THEN
-            IF (IC_P_G(L) == UNDEFINED) GOTO 60
+            IF (IS_UNDEFINED(IC_P_G(L))) GOTO 60
             PJ = IC_P_G(L)
          ENDIF
       ENDDO
@@ -69,7 +69,7 @@ MODULE SET_FLUIDBED_P_MODULE
 ! is already defined in all initial condition regions (otherwise this
 ! section would be skipped)
 ! ---------------------------------------------------------------->>>
-      IF (DELP_X/=UNDEFINED) THEN
+      IF (IS_DEFINED(DELP_X)) THEN
          DPODX = DELP_X/XLENGTH
          PJ = PJ - DPODX*DX
          DO I = IMAX1, IMIN1, -1
@@ -83,7 +83,7 @@ MODULE SET_FLUIDBED_P_MODULE
          ENDDO
       ENDIF
 
-      IF (DELP_Y/=UNDEFINED) THEN
+      IF (IS_DEFINED(DELP_Y)) THEN
          DPODY = DELP_Y/YLENGTH
          PJ = PJ - DPODY*DY
          DO J = JMAX1, JMIN1, -1
@@ -97,7 +97,7 @@ MODULE SET_FLUIDBED_P_MODULE
          ENDDO
       ENDIF
 
-      IF (DELP_Z/=UNDEFINED) THEN
+      IF (IS_DEFINED(DELP_Z)) THEN
          DPODZ = DELP_Z/ZLENGTH
          PJ = PJ - DPODZ*DZ
          DO K = KMAX1, KMIN1, -1
@@ -123,10 +123,10 @@ MODULE SET_FLUIDBED_P_MODULE
          IF (BC_DEFINED(L) .AND. BC_TYPE(L)=='P_OUTFLOW') PJ = BC_P_G(L)
       ENDDO
 
-      IF (PJ == UNDEFINED) THEN
+      IF (IS_UNDEFINED(PJ)) THEN
 ! either a PO was not specified and/or a PO was specified but not the
 ! pressure at the outlet
-         IF (RO_G0 /= UNDEFINED) THEN
+         IF (IS_DEFINED(RO_G0)) THEN
 ! If incompressible flow set P_g to zero
             DO K = kstart3, kend3
             DO J = jstart3, jend3
@@ -162,7 +162,7 @@ MODULE SET_FLUIDBED_P_MODULE
                IF (flag(i,j,k,1)==1) THEN
                   DAREA = DX*DZ
                   AREA = AREA + DAREA
-                  IF (RO_G0 == UNDEFINED) THEN
+                  IF (IS_UNDEFINED(RO_G0)) THEN
                      BED_WEIGHT = BED_WEIGHT - DY*GRAVITY(2)*EP_G(I,J,K)*EOSG(&
                         MW_AVG,PJ,295.15d0)*DAREA
                   ELSE
@@ -176,12 +176,12 @@ MODULE SET_FLUIDBED_P_MODULE
 ! Global Sum
          ! call global_all_sum(bed_weight)
          ! call global_all_sum(area)
-         IF (AREA /= 0.0) BED_WEIGHT = BED_WEIGHT/AREA
+         IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
 
          PJ = PJ + BED_WEIGHT
          DO K = KMIN1, KMAX1
             DO I = IMIN1, IMAX1
-               IF(flag(i,j,k,1) ==1 .AND. P_G(I,J,K)==UNDEFINED)&
+               IF(flag(i,j,k,1) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
                   P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO    ! end do (i=imin1,imax1)
          ENDDO   ! end do (k = kmin1,kmax1)

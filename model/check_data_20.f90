@@ -29,7 +29,7 @@ MODULE CHECK_DATA_20_MODULE
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param1   , only: one, undefined, small_number
+      USE param1   , only: one, is_undefined, small_number
       USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, jminus, kminus
@@ -84,38 +84,38 @@ MODULE CHECK_DATA_20_MODULE
          IF (flag(i,j,k,1)<100) THEN
 
 ! check gas phase fields
-            IF(EP_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(EP_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'EP_G')
-            IF(P_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(P_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'P_G')
-            IF(RO_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(RO_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'RO_G')
-            IF(ROP_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(ROP_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'ROP_G')
 
-            IF(U_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(U_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'U_G')
 
 
-            IF(V_G(I,J,K) == UNDEFINED) then
+            IF(IS_UNDEFINED(V_G(I,J,K))) then
                write(*,*) 'here'
                CALL REPORT_ERROR(ABORT, I, J, K, 'V_G')
             endif
 
-            IF(W_G(I,J,K) == UNDEFINED) &
+            IF(IS_UNDEFINED(W_G(I,J,K))) &
                CALL REPORT_ERROR(ABORT, I, J, K, 'W_G')
 
-            IF(U_G(iminus(i,j,k),j,k) == UNDEFINED) &
+            IF(IS_UNDEFINED(U_G(iminus(i,j,k),j,k))) &
                CALL REPORT_ERROR(ABORT, I-1, J, K, 'U_G')
 
 
-            IF(V_G(i,jminus(i,j,k),k) == UNDEFINED) then
+            IF(IS_UNDEFINED(V_G(i,jminus(i,j,k),k))) then
                write(*,*) 'or here'
                CALL REPORT_ERROR(ABORT, I, J-1, K, 'V_G')
             endif
 
 
-            IF(W_G(i,j,kminus(i,j,k)) == UNDEFINED) &
+            IF(IS_UNDEFINED(W_G(i,j,kminus(i,j,k)))) &
                CALL REPORT_ERROR(ABORT, I, J, K-1, 'W_G')
 
          ENDIF  ! IF (flag(i,j,k,1)<100) THEN

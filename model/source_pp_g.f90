@@ -28,12 +28,13 @@ module source_pp_module
 subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
 
-      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, UNDEFINED, IJK_P_G
+      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
       USE fld_const, ONLY: RO_G0
       USE geometry, ONLY: VOL
       USE matrix, ONLY: E, W, N, S, T, B
+      USE param1, ONLY: IS_DEFINED, IS_UNDEFINED
       USE run, ONLY: UNDEFINED_I
       USE ur_facs, ONLY: UR_FAC
       USE write_error_module, only: write_error
@@ -129,7 +130,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
                IF (ABS(B_M(I,J,K)) < SMALL_NUMBER) THEN
                   A_M(I,J,K,0) = -ONE
                   B_M(I,J,K) = ZERO
-               ELSEIF (RO_G0 .NE. UNDEFINED) THEN !This is an error only in incompressible flow
+               ELSEIF (IS_DEFINED(RO_G0)) THEN !This is an error only in incompressible flow
                   WRITE (LINE, '(A,I3,1x,I3,1x,I3,A,I1,A,G12.5)') 'Error: At IJK = ', i,j,k, &
                      ' M = ', 0, ' A = 0 and b = ', B_M(I,J,K)
                   CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
@@ -155,7 +156,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
       ENDDO
 
 ! make correction for compressible flows
-      IF (RO_G0 == UNDEFINED) THEN
+      IF (IS_UNDEFINED(RO_G0)) THEN
          fac = UR_FAC(1)  !since p_g = p_g* + ur_fac * pp_g
 
          do k = kstart3, kend3
