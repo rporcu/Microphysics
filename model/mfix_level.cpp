@@ -7,7 +7,7 @@ mfix_level::~mfix_level ()
 {};
 
 mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
- : AmrCore(rb,max_level_in,n_cell_in,coord)          
+ : AmrCore(rb,max_level_in,n_cell_in,coord)
 {
 //  ReadParameters();
 
@@ -320,7 +320,7 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::evolve_fluid(int lev, int nstep, int set_normg, 
+mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                          Real dt, Real& prev_dt, Real time, Real normg)
 {
       // Update boundary conditions
@@ -380,7 +380,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         }
 
         // Calculate face mass fluxes
-        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) 
+        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
           calc_mflux(
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
@@ -388,7 +388,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             (*flag[lev])[mfi].dataPtr());
 
         // Update boundary conditions
-        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) 
+        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
           set_bc1(
             &time,                   &dt,
             (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
@@ -654,16 +654,16 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      mfix_main1(
-               &time, &dt, 
+               &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),    
-               (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),   
+               (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+               (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
                (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr());
 
-  if (solve_dem) 
+  if (solve_dem)
   {
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_make_arrays_des(
@@ -671,32 +671,32 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
                pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
                des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-               des_usr_var.dataPtr(), omega_new.dataPtr(), 
+               des_usr_var.dataPtr(), omega_new.dataPtr(),
                fc.dataPtr(), tow.dataPtr());
 
      // Calculate mean fields using either interpolation or cell averaging.
 #if 0
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_comp_mean_fields(
-               (*ep_g[lev])[mfi].dataPtr(), 
+               (*ep_g[lev])[mfi].dataPtr(),
                particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
                (*flag[lev])[mfi].dataPtr());
 #endif
-     
+
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
          mfix_write_des_data(des_radius.dataPtr(),des_pos_new.dataPtr(),
                              des_vel_new.dataPtr(), des_usr_var.dataPtr());
   }
 
   // Call user-defined subroutine to set constants, check data, etc.
-  if (call_udf) 
+  if (call_udf)
       mfix_usr0();
 
   // Calculate all the coefficients once before entering the time loop
   int calc_flag = 2;
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
       calc_coeff(
-               (*flag[lev])[mfi].dataPtr(),    &calc_flag, 
+               (*flag[lev])[mfi].dataPtr(),    &calc_flag,
                (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
                (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),

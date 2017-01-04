@@ -61,6 +61,6 @@ MODULE SET_CONSTPROP_MODULE
          where (flag .eq. 1) mu_g = mu_g0
          where (flag .eq. 1) lambda_g = -(2.0d0/3.0d0)*mu_g0
       end if
-         
+
       END SUBROUTINE SET_CONSTPROP
 END MODULE SET_CONSTPROP_MODULE

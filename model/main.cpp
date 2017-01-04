@@ -39,11 +39,11 @@ int main (int argc, char* argv[])
 
   mfix_get_data(
     &imax, &jmax, &kmax,
-    &solve_fluid, 
+    &solve_fluid,
     &solve_dem,
     &steady_state,
     &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
-    &normg, &set_normg, &call_udf, 
+    &normg, &set_normg, &call_udf,
     &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
     &xlength, &ylength, &zlength, &coord);
 
@@ -51,7 +51,7 @@ int main (int argc, char* argv[])
 
   // This defines the physical size of the box using {xlength,ylength,zlength} from mfix.dat
   RealBox real_box;
-  for (int n = 0; n < BL_SPACEDIM; n++) 
+  for (int n = 0; n < BL_SPACEDIM; n++)
     real_box.setLo(n, 0.0);
   real_box.setHi(0, xlength);
   real_box.setHi(1, ylength);

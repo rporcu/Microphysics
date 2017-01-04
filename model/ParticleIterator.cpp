@@ -47,7 +47,7 @@ PartIter::Initialize ()
 		int idx1d = tileindex[0] + (tileindex[1]-1)*ntiles[0];
 #endif
 		buckets[idx1d].push_back(i);
-	    } 
+	    }
 	}
 #endif
     }
@@ -84,13 +84,13 @@ PartIter::tilebox () const
 {
     const int idx = index_map[currentIndex];
     const BoxArray& ba = mypc.ParticleBoxArray(info.level);
-    return ba[idx]; 
+    return ba[idx];
 }
-    
+
 Box
 PartIter::validbox () const
 {
     const int idx = index_map[currentIndex];
     const BoxArray& ba = mypc.ParticleBoxArray(info.level);
-    return ba[idx]; 
+    return ba[idx];
 }
