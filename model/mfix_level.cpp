@@ -349,9 +349,14 @@ mfix_level::MakeNewLevel (int lev, Real time,
 void
 mfix_level::usr3(int lev)
 {
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      mfix_usr3((*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
-               (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr());
+               (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
+               &dx, &dy, &dz);
 }
 
 void

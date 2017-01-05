@@ -231,7 +231,8 @@ extern "C"
   void mfix_usr2();
 
   void mfix_usr3(Real* u_g,     Real* v_g,
-                 Real* w_g,     Real* p_g);
+                 Real* w_g,     Real* p_g,
+                 Real* dx ,     Real* dy,   Real* dz);
 
   void mfix_finl_err_msg();
 

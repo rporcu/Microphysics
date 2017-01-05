@@ -29,13 +29,12 @@ module source_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
 subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
+                       rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
       USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
       USE fld_const, ONLY: RO_G0
-      USE geometry, ONLY: VOL
       USE matrix, ONLY: E, W, N, S, T, B
       USE param1, ONLY: IS_DEFINED, IS_UNDEFINED
       USE run, ONLY: UNDEFINED_I
@@ -84,6 +83,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -96,9 +96,11 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
 ! error message
       CHARACTER(LEN=80) :: LINE(1)
       real(c_real) :: oDT
+      real(c_real) :: vol
 !-----------------------------------------------
 
       odt = 1.0d0/dt
+      vol = dx*dy*dz
 
 ! Calculate convection-diffusion fluxes through each of the faces
 

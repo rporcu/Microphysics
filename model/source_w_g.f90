@@ -48,7 +48,6 @@ module source_w_g_module
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax
       USE geometry, only: kmax1, cyclic_z_pd
-      USE geometry, only: vol
 
       use matrix, only: e, w, s, n, t, b
 
@@ -106,11 +105,12 @@ module source_w_g_module
 ! jackson terms: local stress tensor quantity
       real(c_real) :: ltau_w_g
       real(c_real) :: odt
-      real(c_real) :: axy
+      real(c_real) :: axy, vol
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
       axy = dx*dy
+      vol = dx*dy*dz
 
 ! Set reference phase to gas
       M = 0
@@ -680,14 +680,13 @@ module source_w_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_W_G(A_M, B_M, flag)
+      SUBROUTINE POINT_SOURCE_W_G(A_M, B_M, flag, dx, dy, dz)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       use compar  , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use param1  , only: small_number, zero
-      use geometry, only: vol
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
       IMPLICIT NONE
@@ -704,6 +703,7 @@ module source_w_g_module
       integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -713,7 +713,10 @@ module source_w_g_module
       INTEGER :: lKT, lKB
 ! terms of bm expression
       real(c_real) :: pSource
+      real(c_real) :: vol
 !-----------------------------------------------
+
+      vol = dx*dy*dz
 
 ! Set reference phase to gas
       M = 0

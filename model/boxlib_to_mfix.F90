@@ -140,7 +140,7 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr3(u_g, v_g, w_g, p_g) &
+  subroutine mfix_usr3(u_g, v_g, w_g, p_g, dx, dy, dz) &
        bind(C, name="mfix_usr3")
 
     use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -153,8 +153,9 @@ contains
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
     real(c_real), intent(inout) :: p_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
+    real(c_real), intent(in   ) :: dx, dy, dz
 
-    call usr3(u_g, v_g, w_g, p_g)
+    call usr3(u_g, v_g, w_g, p_g, dx, dy, dz)
 
   end subroutine mfix_usr3
 

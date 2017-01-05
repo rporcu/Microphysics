@@ -20,11 +20,10 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_ps(slo,shi,lo,hi,flag)
+      subroutine set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
 
       use compar  , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
-      use geometry, only: vol
       use param1  , only: zero, small_number
 
       implicit none
@@ -32,9 +31,11 @@ MODULE SET_PS_MODULE
       integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      real(c_real), intent(in) :: dx,dy,dz
 
       integer :: i,j,k
       integer :: psv, ps_size
+      real(c_real) :: vol
 
       CHARACTER(LEN=64) :: eMsg
 
@@ -42,6 +43,8 @@ MODULE SET_PS_MODULE
       real(c_real), allocatable :: gData_dp(:)
 
       logical, parameter :: dbg_PS = .FALSE.
+
+      vol = dx*dy*dz
 
       if(.NOT.POINT_SOURCE) return
 

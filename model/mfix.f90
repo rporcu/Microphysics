@@ -25,7 +25,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use corner_module, only: get_corner_cells
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
-      use geometry, only: vol, flag_mod
+      use geometry, only: flag_mod
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined, undefined
@@ -119,15 +119,12 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call set_flags1(flag)
       flag_mod = flag
 
-! Calculate cell volumes and face areas
-      VOL = DX*DY*DZ
-
       ! Find corner cells and set their face areas to zero
       call get_corner_cells(slo,shi,lo,hi,flag)
       flag_mod = flag
 
 ! Set point sources.
-      call set_ps(slo,shi,lo,hi,flag)
+      call set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
       call zero_norm_vel(slo,shi,lo,hi,u_g,v_g,w_g,flag)

@@ -23,7 +23,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g, dx, dy, dz)
 
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
@@ -44,6 +44,6 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       real(c_real), intent(in) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), intent(in) :: dx, dy, dz
 
-      RETURN
       END SUBROUTINE USR3

@@ -11,9 +11,6 @@ module drag_gs_des1_module
 ! Function to deterine if a cell contains fluid.
       use functions, only: iminus, jminus, kminus
 
-! Volume of scalar cell.
-      use geometry, only: VOL
-
       use des_drag_gp_module, only: des_drag_gp
 
 ! Global Parameters:
@@ -90,12 +87,14 @@ module drag_gs_des1_module
 ! Loop bound for filter
       integer :: i,j,k
 ! One over cell volume
-      real(c_real) :: odx, ody, odz
+      real(c_real) :: odx, ody, odz, vol
 !......................................................................!
 
       odx = 1.0d0/dx
       ody = 1.0d0/dy
       odz = 1.0d0/dz
+
+      vol = dx*dy*dz
 
 ! Calculate the gas phase forces acting on each particle.
       DO NP=1,size(pvol)
@@ -198,7 +197,7 @@ module drag_gs_des1_module
 ! Drag sources for fluid (intermediate calculation)
       real(c_real) :: lDRAG_BM(3)
 ! One over cell volume
-      real(c_real) :: odx, ody, odz
+      real(c_real) :: odx, ody, odz, vol
 !......................................................................!
 
 ! Initialize fluid cell values.
@@ -208,6 +207,8 @@ module drag_gs_des1_module
       odx = 1.0d0/dx
       ody = 1.0d0/dy
       odz = 1.0d0/dz
+
+      vol = dx*dy*dz
 
 ! Calculate the gas phase forces acting on each particle.
 

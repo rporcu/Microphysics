@@ -19,7 +19,6 @@ module comp_mean_fields_module
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
-      use geometry, only: vol
       use param1, only: zero
 
       use discretelement, only: nonexistent, normal_ghost
@@ -50,13 +49,15 @@ module comp_mean_fields_module
       real(c_real) :: SOLVOLINC&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! One over cell volume
-      real(c_real) :: OoVol, odx, ody, odz
+      real(c_real) :: OoVol, odx, ody, odz, vol
 
       SOLVOLINC(:,:,:) = ZERO
 
       odx = 1.0d0/dx
       ody = 1.0d0/dy
       odz = 1.0d0/dz
+
+      vol = dx*dy*dz
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP

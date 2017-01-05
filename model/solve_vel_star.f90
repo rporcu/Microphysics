@@ -105,7 +105,7 @@ module solve_vel_star_module
          u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_u_g (a_m, b_m, flag)
+      if(point_source) call point_source_u_g (a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -115,7 +115,7 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_u(a_m, b_m, f_gds, drag_bm, flag)
+         call gas_drag_u(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (u_g, v_g, w_g, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
@@ -223,7 +223,7 @@ module solve_vel_star_module
          v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_v_g (a_m, b_m, flag)
+      if(point_source) call point_source_v_g (a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -233,7 +233,7 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_v(a_m, b_m, f_gds, drag_bm, flag)
+         call gas_drag_v(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (v_g, w_g, u_g, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
@@ -339,7 +339,7 @@ module solve_vel_star_module
          w_g, w_go, tau_w_g, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_w_g (a_m, b_m, flag)
+      if(point_source) call point_source_w_g (a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -349,7 +349,7 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_w(a_m, b_m, f_gds, drag_bm, flag)
+         call gas_drag_w(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (w_g, u_g, v_g, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &

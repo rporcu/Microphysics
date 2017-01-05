@@ -48,7 +48,6 @@ module source_v_g_module
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax
       USE geometry, only: jmax1, cyclic_y_pd
-      USE geometry, only: vol
 
       use matrix, only: e, w, s, n, t, b
 
@@ -106,11 +105,12 @@ module source_v_g_module
 ! jackson terms: local stress tensor quantity
       real(c_real) :: ltau_v_g
       real(c_real) :: odt
-      real(c_real) :: axz
+      real(c_real) :: axz, vol
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
       axz = dx*dz
+      vol = dx*dy*dz
 
 ! Set reference phase to gas
       M = 0
@@ -669,9 +669,8 @@ module source_v_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_V_G(A_M, B_M, flag)
+      SUBROUTINE POINT_SOURCE_V_G(A_M, B_M, flag, dx, dy, dz)
 
-      use geometry, only: vol
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
@@ -690,6 +689,7 @@ module source_v_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -699,7 +699,10 @@ module source_v_g_module
       INTEGER :: lJN, lJS
 ! terms of bm expression
       real(c_real) :: pSource
+      real(c_real) :: vol
 !-----------------------------------------------
+
+      vol = dx*dy*dz
 
 ! Set reference phase to gas
       M = 0

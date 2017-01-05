@@ -15,7 +15,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag)
+      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -23,8 +23,6 @@ MODULE GAS_DRAG_MODULE
 
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Volume of X-momentum cell
-      use geometry, only: VOL
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -51,12 +49,14 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
       INTEGER :: I, J, K
+      real(c_real) :: vol
+      vol = dx*dy*dz
 !......................................................................!
 
 ! Skip this routine if the gas/solids are only one-way coupled.
@@ -94,7 +94,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag)
+      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 
 ! Global Variables:
@@ -103,8 +103,6 @@ MODULE GAS_DRAG_MODULE
 
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Volume of Y-momentum cell
-      use geometry, only: VOL
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -129,13 +127,15 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
       INTEGER :: I, J, K
+      real(c_real) :: vol
+      vol = dx*dy*dz
 !......................................................................!
-
 
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
@@ -166,7 +166,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag)
+      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -174,8 +174,6 @@ MODULE GAS_DRAG_MODULE
 
 ! Flag: Gas sees the effect of particles in gas/solids flows.
       use discretelement, only: DES_ONEWAY_COUPLED
-! Volume of Z-momentum cell
-      use geometry, only: VOL
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -200,13 +198,15 @@ MODULE GAS_DRAG_MODULE
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
       INTEGER :: I, J, K
+      real(c_real) :: vol
+      vol = dx*dy*dz
 !......................................................................!
-
 
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN

@@ -26,7 +26,6 @@ MODULE GET_DATA_MODULE
       USE check_solids_phases_module, only: check_solids_phases
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area
-      USE geometry       , only: dx,dy,dz
       USE gridmap        , only: gridmap_init
       USE init_namelist_module, only: init_namelist
       USE open_files_mod, only: open_files
@@ -46,8 +45,7 @@ MODULE GET_DATA_MODULE
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! shift DX, DY and DZ values
-      LOGICAL, PARAMETER :: SHIFT = .TRUE.
+      real(c_real) :: dx, dy, dz
 
 ! This module call routines to initialize the namelist variables.
       CALL INIT_NAMELIST

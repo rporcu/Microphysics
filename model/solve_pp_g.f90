@@ -107,9 +107,9 @@ module solve_pp_module
       call conv_pp_g (a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
       call source_pp_g(a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
-         rop_g, rop_go, ro_g, d_e, d_n, d_t, flag)
+         rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
-      if(point_source) call point_source_pp_g (b_m, b_mmax, flag)
+      if(point_source) call point_source_pp_g (b_m, b_mmax, flag, dx, dy, dz)
 
 ! Find average residual, maximum residual and location
       normgloc = normg
@@ -145,10 +145,9 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(b_m, B_mmax,flag)
+      SUBROUTINE POINT_SOURCE_PP_G(b_m, B_mmax,flag, dx, dy, dz)
 
       use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use geometry, only: vol
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
          ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
@@ -166,6 +165,8 @@ module solve_pp_module
 
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
+
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -176,6 +177,9 @@ module solve_pp_module
 
 ! terms of bm expression
       real(c_real) pSource
+      real(c_real) vol
+
+      vol = dx*dy*dz
 
 !-----------------------------------------------
       PS_LP: do PSV = 1, DIMENSION_PS

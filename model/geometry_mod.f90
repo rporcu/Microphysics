@@ -53,9 +53,6 @@
 ! Number of cells in the z or theta direction + 2
       INTEGER :: KMAX2
 
-! Cell sizes in the x or r direction
-      real(c_real) :: DX, DY, DZ
-
 ! IMAX2 * JMAX2
       INTEGER :: IJMAX2
 ! IMAX2 * JMAX2 * KMAX2
@@ -97,9 +94,6 @@
       LOGICAL :: CYCLIC_Y_MF
 ! Variable to flag periodic bc with mass flux in Z
       LOGICAL :: CYCLIC_Z_MF
-
-! Cell volume - scalar cell
-      real(c_real) :: VOL
 
 ! Cell flags.
       integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag_mod
