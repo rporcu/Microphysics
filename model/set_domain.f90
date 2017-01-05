@@ -4,7 +4,8 @@ module set_domain_module
    use check_initial_conditions_module, only: check_initial_conditions
    use check_point_sources_module, only: check_point_sources
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -50,7 +51,7 @@ module set_domain_module
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_double), intent(in   ) :: dx,dy,dz
+      real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! This used to be in set_geometry
 

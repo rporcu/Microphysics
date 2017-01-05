@@ -1,5 +1,7 @@
 module u_g_conv_dif
 
+   use bl_fort_module, only : c_real
+
    private
    public :: conv_dif_u_g
 
@@ -22,37 +24,38 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: discretize
+      use run, only: discretize
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
-      IMPLICIT NONE
+
+      implicit none
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer    , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      double precision, intent(in   ) :: dt, dx, dy, dz
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(3) == 0) THEN
@@ -76,27 +79,27 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      use compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: avg
-      USE functions, only: iplus
-      USE functions, only:  ip1
+      use functions, only: avg
+      use functions, only: iplus
+      use functions, only:  ip1
 
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(OUT) :: U&
+      DOUBLE PRECISION, intent(OUT) :: U&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: V&
+      DOUBLE PRECISION, intent(OUT) :: V&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: WW&
+      DOUBLE PRECISION, intent(OUT) :: WW&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(in ) :: u_g&
+      DOUBLE PRECISION, intent(in ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(in ) :: v_g&
+      DOUBLE PRECISION, intent(in ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(in ) :: w_g&
+      DOUBLE PRECISION, intent(in ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
@@ -132,27 +135,27 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE param1   , only: half
+      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
+      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+      use param1   , only: half
 
       implicit none
 
 !---------------------------------------------------------------------//
 ! Fluxes through faces of given u-momentum cell
 
-      DOUBLE PRECISION, INTENT(OUT) :: flux_e, flux_w
-      DOUBLE PRECISION, INTENT(OUT) :: flux_n, flux_s
-      DOUBLE PRECISION, INTENT(OUT) :: flux_t, flux_b
+      DOUBLE PRECISION, intent(OUT) :: flux_e, flux_w
+      DOUBLE PRECISION, intent(OUT) :: flux_n, flux_s
+      DOUBLE PRECISION, intent(OUT) :: flux_t, flux_b
 
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_ge&
+      DOUBLE PRECISION, intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gn&
+      DOUBLE PRECISION, intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
+      DOUBLE PRECISION, intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      INTEGER         , INTENT( IN) :: i, j, k
+      INTEGER         , intent( IN) :: i, j, k
 
 !---------------------------------------------------------------------//
 
@@ -183,27 +186,27 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      USE geometry, only: ayz, axz, axy
+      use compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      use geometry, only: ayz, axz, axy
 
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! diffusion through faces of given ijk u-momentum cell
-      DOUBLE PRECISION, INTENT(OUT) :: d_fe, d_fw
-      DOUBLE PRECISION, INTENT(OUT) :: d_fn, d_fs
-      DOUBLE PRECISION, INTENT(OUT) :: d_ft, d_fb
+      DOUBLE PRECISION, intent(OUT) :: d_fe, d_fw
+      DOUBLE PRECISION, intent(OUT) :: d_fn, d_fs
+      DOUBLE PRECISION, intent(OUT) :: d_ft, d_fb
 
-      DOUBLE PRECISION, INTENT( IN) :: MU_G&
+      DOUBLE PRECISION, intent( IN) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT( IN) :: flag&
+      INTEGER, intent( IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
       double precision, intent(in) :: dx, dy, dz
 
 ! ijk index
-      INTEGER, INTENT(IN) :: i, j, k
+      INTEGER, intent(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -285,31 +288,31 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      use compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
-      USE param1, only: zero
+      use param1, only: zero
       use matrix, only: e, w, n, s, t, b
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g&
+      DOUBLE PRECISION, intent(inout) :: A_U_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: MU_g&
+      DOUBLE PRECISION, intent(in   ) :: MU_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_ge&
+      DOUBLE PRECISION, intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gn&
+      DOUBLE PRECISION, intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
+      DOUBLE PRECISION, intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      INTEGER, intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      DOUBLE PRECISION, INTENT(IN   ) :: dx, dy, dz
+      DOUBLE PRECISION, intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -423,42 +426,42 @@ module u_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
+      use compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-      USE param1   , only: one
+      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+      use param1   , only: one
       use matrix   , only: e, w, n, s, t, b
-      USE run      , only: discretize
+      use run      , only: discretize
 
-      USE xsi, only: calc_xsi
+      use xsi, only: calc_xsi
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: MU_G&
+      real(c_real), intent(in   ) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: A_U_g&
+      DOUBLE PRECISION, intent(inout) :: A_U_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
       double precision, intent(in   ) :: dt

@@ -1,11 +1,13 @@
 module solve_vel_star_module
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    private
 
    public :: solve_u_g_star
    public :: solve_v_g_star
    public :: solve_w_g_star
-
 
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -18,8 +20,8 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
-!        f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
-         f_gds, a_m, b_m, drag_bm, flag, dt)&
+         f_gds, a_m, b_m, drag_bm, flag, dt, dxd, dyd, dzd)&
+
          bind(C, name="solve_u_g_star")
 
 ! Module procedures ..................................................//
@@ -44,55 +46,53 @@ module solve_vel_star_module
    use residual, only: resid_u
    use residual, only: resid, num_resid, den_resid
    use residual, only: max_resid, i_resid, j_resid, k_resid
-   use iso_c_binding, only: c_double, c_int
 
    use geometry, only: dx,dy,dz
 
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: u_go&
+      real(c_real), intent(in   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_go&
+      real(c_real), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: tau_u_g&
+      real(c_real), intent(in   ) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(  out) :: d_e&
+      real(c_real), intent(  out) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: f_gds&
+      real(c_real), intent(in   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      real(c_double), intent(  out) :: a_m&
+      real(c_real), intent(  out) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      real(c_double), intent(  out) :: b_m&
+      real(c_real), intent(  out) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-!     real(c_double), intent(in   ) :: dt, dx, dy, dz
-      real(c_double), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt, dxd, dyd, dzd
 !.....................................................................//
 
 ! initialize matrix and vector
@@ -140,8 +140,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-!     f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
-      f_gds, a_m, b_m, drag_bm, flag, dt)&
+      f_gds, a_m, b_m, drag_bm, flag, dt, dxd, dyd, dzd)&
       bind(C, name="solve_v_g_star")
 
 
@@ -168,53 +167,51 @@ module solve_vel_star_module
    use residual, only: resid_v
    use residual, only: resid, num_resid, den_resid
    use residual, only: max_resid, i_resid, j_resid, k_resid
-   use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      REAL(C_DOUBLE), INTENT(INOUT) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: v_go&
+      real(c_real), intent(in   ) :: v_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: rop_go&
+      real(c_real), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: tau_v_g&
+      real(c_real), intent(inout) :: tau_v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: d_n&
+      real(c_real), intent(inout) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: f_gds&
+      real(c_real), intent(in   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      REAL(C_DOUBLE), INTENT(inout) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      REAL(C_DOUBLE), INTENT(inout) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER(C_INT), INTENT(IN   ) :: flag&
+      INTEGER(C_INT), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-!     real(c_double), intent(in   ) :: dt, dx, dy, dz
-      real(c_double), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt, dxd, dyd, dzd
 !.....................................................................//
 
 ! initialize matrix and vector
@@ -261,8 +258,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-!     f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
-      f_gds, a_m, b_m, drag_bm, flag, dt)&
+      f_gds, a_m, b_m, drag_bm, flag, dt, dxd, dyd, dzd)&
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -288,53 +284,51 @@ module solve_vel_star_module
    use residual, only: resid_w
    use residual, only: resid, num_resid, den_resid
    use residual, only: max_resid, i_resid, j_resid, k_resid
-   use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      REAL(C_DOUBLE), INTENT(INOUT) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: w_go&
+      real(c_real), intent(in   ) :: w_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: rop_go&
+      real(c_real), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: tau_w_g&
+      real(c_real), intent(inout) :: tau_w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: d_t&
+      real(c_real), intent(inout) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: f_gds&
+      real(c_real), intent(in   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      REAL(C_DOUBLE), INTENT(IN   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      REAL(C_DOUBLE), INTENT(inout) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
-      REAL(C_DOUBLE), INTENT(inout) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      INTEGER(C_INT), INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-!     real(c_double), intent(in   ) :: dt, dx, dy, dz
-      real(c_double), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt, dxd, dyd, dzd
 !.....................................................................//
 
 ! initialize matrix and vector

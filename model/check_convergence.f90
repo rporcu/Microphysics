@@ -1,4 +1,8 @@
 MODULE CHECK_CONVERGENCE_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -19,7 +23,6 @@ MODULE CHECK_CONVERGENCE_MODULE
       USE run, only: detect_stall
       USE toleranc, only: tol_resid, tol_diverge
       USE utilities, ONLY: check_vel_bound
-      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 

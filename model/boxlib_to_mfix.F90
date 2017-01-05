@@ -1,8 +1,8 @@
 module boxlib_to_mfix_module
 ! _________________________________________________________________
 
-  use iso_c_binding, only: c_double, c_int
   use bl_fort_module, only : c_real
+  use iso_c_binding , only: c_int
 
   implicit none
 
@@ -40,11 +40,11 @@ contains
     integer(c_int), intent(out) :: fluid
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
-    real(c_double), intent(out) :: dt_minC, dt_maxC, tstopC
-    real(c_double), intent(out) :: dt, time
-    real(c_double), intent(out) :: xlength_C, ylength_C, zlength_C
+    real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
+    real(c_real), intent(out) :: dt, time
+    real(c_real), intent(out) :: xlength_C, ylength_C, zlength_C
     integer(c_int)         , intent(out) :: max_nitC, coord_C
-    real(c_double), intent(out) :: normg
+    real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
     integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
 
@@ -145,13 +145,13 @@ contains
 
     use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-    real(c_double), intent(inout) :: u_g&
+    real(c_real), intent(inout) :: u_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    real(c_double), intent(inout) :: v_g&
+    real(c_real), intent(inout) :: v_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    real(c_double), intent(inout) :: w_g&
+    real(c_real), intent(inout) :: w_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
-    real(c_double), intent(inout) :: p_g&
+    real(c_real), intent(inout) :: p_g&
        (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
     call usr3(u_g, v_g, w_g, p_g)

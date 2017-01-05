@@ -1,4 +1,8 @@
 MODULE SET_WALL_BC_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -17,15 +21,14 @@ MODULE SET_WALL_BC_MODULE
       USE bc, only: bc_defined, bc_type, dimension_bc
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      real(c_double), intent(inout) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)

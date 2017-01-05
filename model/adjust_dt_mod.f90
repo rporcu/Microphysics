@@ -1,6 +1,9 @@
 module adjust_dt
 
-contains
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -12,8 +15,6 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    integer(c_int) function adjustdt (converged, nit, dt) &
       bind(C, name="mfix_adjustdt")
-
-      use iso_c_binding, only: c_double, c_int
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -45,7 +46,7 @@ contains
 ! number of iterations for current time step
       integer(c_int), intent(in   ) :: nit
 ! fluid solver time-step size
-      real(c_double), intent(inout) :: dt
+      real(c_real), intent(inout) :: dt
 
 ! Local Variables:
 !---------------------------------------------------------------------//

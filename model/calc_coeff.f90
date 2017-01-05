@@ -8,7 +8,7 @@ module calc_coeff_module
       use physical_prop_module, only: physical_prop
 
       use bl_fort_module, only: c_real
-      use iso_c_binding , only: c_double, c_int
+      use iso_c_binding , only: c_int
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -36,42 +36,41 @@ module calc_coeff_module
 !-----------------------------------------------------------------------
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: max_pip
-      use iso_c_binding, only: c_double, c_int
 
       ! Flag for explcit coupling between the fluid and particles.
       use discretelement, only: DES_EXPLICITLY_COUPLED
 
       implicit none
 
-      real(c_double), intent(inout) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) ::  p_g&
+      real(c_real), intent(in   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: mu_g&
+      real(c_real), intent(inout) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(OUT  ) :: f_gds&
+      real(c_real), intent(OUT  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(OUT  ) :: drag_bm&
+      real(c_real), intent(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
-      real(c_double), intent(in   ) :: pvol(max_pip)
-      real(c_double), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: pvol(max_pip)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
 
-      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
       integer(c_int)         , intent(in   ) :: particle_state(max_pip)
       integer(c_int)         , intent(in   ) :: particle_phase(max_pip)
@@ -132,31 +131,31 @@ module calc_coeff_module
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      real(c_double), intent(inout) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) ::  p_g&
+      real(c_real), intent(in   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: mu_g&
+      real(c_real), intent(inout) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(out  ) :: f_gds&
+      real(c_real), intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(out  ) :: drag_bm&
+      real(c_real), intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      real(c_double), intent(in   ) :: pvol(max_pip)
-      real(c_double), intent(in   ) :: des_radius(max_pip)
-      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: pvol(max_pip)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
       integer(c_int), intent(in   ) :: particle_state(max_pip)
       integer(c_int), intent(in   ) :: particle_phase(max_pip)
@@ -201,31 +200,31 @@ module calc_coeff_module
       implicit none
 
       ! Stress tensor cross terms.
-      real(c_double), intent(inout) :: tau_u_g&
+      real(c_real), intent(inout) :: tau_u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: tau_v_g&
+      real(c_real), intent(inout) :: tau_v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: tau_w_g&
+      real(c_real), intent(inout) :: tau_w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: trd_g&
+      real(c_real), intent(inout) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      real(c_double), intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: lambda_g&
+      real(c_real), intent(in   ) :: lambda_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      real(c_double), intent(in   ) :: dx,dy,dz
+      real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
       call calc_trd_g(trd_g,u_g,v_g,w_g,flag,dx,dy,dz)

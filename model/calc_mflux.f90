@@ -1,4 +1,8 @@
 MODULE CALC_MFLUX_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -16,27 +20,26 @@ MODULE CALC_MFLUX_MODULE
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, jminus, kminus
       USE geometry, only: ayz, axz, axy
-      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
-      real(c_double), intent(in   ) :: u&
+      real(c_real), intent(in   ) :: u&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: v&
+      real(c_real), intent(in   ) :: v&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: w&
+      real(c_real), intent(in   ) :: w&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_e&
+      real(c_real), intent(in   ) :: rop_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_n&
+      real(c_real), intent(in   ) :: rop_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_t&
+      real(c_real), intent(in   ) :: rop_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: flux_e&
+      real(c_real), intent(inout) :: flux_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: flux_n&
+      real(c_real), intent(inout) :: flux_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: flux_t&
+      real(c_real), intent(inout) :: flux_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer(c_int), intent(in   ) :: flag&

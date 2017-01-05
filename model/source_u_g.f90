@@ -1,6 +1,8 @@
 module source_u_g_module
 
-   use param1, only: zero, half, one, undefined, is_undefined, small_number
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+   use param1        , only: zero, half, one, undefined, is_undefined, small_number
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -51,23 +53,23 @@ module source_u_g_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: dt, dx, dy, dz
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
-      double precision, intent(in   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: rop_go&
+      real(c_real), intent(in   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_go&
+      real(c_real), intent(in   ) :: u_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: tau_u_g&
+      real(c_real), intent(in   ) :: tau_u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -75,10 +77,10 @@ module source_u_g_module
 ! Dummy arguments
 !--------o------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local Variables
@@ -88,18 +90,18 @@ module source_u_g_module
 ! Phase index
       INTEGER :: m
 ! Pressure at east cell
-      DOUBLE PRECISION :: PgE
+      real(c_real) :: PgE
 ! Average volume fraction
-      DOUBLE PRECISION :: EPGA
+      real(c_real) :: EPGA
 ! Average density
-      DOUBLE PRECISION :: ROPGA, ROGA
+      real(c_real) :: ROPGA, ROGA
 ! Source terms (Surface)
-      DOUBLE PRECISION :: Sdp
+      real(c_real) :: Sdp
 ! Source terms (Volumetric)
-      DOUBLE PRECISION :: V0, Vbf
+      real(c_real) :: V0, Vbf
 ! local stress tensor quantity
-      DOUBLE PRECISION :: ltau_u_g
-      double precision :: odt
+      real(c_real) :: ltau_u_g
+      real(c_real) :: odt
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
@@ -222,18 +224,18 @@ module source_u_g_module
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Velocity u_g
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      double precision, intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -244,7 +246,7 @@ module source_u_g_module
 ! Phase index
       INTEGER :: M
 
-      double precision :: ody, odz 
+      real(c_real) :: ody, odz 
 !-----------------------------------------------
 
      ody = 1.d0 / dy
@@ -670,10 +672,10 @@ module source_u_g_module
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN   ) :: A_m&
+      real(c_real), INTENT(IN   ) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer, intent(in   ) :: flag &
@@ -687,7 +689,7 @@ module source_u_g_module
       INTEGER :: PSV, M
       INTEGER :: lIE, lIW
 ! terms of bm expression
-      DOUBLE PRECISION :: pSource
+      real(c_real) :: pSource
 !-----------------------------------------------
 
 ! Set reference phase to gas

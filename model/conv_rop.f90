@@ -1,4 +1,8 @@
 MODULE CONV_ROP_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -18,31 +22,30 @@ MODULE CONV_ROP_MODULE
 !---------------------------------------------------------------------//
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE run, only: discretize
-      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: lo(3), hi(3)
 
-      real(c_double), intent(inout) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: rop_ge&
+      real(c_real), intent(inout) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: rop_gn&
+      real(c_real), intent(inout) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: rop_gt&
+      real(c_real), intent(inout) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      real(c_double), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt
 !---------------------------------------------------------------------//
 
 

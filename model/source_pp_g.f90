@@ -1,5 +1,8 @@
 module source_pp_module
 
+  use bl_fort_module, only : c_real
+  use iso_c_binding , only: c_int
+
   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -46,38 +49,38 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! maximum term in b_m expression
-      DOUBLE PRECISION, INTENT(INOUT) :: B_mmax&
+      real(c_real), INTENT(INOUT) :: B_mmax&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       double precision, intent(in   ) :: dt
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      real(c_real), INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      real(c_real), INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_go&
+      real(c_real), INTENT(IN   ) :: rop_go&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      real(c_real), INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_e&
+      real(c_real), INTENT(IN   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_n&
+      real(c_real), INTENT(IN   ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: d_t&
+      real(c_real), INTENT(IN   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -87,9 +90,9 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
 ! Indices
       integer :: i,j,k
 ! under relaxation factor for pressure
-      DOUBLE PRECISION fac
+      real(c_real) fac
 ! terms of bm expression
-      DOUBLE PRECISION bma, bme, bmw, bmn, bms, bmt, bmb
+      real(c_real) bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
       CHARACTER(LEN=80) :: LINE(1)
       double precision :: oDT

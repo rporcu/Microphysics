@@ -1,5 +1,10 @@
 MODULE CORNER_MODULE
-      USE write_error_module, only: write_error
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use write_error_module, only: write_error
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -15,7 +20,6 @@ MODULE CORNER_MODULE
 
       use functions    , only: iminus, iplus, jminus, jplus, kminus, kplus
       use funits       , only: dmp_log, unit_log
-      use iso_c_binding, only: c_double, c_int
       use param1       , only: max_ncorn
       use matrix       , only: e, w, s, n, t, b
 

@@ -16,6 +16,8 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
       use calc_coeff_module, only: calc_coeff
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -23,7 +25,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag_mod
-      use iso_c_binding, only: c_double, c_int
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined, undefined
@@ -45,46 +46,46 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      real(c_double), intent(inout) :: time, dt
+      real(c_real), intent(inout) :: time, dt
 
       integer(c_int), intent(inout) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_double), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_double), intent(inout) :: d_e&
+      real(c_real), intent(inout) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: d_t&
+      real(c_real), intent(inout) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_double), intent(inout) :: mu_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: lambda_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: trD_g&
+      real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_double), intent(inout) :: flux_gE&
+      real(c_real), intent(inout) :: d_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: flux_gN&
+      real(c_real), intent(inout) :: d_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: flux_gT&
+      real(c_real), intent(inout) :: d_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real), intent(inout) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: lambda_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: trD_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real), intent(inout) :: flux_gE&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: flux_gN&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: flux_gT&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !---------------------------------------------------------------------//

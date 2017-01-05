@@ -1,6 +1,7 @@
 MODULE GET_BC_AREA_MODULE
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -32,7 +33,7 @@ MODULE GET_BC_AREA_MODULE
 
       IMPLICIT NONE
 
-      real(c_double), intent(in) :: dx, dy, dz
+      real(c_real), intent(in) :: dx, dy, dz
 !
 ! BC number
       INTEGER :: BCV

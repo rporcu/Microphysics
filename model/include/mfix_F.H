@@ -144,7 +144,8 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,     Real* dt);
+          int* flag,      Real* dt,       
+          Real* dx,       Real* dy,       Real* dz);
 
   void solve_v_g_star(
           Real* u_g,      Real* v_g,      Real* w_g,
@@ -154,7 +155,8 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,     Real* dt);
+          int* flag,      Real* dt,
+          Real* dx,       Real* dy,       Real* dz);
 
   void solve_w_g_star(
           Real* u_g,      Real* v_g,      Real* w_g,
@@ -164,8 +166,8 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int*  flag,     Real* dt);
-
+          int*  flag,     Real* dt,
+          Real* dx,       Real* dy,       Real* dz);
 
   void solve_pp_g(
           Real* u_g,      Real* v_g,      Real* w_g,

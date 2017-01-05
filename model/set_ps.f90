@@ -1,9 +1,12 @@
 MODULE SET_PS_MODULE
 
-      use ps, only: dimension_ps, point_source, ps_vel_mag_g, ps_massflow_g, ps_vel_mag_g, ps_volume, ps_defined
-      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_t, ps_k_b
-      use ps, only: ps_x_w, ps_x_e, ps_y_s, ps_y_n, ps_z_b, ps_z_t
-      use ps, only: ps_u_g, ps_v_g, ps_w_g
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use ps, only: dimension_ps, point_source, ps_vel_mag_g, ps_massflow_g, ps_vel_mag_g, ps_volume, ps_defined
+   use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_t, ps_k_b
+   use ps, only: ps_x_w, ps_x_e, ps_y_s, ps_y_n, ps_z_b, ps_z_t
+   use ps, only: ps_u_g, ps_v_g, ps_w_g
 
    CONTAINS
 
@@ -22,7 +25,6 @@ MODULE SET_PS_MODULE
       use compar  , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
       use geometry, only: vol
-      use iso_c_binding, only: c_double, c_int
       use param1  , only: zero, small_number
 
       implicit none

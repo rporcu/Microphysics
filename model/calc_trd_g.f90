@@ -1,6 +1,7 @@
 MODULE CALC_TRD_G_MODULE
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -36,15 +37,15 @@ MODULE CALC_TRD_G_MODULE
 !-----------------------------------------------
      double precision, intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
 
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-      real(c_double), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

@@ -1,6 +1,7 @@
 MODULE GET_PS_MODULE
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
    CONTAINS
 
@@ -33,7 +34,7 @@ MODULE GET_PS_MODULE
 !---------------------------------------------------------------------//
 ! Loop/variable indices
       INTEGER, INTENT(in) :: PSV
-      real(c_double), intent(in) :: dx,dy,dz
+      real(c_real), intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//

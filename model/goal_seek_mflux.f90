@@ -1,4 +1,8 @@
 module gs_mass_flux_mod
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -22,7 +26,6 @@ contains
       USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       USE utilities, ONLY: mfix_isnan
       USE vavg_mod, ONLY: vavg_flux_g
-      use iso_c_binding, only: c_double, c_int
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
 
       IMPLICIT NONE
@@ -32,13 +35,13 @@ contains
 !-----------------------------------------------
       integer(c_int), intent(inout) :: nit
       integer(c_int), intent(inout) :: gsmf
-      real(c_double), intent(inout) :: delp_n, mdot_n
+      real(c_real), intent(inout) :: delp_n, mdot_n
 
-      real(c_double), intent(inout) :: flux_ge&
+      real(c_real), intent(inout) :: flux_ge&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: flux_gn&
+      real(c_real), intent(inout) :: flux_gn&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(inout) :: flux_gt&
+      real(c_real), intent(inout) :: flux_gt&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)

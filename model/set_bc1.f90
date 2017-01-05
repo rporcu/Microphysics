@@ -1,6 +1,7 @@
 module set_bc1_module
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -25,30 +26,30 @@ module set_bc1_module
 
       implicit none
 
-      real(c_double), INTENT(INOUT) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(inout) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(inout) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(inout) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer(c_int), INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      real(c_double), intent(in   ) :: dt, time, dx, dy, dz
+      real(c_real), intent(in   ) :: dt, time, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -110,22 +111,22 @@ module set_bc1_module
 
       IMPLICIT NONE
 
-      real(c_double), intent(in) :: u_g&
+      real(c_real), intent(in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: v_g&
+      real(c_real), intent(in) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: w_g&
+      real(c_real), intent(in) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: rop_g&
+      real(c_real), intent(in) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: ep_g&
+      real(c_real), intent(in) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: dt, time, dx, dy, dz
+      real(c_real), intent(in) :: dt, time, dx, dy, dz
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! index for boundary condition
-      INTEGER, INTENT(IN) :: BCV
+      INTEGER, intent(IN) :: BCV
 
       IF (IS_UNDEFINED(BC_DT_0(BCV))) RETURN
 
@@ -187,19 +188,19 @@ module set_bc1_module
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! index for boundary condition
-      INTEGER, INTENT(IN) :: BCV
+      INTEGER, intent(IN) :: BCV
 
-      real(c_double), intent(inout) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: dt, time, dx, dy, dz
+      real(c_real), intent(in) :: dt, time, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//

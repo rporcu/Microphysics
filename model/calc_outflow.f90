@@ -1,6 +1,7 @@
 MODULE CALC_OUTFLOW_MODULE
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -33,17 +34,17 @@ MODULE CALC_OUTFLOW_MODULE
       ! Boundary condition number
       INTEGER, intent(in) :: L
 
-      real(c_double), intent(in) :: u_g&
+      real(c_real), intent(in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: v_g&
+      real(c_real), intent(in) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: w_g&
+      real(c_real), intent(in) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: rop_g&
+      real(c_real), intent(in) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: ep_g&
+      real(c_real), intent(in) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in) :: dx, dy, dz
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! Local variables
 !--------------------------------------------------------------------//

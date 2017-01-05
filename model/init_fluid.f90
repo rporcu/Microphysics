@@ -1,4 +1,8 @@
 module init_fluid_module
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -17,35 +21,33 @@ contains
       use param1, only: is_undefined, undefined
       use fld_const, only: ro_g0, mu_g0
 
-      use iso_c_binding, only: c_double, c_int
-
       implicit none
 
 ! Dummy arguments .....................................................//
       integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
 
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: mu_g&
+      real(c_real), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: lambda_g&
+      real(c_real), intent(inout) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_double), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables .....................................................//
       double precision, parameter :: f2o3 = 2.d0/3.d0
@@ -180,7 +182,6 @@ contains
       USE geometry, only: jmax2
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
-      use iso_c_binding, only: c_double, c_int
       USE param1   , only: is_defined, zero, undefined, is_undefined
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
@@ -190,14 +191,14 @@ contains
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
 
-      real(c_double), intent(inout) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_double), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

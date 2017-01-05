@@ -1,4 +1,8 @@
 MODULE CORRECT_0_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -14,25 +18,24 @@ MODULE CORRECT_0_MODULE
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, jnorth, ktop
       USE ur_facs  , only: ur_fac
-      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      real(c_double), intent(inout) :: p_g&
+      real(c_real), intent(inout) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: pp_g&
+      real(c_real), intent(in   ) :: pp_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: u_g&
+      real(c_real), intent(inout) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: v_g&
+      real(c_real), intent(inout) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: w_g&
+      real(c_real), intent(inout) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: d_e&
+      real(c_real), intent(in   ) :: d_e&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: d_n&
+      real(c_real), intent(in   ) :: d_n&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: d_t&
+      real(c_real), intent(in   ) :: d_t&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)

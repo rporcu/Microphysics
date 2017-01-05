@@ -1,4 +1,8 @@
 MODULE PHYSICAL_PROP_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -38,7 +42,6 @@ MODULE PHYSICAL_PROP_MODULE
       USE compar, only: myPE, PE_IO, numPEs
       USE exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
-      use iso_c_binding, only: c_double, c_int
 
       implicit none
 
@@ -47,13 +50,13 @@ MODULE PHYSICAL_PROP_MODULE
 ! Global error Flag.
       integer(c_int), intent(in   ) :: level
 
-      real(c_double), intent(inout) :: ro_g&
+      real(c_real), intent(inout) :: ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(  out) :: rop_g&
+      real(c_real), intent(  out) :: rop_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer(c_int), intent(in   ) :: flag&

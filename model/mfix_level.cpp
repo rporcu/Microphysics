@@ -479,7 +479,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                 (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
                 (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-                (*flag[lev])[mfi].dataPtr(),     &dt);
+                (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
 
             int eq_id=3;
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -499,7 +499,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                 (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
                 (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-                (*flag[lev])[mfi].dataPtr(),     &dt);
+                (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
 
             int eq_id=4;
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -519,7 +519,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                 (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
                 (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-                (*flag[lev])[mfi].dataPtr(),     &dt);
+                (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
 
             int eq_id=5;
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
