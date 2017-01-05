@@ -67,7 +67,6 @@ set(F90_sources
   model/check_data/check_boundary_conditions.f90
   model/check_data/check_dmp_prereqs.f90
   model/check_data/check_gas_phase.f90
-  model/check_data/check_geometry.f90
   model/check_data/check_geometry_prereqs.f90
   model/check_data/check_ic_common_discrete.f90
   model/check_data/check_initial_conditions.f90

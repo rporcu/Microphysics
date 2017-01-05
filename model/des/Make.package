@@ -16,7 +16,6 @@ f90EXE_sources += discretelement_mod.f90
 f90EXE_sources += drag_gp_des.f90
 f90EXE_sources += drag_gs_des.f90
 f90EXE_sources += gas_drag.f90
-f90EXE_sources += layout_mi_dem.f90
 f90EXE_sources += make_arrays_des.f90
 f90EXE_sources += randomno_mod.f90
 f90EXE_sources += read_particle_input.f90

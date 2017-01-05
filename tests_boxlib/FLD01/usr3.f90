@@ -11,9 +11,10 @@
 !           all indices are undefined.                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g, dx, dy, dz)
 
-      use geometry, only: dx, dy
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
       use geometry, only: imin1, imax1, imax
       use geometry, only: jmin1, jmax1, jmax
@@ -25,14 +26,15 @@
 
       IMPLICIT NONE
 
-      double precision, intent(in) :: u_g&
+      real(c_real), intent(in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: v_g&
+      real(c_real), intent(in) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: w_g&
+      real(c_real), intent(in) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: p_g&
+      real(c_real), intent(in) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! looping indices
       integer :: i, j, k

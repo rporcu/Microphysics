@@ -8,18 +8,17 @@
 !  compares with the MFIX solution.                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3(u_g, v_g, w_g, p_g)
+      SUBROUTINE USR3(u_g, v_g, w_g, p_g, dx, dy, dz)
 
       use compar, only: istart3, iend3
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
 
-      use geometry, only: dy
-
       use geometry, only: imin1, jmin1, kmin1
       use geometry, only: imax1, jmax1, kmax1
 
-      use param1, only: zero, small_number, half
+      use param1, only: small_number, half
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
@@ -31,11 +30,10 @@
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       double precision, intent(in) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! looping indices
       integer :: i, j, k
-! temporary variable
-      double precision  :: TMPdp
 ! Calculated height of cell center
       double precision  :: yt
 ! Exact and numerical solutions
@@ -74,7 +72,6 @@
       write(fUnit,"(5/)")
       close(fUnit)
 
- 1100 FORMAT(5(3x,es13.6))
  1200 FORMAT(5(3x,es13.6))
 
       RETURN
@@ -92,7 +89,6 @@
       Use geometry, only: HEIGHT => YLENGTH
       Use geometry, only: XLENGTH
       Use geometry, only: CYCLIC_X_PD
-      Use param1, only: zero, small_number, half
 
       implicit none
 
