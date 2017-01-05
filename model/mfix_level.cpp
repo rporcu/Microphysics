@@ -398,7 +398,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         shi[1] = sshi[1]+2;
         shi[2] = sshi[2]+2;
 
-        calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi, 
+        calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi,
           (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
           (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -585,7 +585,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
               (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr(),     &dt,
-              &lnormg,                 &resg);
+              &lnormg,                 &resg,     &dx, &dy, &dz);
 
             int eq_id=1;
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -678,7 +678,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             shi[1] = sshi[1]+2;
             shi[2] = sshi[2]+2;
 
-            calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi, 
+            calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi,
               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),

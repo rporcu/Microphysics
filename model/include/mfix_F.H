@@ -7,18 +7,18 @@ extern "C"
   void mfix_get_data(int* imax, int* jmax, int* kmax,
                      int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
-                     Real* tstop, Real* time, int* max_nit, 
-                     Real* normg, int* set_normg, int* call_udf, 
+                     Real* tstop, Real* time, int* max_nit,
+                     Real* normg, int* set_normg, int* call_udf,
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
-                     Real* xlength, Real* ylength, Real* zlength, int* coord); 
+                     Real* xlength, Real* ylength, Real* zlength, int* coord);
 
   void set_domain(int* slo, int* shi, int* flag, Real* dx, Real* dy, Real* dz);
 
-  void mfix_main1(int* slo, int* shi, const int* lo, const int* hi, 
+  void mfix_main1(int* slo, int* shi, const int* lo, const int* hi,
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* p_g,     Real* ep_g,     
-                 Real* ro_g,    Real* rop_g,   
+                 Real* p_g,     Real* ep_g,
+                 Real* ro_g,    Real* rop_g,
                  Real* d_e,     Real* d_n,      Real* d_t,
                  Real* flux_gE, Real* flux_gN,  Real* flux_gT,
                  Real* trD_g,   Real* lambda_g, Real* mu_g,
@@ -40,19 +40,19 @@ extern "C"
                  Real* fc,
                  Real* tow);
 
-  void mfix_write_des_data( 
+  void mfix_write_des_data(
                  Real* des_radius,
                  Real* des_pos_new,
                  Real* des_vel_new,
                  Real* des_usr_var);
 
   void mfix_comp_mean_fields(
-                 Real* ep_g,    
+                 Real* ep_g,
                  int* particle_state,
                  Real* des_pos_new,
                  Real* pvol,
                  int* flag);
- 
+
   void set_bc1(
          Real* time,     Real* dt,
          Real* p_g,      Real* ep_g,
@@ -74,7 +74,7 @@ extern "C"
          Real* omega_new,
          int* estatus, int* finsh);
 
-  void calc_coeff_all(int* slo, int* shi, const int* lo, const int* hi, 
+  void calc_coeff_all(int* slo, int* shi, const int* lo, const int* hi,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
          Real* u_g,  Real* v_g,   Real* w_g,
@@ -129,7 +129,7 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      Real* dt,       
+          int* flag,      Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_v_g_star(
@@ -163,7 +163,8 @@ extern "C"
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,
           int*  flag,     Real* dt,
-          Real* lnormg,   Real* resg);
+          Real* lnormg,   Real* resg,
+          Real* dx,       Real* dy,       Real* dz);
 
   void correct0(
           Real* p_g,      Real* pp_g,
@@ -220,7 +221,7 @@ extern "C"
           Real* drag_fc,        Real* fc,             Real* tow,
           int* pairs,           int* pair_count,
           int* flag,
-          Real* time,           Real* dt,             
+          Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
           int * nstep);
 
