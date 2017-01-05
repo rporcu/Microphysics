@@ -48,7 +48,7 @@ module source_w_g_module
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax
       USE geometry, only: kmax1, cyclic_z_pd
-      USE geometry, only: vol, axy
+      USE geometry, only: vol
 
       use matrix, only: e, w, s, n, t, b
 
@@ -106,9 +106,12 @@ module source_w_g_module
 ! jackson terms: local stress tensor quantity
       real(c_real) :: ltau_w_g
       real(c_real) :: odt
+      real(c_real) :: axy
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
+      axy = dx*dy
+
 ! Set reference phase to gas
       M = 0
 

@@ -183,7 +183,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 !  Purpose: Find and validate i, j, k locations for walls BC's         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_GEOMETRY_WALL(BCV)
+      SUBROUTINE CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -192,9 +192,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: XLENGTH, DX, IMAX, IMAX2
-      use geometry, only: YLENGTH, DY, JMAX, JMAX2
-      use geometry, only: ZLENGTH, DZ, KMAX, KMAX2
+      use geometry, only: XLENGTH, IMAX, IMAX2
+      use geometry, only: YLENGTH, JMAX, JMAX2
+      use geometry, only: ZLENGTH, KMAX, KMAX2
 ! Function to compare two values
       use toleranc, only: COMPARE
 
@@ -204,9 +204,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       use location_check_module, only: location_check
 
-
       IMPLICIT NONE
 
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -347,7 +347,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 !           set value of bc_plane for flow BC's.                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_GEOMETRY_FLOW(BCV)
+      SUBROUTINE CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -356,9 +356,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: DX, IMAX, IMAX2
-      use geometry, only: DY, JMAX, JMAX2
-      use geometry, only: DZ, KMAX, KMAX2
+      use geometry, only: IMAX, IMAX2
+      use geometry, only: JMAX, JMAX2
+      use geometry, only: KMAX, KMAX2
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -368,6 +368,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       IMPLICIT NONE
 
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//

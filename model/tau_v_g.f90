@@ -39,14 +39,13 @@ MODULE CALC_TAU_V_G_MODULE
 !  (i.e., those of the form mu.grad(v)                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dy)
+      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero
       USE toleranc, only: dil_ep_s
-      USE geometry, only: axy, axz, ayz
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -71,7 +70,7 @@ MODULE CALC_TAU_V_G_MODULE
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
-      real(c_real), INTENT(IN   ) :: dy
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -82,9 +81,12 @@ MODULE CALC_TAU_V_G_MODULE
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
 
-      real(c_real) :: ody
+      real(c_real) :: ody, axy, axz, ayz
 
       ody = 1.d0/dy
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the

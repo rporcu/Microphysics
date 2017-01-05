@@ -14,12 +14,11 @@ MODULE CALC_MFLUX_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_MFLUX (u, v, w, rop_e, rop_n, rop_t, &
-         flux_e, flux_n, flux_t, flag) bind(C, name="calc_mflux")
+         flux_e, flux_n, flux_t, flag, dx, dy, dz) bind(C, name="calc_mflux")
 
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, jminus, kminus
-      USE geometry, only: ayz, axz, axy
 
       implicit none
 
@@ -45,11 +44,18 @@ MODULE CALC_MFLUX_MODULE
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      real(c_real), intent(in) :: dx, dy, dz
+
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      integer :: i,j,k
+      integer      :: i,j,k
+      real(c_real) :: ayz, axz, axy
 !---------------------------------------------------------------------//
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

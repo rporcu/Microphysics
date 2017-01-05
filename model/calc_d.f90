@@ -14,7 +14,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g, f_gds, flag)
+      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -32,7 +32,6 @@ MODULE CALC_D_MOD
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       use functions, only: AVG
-      use geometry, only: AYZ, AXZ, AXY, VOL
       use param1, only: ZERO, SMALL_NUMBER
       use functions, only: ieast, jnorth, ktop
 
@@ -52,17 +51,24 @@ MODULE CALC_D_MOD
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      real(c_real), INTENT(IN   ) :: dx, dy, dz
 
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Usual Indices
       INTEGER :: I,J,K
+      real(c_real) :: axy, axz, ayz, vol
 
       ! Temp variable 
       real(c_real) :: AM0
       real(c_real) :: EPGA
       logical :: COUPLED
 !......................................................................!
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
+      vol = dx*dy*dz
 
       COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
 

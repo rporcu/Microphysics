@@ -13,7 +13,7 @@ contains
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    integer(c_int) function goal_seek_mFlux(NIT, gsmf, delp_n, mdot_n, &
-      flux_ge, flux_gn, flux_gt, flag)&
+      flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)&
       bind(C, name="goal_seek_mFlux")
 
 !-----------------------------------------------
@@ -23,7 +23,7 @@ contains
       USE param1, only: one
       USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
       USE exit_mod, only: mfix_exit
-      USE geometry, only: axy, ayz, axz, cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+      USE geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       USE utilities, ONLY: mfix_isnan
       USE vavg_mod, ONLY: vavg_flux_g
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
@@ -45,6 +45,7 @@ contains
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -54,6 +55,11 @@ contains
 
       real(c_real) :: mdot_nm1, delp_nm1
       real(c_real) :: delp_xyz
+      real(c_real) :: axy, ayz, axz
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
 ! Store previous values (only used for GSMF>1)
       mdot_nm1 = mdot_n

@@ -15,14 +15,13 @@
 
    contains
 
-      subroutine adjust_a_g(axis, A_M, B_M, ROP_G)
+      subroutine adjust_a_g(axis, A_M, B_M, ROP_G, dx, dy, dz)
 
          USE functions, only: avg
          USE functions, only: ip1
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
 
-         USE geometry, only: ayz, axz, axy
          USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
          use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
@@ -42,12 +41,19 @@
 
       real(c_real), INTENT(IN   ) :: ROP_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      real(c_real), INTENT(IN   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
 
       INTEGER          IP
       INTEGER          I, J, K
 
       real(c_real) :: denominator, xxxm, xxxp
+      real(c_real) :: axy, ayz, axz
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

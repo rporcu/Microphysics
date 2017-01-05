@@ -55,7 +55,6 @@
 
 ! Cell sizes in the x or r direction
       real(c_real) :: DX, DY, DZ
-      real(c_real) :: oDX, oDY, oDZ
 
 ! IMAX2 * JMAX2
       INTEGER :: IJMAX2
@@ -99,13 +98,6 @@
 ! Variable to flag periodic bc with mass flux in Z
       LOGICAL :: CYCLIC_Z_MF
 
-
-! East face area - scalar cell
-      real(c_real) :: AYZ
-! North face area - scalar cell
-      real(c_real) :: AXZ
-! Top face area - scalar cell
-      real(c_real) :: AXY
 ! Cell volume - scalar cell
       real(c_real) :: VOL
 

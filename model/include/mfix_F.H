@@ -22,7 +22,8 @@ extern "C"
                  Real* d_e,     Real* d_n,      Real* d_t,
                  Real* flux_gE, Real* flux_gN,  Real* flux_gT,
                  Real* trD_g,   Real* lambda_g, Real* mu_g,
-                 int* flag);
+                 int* flag,
+                 Real* dx,       Real* dy,       Real* dz);
 
   void mfix_make_arrays_des(
                  int* particle_state,
@@ -114,7 +115,8 @@ extern "C"
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
-         int* flag);
+         int* flag,
+         Real* dx,             Real* dy,             Real* dz);
 
   void physical_prop(int* level, Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g, int* flag);
@@ -200,7 +202,8 @@ extern "C"
   int check_convergence(int* nit);
 
   int goal_seek_mFlux(int*nit, int* gsmf, Real* delP_MF, Real* lMFlux,
-              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag);
+              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag,
+              Real* dx     ,  Real* dy,       Real* dz);
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 

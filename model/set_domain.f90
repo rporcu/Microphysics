@@ -63,10 +63,10 @@ module set_domain_module
 
       ! End of what used to be in set_geometry
 
-      IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES
+      IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES(dx,dy,dz)
 
-      CALL CHECK_INITIAL_CONDITIONS
-      CALL CHECK_BOUNDARY_CONDITIONS
+      CALL CHECK_INITIAL_CONDITIONS(dx,dy,dz)
+      CALL CHECK_BOUNDARY_CONDITIONS(dx,dy,dz)
       CALL check_point_sources(dx,dy,dz)
 
 ! This call needs to occur before any of the IC/BC checks.

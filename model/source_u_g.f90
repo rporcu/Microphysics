@@ -44,7 +44,6 @@ module source_u_g_module
 
       USE geometry, only: imax1, cyclic_x_pd
       USE geometry, only: vol
-      USE geometry, only: ayz
 
       use matrix, only: e, w, s, n, t, b
 
@@ -102,9 +101,11 @@ module source_u_g_module
 ! local stress tensor quantity
       real(c_real) :: ltau_u_g
       real(c_real) :: odt
+      real(c_real) :: ayz
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
+      ayz = dy*dz
 
 ! Set reference phase to gas
       M = 0

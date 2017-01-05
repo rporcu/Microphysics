@@ -26,6 +26,7 @@ MODULE GET_DATA_MODULE
       USE check_solids_phases_module, only: check_solids_phases
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area
+      USE geometry       , only: dx,dy,dz
       USE gridmap        , only: gridmap_init
       USE init_namelist_module, only: init_namelist
       USE open_files_mod, only: open_files
@@ -88,7 +89,7 @@ MODULE GET_DATA_MODULE
       CALL SET_PARAMETERS
 
 ! Basic geometry checks.
-      CALL CHECK_GEOMETRY(SHIFT)
+      CALL CHECK_GEOMETRY(dx,dy,dz)
 
       END SUBROUTINE GET_DATA
 END MODULE GET_DATA_MODULE

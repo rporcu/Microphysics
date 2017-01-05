@@ -19,7 +19,7 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 !     - check specification of physical quantities                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_INITIAL_CONDITIONS
+      SUBROUTINE CHECK_INITIAL_CONDITIONS(dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -44,6 +44,8 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 
       IMPLICIT NONE
 
+      real(c_real), intent(in) :: dx,dy,dz
+
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counter for ICs
@@ -54,7 +56,7 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
       CALL INIT_ERR_MSG("CHECK_INITIAL_CONDITIONS")
 
 ! Determine which ICs are DEFINED
-      CALL CHECK_IC_GEOMETRY
+      CALL CHECK_IC_GEOMETRY(dx,dy,dz)
 
 ! Loop over all IC arrays.
       DO ICV=1, DIMENSION_IC
@@ -91,8 +93,7 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_IC_GEOMETRY
-
+      SUBROUTINE CHECK_IC_GEOMETRY(dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -105,9 +106,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
       use ic, only: IC_Y_n, IC_Y_s, IC_J_n, IC_J_s
       use ic, only: IC_Z_t, IC_Z_b, IC_K_t, IC_K_b
 ! User specified: System geometry
-      use geometry, only: IMAX, IMIN1, IMAX1, DX
-      use geometry, only: JMAX, JMIN1, JMAX1, DY
-      use geometry, only: KMAX, KMIN1, KMAX1, DZ
+      use geometry, only: IMAX, IMIN1, IMAX1
+      use geometry, only: JMAX, JMIN1, JMAX1
+      use geometry, only: KMAX, KMIN1, KMAX1
 ! Flag: New run or a restart.
       use run, only: RUN_TYPE
 
@@ -120,9 +121,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
-
       implicit none
 
+      real(c_real), intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//

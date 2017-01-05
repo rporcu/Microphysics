@@ -187,7 +187,6 @@ module u_g_conv_dif
 ! Modules
 !---------------------------------------------------------------------//
       use compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      use geometry, only: ayz, axz, axy
 
       IMPLICIT NONE
 
@@ -215,11 +214,16 @@ module u_g_conv_dif
 ! length terms
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
       real(c_real) :: odx, ody, odz
+      real(c_real) :: axy, axz, ayz
 !---------------------------------------------------------------------//
 
       odx = 1.0 / dx
       ody = 1.0 / dy
       odz = 1.0 / dz
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
       IP = IP1(I)
       JM = JM1(J)

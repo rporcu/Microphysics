@@ -424,7 +424,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
             (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-            (*flag[lev])[mfi].dataPtr());
+            (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
 
         // Update boundary conditions
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -595,7 +595,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
               (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr());
+              (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
 
           // Update boundary conditions
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -618,7 +618,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
               converged = goal_seek_mFlux(&nit, &gsmf, &delP_MF, &lMFlux,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-                (*flag[lev])[mfi].dataPtr());
+                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
         } while(converged==0 && nit<max_nit);
 
@@ -733,7 +733,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
                (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-               (*flag[lev])[mfi].dataPtr());
+               (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
 
   if (solve_dem)

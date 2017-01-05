@@ -191,8 +191,6 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
-      USE geometry, only: ayz, axz, axy
-
       USE param1, only: zero
       IMPLICIT NONE
 
@@ -214,10 +212,15 @@ module v_g_conv_dif
 ! Local variables
       INTEGER :: jc, jn
       real(c_real) :: odx, ody, odz
+      real(c_real) :: axy, axz, ayz
 !---------------------------------------------------------------------//
       odx = 1.d0 / dx
       ody = 1.d0 / dy
       odz = 1.d0 / dz
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
       jn = jnorth(i,j,k)
 

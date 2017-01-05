@@ -48,7 +48,7 @@ module source_v_g_module
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax
       USE geometry, only: jmax1, cyclic_y_pd
-      USE geometry, only: vol, axz
+      USE geometry, only: vol
 
       use matrix, only: e, w, s, n, t, b
 
@@ -106,9 +106,12 @@ module source_v_g_module
 ! jackson terms: local stress tensor quantity
       real(c_real) :: ltau_v_g
       real(c_real) :: odt
+      real(c_real) :: axz
 !---------------------------------------------------------------------//
 
       odt = 1.0d0/dt
+      axz = dx*dz
+
 ! Set reference phase to gas
       M = 0
 

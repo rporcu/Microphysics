@@ -10,7 +10,8 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
    p_g, ep_g, ro_g, rop_g, &
    d_e, d_n, d_t, &
    flux_ge, flux_gn, flux_gt, &
-   trD_g, lambda_g, mu_g, flag) &
+   trD_g, lambda_g, mu_g, flag, &
+   dx, dy, dz) &
    bind(C, name="mfix_main1")
 
 !-----------------------------------------------
@@ -24,7 +25,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use corner_module, only: get_corner_cells
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
-      use geometry, only: dx, dy, dz, ayz, axy, axz, vol, flag_mod
+      use geometry, only: vol, flag_mod
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined, undefined
@@ -47,6 +48,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), intent(inout) :: time, dt
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       integer(c_int), intent(inout) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -119,9 +121,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 
 ! Calculate cell volumes and face areas
       VOL = DX*DY*DZ
-      AYZ = DY*DZ
-      AXY = DX*DY
-      AXZ = DX*DZ
 
       ! Find corner cells and set their face areas to zero
       call get_corner_cells(slo,shi,lo,hi,flag)

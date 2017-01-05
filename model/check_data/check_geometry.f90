@@ -15,15 +15,15 @@ MODULE CHECK_GEOMETRY_MODULE
 !  Reviewer: J.Musser                                 Date: 16-Jan-14  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_GEOMETRY(SHIFT)
+      SUBROUTINE CHECK_GEOMETRY(dx,dy,dz)
 
 
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Domain partitions in various directions.
-      use geometry, only: DX, XLENGTH
-      use geometry, only: DY, YLENGTH
-      use geometry, only: DZ, ZLENGTH
+      use geometry, only: XLENGTH
+      use geometry, only: YLENGTH
+      use geometry, only: ZLENGTH
 
       use geometry, only: IMAX, IMAX3
       use geometry, only: JMAX, JMAX3
@@ -35,7 +35,7 @@ MODULE CHECK_GEOMETRY_MODULE
 
       implicit none
 
-      LOGICAL, intent(IN) :: SHIFT
+      real(c_real), intent(inout) :: dx,dy,dz
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_GEOMETRY")

@@ -201,8 +201,6 @@ module w_g_conv_dif
       ! USE functions, only: iminus, jminus, kminus
       ! USE functions, only: im1, jm1, kp1
 
-      USE geometry, only: ayz, axz, axy
-
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -229,11 +227,16 @@ module w_g_conv_dif
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 
       real(c_real) :: odx, ody, odz
+      real(c_real) :: axy, axz, ayz
 !---------------------------------------------------------------------//
 
       odx = 1.d0 / dx
       ody = 1.d0 / dy
       odz = 1.d0 / dz
+
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
       KP = KP1(K)
       IM = IM1(I)

@@ -37,7 +37,7 @@ module conv_pp_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt, flag)
+      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
 !-----------------------------------------------
 ! Modules
@@ -45,7 +45,6 @@ module conv_pp_g_module
       USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use matrix   , only: e, w, s, n, t, b
-      USE geometry , only: axy, ayz, axz
       USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
 
       implicit none
@@ -64,6 +63,7 @@ module conv_pp_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -71,7 +71,12 @@ module conv_pp_g_module
       integer ::  i,j,k
 ! local value of A_m
       real(c_real) :: am
+
+      real(c_real) :: axy, axz, ayz
 !-----------------------------------------------
+      axy = dx*dy
+      axz = dx*dz
+      ayz = dy*dz
 
 ! Calculate convection fluxes through each of the faces
       DO K = kstart2, kend2

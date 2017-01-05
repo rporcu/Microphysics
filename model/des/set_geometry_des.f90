@@ -12,7 +12,7 @@ MODULE SET_GEOMETRY_DES_MODULE
 !  Purpose: Allocate des arrays that are based on Eulerian grid.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_GEOMETRY_DES
+      SUBROUTINE SET_GEOMETRY_DES(dx,dy,dz)
 
 
 ! Global Variables:
@@ -20,9 +20,9 @@ MODULE SET_GEOMETRY_DES_MODULE
 ! Arrays for DEM simulations delineating cell edges.
       use discretelement, only: XE, YN, ZT, DIMN
 ! Fluid grid cell dimensions and mesh size
-      USE geometry, only: DX, IMIN2, IMAX2
-      USE geometry, only: DY, JMIN2, JMAX2
-      USE geometry, only: DZ, KMIN2, KMAX2
+      USE geometry, only: IMIN2, IMAX2
+      USE geometry, only: JMIN2, JMAX2
+      USE geometry, only: KMIN2, KMAX2
 ! Number of particles in the I/J/K direction
       use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
@@ -35,6 +35,8 @@ MODULE SET_GEOMETRY_DES_MODULE
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
+
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
