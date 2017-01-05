@@ -92,7 +92,8 @@ extern "C"
          Real* mu_g, Real* f_gds, Real* drag_bm,
          int* particle_phase,  int* particle_state,
          Real* pvol, Real* des_pos_new,
-         Real* des_vel_new, Real* des_radius);
+         Real* des_vel_new, Real* des_radius,
+         Real* dx,       Real* dy,       Real* dz);
 
   void calc_trd_and_tau(
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
@@ -114,16 +115,6 @@ extern "C"
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
          int* flag);
-
-  void calc_coeff(
-         int* flag, int* level,
-         Real* ro_g, Real* p_g,
-         Real* ep_g, Real* rop_g,
-         Real* u_g,  Real* v_g,   Real* w_g,
-         Real* mu_g, Real* f_gds, Real* drag_bm,
-         int* particle_phase,  int* particle_state,
-         Real* pvol, Real* des_pos_new,
-         Real* des_vel_new, Real* des_radius);
 
   void physical_prop(int* level, Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g, int* flag);

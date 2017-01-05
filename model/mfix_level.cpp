@@ -465,7 +465,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
               particle_phase.dataPtr(),  particle_state.dataPtr(),
               pvol.dataPtr(), des_pos_new.dataPtr(),
-              des_vel_new.dataPtr(), des_radius.dataPtr());
+              des_vel_new.dataPtr(), des_radius.dataPtr(), &dx, &dy, &dz);
 
           // Solve U-Momentum equation
           {
@@ -696,6 +696,10 @@ void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
 
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
   Array<int> slo(3);
   Array<int> shi(3);
 
@@ -773,7 +777,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
                particle_phase.dataPtr(), particle_state.dataPtr(),
                pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-               des_radius.dataPtr());
+               des_radius.dataPtr(), &dx, &dy, &dz );
 
   mfix_finl_err_msg();
 }
