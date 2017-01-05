@@ -110,7 +110,6 @@ set(F90_sources
   model/des/drag_gp_des.f90
   model/des/drag_gs_des.f90
   model/des/gas_drag.f90
-  model/des/layout_mi_dem.f90
   model/des/make_arrays_des.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90

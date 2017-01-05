@@ -27,7 +27,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     subroutine CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+      subroutine calc_coeff_all(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
         flag, dx, dy, dz) bind(C, name="calc_coeff_all")
@@ -83,7 +83,7 @@ module calc_coeff_module
       ! and exchange rates.
       CALL CALC_COEFF(flag, 2, ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, &
          f_gds, drag_bm,  particle_phase, particle_state, pvol, &
-         des_pos_new, des_vel_new, des_radius)
+         des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(flag, ep_g, &
          u_g, v_g, w_g, ro_g, mu_g, f_gds, drag_bm,  &
@@ -91,7 +91,7 @@ module calc_coeff_module
          pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
 
-      END SUBROUTinE CALC_COEFF_ALL
+      end subroutine calc_coeff_all
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -111,9 +111,9 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTinE CALC_COEFF(flag, pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
+      subroutine calc_coeff(flag, pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
          w_g, mu_g, f_gds, drag_bm,  particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)&
+         pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)&
         bind(C, name="calc_coeff")
 
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -162,6 +162,7 @@ module calc_coeff_module
       integer(c_int), intent(in   ) :: particle_state(max_pip)
       integer(c_int), intent(in   ) :: particle_phase(max_pip)
 
+      real(c_real)  , intent(in   ) :: dx, dy, dz
 
 ! Calculate physical properties: (density, specific heat, diameter)
       CALL PHYSICAL_PROP(pLevel, ro_g, p_g, ep_g, rop_g, flag)
@@ -170,9 +171,10 @@ module calc_coeff_module
       IF (DES_CONTinUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &
          CALL CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm,  particle_state, &
-         particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
+         particle_phase, pvol, des_pos_new, des_vel_new, des_radius, &
+         dx, dy, dz)
 
-      END SUBROUTinE CALC_COEFF
+      end subroutine calc_coeff
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

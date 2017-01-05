@@ -157,7 +157,7 @@ module des_time_march_module
          IF(DES_EXPLICITLY_COUPLED) THEN
             CALL DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
                flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
-               des_radius,  particle_phase)
+               des_radius,  particle_phase, dx, dy, dz)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new, &
                            pvol, drag_fc, flag, dx, dy, dz)

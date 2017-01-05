@@ -46,10 +46,8 @@ module drag_gs_des1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
         flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
-        des_radius,  particle_phase)
+        des_radius, particle_phase, dx, dy, dz)
 
-
-      use geometry, only: dx, dy, dz
 
       IMPLICIT NONE
 
@@ -76,8 +74,10 @@ module drag_gs_des1_module
       real(c_real), intent(in   ) :: des_vel_new(:,:)
       real(c_real), intent(inout) :: fc(:,:)
 
-      integer         , intent(in   ) :: particle_state(:)
-      integer         , intent(in   ) :: particle_phase(:)
+      integer     , intent(in   ) :: particle_state(:)
+      integer     , intent(in   ) :: particle_phase(:)
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -90,21 +90,21 @@ module drag_gs_des1_module
 ! Loop bound for filter
       integer :: i,j,k
 ! One over cell volume
-      real(c_real) :: Oodx, Oody, Oodz
+      real(c_real) :: odx, ody, odz
 !......................................................................!
 
-      Oodx = 1.0d0/dx
-      Oody = 1.0d0/dy
-      Oodz = 1.0d0/dz
+      odx = 1.0d0/dx
+      ody = 1.0d0/dy
+      odz = 1.0d0/dz
 
 ! Calculate the gas phase forces acting on each particle.
       DO NP=1,size(pvol)
 
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP)) CYCLE
 
-         i = floor(des_pos_new(np,1)*Oodx) + 1
-         j = floor(des_pos_new(np,2)*Oody) + 1
-         k = floor(des_pos_new(np,3)*Oodz) + 1
+         i = floor(des_pos_new(np,1)*odx) + 1
+         j = floor(des_pos_new(np,2)*ody) + 1
+         k = floor(des_pos_new(np,3)*odz) + 1
 
 ! Avoid drag calculations in cells without fluid (cut-cell)
          if (flag(i,j,k,1)/=1) CYCLE
@@ -154,9 +154,7 @@ module drag_gs_des1_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_GAS(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm, particle_phase, particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)
-
-      use geometry, only: dx, dy, dz
+         pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IMPLICIT NONE
 
@@ -182,8 +180,10 @@ module drag_gs_des1_module
       real(c_real), intent(in   ) :: des_pos_new(:,:)
       real(c_real), intent(in   ) :: des_vel_new(:,:)
 
-      integer         , intent(in   ) :: particle_state(:)
-      integer         , intent(in   ) :: particle_phase(:)
+      integer     , intent(in   ) :: particle_state(:)
+      integer     , intent(in   ) :: particle_phase(:)
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -198,16 +198,16 @@ module drag_gs_des1_module
 ! Drag sources for fluid (intermediate calculation)
       real(c_real) :: lDRAG_BM(3)
 ! One over cell volume
-      real(c_real) :: Oodx, Oody, Oodz
+      real(c_real) :: odx, ody, odz
 !......................................................................!
 
 ! Initialize fluid cell values.
       F_GDS = ZERO
       DRAG_BM = ZERO
 
-      Oodx = 1.0d0/dx
-      Oody = 1.0d0/dy
-      Oodz = 1.0d0/dz
+      odx = 1.0d0/dx
+      ody = 1.0d0/dy
+      odz = 1.0d0/dz
 
 ! Calculate the gas phase forces acting on each particle.
 
@@ -223,9 +223,9 @@ module drag_gs_des1_module
             exiting_ghost==particle_state(np)) cycle
 
 ! This avoids FP exceptions for some ghost particles.
-         i = floor(des_pos_new(np,1)*Oodx) + 1
-         j = floor(des_pos_new(np,2)*Oody) + 1
-         k = floor(des_pos_new(np,3)*Oodz) + 1
+         i = floor(des_pos_new(np,1)*odx) + 1
+         j = floor(des_pos_new(np,2)*ody) + 1
+         k = floor(des_pos_new(np,3)*odz) + 1
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
