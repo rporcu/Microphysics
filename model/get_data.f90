@@ -17,7 +17,6 @@ MODULE GET_DATA_MODULE
 
       USE check_dmp_prereqs_module, only: check_dmp_prereqs
       USE check_gas_phase_module, only: check_gas_phase
-      USE check_geometry_module, only: check_geometry
       USE check_geometry_prereqs_module, only: check_geometry_prereqs
       USE check_numerics_module, only: check_numerics
       USE check_output_control_module, only: check_output_control

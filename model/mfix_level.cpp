@@ -482,7 +482,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Calculate transport coefficients
           int level=1;
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            calc_coeff(
+            calc_coeff(slo.dataPtr(), shi.dataPtr(),
               (*flag[lev])[mfi].dataPtr(), &level,
               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
@@ -811,16 +811,16 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   int calc_flag = 2;
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-      calc_coeff(
-               (*flag[lev])[mfi].dataPtr(),    &calc_flag,
-               (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
-               (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
-               (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
-               (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
-               particle_phase.dataPtr(), particle_state.dataPtr(),
-               pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-               des_radius.dataPtr(), &dx, &dy, &dz );
+    calc_coeff(slo.dataPtr(), shi.dataPtr(),
+      (*flag[lev])[mfi].dataPtr(),    &calc_flag,
+      (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
+      (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+      (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
+      (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
+      (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
+      particle_phase.dataPtr(), particle_state.dataPtr(),
+      pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+      des_radius.dataPtr(), &dx, &dy, &dz );
   }
 
   mfix_finl_err_msg();

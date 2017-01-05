@@ -151,28 +151,30 @@ module drag_gs_des1_module
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_GAS(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+      SUBROUTINE DRAG_GS_GAS(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IMPLICIT NONE
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+
 
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       real(c_real), intent(in   ) :: pvol(:)
       real(c_real), intent(in   ) :: des_radius(:)
@@ -199,6 +201,9 @@ module drag_gs_des1_module
 ! One over cell volume
       real(c_real) :: odx, ody, odz, vol
 !......................................................................!
+
+      write(6,*)'slo',slo; flush(6)
+      write(6,*)'shi',shi; flush(6)
 
 ! Initialize fluid cell values.
       F_GDS = ZERO

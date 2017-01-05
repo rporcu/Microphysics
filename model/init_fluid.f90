@@ -62,7 +62,7 @@ contains
 
 ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
-         call calc_ro_g(ro_g,rop_g,p_g,ep_g,flag)
+         call calc_ro_g(slo, shi, ro_g,rop_g,p_g,ep_g,flag)
       else
          where (flag(:,:,:,1) < 100) ro_g = ro_g0
          where (flag(:,:,:,1) < 100) rop_g = ro_g0*ep_g

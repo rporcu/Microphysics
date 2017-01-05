@@ -91,29 +91,30 @@ module calc_drag_des_module
 !  calls the correct routine for calculating the gas drag force.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_bm,  particle_state, &
-         particle_phase, pvol, des_pos_new, des_vel_new, des_radius,&
-         dx, dy, dz)
+      SUBROUTINE CALC_DRAG_DES_2FLUID(slo, shi, ep_g, u_g, v_g, w_g, &
+         ro_g, mu_g, f_gds, drag_bm,  particle_state, particle_phase,&
+         pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
-      IMPLICIT NONE
+         IMPLICIT NONE
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       real(c_real), intent(in   ) :: pvol(:)
       real(c_real), intent(in   ) :: des_radius(:)
@@ -126,7 +127,7 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
-         CALL DRAG_GS_GAS(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+         CALL DRAG_GS_GAS(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
             f_gds, drag_bm, particle_phase, particle_state, pvol, &
             des_pos_new, des_vel_new, des_radius, dx, dy, dz)
       ENDIF
@@ -146,31 +147,33 @@ module calc_drag_des_module
 !  computational overhead.                                             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_EXPLICIT(flag, ep_g, u_g, v_g, w_g, ro_g, &
-         mu_g, f_gds, drag_bm,  particle_phase,  &
+      SUBROUTINE CALC_DRAG_DES_EXPLICIT(slo, shi, flag, ep_g, u_g, v_g,&
+         w_g, ro_g, mu_g, f_gds, drag_bm,  particle_phase,  &
          particle_state, pvol, des_pos_new, des_vel_new, &
          des_radius, dx, dy, dz)
 
-      IMPLICIT NONE
+         implicit none
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(inout) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       integer         , intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       integer, intent(in   ) :: particle_state(:)
 
@@ -185,12 +188,12 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Calculate mean fields (EPg).
-      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(des_radius), &
-                            dx, dy, dz)
+      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, &
+         pvol, flag, size(des_radius), dx, dy, dz)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) &
-         CALL DRAG_GS_GAS(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+         CALL DRAG_GS_GAS(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
             f_gds, drag_bm, particle_phase, particle_state, pvol, &
             des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 

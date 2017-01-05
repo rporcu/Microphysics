@@ -86,6 +86,7 @@ extern "C"
          Real* dx,       Real* dy,       Real* dz);
 
   void calc_coeff(
+         int* slo, int* shi,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
