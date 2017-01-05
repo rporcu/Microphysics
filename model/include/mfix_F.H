@@ -108,7 +108,8 @@ extern "C"
          Real* trd_g,    Real* ep_g,
          Real* u_g,      Real* v_g,     Real* w_g,
          Real* lambda_g, Real* mu_g,
-         int* flag);
+         int* flag,
+         Real* dx,       Real* dy,       Real* dz);
 
   void conv_rop(const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,

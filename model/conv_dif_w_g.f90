@@ -17,7 +17,7 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_DIF_W_G(A_M, MU_G, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -51,14 +51,15 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      double precision, intent(in   ) :: dt
+      double precision, intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt, flag)
+         CALL STORE_A_W_G0 (A_M, MU_G, flux_ge, flux_gn, flux_gt, flag, &
+                            dx, dy, dz)
       ELSE
          CALL STORE_A_W_G1 (A_M, MU_G, u_g, v_g, w_g, &
-            flux_ge, flux_gn, flux_gt,flag, dt)
+                            flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_W_G
@@ -185,7 +186,8 @@ module w_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K, flag)
+         D_FT, D_FB, MU_G, I, J, K, flag, &
+         dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -196,7 +198,6 @@ module w_g_conv_dif
       ! USE functions, only: iminus, jminus, kminus
       ! USE functions, only: im1, jm1, kp1
 
-      USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
 
       IMPLICIT NONE
@@ -214,6 +215,7 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
       INTEGER, INTENT(IN) :: i, j, k
+      double precision, intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -222,7 +224,13 @@ module w_g_conv_dif
       INTEGER :: itmp, jtmp, ktmp
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
+
+      double precision :: odx, ody, odz
 !---------------------------------------------------------------------//
+
+      odx = 1.d0 / dx
+      ody = 1.d0 / dy
+      odz = 1.d0 / dz
 
       KP = KP1(K)
       IM = IM1(I)
@@ -291,7 +299,8 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(A_W_G, MU_G, flux_ge, flux_gn, flux_gt,flag)
+      SUBROUTINE STORE_A_W_G0(A_W_G, MU_G, flux_ge, flux_gn, flux_gt, flag, &
+                              dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -321,6 +330,7 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      double precision, intent(in   ) :: dx, dy, dz
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -347,7 +357,7 @@ module w_g_conv_dif
                      flux_ge, flux_gn, flux_gt, i, j, k)
 
                   CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag)
+                     d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
 ! East face (i+1/2, j, k+1/2)
                   IF (Flux_e >= ZERO) THEN
@@ -430,7 +440,8 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_W_G1(A_W_G, MU_G, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+                              flux_ge, flux_gn, flux_gt, flag,  &
+                              dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -472,7 +483,7 @@ module w_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      double precision, intent(in   ) :: dt
+      double precision, intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -519,7 +530,7 @@ module w_g_conv_dif
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_WCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag)
+                     d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
 ! East face (i+1/2, j, k+1/2)
                   A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e

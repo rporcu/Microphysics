@@ -29,7 +29,7 @@ module source_w_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_W_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            w_g, w_go, tau_w_g, flag)
+                            w_g, w_go, tau_w_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -81,7 +81,7 @@ module source_w_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      DOUBLE PRECISION, INTENT(IN   ) :: dt
+      DOUBLE PRECISION, INTENT(IN   ) :: dt, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -185,7 +185,7 @@ module source_w_g_module
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_W_G_BC (A_M, B_M, W_G, flag)
+      CALL SOURCE_W_G_BC (A_M, B_M, W_G, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_W_G
@@ -207,13 +207,12 @@ module source_w_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G, flag)
+      SUBROUTINE SOURCE_W_G_BC(A_M, B_M, W_G, flag, dx, dy, dz)
 
       use matrix, only: e, w, s, n, t, b
       USE geometry , only: imax2,imin3,imax3
       USE geometry , only: jmax2,jmin3,jmax3
       USE geometry , only:       kmin3,kmax3
-      USE geometry , only: odx, ody
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
       USE functions, only: im1, jm1
@@ -237,6 +236,8 @@ module source_w_g_module
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      double precision, intent(in) :: dx, dy, dz
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -248,7 +249,13 @@ module source_w_g_module
 ! Phase index
       INTEGER :: M
 
-!-----------------------------------------------
+      double precision :: odx, ody
+!---------------------------------------------------------------------//
+
+      odx = 1.0d0/dx
+      ody = 1.0d0/dy
+
+!---------------------------------------------------------------------//
 
 ! Set reference phase to gas
       M = 0

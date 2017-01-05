@@ -6,7 +6,9 @@ module calc_coeff_module
       use calc_tau_w_g_module, only: calc_tau_w_g
       use calc_trd_g_module, only: calc_trd_g
       use physical_prop_module, only: physical_prop
-      use iso_c_binding, only: c_double, c_int
+
+      use bl_fort_module, only: c_real
+      use iso_c_binding , only: c_double, c_int
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -25,7 +27,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+     SUBROUTinE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
         flag) bind(C, name="calc_coeff_all")
@@ -41,27 +43,26 @@ module calc_coeff_module
 
       implicit none
 
-      real(c_double), INTENT(INOUT) :: ro_g&
+      real(c_double), intent(inout) :: ro_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) ::  p_g&
+      real(c_double), intent(in   ) ::  p_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: ep_g&
+      real(c_double), intent(inout) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: rop_g&
+      real(c_double), intent(inout) :: rop_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: u_g&
+      real(c_double), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: v_g&
+      real(c_double), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: w_g&
+      real(c_double), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: mu_g&
+      real(c_double), intent(inout) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(OUT  ) :: f_gds&
+      real(c_double), intent(OUT  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(OUT  ) :: drag_bm&
+      real(c_double), intent(OUT  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-
 
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
@@ -89,7 +90,7 @@ module calc_coeff_module
          particle_phase,  particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius)
 
-      END SUBROUTINE CALC_COEFF_ALL
+      END SUBROUTinE CALC_COEFF_ALL
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -109,7 +110,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_COEFF(flag, pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
+      SUBROUTinE CALC_COEFF(flag, pLevel, ro_g, p_g, ep_g, rop_g, u_g, v_g, &
          w_g, mu_g, f_gds, drag_bm,  particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius)&
         bind(C, name="calc_coeff")
@@ -117,7 +118,7 @@ module calc_coeff_module
       use compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: max_pip
       use discretelement, only: DES_EXPLICITLY_COUPLED
-      use discretelement, only: DES_CONTINUUM_COUPLED
+      use discretelement, only: DES_CONTinUUM_COUPLED
 
       implicit none
 
@@ -165,12 +166,12 @@ module calc_coeff_module
       CALL PHYSICAL_PROP(pLevel, ro_g, p_g, ep_g, rop_g, flag)
 
 ! Calculate interphase coeffs: (momentum and energy)
-      IF (DES_CONTINUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &
+      IF (DES_CONTinUUM_COUPLED .AND. .NOT.DES_EXPLICITLY_COUPLED)  &
          CALL CALC_DRAG_DES_2FLUID(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm,  particle_state, &
          particle_phase, pvol, des_pos_new, des_vel_new, des_radius)
 
-      END SUBROUTINE CALC_COEFF
+      END SUBROUTinE CALC_COEFF
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -190,8 +191,8 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
-         ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag) &
+      SUBROUTinE CALC_TRD_AND_TAU(tau_u_g,tau_v_g,tau_w_g,trd_g,&
+         ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz) &
         bind(C, name="calc_trd_and_tau")
 
       use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
@@ -200,38 +201,40 @@ module calc_coeff_module
       implicit none
 
       ! Stress tensor cross terms.
-      real(c_double), INTENT(INOUT) :: tau_u_g&
+      real(c_double), intent(inout) :: tau_u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: tau_v_g&
+      real(c_double), intent(inout) :: tau_v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: tau_w_g&
+      real(c_double), intent(inout) :: tau_w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(INOUT) :: trd_g&
+      real(c_double), intent(inout) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      real(c_double), INTENT(IN   ) :: ep_g&
+      real(c_double), intent(in   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: u_g&
+      real(c_double), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: v_g&
+      real(c_double), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: w_g&
+      real(c_double), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: lambda_g&
+      real(c_double), intent(in   ) :: lambda_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: mu_g&
+      real(c_double), intent(in   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      integer(c_int), INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
+      real(c_double), intent(in   ) :: dx,dy,dz
+
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      CALL CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
+      call calc_trd_g(trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      CALL CALC_TAU_U_G (TAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
-      CALL CALC_TAU_V_G (TAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
-      CALL CALC_TAU_W_G (TAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      call calc_tau_u_g (tau_u_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      call calc_tau_v_g (tau_v_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      call calc_tau_w_g (tau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
 
-      END SUBROUTINE CALC_TRD_AND_TAU
+      END SUBROUTinE CALC_TRD_AND_TAU
 
 end module calc_coeff_module

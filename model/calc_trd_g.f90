@@ -1,4 +1,7 @@
 MODULE CALC_TRD_G_MODULE
+
+   use iso_c_binding, only: c_double, c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -20,9 +23,8 @@ MODULE CALC_TRD_G_MODULE
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g,flag)
+      SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
-      USE geometry, only: ODX, ODY, ODZ
       USE functions, only: iminus, jminus, kminus
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: istart, iend, jstart, jend, kstart, kend
@@ -34,14 +36,15 @@ MODULE CALC_TRD_G_MODULE
 !-----------------------------------------------
      double precision, intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_double), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_double), intent(in   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_double), intent(in   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      real(c_double), intent(in   ) :: dx, dy, dz
 
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -49,6 +52,12 @@ MODULE CALC_TRD_G_MODULE
 !
 ! Indices
       INTEGER :: I, J, K
+
+      double precision :: odx, ody, odz
+
+      odx = 1.d0 / dx
+      ody = 1.d0 / dy
+      odz = 1.d0 / dz
 !
 !=======================================================================
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION

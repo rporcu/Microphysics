@@ -18,6 +18,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
+!        f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
          f_gds, a_m, b_m, drag_bm, flag, dt)&
          bind(C, name="solve_u_g_star")
 
@@ -44,6 +45,8 @@ module solve_vel_star_module
    use residual, only: resid, num_resid, den_resid
    use residual, only: max_resid, i_resid, j_resid, k_resid
    use iso_c_binding, only: c_double, c_int
+
+   use geometry, only: dx,dy,dz
 
       IMPLICIT NONE
 
@@ -88,6 +91,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+!     real(c_double), intent(in   ) :: dt, dx, dy, dz
       real(c_double), intent(in   ) :: dt
 !.....................................................................//
 
@@ -96,11 +100,11 @@ module solve_vel_star_module
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (a_m, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag)
+         u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_u_g (a_m, b_m, flag)
@@ -136,6 +140,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
+!     f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       f_gds, a_m, b_m, drag_bm, flag, dt)&
       bind(C, name="solve_v_g_star")
 
@@ -150,6 +155,7 @@ module solve_vel_star_module
       use gas_drag_module, only: gas_drag_v
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
+   use geometry, only: dx,dy,dz
 
 ! Global data .........................................................//
 ! Fluid array bounds
@@ -207,6 +213,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER(C_INT), INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+!     real(c_double), intent(in   ) :: dt, dx, dy, dz
       real(c_double), intent(in   ) :: dt
 !.....................................................................//
 
@@ -215,11 +222,11 @@ module solve_vel_star_module
 
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (a_m, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         v_g, v_go, tau_v_g, flag)
+         v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_v_g (a_m, b_m, flag)
@@ -254,6 +261,7 @@ module solve_vel_star_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
+!     f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       f_gds, a_m, b_m, drag_bm, flag, dt)&
       bind(C, name="solve_w_g_star")
 
@@ -267,6 +275,7 @@ module solve_vel_star_module
       use gas_drag_module, only: gas_drag_w
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
+   use geometry, only: dx,dy,dz
 
 ! Global data .........................................................//
 ! Fluid array bounds
@@ -324,6 +333,7 @@ module solve_vel_star_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER(C_INT), INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+!     real(c_double), intent(in   ) :: dt, dx, dy, dz
       real(c_double), intent(in   ) :: dt
 !.....................................................................//
 
@@ -331,11 +341,12 @@ module solve_vel_star_module
       call init_ab_m(a_m, b_m)
 
 ! calculate the convection-diffusion terms
-      call conv_dif_w_g(a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag, dt)
+      call conv_dif_w_g(a_m, mu_g, u_g, v_g, w_g, &
+                        flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         w_g, w_go, tau_w_g, flag)
+         w_g, w_go, tau_w_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_w_g (a_m, b_m, flag)

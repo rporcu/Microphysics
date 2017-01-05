@@ -391,7 +391,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           (*trD_g[lev])[mfi].dataPtr(),    (*ep_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
           (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-          (*flag[lev])[mfi].dataPtr());
+          (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
       // Backup field variable to old
       int nghost = ep_go[lev]->nGrow();

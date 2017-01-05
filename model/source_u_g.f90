@@ -26,7 +26,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_U_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag)
+         u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -51,7 +51,7 @@ module source_u_g_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: dt
+      double precision, intent(in   ) :: dt, dx, dy, dz
 
       double precision, intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -181,7 +181,7 @@ module source_u_g_module
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_U_G_BC (A_M, B_M, U_G, flag)
+      CALL SOURCE_U_G_BC (A_M, B_M, U_G, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -205,7 +205,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(A_M, B_M, U_G, flag)
+      SUBROUTINE SOURCE_U_G_BC(A_M, B_M, U_G, flag, dx, dy, dz)
 
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -215,7 +215,6 @@ module source_u_g_module
       USE functions, only: iminus, iplus, im1
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
       USE geometry  , only: jmax2, kmax2
-      USE geometry  , only: ody, odz
       USE matrix, only: e, w, s, n, t, b
 
       IMPLICIT NONE
@@ -233,6 +232,8 @@ module source_u_g_module
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+
+      double precision, intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -242,7 +243,12 @@ module source_u_g_module
       INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2
 ! Phase index
       INTEGER :: M
+
+      double precision :: ody, odz 
 !-----------------------------------------------
+
+     ody = 1.d0 / dy
+     odz = 1.d0 / dz
 
 ! Set reference phase to gas
       M = 0

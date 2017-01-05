@@ -18,7 +18,7 @@ module u_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_DIF_U_G(A_M, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -52,13 +52,15 @@ module u_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      double precision, intent(in   ) :: dt
+      double precision, intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(3) == 0) THEN
-         CALL STORE_A_U_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt, flag)
+         CALL STORE_A_U_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt, &
+                           flag, dx, dy, dz)
       ELSE
-         CALL STORE_A_U_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt, flag,dt)
+         CALL STORE_A_U_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt, &
+                           flag, dt, dx, dy, dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_U_G
@@ -177,18 +179,11 @@ module u_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K, flag)
+         D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-      !USE functions, only: wall_at
-      !USE functions, only: ieast, jnorth, ktop
-      !USE functions, only: ieast, jnorth, jsouth, ktop, kbot
-      !USE functions, only: iminus, jminus, kminus
-      !USE functions, only: ip1, jm1, km1
-
-      USE geometry, only: odx, ody, odz
       USE geometry, only: ayz, axz, axy
 
       IMPLICIT NONE
@@ -205,6 +200,8 @@ module u_g_conv_dif
       INTEGER, INTENT( IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
+      double precision, intent(in) :: dx, dy, dz
+
 ! ijk index
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -214,7 +211,12 @@ module u_g_conv_dif
       INTEGER :: ip, jm, km, ic
 ! length terms
       DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
+      DOUBLE PRECISION :: odx, ody, odz
 !---------------------------------------------------------------------//
+
+      odx = 1.0 / dx
+      ody = 1.0 / dy
+      odz = 1.0 / dz
 
       IP = IP1(I)
       JM = JM1(J)
@@ -278,7 +280,8 @@ module u_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_U_G0(A_U_G,MU_G,flux_ge,flux_gn,flux_gt, flag)
+      SUBROUTINE STORE_A_U_G0(A_U_G,MU_G,flux_ge,flux_gn,flux_gt, flag, &
+                              dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -306,6 +309,7 @@ module u_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+      DOUBLE PRECISION, INTENT(IN   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -332,7 +336,8 @@ module u_g_conv_dif
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_UCELL_GDIFF_TERMS(&
                      d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag)
+                     d_ft, d_fb, mu_g, i, j, k, flag, &
+                     dx, dy, dz)
 
 ! East face (i+1, j, k)
                   IF (Flux_e >= ZERO) THEN
@@ -414,7 +419,7 @@ module u_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_U_G1(A_U_G, MU_G, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt)
+         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -447,6 +452,8 @@ module u_g_conv_dif
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+
+      DOUBLE PRECISION, INTENT(IN   ) :: dx, dy, dz
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -499,7 +506,8 @@ module u_g_conv_dif
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_UCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag)
+                     d_ft, d_fb, mu_g, i, j, k, flag, &
+                     dx, dy, dz)
 
 ! East face (i+1, j, k)
                   A_U_G(I,J,K,E) = D_Fe - XSI_E(i,j,k) * Flux_e
