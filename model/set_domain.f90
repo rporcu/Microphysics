@@ -22,11 +22,6 @@ module set_domain_module
 
       use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
-      ! Domain decomposition and dimensions
-      use geometry, only: oDX
-      use geometry, only: oDZ
-      use geometry, only: oDY
-
       ! Cyclic domain flags.
       use geometry, only: CYCLIC
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
@@ -65,10 +60,6 @@ module set_domain_module
       IF (CYCLIC_Y_PD) CYCLIC_Y = .TRUE.
       IF (CYCLIC_Z_PD) CYCLIC_Z = .TRUE.
       CYCLIC = CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z
-
-      ODX = ONE/DX
-      ODY = ONE/DY
-      ODZ = ONE/DZ
 
       ! End of what used to be in set_geometry
 
