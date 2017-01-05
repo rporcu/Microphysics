@@ -4,12 +4,11 @@ MODULE CALC_GRAD_DES_MODULE
    use iso_c_binding , only: c_int
 
    CONTAINS
-      SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI, flag)
+      SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI, flag, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
 
-      use geometry, only: oDX, oDY, oDZ
       USE geometry, only: IMIN1, JMIN1, KMIN1
       USE geometry, only: IMAX1, JMAX1, KMAX1
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
@@ -28,13 +27,18 @@ MODULE CALC_GRAD_DES_MODULE
       real(c_real), INTENT(OUT) :: DEL_PHI&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! general i, j, k indices
       INTEGER :: I, J, K
+      real(c_real) :: odx, ody, odz
 !......................................................................!
 
+        odx = 1.d0 / dx
+        ody = 1.d0 / dy
+        odz = 1.d0 / dz
 
         DO K = kstart3, kend3
         DO J = jstart3, jend3

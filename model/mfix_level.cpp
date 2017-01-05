@@ -11,7 +11,7 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 {
 //  ReadParameters();
 
-    // Geometry on all levels has been defined already in the AmrCore constructor
+    // Geometry on all levels has just been defined in the AmrCore constructor
 
     // No valid BoxArray and DistributionMapping have been defined.
     // But the arrays for them have been resized.
@@ -655,6 +655,10 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 {
     int pair_count = 0;
 
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
+
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         mfix_des_time_march(
           (*ep_g[lev])[mfi].dataPtr(),      (*p_g[lev])[mfi].dataPtr(),
@@ -669,7 +673,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
           drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
           pairs.dataPtr(),          &pair_count,
           (*flag[lev])[mfi].dataPtr(),
-          &time, &dt, &nstep);
+          &time, &dt, &dx, &dy, &dz, &nstep);
 }
 
 void

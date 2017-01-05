@@ -16,7 +16,8 @@ module des_time_march_module
              particle_state, particle_phase, &
              des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
              des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-             drag_fc, fc, tow, pairs, pair_count, flag, time, dt, nstep) &
+             drag_fc, fc, tow, pairs, pair_count, flag, &
+             time, dt, dx, dy, dz, nstep) &
              bind(C, name="mfix_des_time_march")
 
       USE calc_collision_wall, only: calc_dem_force_with_wall_stl
@@ -60,7 +61,8 @@ module des_time_march_module
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
-      real(c_real), intent(inout) :: time, dt
+      real(c_real)  , intent(inout) :: time, dt
+      real(c_real)  , intent(in   ) :: dx, dy, dz
       integer(c_int), intent(inout) :: nstep
 
       real(c_real), intent(inout) :: pvol(max_pip)
@@ -158,7 +160,7 @@ module des_time_march_module
                des_radius,  particle_phase)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new, &
-            pvol, drag_fc, flag)
+                           pvol, drag_fc, flag, dx, dy, dz)
       ENDIF
 
 

@@ -235,7 +235,9 @@ extern "C"
           Real* drag_fc,        Real* fc,             Real* tow,
           int* pairs,           int* pair_count,
           int* flag,
-          Real* time,           Real* dt,             int* nstep);
+          Real* time,           Real* dt,             
+          Real* dx  ,           Real* dy,             Real* dz,
+          int * nstep);
 
   void mfix_usr0();
 

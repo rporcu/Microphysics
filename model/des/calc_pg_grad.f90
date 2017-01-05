@@ -19,7 +19,7 @@ MODULE CALC_PG_GRAD_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new,&
-         pvol, drag_fc, flag)
+                              pvol, drag_fc, flag, dx, dy, dz)
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use calc_grad_des_module, only: calc_grad_des
@@ -31,7 +31,6 @@ MODULE CALC_PG_GRAD_MODULE
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flags for cyclic BC with pressure drop
       use geometry, only: CYCLIC_X_PD, CYCLIC_Y_PD, CYCLIC_Z_PD
-      use geometry, only: dx, dy, dz
 ! Specified pressure drop
       use bc, only: DELP_X, DELP_Y, DELP_Z
 ! Domain length
@@ -57,6 +56,8 @@ MODULE CALC_PG_GRAD_MODULE
       real(c_real), intent(in   ) :: pvol(:)
       real(c_real), intent(in   ) :: des_pos_new(:,:)
       real(c_real), intent(inout) :: drag_fc(:,:)
+      real(c_real), intent(in   ) :: dx, dy, dz
+
       integer         , intent(in   ) :: particle_state(:)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
@@ -64,11 +65,11 @@ MODULE CALC_PG_GRAD_MODULE
 ! mean pressure gradient for the case of periodic boundaries
       real(c_real) :: cPG(3)
 ! One over cell volume
-      real(c_real) :: Oodx, Oody, Oodz
+      real(c_real) :: odx, ody, odz
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(P_G, gradPg, flag)
+      CALL CALC_GRAD_DES(P_G, gradPg, flag, dx, dy, dz)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
@@ -87,9 +88,9 @@ MODULE CALC_PG_GRAD_MODULE
 
       IF(DES_EXPLICITLY_COUPLED) THEN
 
-         Oodx = 1.0d0/dx
-         Oody = 1.0d0/dy
-         Oodz = 1.0d0/dz
+         odx = 1.0d0/dx
+         ody = 1.0d0/dy
+         odz = 1.0d0/dz
 
 ! Calculate the gas phase forces acting on each particle.
          DO NP=1,MAX_PIP
@@ -101,9 +102,9 @@ MODULE CALC_PG_GRAD_MODULE
                exiting_ghost==particle_state(np)) cycle
 
 ! Fluid cell containing the particle
-            i = floor(des_pos_new(np,1)*Oodx) + 1
-            j = floor(des_pos_new(np,2)*Oody) + 1
-            k = floor(des_pos_new(np,3)*Oodz) + 1
+            i = floor(des_pos_new(np,1)*odx) + 1
+            j = floor(des_pos_new(np,2)*ody) + 1
+            k = floor(des_pos_new(np,3)*odz) + 1
 
             if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
