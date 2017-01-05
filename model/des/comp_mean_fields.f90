@@ -13,12 +13,13 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, nparticles) &
+     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, nparticles, &
+                                 dx, dy, dz) &
          bind(C, name="mfix_comp_mean_fields")
 
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
-      use geometry, only: dx, dy, dz, vol
+      use geometry, only: vol
       use param1, only: zero
 
       use discretelement, only: nonexistent, normal_ghost
@@ -30,6 +31,8 @@ module comp_mean_fields_module
       integer(c_int), intent(in   ) :: particle_state(nparticles)
       real(c_real), intent(in   ) :: des_pos_new(nparticles,3)
       real(c_real), intent(in   ) :: pvol(nparticles)
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -47,13 +50,13 @@ module comp_mean_fields_module
       real(c_real) :: SOLVOLINC&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! One over cell volume
-      real(c_real) :: OoVol, Oodx, Oody, Oodz
+      real(c_real) :: OoVol, odx, ody, odz
 
       SOLVOLINC(:,:,:) = ZERO
 
-      Oodx = 1.0d0/dx
-      Oody = 1.0d0/dy
-      Oodz = 1.0d0/dz
+      odx = 1.0d0/dx
+      ody = 1.0d0/dy
+      odz = 1.0d0/dz
 
 ! Calculate the gas phae forces acting on each particle.
       DO NP=1,MAX_PIP
@@ -63,9 +66,9 @@ module comp_mean_fields_module
             EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Fluid cell containing the particle
-         i = floor(des_pos_new(np,1)*Oodx) + 1
-         j = floor(des_pos_new(np,2)*Oody) + 1
-         k = floor(des_pos_new(np,3)*Oodz) + 1
+         i = floor(des_pos_new(np,1)*odx) + 1
+         j = floor(des_pos_new(np,2)*ody) + 1
+         k = floor(des_pos_new(np,3)*odz) + 1
 
 ! Particle phase for data binning.
 ! Accumulate total solids volume (by phase)

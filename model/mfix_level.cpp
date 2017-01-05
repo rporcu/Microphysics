@@ -382,7 +382,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           particle_phase.dataPtr(),  particle_state.dataPtr(),
           pvol.dataPtr(), des_pos_new.dataPtr(),
           des_vel_new.dataPtr(), des_radius.dataPtr(),
-          (*flag[lev])[mfi].dataPtr());
+          (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
 
       // Calculate the stress tensor trace and cross terms for all phases.
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -645,7 +645,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               particle_phase.dataPtr(),  particle_state.dataPtr(),
               pvol.dataPtr(), des_pos_new.dataPtr(),
               des_vel_new.dataPtr(), des_radius.dataPtr(),
-              (*flag[lev])[mfi].dataPtr());
+              (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
         }
       } while (reiterate==1);
 }

@@ -23,7 +23,7 @@ module calc_drag_des_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      SUBROUTINE CALC_DRAG_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg,&
          particle_state, fc, drag_fc, pvol, des_pos_new, &
-        des_vel_new, des_radius, particle_phase, flag)
+         des_vel_new, des_radius, particle_phase, flag, dx, dy, dz)
 
       IMPLICIT NONE
 
@@ -53,6 +53,8 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: des_vel_new(:,:)
       real(c_real), intent(in   ) :: des_pos_new(:,:)
       real(c_real), intent(inout) :: fc(:,:)
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       INTEGER :: II
 
@@ -144,7 +146,7 @@ module calc_drag_des_module
       SUBROUTINE CALC_DRAG_DES_EXPLICIT(flag, ep_g, u_g, v_g, w_g, ro_g, &
          mu_g, f_gds, drag_bm,  particle_phase,  &
          particle_state, pvol, des_pos_new, des_vel_new, &
-         des_radius)
+         des_radius, dx, dy, dz)
 
       IMPLICIT NONE
 
@@ -177,8 +179,11 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: des_pos_new(:,:)
       real(c_real), intent(in   ) :: des_vel_new(:,:)
 
+      real(c_real), intent(in   ) :: dx, dy, dz
+
 ! Calculate mean fields (EPg).
-      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(des_radius))
+      CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(des_radius), &
+                            dx, dy, dz)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) &

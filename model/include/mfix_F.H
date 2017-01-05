@@ -81,17 +81,8 @@ extern "C"
          int* particle_phase,  int* particle_state,
          Real* pvol, Real* des_pos_new,
          Real* des_vel_new, Real* des_radius,
-         int* flag);
-
-  void calc_coeff_all(
-         Real* ro_g, Real* p_g,
-         Real* ep_g, Real* rop_g,
-         Real* u_g,  Real* v_g,   Real* w_g,
-         Real* mu_g, Real* f_gds, Real* drag_bm,
-         int* particle_phase,  int* particle_state,
-         Real* pvol, Real* des_pos_new,
-         Real* des_vel_new, Real* des_radius,
-         int* flag);
+         int* flag,
+         Real* dx,       Real* dy,       Real* dz);
 
   void calc_coeff(
          int* flag, int* level,

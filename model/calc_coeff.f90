@@ -27,10 +27,10 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTinE CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+     subroutine CALC_COEFF_ALL(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-        flag) bind(C, name="calc_coeff_all")
+        flag, dx, dy, dz) bind(C, name="calc_coeff_all")
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -72,9 +72,10 @@ module calc_coeff_module
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
+      real(c_real), intent(in   ) :: dx, dy, dz
+
       integer(c_int)         , intent(in   ) :: particle_state(max_pip)
       integer(c_int)         , intent(in   ) :: particle_phase(max_pip)
-
 
 !-----------------------------------------------------------------------
 
@@ -87,7 +88,8 @@ module calc_coeff_module
       IF (DES_EXPLICITLY_COUPLED) CALL CALC_DRAG_DES_EXPLICIT(flag, ep_g, &
          u_g, v_g, w_g, ro_g, mu_g, f_gds, drag_bm,  &
          particle_phase,  particle_state, &
-         pvol, des_pos_new, des_vel_new, des_radius)
+         pvol, des_pos_new, des_vel_new, des_radius, &
+         dx, dy, dz)
 
       END SUBROUTinE CALC_COEFF_ALL
 
