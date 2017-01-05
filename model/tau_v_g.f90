@@ -39,14 +39,14 @@ MODULE CALC_TAU_V_G_MODULE
 !  (i.e., those of the form mu.grad(v)                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      SUBROUTINE CALC_TAU_V_G(lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dy)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero
       USE toleranc, only: dil_ep_s
-      USE geometry, only: axy, axz, ayz, ody
+      USE geometry, only: axy, axz, ayz
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -71,6 +71,7 @@ MODULE CALC_TAU_V_G_MODULE
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      real(c_real), INTENT(IN   ) :: dy
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -80,6 +81,11 @@ MODULE CALC_TAU_V_G_MODULE
       real(c_real) :: EPGA
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
+
+      real(c_real) :: ody
+
+      ody = 1.d0/dy
+
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the
 !             use of the *tmp variables below

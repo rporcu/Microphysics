@@ -12,7 +12,7 @@ MODULE WRITE_OUT0_MODULE
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_OUT0(time, dt)
+      SUBROUTINE WRITE_OUT0(time, dt, dx, dy, dz)
 
       USE bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -30,7 +30,6 @@ MODULE WRITE_OUT0_MODULE
       USE geometry, only: coordinates
       USE geometry, only: cyclic_x, cyclic_y, cyclic_z
       USE geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      USE geometry, only: dx, dy, dz
       USE geometry, only: imax, jmax, kmax
       USE geometry, only: imax2, jmax2, kmax2
       USE geometry, only: xlength, ylength, zlength
@@ -52,7 +51,7 @@ MODULE WRITE_OUT0_MODULE
 
       IMPLICIT NONE
 
-      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: time, dt, dx, dy, dz
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------

@@ -41,14 +41,14 @@ MODULE CALC_TAU_W_G_MODULE
 !  mu.grad(w)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_W_G(lTAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag)
+      SUBROUTINE CALC_TAU_W_G(lTAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero
       USE toleranc, only: dil_ep_s
-      USE geometry, only: axy, axz, ayz, odz, dy, dz
+      USE geometry, only: axy, axz, ayz
 
       IMPLICIT NONE
 
@@ -74,6 +74,7 @@ MODULE CALC_TAU_W_G_MODULE
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      real(c_real), INTENT(IN   ) :: dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -83,6 +84,10 @@ MODULE CALC_TAU_W_G_MODULE
       real(c_real) :: EPGA
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
+
+      real(c_real) :: odz
+
+      odz = 1.d0/dz
 
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the
@@ -124,7 +129,7 @@ MODULE CALC_TAU_W_G_MODULE
                                  MU_G(i,j,k)), &
                            AVG_H(MU_G(iwest(i,j,ktop(i,j,k)),j,ktop(i,j,k)), &
                                  MU_G(i,j,ktop(i,j,k)))) &
-                     *(U_G(IMinus(i,j,k),J,KPlus(i,j,k))-U_G(IMinus(i,j,k),J,K))*ODZ*DY*DZ
+                     *(U_G(IMinus(i,j,k),J,KPlus(i,j,k))-U_G(IMinus(i,j,k),J,K))*ODZ*AXZ
 ! DY(J)*HALF(DZ(k)+DZ(kp)) = oX_E(IM)*AYZ_W(IMJK), but avoids singularity
 
 ! part of d/dy (tau_zy) xdxdydz =>

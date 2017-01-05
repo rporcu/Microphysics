@@ -16,7 +16,7 @@ MODULE CONV_ROP_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP(lo, hi, u_g, v_g, w_g, rop_g, &
          rop_ge, rop_gn, rop_gt, &
-         flag, dt) bind(C, name="conv_rop")
+         flag, dt, dx, dy, dz) bind(C, name="conv_rop")
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -45,7 +45,7 @@ MODULE CONV_ROP_MODULE
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      real(c_real), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 
@@ -54,7 +54,7 @@ MODULE CONV_ROP_MODULE
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &
                          flag, rop_g, u_g, v_g, w_g, &
-                         rop_ge, rop_gn, rop_gt, dt)
+                         rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
       ENDIF
 
       RETURN
@@ -177,7 +177,8 @@ MODULE CONV_ROP_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP1(DISC, flag, &
                            rop, u, v, w, &
-                           rop_e, rop_n, rop_t, dt)
+                           rop_e, rop_n, rop_t, &
+                           dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -214,7 +215,7 @@ MODULE CONV_ROP_MODULE
       integer, intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      real(c_real), intent(in) :: dt
+      real(c_real), intent(in) :: dt, dx, dy, dz
 !
 ! Local variables
 !---------------------------------------------------------------------//
@@ -231,7 +232,7 @@ MODULE CONV_ROP_MODULE
 
 ! Calculate factors
       incr=0
-      CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr, dt)
+      CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr, dt, dx, dy, dz)
 
       DO K = kstart3, kend3
         DO J = jstart3, jend3

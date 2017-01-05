@@ -115,7 +115,8 @@ extern "C"
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
-         int* flag,            Real* dt);
+         int* flag,            Real* dt,
+         Real* dx,             Real* dy,             Real* dz);
 
   void calc_mflux(
          Real* u_g,            Real* v_g,            Real* w_g,

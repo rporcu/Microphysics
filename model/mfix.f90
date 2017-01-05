@@ -105,7 +105,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call parse_resid_string ()
 
 ! Write the initial part of the standard output file
-      call write_out0(time, dt)
+      call write_out0(time, dt, dx, dy, dz)
 
 ! Write the initial part of the special output file(s)
       call write_usr0

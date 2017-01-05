@@ -495,7 +495,8 @@ module u_g_conv_dif
 
 ! shear indicator:
       incr=1
-      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, dt)
+      CALL CALC_XSI (DISCRETIZE(3), U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
+                     dt, dx, dy, dz)
 
       DO K = kstart3, kend3
          DO J = jstart3, jend3

@@ -17,7 +17,8 @@
 
       CONTAINS
 
-      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, dt)
+      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, &
+                          dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -35,8 +36,6 @@
       USE discretization, only: central_scheme
 
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-
-      USE geometry, only: odx, ody, odz
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
@@ -63,7 +62,7 @@
 
 ! shear indicator
       INTEGER, INTENT(IN) :: incr
-      real(c_real), intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -77,8 +76,12 @@
       real(c_real) :: cf
 ! cell widths for QUICKEST
       real(c_real) :: oDXc, oDXuc, oDYc, oDYuc, oDZc, oDZuc
+      real(c_real) :: odx, ody, odz
 !---------------------------------------------------------------------//
 
+       odx = 1.d0 / dx
+       ody = 1.d0 / dy
+       odz = 1.d0 / dz
 
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)

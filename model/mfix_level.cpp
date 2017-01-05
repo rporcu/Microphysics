@@ -359,8 +359,8 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                          Real dt, Real& prev_dt, Real time, Real normg)
 {
       Real dx = geom[lev].CellSize(0);
-      Real dy = geom[lev].CellSize(0);
-      Real dz = geom[lev].CellSize(0);
+      Real dy = geom[lev].CellSize(1);
+      Real dz = geom[lev].CellSize(2);
 
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -415,7 +415,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*rop_g[lev])[mfi].dataPtr(),
             (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-            (*flag[lev])[mfi].dataPtr(),     &dt);
+            (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
         }
 
         // Calculate face mass fluxes
@@ -546,7 +546,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*rop_g[lev])[mfi].dataPtr(),
               (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr(),     &dt);
+              (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
           }
 
           // Solve the pressure correction equation
