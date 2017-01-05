@@ -18,6 +18,7 @@
       use geometry, only: imax1, jmax1, kmax1
 
       use param1, only: small_number, half
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
