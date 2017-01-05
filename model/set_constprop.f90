@@ -1,4 +1,8 @@
 MODULE SET_CONSTPROP_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -24,11 +28,11 @@ MODULE SET_CONSTPROP_MODULE
 
       implicit none
 
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      real(c_real), INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: lambda_g&
+      real(c_real), INTENT(INOUT) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: mu_g&
+      real(c_real), INTENT(INOUT) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) ::  flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)

@@ -7,6 +7,9 @@
 !----------------------------------------------------------------------!
       module desmpi
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 ! Ghost particle packet size.
       INTEGER :: iGhostPacketSize
       INTEGER :: iParticlePacketSize
@@ -17,10 +20,10 @@
       logical, dimension(:), allocatable :: iexchflag
 
 ! offset for periodic boundaries
-      double precision, dimension(:,:), allocatable :: dcycl_offset
+      real(c_real), dimension(:,:), allocatable :: dcycl_offset
 
       type array
-         double precision, dimension(:), allocatable :: facebuf
+         real(c_real), dimension(:), allocatable :: facebuf
       end type array
 
 ! following variables used for sendrecv ghost particles and particle exchange
@@ -38,8 +41,8 @@
       integer :: ispot
 
 ! following variables are used for gather and scatter
-      double precision, dimension(:), allocatable :: drootbuf
-      double precision, dimension(:), allocatable :: dprocbuf
+      real(c_real), dimension(:), allocatable :: drootbuf
+      real(c_real), dimension(:), allocatable :: dprocbuf
       integer, dimension(:), allocatable :: irootbuf
       integer, dimension(:), allocatable :: iprocbuf
 
@@ -55,10 +58,10 @@
       integer,dimension(:,:),allocatable :: irecvindices
 
 ! variables used to read initial particle properties
-      double precision, dimension(:,:), allocatable:: dpar_pos
-      double precision, dimension(:,:), allocatable:: dpar_vel
-      double precision, dimension(:), allocatable:: dpar_den
-      double precision, dimension(:), allocatable:: dpar_rad
+      real(c_real), dimension(:,:), allocatable:: dpar_pos
+      real(c_real), dimension(:,:), allocatable:: dpar_vel
+      real(c_real), dimension(:), allocatable:: dpar_den
+      real(c_real), dimension(:), allocatable:: dpar_rad
 
       contains
 

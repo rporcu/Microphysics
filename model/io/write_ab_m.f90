@@ -17,15 +17,18 @@
       USE geometry, only: imax2, jmax2, kmax2
       USE geometry, only: imin2, jmin2, kmin2
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !                      Phase index
       INTEGER          M

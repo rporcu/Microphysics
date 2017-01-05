@@ -1,4 +1,8 @@
 MODULE CALC_GRAD_DES_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
       SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI, flag)
 
@@ -19,9 +23,9 @@ MODULE CALC_GRAD_DES_MODULE
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: PHI&
+      real(c_real), INTENT(IN) :: PHI&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: DEL_PHI&
+      real(c_real), INTENT(OUT) :: DEL_PHI&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 

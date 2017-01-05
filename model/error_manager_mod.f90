@@ -6,6 +6,9 @@
 !----------------------------------------------------------------------!
       MODULE ERROR_MANAGER
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use exit_mod, only: mfix_exit
 
       implicit none
@@ -17,9 +20,6 @@
          module procedure iVal_dbl
          module procedure iVal_log
       end interface
-
-
-
 
 ! Maximum number of lines a message can have before a flush is needed.
       INTEGER, PARAMETER :: LINE_COUNT  = 32
@@ -606,7 +606,8 @@
 !                                                                      !
 !......................................................................!
       CHARACTER(len=32) FUNCTION iVal_dbl(VAL)
-      DOUBLE PRECISION, intent(in) :: VAL
+
+      real(c_real), intent(in) :: VAL
 
       CHARACTER(len=32) :: dASc
 

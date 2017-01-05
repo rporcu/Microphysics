@@ -1,5 +1,8 @@
 module calc_drag_des_module
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use comp_mean_fields_module, only: comp_mean_fields
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: des_continuum_coupled
@@ -7,9 +10,6 @@ module calc_drag_des_module
       use discretelement, only: normal_particle
 
       use drag_gs_des1_module, only: drag_gs_des, drag_gs_gas
-
-
-
 
   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -27,19 +27,19 @@ module calc_drag_des_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: gradpg&
+      real(c_real), intent(in   ) :: gradpg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
@@ -47,12 +47,12 @@ module calc_drag_des_module
       integer         , intent(in   ) :: particle_phase(:)
       integer         , intent(in   ) :: particle_state(:)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_radius(:)
-      double precision, intent(in   ) :: drag_fc(:,:)
-      double precision, intent(in   ) :: des_vel_new(:,:)
-      double precision, intent(in   ) :: des_pos_new(:,:)
-      double precision, intent(inout) :: fc(:,:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_radius(:)
+      real(c_real), intent(in   ) :: drag_fc(:,:)
+      real(c_real), intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(inout) :: fc(:,:)
 
       INTEGER :: II
 
@@ -95,27 +95,27 @@ module calc_drag_des_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: f_gds&
+      real(c_real), intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: drag_bm&
+      real(c_real), intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_radius(:)
-      double precision, intent(in   ) :: des_vel_new(:,:)
-      double precision, intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_radius(:)
+      real(c_real), intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
       integer         , intent(in   ) :: particle_state(:)
       integer         , intent(in   ) :: particle_phase(:)
 
@@ -148,21 +148,21 @@ module calc_drag_des_module
 
       IMPLICIT NONE
 
-      double precision, intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: f_gds&
+      real(c_real), intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: drag_bm&
+      real(c_real), intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
@@ -171,11 +171,11 @@ module calc_drag_des_module
 
       integer, intent(in   ) :: particle_phase(:)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_radius(:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_radius(:)
 
-      double precision, intent(in   ) :: des_pos_new(:,:)
-      double precision, intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(in   ) :: des_vel_new(:,:)
 
 ! Calculate mean fields (EPg).
       CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(des_radius))

@@ -33,8 +33,8 @@ MODULE functions
 !---------------------------------------------------------------------//
 ! Additional functions
 !---------------------------------------------------------------------//
-! DOUBLE PRECISION :: ZMAX
-! INTEGER FUNCTION :: FUNLM
+! real(c_real)     :: ZMAX
+! integer FUNCTION :: FUNLM
 
 
 CONTAINS

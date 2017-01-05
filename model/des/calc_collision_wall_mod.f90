@@ -12,6 +12,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE CALC_COLLISION_WALL
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       USE discretelement, only: des_coll_model_enum
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
       USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
@@ -46,42 +49,42 @@
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: fc, tow
+      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
+      real(c_real), DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
+      real(c_real), DIMENSION(:,:), INTENT(INOUT) :: fc, tow
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
       INTEGER :: LL
       INTEGER :: NF
-      DOUBLE PRECISION ::OVERLAP_N, SQRT_OVERLAP
+      real(c_real) ::OVERLAP_N, SQRT_OVERLAP
 
-      DOUBLE PRECISION :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
+      real(c_real) :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
 ! local normal and tangential forces
-      DOUBLE PRECISION :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
-      DOUBLE PRECISION, DIMENSION(DIMN) :: FT, FN, OVERLAP_T
+      real(c_real) :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
+      real(c_real), DIMENSION(DIMN) :: FT, FN, OVERLAP_T
 
       INTEGER :: PHASELL
 
-      DOUBLE PRECISION :: TANGENT(DIMN)
-      DOUBLE PRECISION :: FNMD
+      real(c_real) :: TANGENT(DIMN)
+      real(c_real) :: FNMD
 ! local values used spring constants and damping coefficients
-      DOUBLE PRECISION ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
+      real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
 
-      double precision :: MAG_OVERLAP_T
+      real(c_real) :: MAG_OVERLAP_T
 
-      double precision :: line_t
+      real(c_real) :: line_t
 ! flag to tell if the orthogonal projection of sphere center to
 ! extended plane detects an overlap
 
-      DOUBLE PRECISION :: MAX_DISTSQ
+      real(c_real) :: MAX_DISTSQ
       INTEGER :: MAX_NF
-      DOUBLE PRECISION, DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
+      real(c_real), DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
       integer :: i,j,k
 !     Vertex Coordinates X ,Y and Z
-      DOUBLE PRECISION, DIMENSION(3,3,6) :: VERTEX
+      real(c_real), DIMENSION(3,3,6) :: VERTEX
 !     Face normal vector (normalized)
-      DOUBLE PRECISION, DIMENSION(3,6) :: NORM_FACE
+      real(c_real), DIMENSION(3,6) :: NORM_FACE
 
 ! Skip this routine if the system is fully periodic.
       IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
@@ -311,29 +314,29 @@
       IMPLICIT NONE
 
 ! Particle translational velocity
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: DES_VEL_NEW
+      real(c_real), DIMENSION(:,:), INTENT(IN) :: DES_VEL_NEW
 ! Particle rotational velocity
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: OMEGA_NEW
+      real(c_real), DIMENSION(:,:), INTENT(IN) :: OMEGA_NEW
 
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Particle index.
       INTEGER, INTENT(IN) :: LL
 ! Magnitude of the total relative translational velocity.
-      DOUBLE PRECISION, INTENT(OUT):: VRN
+      real(c_real), INTENT(OUT):: VRN
 ! Total relative translational velocity (vector).
-      DOUBLE PRECISION, DIMENSION(DIMN), INTENT(OUT):: VRT
+      real(c_real), DIMENSION(DIMN), INTENT(OUT):: VRT
 ! Unit normal from particle center to closest point on stl (wall)
-      DOUBLE PRECISION, DIMENSION(DIMN), INTENT(IN) :: NORM
+      real(c_real), DIMENSION(DIMN), INTENT(IN) :: NORM
 ! Distance between particle center and stl (wall).
-      DOUBLE PRECISION, INTENT(IN) :: DIST
+      real(c_real), INTENT(IN) :: DIST
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Additional relative translational motion due to rotation
-      DOUBLE PRECISION, DIMENSION(DIMN) :: V_ROT
+      real(c_real), DIMENSION(DIMN) :: V_ROT
 ! Total relative velocity at contact point
-      DOUBLE PRECISION, DIMENSION(DIMN) :: VRELTRANS
+      real(c_real), DIMENSION(DIMN) :: VRELTRANS
 
 ! Total relative velocity + rotational contribution
       V_ROT = DIST*OMEGA_NEW(LL,:)

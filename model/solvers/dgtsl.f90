@@ -1,5 +1,9 @@
 !
       subroutine dgtsl(n, c, d, e, b, info)
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !...Translated by Pacific-Sierra Research VAST-90 2.06G5  15:38:13   1/21/99
 !...Switches:
       implicit none
@@ -7,12 +11,12 @@
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
       integer n, info
-      double precision, dimension(n) :: c, d, e, b
+      real(c_real), dimension(n) :: c, d, e, b
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
       integer :: k, kb, kp1, nm1, nm2
-      double precision :: t,tc,td,te,tb
+      real(c_real) :: t,tc,td,te,tb
 !-----------------------------------------------
 !
 !     dgtsl given a general tridiagonal matrix and a right hand
@@ -23,21 +27,21 @@
 !        n       integer
 !                is the order of the tridiagonal matrix.
 !
-!        c       double precision(n)
+!        c       real(c_real)(n)
 !                is the subdiagonal of the tridiagonal matrix.
 !                c(2) through c(n) should contain the subdiagonal.
 !                on output c is destroyed.
 !
-!        d       double precision(n)
+!        d       real(c_real)(n)
 !                is the diagonal of the tridiagonal matrix.
 !                on output d is destroyed.
 !
-!        e       double precision(n)
+!        e       real(c_real)(n)
 !                is the superdiagonal of the tridiagonal matrix.
 !                e(1) through e(n-1) should contain the superdiagonal.
 !                on output e is destroyed.
 !
-!        b       double precision(n)
+!        b       real(c_real)(n)
 !                is the right hand side vector.
 !
 !     on return

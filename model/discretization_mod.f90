@@ -8,20 +8,24 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      MODULE discretization
-      IMPLICIT NONE
+MODULE discretization
 
-      CONTAINS
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   IMPLICIT NONE
+
+   CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION SUPERBEE (PHI_C)
+      real(c_real) FUNCTION SUPERBEE (PHI_C)
       USE param1, only: one, half, zero
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
-      DOUBLE PRECISION :: TH
+      real(c_real) :: TH
 
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
@@ -38,12 +42,12 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION SMART (PHI_C)
+      real(c_real) FUNCTION SMART (PHI_C)
       USE param1, only: zero, half, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
-      DOUBLE PRECISION :: TH
+      real(c_real) :: TH
 
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
@@ -62,14 +66,14 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION ULTRA_QUICK (PHI_C, CF)
+      real(c_real) FUNCTION ULTRA_QUICK (PHI_C, CF)
       USE param1, only: zero, half, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
-      DOUBLE PRECISION, INTENT(IN) :: CF
+      real(c_real), INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: CF
 
-      DOUBLE PRECISION, PARAMETER :: FIVEOSIX = 5.D0/6.D0
-      DOUBLE PRECISION :: TH, OCF
+      real(c_real), PARAMETER :: FIVEOSIX = 5.D0/6.D0
+      real(c_real) :: TH, OCF
 
       OCF = MAX(ONE,ONE/MAX(1.D-2,CF))
       IF (PHI_C > ONE) THEN
@@ -93,16 +97,16 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION QUICKEST (PHI_C, CF, ODXC, ODXUC, ODXCD)
+      real(c_real) FUNCTION QUICKEST (PHI_C, CF, ODXC, ODXUC, ODXCD)
       USE param1, only: zero, half, one, small_number
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
-      DOUBLE PRECISION, INTENT(IN) :: CF
-      DOUBLE PRECISION, INTENT(IN) :: ODXC
-      DOUBLE PRECISION, INTENT(IN) :: ODXUC
-      DOUBLE PRECISION, INTENT(IN) :: ODXCD
+      real(c_real), INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: CF
+      real(c_real), INTENT(IN) :: ODXC
+      real(c_real), INTENT(IN) :: ODXUC
+      real(c_real), INTENT(IN) :: ODXCD
 
-      DOUBLE PRECISION :: FCF, TH
+      real(c_real) :: FCF, TH
 
       IF (PHI_C>ZERO .AND. PHI_C<ONE) THEN       !monotonic region
          FCF = -(ONE - CF*CF)/3.D0
@@ -120,12 +124,12 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION MUSCL (PHI_C)
+      real(c_real) FUNCTION MUSCL (PHI_C)
       USE param1, only: zero, half, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
-      DOUBLE PRECISION :: TH
+      real(c_real) :: TH
 
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
@@ -142,10 +146,10 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION VANLEER (PHI_C)
+      real(c_real) FUNCTION VANLEER (PHI_C)
       USE param1, only: zero, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
       IF (PHI_C>=ZERO .AND. PHI_C<=ONE) THEN     !monotonic region
          VANLEER = PHI_C
@@ -159,10 +163,10 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION MINMOD (PHI_C)
+      real(c_real) FUNCTION MINMOD (PHI_C)
       USE param1, only: zero, half, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
       IF (PHI_C>=ZERO .AND. PHI_C<=ONE) THEN     !monotonic region
          IF (PHI_C >= HALF) THEN                 !central differencing
@@ -183,10 +187,10 @@
 ! Central scheme.                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION CENTRAL_SCHEME (PHI_C)
+      real(c_real) FUNCTION CENTRAL_SCHEME (PHI_C)
       USE param1, only: half
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
       CENTRAL_SCHEME = HALF
       RETURN
@@ -196,12 +200,12 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION UMIST (PHI_C)
+      real(c_real) FUNCTION UMIST (PHI_C)
       USE param1, only: zero, half, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_C
 
-      DOUBLE PRECISION :: TH
+      real(c_real) :: TH
 
       IF (PHI_C>=ZERO .AND. PHI_C<ONE) THEN      !monotonic region
          TH = PHI_C/(ONE - PHI_C)
@@ -218,11 +222,11 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION XSI (V, DWF)
+      real(c_real) FUNCTION XSI (V, DWF)
       USE param1, only: zero, one
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: V
-      DOUBLE PRECISION, INTENT(IN) :: DWF
+      real(c_real), INTENT(IN) :: V
+      real(c_real), INTENT(IN) :: DWF
 
       IF (V >= ZERO) THEN
          XSI = DWF
@@ -236,15 +240,15 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      DOUBLE PRECISION FUNCTION PHI_C_OF (PHI_U, PHI_C, PHI_D)
+      real(c_real) FUNCTION PHI_C_OF (PHI_U, PHI_C, PHI_D)
       USE param1, only: zero
       USE toleranc, only: compare
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: PHI_U
-      DOUBLE PRECISION, INTENT(IN) :: PHI_C
-      DOUBLE PRECISION, INTENT(IN) :: PHI_D
+      real(c_real), INTENT(IN) :: PHI_U
+      real(c_real), INTENT(IN) :: PHI_C
+      real(c_real), INTENT(IN) :: PHI_D
 
-      DOUBLE PRECISION :: DEN
+      real(c_real) :: DEN
 
       IF (COMPARE(PHI_D,PHI_U)) THEN
          PHI_C_OF = ZERO

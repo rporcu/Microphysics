@@ -1,4 +1,8 @@
 MODULE WRITE_OUT0_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -48,7 +52,7 @@ MODULE WRITE_OUT0_MODULE
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: time, dt
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -61,10 +65,9 @@ MODULE WRITE_OUT0_MODULE
       INTEGER :: L, M, N
 
       INTEGER :: MMAX_TOT
-      DOUBLE PRECISION :: TMP_DP
+      real(c_real) :: TMP_DP
 
-
-      DOUBLE PRECISION, DIMENSION(6) :: LOC
+      real(c_real), DIMENSION(6) :: LOC
 
 ! Coefficient of restitution (old symbol)
       CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
@@ -591,7 +594,7 @@ MODULE WRITE_OUT0_MODULE
 ! Index for which the location is required
       INTEGER :: L2
 ! Cell sizes (DX, DY, or DZ)
-      DOUBLE PRECISION :: DX
+      real(c_real) :: DX
 !
 !-----------------------------------------------
 !

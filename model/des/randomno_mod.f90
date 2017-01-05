@@ -9,11 +9,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
     MODULE randomno
 
+    use bl_fort_module, only : c_real
+    use iso_c_binding , only: c_int
+
     IMPLICIT NONE
 
     PRIVATE
     PUBLIC :: uni_rno, nor_rno
-
 
     CONTAINS
 
@@ -26,8 +28,8 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      double precision, intent(out), dimension(:) :: y
-      double precision rmean, variance, sigma
+      real(c_real), intent(out), dimension(:) :: y
+      real(c_real) rmean, variance, sigma
       integer i, nsize
 !-----------------------------------------------
 
@@ -68,11 +70,11 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      double precision, intent(out), dimension(:) :: y
-      double precision mean, sigma
+      real(c_real), intent(out), dimension(:) :: y
+      real(c_real) mean, sigma
 
-      double precision lmean, lvariance, lsigma
-      double precision x(2), w
+      real(c_real) lmean, lvariance, lsigma
+      real(c_real) x(2), w
       integer i, nsize, n
 ! no. of times this routine has been called
       integer, save :: COUNTER = 0

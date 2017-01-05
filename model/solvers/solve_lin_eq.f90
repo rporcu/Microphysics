@@ -22,7 +22,8 @@ MODULE SOLVE_LIN_EQ_MODULE
          use compar, only: jstart3, jend3
          use compar, only: kstart3, kend3
          USE leqsol  , only: leq_it, leq_sweep, leq_tol, leq_pc
-         use iso_c_binding, only: c_double, c_int
+         use bl_fort_module, only : c_real
+         use iso_c_binding , only: c_int
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -35,13 +36,13 @@ MODULE SOLVE_LIN_EQ_MODULE
 !     5 = gas w-momentum
       integer(c_int), intent(in   ) :: vno
 ! variable
-      real(c_double), intent(inout) :: var&
+      real(c_real), intent(inout) :: var&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! septadiagonal matrix a_m
-      real(c_double), intent(inout) :: a_m&
+      real(c_real), intent(inout) :: a_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! vector b_m
-      real(c_double), intent(inout) :: b_m&
+      real(c_real), intent(inout) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------

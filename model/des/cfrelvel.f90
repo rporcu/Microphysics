@@ -1,4 +1,8 @@
 MODULE CFRELVEL_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
@@ -25,8 +29,8 @@ MODULE CFRELVEL_MODULE
       USE discretelement, only: DES_CROSSPRDCT
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, omega_new
+      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
+      real(c_real), DIMENSION(:,:), INTENT(IN) :: des_vel_new, omega_new
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -34,23 +38,23 @@ MODULE CFRELVEL_MODULE
 ! indices of particle-particle contact pair
       INTEGER, INTENT(IN) :: L, II
 ! distance between particle centers
-      DOUBLE PRECISION, INTENT(IN) :: DIST_LI
+      real(c_real), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from
 ! particle L to particle II
-      DOUBLE PRECISION, INTENT(IN) :: NORM(3)
+      real(c_real), INTENT(IN) :: NORM(3)
 ! slip velocity at point of contact
-      DOUBLE PRECISION, INTENT(OUT) :: VSLIP(3)
+      real(c_real), INTENT(OUT) :: VSLIP(3)
 ! normal component of relative contact velocity (scalar)
-      DOUBLE PRECISION, INTENT(OUT) :: VRN
+      real(c_real), INTENT(OUT) :: VRN
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! translational relative velocity
-      DOUBLE PRECISION :: VRELTRANS(3)
+      real(c_real) :: VRELTRANS(3)
 ! rotational velocity at point of contact
-      DOUBLE PRECISION :: V_ROT(3), OMEGA_SUM(3)
+      real(c_real) :: V_ROT(3), OMEGA_SUM(3)
 ! distance from the contact point to the particle centers
-      DOUBLE PRECISION :: DIST_CL, DIST_CI
+      real(c_real) :: DIST_CL, DIST_CI
 !-----------------------------------------------
 
 ! translational relative velocity

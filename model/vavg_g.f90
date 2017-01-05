@@ -1,5 +1,9 @@
 MODULE VAVG_MOD
-CONTAINS
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: VAVG_g                                                 C
@@ -22,7 +26,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      DOUBLE PRECISION FUNCTION VAVG_G (vel_g, ep_g, vol, flag)
+      real(c_real) FUNCTION VAVG_G (vel_g, ep_g, vol, flag)
 
 !-----------------------------------------------
 !   M o d u l e s
@@ -33,26 +37,26 @@ CONTAINS
       IMPLICIT NONE
 
       ! Cell volume
-      DOUBLE PRECISION, INTENT(IN   ) :: VOL
+      real(c_real), INTENT(IN   ) :: VOL
 
       ! component of gas velocity
-      DOUBLE PRECISION, INTENT(IN   ) :: vel_g&
+      real(c_real), INTENT(IN   ) :: vel_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
 !     Integral of U_g*EP_g for entire volume
-      DOUBLE PRECISION :: sum_g
+      real(c_real) :: sum_g
 
 !                      Indices
       INTEGER :: I,J,K
 
 !                      Total volume of computational cells
-      DOUBLE PRECISION SUM_VOL
+      real(c_real) SUM_VOL
 
 !  Integrate the velocity values for the whole domain,
 !
@@ -79,7 +83,7 @@ CONTAINS
       RETURN
       END FUNCTION VAVG_G
 
-      DOUBLE PRECISION FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE, flag)
+      real(c_real) FUNCTION VAVG_FLUX_G (FLUX_G, A_FACE, flag)
 
       USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE param1, only: zero
@@ -87,20 +91,20 @@ CONTAINS
       IMPLICIT NONE
 
 ! face area - scalar cell
-      DOUBLE PRECISION, INTENT(IN) :: A_FACE
+      real(c_real), INTENT(IN) :: A_FACE
 
 ! gas mass flux
-      DOUBLE PRECISION, DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
+      real(c_real), DIMENSION(:,:,:), INTENT(IN) ::  Flux_g
       integer, intent(in   ) :: flag &
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
       INTEGER :: I,J,K
 
 ! Integral of U_g*ROP_g*Area
-      DOUBLE PRECISION :: SUM_G
+      real(c_real) :: SUM_G
 
 !  Total volume of computational cells
-      DOUBLE PRECISION :: SUM_AREA
+      real(c_real) :: SUM_AREA
 
 !  Integrate the velocity values for the whole domain,
 

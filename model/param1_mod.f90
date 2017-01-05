@@ -1,5 +1,8 @@
       MODULE param1
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 ! Maximum number of cell classes
       INTEGER, PARAMETER :: MAX_CLASS = 1000000
 ! Maximum number of corner cells
@@ -11,18 +14,18 @@
       INTEGER :: DIMENSION_N_all
 
 ! Parameters for testing if user input was specifed.
-      DOUBLE PRECISION, PARAMETER :: UNDEFINED = 9.87654321D31
+      real(c_real), PARAMETER :: UNDEFINED = 9.87654321D31
       INTEGER, PARAMETER :: UNDEFINED_I = 987654321
       CHARACTER, PARAMETER :: UNDEFINED_C = ' '
 
 ! Cutoffs for large and small numbers
-      DOUBLE PRECISION, PARAMETER :: LARGE_NUMBER = 1.0D32
-      DOUBLE PRECISION, PARAMETER :: SMALL_NUMBER = 1.0D-15
+      real(c_real), PARAMETER :: LARGE_NUMBER = 1.0D32
+      real(c_real), PARAMETER :: SMALL_NUMBER = 1.0D-15
 
 ! ZERO, HALF, ONE
-      DOUBLE PRECISION, PARAMETER :: ZERO = 0.0d0
-      DOUBLE PRECISION, PARAMETER :: HALF = 0.5d0
-      DOUBLE PRECISION, PARAMETER :: ONE  = 1.0d0
+      real(c_real), PARAMETER :: ZERO = 0.0d0
+      real(c_real), PARAMETER :: HALF = 0.5d0
+      real(c_real), PARAMETER :: ONE  = 1.0d0
 
       interface is_defined
          module procedure is_defined_db
@@ -37,7 +40,7 @@
    CONTAINS
 
       PURE LOGICAL FUNCTION IS_DEFINED_DB(x)
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(c_real), INTENT(IN) :: x
          IS_DEFINED_DB = (x /= UNDEFINED)
       END FUNCTION IS_DEFINED_DB
 
@@ -47,7 +50,7 @@
       END FUNCTION IS_DEFINED_I
 
       PURE LOGICAL FUNCTION IS_UNDEFINED_DB(x)
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(c_real), INTENT(IN) :: x
          IS_UNDEFINED_DB = (x == UNDEFINED)
       END FUNCTION IS_UNDEFINED_DB
 

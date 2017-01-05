@@ -50,7 +50,7 @@ contains
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables .....................................................//
-      double precision, parameter :: f2o3 = 2.d0/3.d0
+      real(c_real), parameter :: f2o3 = 2.d0/3.d0
 
 !-----------------------------------------------------------------------!
 
@@ -101,15 +101,15 @@ contains
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
 
-      double precision, intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(inout) ::  p_g&
+      real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(inout) ::  u_g&
+      real(c_real), intent(inout) ::  u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(inout) ::  v_g&
+      real(c_real), intent(inout) ::  v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(inout) ::  w_g&
+      real(c_real), intent(inout) ::  w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer, intent(in) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -122,7 +122,7 @@ contains
 ! local index for initial condition
       integer :: l
 ! Temporary variables for storing IC values
-      double precision :: epgx, pgx, ugx, vgx, wgx
+      real(c_real) :: epgx, pgx, ugx, vgx, wgx
 !-----------------------------------------------
 
 !  Set the initial conditions.
@@ -207,15 +207,15 @@ contains
 ! Local loop counter
       INTEGER :: L
 ! Gas pressure at the axial location j
-      DOUBLE PRECISION :: PJ
+      real(c_real) :: PJ
 ! Bed weight per unit area
-      DOUBLE PRECISION :: BED_WEIGHT
+      real(c_real) :: BED_WEIGHT
 ! Total area of a x-z plane
-      DOUBLE PRECISION :: AREA
+      real(c_real) :: AREA
 ! x-z plane area of one cell
-      DOUBLE PRECISION :: dAREA
+      real(c_real) :: dAREA
 ! Average pressure drop per unit length
-      DOUBLE PRECISION :: DPoDX, DPoDY, DPoDZ
+      real(c_real) :: DPoDX, DPoDY, DPoDZ
 !-----------------------------------------------
 
 ! If any initial pressures are unspecified skip next section

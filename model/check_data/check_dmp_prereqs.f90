@@ -1,4 +1,8 @@
 MODULE CHECK_DMP_PREREQS_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

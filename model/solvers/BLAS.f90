@@ -578,11 +578,11 @@
 !       SUBROUTINE DAXPY(N,DA,DX,INCX,DY,INCY)
 !
 !       .. Scalar Arguments ..
-!       DOUBLE PRECISION DA
+!       real(c_real) :: DA
 !       INTEGER INCX,INCY,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
+!       real(c_real) :: DX(*),DY(*)
 !       ..
 !
 !
@@ -624,12 +624,15 @@
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
-      DOUBLE PRECISION DA
+      real(c_real) :: DA
       INTEGER INCX,INCY,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
+      real(c_real) :: DX(*),DY(*)
 !     ..
 !
 !  =====================================================================
@@ -696,7 +699,7 @@
 !       INTEGER INCX,INCY,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
+!       real(c_real) :: DX(*),DY(*)
 !       ..
 !
 !
@@ -738,11 +741,14 @@
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
       INTEGER INCX,INCY,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
+      real(c_real) :: DX(*),DY(*)
 !     ..
 !
 !  =====================================================================
@@ -808,11 +814,11 @@
 !       SUBROUTINE DROT(N,DX,INCX,DY,INCY,C,S)
 !
 !       .. Scalar Arguments ..
-!       DOUBLE PRECISION C,S
+!       real(c_real) :: C,S
 !       INTEGER INCX,INCY,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
+!       real(c_real) :: DX(*),DY(*)
 !       ..
 !
 !
@@ -852,19 +858,22 @@
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 !
 !     .. Scalar Arguments ..
-      DOUBLE PRECISION C,S
+      real(c_real) :: C,S
       INTEGER INCX,INCY,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
+      real(c_real) :: DX(*),DY(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DTEMP
+      real(c_real) :: DTEMP
       INTEGER I,IX,IY
 !     ..
       IF (N.LE.0) RETURN
@@ -909,7 +918,7 @@
 !       SUBROUTINE DROTG(DA,DB,C,S)
 !
 !       .. Scalar Arguments ..
-!       DOUBLE PRECISION C,DA,DB,S
+!       real(c_real) :: C,DA,DB,S
 !       ..
 !
 !
@@ -949,14 +958,17 @@
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
-      DOUBLE PRECISION C,DA,DB,S
+      real(c_real) :: C,DA,DB,S
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION R,ROE,SCALE,Z
+      real(c_real) :: R,ROE,SCALE,Z
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC DABS,DSIGN,DSQRT
@@ -995,11 +1007,11 @@
 !       SUBROUTINE DSCAL(N,DA,DX,INCX)
 !
 !       .. Scalar Arguments ..
-!       DOUBLE PRECISION DA
+!       real(c_real) :: DA
 !       INTEGER INCX,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*)
+!       real(c_real) :: DX(*)
 !       ..
 !
 !
@@ -1042,12 +1054,15 @@
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
-      DOUBLE PRECISION DA
+      real(c_real) :: DA
       INTEGER INCX,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*)
+      real(c_real) :: DX(*)
 !     ..
 !
 !  =====================================================================
@@ -1108,7 +1123,7 @@
 !       INTEGER INCX,INCY,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
+!       real(c_real) :: DX(*),DY(*)
 !       ..
 !
 !
@@ -1150,17 +1165,20 @@
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
       INTEGER INCX,INCY,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
+      real(c_real) :: DX(*),DY(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DTEMP
+      real(c_real) :: DTEMP
       INTEGER I,IX,IY,M,MP1
 !     ..
 !     .. Intrinsic Functions ..
@@ -2073,13 +2091,13 @@
 !  Definition:
 !  ===========
 !
-!       DOUBLE PRECISION FUNCTION DASUM(N,DX,INCX)
+!       real(c_real) FUNCTION DASUM(N,DX,INCX)
 !
 !       .. Scalar Arguments ..
 !       INTEGER INCX,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*)
+!       real(c_real) :: DX(*)
 !       ..
 !
 !
@@ -2114,24 +2132,27 @@
 !> \endverbatim
 !>
 !  =====================================================================
-      DOUBLE PRECISION FUNCTION DASUM(N,DX,INCX)
+      real(c_real) FUNCTION DASUM(N,DX,INCX)
 !
 !  -- Reference BLAS level1 routine (version 3.4.0) --
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
 !
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !     .. Scalar Arguments ..
       INTEGER INCX,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*)
+      real(c_real) :: DX(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DTEMP
+      real(c_real) :: DTEMP
       INTEGER I,M,MP1,NINCX
 !     ..
 !     .. Intrinsic Functions ..
@@ -2184,13 +2205,13 @@
 !  Definition:
 !  ===========
 !
-!       DOUBLE PRECISION FUNCTION DDOT(N,DX,INCX,DY,INCY)
+!       real(c_real) FUNCTION DDOT(N,DX,INCX,DY,INCY)
 !
 !       .. Scalar Arguments ..
 !       INTEGER INCX,INCY,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
+!       real(c_real) :: DX(*),DY(*)
 !       ..
 !
 !
@@ -2225,24 +2246,27 @@
 !> \endverbatim
 !>
 !  =====================================================================
-      DOUBLE PRECISION FUNCTION DDOT(N,DX,INCX,DY,INCY)
+      real(c_real) FUNCTION DDOT(N,DX,INCX,DY,INCY)
 !
 !  -- Reference BLAS level1 routine (version 3.4.0) --
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 !
 !     .. Scalar Arguments ..
       INTEGER INCX,INCY,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
+      real(c_real) :: DX(*),DY(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DTEMP
+      real(c_real) :: DTEMP
       INTEGER I,IX,IY,M,MP1
 !     ..
 !     .. Intrinsic Functions ..
@@ -2301,13 +2325,13 @@
 !  Definition:
 !  ===========
 !
-!       DOUBLE PRECISION FUNCTION DNRM2(N,X,INCX)
+!       real(c_real) FUNCTION DNRM2(N,X,INCX)
 !
 !       .. Scalar Arguments ..
 !       INTEGER INCX,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION X(*)
+!       real(c_real) :: X(*)
 !       ..
 !
 !
@@ -2345,28 +2369,31 @@
 !> \endverbatim
 !>
 !  =====================================================================
-      DOUBLE PRECISION FUNCTION DNRM2(N,X,INCX)
+      real(c_real) FUNCTION DNRM2(N,X,INCX)
 !
 !  -- Reference BLAS level1 routine (version 3.4.0) --
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 !
 !     .. Scalar Arguments ..
       INTEGER INCX,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION X(*)
+      real(c_real) :: X(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Parameters ..
-      DOUBLE PRECISION ONE,ZERO
+      real(c_real) :: ONE,ZERO
       PARAMETER (ONE=1.0D+0,ZERO=0.0D+0)
 !     ..
 !     .. Local Scalars ..
-      DOUBLE PRECISION ABSXI,NORM,SCALE,SSQ
+      real(c_real) :: ABSXI,NORM,SCALE,SSQ
       INTEGER IX
 !     ..
 !     .. Intrinsic Functions ..
@@ -2526,7 +2553,7 @@
 !       INTEGER INCX,N
 !       ..
 !       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*)
+!       real(c_real) :: DX(*)
 !       ..
 !
 !
@@ -2567,18 +2594,21 @@
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 !
 !     .. Scalar Arguments ..
       INTEGER INCX,N
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION DX(*)
+      real(c_real) :: DX(*)
 !     ..
 !
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DMAX
+      real(c_real) :: DMAX
       INTEGER I,IX
 !     ..
 !     .. Intrinsic Functions ..
@@ -3134,7 +3164,7 @@
 !    =====================================================================
 !
 !       .. Local Scalars ..
-!       DOUBLE PRECISION DSDOT
+!       real(c_real) :: DSDOT
 !       INTEGER I,KX,KY,NS
 !       ..
 !       .. Intrinsic Functions ..
@@ -3196,6 +3226,9 @@
 !  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 !  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 !     November 2011
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 !
 !     .. Scalar Arguments ..
       REAL SB
@@ -3269,7 +3302,7 @@
 !  =====================================================================
 !
 !     .. Local Scalars ..
-      DOUBLE PRECISION DSDOT
+      real(c_real) :: DSDOT
       INTEGER I,KX,KY,NS
 !     ..
 !     .. Intrinsic Functions ..

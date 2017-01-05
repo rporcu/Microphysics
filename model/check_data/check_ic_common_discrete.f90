@@ -1,4 +1,8 @@
 MODULE CHECK_IC_COMMON_DISCRETE_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -41,8 +45,8 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
       INTEGER :: COUNT_IC, COUNT_IC_WITH_SOLS
       INTEGER :: FIRST_DEF_IC
 
-      DOUBLE PRECISION :: IC_ORIG(3), IC_END(3), IC2_ORIG(3) , IC2_END(3)
-      DOUBLE PRECISION :: IC_MIN, IC_MAX, IC2_MIN, IC2_MAX , TOL_IC_REG
+      real(c_real) :: IC_ORIG(3), IC_END(3), IC2_ORIG(3) , IC2_END(3)
+      real(c_real) :: IC_MIN, IC_MAX, IC2_MIN, IC2_MAX , TOL_IC_REG
 
       LOGICAL :: SEP_AXIS, first_ic_ok
 

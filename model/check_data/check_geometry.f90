@@ -1,5 +1,8 @@
 MODULE CHECK_GEOMETRY_MODULE
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    USE check_axis_module, only: check_axis
 
    CONTAINS

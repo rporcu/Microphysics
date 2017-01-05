@@ -119,8 +119,8 @@ MODULE SET_BC0_MODULE
 
       implicit none
 
-      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Dummy arguments
 !--------------------------------------------------------------------//
@@ -188,11 +188,11 @@ MODULE SET_BC0_MODULE
 ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
 
-      double precision, intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -266,7 +266,7 @@ MODULE SET_BC0_MODULE
       implicit none
 
       ! Specified constant gas density.
-      double precision, intent(in) :: ro_g0
+      real(c_real), intent(in) :: ro_g0
       integer         , intent(in) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 !--------------------------------------------------------------------//
       INTEGER :: BCV

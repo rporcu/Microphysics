@@ -1,6 +1,9 @@
 module conv_pp_g_module
 
-  contains
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -50,14 +53,14 @@ module conv_pp_g_module
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_ge&
+      real(c_real), INTENT(IN   ) :: rop_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_gn&
+      real(c_real), INTENT(IN   ) :: rop_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_gt&
+      real(c_real), INTENT(IN   ) :: rop_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -67,7 +70,7 @@ module conv_pp_g_module
 ! Indices
       integer ::  i,j,k
 ! local value of A_m
-      DOUBLE PRECISION :: am
+      real(c_real) :: am
 !-----------------------------------------------
 
 ! Calculate convection fluxes through each of the faces

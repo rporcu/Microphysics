@@ -1,4 +1,8 @@
 MODULE WRITE_OUT3_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -15,14 +19,13 @@ MODULE WRITE_OUT3_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(INOUT) :: CPU
-      DOUBLE PRECISION, INTENT(INOUT) :: WALL
-      DOUBLE PRECISION, INTENT(INOUT) :: IO
+      real(c_real), INTENT(INOUT) :: CPU
+      real(c_real), INTENT(INOUT) :: WALL
+      real(c_real), INTENT(INOUT) :: IO
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
 !-----------------------------------------------
 !-----------------------------------------------
-
 
       CHARACTER(len=4) :: UNIT_CPU
       CHARACTER(len=4) :: UNIT_WALL

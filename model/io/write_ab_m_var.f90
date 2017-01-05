@@ -21,6 +21,9 @@
          USE geometry, only: imax2, jmax2, kmax2
          USE funits, only: dmp_log, unit_log
 
+         use bl_fort_module, only : c_real
+         use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
@@ -33,15 +36,15 @@
       INTEGER          L
 !
 !                      Septadiagonal matrix A_m
-      DOUBLE PRECISION :: A_m&
+      real(c_real) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 !
 !                      Source vector
-      DOUBLE PRECISION :: b_m&
+      real(c_real) :: b_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !                      Source vector
-      DOUBLE PRECISION var&
+      real(c_real) var&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------

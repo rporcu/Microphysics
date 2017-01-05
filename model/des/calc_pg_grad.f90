@@ -1,4 +1,8 @@
 MODULE CALC_PG_GRAD_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -43,24 +47,24 @@ MODULE CALC_PG_GRAD_MODULE
 
       implicit none
 
-      double precision, intent(in   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: gradpg&
+      real(c_real), intent(out  ) :: gradpg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_pos_new(:,:)
-      double precision, intent(inout) :: drag_fc(:,:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(inout) :: drag_fc(:,:)
       integer         , intent(in   ) :: particle_state(:)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
 ! mean pressure gradient for the case of periodic boundaries
-      DOUBLE PRECISION :: cPG(3)
+      real(c_real) :: cPG(3)
 ! One over cell volume
-      double precision :: Oodx, Oody, Oodz
+      real(c_real) :: Oodx, Oody, Oodz
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)

@@ -1,5 +1,8 @@
 MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    use check_bc_dem_module, only: check_bc_dem
    use check_bc_inflow_module, only: check_bc_inflow, check_bc_mass_inflow, check_bc_p_inflow
    use check_bc_outflow_module, only: check_bc_outflow, check_bc_mass_outflow, check_bc_p_outflow

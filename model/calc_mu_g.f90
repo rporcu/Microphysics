@@ -1,5 +1,9 @@
 module calc_mu_g_module
-contains
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: calc_mu_g                                               !
@@ -19,9 +23,9 @@ contains
       implicit none
 
 ! Dummy arguments .....................................................//
-      double precision, intent(  out) :: lambda_g&
+      real(c_real), intent(  out) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(  out) :: mu_g&
+      real(c_real), intent(  out) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       integer         , intent(in   ) :: flag&
@@ -29,7 +33,7 @@ contains
 
 ! Local variables .....................................................//
       integer :: i,j,k
-      double precision, parameter :: f2o3 = 2.d0/3.d0
+      real(c_real), parameter :: f2o3 = 2.d0/3.d0
 
 !-----------------------------------------------------------------------!
 

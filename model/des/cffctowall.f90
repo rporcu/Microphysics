@@ -1,4 +1,8 @@
 MODULE CFFCTOWALL_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
@@ -22,22 +26,22 @@ MODULE CFFCTOWALL_MODULE
 ! particle index
       INTEGER, INTENT(IN) :: L
 ! distance between particle center and wall
-      DOUBLE PRECISION, INTENT(IN) :: DIST_LI
+      real(c_real), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from
 ! particle L to wall
-      DOUBLE PRECISION, INTENT(IN) :: NORM(3)
+      real(c_real), INTENT(IN) :: NORM(3)
 ! normal and tangential force
-      DOUBLE PRECISION, INTENT(IN) :: FN(3), FT(3)
+      real(c_real), INTENT(IN) :: FN(3), FT(3)
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: DES_RADIUS
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(INOUT) :: FC, TOW
+      real(c_real), DIMENSION(:), INTENT(IN) :: DES_RADIUS
+      real(c_real), DIMENSION(:,:), INTENT(INOUT) :: FC, TOW
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! local variable for calculating torque on particle
-      DOUBLE PRECISION :: CROSSP(3)
+      real(c_real) :: CROSSP(3)
 ! distance from the contact point to the particle center
-      DOUBLE PRECISION DIST_CL
+      real(c_real) DIST_CL
 !------------------------------------------------
 
 ! total contact force

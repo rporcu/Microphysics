@@ -13,6 +13,9 @@
 
       MODULE DES_BC
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       USE param, only: dimension_bc
 
       INTEGER :: DEM_BCMI
@@ -33,7 +36,7 @@
 
 ! Particle injection time scale; used when pi_factor > 1 to keep track
 ! of time needed for next injection
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DEM_MI_TIME
+      real(c_real), DIMENSION(:), ALLOCATABLE :: DEM_MI_TIME
 
 ! Particle injection factor; how many solid time steps (dtsolid) pass
 ! before the next injection of a particle. if pi_count is greater than
@@ -62,16 +65,16 @@
 ! Flag for polydisperse inlets.
          LOGICAL :: POLYDISPERSE
 ! Uniform grid dimension (width and height).
-         DOUBLE PRECISION :: WINDOW
+         real(c_real) :: WINDOW
 ! Offset for placing particles in ghost cell.
-         DOUBLE PRECISION :: OFFSET
+         real(c_real) :: OFFSET
 ! Fluid cell index associated with each grid. (I/J/K like)
          INTEGER :: L
          INTEGER, ALLOCATABLE :: W(:)
          INTEGER, ALLOCATABLE :: H(:)
 ! Spatial location of each grid cell's lower, bottom corder.
-         DOUBLE PRECISION, ALLOCATABLE :: P(:)
-         DOUBLE PRECISION, ALLOCATABLE :: Q(:)
+         real(c_real), ALLOCATABLE :: P(:)
+         real(c_real), ALLOCATABLE :: Q(:)
 ! The rank of the owning process owning the indexed grid cell.
          INTEGER, ALLOCATABLE :: OWNER(:)
       END TYPE DEM_MI_

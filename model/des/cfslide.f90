@@ -1,4 +1,8 @@
 MODULE CFSLIDE_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !
@@ -21,20 +25,20 @@ MODULE CFSLIDE_MODULE
 ! Dummy arguments
 !-----------------------------------------------
 ! tangent to the plane of contact
-      DOUBLE PRECISION, INTENT(IN) :: V_TANG(3)
+      real(c_real), INTENT(IN) :: V_TANG(3)
 ! logic set to T when a sliding contact occurs
       LOGICAL, INTENT(OUT) :: PARTICLE_SLIDE
 ! Coefficient of friction
-      DOUBLE PRECISION, INTENT(IN) :: MU
+      real(c_real), INTENT(IN) :: MU
 ! normal force
-      DOUBLE PRECISION, DIMENSION(3), INTENT(IN) :: FN_tmp
+      real(c_real), DIMENSION(3), INTENT(IN) :: FN_tmp
 ! tangential force
-      DOUBLE PRECISION, DIMENSION(3), INTENT(INOUT) :: FT_tmp
+      real(c_real), DIMENSION(3), INTENT(INOUT) :: FT_tmp
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! squared magnitude of tangential and normal forces
-      DOUBLE PRECISION FTMD, FNMD
+      real(c_real) FTMD, FNMD
 !-----------------------------------------------
 
       FTMD = dot_product(FT_tmp(:),FT_tmp(:))

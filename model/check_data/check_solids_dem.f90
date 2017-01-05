@@ -1,7 +1,11 @@
 MODULE CHECK_DES_SOLIDS_MODULE
 
-! Parameter constants
-      USE param1, only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   ! Parameter constants
+   use param1, only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -167,11 +171,11 @@ MODULE CHECK_DES_SOLIDS_MODULE
 ! Flag to warn user.
       LOGICAL :: FLAG_WARN
 ! Collision length scale.
-      DOUBLE PRECISION :: TCOLL, TCOLL_TMP
+      real(c_real) :: TCOLL, TCOLL_TMP
 ! Collision length scale.
-      DOUBLE PRECISION :: MASS_M, MASS_L, MASS_EFF
+      real(c_real) :: MASS_M, MASS_L, MASS_EFF
 ! Alias for coefficient restitution
-      DOUBLE PRECISION :: EN
+      real(c_real) :: EN
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_DEM_COLL_LSD")
@@ -413,15 +417,15 @@ MODULE CHECK_DES_SOLIDS_MODULE
 ! Message for formatted output.
       CHARACTER(len=64) :: MSG
 ! Collision length scale.
-      DOUBLE PRECISION :: TCOLL, TCOLL_TMP
+      real(c_real) :: TCOLL, TCOLL_TMP
 ! Particle and effective mass.
-      DOUBLE PRECISION :: MASS_M, MASS_L, MASS_EFF
+      real(c_real) :: MASS_M, MASS_L, MASS_EFF
 ! Effective physical quantities. Radius, Youngs, Shear
-      DOUBLE PRECISION :: R_EFF, E_EFF, G_MOD_EFF, RED_MASS_EFF
+      real(c_real) :: R_EFF, E_EFF, G_MOD_EFF, RED_MASS_EFF
 ! Alias for coefficient restitution
-      DOUBLE PRECISION :: EN, ET
+      real(c_real) :: EN, ET
 ! Shear modules for particles and wall
-      DOUBLE PRECISION :: G_MOD(DIM_M), G_MOD_WALL
+      real(c_real) :: G_MOD(DIM_M), G_MOD_WALL
 
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("CHECK_SOLIDS_DEM_COLL_HERTZ")

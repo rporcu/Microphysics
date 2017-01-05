@@ -1,4 +1,8 @@
 MODULE WRITE_DES_DATA_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -19,8 +23,8 @@ MODULE WRITE_DES_DATA_MODULE
 
          IMPLICIT NONE
 
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-         DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+         real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
+         real(c_real), DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
 
          CALL WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
 
@@ -45,10 +49,10 @@ MODULE WRITE_DES_DATA_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
+      real(c_real), DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
 
-      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DES_DIAMETER !(PARTICLES)
+      real(c_real), DIMENSION(:), ALLOCATABLE :: DES_DIAMETER !(PARTICLES)
       CHARACTER(len=10) :: lNoP
       CHARACTER(len=24) :: sTIMEc
 

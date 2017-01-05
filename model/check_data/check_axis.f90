@@ -1,4 +1,8 @@
 MODULE CHECK_AXIS_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -23,7 +27,7 @@ MODULE CHECK_AXIS_MODULE
 ! maximum number of cells along axis based on domain decomposition
       INTEGER, INTENT(IN) :: DIMEN
 ! axis length (XLENGTH, YLENGTH, ZLENGTH)
-      DOUBLE PRECISION, INTENT(INOUT) :: ALENGTH
+      real(c_real), INTENT(INOUT) :: ALENGTH
 ! axis checked ('X','Y','Z')
       CHARACTER, INTENT(IN) :: AXIS
 ! index associated with AXIS ('I','J','K')
@@ -35,19 +39,19 @@ MODULE CHECK_AXIS_MODULE
 ! as the first element.  An error check has been added to ensure that
 ! DX, DY and DZ definitions in mfix.dat starts with the zeroth
 ! element; i.e. DA(1).
-      DOUBLE PRECISION, INTENT(OUT) :: DA
+      real(c_real), INTENT(OUT) :: DA
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
 ! percent error allowed in axis length checks
-      DOUBLE PRECISION, PARAMETER :: PERCENT_ERROR = 1.0
+      real(c_real), PARAMETER :: PERCENT_ERROR = 1.0
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! loop counter
       INTEGER :: LC
 ! temporary storage
-      DOUBLE PRECISION :: lSUM, lERR
+      real(c_real) :: lSUM, lERR
 !-----------------------------------------------
 
 

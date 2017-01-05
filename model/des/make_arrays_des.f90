@@ -14,6 +14,9 @@
       use read_par_input_module, only: read_par_input
       use error_manager, only: init_err_msg, flush_err_msg
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 ! Global data .......................................................//
       use discretelement, only: particles, max_pip
       use discretelement, only: vtp_findex
@@ -27,25 +30,24 @@
 
       use run, only: run_type
       use set_phase_index_module, only: set_phase_index
-      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      real(c_double), intent(  out) :: pvol(max_pip)
-      real(c_double), intent(  out) :: pmass(max_pip)
-      real(c_double), intent(  out) :: des_radius(max_pip)
-      real(c_double), intent(  out) :: ro_sol(max_pip)
-      real(c_double), intent(  out) :: omoi(max_pip)
+      real(c_real), intent(  out) :: pvol(max_pip)
+      real(c_real), intent(  out) :: pmass(max_pip)
+      real(c_real), intent(  out) :: des_radius(max_pip)
+      real(c_real), intent(  out) :: ro_sol(max_pip)
+      real(c_real), intent(  out) :: omoi(max_pip)
 
-      real(c_double), intent(  out) :: des_vel_new(max_pip,3)
-      real(c_double), intent(  out) :: des_pos_new(max_pip,3)
-      real(c_double), intent(  out) :: omega_new(max_pip,3)
-      real(c_double), intent(  out) :: des_usr_var(max_pip,1)
+      real(c_real), intent(  out) :: des_vel_new(max_pip,3)
+      real(c_real), intent(  out) :: des_pos_new(max_pip,3)
+      real(c_real), intent(  out) :: omega_new(max_pip,3)
+      real(c_real), intent(  out) :: des_usr_var(max_pip,1)
       integer(c_int)  , intent(  out) :: particle_state(max_pip)
       integer(c_int)  , intent(  out) :: particle_phase(max_pip)
 
-      real(c_double), intent(  out) :: fc(max_pip,3)
-      real(c_double), intent(  out) :: tow(max_pip,3)
+      real(c_real), intent(  out) :: fc(max_pip,3)
+      real(c_real), intent(  out) :: tow(max_pip,3)
 
 !-----------------------------------------------
 ! Local variables
@@ -126,16 +128,18 @@
    subroutine mfix_write_des_data(des_radius, des_pos_new, des_vel_new, des_usr_var) &
       bind(C, name="mfix_write_des_data")
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use discretelement       , only: max_pip, print_des_data, s_time
       use error_manager        , only: finl_err_msg
-      use iso_c_binding, only: c_double, c_int
       use run                  , only: run_type
       use write_des_data_module, only: write_des_data
 
-      real(c_double), intent(in   ) :: des_radius (max_pip)
-      real(c_double), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_double), intent(in   ) :: des_vel_new(max_pip,3)
-      real(c_double), intent(in   ) :: des_usr_var(max_pip,1)
+      real(c_real), intent(in   ) :: des_radius (max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_usr_var(max_pip,1)
 
       IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME

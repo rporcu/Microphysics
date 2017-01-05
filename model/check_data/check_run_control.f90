@@ -1,4 +1,8 @@
 MODULE CHECK_RUN_CONTROL_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -38,7 +42,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-      double precision, intent(inout) :: time, dt
+      real(c_real), intent(inout) :: time, dt
 
 !......................................................................!
 

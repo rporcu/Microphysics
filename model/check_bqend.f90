@@ -10,6 +10,9 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 !----------------------------------------------------------------------!
       SUBROUTINE CHECK_BATCH_QUEUE_END(pEXIT_SIGNAL)
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use run, only: BATCH_WALLCLOCK
       use run, only: TERM_BUFFER
 
@@ -28,7 +31,7 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 ! Logical flags for hault cases.
       LOGICAL :: USER_HAULT, WALL_HAULT
 ! Elapsed wall time, and fancy formatted buffer/batch queue times.
-      DOUBLE PRECISION :: WALL_STOP, FANCY_BUFF, FANCY_BATCH
+      real(c_real) :: WALL_STOP, FANCY_BUFF, FANCY_BATCH
 ! Time units for formatted output.
       CHARACTER(LEN=4) :: WT_UNIT, BF_UNIT, BC_UNIT
 

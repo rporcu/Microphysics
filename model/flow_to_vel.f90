@@ -1,5 +1,8 @@
 MODULE FLOW_TO_VEL_NEW_MODULE
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use bc, only: BC_MASSFLOW_G
       use bc, only: BC_MASSFLOW_S
       use bc, only: BC_VOLFLOW_G
@@ -124,9 +127,9 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       INTEGER, INTENT(in) :: BCV
 
 ! Volumetric flow rate computed from mass flow rate
-      DOUBLE PRECISION :: VOLFLOW
+      real(c_real) :: VOLFLOW
 ! Average molecular weight
-      DOUBLE PRECISION :: MW
+      real(c_real) :: MW
 
       CALL INIT_ERR_MSG("GAS_MASSFLOW_TO_VOLFLOW")
 
@@ -205,7 +208,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       LOGICAL, INTENT(in) :: SKIP_M
 
 ! Volumetric flow rate computed from mass flow rate
-      DOUBLE PRECISION :: VOLFLOW
+      real(c_real) :: VOLFLOW
 
       CALL INIT_ERR_MSG("SOLIDS_MASSFLOW_TO_VOLFLOW")
 
@@ -273,10 +276,10 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       LOGICAL, INTENT(in) :: DO_VEL_CHECK
 
 
-      DOUBLE PRECISION :: SGN, OFF
+      real(c_real) :: SGN, OFF
 
 ! Velocity computed from volumetric flow rate
-      DOUBLE PRECISION :: VEL
+      real(c_real) :: VEL
 !-----------------------------------------------
       CALL INIT_ERR_MSG("GAS_VOLFLOW_TO_VELOCITY")
 
@@ -381,9 +384,8 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       LOGICAL, INTENT(in) :: DO_VEL_CHECK, SKIP_M
 
 ! Velocity computed from volumetric flow rate
-      DOUBLE PRECISION :: VEL
-
-      DOUBLE PRECISION :: SGN, OFF
+      real(c_real) :: VEL
+      real(c_real) :: SGN, OFF
 
 !-----------------------------------------------
 

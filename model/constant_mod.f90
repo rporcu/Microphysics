@@ -9,6 +9,8 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       MODULE constant
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -17,22 +19,22 @@
 
 ! Coefficients for calibrating Syamlal-O'Brien drag correlation with
 ! Umf data
-      DOUBLE PRECISION :: drag_c1, drag_d1
+      real(c_real) :: drag_c1, drag_d1
 
 ! Gravitational acceleration
-      DOUBLE PRECISION :: GRAVITY(3)
+      real(c_real) :: GRAVITY(3)
 
 ! Universal gas constant; (Pa.m3/kmol.K)
-      DOUBLE PRECISION, parameter :: GAS_CONST = 8314.56D0
+      real(c_real), parameter :: GAS_CONST = 8314.56D0
 
 ! Pi, the ubiquitous irrational number
-      DOUBLE PRECISION, PARAMETER :: Pi = 4.D0*ATAN(1.D0)
+      real(c_real), PARAMETER :: Pi = 4.D0*ATAN(1.D0)
 
 ! Maximum pressure correction allowed in one iteration
-      DOUBLE PRECISION :: MAX_DELP
+      real(c_real) :: MAX_DELP
 
 ! User defined constants
-      DOUBLE PRECISION :: C (DIMENSION_C)
+      real(c_real) :: C (DIMENSION_C)
 
 ! Names of user defined constants (for output file only)
       CHARACTER(LEN=20) :: C_NAME (DIMENSION_C)
@@ -43,8 +45,8 @@
 ! Number of solids phases
       integer :: mmax = 0
 ! Particle diameters
-      double precision :: d_p0(dim_m)
+      real(c_real) :: d_p0(dim_m)
 ! Constant solids phase densities.
-      double precision :: ro_s0(dim_m)
+      real(c_real) :: ro_s0(dim_m)
 
       END MODULE constant

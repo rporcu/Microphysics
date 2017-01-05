@@ -7,10 +7,12 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      MODULE eos
+MODULE eos
 
-      CONTAINS
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
+   CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -18,7 +20,7 @@
 !  Purpose: Equation of state for gas                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION FUNCTION EOSG (MW, PG, TG)
+      real(c_real) FUNCTION EOSG (MW, PG, TG)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -28,7 +30,7 @@
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: MW, PG, TG
+      real(c_real), INTENT(IN) :: MW, PG, TG
 
       EOSG = UNSCALE_PRESSURE(PG)*MW/(GAS_CONST*TG)
       RETURN
@@ -43,7 +45,7 @@
 !  Author: M. Syamlal                                 Date: 14-AUG-96  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION FUNCTION DROODP_G (ROG, PG)
+      real(c_real) FUNCTION DROODP_G (ROG, PG)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -53,7 +55,7 @@
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! gas density and pressure
-      DOUBLE PRECISION, INTENT(IN) :: ROG, PG
+      real(c_real), INTENT(IN) :: ROG, PG
 
       DROODP_G = ROG/(PG + P_REF)
       RETURN

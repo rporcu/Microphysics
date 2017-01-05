@@ -1,5 +1,8 @@
 module drag_gs_des1_module
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Fluid grid loop bounds.
@@ -50,28 +53,28 @@ module drag_gs_des1_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: gradpg&
+      real(c_real), intent(in   ) :: gradpg&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
       integer         , intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_radius(:)
-      double precision, intent(in   ) :: des_pos_new(:,:)
-      double precision, intent(in   ) :: des_vel_new(:,:)
-      double precision, intent(inout) :: fc(:,:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_radius(:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(inout) :: fc(:,:)
 
       integer         , intent(in   ) :: particle_state(:)
       integer         , intent(in   ) :: particle_phase(:)
@@ -81,13 +84,13 @@ module drag_gs_des1_module
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP
 ! Interpolated gas phase quanties.
-      DOUBLE PRECISION :: lEPg, VELFP(3)
+      real(c_real) :: lEPg, VELFP(3)
 ! Drag force acting on each particle.
-      DOUBLE PRECISION :: D_FORCE(3), f_gp
+      real(c_real) :: D_FORCE(3), f_gp
 ! Loop bound for filter
       integer :: i,j,k
 ! One over cell volume
-      double precision :: Oodx, Oody, Oodz
+      real(c_real) :: Oodx, Oody, Oodz
 !......................................................................!
 
       Oodx = 1.0d0/dx
@@ -157,27 +160,27 @@ module drag_gs_des1_module
 
       IMPLICIT NONE
 
-      double precision, intent(in   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: f_gds&
+      real(c_real), intent(out  ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(out  ) :: drag_bm&
+      real(c_real), intent(out  ) :: drag_bm&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
 
-      double precision, intent(in   ) :: pvol(:)
-      double precision, intent(in   ) :: des_radius(:)
-      double precision, intent(in   ) :: des_pos_new(:,:)
-      double precision, intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: pvol(:)
+      real(c_real), intent(in   ) :: des_radius(:)
+      real(c_real), intent(in   ) :: des_pos_new(:,:)
+      real(c_real), intent(in   ) :: des_vel_new(:,:)
 
       integer         , intent(in   ) :: particle_state(:)
       integer         , intent(in   ) :: particle_phase(:)
@@ -187,15 +190,15 @@ module drag_gs_des1_module
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K
 ! Interpolation weight
-      DOUBLE PRECISION :: WEIGHT
+      real(c_real) :: WEIGHT
 ! Interpolated gas phase quanties.
-      DOUBLE PRECISION :: lEPg, VELFP(3)
+      real(c_real) :: lEPg, VELFP(3)
 ! Drag force (intermediate calculation)
-      DOUBLE PRECISION :: f_gp
+      real(c_real) :: f_gp
 ! Drag sources for fluid (intermediate calculation)
-      DOUBLE PRECISION :: lDRAG_BM(3)
+      real(c_real) :: lDRAG_BM(3)
 ! One over cell volume
-      double precision :: Oodx, Oody, Oodz
+      real(c_real) :: Oodx, Oody, Oodz
 !......................................................................!
 
 ! Initialize fluid cell values.

@@ -1,4 +1,8 @@
 MODULE READ_PAR_INPUT_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 ! Subroutine: READ_PAR_INPUT                                           !
@@ -18,8 +22,8 @@ MODULE READ_PAR_INPUT_MODULE
 
       implicit none
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
-      DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new
+      real(c_real), DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
+      real(c_real), DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
 
 !-----------------------------------------------

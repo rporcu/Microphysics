@@ -1,8 +1,11 @@
 MODULE layout_mi_dem_module
 
-      use calc_cell_module, only: calc_cell_intersect
-      use compar, only: mype
-      use error_manager, only: init_err_msg, flush_err_msg, finl_err_msg, err_msg
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use calc_cell_module, only: calc_cell_intersect
+   use compar, only: mype
+   use error_manager, only: init_err_msg, flush_err_msg, finl_err_msg, err_msg
 
    CONTAINS
 
@@ -26,7 +29,7 @@ MODULE layout_mi_dem_module
 
       INTEGER, INTENT(IN) :: BCV
       INTEGER, INTENT(IN) :: BCV_I      ! BC loop counter
-      DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
+      real(c_real), INTENT(IN) :: MAX_DIA
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 ! Local debug flags.
       LOGICAL, parameter :: setDBG = .FALSE.
@@ -108,7 +111,7 @@ MODULE layout_mi_dem_module
       INTEGER, INTENT(IN) :: BCV
       INTEGER, INTENT(IN) :: BCV_I
 ! Max diameter of incoming particles at bc
-      DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
+      real(c_real), INTENT(IN) :: MAX_DIA
 ! Debug flas.
       LOGICAL, INTENT(IN) :: setDBG, showMAP
 
@@ -123,15 +126,15 @@ MODULE layout_mi_dem_module
 ! Local MESH indices
       INTEGER H, W
 ! Temp variable for double precision
-      DOUBLE PRECISION :: TMP_DP
+      real(c_real) :: TMP_DP
 ! Temporary variable for integers
       INTEGER :: TMP_INT
 ! Window indicies.
       INTEGER, allocatable :: MESH_H(:)
       INTEGER, allocatable :: MESH_W(:)
 ! Window positions.
-      DOUBLE PRECISION, allocatable :: MESH_P(:)
-      DOUBLE PRECISION, allocatable :: MESH_Q(:)
+      real(c_real), allocatable :: MESH_P(:)
+      real(c_real), allocatable :: MESH_Q(:)
 ! Map of array index to MI cell
       INTEGER, allocatable :: RAND_MAP(:)
 ! Map of MI cells to owner processes
@@ -139,11 +142,11 @@ MODULE layout_mi_dem_module
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
 ! the length of each side of the inlet boundary
-      DOUBLE PRECISION :: PLEN, QLEN
+      real(c_real) :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and window size.
-      DOUBLE PRECISION :: SHIFT, WINDOW
+      real(c_real) :: SHIFT, WINDOW
 ! Debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -423,7 +426,7 @@ MODULE layout_mi_dem_module
       INTEGER, INTENT(IN) :: BCV
       INTEGER, INTENT(IN) :: BCV_I
 ! Max diameter of incoming particles at bc
-      DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
+      real(c_real), INTENT(IN) :: MAX_DIA
 ! Debug flas.
       LOGICAL, INTENT(IN) :: setDBG, showMAP
 
@@ -436,15 +439,15 @@ MODULE layout_mi_dem_module
 ! Local MESH indices
       INTEGER H, W
 ! Temp variable for double precision
-      DOUBLE PRECISION :: TMP_DP
+      real(c_real) :: TMP_DP
 ! Temporary variable for integers
       INTEGER :: TMP_INT
 ! Window indicies.
       INTEGER, allocatable :: MESH_H(:)
       INTEGER, allocatable :: MESH_W(:)
 ! Window positions.
-      DOUBLE PRECISION, allocatable :: MESH_P(:)
-      DOUBLE PRECISION, allocatable :: MESH_Q(:)
+      real(c_real), allocatable :: MESH_P(:)
+      real(c_real), allocatable :: MESH_Q(:)
 ! Map of array index to MI cell
       INTEGER, allocatable :: RAND_MAP(:)
 ! Map of MI cells to owner processes
@@ -452,11 +455,11 @@ MODULE layout_mi_dem_module
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
 ! the length of each side of the inlet boundary
-      DOUBLE PRECISION :: PLEN, QLEN
+      real(c_real) :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and window size.
-      DOUBLE PRECISION :: SHIFT, WINDOW
+      real(c_real) :: SHIFT, WINDOW
 ! Local debug flag.
       LOGICAL :: dFlag
 !......................................................................!
@@ -738,7 +741,7 @@ MODULE layout_mi_dem_module
       INTEGER, INTENT(IN) :: BCV
       INTEGER, INTENT(IN) :: BCV_I
 ! Max diameter of incoming particles at bc
-      DOUBLE PRECISION, INTENT(IN) :: MAX_DIA
+      real(c_real), INTENT(IN) :: MAX_DIA
 ! Debug flas.
       LOGICAL, INTENT(IN) :: setDBG, showMAP
 
@@ -753,15 +756,15 @@ MODULE layout_mi_dem_module
 ! Local MESH indices
       INTEGER H, W
 ! Temp variable for double precision
-      DOUBLE PRECISION :: TMP_DP
+      real(c_real) :: TMP_DP
 ! Temporary variable for integers
       INTEGER :: TMP_INT
 ! Window indicies.
       INTEGER, allocatable :: MESH_H(:)
       INTEGER, allocatable :: MESH_W(:)
 ! Window positions.
-      DOUBLE PRECISION, allocatable :: MESH_P(:)
-      DOUBLE PRECISION, allocatable :: MESH_Q(:)
+      real(c_real), allocatable :: MESH_P(:)
+      real(c_real), allocatable :: MESH_Q(:)
 ! Map of array index to MI cell
       INTEGER, allocatable :: RAND_MAP(:)
 ! Map of MI cells to owner processes
@@ -769,11 +772,11 @@ MODULE layout_mi_dem_module
 ! max number of partitions along length of inlet
       INTEGER :: WMAX, HMAX
 ! the length of each side of the inlet boundary
-      DOUBLE PRECISION :: PLEN, QLEN
+      real(c_real) :: PLEN, QLEN
 ! Number of occupied mesh cells
       INTEGER :: OCCUPANTS
 ! Offset and and window size.
-      DOUBLE PRECISION :: SHIFT, WINDOW
+      real(c_real) :: SHIFT, WINDOW
 ! Local Debug flag.
       LOGICAL :: dFlag
 

@@ -1,7 +1,10 @@
 MODULE CHECK_BC_GEOMETRY_MODULE
 
-      use calc_cell_module, only: calc_loc, calc_cell
-      use check_plane_module, only: check_plane
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use calc_cell_module, only: calc_loc, calc_cell
+   use check_plane_module, only: check_plane
 
 ! Global Parameters:
 !---------------------------------------------------------------------//

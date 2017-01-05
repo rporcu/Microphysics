@@ -29,19 +29,21 @@
       use compar, only: jstart3, jend3
       use compar, only: kstart3, kend3
 
-      Use usr
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
+      use usr
 
       IMPLICIT NONE
 
-      double precision, intent(in) :: u_g&
+      real(c_real), intent(in) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: v_g&
+      real(c_real), intent(in) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: w_g&
+      real(c_real), intent(in) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      double precision, intent(in) :: p_g&
+      real(c_real), intent(in) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
 
       RETURN
       END SUBROUTINE USR3

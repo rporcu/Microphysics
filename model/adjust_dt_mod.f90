@@ -57,9 +57,9 @@ module adjust_dt
 ! number of iterations since last DT adjustment
       INTEGER, SAVE :: NIT_TOT=0
 ! Iterations per second for last dt
-      DOUBLE PRECISION, SAVE :: NIToS=0.0
+      real(c_real), SAVE :: NIToS=0.0
 ! Current number of iterations per second
-      DOUBLE PRECISION :: NITOS_NEW
+      real(c_real) :: NITOS_NEW
 !......................................................................!
 
 ! Initialize the function result.

@@ -20,6 +20,9 @@ MODULE leqsol
    use param, only: dimension_3
    use param1, only: zero
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 ! Maximum number of outer iterations
   INTEGER :: MAX_NIT
 
@@ -40,7 +43,7 @@ MODULE leqsol
   CHARACTER(LEN=4) :: LEQ_SWEEP(DIM_EQS)
 
 ! Linear equation solver tolerance
-  DOUBLE PRECISION :: LEQ_TOL(DIM_EQS)
+  real(c_real) :: LEQ_TOL(DIM_EQS)
 
 ! Preconditioner option
   CHARACTER(LEN=4) :: LEQ_PC(DIM_EQS)
@@ -130,12 +133,12 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-    DOUBLE PRECISION, INTENT(IN) :: Var(DIMENSION_3)
+    real(c_real), INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-    DOUBLE PRECISION, INTENT(IN) :: A_m&
+    real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector AVar
-    DOUBLE PRECISION, INTENT(OUT) :: AVar(DIMENSION_3)
+    real(c_real), INTENT(OUT) :: AVar(DIMENSION_3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -195,13 +198,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-    DOUBLE PRECISION, INTENT(IN) :: B_m&
+    real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-    DOUBLE PRECISION, INTENT(IN) :: A_m&
+    real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-    DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+    real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
@@ -447,13 +450,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-    DOUBLE PRECISION, INTENT(IN) :: B_m&
+    real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-    DOUBLE PRECISION, INTENT(IN) :: A_m&
+    real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-    DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
+    real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
 !-----------------------------------------------
@@ -501,13 +504,13 @@ CONTAINS
 ! Variable name
     CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
-    DOUBLE PRECISION, INTENT(IN) :: B_m&
+    real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix A_m
-    DOUBLE PRECISION, INTENT(IN) :: A_m&
+    real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
-    DOUBLE PRECISION, INTENT(OUT) :: Var(DIMENSION_3)
+    real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
 ! sweep direction
     CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
 !-----------------------------------------------
@@ -557,17 +560,17 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m&
+      real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m&
+      real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      DOUBLE PRECISION, DIMENSION (JSTART:JEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION (JSTART:JEND) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO
       INTEGER :: IJK, J, K, IM1JK, IP1JK
 !-----------------------------------------------
@@ -631,17 +634,17 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m&
+      real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m&
+      real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      DOUBLE PRECISION, DIMENSION(JSTART:JEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION(JSTART:JEND) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO
       INTEGER :: IJK, J
 !-----------------------------------------------
@@ -706,17 +709,17 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m&
+      real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m&
+      real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      DOUBLE PRECISION, DIMENSION (ISTART:IEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION (ISTART:IEND) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO, IJK, I
 !-----------------------------------------------
 
@@ -780,17 +783,17 @@ CONTAINS
 ! Variable name
       CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
-      DOUBLE PRECISION, INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(IN) :: A_m&
+      real(c_real), INTENT(IN) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(IN) :: B_m&
+      real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      DOUBLE PRECISION, DIMENSION (KSTART:KEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION (KSTART:KEND) :: CC, DD, EE, BB
       INTEGER :: NEND, NSTART, INFO, IJK, K
 !-----------------------------------------------
 
@@ -834,19 +837,18 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  double precision function dot_product_par(r1,r2)
+  real(c_real) function dot_product_par(r1,r2)
 
    use compar, only: imap_c, jmap_c, kmap_c
     implicit none
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-!      double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
-    double precision, intent(in), dimension(DIMENSION_3) :: r1,r2
+    real(c_real), intent(in), dimension(DIMENSION_3) :: r1,r2
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    double precision :: prod
+    real(c_real) :: prod
     integer :: i, j, k, ijk
 !-----------------------------------------------
 
@@ -879,11 +881,11 @@ CONTAINS
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-    double precision, intent(in), dimension(DIMENSION_3) :: r1,r2,r3,r4
+    real(c_real), intent(in), dimension(DIMENSION_3) :: r1,r2,r3,r4
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    double precision, Dimension(2) :: prod, dot_product_par2
+    real(c_real), Dimension(2) :: prod, dot_product_par2
     integer :: i, j, k, ijk
 !-----------------------------------------------
 

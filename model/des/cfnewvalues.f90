@@ -1,4 +1,8 @@
 MODULE CFNEWVALUES_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -23,25 +27,25 @@ MODULE CFNEWVALUES_MODULE
       IMPLICIT NONE
 
       INTEGER         , INTENT(IN   ) :: particle_state(:)
-      DOUBLE PRECISION, INTENT(IN   ) :: des_radius(:)
-      DOUBLE PRECISION, INTENT(IN   ) :: omoi(:)
-      DOUBLE PRECISION, INTENT(IN   ) :: pmass(:)
-      DOUBLE PRECISION, INTENT(INOUT) :: des_pos_new(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: des_vel_new(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: omega_new(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: fc(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: tow(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: des_acc_old(:,:)
-      DOUBLE PRECISION, INTENT(INOUT) :: rot_acc_old(:,:)
+      real(c_real), INTENT(IN   ) :: des_radius(:)
+      real(c_real), INTENT(IN   ) :: omoi(:)
+      real(c_real), INTENT(IN   ) :: pmass(:)
+      real(c_real), INTENT(INOUT) :: des_pos_new(:,:)
+      real(c_real), INTENT(INOUT) :: des_vel_new(:,:)
+      real(c_real), INTENT(INOUT) :: omega_new(:,:)
+      real(c_real), INTENT(INOUT) :: fc(:,:)
+      real(c_real), INTENT(INOUT) :: tow(:,:)
+      real(c_real), INTENT(INOUT) :: des_acc_old(:,:)
+      real(c_real), INTENT(INOUT) :: rot_acc_old(:,:)
 
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
       INTEGER :: L
-      DOUBLE PRECISION :: DD(3)
+      real(c_real) :: DD(3)
       LOGICAL, SAVE :: FIRST_PASS = .TRUE.
 
-      DOUBLE PRECISION :: lVELo(3), lPOSo(3)
+      real(c_real) :: lVELo(3), lPOSo(3)
 
 !-----------------------------------------------
 

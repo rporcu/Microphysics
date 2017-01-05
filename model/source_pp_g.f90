@@ -58,7 +58,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
       real(c_real), INTENT(INOUT) :: B_mmax&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      double precision, intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt
 
       real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -95,7 +95,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
       real(c_real) bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
       CHARACTER(LEN=80) :: LINE(1)
-      double precision :: oDT
+      real(c_real) :: oDT
 !-----------------------------------------------
 
       odt = 1.0d0/dt

@@ -1,4 +1,8 @@
 MODULE WRITE_OUT1_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -24,17 +28,16 @@ MODULE WRITE_OUT1_MODULE
          END SUBROUTINE USR_WRITE_OUT1
       END INTERFACE
 
-      DOUBLE PRECISION, INTENT(IN) :: time
+      real(c_real), INTENT(IN) :: time
 
-      DOUBLE PRECISION, INTENT(IN) :: ep_g&
+      real(c_real), INTENT(IN) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: p_g&
+      real(c_real), INTENT(IN) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: ro_g&
+      real(c_real), INTENT(IN) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      double precision, allocatable :: array1(:,:,:)
-
+      real(c_real), allocatable :: array1(:,:,:)
 
       if (myPE == PE_IO) then
          allocate (array1(istart3:iend3, jstart3:jend3, kstart3:kend3) )

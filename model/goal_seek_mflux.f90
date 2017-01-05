@@ -49,11 +49,11 @@ contains
 ! Local Variables
 !-----------------------------------------------
       INTEGER, PARAMETER :: MAXGSMF = 500
-      DOUBLE PRECISION, PARAMETER :: omega = 0.9
-      DOUBLE PRECISION, PARAMETER :: TOL = 1E-03
+      real(c_real), PARAMETER :: omega = 0.9
+      real(c_real), PARAMETER :: TOL = 1E-03
 
-      DOUBLE PRECISION :: mdot_nm1, delp_nm1
-      DOUBLE PRECISION :: delp_xyz
+      real(c_real) :: mdot_nm1, delp_nm1
+      real(c_real) :: delp_xyz
 
 ! Store previous values (only used for GSMF>1)
       mdot_nm1 = mdot_n

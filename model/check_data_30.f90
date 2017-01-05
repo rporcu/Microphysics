@@ -1,5 +1,9 @@
 MODULE CHECK_DATA_30_MODULE
-   CONTAINS
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Module name: CHECK_DATA_30                                          !
 !  Author: M. Syamlal                                 Date: 27-OCT-92  !
@@ -19,9 +23,9 @@ MODULE CHECK_DATA_30_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+      real(c_real), INTENT(IN   ) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
+      real(c_real), INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -61,9 +65,9 @@ MODULE CHECK_DATA_30_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+      real(c_real), INTENT(IN   ) :: lambda_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_real), INTENT(IN   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -134,7 +138,7 @@ MODULE CHECK_DATA_30_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) ::     mu_g&
+      real(c_real), INTENT(IN   ) ::     mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) ::     flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -191,7 +195,7 @@ MODULE CHECK_DATA_30_MODULE
 
       INTEGER, INTENT(INOUT) :: pIER
       INTEGER, INTENT(IN) :: pI, pJ, pK
-      DOUBLE PRECISION, INTENT(IN) :: BND, VAL
+      real(c_real), INTENT(IN) :: BND, VAL
       CHARACTER(LEN=*), INTENT(IN) :: RELATION
       CHARACTER(LEN=*), INTENT(IN) :: VAR
       INTEGER, INTENT(IN), OPTIONAL :: LC1, LC2

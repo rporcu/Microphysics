@@ -13,10 +13,12 @@
 
 ! Modules
 !---------------------------------------------------------------------//
-      use param, only: dim_M, dim_eqs
-      use param1, only: UNDEFINED_I
+
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
+
+      use param, only: dim_M, dim_eqs
+      use param1, only: UNDEFINED_I
 
 !---------------------------------------------------------------------//
 
@@ -44,7 +46,7 @@
       CHARACTER(LEN=10) :: ID_VERSION
 
 ! Stop-time of the run.
-      DOUBLE PRECISION :: TSTOP
+      real(c_real) :: TSTOP
 
 ! Discretization scheme for different equations
       INTEGER :: DISCRETIZE(DIM_EQS)
@@ -84,27 +86,27 @@
 ! session wall clock time specified in seconds
 ! for jaguarcnl@NCCS max wall clock limit is 2.5 hr limit up to 512
 ! processors
-      DOUBLE PRECISION :: BATCH_WALLCLOCK
+      real(c_real) :: BATCH_WALLCLOCK
 ! variable to set a buffer time before the batch queue session ends to
 ! make sure once MFIX is triggered to shutdown, there is sufficient
 ! time to save files, make copies to HPSS storage before batch queue
 ! time runs out. Current logic in MFIX checks for:
 !    if CPU_TIME > (BATCH_WALLCLOCK - TERM_BUFFER) then
 !    save all .RES .SP files and trigger shutdown
-      DOUBLE PRECISION :: TERM_BUFFER
+      real(c_real) :: TERM_BUFFER
 
 ! parameters for dynamically adjusting time step
 ! +1 -> increase dt; -1 decrease dt
       INTEGER :: DT_dir = -1
 
 ! Maximum Time step.
-      DOUBLE PRECISION :: DT_MAX
+      real(c_real) :: DT_MAX
 
 ! Minimum Time step.
-      DOUBLE PRECISION :: DT_MIN
+      real(c_real) :: DT_MIN
 
 ! Time step adjustment factor (<1.0)
-      DOUBLE PRECISION :: DT_FAC
+      real(c_real) :: DT_FAC
 
 ! If .TRUE. reduce time step when residuals do not decrease
       LOGICAL :: DETECT_STALL

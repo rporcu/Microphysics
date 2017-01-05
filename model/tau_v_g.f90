@@ -1,5 +1,9 @@
 MODULE CALC_TAU_V_G_MODULE
-CONTAINS
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -48,22 +52,22 @@ CONTAINS
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! TAU_V_g
-      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+      real(c_real), INTENT(INOUT) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: lTAU_V_g&
+      real(c_real), INTENT(OUT) :: lTAU_V_g&
           (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+      real(c_real), INTENT(IN   ) :: lambda_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_real), INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -73,9 +77,9 @@ CONTAINS
 ! Indices
       INTEGER :: I, J, K, IM, JP, KM
 ! Average volume fraction
-      DOUBLE PRECISION :: EPGA
+      real(c_real) :: EPGA
 ! Source terms (Surface)
-      DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
+      real(c_real) :: Sbv, Ssx, Ssy, Ssz
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the
 !             use of the *tmp variables below

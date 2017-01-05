@@ -109,11 +109,11 @@ MODULE SET_WALL_BC_MODULE
 ! Starting and ending K index
       INTEGER, INTENT(IN) :: KK1, KK2
 
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      real(c_real), INTENT(INOUT) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_real), INTENT(INOUT) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_real), INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -121,7 +121,7 @@ MODULE SET_WALL_BC_MODULE
 ! Local variables
 !-----------------------------------------------
 ! Sign with legal values +1 or -1
-      DOUBLE PRECISION :: SIGN0
+      real(c_real) :: SIGN0
 ! Local indices near wall cell
       INTEGER :: I, J, K
       INTEGER :: I1, I2, J1, J2, K1, K2

@@ -1,6 +1,9 @@
 MODULE CHECK_BC_OUTFLOW_MODULE
 
-      use param1, only: one, undefined, zero, is_undefined, is_defined
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use param1, only: one, undefined, zero, is_undefined, is_defined
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -33,7 +36,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 ! Local variables
 ! --------------------------------------------------------------------//
       INTEGER :: M
-      DOUBLE PRECISION :: SUM_EP
+      real(c_real) :: SUM_EP
       LOGICAL :: FLAG_WARNING
 
       FLAG_WARNING = .TRUE.

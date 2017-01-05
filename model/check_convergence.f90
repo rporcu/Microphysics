@@ -34,9 +34,9 @@ MODULE CHECK_CONVERGENCE_MODULE
 ! Local variables
 !-----------------------------------------------
 ! sum of residuals
-      DOUBLE PRECISION :: SUM
+      real(c_real) :: SUM
 ! max of residuals
-      DOUBLE PRECISION :: maxres
+      real(c_real) :: maxres
 ! index
       INTEGER :: L, maxL, maxM, maxN
 !-----------------------------------------------

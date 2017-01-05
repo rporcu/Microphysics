@@ -9,10 +9,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       MODULE XSI
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 
       CONTAINS
-
 
       SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, dt)
 
@@ -48,32 +51,32 @@
 ! discretization method
       INTEGER, INTENT(IN) :: DISCR
 ! convected quantity
-      DOUBLE PRECISION, INTENT(IN) :: phi(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(IN) :: phi(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(IN) :: U(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(IN) :: V(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(IN) :: W(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Convection weighting factors
-      DOUBLE PRECISION, INTENT(out) :: xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(out) :: xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(out) :: xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(out) :: xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(out) :: xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real), INTENT(out) :: xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! shear indicator
       INTEGER, INTENT(IN) :: incr
-      double precision, intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: IC, ID, IU, JC, JD, JU, KC, KD, KU
       INTEGER :: i, j, k
 !
-      DOUBLE PRECISION :: PHI_C
+      real(c_real) :: PHI_C
 ! down wind factor
-      DOUBLE PRECISION :: dwf
+      real(c_real) :: dwf
 ! Courant number
-      DOUBLE PRECISION :: cf
+      real(c_real) :: cf
 ! cell widths for QUICKEST
-      DOUBLE PRECISION :: oDXc, oDXuc, oDYc, oDYuc, oDZc, oDZuc
+      real(c_real) :: oDXc, oDXuc, oDYc, oDYuc, oDZc, oDZuc
 !---------------------------------------------------------------------//
 
 
@@ -530,10 +533,10 @@
 !  significant.                                                        C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION FUNCTION XSI_func(XXXv,XXXdwf)
+      real(c_real) FUNCTION XSI_func(XXXv,XXXdwf)
 
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: XXXv, XXXdwf
+      real(c_real), INTENT(IN) :: XXXv, XXXdwf
       XSI_func = (sign(1d0,(-XXXv))+1d0)/(2d0) + &
          sign(1d0,XXXv)*XXXdwf
       END FUNCTION XSI_func

@@ -1,11 +1,15 @@
 MODULE CHECK_POINT_SOURCES_MODULE
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 ! Parameter constants
       use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO
 
       use get_ps_module, only: get_ps
 
-      use iso_c_binding, only: c_double, c_int
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -38,7 +42,7 @@ MODULE CHECK_POINT_SOURCES_MODULE
 !---------------------------------------------------------------------//
 ! Loop counter for BCs
       INTEGER :: PSV
-      real(c_double), intent(in) :: dx,dy,dz
+      real(c_real), intent(in) :: dx,dy,dz
 !......................................................................!
 
 

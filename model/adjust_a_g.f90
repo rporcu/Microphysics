@@ -1,4 +1,8 @@
    MODULE ADJUST_A
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: ADJUST_A_U_g(A_m, B_m, IER)                            C
@@ -30,20 +34,20 @@
       CHARACTER, INTENT(IN) :: axis
 
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ROP_G&
+      real(c_real), INTENT(IN   ) :: ROP_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 
       INTEGER          IP
       INTEGER          I, J, K
 
-      double precision :: denominator, xxxm, xxxp
+      real(c_real) :: denominator, xxxm, xxxp
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

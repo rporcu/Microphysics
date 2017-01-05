@@ -1,9 +1,6 @@
       MODULE usr
 
-
-        ! Use param
-        ! Use param1
-
+        use bl_fort_module, only : c_real
 
 !
 !       Declare the user-defined namelist variables (usrnlst.inc) in this module.
@@ -14,6 +11,6 @@
 !       mfix.dat.
 !
 !                       a dummy variable listed in usrnlst.inc
-        DOUBLE PRECISION DUMMY_DP
+        real(c_real) DUMMY_DP
 
       END MODULE usr

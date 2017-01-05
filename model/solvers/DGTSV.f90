@@ -6,12 +6,16 @@
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 !     October 31, 1999
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 !
 !     .. Scalar Arguments ..
       INTEGER            INFO, LDB, N, NRHS
 !     ..
 !     .. Array Arguments ..
-      DOUBLE PRECISION   B( LDB, * ), D( * ), DL( * ), DU( * )
+      real(c_real)   B( LDB, * ), D( * ), DL( * ), DU( * )
 !     ..
 !
 !  Purpose
@@ -37,7 +41,7 @@
 !          The number of right hand sides, i.e., the number of columns
 !          of the matrix B.  NRHS >= 0.
 !
-!  DL      (input/output) DOUBLE PRECISION array, dimension (N-1)
+!  DL      (input/output) real(c_real) array, dimension (N-1)
 !          On entry, DL must contain the (n-1) sub-diagonal elements of
 !          A.
 !
@@ -45,19 +49,19 @@
 !          second super-diagonal of the upper triangular matrix U from
 !          the LU factorization of A, in DL(1), ..., DL(n-2).
 !
-!  D       (input/output) DOUBLE PRECISION array, dimension (N)
+!  D       (input/output) real(c_real) array, dimension (N)
 !          On entry, D must contain the diagonal elements of A.
 !
 !          On exit, D is overwritten by the n diagonal elements of U.
 !
-!  DU      (input/output) DOUBLE PRECISION array, dimension (N-1)
+!  DU      (input/output) real(c_real) array, dimension (N-1)
 !          On entry, DU must contain the (n-1) super-diagonal elements
 !          of A.
 !
 !          On exit, DU is overwritten by the (n-1) elements of the first
 !          super-diagonal of U.
 !
-!  B       (input/output) DOUBLE PRECISION array, dimension (LDB,NRHS)
+!  B       (input/output) real(c_real) array, dimension (LDB,NRHS)
 !          On entry, the N by NRHS matrix of right hand side matrix B.
 !          On exit, if INFO = 0, the N by NRHS solution matrix X.
 !
@@ -74,12 +78,12 @@
 !  =====================================================================
 !
 !     .. Parameters ..
-      DOUBLE PRECISION   ZERO
+      real(c_real)   ZERO
       PARAMETER          ( ZERO = 0.0D+0 )
 !     ..
 !     .. Local Scalars ..
       INTEGER            I, J
-      DOUBLE PRECISION   FACT, TEMP
+      real(c_real)   FACT, TEMP
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC          ABS, MAX

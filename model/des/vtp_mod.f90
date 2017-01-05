@@ -4,6 +4,9 @@
       use discretelement, only: s_time, vtp_findex, pip
       use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 
       INTEGER, PRIVATE :: GLOBAL_CNT
@@ -35,7 +38,7 @@
       SUBROUTINE VTP_WRITE_DP1(NAME, DATA)
 
       CHARACTER(len=*), INTENT(in) :: NAME
-      DOUBLE PRECISION, INTENT(in) :: DATA(:)
+      real(c_real), INTENT(in) :: DATA(:)
 
       INTEGER :: LC
 
@@ -61,7 +64,7 @@
       SUBROUTINE VTP_WRITE_DP2(NAME, DATA)
 
       CHARACTER(len=*), INTENT(in) :: NAME
-      DOUBLE PRECISION, INTENT(in) :: DATA(:,:)
+      real(c_real), INTENT(in) :: DATA(:,:)
 
       CHARACTER(len=16) :: NOC
       INTEGER :: LB, UB

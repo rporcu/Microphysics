@@ -8,20 +8,23 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       MODULE output
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use param, only: DIMENSION_USR
 
 ! Interval at which restart (.RES) file data is updated.
-      DOUBLE PRECISION :: RES_DT, RES_TIME
+      real(c_real) :: RES_DT, RES_TIME
 ! Interval to create a backup copy of the RES file.
-      DOUBLE PRECISION :: RES_BACKUP_DT, RES_BACKUP_TIME
+      real(c_real) :: RES_BACKUP_DT, RES_BACKUP_TIME
 ! Interval at which standard output (.OUT) file data is updated.
-      DOUBLE PRECISION :: OUT_DT, OUT_TIME
+      real(c_real) :: OUT_DT, OUT_TIME
 ! Interval at which user-defined output files are updated.
-      DOUBLE PRECISION :: USR_DT (DIMENSION_USR), USR_TIME(DIMENSION_USR)
+      real(c_real) :: USR_DT (DIMENSION_USR), USR_TIME(DIMENSION_USR)
 ! Interval to write DES VTP files
-      DOUBLE PRECISION :: VTP_DT, VTP_TIME
+      real(c_real) :: VTP_DT, VTP_TIME
 ! Interval to check and report the mass balance
-      DOUBLE PRECISION :: REPORT_MASS_BALANCE_DT
+      real(c_real) :: REPORT_MASS_BALANCE_DT
 ! Number of RES file copies to retain.
       INTEGER :: RES_BACKUPS
 ! Interval in number of time steps at which LOG file is written
@@ -33,9 +36,9 @@
 ! Flag to print the index layout for  ijk<=>i,j,k  debugging tasks
       LOGICAL :: DBGPRN_LAYOUT
 ! The approximated total disk space (in MB)
-      DOUBLE PRECISION :: DISK_TOT = 0.0d0
+      real(c_real) :: DISK_TOT = 0.0d0
 ! One megabite (MB)
-      DOUBLE PRECISION, PARAMETER :: ONEMEG = 1048576
+      real(c_real), PARAMETER :: ONEMEG = 1048576
 
 ! The following have no direct usage in the code. They are generic
 ! hooks wereby a user can specify some information. It may be useful
@@ -43,17 +46,17 @@
 ! the same way that coordinates for BCs, ICs, PSs, are calculated.
 !--------------------------------------------------------------------//
 ! X coordinate of the west face of user output region
-      DOUBLE PRECISION :: USR_X_w (DIMENSION_USR)
+      real(c_real) :: USR_X_w (DIMENSION_USR)
 ! X coordinate of the east face of user output region
-      DOUBLE PRECISION :: USR_X_e (DIMENSION_USR)
+      real(c_real) :: USR_X_e (DIMENSION_USR)
 ! Y coordinate of the south face of user output region
-      DOUBLE PRECISION :: USR_Y_s (DIMENSION_USR)
+      real(c_real) :: USR_Y_s (DIMENSION_USR)
 ! Y coordinate of the north face of user output region
-      DOUBLE PRECISION :: USR_Y_n (DIMENSION_USR)
+      real(c_real) :: USR_Y_n (DIMENSION_USR)
 ! Z coordinate of the bottom face of user output region
-      DOUBLE PRECISION :: USR_Z_b (DIMENSION_USR)
+      real(c_real) :: USR_Z_b (DIMENSION_USR)
 ! Z coordinate of the top face of user output region
-      DOUBLE PRECISION :: USR_Z_t (DIMENSION_USR)
+      real(c_real) :: USR_Z_t (DIMENSION_USR)
 ! I index of the west face of user output region
       INTEGER :: USR_I_w (DIMENSION_USR)
 ! I index of the east face of user output region

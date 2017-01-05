@@ -35,7 +35,7 @@ MODULE CALC_TRD_G_MODULE
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
-     double precision, intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
+      real(c_real), intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
 
       real(c_real), intent(in   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
@@ -54,7 +54,7 @@ MODULE CALC_TRD_G_MODULE
 ! Indices
       INTEGER :: I, J, K
 
-      double precision :: odx, ody, odz
+      real(c_real) :: odx, ody, odz
 
       odx = 1.d0 / dx
       ody = 1.d0 / dy

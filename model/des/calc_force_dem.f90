@@ -1,4 +1,8 @@
 MODULE CALC_FORCE_DEM_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -26,55 +30,55 @@ MODULE CALC_FORCE_DEM_MODULE
 
       integer, intent(in) :: particle_phase(:)
 
-      double precision, intent(in) :: des_radius(:)
-      double precision, intent(in) :: des_pos_new(:,:)
-      double precision, intent(in) :: des_vel_new(:,:)
-      double precision, intent(in) :: omega_new(:,:)
+      real(c_real), intent(in) :: des_radius(:)
+      real(c_real), intent(in) :: des_pos_new(:,:)
+      real(c_real), intent(in) :: des_vel_new(:,:)
+      real(c_real), intent(in) :: omega_new(:,:)
       integer, intent(in) :: pairs(:,:)
       integer, intent(in) :: pair_count
-      double precision, intent(inout) :: fc(:,:), tow(:,:)
+      real(c_real), intent(inout) :: fc(:,:), tow(:,:)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! percent of particle radius when excess overlap will be flagged
-      DOUBLE PRECISION, PARAMETER :: flag_overlap = 0.20d0
+      real(c_real), PARAMETER :: flag_overlap = 0.20d0
 ! particle no. indices
       INTEGER :: I, LL, cc
 ! the overlap occuring between particle-particle or particle-wall
 ! collision in the normal direction
-      DOUBLE PRECISION :: OVERLAP_N, OVERLAP_T(3)
+      real(c_real) :: OVERLAP_N, OVERLAP_T(3)
 ! square root of the overlap
-      DOUBLE PRECISION :: SQRT_OVERLAP
+      real(c_real) :: SQRT_OVERLAP
 ! distance vector between two particle centers or between a particle
 ! center and wall when the two surfaces are just at contact (i.e. no
 ! overlap)
-      DOUBLE PRECISION :: R_LM,DIST_CI,DIST_CL
+      real(c_real) :: R_LM,DIST_CI,DIST_CL
 ! the normal and tangential components of the translational relative
 ! velocity
-      DOUBLE PRECISION :: V_REL_TRANS_NORM, rad
+      real(c_real) :: V_REL_TRANS_NORM, rad
 ! distance vector between two particle centers or between a particle
 ! center and wall at current and previous time steps
-      DOUBLE PRECISION :: DIST(3), NORMAL(3), DIST_MAG, POS(3)
+      real(c_real) :: DIST(3), NORMAL(3), DIST_MAG, POS(3)
 ! tangent to the plane of contact at current time step
-      DOUBLE PRECISION :: VREL_T(3)
+      real(c_real) :: VREL_T(3)
 ! normal and tangential forces
-      DOUBLE PRECISION :: FN(3), FT(3)
+      real(c_real) :: FN(3), FT(3)
 ! temporary storage of force
-      DOUBLE PRECISION :: FC_TMP(3)
+      real(c_real) :: FC_TMP(3)
 ! temporary storage of force for torque
-      DOUBLE PRECISION :: TOW_FORCE(3)
+      real(c_real) :: TOW_FORCE(3)
 ! temporary storage of torque
-      DOUBLE PRECISION :: TOW_TMP(3,2)
+      real(c_real) :: TOW_TMP(3,2)
 
 ! store solids phase index of particle (i.e. particle_phase(np))
       INTEGER :: PHASEI, PHASELL
 ! local values used spring constants and damping coefficients
-      DOUBLE PRECISION :: ETAN_DES, ETAT_DES
-      DOUBLE PRECISION :: KN_DES, KT_DES
+      real(c_real) :: ETAN_DES, ETAT_DES
+      real(c_real) :: KN_DES, KT_DES
 
       LOGICAL, PARAMETER :: report_excess_overlap = .FALSE.
 
-      DOUBLE PRECISION :: FNMD, MAG_OVERLAP_T, TANGENT(3)
+      real(c_real) :: FNMD, MAG_OVERLAP_T, TANGENT(3)
 
 !-----------------------------------------------
 

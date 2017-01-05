@@ -1,6 +1,9 @@
 module comp_mean_fields_module
 
-  contains
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: COMP_MEAN_FIELDS                                        !
@@ -13,7 +16,6 @@ module comp_mean_fields_module
      SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, nparticles) &
          bind(C, name="mfix_comp_mean_fields")
 
-      use iso_c_binding, only: c_double, c_int
       use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
       use geometry, only: dx, dy, dz, vol
@@ -26,10 +28,10 @@ module comp_mean_fields_module
 
       integer(c_int), intent(in   ) :: nparticles
       integer(c_int), intent(in   ) :: particle_state(nparticles)
-      real(c_double), intent(in   ) :: des_pos_new(nparticles,3)
-      real(c_double), intent(in   ) :: pvol(nparticles)
+      real(c_real), intent(in   ) :: des_pos_new(nparticles,3)
+      real(c_real), intent(in   ) :: pvol(nparticles)
 
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
@@ -42,10 +44,10 @@ module comp_mean_fields_module
 ! Fluid cell index
       INTEGER :: I,J,K
 ! Total Mth solids phase volume in IJK
-      DOUBLE PRECISION :: SOLVOLINC&
+      real(c_real) :: SOLVOLINC&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! One over cell volume
-      double precision :: OoVol, Oodx, Oody, Oodz
+      real(c_real) :: OoVol, Oodx, Oody, Oodz
 
       SOLVOLINC(:,:,:) = ZERO
 

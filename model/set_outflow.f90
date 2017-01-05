@@ -1,5 +1,8 @@
 module set_outflow_module
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -56,25 +59,25 @@ module set_outflow_module
 ! Boundary condition number
       INTEGER, INTENT(IN) :: BCV
 
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      real(c_real), INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_real), INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      real(c_real), INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_real), INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: u_g&
+      real(c_real), INTENT(INOUT) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: v_g&
+      real(c_real), INTENT(INOUT) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: w_g&
+      real(c_real), INTENT(INOUT) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_ge&
+      real(c_real), INTENT(INOUT) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gn&
+      real(c_real), INTENT(INOUT) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: flux_gt&
+      real(c_real), INTENT(INOUT) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -87,7 +90,7 @@ module set_outflow_module
       INTEGER :: ip,im,jp,jm,kp,km
 ! local value for normal component of gas and solids velocity defined
 ! such that
-      DOUBLE PRECISION :: RVEL_G, RVEL_S(DIMENSION_M)
+      real(c_real) :: RVEL_G, RVEL_S(DIMENSION_M)
 !---------------------------------------------------------------------//
 
 ! Loop over the range of boundary cells
@@ -300,9 +303,9 @@ module set_outflow_module
 ! i,j,k index for adjacent fluid cell
       INTEGER, INTENT(IN) :: FI,FJ,FK
 
-      DOUBLE PRECISION, INTENT(INOUT) :: p_g&
+      real(c_real), INTENT(INOUT) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ro_g&
+      real(c_real), INTENT(INOUT) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 !---------------------------------------------------------------------//
 
@@ -340,11 +343,11 @@ module set_outflow_module
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      real(c_real), INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: rop_g&
+      real(c_real), INTENT(INOUT) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(INOUT) :: ep_g&
+      real(c_real), INTENT(INOUT) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Dummy arguments
@@ -362,15 +365,15 @@ module set_outflow_module
 ! an outflow on the eastern boundary this is the u component of velocity
 ! while for an outflow on the western boundary this is the -u component,
 ! etc.
-      DOUBLE PRECISION, INTENT(IN) :: RVEL_G
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(DIMENSION_M) :: RVEL_S
+      real(c_real), INTENT(IN) :: RVEL_G
+      real(c_real), INTENT(IN), DIMENSION(DIMENSION_M) :: RVEL_S
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! sum of solids phases volume fractions
-      DOUBLE PRECISION :: SUM_EPs
+      real(c_real) :: SUM_EPs
 ! sum of solids phases bulk densities
-      DOUBLE PRECISION :: SUM_ROPS
+      real(c_real) :: SUM_ROPS
 !---------------------------------------------------------------------//
 
 ! initializing summation quantities

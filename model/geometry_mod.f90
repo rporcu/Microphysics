@@ -10,18 +10,20 @@
 
       MODULE geometry
 
-      Use param, only: DIM_I, DIM_J, DIM_K
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
+      use param, only: DIM_I, DIM_J, DIM_K
 
 ! Coordinates: CARTESIAN
       CHARACTER(LEN=16)     COORDINATES
 
 ! Reactor length in the x or r direction
-      DOUBLE PRECISION :: XLENGTH
+      real(c_real) :: XLENGTH
 ! Reactor length in the y direction
-      DOUBLE PRECISION :: YLENGTH
+      real(c_real) :: YLENGTH
 ! Reactor length in the z or theta direction
-      DOUBLE PRECISION :: ZLENGTH
+      real(c_real) :: ZLENGTH
 
 ! Starting index in the x or r direction
       INTEGER :: IMIN1
@@ -52,8 +54,8 @@
       INTEGER :: KMAX2
 
 ! Cell sizes in the x or r direction
-      DOUBLE PRECISION :: DX, DY, DZ
-      DOUBLE PRECISION :: oDX, oDY, oDZ
+      real(c_real) :: DX, DY, DZ
+      real(c_real) :: oDX, oDY, oDZ
 
 ! IMAX2 * JMAX2
       INTEGER :: IJMAX2
@@ -99,13 +101,13 @@
 
 
 ! East face area - scalar cell
-      DOUBLE PRECISION :: AYZ
+      real(c_real) :: AYZ
 ! North face area - scalar cell
-      DOUBLE PRECISION :: AXZ
+      real(c_real) :: AXZ
 ! Top face area - scalar cell
-      DOUBLE PRECISION :: AXY
+      real(c_real) :: AXY
 ! Cell volume - scalar cell
-      DOUBLE PRECISION :: VOL
+      real(c_real) :: VOL
 
 ! Cell flags.
       integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag_mod

@@ -1,12 +1,15 @@
 MODULE ur_facs
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    use param, only: DIM_EQS
 
 ! Under relaxation factors for coefficient update:
 !  [0]  every time step (explicit)
 !  [1]  every iteration (implicit)
 ! (0,1) under-relaxed
-   DOUBLE PRECISION :: UR_FAC(DIM_EQS)
+   real(c_real) :: UR_FAC(DIM_EQS)
 
    contains
 
@@ -28,12 +31,12 @@ MODULE ur_facs
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Variable
-      DOUBLE PRECISION :: Var(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real) :: Var(istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Septadiagonal matrix
-      DOUBLE PRECISION :: A_m&
+      real(c_real) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 !   Vector b_m
-      DOUBLE PRECISION :: B_m&
+      real(c_real) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer, intent(in   ) ::  flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -47,9 +50,9 @@ MODULE ur_facs
 ! Loop index
       INTEGER :: i, j, k
 ! Functions of under-relaxation factor
-      DOUBLE PRECISION :: f1, f2
+      real(c_real) :: f1, f2
 ! Center coefficient
-      DOUBLE PRECISION :: Ap
+      real(c_real) :: Ap
 
 !.......................................................................!
       F1 = ONE/UR_FAC(EQ)

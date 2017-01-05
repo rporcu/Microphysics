@@ -89,17 +89,17 @@ module u_g_conv_dif
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, intent(OUT) :: U&
+      real(c_real), intent(OUT) :: U&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(OUT) :: V&
+      real(c_real), intent(OUT) :: V&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(OUT) :: WW&
+      real(c_real), intent(OUT) :: WW&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in ) :: u_g&
+      real(c_real), intent(in ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in ) :: v_g&
+      real(c_real), intent(in ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in ) :: w_g&
+      real(c_real), intent(in ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
@@ -144,15 +144,15 @@ module u_g_conv_dif
 !---------------------------------------------------------------------//
 ! Fluxes through faces of given u-momentum cell
 
-      DOUBLE PRECISION, intent(OUT) :: flux_e, flux_w
-      DOUBLE PRECISION, intent(OUT) :: flux_n, flux_s
-      DOUBLE PRECISION, intent(OUT) :: flux_t, flux_b
+      real(c_real), intent(OUT) :: flux_e, flux_w
+      real(c_real), intent(OUT) :: flux_n, flux_s
+      real(c_real), intent(OUT) :: flux_t, flux_b
 
-      DOUBLE PRECISION, intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER         , intent( IN) :: i, j, k
@@ -194,16 +194,16 @@ module u_g_conv_dif
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! diffusion through faces of given ijk u-momentum cell
-      DOUBLE PRECISION, intent(OUT) :: d_fe, d_fw
-      DOUBLE PRECISION, intent(OUT) :: d_fn, d_fs
-      DOUBLE PRECISION, intent(OUT) :: d_ft, d_fb
+      real(c_real), intent(OUT) :: d_fe, d_fw
+      real(c_real), intent(OUT) :: d_fn, d_fs
+      real(c_real), intent(OUT) :: d_ft, d_fb
 
-      DOUBLE PRECISION, intent( IN) :: MU_G&
+      real(c_real), intent( IN) :: MU_G&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, intent( IN) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
-      double precision, intent(in) :: dx, dy, dz
+      real(c_real), intent(in) :: dx, dy, dz
 
 ! ijk index
       INTEGER, intent(IN) :: i, j, k
@@ -213,8 +213,8 @@ module u_g_conv_dif
 ! indices
       INTEGER :: ip, jm, km, ic
 ! length terms
-      DOUBLE PRECISION :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-      DOUBLE PRECISION :: odx, ody, odz
+      real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
+      real(c_real) :: odx, ody, odz
 !---------------------------------------------------------------------//
 
       odx = 1.0 / dx
@@ -299,30 +299,30 @@ module u_g_conv_dif
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, intent(inout) :: A_U_g&
+      real(c_real), intent(inout) :: A_U_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      DOUBLE PRECISION, intent(in   ) :: MU_g&
+      real(c_real), intent(in   ) :: MU_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-      DOUBLE PRECISION, intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-      DOUBLE PRECISION, intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: I, J, K
 ! Face mass flux
-      DOUBLE PRECISION :: flux_e, flux_w, flux_n, flux_s
-      DOUBLE PRECISION :: flux_t, flux_b
+      real(c_real) :: flux_e, flux_w, flux_n, flux_s
+      real(c_real) :: flux_t, flux_b
 ! Diffusion parameter
-      DOUBLE PRECISION :: D_fe, d_fw, d_fn, d_fs, d_ft, d_fb
+      real(c_real) :: D_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 
 !---------------------------------------------------------------------//
 
@@ -461,10 +461,10 @@ module u_g_conv_dif
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
-      DOUBLE PRECISION, intent(inout) :: A_U_g&
+      real(c_real), intent(inout) :: A_U_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
-      double precision, intent(in   ) :: dt
+      real(c_real), intent(in   ) :: dt
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
@@ -472,14 +472,14 @@ module u_g_conv_dif
 ! indicator for shear
       INTEGER :: incr
 ! Diffusion parameter
-      DOUBLE PRECISION :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
+      real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
-      DOUBLE PRECISION :: Flux_e, flux_w, flux_n, flux_s
-      DOUBLE PRECISION :: flux_t, flux_b
+      real(c_real) :: Flux_e, flux_w, flux_n, flux_s
+      real(c_real) :: flux_t, flux_b
 
 ! x, y, z directional velocity
-      DOUBLE PRECISION, allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
-      DOUBLE PRECISION, allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
+      real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
+      real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 !---------------------------------------------------------------------//
 
 

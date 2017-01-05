@@ -1,4 +1,8 @@
 MODULE CALC_CELL_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -24,11 +28,11 @@ MODULE CALC_CELL_MODULE
 !-----------------------------------------------
 ! the x, y or z location along the axis for which the cell index (i, j
 ! or k) is to be found
-      DOUBLE PRECISION, INTENT(IN) :: REACTOR_LOC
+      real(c_real), INTENT(IN) :: REACTOR_LOC
 ! number of cells in the corresponding direction (IMAX, JMAX, or KMAX)
       INTEGER, INTENT(IN) :: N_DIR
 ! the cell lengths along the corresponding axis (DX, DY or DZ)
-      DOUBLE PRECISION, INTENT(IN) :: D_DIR
+      real(c_real), INTENT(IN) :: D_DIR
 ! the i, j, or k cell index that corresponds to the x, y or z
 ! reactor_location (calculated value)
       INTEGER, INTENT(INOUT) :: CELL_LOC
@@ -38,7 +42,7 @@ MODULE CALC_CELL_MODULE
 ! loop counter
       INTEGER :: LC
 ! start and end coordinate for cell
-      DOUBLE PRECISION :: CELL_START, CELL_END
+      real(c_real) :: CELL_START, CELL_END
 !-----------------------------------------------
 
       CELL_LOC = -1
@@ -83,10 +87,10 @@ MODULE CALC_CELL_MODULE
 ! reactor_location to be found
       INTEGER, INTENT(IN) :: CELL_LOC
 ! the cell lengths along the corresponding axis (DX, DY or DZ)
-      DOUBLE PRECISION, INTENT(IN) :: D_DIR
+      real(c_real), INTENT(IN) :: D_DIR
 ! the x, y or z location along the axis that corresponds to the i, j
 ! k cell index  (calculated value)
-      DOUBLE PRECISION, INTENT(INOUT) :: REACTOR_LOC
+      real(c_real), INTENT(INOUT) :: REACTOR_LOC
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -124,11 +128,11 @@ MODULE CALC_CELL_MODULE
 ! Passed Arguments:
 !---------------------------------------------------------------------//
 ! Point to check for intersection.
-      DOUBLE PRECISION, INTENT(in) :: LOC
+      real(c_real), INTENT(in) :: LOC
 ! Number of cells in this direction (IMAX,JMAX,KMAX)
       INTEGER, INTENT(in) :: N_DIR
 ! Cell lengths (DX,DY,DZ)
-      DOUBLE PRECISION, INTENT(IN) :: D_DIR
+      real(c_real), INTENT(IN) :: D_DIR
 ! Cell indices corresponding to LOC
       INTEGER, INTENT(out) :: CELL
 
@@ -137,7 +141,7 @@ MODULE CALC_CELL_MODULE
 ! Loop counter
       INTEGER :: LC
 ! Start/End coordinates for cell
-      DOUBLE PRECISION :: CELL_START, CELL_END
+      real(c_real) :: CELL_START, CELL_END
 !......................................................................!
 
      CELL = -1

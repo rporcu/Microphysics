@@ -1,5 +1,8 @@
 MODULE WRITE_TABLE_MOD
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    USE param, only: dim_i, dim_j, dim_k
    USE funits, only: unit_out
 
@@ -49,10 +52,10 @@ MODULE WRITE_TABLE_MOD
 !                      Ending array index
       INTEGER          LEND
 
-      DOUBLE PRECISION SCALAR
+      real(c_real) SCALAR
 
 !                      Starting value of distance
-      DOUBLE PRECISION DIST_MIN
+      real(c_real) DIST_MIN
 
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
@@ -73,13 +76,13 @@ MODULE WRITE_TABLE_MOD
       INTEGER          ARRAY1(DIMENSION_1)
 !
 !                      Array3 to be written
-      DOUBLE PRECISION ARRAY3(DIMENSION_1)
+      real(c_real) ARRAY3(DIMENSION_1)
 !
 !                      Number of rows
       INTEGER          NROW
 !
 !                      Temporary storage for distance calculation
-      DOUBLE PRECISION DIST
+      real(c_real) DIST
 !
 !                      Local array indices
       INTEGER          L, L1, L2, L3

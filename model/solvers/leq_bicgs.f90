@@ -25,6 +25,9 @@
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
          use param, only: dimension_3
 
+         use bl_fort_module, only : c_real
+         use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -34,12 +37,12 @@
 ! variable number (not really used here; see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
+      real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Sweep direction of leq solver (leq_sweep)
@@ -47,7 +50,7 @@
 ! Note: this setting only seems to matter when leq_pc='line'
       CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
 ! convergence tolerance (generally leq_tol)
-      DOUBLE PRECISION, INTENT(IN) :: TOL
+      real(c_real), INTENT(IN) :: TOL
 ! preconditioner (leq_pc)
 !     options = 'line' (default), 'diag', 'none'
       CHARACTER(LEN=4), INTENT(IN) ::  PC
@@ -110,6 +113,9 @@
          use param, only: dimension_3
          use param1, only: zero, one, small_number
 
+         use bl_fort_module, only : c_real
+         use iso_c_binding , only: c_int
+
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments/procedure
@@ -119,18 +125,18 @@
 ! variable number (not really used here-see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
-      DOUBLE PRECISION, DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
+      real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION, INTENT(INOUT) :: A_m&
+      real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Vector b_m
-      DOUBLE PRECISION, INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
       CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
 ! convergence tolerance (generally leq_tol)
-      DOUBLE PRECISION, INTENT(IN) :: TOL
+      real(c_real), INTENT(IN) :: TOL
 ! maximum number of iterations (generally leq_it)
       INTEGER, INTENT(IN) :: ITMAX
 ! error indicator
@@ -145,23 +151,23 @@
 ! Local parameters
 !-----------------------------------------------
       INTEGER, PARAMETER :: idebugl = 0
-      DOUBLE PRECISION, PARAMETER :: ratiotol = 0.2
+      real(c_real), PARAMETER :: ratiotol = 0.2
       LOGICAL, PARAMETER :: do_unit_scaling = .true.
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 
-      DOUBLE PRECISION, DIMENSION(:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
+      real(c_real), DIMENSION(:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
 
-      DOUBLE PRECISION, DIMENSION(0:ITMAX+1) :: &
+      real(c_real), DIMENSION(0:ITMAX+1) :: &
                         alpha, beta, omega, rho
-      DOUBLE PRECISION :: TxS, TxT, RtildexV, &
+      real(c_real) :: TxS, TxT, RtildexV, &
                           aijmax, oam
-      DOUBLE PRECISION :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
+      real(c_real) :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
       LOGICAL :: isconverged
       INTEGER :: i, j, k, ijk, ii, jj, kk
       INTEGER :: iter
-      DOUBLE PRECISION, DIMENSION(2) :: TxS_TxT
+      real(c_real), DIMENSION(2) :: TxS_TxT
 !-----------------------------------------------
 
       allocate(R(DIMENSION_3))

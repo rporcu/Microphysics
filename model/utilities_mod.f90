@@ -1,6 +1,9 @@
 MODULE utilities
 
-  IMPLICIT NONE
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   IMPLICIT NONE
 
 CONTAINS
 
@@ -16,7 +19,7 @@ CONTAINS
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-      double precision x
+      real(c_real) :: x
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -54,7 +57,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      DOUBLE PRECISION FUNCTION MAX_VEL_INLET(u_g,v_g,w_g)
+      real(c_real) FUNCTION MAX_VEL_INLET(u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -70,17 +73,17 @@ CONTAINS
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Local variables
 !---------------------------------------------------------------------//
       INTEGER :: L, I, J, K
-      DOUBLE PRECISION :: maxVEL
+      real(c_real) :: maxVEL
 !---------------------------------------------------------------------//
 
       maxVEL = ZERO
@@ -152,13 +155,13 @@ CONTAINS
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN) :: FLAG&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)

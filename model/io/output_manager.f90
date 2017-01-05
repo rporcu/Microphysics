@@ -1,6 +1,8 @@
 module output_manager_module
 
-   use iso_c_binding, only: c_double, c_int
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
    use write_out1_module, only: write_out1
 
@@ -38,31 +40,31 @@ module output_manager_module
 
       IMPLICIT NONE
 
-      real(c_double), INTENT(IN   ) :: time, dt
+      real(c_real), INTENT(IN   ) :: time, dt
       integer(c_int), intent(in   ) :: nstep
 
-      real(c_double), INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: p_g&
+      real(c_real), INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: ro_g&
+      real(c_real), INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: rop_g&
+      real(c_real), INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-      real(c_double), intent(in) :: des_radius(max_pip)
-      real(c_double), intent(in) :: ro_sol(max_pip)
+      real(c_real), intent(in) :: des_radius(max_pip)
+      real(c_real), intent(in) :: ro_sol(max_pip)
 
-      real(c_double), intent(in) :: des_pos_new(max_pip,3)
-      real(c_double), intent(in) :: des_vel_new(max_pip,3)
-      real(c_double), intent(in) :: des_usr_var(max_pip,1)
-      real(c_double), intent(in) :: omega_new(max_pip,3)
+      real(c_real), intent(in) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in) :: des_usr_var(max_pip,1)
+      real(c_real), intent(in) :: omega_new(max_pip,3)
 
 
       integer(c_int), intent(inout) :: particle_state(max_pip)
@@ -81,7 +83,7 @@ module output_manager_module
 ! Flag that the header (time) has not be written.
       LOGICAL :: HDR_MSG
 ! Wall time at the start of IO operations.
-      DOUBLE PRECISION :: WALL_START
+      real(c_real) :: WALL_START
 ! SPX file extensions.
       CHARACTER(LEN=35) ::  EXT_END
 !......................................................................!
@@ -139,7 +141,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
       LOGICAL FUNCTION CHECK_TIME(lTIME)
 
-      DOUBLE PRECISION, INTENT(IN) :: lTIME
+      real(c_real), INTENT(IN) :: lTIME
 
       IF(IS_UNDEFINED(DT)) THEN
          CHECK_TIME = (FINISHED == 1)
@@ -156,7 +158,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
       DOUBLE PRECISION FUNCTION NEXT_TIME(lWRITE_DT)
 
-      DOUBLE PRECISION, INTENT(IN) :: lWRITE_DT
+      real(c_real), INTENT(IN) :: lWRITE_DT
 
       IF (IS_DEFINED(DT)) THEN
          NEXT_TIME = (INT((TIME + 0.1d0*DT)/lWRITE_DT)+1)*lWRITE_DT
@@ -252,7 +254,7 @@ module output_manager_module
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
 
-      DOUBLE PRECISION :: WALL_ELAP, WALL_LEFT, WALL_NOW
+      real(c_real) :: WALL_ELAP, WALL_LEFT, WALL_NOW
       CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT
       CHARACTER(LEN=4) :: UNIT_ELAP, UNIT_LEFT
 
@@ -338,7 +340,7 @@ module output_manager_module
       use funits, only: CREATE_DIR
 
       IMPLICIT NONE
-      double precision, intent(in) :: dt, time
+      real(c_real), intent(in) :: dt, time
 ! Loop counter
       INTEGER :: LC
 

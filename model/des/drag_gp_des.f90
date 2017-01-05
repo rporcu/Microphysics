@@ -1,6 +1,9 @@
 module des_drag_gp_module
 
-  contains
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: DES_DRAG_GP                                             C
@@ -23,9 +26,6 @@ module des_drag_gp_module
      SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g,&
         f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       USE compar  , only: myPE
       use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
@@ -42,8 +42,12 @@ module des_drag_gp_module
       IMPLICIT NONE
 
       INTERFACE
+
          SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
             ROs, lUg, lVg, lWg)
+
+            use bl_fort_module, only : c_real
+            use iso_c_binding , only: c_int
 
 ! Index of fluid cell:
             INTEGER, INTENT(IN) :: I,J,K
@@ -52,31 +56,31 @@ module des_drag_gp_module
             INTEGER, INTENT(IN) :: M_NP
 
 ! drag coefficient
-            DOUBLE PRECISION, INTENT(OUT) :: lDgA
+            real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-            DOUBLE PRECISION, INTENT(IN) :: EPg
+            real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-            DOUBLE PRECISION, INTENT(IN) :: Mug
+            real(c_real), INTENT(IN) :: Mug
 ! gas density
-            DOUBLE PRECISION, INTENT(IN) :: ROg
+            real(c_real), INTENT(IN) :: ROg
 ! Magnitude of gas-solids relative velocity
-            DOUBLE PRECISION, INTENT(IN) :: VREL
+            real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-            DOUBLE PRECISION, INTENT(IN) :: DPM
+            real(c_real), INTENT(IN) :: DPM
 ! particle density of solids phase M
-            DOUBLE PRECISION, INTENT(IN) :: ROs
+            real(c_real), INTENT(IN) :: ROs
 ! fluid velocity components:
 ! o TFM: Averaged from faces to cell center
 ! o DES: Interpolated to the particle's position
-            DOUBLE PRECISION, INTENT(IN) :: lUg, lVg, lWg
+            real(c_real), INTENT(IN) :: lUg, lVg, lWg
          END SUBROUTINE DRAG_USR
       END INTERFACE
 
 ! indices, associated with current particle
       INTEGER, intent(in   ) :: I, J, K
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, pvol
+      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius, pvol
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -84,17 +88,17 @@ module des_drag_gp_module
 ! particle number id.
       INTEGER , INTENT(IN) :: NP
 ! particle velocity
-      DOUBLE PRECISION, INTENT(IN) :: PARTICLE_VEL(3)
+      real(c_real), INTENT(IN) :: PARTICLE_VEL(3)
 ! fluid velocity interpolated to particle position
-      DOUBLE PRECISION, INTENT(IN) :: FLUID_VEL(3)
+      real(c_real), INTENT(IN) :: FLUID_VEL(3)
 ! Gas phase volume fraction.
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 
-      DOUBLE PRECISION, INTENT(IN) :: ro_g&
+      real(c_real), INTENT(IN) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: mu_g&
+      real(c_real), INTENT(IN) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(out) :: F_gp
+      real(c_real), INTENT(out) :: F_gp
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 
 !-----------------------------------------------
@@ -103,24 +107,24 @@ module des_drag_gp_module
 ! solids phase index, associated with current particle
       INTEGER :: M
 ! Slip velocity and its magnitude
-      DOUBLE PRECISION :: VSLP(3), VREL
+      real(c_real) :: VSLP(3), VREL
 ! gas laminar viscosity redefined here to set viscosity at pressure
 ! boundaries
-      DOUBLE PRECISION :: Mu
+      real(c_real) :: Mu
 ! drag coefficient
-      DOUBLE PRECISION :: DgA
+      real(c_real) :: DgA
 ! correction factors for implementing polydisperse drag model
 ! proposed by van der Hoef et al. (2005)
-      DOUBLE PRECISION :: F_cor, tSUM
+      real(c_real) :: F_cor, tSUM
 ! average particle diameter in polydisperse systems
-      DOUBLE PRECISION :: DPA
+      real(c_real) :: DPA
 ! diameter ratio in polydisperse systems
-      DOUBLE PRECISION :: Y_i
+      real(c_real) :: Y_i
 ! total solids volume fraction
-      DOUBLE PRECISION :: PHIS
+      real(c_real) :: PHIS
 ! aliases for void fraction, gas density, gas bulk density,
 ! solids volume fraction, particle diameter, particle density
-      DOUBLE PRECISION :: ROg, ROPg, DPM
+      real(c_real) :: ROg, ROPg, DPM
 !-----------------------------------------------
 
 ! solids phase index of current particle

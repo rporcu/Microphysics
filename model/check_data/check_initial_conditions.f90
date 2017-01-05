@@ -1,9 +1,11 @@
 MODULE CHECK_INITIAL_CONDITIONS_MODULE
 
-! Parameter constants
-      use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO, ONE
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
 
-      use check_ic_common_discrete_module, only: check_ic_common_discrete
+   ! Parameter constants
+   use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED, ZERO, ONE
+   use check_ic_common_discrete_module, only: check_ic_common_discrete
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -452,9 +454,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 ! Loop/variable index
       INTEGER :: M
 ! Various sums.
-      DOUBLE PRECISION SUM_EP
+      real(c_real) SUM_EP
 ! Solids phase density in IC region.
-      DOUBLE PRECISION :: IC_ROs(1:DIM_M)
+      real(c_real) :: IC_ROs(1:DIM_M)
 ! Flag to skip checks on indexed solid phase.
       LOGICAL :: SKIP(1:DIM_M)
 ! Flag for PATCH IC regions

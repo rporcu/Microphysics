@@ -1,5 +1,8 @@
 module des_time_march_module
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -35,49 +38,48 @@ module des_time_march_module
       use run, only: CALL_USR
       use run, only: TSTOP
       use discretelement, only: max_pip
-      use iso_c_binding, only: c_double, c_int
 
       IMPLICIT NONE
 
-      real(c_double), intent(inout) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_double), intent(in   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       integer(c_int), intent(in   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
 
-      real(c_double), intent(inout) :: time, dt
+      real(c_real), intent(inout) :: time, dt
       integer(c_int), intent(inout) :: nstep
 
-      real(c_double), intent(inout) :: pvol(max_pip)
-      real(c_double), intent(inout) :: pmass(max_pip)
-      real(c_double), intent(inout) :: des_radius(max_pip)
-      real(c_double), intent(inout) :: ro_sol(max_pip)
-      real(c_double), intent(inout) :: omoi(max_pip)
+      real(c_real), intent(inout) :: pvol(max_pip)
+      real(c_real), intent(inout) :: pmass(max_pip)
+      real(c_real), intent(inout) :: des_radius(max_pip)
+      real(c_real), intent(inout) :: ro_sol(max_pip)
+      real(c_real), intent(inout) :: omoi(max_pip)
 
-      real(c_double), intent(inout) :: des_pos_new(max_pip,3)
-      real(c_double), intent(inout) :: des_vel_new(max_pip,3)
+      real(c_real), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_real), intent(inout) :: des_vel_new(max_pip,3)
 
-      real(c_double), intent(inout) :: des_acc_old(max_pip,3)
-      real(c_double), intent(inout) :: rot_acc_old(max_pip,3)
-      real(c_double), intent(inout) :: drag_fc(max_pip,3)
-      real(c_double), intent(inout) :: fc(max_pip,3)
-      real(c_double), intent(inout) :: tow(max_pip,3)
+      real(c_real), intent(inout) :: des_acc_old(max_pip,3)
+      real(c_real), intent(inout) :: rot_acc_old(max_pip,3)
+      real(c_real), intent(inout) :: drag_fc(max_pip,3)
+      real(c_real), intent(inout) :: fc(max_pip,3)
+      real(c_real), intent(inout) :: tow(max_pip,3)
 
-      real(c_double), intent(inout) :: omega_new(max_pip,3)
-      real(c_double), intent(inout) :: des_usr_var(max_pip,1)
+      real(c_real), intent(inout) :: omega_new(max_pip,3)
+      real(c_real), intent(inout) :: des_usr_var(max_pip,1)
 
       integer(c_int), intent(inout) :: particle_state(max_pip)
       integer(c_int), intent(inout) :: particle_phase(max_pip)
@@ -99,12 +101,12 @@ module des_time_march_module
 
 ! Temporary variables when des_continuum_coupled is T to track
 ! changes in solid time step
-      DOUBLE PRECISION :: TMP_DTS, DTSOLID_TMP
+      real(c_real) :: TMP_DTS, DTSOLID_TMP
 
 ! Numbers to calculate wall time spent in DEM calculations.
-      DOUBLE PRECISION :: TMP_WALL
+      real(c_real) :: TMP_WALL
 ! Pressure gradient
-      DOUBLE PRECISION, allocatable :: gradPg(:,:,:,:)
+      real(c_real), allocatable :: gradPg(:,:,:,:)
 !.......................................................................!
 
       allocate (gradPg(istart3:iend3, jstart3:jend3, kstart3:kend3,3) )
@@ -280,13 +282,13 @@ module des_time_march_module
       integer, intent(out), dimension(:,:) :: pairs
       integer, intent(out) :: pair_count
 
-      double precision, intent(in) :: des_pos_new(:,:)
-      double precision, intent(in) :: des_radius(:)
+      real(c_real), intent(in) :: des_pos_new(:,:)
+      real(c_real), intent(in) :: des_radius(:)
       integer, intent(in) :: particle_state(:)
 
       INTEGER :: i, ll
-      double precision :: rad
-      double precision :: DIST(3), DIST_MAG, POS(3)
+      real(c_real) :: rad
+      real(c_real) :: DIST(3), DIST_MAG, POS(3)
 
       pair_count = 0
 

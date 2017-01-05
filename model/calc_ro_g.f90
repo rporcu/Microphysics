@@ -1,4 +1,8 @@
 module calc_ro_g_module
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -15,13 +19,13 @@ contains
 
       IMPLICIT NONE
 
-      double precision, intent(inout) ::  ro_g&
+      real(c_real), intent(inout) ::  ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::   p_g&
+      real(c_real), intent(in   ) ::   p_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::  ep_g&
+      real(c_real), intent(in   ) ::  ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer, intent(in   ) ::  flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)

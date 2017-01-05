@@ -1,5 +1,8 @@
       MODULE machine
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 ! Record length used in open statement for unformatted, direct access
 ! file, with 512 bytes per record.
       INTEGER, PARAMETER :: OPEN_N1 =   512
@@ -59,7 +62,7 @@
 !  Purpose: returns wall time since start of the run                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION FUNCTION WALL_TIME()
+      real(c_real) FUNCTION WALL_TIME()
 
       IMPLICIT NONE
 

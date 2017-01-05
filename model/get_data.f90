@@ -1,4 +1,8 @@
 MODULE GET_DATA_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -37,7 +41,7 @@ MODULE GET_DATA_MODULE
 
       IMPLICIT NONE
 
-      double precision, intent(  out) :: time, dt
+      real(c_real), intent(  out) :: time, dt
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

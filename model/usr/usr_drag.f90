@@ -25,6 +25,9 @@
       SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
          ROs, lUg, lVg, lWg)
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
@@ -36,24 +39,24 @@
       INTEGER, INTENT(IN) :: M_NP
 
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density
-      DOUBLE PRECISION, INTENT(IN) :: ROg
+      real(c_real), INTENT(IN) :: ROg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 ! particle density of solids phase M
-      DOUBLE PRECISION, INTENT(IN) :: ROs
+      real(c_real), INTENT(IN) :: ROs
 ! fluid velocity components:
 ! o TFM: Averaged from faces to cell center
 ! o DES: Interpolated to the particle's position
-      DOUBLE PRECISION, INTENT(IN) :: lUg, lVg, lWg
+      real(c_real), INTENT(IN) :: lUg, lVg, lWg
 
 
 ! The following error message is used to make sure that if a user

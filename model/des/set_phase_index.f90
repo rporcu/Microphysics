@@ -1,4 +1,8 @@
 MODULE SET_PHASE_INDEX_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -19,7 +23,7 @@ MODULE SET_PHASE_INDEX_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
+      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius, ro_sol
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
       INTEGER, DIMENSION(:), INTENT(OUT) :: particle_phase
 
@@ -34,7 +38,7 @@ MODULE SET_PHASE_INDEX_MODULE
       INTEGER :: IER
 ! Difference between a particles diameter (density) and the diameter
 ! (density) of a phase specified in the data file.
-      DOUBLE PRECISION dDp, dRho
+      real(c_real) dDp, dRho
 
 ! The restart file contains the phase index for reacting cases as the
 ! diameter and/or density of the particle may have changed.

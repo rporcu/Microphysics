@@ -1,5 +1,10 @@
 MODULE CHECK_DATA_20_MODULE
-   CONTAINS
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CHECK_DATA_20                                           C
@@ -38,19 +43,19 @@ MODULE CHECK_DATA_20_MODULE
 
       IMPLICIT NONE
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: p_g&
+      real(c_real), INTENT(IN   ) :: p_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: ro_g&
+      real(c_real), INTENT(IN   ) :: ro_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: rop_g&
+      real(c_real), INTENT(IN   ) :: rop_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -211,7 +216,7 @@ MODULE CHECK_DATA_20_MODULE
       LOGICAL, INTENT(INOUT) :: ABORT
       INTEGER, INTENT(IN   ) :: pI, pJ, pK
       CHARACTER(LEN=*), INTENT(IN) :: VAR
-      DOUBLE PRECISION, INTENT(IN) :: VALUE
+      real(c_real), INTENT(IN) :: VALUE
 
       IF(.NOT.ABORT) THEN
          WRITE(ERR_MSG,1100)

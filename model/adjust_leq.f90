@@ -1,4 +1,8 @@
 MODULE ADJUST_LEQ_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -26,7 +30,7 @@ MODULE ADJUST_LEQ_MODULE
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
       INTEGER LEQ_ITL, LEQ_METHODL, LEQI, LEQM
-      DOUBLE PRECISION RESID
+      real(c_real) RESID
 !
 !  The adjustment is disabled, because it was adversely affecting species
 !  conservation

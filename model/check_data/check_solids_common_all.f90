@@ -1,4 +1,8 @@
 MODULE CHECK_SOLIDS_COMMON_ALL_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    use param1, only: is_undefined, is_defined
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

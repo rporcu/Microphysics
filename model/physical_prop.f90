@@ -150,13 +150,13 @@ MODULE PHYSICAL_PROP_MODULE
       ! Gas phase volume fraction       :  ep_g
       ! Gas phase material density      : rop_g
 
-      double precision, intent(inout) ::  ro_g&
+      real(c_real), intent(inout) ::  ro_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(inout) :: rop_g&
+      real(c_real), intent(inout) :: rop_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::   p_g&
+      real(c_real), intent(in   ) ::   p_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      double precision, intent(in   ) ::  ep_g&
+      real(c_real), intent(in   ) ::  ep_g&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
       integer, intent(in   ) ::  flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)

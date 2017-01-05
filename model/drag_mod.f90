@@ -9,10 +9,13 @@
 
 MODULE drag
 
-      USE param1, only: one, half, zero, small_number, large_number
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use param1, only: one, half, zero, small_number, large_number
 
 ! Off diagonal friction coefficient in HYS drag relation
-  DOUBLE PRECISION, DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
+  real(c_real), DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
 
 CONTAINS
 
@@ -28,10 +31,10 @@ CONTAINS
 
 ! Dalla Valle (1948)
 !----------------------------------------------------------------->>>
-  DOUBLE PRECISION FUNCTION C_DSXRE_DV(RE)
+  real(c_real) FUNCTION C_DSXRE_DV(RE)
 
     IMPLICIT NONE
-    DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
+    real(c_real), INTENT(IN) :: RE ! Reynolds number
 
     C_DSXRE_DV = (0.63D0*SQRT(RE) + 4.8D0)**2
     RETURN
@@ -39,10 +42,10 @@ CONTAINS
 
 ! Schiller and Naumann (1933)
 !----------------------------------------------------------------->>>
-  DOUBLE PRECISION FUNCTION C_DS_SN(RE)
+  real(c_real) FUNCTION C_DS_SN(RE)
 
     IMPLICIT NONE
-    DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
+    real(c_real), INTENT(IN) :: RE ! Reynolds number
 
     C_DS_SN = 24.D0*(1.D0 + 0.15D0*RE**0.687D0)/(RE+SMALL_NUMBER)
     RETURN
@@ -54,9 +57,9 @@ CONTAINS
 
 ! Turton and Levenspiel (1986)
 !----------------------------------------------------------------->>>
-      DOUBLE PRECISION FUNCTION C_DSXRE_TL(RE)
+      real(c_real) FUNCTION C_DSXRE_TL(RE)
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: RE ! Reynolds number
+      real(c_real), INTENT(IN) :: RE ! Reynolds number
 
       C_DSXRE_TL = 24.D0*(1.D0 + 0.173D0*RE**0.657D0) + &
          0.413D0*RE**2.09D0/(RE**1.09D0 + 16300.D0)
@@ -87,17 +90,17 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: ldGA
+      real(c_real), INTENT(OUT) :: ldGA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density
-      DOUBLE PRECISION, INTENT(IN) :: ROg
+      real(c_real), INTENT(IN) :: ROg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -106,20 +109,20 @@ CONTAINS
 !     PARAMETER (a1 = 1500.)  !for G_s = 147 kg/m^2.s
 !     a1 depends upon solids flux.  It has been represented by C(1)
 !     defined in the data file.
-!     DOUBLE PRECISION, PARAMETER :: A2 = 0.005D0
-!     DOUBLE PRECISION, PARAMETER :: A3 = 90.0D0
-!     DOUBLE PRECISION, PARAMETER :: RE_C = 5.D0
-!     DOUBLE PRECISION, PARAMETER :: EP_C = 0.92D0
+!     real(c_real), PARAMETER :: A2 = 0.005D0
+!     real(c_real), PARAMETER :: A3 = 90.0D0
+!     real(c_real), PARAMETER :: RE_C = 5.D0
+!     real(c_real), PARAMETER :: EP_C = 0.92D0
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Variables which are function of EP_g
-      DOUBLE PRECISION :: A, B
+      real(c_real) :: A, B
 ! Ratio of settling velocity of a multiparticle system to
 ! that of a single particle
-      DOUBLE PRECISION :: V_rm
+      real(c_real) :: V_rm
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -174,28 +177,28 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density
-      DOUBLE PRECISION, INTENT(IN) :: ROg
+      real(c_real), INTENT(IN) :: ROg
 ! gas density*EP_g
-      DOUBLE PRECISION, INTENT(IN) :: ROPg
+      real(c_real), INTENT(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 ! Single sphere drag coefficient
-      DOUBLE PRECISION :: C_d
+      real(c_real) :: C_d
 !-----------------------------------------------
 
 ! Note the presence of gas volume fraction in ROPG
@@ -250,31 +253,31 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density
-      DOUBLE PRECISION, INTENT(IN) :: ROg
+      real(c_real), INTENT(IN) :: ROg
 ! gas density*EP_g
-      DOUBLE PRECISION, INTENT(IN) :: ROPg
+      real(c_real), INTENT(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 ! Single sphere drag coefficient
-      DOUBLE PRECISION :: C_d
+      real(c_real) :: C_d
 ! Gidaspow switch function variables
-      DOUBLE PRECISION :: Ergun
-      DOUBLE PRECISION :: WenYu
-      DOUBLE PRECISION :: PHI_gs
+      real(c_real) :: Ergun
+      real(c_real) :: WenYu
+      real(c_real) :: PHI_gs
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -329,25 +332,25 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density*EP_g
-      DOUBLE PRECISION, INTENT(IN) :: ROPg
+      real(c_real), INTENT(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
 ! average particle diameter if PCF
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 ! Single sphere drag coefficient
-      DOUBLE PRECISION :: C_d
+      real(c_real) :: C_d
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN
@@ -401,42 +404,42 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density*EP_g
-      DOUBLE PRECISION, INTENT(IN) :: ROPg
+      real(c_real), INTENT(IN) :: ROPg
 ! Magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 ! average particle diameter if pcf otherwise DPM again
-      DOUBLE PRECISION, INTENT(IN) :: DPA
+      real(c_real), INTENT(IN) :: DPA
 ! total solids volume fraction of solids phases
-      DOUBLE PRECISION, INTENT(IN) :: PHIS
+      real(c_real), INTENT(IN) :: PHIS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 ! transition Reynolds numbers
-      DOUBLE PRECISION :: Re_Trans_1, Re_Trans_2
+      real(c_real) :: Re_Trans_1, Re_Trans_2
 ! Stokes Drag Force
-      DOUBLE PRECISION :: F_STOKES
+      real(c_real) :: F_STOKES
 ! zero Re function for low Reynolds number
-      DOUBLE PRECISION :: F_0
+      real(c_real) :: F_0
 ! inertial function for low Reynolds number
-      DOUBLE PRECISION :: F_1
+      real(c_real) :: F_1
 ! zero Re function for high Reynolds number
-      DOUBLE PRECISION :: F_2
+      real(c_real) :: F_2
 ! inertial function for high Reynolds number
-      DOUBLE PRECISION :: F_3
+      real(c_real) :: F_3
 ! dimensionless drag force F
-      DOUBLE PRECISION :: F
+      real(c_real) :: F
 ! weighting factor to compute F_0 and F_2
-      DOUBLE PRECISION :: w
+      real(c_real) :: w
 !-----------------------------------------------
 
 
@@ -525,30 +528,30 @@ CONTAINS
 ! Dummy arguments
 !-----------------------------------------------
 ! drag coefficient
-      DOUBLE PRECISION, INTENT(OUT) :: lDgA
+      real(c_real), INTENT(OUT) :: lDgA
 ! gas volume fraction
-      DOUBLE PRECISION, INTENT(IN) :: EPg
+      real(c_real), INTENT(IN) :: EPg
 ! gas laminar viscosity
-      DOUBLE PRECISION, INTENT(IN) :: Mug
+      real(c_real), INTENT(IN) :: Mug
 ! gas density*EP_g
-      DOUBLE PRECISION, INTENT(IN) :: ROPg
+      real(c_real), INTENT(IN) :: ROPg
 ! magnitude of gas-solids relative velocity
-      DOUBLE PRECISION, INTENT(IN) :: VREL
+      real(c_real), INTENT(IN) :: VREL
 ! particle diameter of solids phase M or
-      DOUBLE PRECISION, INTENT(IN) :: DPM
+      real(c_real), INTENT(IN) :: DPM
 ! average particle diameter
-      DOUBLE PRECISION, INTENT(IN) :: DPA
+      real(c_real), INTENT(IN) :: DPA
 ! total solids volume fraction of solids phases
-      DOUBLE PRECISION, INTENT(IN) :: PHIS
+      real(c_real), INTENT(IN) :: PHIS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! Reynolds number
-      DOUBLE PRECISION :: RE
+      real(c_real) :: RE
 ! Stokes Drag Force
-      DOUBLE PRECISION :: F_STOKES
+      real(c_real) :: F_STOKES
 ! dimensionless drag force F
-      DOUBLE PRECISION :: F
+      real(c_real) :: F
 !-----------------------------------------------
 
       IF(Mug > ZERO) THEN

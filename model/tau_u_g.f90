@@ -1,4 +1,8 @@
 MODULE CALC_TAU_U_G_MODULE
+
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -50,22 +54,22 @@ MODULE CALC_TAU_U_G_MODULE
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! TAU_U_g
-      DOUBLE PRECISION, INTENT(INOUT) :: trd_g&
+      real(c_real), INTENT(INOUT) :: trd_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: lTAU_U_g&
+      real(c_real), INTENT(OUT) :: lTAU_U_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
-      DOUBLE PRECISION, INTENT(IN   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: u_g&
+      real(c_real), INTENT(IN   ) :: u_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: v_g&
+      real(c_real), INTENT(IN   ) :: v_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: w_g&
+      real(c_real), INTENT(IN   ) :: w_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: lambda_g&
+      real(c_real), INTENT(IN   ) :: lambda_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: mu_g&
+      real(c_real), INTENT(IN   ) :: mu_g&
             (istart3:iend3,jstart3:jend3,kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
             (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
@@ -75,11 +79,11 @@ MODULE CALC_TAU_U_G_MODULE
 ! Indices
       INTEGER :: I, J, K, IP, JM, KM
 ! Average volume fraction
-      DOUBLE PRECISION :: EPGA
+      real(c_real) :: EPGA
 ! Average viscosity
-      DOUBLE PRECISION :: MU_Ge, MU_gbe
+      real(c_real) :: MU_Ge, MU_gbe
 ! Source terms (Surface)
-      DOUBLE PRECISION :: Sbv, Ssx, Ssy, Ssz
+      real(c_real) :: Sbv, Ssx, Ssy, Ssz
 !---------------------------------------------------------------------//
 !     NOTE -- triply nested functions seem to break things -- hence the
 !             use of the *tmp variables below

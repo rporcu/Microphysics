@@ -1,5 +1,8 @@
 MODULE CALC_D_MOD
 
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
    CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -38,14 +41,14 @@ MODULE CALC_D_MOD
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! Pressure correction
-      DOUBLE PRECISION, INTENT(OUT) :: d(:,:,:)
+      real(c_real), INTENT(OUT) :: d(:,:,:)
 ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
-      DOUBLE PRECISION, INTENT(IN):: A_M&
+      real(c_real), INTENT(IN):: A_M&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-      DOUBLE PRECISION, INTENT(IN):: ep_g&
+      real(c_real), INTENT(IN):: ep_g&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN   ) :: f_gds&
+      real(c_real), INTENT(IN   ) :: f_gds&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
@@ -55,14 +58,13 @@ MODULE CALC_D_MOD
 ! Usual Indices
       INTEGER :: I,J,K
 
-! Temp variable for double precision values.
-      DOUBLE PRECISION :: AM0
-      DOUBLE PRECISION :: EPGA
-      LOGICAL :: COUPLED
+      ! Temp variable 
+      real(c_real) :: AM0
+      real(c_real) :: EPGA
+      logical :: COUPLED
 !......................................................................!
 
       COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
-
 
       DO K = kstart2, kend2
         DO J = jstart2, jend2

@@ -38,8 +38,8 @@ MODULE SET_PS_MODULE
 
       CHARACTER(LEN=64) :: eMsg
 
-      DOUBLE PRECISION, allocatable :: lData_dp(:)
-      DOUBLE PRECISION, allocatable :: gData_dp(:)
+      real(c_real), allocatable :: lData_dp(:)
+      real(c_real), allocatable :: gData_dp(:)
 
       logical, parameter :: dbg_PS = .FALSE.
 
@@ -138,8 +138,8 @@ MODULE SET_PS_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine calc_ps_vel_mag(VEL_MAG, lU, lV, lW)
 
-      DOUBLE PRECISION, intent(inout) :: VEL_MAG
-      DOUBLE PRECISION, intent(inout) :: lU, lV, lW
+      real(c_real), intent(inout) :: VEL_MAG
+      real(c_real), intent(inout) :: lU, lV, lW
 
 ! Normalize velocities:
       VEL_MAG = lU**2 + lV**2 + lW**2

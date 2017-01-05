@@ -6,23 +6,26 @@
 
       MODULE scales
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
 ! reference pressure
-      DOUBLE PRECISION :: P_ref
+      real(c_real) :: P_ref
 
 ! pressure scale
-      DOUBLE PRECISION :: P_scale
+      real(c_real) :: P_scale
 
       CONTAINS
 
-      DOUBLE PRECISION FUNCTION SCALE_PRESSURE(XXX)
+      real(c_real) FUNCTION SCALE_PRESSURE(XXX)
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: XXX
+      real(c_real), INTENT(IN) :: XXX
       SCALE_PRESSURE   = (XXX - P_ref) / P_scale
       END FUNCTION SCALE_PRESSURE
 
-      DOUBLE PRECISION FUNCTION UNSCALE_PRESSURE(XXX)
+      real(c_real) FUNCTION UNSCALE_PRESSURE(XXX)
       IMPLICIT NONE
-      DOUBLE PRECISION, INTENT(IN) :: XXX
+      real(c_real), INTENT(IN) :: XXX
       UNSCALE_PRESSURE = (XXX * P_scale + P_ref)
       END FUNCTION UNSCALE_PRESSURE
 

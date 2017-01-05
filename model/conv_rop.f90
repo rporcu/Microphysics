@@ -84,15 +84,15 @@ MODULE CONV_ROP_MODULE
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(IN) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(IN) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
@@ -194,33 +194,33 @@ MODULE CONV_ROP_MODULE
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
 ! macroscopic density (rho_prime)
-      DOUBLE PRECISION, INTENT(in) :: rop&
+      real(c_real), INTENT(in) :: rop&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Velocity components
-      DOUBLE PRECISION, INTENT(IN) :: u&
+      real(c_real), INTENT(IN) :: u&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: v&
+      real(c_real), INTENT(IN) :: v&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: w&
+      real(c_real), INTENT(IN) :: w&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 ! Face value of density (for calculating convective fluxes)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_e&
+      real(c_real), INTENT(OUT) :: rop_e&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_n&
+      real(c_real), INTENT(OUT) :: rop_n&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
-      DOUBLE PRECISION, INTENT(OUT) :: rop_t&
+      real(c_real), INTENT(OUT) :: rop_t&
          (istart3:iend3,jstart3:jend3,kstart3:kend3)
 
       integer, intent(in   ) :: flag&
          (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
 
-      double precision, intent(in) :: dt
+      real(c_real), intent(in) :: dt
 !
 ! Local variables
 !---------------------------------------------------------------------//
       INTEGER :: I,J,K
       Integer :: incr
-      DOUBLE PRECISION, allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
+      real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 
 !---------------------------------------------------------------------//
 

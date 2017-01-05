@@ -17,11 +17,12 @@ MODULE WRITE_HEADER_MODULE
       USE output, only: full_log, onemeg
       USE param, only: dimension_3, dimension_m, dimension_n_g, dimension_n_s
       USE run, only: id_version, run_name
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
 !     Memory required for the run
-      DOUBLE PRECISION :: MEMORY
+      real(c_real) :: MEMORY
 !-----------------------------------------------
 
       IF(DMP_LOG)WRITE (UNIT_LOG, *) ' '

@@ -62,7 +62,7 @@ MODULE read_namelist_module
 
 ! Dummy Arguments:
 !------------------------------------------------------------------------//
-      double precision, intent(  out) :: time, dt
+      real(c_real), intent(  out) :: time, dt
 
 ! Local Variables:
 !------------------------------------------------------------------------//
@@ -75,7 +75,7 @@ MODULE read_namelist_module
 ! Line number
       INTEGER :: LINE_NO
 ! Coefficient of restitution (old symbol)
-      DOUBLE PRECISION e
+      real(c_real) :: e
 ! Indicate whether to do a namelist read on the line
       LOGICAL :: READ_FLAG
 ! Logical to check if file exits.

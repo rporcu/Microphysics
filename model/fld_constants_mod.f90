@@ -6,13 +6,16 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       module fld_const
 
+         use bl_fort_module, only : c_real
+         use iso_c_binding , only: c_int
+
          ! Specified constant gas density
-         double precision :: ro_g0
+         real(c_real) :: ro_g0
 
          ! Specified constant gas viscosity
-         double precision :: mu_g0
+         real(c_real) :: mu_g0
 
          ! Average molecular weight of gas
-         double precision :: mw_avg
+         real(c_real) :: mw_avg
 
       end module fld_const

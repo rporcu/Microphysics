@@ -1,5 +1,8 @@
       MODULE residual
 
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
+
       Use param, only: DIM_n
 
       integer, parameter :: MAX_RESID_INDEX = 8
@@ -30,13 +33,13 @@
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
 ! Average residual
-      DOUBLE PRECISION :: RESID(NRESID)
+      real(c_real) :: RESID(NRESID)
 ! Maximum residual
-      DOUBLE PRECISION :: MAX_RESID(NRESID)
+      real(c_real) :: MAX_RESID(NRESID)
 ! Residual Numerator
-      DOUBLE PRECISION :: NUM_RESID(NRESID)
+      real(c_real) :: NUM_RESID(NRESID)
 ! Residual Denominator
-      DOUBLE PRECISION :: DEN_RESID(NRESID)
+      real(c_real) :: DEN_RESID(NRESID)
 
 ! (i,j,k) location of maximum residual
       integer :: i_resid(nresid)
@@ -44,11 +47,11 @@
       integer :: k_resid(nresid)
 
 ! sum of residuals every 5 iterations
-      DOUBLE PRECISION :: SUM5_RESID
+      real(c_real) :: SUM5_RESID
 
 ! Residual sum within a group of equations
       LOGICAL          :: GROUP_RESID
-      DOUBLE PRECISION :: RESID_GRP(6)
+      real(c_real) :: RESID_GRP(6)
 
 ! Residuals to be printed out
       CHARACTER(LEN=4) :: RESID_STRING(MAX_RESID_INDEX)
@@ -58,7 +61,7 @@
       integer :: RESID_INDEX(MAX_RESID_INDEX, 2)
 
 ! For checking the over-all fluid mass balance
-      DOUBLE PRECISION :: accum_resid_g
+      real(c_real) :: accum_resid_g
 
    contains
 
@@ -94,20 +97,20 @@
 ! Dummy arguments
 !-----------------------------------------------
 !   Vector b_m
-      DOUBLE PRECISION :: B_m&
+      real(c_real) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       ! Normalization factor
-      DOUBLE PRECISION, INTENT(IN) :: NORM
+      real(c_real), INTENT(IN) :: NORM
 
       ! Numerator and denominator
-      DOUBLE PRECISION, INTENT(OUT) :: NUM, DEN
+      real(c_real), INTENT(OUT) :: NUM, DEN
 
       ! Average value of Residual
-      DOUBLE PRECISION, INTENT(OUT) :: RESID
+      real(c_real), INTENT(OUT) :: RESID
 
       ! Maximum value of Residual
-      DOUBLE PRECISION, INTENT(OUT) :: MAX_RESID
+      real(c_real), INTENT(OUT) :: MAX_RESID
       INTEGER, INTENT(IN   ) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 
@@ -121,7 +124,7 @@
 ! Number of fluid cells
       INTEGER :: NCELLS
 ! Numerators and denominators
-      DOUBLE PRECISION :: NUM1, DEN1
+      real(c_real) :: NUM1, DEN1
 !-----------------------------------------------
 
 ! initializing values
@@ -218,50 +221,50 @@
 ! Dummy arguments
 !-----------------------------------------------
 ! primary velocity component
-      DOUBLE PRECISION, INTENT(IN) :: vel&
+      real(c_real), INTENT(IN) :: vel&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! other components used here only for scaling
-      DOUBLE PRECISION, INTENT(IN) :: vels1&
+      real(c_real), INTENT(IN) :: vels1&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      DOUBLE PRECISION, INTENT(IN) :: vels2&
+      real(c_real), INTENT(IN) :: vels2&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 ! Septadiagonal matrix A_m
-      DOUBLE PRECISION :: A_m&
+      real(c_real) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 
 ! Vector b_m
-      DOUBLE PRECISION :: B_m&
+      real(c_real) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
       INTEGER, INTENT(in) :: flag&
          (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
 ! Numerator and denominator
-      DOUBLE PRECISION, INTENT(OUT) :: NUM, DEN
+      real(c_real), INTENT(OUT) :: NUM, DEN
 ! Average value of Residual
-      DOUBLE PRECISION, INTENT(OUT) :: RESID
+      real(c_real), INTENT(OUT) :: RESID
 ! Maximum value of Residual
-      DOUBLE PRECISION, INTENT(OUT) :: MAX_RESID
+      real(c_real), INTENT(OUT) :: MAX_RESID
 ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
 !-----------------------------------------------
 !     Local variables
 !-----------------------------------------------
       ! Velocity magnitude
-      DOUBLE PRECISION :: magvel
+      real(c_real) :: magvel
 
       ! Indices
       INTEGER :: i, j, k
 
       ! Numerators and denominators
-      DOUBLE PRECISION :: NUM1, DEN1
+      real(c_real) :: NUM1, DEN1
 
       ! Number of fluid cells
       INTEGER :: NCELLS
 
       ! New local variables for DMP version
-      DOUBLE PRECISION :: resid_ijk&
+      real(c_real) :: resid_ijk&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
 !-----------------------------------------------

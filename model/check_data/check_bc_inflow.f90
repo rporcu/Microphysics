@@ -1,6 +1,9 @@
 MODULE CHECK_BC_INFLOW_MODULE
 
-      use param1   , only: undefined, one, zero, is_undefined, is_defined
+   use bl_fort_module, only : c_real
+   use iso_c_binding , only: c_int
+
+   use param1   , only: undefined, one, zero, is_undefined, is_defined
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -67,9 +70,9 @@ MODULE CHECK_BC_INFLOW_MODULE
 !---------------------------------------------------------------------//
 ! loop/variable indices
       INTEGER :: M
-      DOUBLE PRECISION :: SUM_EP
+      real(c_real) :: SUM_EP
 ! Solids phase density in BC region.
-      DOUBLE PRECISION :: BC_ROs(DIM_M)
+      real(c_real) :: BC_ROs(DIM_M)
 
 !---------------------------------------------------------------------//
 
