@@ -74,7 +74,7 @@ extern "C"
          Real* omega_new,
          int* estatus, int* finsh);
 
-  void calc_coeff_all(
+  void calc_coeff_all(int* slo, int* shi, const int* lo, const int* hi, 
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
          Real* u_g,  Real* v_g,   Real* w_g,

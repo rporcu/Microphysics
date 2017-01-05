@@ -27,14 +27,14 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff_all(ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
+      subroutine calc_coeff_all(slo, shi, lo, hi, &
+        ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
         flag, dx, dy, dz) bind(C, name="calc_coeff_all")
 
 ! Global variables:
 !-----------------------------------------------------------------------
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use discretelement, only: max_pip
 
       ! Flag for explcit coupling between the fluid and particles.
@@ -42,29 +42,30 @@ module calc_coeff_module
 
       implicit none
 
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(inout) :: ro_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) ::  p_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: mu_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(OUT  ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(OUT  ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: pvol(max_pip)
       real(c_real), intent(in   ) :: des_radius(max_pip)

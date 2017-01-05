@@ -367,6 +367,9 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
+      Array<int> slo(3);
+      Array<int> shi(3);
+
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
         set_bc1(
@@ -379,7 +382,23 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
       // Calculate transport coefficients
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        calc_coeff_all(
+      {
+        const Box& bx=mfi.validbox();
+        const int* lo = bx.loVect();
+        const int* hi = bx.hiVect();
+
+        const int* sslo = (*flag[lev])[mfi].loVect();
+        const int* sshi = (*flag[lev])[mfi].hiVect();
+
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
+
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
+
+        calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi, 
           (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
           (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -388,6 +407,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           pvol.dataPtr(), des_pos_new.dataPtr(),
           des_vel_new.dataPtr(), des_radius.dataPtr(),
           (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+      }
 
       // Calculate the stress tensor trace and cross terms for all phases.
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -642,7 +662,23 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Recalculate all coefficients (JM: not sure why)
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            calc_coeff_all(
+          {
+            const Box& bx=mfi.validbox();
+            const int* lo = bx.loVect();
+            const int* hi = bx.hiVect();
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi, 
               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -651,6 +687,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               pvol.dataPtr(), des_pos_new.dataPtr(),
               des_vel_new.dataPtr(), des_radius.dataPtr(),
               (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+          }
         }
       } while (reiterate==1);
 }
@@ -773,6 +810,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Calculate all the coefficients once before entering the time loop
   int calc_flag = 2;
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  {
       calc_coeff(
                (*flag[lev])[mfi].dataPtr(),    &calc_flag,
                (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
@@ -783,6 +821,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                particle_phase.dataPtr(), particle_state.dataPtr(),
                pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
                des_radius.dataPtr(), &dx, &dy, &dz );
+  }
 
   mfix_finl_err_msg();
 }
