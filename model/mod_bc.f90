@@ -9,31 +9,32 @@ MODULE MOD_BC
 !     This is a yz plane                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE MOD_BC_I(BCV, flag)
+      SUBROUTINE MOD_BC_I(BCV, flag, slo, shi)
 
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
       use bc, only: BC_PLANE
 
-      use compar, only: mype, istart3, iend3, jstart3, jend3, kstart3, kend3
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
 
+      use compar       , only: myPE
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       use open_files_mod, only: open_pe_log
 
       IMPLICIT NONE
 
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! boundary condition index
-      integer, intent(in   ) :: BCV
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
-! i cell indices defining location of yz plane
+      ! boundary condition index
+      integer, intent(in   ) :: BCV
+
+      integer, intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      ! i cell indices defining location of yz plane
       INTEGER :: i,j,k
 
 !-----------------------------------------------
@@ -169,7 +170,7 @@ MODULE MOD_BC
 !  Purpose: modify the "J" values for the b.c. plane                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MOD_BC_J(BCV, flag)
+      SUBROUTINE MOD_BC_J(BCV, flag, slo, shi)
 
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
@@ -187,11 +188,15 @@ MODULE MOD_BC
 
       IMPLICIT NONE
 
-! boundary condition index
-      INTEGER, INTENT(in) :: BCV
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer     , intent(in   ) :: slo(3),shi(3)
 
-! Calculated cell indices in I,J,K directions
+      ! boundary condition index
+      INTEGER, INTENT(in) :: BCV
+
+      integer, intent(in) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      ! Calculated cell indices in I,J,K directions
       INTEGER :: OWNER
       INTEGER :: I, J, K
 
@@ -322,7 +327,7 @@ MODULE MOD_BC
 !  Purpose: modify the "K" values for the b.c. plane                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE MOD_BC_K(BCV,flag)
+      SUBROUTINE MOD_BC_K(BCV,flag,slo,shi)
 
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
@@ -340,9 +345,12 @@ MODULE MOD_BC
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
 ! boundary condition index
       INTEGER, INTENT(in) :: BCV
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! calculated cell indices in I,J,K directions
       INTEGER :: OWNER

@@ -105,29 +105,30 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      LOGICAL FUNCTION IS_SMALL (V, tol, flag)
+      LOGICAL FUNCTION IS_SMALL (V, tol, flag, slo, shi)
 
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       IMPLICIT NONE
 
-! Dummy arguments
-!--------------------------------------------------------------------//
-! Tolerance value for small
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      ! Tolerance value for small
       real(c_real), INTENT(IN) :: tol
-! Field variable array
-      real(c_real), INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
+
+      ! Field variable array
+      real(c_real), INTENT(IN) :: V&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !--------------------------------------------------------------------//
       INTEGER :: i, j, k
 
       IS_SMALL = .FALSE.
-      do k = kstart3, kend3
-        do j = jstart3, jend3
-          do i = istart3, iend3
+      do k = slo(3),shi(3)
+        do j = slo(1),shi(2)
+          do i = slo(1),shi(1)
 
              if (1.eq.flag(i,j,k,1)) then
                if (abs(V(i,j,k)) > tol) return

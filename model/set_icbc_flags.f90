@@ -405,15 +405,15 @@ MODULE set_icbc_flags_module
 
             write(*,*) 'call mod_bc_i',bcv
             IF(X_CONSTANT .AND. IS_DEFINED(BC_X_W(BCV)))                &
-               CALL MOD_BC_I(BCV,flag)
+               CALL MOD_BC_I(BCV,flag,slo,shi)
 
             write(*,*) 'call mod_bc_j',bcv
             IF(Y_CONSTANT .AND. IS_DEFINED(BC_Y_S(BCV)))                &
-               CALL MOD_BC_J(BCV,flag)
+               CALL MOD_BC_J(BCV,flag,slo,shi)
 
             write(*,*) 'call mod_bc_k',bcv
             IF(Z_CONSTANT .AND. IS_DEFINED(BC_Z_B(BCV)))                &
-               CALL MOD_BC_K(BCV,flag)
+               CALL MOD_BC_K(BCV,flag,slo,shi)
 
 ! Extend the boundaries for cyclic implementation
             IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (IMAX2 - 1) .AND. &

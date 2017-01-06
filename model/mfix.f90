@@ -21,7 +21,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use iso_c_binding , only: c_int
 
       use calc_coeff_module, only: calc_coeff
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use corner_module, only: get_corner_cells
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
@@ -90,14 +89,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !---------------------------------------------------------------------//
-      print *,'ISTART3 ', istart3, slo(1)
-      print *,'JSTART3 ', jstart3, slo(2)
-      print *,'KSTART3 ', kstart3, slo(3)
-      print *,'IEND3   ', iend3  , shi(1)
-      print *,'JEND3   ', jend3  , shi(2)
-      print *,'KEND3   ', kend3  , shi(3)
-
-!---------------------------------------------------------------------//
       flag_mod = flag
 
       call init_output_vars(time, dt)
@@ -115,7 +106,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 
 ! Set the flags for wall surfaces impermeable and identify flow
 ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      call set_flags1(flag)
+      call set_flags1(slo,shi,flag)
       flag_mod = flag
 
       ! Find corner cells and set their face areas to zero

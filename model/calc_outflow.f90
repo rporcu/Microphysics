@@ -14,7 +14,7 @@ MODULE CALC_OUTFLOW_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_OUTFLOW(L,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
+      SUBROUTINE CALC_OUTFLOW(L,slo,shi,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -25,25 +25,25 @@ MODULE CALC_OUTFLOW_MODULE
       use bc, only: bc_out_n
       use bc, only: bc_mout_g, bc_vout_g
 
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       implicit none
 
-!--------------------------------------------------------------------//
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       ! Boundary condition number
       INTEGER, intent(in) :: L
 
       real(c_real), intent(in) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: dx, dy, dz
 
 ! Local variables

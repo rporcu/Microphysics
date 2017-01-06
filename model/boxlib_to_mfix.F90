@@ -140,22 +140,22 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr3(u_g, v_g, w_g, p_g, dx, dy, dz) &
+  subroutine mfix_usr3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz) &
        bind(C, name="mfix_usr3")
 
-    use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
+    integer     , intent(in   ) :: slo(3),shi(3)
 
     real(c_real), intent(inout) :: u_g&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(inout) :: v_g&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(inout) :: w_g&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(inout) :: p_g&
-       (istart3:iend3,jstart3:jend3,kstart3:kend3)
+        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(in   ) :: dx, dy, dz
 
-    call usr3(u_g, v_g, w_g, p_g, dx, dy, dz)
+    call usr3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz)
 
   end subroutine mfix_usr3
 

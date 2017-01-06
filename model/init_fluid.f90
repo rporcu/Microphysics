@@ -73,7 +73,7 @@ contains
 
       ! Set the initial viscosity
       if (is_undefined(ro_g0)) then
-         call calc_mu_g(lambda_g,mu_g,flag)
+         call calc_mu_g(slo,shi,lambda_g,mu_g,flag)
       else
          where (flag(:,:,:,1) == 1) mu_g = mu_g0
          where (flag(:,:,:,1) == 1) lambda_g = -(2.0d0/3.0d0)*mu_g0

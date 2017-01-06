@@ -132,7 +132,7 @@ module set_bc1_module
 
       IF (IS_UNDEFINED(BC_DT_0(BCV))) RETURN
 
-      CALL CALC_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
+      CALL CALC_OUTFLOW(BCV,slo,shi,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &
@@ -209,7 +209,7 @@ module set_bc1_module
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      CALL CALC_OUTFLOW(BCV,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
+      CALL CALC_OUTFLOW(BCV,slo,shi,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &

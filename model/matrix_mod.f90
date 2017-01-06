@@ -17,7 +17,6 @@
       use iso_c_binding , only: c_int
 
       USE compar, only: iend3, jend3, kend3
-      USE compar, only: istart3, jstart3, kstart3
       USE compar, only: mype
       USE funits, only: dmp_log
       USE param1, only: zero, one
@@ -71,16 +70,19 @@
 !           source vector.                                             C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE INIT_AB_M(A_M, B_M)
+      SUBROUTINE INIT_AB_M(slo, shi, A_M, B_M)
 
       IMPLICIT NONE
 
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !-----------------------------------------------
 !

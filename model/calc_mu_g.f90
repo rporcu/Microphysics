@@ -15,21 +15,22 @@ module calc_mu_g_module
 ! For air, Tb=74.82 so that mu = 1.71*10-4 poise at T = 273K           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_mu_g(lambda_g,mu_g,flag)
+   subroutine calc_mu_g(slo,shi,lambda_g,mu_g,flag)
 
       use param1, only: zero, is_undefined
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
 ! Dummy arguments .....................................................//
       real(c_real), intent(  out) :: lambda_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer         , intent(in   ) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables .....................................................//
       integer :: i,j,k
@@ -37,9 +38,9 @@ module calc_mu_g_module
 
 !-----------------------------------------------------------------------!
 
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-            do i = istart3, iend3
+      do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+            do i = slo(1),shi(1)
 
                if(flag(i,j,k,1) == 1) then
                   mu_g(i,j,k) = 1.7d-5 * (293.15d0/273.0d0)**1.5d0 *&

@@ -9,9 +9,8 @@ MODULE SET_FLAGS_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_FLAGS(flag)
+      SUBROUTINE SET_FLAGS(slo,shi,flag)
 
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
       use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
       use ic, only: NSW_
       use geometry, only: ijkmax3
@@ -20,7 +19,10 @@ MODULE SET_FLAGS_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      integer, intent(inout) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -51,46 +53,46 @@ MODULE SET_FLAGS_MODULE
 ! avoid unphysical strain rates in fluid cells adjacent to the flow
 ! boundary
 ! ---------------------------------------------------------------->>>
-      DO i = istart3, iend3
-         DO j = jstart3, jend3
-            DO k = kstart3, kend3
+      do i = slo(3),shi(3)
+         do j = slo(2),shi(2)
+            do k = slo(1),shi(1)
 
               select case (flag(i,j,k,1))
                 case (PINF_, POUT_, MINF_, MOUT_, OUTF_)
 
-                ib = min( iend3, max (istart3, i+1) )
-                jb = min( jend3, max (jstart3, j) )
-                kb = min( kend3, max (kstart3, k) )
+                ib = min( shi(1), max (slo(1), i+1) )
+                jb = min( shi(2), max (slo(2), j) )
+                kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
-                ib = min( iend3, max (istart3, i-1) )
-                jb = min( jend3, max (jstart3, j) )
-                kb = min( kend3, max (kstart3, k) )
+                ib = min( shi(1), max (slo(1), i-1) )
+                jb = min( shi(2), max (slo(2), j) )
+                kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
-                ib = min( iend3, max (istart3, i) )
-                jb = min( jend3, max (jstart3, j+1) )
-                kb = min( kend3, max (kstart3, k) )
+                ib = min( shi(1), max (slo(1), i) )
+                jb = min( shi(2), max (slo(2), j+1) )
+                kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
-                ib = min( iend3, max (istart3, i) )
-                jb = min( jend3, max (jstart3, j-1) )
-                kb = min( kend3, max (kstart3, k) )
+                ib = min( shi(1), max (slo(1), i) )
+                jb = min( shi(2), max (slo(2), j-1) )
+                kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
-                ib = min( iend3, max (istart3, i) )
-                jb = min( jend3, max (jstart3, j) )
-                kb = min( kend3, max (kstart3, k+1) )
+                ib = min( shi(1), max (slo(1), i) )
+                jb = min( shi(2), max (slo(2), j) )
+                kb = min( shi(3), max (slo(3), k+1) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
-                ib = min( iend3, max (istart3, i) )
-                jb = min( jend3, max (jstart3, j) )
-                kb = min( kend3, max (kstart3, k-1) )
+                ib = min( shi(1), max (slo(1), i) )
+                jb = min( shi(2), max (slo(2), j) )
+                kb = min( shi(3), max (slo(3), k-1) )
                 if (flag(ib,jb,kb,1) == NSW_) &
                    flag(ib,jb,kb,1) = FSW_
 
@@ -104,18 +106,7 @@ MODULE SET_FLAGS_MODULE
 ! on the corresponding character value of flag0.  By this point the
 ! flag0 has been defined in all cells
 ! ---------------------------------------------------------------->>>
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
-
-! Initialize cell face flags.  UNDEFINED_I should be a large +ve value.
-              flag(i,j,k,2) = UNDEFINED_I
-              flag(i,j,k,3) = UNDEFINED_I
-              flag(i,j,k,4) = UNDEFINED_I
-
-          end do
-        end do
-      end do
+      flag(:,:,:,2:4) = UNDEFINED_I
 
       IF (MYPE.EQ.PE_IO) THEN
          ALLOCATE (ARR1(IJKMAX3))
@@ -154,19 +145,21 @@ MODULE SET_FLAGS_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SET_FLAGS1(flag)
+      SUBROUTINE SET_FLAGS1(slo,shi,flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE param1   , only: is_undefined
       USE geometry , only: imax2,jmax2,kmax2,imax3,jmax3,kmax3
-      USE compar   , only: istart3,iend3,jstart3,jend3,kstart3,kend3
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       implicit none
 
-      integer, intent(inout) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      integer, intent(inout) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -175,9 +168,9 @@ MODULE SET_FLAGS_MODULE
       INTEGER :: i,j,k
 !-----------------------------------------------
 
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
+      do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+           do i = slo(1),shi(1)
 
 ! If the flag is greater than or equal to 2000, there is no
 ! internal surface.
@@ -257,9 +250,9 @@ MODULE SET_FLAGS_MODULE
      end do
 
 ! Clean up edge cases
-     do k = kstart3, kend3
-         do j = jstart3, jend3
-            do i = istart3, iend3
+      do i = slo(3),shi(3)
+         do j = slo(2),shi(2)
+            do k = slo(1),shi(1)
                if(IS_UNDEFINED(flag(i,j,k,2))) flag(i,j,k,2) = 0
                if(IS_UNDEFINED(flag(i,j,k,3))) flag(i,j,k,3) = 0
                if(IS_UNDEFINED(flag(i,j,k,4))) flag(i,j,k,4) = 0

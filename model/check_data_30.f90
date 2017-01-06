@@ -11,24 +11,25 @@ MODULE CHECK_DATA_30_MODULE
 !  Purpose: Set miscellaneous constants                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_DATA_30(lambda_g,mu_g,flag)
+      SUBROUTINE CHECK_DATA_30(slo,shi,lo,hi,lambda_g,mu_g,flag)
 
 ! Global variables: (common to sub-functions)
 !---------------------------------------------------------------------//
       use compar, only: istart2,iend2, jstart2, jend2, kstart2, kend2
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1, only: zero
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(IN   ) :: lambda_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) ::     mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -38,10 +39,10 @@ MODULE CHECK_DATA_30_MODULE
 
 
 ! Check physical properties in inflow/outflow cells.
-      CALL CHECK_FLOW_CELL_PROPS(lambda_g,mu_g, flag)
+      CALL CHECK_FLOW_CELL_PROPS(slo,shi,lo,hi,lambda_g,mu_g, flag)
 
 ! Verify physical values for field variables.
-      CALL CHECK_PHYSICAL_BOUNDS(mu_g, flag)
+      CALL CHECK_PHYSICAL_BOUNDS(slo,shi,lo,hi,mu_g, flag)
 
       RETURN
 
@@ -55,22 +56,23 @@ MODULE CHECK_DATA_30_MODULE
 !  properties for specified variables.                                 !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_FLOW_CELL_PROPS(lambda_g,mu_g,flag)
+      SUBROUTINE CHECK_FLOW_CELL_PROPS(slo,shi,lo,hi,lambda_g,mu_g,flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
 
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE open_files_mod, only: open_pe_log, close_pe_log
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(IN   ) :: lambda_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables:
 !---------------------------------------------------------------------//
@@ -129,19 +131,20 @@ MODULE CHECK_DATA_30_MODULE
 !  specified variables.                                                !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE CHECK_PHYSICAL_BOUNDS(mu_g, flag)
+      SUBROUTINE CHECK_PHYSICAL_BOUNDS(slo, shi, lo, hi, mu_g, flag)
 
 ! Global variables:
 !---------------------------------------------------------------------//
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use open_files_mod, only: open_pe_log, close_pe_log
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(IN   ) ::     mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) ::     flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables:
 !---------------------------------------------------------------------//

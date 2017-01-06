@@ -102,7 +102,7 @@ module solve_pp_module
 
 ! initializing
       pp_g = 0.0d0
-      call init_ab_m (a_m, b_m)
+      call init_ab_m (slo, shi, a_m, b_m)
 
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)

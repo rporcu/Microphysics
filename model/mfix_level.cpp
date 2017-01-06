@@ -353,10 +353,27 @@ mfix_level::usr3(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
+   Array<int> slo(3);
+   Array<int> shi(3);
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     mfix_usr3((*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
+  {
+     const int* sslo = (*flag[lev])[mfi].loVect();
+     const int* sshi = (*flag[lev])[mfi].hiVect();
+ 
+     slo[0] = sslo[0]+2;
+     slo[1] = sslo[1]+2;
+     slo[2] = sslo[2]+2;
+ 
+     shi[0] = sshi[0]+2;
+     shi[1] = sshi[1]+2;
+     shi[2] = sshi[2]+2;
+
+     mfix_usr3( slo.dataPtr(),              shi.dataPtr(), 
+               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
                (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
                &dx, &dy, &dz);
+   }
 }
 
 void

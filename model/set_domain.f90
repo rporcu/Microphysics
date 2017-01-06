@@ -20,8 +20,6 @@ module set_domain_module
       subroutine set_domain(slo,shi,flag,dx,dy,dz) &
           bind(C, name="set_domain")
 
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-
       ! Cyclic domain flags.
       use geometry, only: CYCLIC
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
@@ -79,8 +77,7 @@ module set_domain_module
       CALL SET_BC_FLOW
 
       ! Set the flags for identifying computational cells
-      CALL SET_FLAGS(flag)
-
+      CALL SET_FLAGS(slo,shi,flag)
 
       end subroutine set_domain
 end module set_domain_module

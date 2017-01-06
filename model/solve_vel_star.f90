@@ -95,7 +95,7 @@ module solve_vel_star_module
 !.....................................................................//
 
 ! initialize matrix and vector
-      call init_ab_m (a_m, b_m)
+      call init_ab_m (slo, shi, a_m, b_m)
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
@@ -215,7 +215,7 @@ module solve_vel_star_module
 !.....................................................................//
 
 ! initialize matrix and vector
-      call init_ab_m (a_m, b_m)
+      call init_ab_m (slo, shi, a_m, b_m)
 
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
@@ -333,7 +333,7 @@ module solve_vel_star_module
 !.....................................................................//
 
 ! initialize matrix and vector
-      call init_ab_m(a_m, b_m)
+      call init_ab_m(slo, shi, a_m, b_m)
 
 ! calculate the convection-diffusion terms
       call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &

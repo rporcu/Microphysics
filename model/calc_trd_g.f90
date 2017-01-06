@@ -24,27 +24,28 @@ MODULE CALC_TRD_G_MODULE
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TRD_G(trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
+      SUBROUTINE CALC_TRD_G(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
       USE functions, only: iminus, jminus, kminus
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE compar, only: istart, iend, jstart, jend, kstart, kend
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
-      real(c_real), intent(inout) :: trd_g(istart:iend,jstart:jend,kstart:kend)
+      real(c_real), intent(inout) :: trd_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 !-----------------------------------------------
@@ -64,9 +65,9 @@ MODULE CALC_TRD_G_MODULE
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
             IF (flag(i,j,k,1)<100) THEN
 
               TRD_G(i,j,k) = &
