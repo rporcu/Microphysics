@@ -28,11 +28,10 @@ module source_pp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
+subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
-      USE compar, ONLY: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE eos, ONLY: DROODP_G
       USE fld_const, ONLY: RO_G0
       USE matrix, ONLY: E, W, N, S, T, B
@@ -42,47 +41,47 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
       USE write_error_module, only: write_error
 
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! maximum term in b_m expression
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! maximum term in b_m expression
       real(c_real), INTENT(INOUT) :: B_mmax&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dt
 
       real(c_real), INTENT(IN   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: d_e&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: d_n&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: d_t&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local Variables
@@ -104,9 +103,9 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
-        do k = kstart3, kend3
-           do j = jstart3, jend3
-             do i = istart3, iend3
+        do k = slo(3),shi(3)
+           do j = slo(2),shi(2)
+             do i = slo(1),shi(1)
 
             IF (1.eq.flag(i,j,k,1)) THEN
 
@@ -164,9 +163,9 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
       IF (IS_UNDEFINED(RO_G0)) THEN
          fac = UR_FAC(1)  !since p_g = p_g* + ur_fac * pp_g
 
-         do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+        do k = slo(3),shi(3)
+           do j = slo(2),shi(2)
+             do i = slo(1),shi(1)
 
                if (1.eq.flag(i,j,k,1)) THEN
                   A_M(I,J,K,0) = A_M(I,J,K,0) - &
@@ -177,6 +176,7 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
              end do
            end do
          end do
+
       ENDIF   ! end if (ro_g0 == undefined); i.e., compressible flow
 
 
@@ -184,9 +184,9 @@ subroutine source_pp_g(A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
 ! boundaries.  Because the P' at such boundaries is zero we may set the
 ! coefficient in the neighboring fluid cell to zero without affecting
 ! the linear equation set.
-      do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
+      do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+           do i = slo(1),shi(1)
 
          IF (1.eq.flag(i,j,k,1)) THEN
 

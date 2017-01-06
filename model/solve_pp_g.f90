@@ -12,7 +12,8 @@ module solve_pp_module
 !  Author: M. Syamlal                                 Date: 19-JUN-96  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_pp_g(u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
+   subroutine solve_pp_g(slo, shi, lo, hi, &
+      u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
       flag, dt, normg, resg, dx, dy, dz)&
       bind(C, name="solve_pp_g")
@@ -25,7 +26,6 @@ module solve_pp_module
 
 ! Global data .........................................................//
 ! Fluid array bounds
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Flag for existence of point sources
       use ps, only: point_source
 ! Global data arrays for residuals
@@ -37,43 +37,44 @@ module solve_pp_module
 
       IMPLICIT NONE
 
-! Dummy arguments ....................................................//
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: pp_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_e&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_n&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_t&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: a_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,-3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: b_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -97,19 +98,19 @@ module solve_pp_module
       real(c_real), allocatable :: B_MMAX(:,:,:)
 !.....................................................................//
 
-      ALLOCATE(B_MMAX(istart3:iend3, jstart3:jend3, kstart3:kend3))
+      ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
 ! initializing
       pp_g = 0.0d0
       call init_ab_m (a_m, b_m)
 
 ! Forming the sparse matrix equation.
-      call conv_pp_g (a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
+      call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
-      call source_pp_g(a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
-      if(point_source) call point_source_pp_g (b_m, b_mmax, flag, dx, dy, dz)
+      if(point_source) call point_source_pp_g (slo, shi, lo, hi, b_m, b_mmax, flag, dx, dy, dz)
 
 ! Find average residual, maximum residual and location
       normgloc = normg
@@ -145,23 +146,23 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(b_m, B_mmax,flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, lo, hi, b_m, B_mmax,flag, dx, dy, dz)
 
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
          ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
 
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! Vector b_m
+
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! maximum term in b_m expression
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! maximum term in b_m expression
       real(c_real), INTENT(INOUT) :: B_mmax&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
 

@@ -674,7 +674,21 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Solve the pressure correction equation
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            solve_pp_g(
+          {
+            const Box& bx=mfi.validbox();
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            solve_pp_g(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
               (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
@@ -684,6 +698,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr(),     &dt,
               &lnormg,                 &resg,     &dx, &dy, &dz);
+          }
 
             eq_id=1;
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)

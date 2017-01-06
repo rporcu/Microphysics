@@ -37,32 +37,32 @@ module conv_pp_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CONV_PP_G(A_M, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
+      SUBROUTINE CONV_PP_G(slo, shi, lo, hi, &
+                           A_M, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use matrix   , only: e, w, s, n, t, b
       USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
 
       implicit none
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), INTENT(IN   ) :: rop_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local variables

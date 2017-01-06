@@ -154,7 +154,7 @@ extern "C"
           int*  flag,     Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
-  void solve_pp_g(
+  void solve_pp_g(int* slo, int* shi, const int* lo, const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,
           Real* rop_g,    Real* rop_go,
