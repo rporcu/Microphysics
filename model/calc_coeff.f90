@@ -84,7 +84,7 @@ module calc_coeff_module
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(slo, shi, flag, 2, ro_g, p_g, ep_g, rop_g, &
+      CALL CALC_COEFF(slo, shi, lo, hi, flag, 2, ro_g, p_g, ep_g, rop_g, &
          u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
@@ -114,7 +114,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff(slo, shi, flag, pLevel, ro_g, p_g, ep_g, &
+      subroutine calc_coeff(slo, shi, lo, hi, flag, pLevel, ro_g, p_g, ep_g, &
          rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)&
@@ -132,7 +132,7 @@ module calc_coeff_module
 ! 0) Only density
 ! 1) Everything but density
 ! 2) All physical properties
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in   ) :: plevel
 
       integer(c_int), intent(in   ) :: flag&

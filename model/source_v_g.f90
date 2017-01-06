@@ -30,7 +30,8 @@ module source_v_g_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_V_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      SUBROUTINE SOURCE_V_G(slo, shi, lo, hi, &
+                            A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                             v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
 
@@ -38,7 +39,6 @@ module source_v_g_module
 !---------------------------------------------------------------------//
       use compar, only: jmap
       USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       USE constant, only: gravity
       USE bc, only: delp_y
@@ -56,33 +56,33 @@ module source_v_g_module
 
       implicit none
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: tau_v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -188,7 +188,7 @@ module source_v_g_module
       ENDDO
 
 ! modifications for bc
-      CALL SOURCE_V_G_BC(A_M,B_M,V_G,flag,dx,dy,dz)
+      CALL SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,V_G,flag,dx,dy,dz)
 
       RETURN
       END SUBROUTINE SOURCE_V_G
@@ -210,7 +210,7 @@ module source_v_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_V_G_BC(A_M,B_M,v_g,flag,dx,dy,dz)
+      SUBROUTINE SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,v_g,flag,dx,dy,dz)
 
 !-----------------------------------------------
 ! Modules
@@ -220,24 +220,26 @@ module source_v_g_module
       USE functions, only: jminus, jplus, jm1
       USE geometry  , only: imax2, kmax2
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use matrix, only: e, w, s, n, t, b
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Velocity v_g
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Velocity v_g
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -669,26 +671,26 @@ module source_v_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_V_G(A_M, B_M, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_V_G(slo, shi, lo, hi, A_M, B_M, flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN   ) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       integer, intent(in   ) :: flag &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local Variables

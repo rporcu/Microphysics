@@ -85,8 +85,7 @@ extern "C"
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void calc_coeff(
-         int* slo, int* shi,
+  void calc_coeff(int* slo, int* shi, const int* lo, const int* hi,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
@@ -122,7 +121,7 @@ extern "C"
   void physical_prop(int* level, Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g, int* flag);
 
-  void solve_u_g_star(
+  void solve_u_g_star(int* slo, int* shi, const int* lo, const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* u_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -133,7 +132,7 @@ extern "C"
           int* flag,      Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
-  void solve_v_g_star(
+  void solve_v_g_star(int* slo, int* shi, const int* lo, const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* v_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -144,7 +143,7 @@ extern "C"
           int* flag,      Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
-  void solve_w_g_star(
+  void solve_w_g_star(int* slo, int* shi, const int* lo, const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* w_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,

@@ -27,14 +27,14 @@ module source_u_g_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_U_G(A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      SUBROUTINE SOURCE_U_G(slo, shi, lo, hi, &
+         A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       use compar  , only: imap
       USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE constant, only: gravity
       USE bc      , only: delp_x
 
@@ -51,35 +51,35 @@ module source_u_g_module
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
-      real(c_real), intent(in   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: rop_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: u_go&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), intent(in   ) :: tau_u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      integer, intent(in   ) :: flag &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-
-! Dummy arguments
-!--------o------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real), intent(in   ) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: rop_go&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: u_go&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: tau_u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      integer, intent(in   ) :: flag &
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -185,7 +185,7 @@ module source_u_g_module
       ENDDO   ! end do loop over ijk
 
 ! modifications for bc
-      CALL SOURCE_U_G_BC (A_M, B_M, U_G, flag, dx, dy, dz)
+      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_M, B_M, U_G, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -209,12 +209,11 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(A_M, B_M, U_G, flag, dx, dy, dz)
+      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_M, B_M, U_G, flag, dx, dy, dz)
 
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
       USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
@@ -223,19 +222,22 @@ module source_u_g_module
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Velocity u_g
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Velocity u_g
       real(c_real), INTENT(IN   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
@@ -662,25 +664,25 @@ module source_u_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(A_M, B_M, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_M, B_M, flag, dx, dy, dz)
 
-      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
       implicit none
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN   ) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag &
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 
