@@ -16,10 +16,8 @@ contains
       flag) bind(c, name="physical_prop")
 
       use calc_ro_g_module, only: calc_ro_g
-      use funits, only: unit_log
-      use param1, only: is_undefined, zero
+      use param1, only: is_undefined
 
-      USE compar, only: myPE, PE_IO, numPEs
       USE exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
 

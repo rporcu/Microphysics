@@ -41,10 +41,6 @@ MODULE GET_DATA_MODULE
       IMPLICIT NONE
 
       real(c_real), intent(  out) :: time, dt
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-      real(c_real) :: dx, dy, dz
 
 ! This module call routines to initialize the namelist variables.
       CALL INIT_NAMELIST

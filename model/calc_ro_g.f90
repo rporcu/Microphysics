@@ -14,7 +14,7 @@ contains
    subroutine calc_ro_g(slo, shi, ro_g, rop_g, p_g, ep_g, flag)
 
       use eos      , only: eosg
-      use fld_const, only: mw_avg, ro_g0
+      use fld_const, only: mw_avg
 
       IMPLICIT NONE
 

@@ -26,7 +26,7 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer(c_int), intent(in   ) :: nparticles
       integer(c_int), intent(in   ) :: particle_state(nparticles)

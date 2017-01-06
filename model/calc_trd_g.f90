@@ -27,11 +27,10 @@ MODULE CALC_TRD_G_MODULE
       SUBROUTINE CALC_TRD_G(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
       USE functions, only: iminus, jminus, kminus
-      USE compar, only: istart, iend, jstart, jend, kstart, kend
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s

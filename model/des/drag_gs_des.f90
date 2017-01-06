@@ -44,7 +44,7 @@ module drag_gs_des1_module
 
         IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -156,7 +156,7 @@ module drag_gs_des1_module
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

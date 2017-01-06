@@ -36,7 +36,7 @@ module set_domain_module
       use set_bc_flow_module, only: set_bc_flow
       use set_flags_module, only: set_flags
 
-      use param1, only: one, is_defined
+      use param1, only: is_defined
 
       use run, only: dem_solids
 

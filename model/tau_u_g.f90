@@ -50,7 +50,7 @@ MODULE CALC_TAU_U_G_MODULE
       USE toleranc, only: dil_ep_s
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! TAU_U_g
       real(c_real), INTENT(INOUT) :: trd_g&

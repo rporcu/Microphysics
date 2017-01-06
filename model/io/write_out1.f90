@@ -14,7 +14,6 @@ MODULE WRITE_OUT1_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE WRITE_OUT1(time,slo,shi,ep_g,p_g,ro_g)
 
-      USE compar, only: iend3, jend3, kend3
       USE compar, only: mype, pe_io
       USE funits, only: unit_out
       USE out_array_mod, only: out_array

@@ -205,7 +205,7 @@ module calc_coeff_module
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Stress tensor cross terms.
       real(c_real), intent(inout) :: tau_u_g&

@@ -17,7 +17,7 @@ module calc_mu_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_mu_g(slo,shi,lambda_g,mu_g,flag)
 
-      use param1, only: zero, is_undefined
+      use param1, only: is_undefined
 
       implicit none
 

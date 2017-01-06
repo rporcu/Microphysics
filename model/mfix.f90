@@ -27,9 +27,8 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use geometry, only: flag_mod
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
-      use param1 , only: is_defined, is_undefined, undefined
+      use param1 , only: is_defined, is_undefined
       use parse_resid_string_module, only: parse_resid_string
-      use run, only: run_type
       use set_bc0_module, only: set_bc0
       use set_flags_module, only: set_flags1
       use set_ps_module, only: set_ps

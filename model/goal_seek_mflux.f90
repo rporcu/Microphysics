@@ -30,7 +30,7 @@ contains
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       integer(c_int), intent(inout) :: nit
       integer(c_int), intent(inout) :: gsmf

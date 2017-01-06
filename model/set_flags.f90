@@ -14,7 +14,7 @@ MODULE SET_FLAGS_MODULE
       use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
       use ic, only: NSW_
       use geometry, only: ijkmax3
-      use compar, only: iend3, mype, pe_io
+      use compar, only: mype, pe_io
       use param1, only: undefined_i
 
       IMPLICIT NONE

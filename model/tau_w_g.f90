@@ -51,7 +51,7 @@ MODULE CALC_TAU_W_G_MODULE
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! TAU_W_g
       real(c_real), INTENT(INOUT) :: trd_g&
