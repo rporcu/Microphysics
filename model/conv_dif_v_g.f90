@@ -19,50 +19,47 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_V_G(A_M, mu_g, u_g, v_g, w_g, &
+      SUBROUTINE CONV_DIF_V_G(slo, shi, lo, hi, A_M, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE run, only: discretize
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
+
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), INTENT(IN   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(INOUT) :: flux_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(INOUT) :: flux_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(INOUT) :: flux_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 ! DO NOT USE DEFERRED CORRECTION TO SOLVE V_G
       IF (DISCRETIZE(4) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_V_G0(A_M,MU_G,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
+         CALL STORE_A_V_G0(slo,shi,lo,hi,A_M,MU_G,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
       ELSE
-         CALL STORE_A_V_G1(A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag,dt,dx,dy,dz)
+         CALL STORE_A_V_G1(slo,shi,lo,hi,A_M,MU_G,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag,dt,dx,dy,dz)
       ENDIF
 
       RETURN
@@ -75,32 +72,31 @@ module v_g_conv_dif
 !  and top face of a v-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_VCELL_GVTERMS(U, V, WW, u_g, v_g, w_g)
+      SUBROUTINE GET_VCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE functions, only: jplus
       USE functions, only: avg
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(OUT) :: U&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(OUT) :: V&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(OUT) :: WW&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT( in) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT( in) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT( in) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -108,9 +104,9 @@ module v_g_conv_dif
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
             U(I,J,K) = AVG(U_G(I,J,K),U_G(i,jplus(i,j,k),k))
             V(I,J,K) = AVG(V_G(I,J,K),V_G(i,jplus(i,j,k),k))
             WW(I,J,K) = AVG(W_G(I,J,K),W_G(i,jplus(i,j,k),k))
@@ -130,31 +126,31 @@ module v_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GCFLUX_TERMS(&
+         slo, shi, lo, hi, &
          FLUX_E, FLUX_W, FLUX_N, &
          FLUX_S, FLUX_T, FLUX_B, &
          flux_ge, flux_gn, flux_gt, i, j, k)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar   , only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
 
       USE param1, only: half
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! fluxes through faces of given u-momentum cell
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! fluxes through faces of given u-momentum cell
       real(c_real), INTENT(OUT) :: flux_e, flux_w
       real(c_real), INTENT(OUT) :: flux_n, flux_s
       real(c_real), INTENT(OUT) :: flux_t, flux_b
 
       real(c_real), INTENT(IN   ) :: flux_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! indices
       INTEGER, INTENT(IN) :: i, j, k
 
@@ -183,28 +179,27 @@ module v_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
+         slo, shi, lo, hi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K,flag, &
          dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
       USE param1, only: zero
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! diffusion through faces of given v-momentum cell
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! diffusion through faces of given v-momentum cell
       real(c_real), INTENT(  OUT) :: d_fe, d_fw
       real(c_real), INTENT(  OUT) :: d_fn, d_fs
       real(c_real), INTENT(  OUT) :: d_ft, d_fb
 
       real(c_real), INTENT(IN   ) :: MU_G&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx, dy, dz
 
       INTEGER, INTENT(IN) :: i, j, k
@@ -280,34 +275,34 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G0(A_V_G,mu_g,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
+      SUBROUTINE STORE_A_V_G0(&
+         slo, shi, lo, hi, &
+         A_V_G,mu_g,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
-
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_V_g
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_V_g
       real(c_real), INTENT(INOUT) :: A_V_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), INTENT(IN   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 
 ! Local variables
@@ -322,19 +317,22 @@ module v_g_conv_dif
 
 !---------------------------------------------------------------------//
 
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
                   CALL GET_VCELL_GCFLUX_TERMS(&
+                     slo, shi, lo, hi, &
                      flux_e, flux_w, flux_n, &
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
-                  CALL GET_VCELL_GDIFF_TERMS(d_fe, d_fw, d_fn, d_fs, &
+                  CALL GET_VCELL_GDIFF_TERMS(&
+                     slo, shi, lo, hi, &
+                     d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
 ! East face (i+1/2, j+1/2, k)
@@ -418,46 +416,43 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G1(A_V_G, mu_g, u_g, v_g, w_g, &
+      SUBROUTINE STORE_A_V_G1(&
+         slo, shi, lo, hi, A_V_G, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-
       USE param1, only: one
-
       use matrix, only: e, w, n, s, t, b
-
       USE run, only: discretize
-
       USE xsi, only: calc_xsi
+
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_V_g
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_V_g
       real(c_real), INTENT(INOUT) :: A_V_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), INTENT(IN   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT( in) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT( in) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT( in) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
@@ -477,34 +472,37 @@ module v_g_conv_dif
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 !---------------------------------------------------------------------//
 
-      allocate(  U(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate(  V(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate( WW(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(  U(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(  V(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( WW(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      allocate(xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate(xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate(xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate(xsi_e(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      CALL GET_VCELL_GVTERMS(U, V, WW, u_g, v_g, w_g)
+      CALL GET_VCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
 
 ! shear indicator: y-momentum
       incr=2
-      CALL CALC_XSI (DISCRETIZE(4), V_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
+      CALL CALC_XSI (DISCRETIZE(4), slo, shi, lo, hi, &
+                     V_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
                      dt, dx, dy, dz)
 
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
                   CALL GET_VCELL_GCFLUX_TERMS(&
+                     slo, shi, lo, hi, &
                      flux_e, flux_w, flux_n, &
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_VCELL_GDIFF_TERMS(&
+                     slo, shi, lo, hi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 

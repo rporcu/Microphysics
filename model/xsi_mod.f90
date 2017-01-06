@@ -17,13 +17,11 @@
 
       CONTAINS
 
-      SUBROUTINE CALC_XSI(DISCR, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, &
+      SUBROUTINE CALC_XSI(DISCR, slo, shi, lo, hi, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, &
                           dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       USE discretization, only: phi_c_of
       USE discretization, only: superbee
@@ -43,22 +41,33 @@
 
       USE error_manager, only: err_msg, init_err_msg, finl_err_msg
       USE error_manager, only: ival, flush_err_msg
+
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! discretization method
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! discretization method
       INTEGER, INTENT(IN) :: DISCR
-! convected quantity
-      real(c_real), INTENT(IN) :: phi(istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Velocity components
-      real(c_real), INTENT(IN) :: U(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), INTENT(IN) :: V(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), INTENT(IN) :: W(istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Convection weighting factors
-      real(c_real), INTENT(out) :: xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), INTENT(out) :: xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), INTENT(out) :: xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3)
+
+      ! convected quantity
+      real(c_real), INTENT(IN) :: phi&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Velocity components
+      real(c_real), INTENT(IN) :: U&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN) :: V&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN) :: W&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Convection weighting factors
+      real(c_real), INTENT(out) :: xsi_e&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(out) :: xsi_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(out) :: xsi_t&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! shear indicator
       INTEGER, INTENT(IN) :: incr
@@ -86,9 +95,9 @@
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)
 
-       do k = kstart3, kend3
-         do j = jstart3, jend3
-           do i = istart3, iend3
+       do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+           do i = slo(1),shi(1)
              XSI_E(i,j,k) = XSI_func(U(i,j,k),ZERO)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),ZERO)
              XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
@@ -98,9 +107,9 @@
 
        CASE (2)                               !Superbee
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -149,9 +158,9 @@
 
        CASE (3)                               !SMART
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -197,9 +206,9 @@
 
        CASE (4)                               !ULTRA-QUICK
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -250,9 +259,9 @@
 
        CASE (5)                               !QUICKEST
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -314,9 +323,9 @@
 
        CASE (6)                               !MUSCL
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -363,9 +372,9 @@
 
        CASE (7)                               !Van Leer
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -412,9 +421,9 @@
 
        CASE (8)                               !Minmod
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -460,9 +469,9 @@
 
        CASE (9)                               ! Central
 
-          do k = kstart3, kend3
-            do j = jstart3, jend3
-              do i = istart3, iend3
+          do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+              do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I

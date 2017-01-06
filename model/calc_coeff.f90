@@ -114,7 +114,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff(slo, shi, lo, hi, flag, pLevel, ro_g, p_g, ep_g, &
+      subroutine calc_coeff(slo, shi, lo, hi, flag, plevel, ro_g, p_g, ep_g, &
          rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)&
