@@ -46,7 +46,7 @@ extern "C"
                  Real* des_vel_new,
                  Real* des_usr_var);
 
-  void mfix_comp_mean_fields(
+  void mfix_comp_mean_fields(int* slo, int* shi, const int* lo, const int* hi,
                  Real* ep_g,
                  int* particle_state,
                  Real* des_pos_new,

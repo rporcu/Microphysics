@@ -1096,10 +1096,25 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      // Calculate mean fields using either interpolation or cell averaging.
 #if 0
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        mfix_comp_mean_fields(
+     {
+        const Box& bx=mfi.validbox();
+
+        const int* sslo = (*flag[lev])[mfi].loVect();
+        const int* sshi = (*flag[lev])[mfi].hiVect();
+ 
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
+ 
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
+
+        mfix_comp_mean_fields(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
                (*ep_g[lev])[mfi].dataPtr(),
                particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
                (*flag[lev])[mfi].dataPtr());
+    }
 #endif
 
      for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)

@@ -90,7 +90,7 @@ module calc_coeff_module
          dx, dy, dz)
 
       if (des_explicitly_coupled) call calc_drag_des_explicit(&
-         slo, shi, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
+         slo, shi, lo, hi, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
          drag_bm, particle_phase,  particle_state, pvol, &
          des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
@@ -174,7 +174,7 @@ module calc_coeff_module
 
 ! Calculate interphase coeffs: (momentum and energy)
       if (des_continuum_coupled .and. .not.des_explicitly_coupled)   &
-         call calc_drag_des_2fluid(slo, shi, ep_g, u_g, v_g, w_g,    &
+         call calc_drag_des_2fluid(slo, shi, lo, hi, ep_g, u_g, v_g, w_g,    &
          ro_g, mu_g, f_gds, drag_bm, particle_state, particle_phase, &
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 

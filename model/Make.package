@@ -62,7 +62,6 @@ f90EXE_sources += param1_mod.f90
 f90EXE_sources += param_mod.f90
 f90EXE_sources += parse_line.f90
 f90EXE_sources += parse_resid_string.f90
-f90EXE_sources += physical_prop.f90
 f90EXE_sources += ps_mod.f90
 f90EXE_sources += read_namelist.f90
 f90EXE_sources += remove_comment.f90

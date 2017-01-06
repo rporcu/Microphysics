@@ -13,11 +13,11 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, nparticles, &
+     SUBROUTINE COMP_MEAN_FIELDS(slo, shi, lo, hi, &
+                                 ep_g, particle_state, des_pos_new, pvol, flag, nparticles, &
                                  dx, dy, dz) &
          bind(C, name="mfix_comp_mean_fields")
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: max_pip
       use param1, only: zero
 
@@ -25,6 +25,8 @@ module comp_mean_fields_module
       use discretelement, only: entering_ghost, exiting_ghost
 
       IMPLICIT NONE
+
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer(c_int), intent(in   ) :: nparticles
       integer(c_int), intent(in   ) :: particle_state(nparticles)
@@ -34,9 +36,9 @@ module comp_mean_fields_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(inout) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -47,7 +49,7 @@ module comp_mean_fields_module
       INTEGER :: I,J,K
 ! Total Mth solids phase volume in IJK
       real(c_real) :: SOLVOLINC&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! One over cell volume
       real(c_real) :: OoVol, odx, ody, odz, vol
 
@@ -81,9 +83,9 @@ module comp_mean_fields_module
 ! and the void fraction.
 !----------------------------------------------------------------//
       OoVol = 1.0d0/VOL
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+         DO J = slo(2),shi(2)
+            DO I = slo(1),shi(1)
                IF(flag(i,j,k,1) == 1) then
                   ep_g(i,j,k) = 1.0d0 - solvolinc(i,j,k)*OoVol
                endif

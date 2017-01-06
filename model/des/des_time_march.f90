@@ -155,7 +155,8 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+            CALL DRAG_GS_DES(slo, shi, lo, hi, &
+               ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                gradPg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
@@ -192,7 +193,7 @@ module des_time_march_module
          CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(slo, shi, ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
+         CALL calc_drag_des(slo,shi,lo,hi,ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
             particle_state, fc,drag_fc,pvol, des_pos_new,des_vel_new,&
             des_radius,particle_phase,flag, dx, dy, dz)
 
@@ -211,7 +212,8 @@ module des_time_march_module
 !         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
 
 ! Calculate mean fields (EPg).
-         CALL COMP_MEAN_FIELDS(ep_g, particle_state, des_pos_new, pvol, flag, size(pvol), &
+         CALL COMP_MEAN_FIELDS(slo, shi, lo, hi, &
+                               ep_g, particle_state, des_pos_new, pvol, flag, size(pvol), &
                                dx, dy, dz)
 
          ! IF(DO_NSEARCH) CALL NEIGHBOUR(  particle_state, des_radius,&

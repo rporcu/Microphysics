@@ -9,7 +9,6 @@ f90EXE_sources += usr3_des.f90
 f90EXE_sources += usr_drag.f90
 f90EXE_sources += usr_init_namelist.f90
 f90EXE_sources += usr_mod.f90
-f90EXE_sources += usr_physical_prop.f90
 f90EXE_sources += usr_write_out0.f90
 f90EXE_sources += usr_write_out1.f90
 f90EXE_sources += write_usr0.f90
