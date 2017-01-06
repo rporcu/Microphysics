@@ -5,7 +5,6 @@ MODULE set_icbc_flags_module
       use bc, only: bc_z_t, bc_z_b, bc_k_b, bc_k_t
       use bc, only: dimension_bc, bc_type, bc_x_e, bc_defined
       use compar, only: iend3, jend3, kend3
-      use compar, only: istart3, jstart3, kstart3
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use geometry, only: imax2, jmax2, kmax2
@@ -28,21 +27,23 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE SET_ICBC_FLAG(flag)
+      SUBROUTINE SET_ICBC_FLAG(slo,shi,flag)
+
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      CALL INIT_ICBC_FLAG(flag)
+      CALL INIT_ICBC_FLAG(slo,shi,flag)
 
-      CALL SET_IC_FLAGS(flag)
+      CALL SET_IC_FLAGS(slo,shi,flag)
 
-      CALL SET_BC_FLAGS_WALL(flag)
+      CALL SET_BC_FLAGS_WALL(slo,shi,flag)
 
-      CALL SET_BC_FLAGS_FLOW(flag)
+      CALL SET_BC_FLAGS_FLOW(slo,shi,flag)
 
 ! Verify that ICBC flags are set for all fluid cells.
-      CALL CHECK_ICBC_FLAG(flag)
+      CALL CHECK_ICBC_FLAG(slo,shi,flag)
 
       END SUBROUTINE SET_ICBC_FLAG
 
@@ -54,19 +55,21 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE INIT_ICBC_FLAG(flag)
+      SUBROUTINE INIT_ICBC_FLAG(slo,shi,flag)
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       INTEGER :: I, J, K
 
 ! Initialize the icbc_flag array.
-      DO k = kstart3, kend3
-      DO j = jstart3, jend3
-      DO i = istart3, iend3
+      DO k = slo(3),shi(3)
+      DO j = slo(2),shi(2)
+      DO i = slo(1),shi(1)
 
 ! Initialize the ICBC Flag
          if (run_type == 'NEW') then
@@ -113,9 +116,9 @@ MODULE set_icbc_flags_module
             IF (FLAG(i,j,k,1) /= FSW_) FLAG(i,j,k,1) = NSW_
          ENDIF
 
-      ENDDO ! end do loop (i=istart3, iend3)
-      ENDDO ! end do loop (j=jstart3, jend3)
-      ENDDO ! end do loop (k=kstart3, kend3)
+      ENDDO ! end do loop
+      ENDDO ! end do loop 
+      ENDDO ! end do loop
 
       RETURN
 
@@ -132,7 +135,7 @@ MODULE set_icbc_flags_module
 !  Note that the error message may be incomplete
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_ICBC_FLAG(flag)
+      SUBROUTINE CHECK_ICBC_FLAG(slo,shi,flag)
 
       use compar, only: iend2, jend2, kend2
       use compar, only: istart2, jstart2, kstart2
@@ -144,8 +147,10 @@ MODULE set_icbc_flags_module
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       INTEGER :: I, J ,K, IER
 
@@ -212,8 +217,6 @@ MODULE set_icbc_flags_module
 
       END SUBROUTINE CHECK_ICBC_FLAG
 
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_IC_FLAGS                                            !
@@ -222,7 +225,7 @@ MODULE set_icbc_flags_module
 !  Purpose: Set the IC portions of the ICBC_Flag array.                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_IC_FLAGS(flag)
+      SUBROUTINE SET_IC_FLAGS(slo,shi,flag)
 
       use ic, only: IC_DEFINED
       use ic, only: IC_TYPE
@@ -238,8 +241,10 @@ MODULE set_icbc_flags_module
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -289,14 +294,16 @@ MODULE set_icbc_flags_module
 !  Purpose: Find and validate i, j, k locations for walls BC's         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_FLAGS_WALL(flag)
+      SUBROUTINE SET_BC_FLAGS_WALL(slo,shi,flag)
 
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
@@ -350,7 +357,7 @@ MODULE set_icbc_flags_module
 !           set value of bc_plane for flow BC's.                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_BC_FLAGS_FLOW(flag)
+      SUBROUTINE SET_BC_FLAGS_FLOW(slo,shi,flag)
 
       use compar       , only: nodesi, nodesj, nodesk
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
@@ -361,8 +368,10 @@ MODULE set_icbc_flags_module
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer, intent(inout) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! loop/variable indices
       INTEGER :: BCV, I, J, K

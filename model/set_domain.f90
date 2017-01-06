@@ -70,7 +70,7 @@ module set_domain_module
       CALL check_point_sources(dx,dy,dz)
 
 ! This call needs to occur before any of the IC/BC checks.
-      CALL SET_ICBC_FLAG(flag)
+      CALL SET_ICBC_FLAG(slo,shi,flag)
 
       ! Compute area of boundary surfaces.
       call get_bc_area(dx,dy,dz)

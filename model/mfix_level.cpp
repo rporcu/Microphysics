@@ -372,13 +372,27 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
       // Update boundary conditions
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+      {
+        const int* sslo = (*flag[lev])[mfi].loVect();
+        const int* sshi = (*flag[lev])[mfi].hiVect();
+ 
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
+ 
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
+
         set_bc1(
           &time,                   &dt,
+          slo.dataPtr(),           shi.dataPtr(), 
           (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
           (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+      }
 
       // Calculate transport coefficients
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -480,13 +494,27 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
         // Update boundary conditions
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+        {
+          const int* sslo = (*flag[lev])[mfi].loVect();
+          const int* sshi = (*flag[lev])[mfi].hiVect();
+ 
+          slo[0] = sslo[0]+2;
+          slo[1] = sslo[1]+2;
+          slo[2] = sslo[2]+2;
+ 
+          shi[0] = sshi[0]+2;
+          shi[1] = sshi[1]+2;
+          shi[2] = sshi[2]+2;
+
           set_bc1(
             &time,                   &dt,
+             slo.dataPtr(),           shi.dataPtr(), 
             (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
             (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
             (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+        }
 
         int converged=0;
         int nit=0;          // number of iterations
@@ -737,13 +765,27 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Update boundary conditions
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+          {
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+   
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+   
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
             set_bc1(
               &time,                   &dt,
+              slo.dataPtr(),           shi.dataPtr(), 
               (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
               (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+          }
 
           // Display current iteration residuals
           display_resid(&nit);

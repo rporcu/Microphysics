@@ -15,7 +15,7 @@
 
    contains
 
-      subroutine adjust_a_g(axis, A_M, B_M, ROP_G, dx, dy, dz)
+      subroutine adjust_a_g(axis, slo, shi, lo, hi, A_M, B_M, ROP_G, dx, dy, dz)
 
          USE functions, only: avg
          USE functions, only: ip1
@@ -25,22 +25,23 @@
          USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
          use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
-         use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
          implicit none
 
+         integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 !---------------------------------------------------------------------//
       CHARACTER, INTENT(IN) :: axis
 
-! Septadiagonal matrix A_m
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: ROP_G&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: dx, dy, dz
 !---------------------------------------------------------------------//

@@ -12,42 +12,43 @@ module set_bc1_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-     SUBROUTINE SET_BC1(time, dt, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-        flux_ge, flux_gn, flux_gt, flag, dx, dy, dz) &
+     SUBROUTINE SET_BC1(time, dt, slo, shi, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
+                        flux_ge, flux_gn, flux_gt, flag, dx, dy, dz) &
        bind(C, name="set_bc1")
 
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_defined, bc_type
       USE param , only : dimension_bc
-      USE compar, only : istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use set_outflow_module, only: set_outflow
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       real(c_real), intent(inout) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, time, dx, dy, dz
 
@@ -65,12 +66,12 @@ module set_bc1_module
             CASE ('P_OUTFLOW')
                CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
-               CALL SET_BC1_REPORT_OUTFLOW(L, time, dt, &
+               CALL SET_BC1_REPORT_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_OUTFLOW')
                CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
-               CALL SET_BC1_ADJUST_OUTFLOW(L, time, dt, &
+               CALL SET_BC1_ADJUST_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_INFLOW')
             CASE ('P_INFLOW')
@@ -79,7 +80,7 @@ module set_bc1_module
             CASE ('OUTFLOW')
                CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
-               CALL SET_BC1_REPORT_OUTFLOW(L,time, dt, &
+               CALL SET_BC1_REPORT_OUTFLOW(L,time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             END SELECT
          ENDIF   ! end if (bc_defined(l))
@@ -96,7 +97,7 @@ module set_bc1_module
 !  Purpose: print out outflow conditions                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV, time, dt, &
+      SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV, time, dt, slo, shi,&
          u_g, v_g, w_g, rop_g, ep_g, dx, dy, dz)
 
       use bc, only: bc_dt_0, bc_time
@@ -104,23 +105,24 @@ module set_bc1_module
       use bc, only: bc_out_n
       use bc, only: bc_vout_g
       use calc_outflow_module, only: calc_outflow
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use funits, only: dmp_log, unit_log
       use param1, only: is_undefined, zero
       use run, only: tstop
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       real(c_real), intent(in) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: dt, time, dx, dy, dz
 
 ! Dummy arguments
@@ -162,7 +164,7 @@ module set_bc1_module
 !  flow rate based on average outflow rate                             C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV, time, dt, &
+      SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV, time, dt, slo, shi, &
          u_g, v_g, w_g, rop_g, ep_g, dx, dy, dz)
 
       use bc, only: bc_dt_0, bc_time
@@ -177,7 +179,6 @@ module set_bc1_module
       use bc, only: bc_volflow_g
       use bc, only: bc_vout_g
       use calc_outflow_module, only: calc_outflow
-      use compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iminus, jminus, kminus
       use funits, only: dmp_log, unit_log
       use param1, only: is_defined, zero, small_number
@@ -185,21 +186,21 @@ module set_bc1_module
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! index for boundary condition
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      ! index for boundary condition
       INTEGER, intent(IN) :: BCV
 
       real(c_real), intent(inout) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: dt, time, dx, dy, dz
 
 ! Local variables

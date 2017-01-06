@@ -51,7 +51,7 @@ MODULE SET_BC0_MODULE
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
-      CALL SET_IJK_P_G(ro_g0,flag)
+      CALL SET_IJK_P_G(slo,shi,ro_g0,flag)
 
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
@@ -63,19 +63,19 @@ MODULE SET_BC0_MODULE
             CASE ('PAR_SLIP_WALL')
             CASE ('P_OUTFLOW')
                write(6,*) 'po',l; flush(6)
-               CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
+               CALL SET_BC0_OUTFLOW(L,slo,shi,p_g,ep_g)
             CASE ('MASS_OUTFLOW')
                write(6,*) 'mo',l; flush(6)
-               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
+               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
                write(6,*) 'of',l; flush(6)
-               CALL SET_BC0_OUTFLOW(L,p_g,ep_g)
+               CALL SET_BC0_OUTFLOW(L,slo,shi,p_g,ep_g)
             CASE ('MASS_INFLOW')
                write(6,*) 'mi',l; flush(6)
-               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
+               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                write(6,*) 'pi',l; flush(6)
-               CALL SET_BC0_INFLOW(L,p_g,ep_g,u_g,v_g,w_g)
+               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             END SELECT
          ENDIF
       ENDDO
@@ -102,7 +102,7 @@ MODULE SET_BC0_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_OUTFLOW(BCV,p_g,ep_g)
+      SUBROUTINE SET_BC0_OUTFLOW(BCV,slo,shi,p_g,ep_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -112,15 +112,16 @@ MODULE SET_BC0_MODULE
       use bc, only: bc_p_g
       use bc, only: bc_ep_g
 
-
       use scales, only: scale_pressure
-
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       implicit none
 
-      real(c_real), intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      real(c_real), intent(inout) ::  p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Dummy arguments
 !--------------------------------------------------------------------//
@@ -163,7 +164,7 @@ MODULE SET_BC0_MODULE
 !  for the simulation.                                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_INFLOW(BCV,p_g,ep_g,u_g,v_g,w_g)
+      SUBROUTINE SET_BC0_INFLOW(BCV,slo,shi,p_g,ep_g,u_g,v_g,w_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -175,24 +176,26 @@ MODULE SET_BC0_MODULE
       use bc, only: bc_p_g
       use bc, only: bc_ep_g
 
-
       use scales, only: scale_pressure
-
-      use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: im1, jm1, km1
       IMPLICIT NONE
 
-! Dummy arguments
-!--------------------------------------------------------------------//
-! index for boundary condition
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
 
-      real(c_real), intent(inout) ::  p_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), intent(inout) :: ep_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), intent(inout) ::  u_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), intent(inout) ::  v_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), intent(inout) ::  w_g(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      real(c_real), intent(inout) ::  p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) ::  u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) ::  v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) ::  w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -238,7 +241,7 @@ MODULE SET_BC0_MODULE
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_IJK_P_G (RO_G0, flag)
+      SUBROUTINE SET_IJK_P_G (slo, shi, RO_G0, flag)
 
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_G
@@ -255,19 +258,22 @@ MODULE SET_BC0_MODULE
       use bc, only: BC_DEFINED
       use bc, only: BC_TYPE
 
-! MFIX Runtime parameters:
+      ! MFIX Runtime parameters:
       use param, only: DIMENSION_BC
       use param1, only: UNDEFINED_I, is_undefined
 
-      use compar, only: mype, istart3, iend3, jstart3, jend3, kstart3, kend3
+      use compar, only: mype
       use funits, only: UNIT_LOG
       use exit_mod, only: mfix_exit
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       ! Specified constant gas density.
       real(c_real), intent(in) :: ro_g0
-      integer         , intent(in) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer         , intent(in) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 !--------------------------------------------------------------------//
       INTEGER :: BCV
 
@@ -365,7 +371,7 @@ MODULE SET_BC0_MODULE
       ENDIF
 
 ! Invoke the search routine.
-      CALL IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr, flag)
+      CALL IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr, flag, slo, shi)
 
       IF(iErr == 0) RETURN
 
@@ -424,24 +430,25 @@ MODULE SET_BC0_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE IJK_Pg_SEARCH(ll3, ll2, lu2, ll1, lu1, lMAP,          &
-         ldFlag, iErr, flag)
+         ldFlag, iErr, flag, slo, shi)
 
 ! Modules
 !--------------------------------------------------------------------//
 ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_g
       use param1, only: undefined_i, is_undefined
-      use compar, only: numpes, mype, istart3, iend3, jstart3, jend3, kstart3, kend3
+      use compar, only: numpes, mype
       implicit none
 
-! Dummy arguments
-!--------------------------------------------------------------------//
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       INTEGER, INTENT(IN   )  :: ll3
       INTEGER, INTENT(IN   )  :: ll2, lu2
       INTEGER, INTENT(IN   )  :: ll1, lu1
       LOGICAL, INTENT(IN   ) :: ldFlag
       INTEGER, INTENT(  OUT)  :: iErr
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      integer, intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       CHARACTER(len=*), INTENT(IN) :: lMAP
 

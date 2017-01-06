@@ -55,6 +55,7 @@ extern "C"
 
   void set_bc1(
          Real* time,     Real* dt,
+         int* slo,       int* shi, 
          Real* p_g,      Real* ep_g,
          Real* ro_g,     Real* rop_g,
          Real* u_g,      Real* v_g,      Real* w_g,

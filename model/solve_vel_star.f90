@@ -112,7 +112,7 @@ module solve_vel_star_module
       call calc_d(d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g ('U', a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g ('U', slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
@@ -231,7 +231,7 @@ module solve_vel_star_module
       call calc_d(d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g('V',a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g('V',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
@@ -348,7 +348,7 @@ module solve_vel_star_module
       call calc_d(d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g('W',a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g('W',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
