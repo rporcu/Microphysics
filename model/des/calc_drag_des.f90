@@ -21,28 +21,30 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE CALC_DRAG_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg,&
-         particle_state, fc, drag_fc, pvol, des_pos_new, &
+     SUBROUTINE CALC_DRAG_DES(slo, shi, ep_g, u_g, v_g, w_g, ro_g, &
+        mu_g, gradPg, particle_state, fc, drag_fc, pvol, des_pos_new, &
          des_vel_new, des_radius, particle_phase, flag, dx, dy, dz)
 
-      IMPLICIT NONE
+        IMPLICIT NONE
+
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
 
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: gradpg&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       integer         , intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       integer         , intent(in   ) :: particle_phase(:)
       integer         , intent(in   ) :: particle_state(:)
@@ -72,7 +74,7 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force on particle
          if(des_continuum_coupled) then
-            call drag_gs_des(ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+            call drag_gs_des(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                gradpg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius, particle_phase, dx, dy, dz)
          endif

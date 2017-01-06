@@ -12,13 +12,13 @@ module des_time_march_module
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(ep_g, p_g, u_g, v_g, w_g, ro_g, rop_g, mu_g, &
-             particle_state, particle_phase, &
-             des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
-             des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-             drag_fc, fc, tow, pairs, pair_count, flag, &
-             time, dt, dx, dy, dz, nstep) &
-             bind(C, name="mfix_des_time_march")
+      SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, ep_g, p_g, u_g, v_g,&
+         w_g, ro_g, rop_g, mu_g, particle_state, particle_phase, &
+         des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
+         des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
+         drag_fc, fc, tow, pairs, pair_count, flag, &
+         time, dt, dx, dy, dz, nstep) &
+         bind(C, name="mfix_des_time_march")
 
       USE calc_collision_wall, only: calc_dem_force_with_wall_stl
       use calc_drag_des_module, only: calc_drag_des
@@ -42,24 +42,26 @@ module des_time_march_module
 
       IMPLICIT NONE
 
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+
       real(c_real), intent(inout) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, 4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real)  , intent(inout) :: time, dt
       real(c_real)  , intent(in   ) :: dx, dy, dz
@@ -155,9 +157,9 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            CALL DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
-               flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
-               des_radius,  particle_phase, dx, dy, dz)
+            CALL DRAG_GS_DES(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+               gradPg, flag, particle_state, pvol, des_pos_new, &
+               des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
          CALL CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new, &
                            pvol, drag_fc, flag, dx, dy, dz)
@@ -192,10 +194,9 @@ module des_time_march_module
          CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
-         CALL CALC_DRAG_DES(ep_g,u_g,v_g,w_g,ro_g,mu_g,gradPg,particle_state,&
-            fc,drag_fc,pvol, &
-            des_pos_new,des_vel_new,des_radius,particle_phase,flag, &
-            dx, dy, dz)
+         CALL CALC_DRAG_DES(slo, shi, ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
+            particle_state, fc,drag_fc,pvol, des_pos_new,des_vel_new,&
+            des_radius,particle_phase,flag, dx, dy, dz)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES

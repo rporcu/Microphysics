@@ -360,16 +360,16 @@ mfix_level::usr3(int lev)
   {
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
- 
+
      slo[0] = sslo[0]+2;
      slo[1] = sslo[1]+2;
      slo[2] = sslo[2]+2;
- 
+
      shi[0] = sshi[0]+2;
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
 
-     mfix_usr3( slo.dataPtr(),              shi.dataPtr(), 
+     mfix_usr3( slo.dataPtr(),              shi.dataPtr(),
                (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
                (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
                &dx, &dy, &dz);
@@ -392,18 +392,18 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
       {
         const int* sslo = (*flag[lev])[mfi].loVect();
         const int* sshi = (*flag[lev])[mfi].hiVect();
- 
+
         slo[0] = sslo[0]+2;
         slo[1] = sslo[1]+2;
         slo[2] = sslo[2]+2;
- 
+
         shi[0] = sshi[0]+2;
         shi[1] = sshi[1]+2;
         shi[2] = sshi[2]+2;
 
         set_bc1(
           &time,                   &dt,
-          slo.dataPtr(),           shi.dataPtr(), 
+          slo.dataPtr(),           shi.dataPtr(),
           (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
           (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -485,7 +485,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           const int* sslo = (*flag[lev])[mfi].loVect();
           const int* sshi = (*flag[lev])[mfi].hiVect();
-   
+
           slo[0] = sslo[0]+2;
           slo[1] = sslo[1]+2;
           slo[2] = sslo[2]+2;
@@ -528,18 +528,18 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         {
           const int* sslo = (*flag[lev])[mfi].loVect();
           const int* sshi = (*flag[lev])[mfi].hiVect();
- 
+
           slo[0] = sslo[0]+2;
           slo[1] = sslo[1]+2;
           slo[2] = sslo[2]+2;
- 
+
           shi[0] = sshi[0]+2;
           shi[1] = sshi[1]+2;
           shi[2] = sshi[2]+2;
 
           set_bc1(
             &time,                   &dt,
-             slo.dataPtr(),           shi.dataPtr(), 
+             slo.dataPtr(),           shi.dataPtr(),
             (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
             (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -647,7 +647,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
             shi[1] = sshi[1]+2;
             shi[2] = sshi[2]+2;
 
-            solve_v_g_star(slo.dataPtr(), shi.dataPtr(), lo, hi, 
+            solve_v_g_star(slo.dataPtr(), shi.dataPtr(), lo, hi,
                 (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                 (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
                 (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -703,10 +703,25 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Calculate transport coefficients
           calc_flag = 0;
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            physical_prop(&calc_flag,
+          {
+            const Box& bx=mfi.validbox();
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            physical_prop(slo.dataPtr(), shi.dataPtr(), &calc_flag,
               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr());
+          }
 
           // Calculate bulk density (epg*ro_g) at cell faces
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -715,7 +730,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
             const int* sslo = (*flag[lev])[mfi].loVect();
             const int* sshi = (*flag[lev])[mfi].hiVect();
-   
+
             slo[0] = sslo[0]+2;
             slo[1] = sslo[1]+2;
             slo[2] = sslo[2]+2;
@@ -759,26 +774,55 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
               &lnormg,                 &resg,     &dx, &dy, &dz);
           }
 
-            eq_id=1;
-            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-              mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
-                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
+          eq_id=1;
+          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+            mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
+              (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
 
           // Correct fluid pressure and velocities
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            correct0(
+          {
+            const Box& bx=mfi.validbox();
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+            correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
               (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr());
+          }
 
           // Update fluid density
           calc_flag = 0;
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            physical_prop(&calc_flag,
+          {
+            const Box& bx=mfi.validbox();
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            physical_prop(slo.dataPtr(), shi.dataPtr(), &calc_flag,
               (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
               (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr());
+          }
 
           // Update wall velocities
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -825,18 +869,18 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           {
             const int* sslo = (*flag[lev])[mfi].loVect();
             const int* sshi = (*flag[lev])[mfi].hiVect();
-   
+
             slo[0] = sslo[0]+2;
             slo[1] = sslo[1]+2;
             slo[2] = sslo[2]+2;
-   
+
             shi[0] = sshi[0]+2;
             shi[1] = sshi[1]+2;
             shi[2] = sshi[2]+2;
 
             set_bc1(
               &time,                   &dt,
-              slo.dataPtr(),           shi.dataPtr(), 
+              slo.dataPtr(),           shi.dataPtr(),
               (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
               (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -924,8 +968,24 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    Array<int> slo(3);
+    Array<int> shi(3);
+
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        mfix_des_time_march(
+    {
+      const Box& bx=mfi.validbox();
+
+      const int* sslo = (*flag[lev])[mfi].loVect();
+      const int* sshi = (*flag[lev])[mfi].hiVect();
+
+      slo[0] = sslo[0]+2;
+      slo[1] = sslo[1]+2;
+      slo[2] = sslo[2]+2;
+
+      shi[0] = sshi[0]+2;
+      shi[1] = sshi[1]+2;
+      shi[2] = sshi[2]+2;
+        mfix_des_time_march(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
           (*ep_g[lev])[mfi].dataPtr(),      (*p_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),       (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*ro_g[lev])[mfi].dataPtr(),      (*rop_g[lev])[mfi].dataPtr(),    (*mu_g[lev])[mfi].dataPtr(),
@@ -939,6 +999,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
           pairs.dataPtr(),          &pair_count,
           (*flag[lev])[mfi].dataPtr(),
           &time, &dt, &dx, &dy, &dz, &nstep);
+    }
 }
 
 void

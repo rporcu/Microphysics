@@ -5,9 +5,6 @@ module drag_gs_des1_module
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
 ! Function to deterine if a cell contains fluid.
       use functions, only: iminus, jminus, kminus
 
@@ -41,29 +38,30 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES(ep_g, u_g, v_g, w_g, ro_g, mu_g, gradPg, &
-        flag, particle_state, pvol, des_pos_new, des_vel_new, fc, &
-        des_radius, particle_phase, dx, dy, dz)
+     SUBROUTINE DRAG_GS_DES(slo, shi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+        gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
+        fc, des_radius, particle_phase, dx, dy, dz)
 
+        IMPLICIT NONE
 
-      IMPLICIT NONE
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
 
       real(c_real), intent(in   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: gradpg&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      integer         , intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+      integer     , intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: pvol(:)
       real(c_real), intent(in   ) :: des_radius(:)
@@ -119,8 +117,8 @@ module drag_gs_des1_module
 ! gas phase drag calculations.
 
 ! Calculate the drag coefficient.
-         call des_drag_gp(np, des_vel_new(np,:), velfp, lepg, ro_g, mu_g, &
-            f_gp, i,j,k, des_radius,  pvol, particle_phase)
+         call des_drag_gp(slo, shi, np, des_vel_new(np,:), velfp, lepg,&
+            ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
 ! Calculate the gas-solids drag force on the particle
          D_FORCE = F_GP*(VELFP - DES_VEL_NEW(NP,:))
@@ -217,9 +215,9 @@ module drag_gs_des1_module
 
 ! Calculate the gas phase forces acting on each particle.
 
-      DO NP=1,size(pvol)
+      do np=1,size(pvol)
 
-         IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
+         if(nonexistent==particle_state(np)) cycle
 
 ! The drag force is not calculated on entering or exiting particles
 ! as their velocities are fixed and may exist in 'non fluid' cells.
@@ -235,28 +233,28 @@ module drag_gs_des1_module
 
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
-         lEPG = EP_G(I,J,K)
-         VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
-         VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
-         VELFP(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(I,J,K))
+         lepg = ep_g(i,j,k)
+         velfp(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(i,j,k))
+         velfp(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(i,j,k))
+         velfp(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(i,j,k))
 
-         IF(lEPg < EPSILON(lEPg)) lEPG = EP_g(I,J,K)
+         if(lepg < epsilon(lepg)) lepg = ep_g(i,j,k)
 
 ! Calculate drag coefficient
-         CALL DES_DRAG_GP(NP, DES_VEL_NEW(NP,:), VELFP, lEPg, ro_g, mu_g,&
-            f_gp, i,j,k, des_radius,  pvol, particle_phase)
+         call des_drag_gp(slo, shi, np, des_vel_new(np,:), velfp, lepg, &
+            ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
-         lDRAG_BM = f_gp*DES_VEL_NEW(NP,:)
+         ldrag_bm = f_gp*des_vel_new(np,:)
 
-         WEIGHT = ONE/VOL
+         weight = one/vol
 
-         DRAG_BM(I,J,K,1) = DRAG_BM(I,J,K,1) + lDRAG_BM(1)*WEIGHT
-         DRAG_BM(I,J,K,2) = DRAG_BM(I,J,K,2) + lDRAG_BM(2)*WEIGHT
-         DRAG_BM(I,J,K,3) = DRAG_BM(I,J,K,3) + lDRAG_BM(3)*WEIGHT
+         drag_bm(i,j,k,1) = drag_bm(i,j,k,1) + ldrag_bm(1)*weight
+         drag_bm(i,j,k,2) = drag_bm(i,j,k,2) + ldrag_bm(2)*weight
+         drag_bm(i,j,k,3) = drag_bm(i,j,k,3) + ldrag_bm(3)*weight
 
-         F_GDS(i,j,k) = F_GDS(i,j,k) + f_gp*WEIGHT
+         f_gds(i,j,k) = f_gds(i,j,k) + f_gp*weight
 
-      ENDDO
+      enddo
 
 ! Update the drag force and sources in ghost layers.
       ! CALL SEND_RECV(F_GDS, 2)

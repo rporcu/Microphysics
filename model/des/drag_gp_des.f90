@@ -23,17 +23,17 @@ module des_drag_gp_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-     SUBROUTINE DES_DRAG_GP(NP, PARTICLE_VEL, FLUID_VEL, EPg, ro_g, mu_g,&
-        f_gp, i,j,k, des_radius,  pvol, particle_phase)
+      SUBROUTINE DES_DRAG_GP(slo, shi, NP, PARTICLE_VEL, FLUID_VEL, EPg,&
+         ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
       USE compar  , only: myPE
-      use compar  , only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       USE exit_mod, only: mfix_exit
       USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
          drag_wen_yu, drag_koch_hill, drag_bvk
-      USE run, only: syam_obrien, gidaspow, gidaspow_blend, wen_yu_pcf, bvk,&
+      USE run, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
          drag_type_enum, drag_type
-      USE run, only: wen_yu, koch_hill, user_drag, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
+      USE run, only: wen_yu, koch_hill, user_drag
+      USE run, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
       USE funits  , only: dmp_log, unit_log
       USE param1, only: one
       USE constant, only: ro_s0
@@ -85,6 +85,7 @@ module des_drag_gp_module
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
 ! particle number id.
       INTEGER , INTENT(IN) :: NP
 ! particle velocity
@@ -95,9 +96,9 @@ module des_drag_gp_module
       real(c_real), INTENT(IN) :: EPg
 
       real(c_real), INTENT(IN) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: mu_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(out) :: F_gp
       INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
 

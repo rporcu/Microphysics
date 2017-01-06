@@ -55,7 +55,7 @@ extern "C"
 
   void set_bc1(
          Real* time,     Real* dt,
-         int* slo,       int* shi, 
+         int* slo,       int* shi,
          Real* p_g,      Real* ep_g,
          Real* ro_g,     Real* rop_g,
          Real* u_g,      Real* v_g,      Real* w_g,
@@ -119,7 +119,8 @@ extern "C"
          int* flag,
          Real* dx,             Real* dy,             Real* dz);
 
-  void physical_prop(int* level, Real* ro_g, Real* p_g,
+  void physical_prop(int* slo, int* shi,
+         int* level, Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g, int* flag);
 
   void solve_u_g_star(int* slo, int* shi, const int* lo, const int* hi,
@@ -167,7 +168,7 @@ extern "C"
           Real* lnormg,   Real* resg,
           Real* dx,       Real* dy,       Real* dz);
 
-  void correct0(
+  void correct0(int* slo, int* shi, const int* lo, const int* hi,
           Real* p_g,      Real* pp_g,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t,
@@ -210,7 +211,7 @@ extern "C"
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
-  void  mfix_des_time_march(
+  void  mfix_des_time_march(int* slo, int* shi, const int* lo, const int* hi,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,
           Real* ro_g,           Real* rop_g,          Real* mu_g,
@@ -233,7 +234,7 @@ extern "C"
 
   void mfix_usr2();
 
-  void mfix_usr3(int* slo, int* shi, 
+  void mfix_usr3(int* slo, int* shi,
                  Real* u_g,     Real* v_g,
                  Real* w_g,     Real* p_g,
                  Real* dx ,     Real* dy,   Real* dz);
