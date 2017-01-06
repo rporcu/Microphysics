@@ -14,45 +14,45 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(lo, hi, u_g, v_g, w_g, rop_g, &
+      SUBROUTINE CONV_ROP(slo, shi, lo, hi, u_g, v_g, w_g, rop_g, &
          rop_ge, rop_gn, rop_gt, &
          flag, dt, dx, dy, dz) bind(C, name="conv_rop")
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE run, only: discretize
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
 
       real(c_real), intent(inout) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_ge&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_gn&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_gt&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 
       IF (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
+         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &
+                         slo, shi, lo, hi, &
                          flag, rop_g, u_g, v_g, w_g, &
                          rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
       ENDIF
@@ -70,31 +70,40 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP0(ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
+      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
       USE param1, only: zero
+
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! macroscopic density (rho_prime)
-      real(c_real), INTENT(IN) :: ROP(istart3:iend3,jstart3:jend3,kstart3:kend3)
-! Velocity components
-      real(c_real), INTENT(IN) :: U(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), INTENT(IN) :: V(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), INTENT(IN) :: W(istart3:iend3,jstart3:jend3,kstart3:kend3)
-! Face value of density (for calculating convective fluxes)
-      real(c_real), INTENT(OUT) :: ROP_E(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), INTENT(OUT) :: ROP_N(istart3:iend3,jstart3:jend3,kstart3:kend3)
-      real(c_real), INTENT(OUT) :: ROP_T(istart3:iend3,jstart3:jend3,kstart3:kend3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      integer, intent(in   ) :: flag(istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+      ! macroscopic density (rho_prime)
+      real(c_real), INTENT(IN) :: ROP(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Velocity components
+      real(c_real), INTENT(IN) :: U&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN) :: V&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN) :: W&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Face value of density (for calculating convective fluxes)
+      real(c_real), INTENT(OUT) :: ROP_E&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(OUT) :: ROP_N&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(OUT) :: ROP_T&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer, intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -102,9 +111,9 @@ MODULE CONV_ROP_MODULE
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
          IF (1.eq.flag(i,j,k,1)) THEN
 
@@ -175,14 +184,14 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP1(DISC, flag, &
+      SUBROUTINE CONV_ROP1(DISC, &
+                           slo, shi, lo, hi, flag, &
                            rop, u, v, w, &
                            rop_e, rop_n, rop_t, &
                            dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE compar, only: istart3, jstart3, kstart3, iend3, jend3, kend3
       USE functions, only: ieast, jnorth, ktop
       USE functions, only: iwest, jsouth, kbot
       USE functions, only: iminus, jminus, kminus
@@ -190,30 +199,33 @@ MODULE CONV_ROP_MODULE
       USE xsi, only: calc_xsi
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Discretization scheme
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
-! macroscopic density (rho_prime)
+
+      ! macroscopic density (rho_prime)
       real(c_real), INTENT(in) :: rop&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-! Velocity components
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Velocity components
       real(c_real), INTENT(IN) :: u&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: v&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: w&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
-! Face value of density (for calculating convective fluxes)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      ! Face value of density (for calculating convective fluxes)
       real(c_real), INTENT(OUT) :: rop_e&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(OUT) :: rop_n&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(OUT) :: rop_t&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in) :: dt, dx, dy, dz
 !
@@ -225,18 +237,18 @@ MODULE CONV_ROP_MODULE
 
 !---------------------------------------------------------------------//
 
-      allocate(xsi_e(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate(xsi_n(istart3:iend3, jstart3:jend3, kstart3:kend3) )
-      allocate(xsi_t(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+      allocate( xsi_e(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
 
 ! Calculate factors
       incr=0
       CALL CALC_XSI (DISC, ROP, U, V, W, XSI_E, XSI_N, XSI_T, incr, dt, dx, dy, dz)
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
          IF (1.eq.flag(i,j,k,1)) THEN
 

@@ -104,7 +104,7 @@ extern "C"
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void conv_rop(const int* lo, const int* hi,
+  void conv_rop(int* slo, int* shi, const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,

@@ -436,7 +436,19 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         // Calculate bulk density (epg*ro_g) at cell faces
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
           const Box& bx=mfi.validbox();
-          conv_rop(bx.loVect(), bx.hiVect(),
+
+          const int* sslo = (*flag[lev])[mfi].loVect();
+          const int* sshi = (*flag[lev])[mfi].hiVect();
+
+          slo[0] = sslo[0]+2;
+          slo[1] = sslo[1]+2;
+          slo[2] = sslo[2]+2;
+
+          shi[0] = sshi[0]+2;
+          shi[1] = sshi[1]+2;
+          shi[2] = sshi[2]+2;
+
+          conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
             (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
             (*rop_g[lev])[mfi].dataPtr(),
             (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
@@ -630,7 +642,19 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
           {
             const Box& bx=mfi.validbox();
-            conv_rop(bx.loVect(), bx.hiVect(),
+
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*rop_g[lev])[mfi].dataPtr(),
               (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
