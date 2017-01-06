@@ -31,17 +31,27 @@ public:
 
     void Restart();
 
-    void usr3 (int lev);
-
-    void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
-
     void evolve_fluid (int lev, int nstep, int set_normg, 
                        Real dt, Real& prev_dt, Real time, Real normg); 
 
     void evolve_dem (int lev, int nstep, Real dt, Real time);
 
+    void usr3 (int lev);
+
+    void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
+
 protected:
     virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
+
+    void mfix_calc_coeffs (int lev, int calc_flag);
+
+    void mfix_calc_all_coeffs (int lev);
+
+    void mfix_calc_trd_and_tau (int lev);
+
+    void mfix_init_fluid (int lev);
+
+    void mfix_comp_mean_fields (int lev);
 
 private:
 

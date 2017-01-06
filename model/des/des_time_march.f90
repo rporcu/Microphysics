@@ -24,8 +24,8 @@ module des_time_march_module
       use calc_drag_des_module, only: calc_drag_des
       use calc_force_dem_module, only: calc_force_dem
       use calc_pg_grad_module, only: calc_pg_grad
-      use cfnewvalues_module, only: cfnewvalues
       use comp_mean_fields_module, only: comp_mean_fields
+      use cfnewvalues_module, only: cfnewvalues
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled
       use discretelement, only: dtsolid
       use discretelement, only: pip, s_time, do_nsearch
@@ -213,7 +213,7 @@ module des_time_march_module
 !         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
 
 ! Calculate mean fields (EPg).
-         CALL COMP_MEAN_FIELDS(slo, shi, lo, hi, &
+         CALL comp_mean_fields(slo, shi, lo, hi, &
                                ep_g, particle_state, des_pos_new, pvol, flag, size(pvol), &
                                dx, dy, dz)
 

@@ -1,19 +1,14 @@
-module init_fluid_module
-
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
-
-contains
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: init_fluid                                              !
 !                                                                      !
-!  Purpose: This module sets all the initial conditions.               !
-!                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-                         mu_g, lambda_g, flag, dx, dy, dz)
+                         mu_g, lambda_g, flag, dx, dy, dz) &
+      bind(C, name="init_fluid")
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
       use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
@@ -81,7 +76,6 @@ contains
 
    end subroutine init_fluid
 
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_IC                                                  !
@@ -97,6 +91,9 @@ contains
       use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use scales, only: scale_pressure
       use param1, only: undefined, is_defined
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
       IMPLICIT NONE
 
@@ -187,6 +184,9 @@ contains
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
+
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
       IMPLICIT NONE
 
@@ -357,5 +357,3 @@ contains
          'condition need to be specified',/1X,70('*')/)
 
    end subroutine set_p_g
-
-end module init_fluid_module

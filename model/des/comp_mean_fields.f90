@@ -13,10 +13,10 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     SUBROUTINE COMP_MEAN_FIELDS(slo, shi, lo, hi, &
+     subroutine comp_mean_fields(slo, shi, lo, hi, &
                                  ep_g, particle_state, des_pos_new, pvol, flag, nparticles, &
                                  dx, dy, dz) &
-         bind(C, name="mfix_comp_mean_fields")
+         bind(C, name="comp_mean_fields")
 
       use discretelement, only: max_pip
       use param1, only: zero
@@ -93,11 +93,5 @@ module comp_mean_fields_module
          ENDDO
       ENDDO
 
-! Halo exchange of solids volume fraction data.
-      ! CALL SEND_RECV(EP_G,2)
-
-      RETURN
-
-      END SUBROUTINE COMP_MEAN_FIELDS
-
+     end subroutine comp_mean_fields
 end module comp_mean_fields_module

@@ -122,8 +122,4 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       ! Set boundary conditions
       call set_bc0(slo,shi,lo,hi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
 
-      ! Initialize the fluid
-      call init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-                      mu_g, lambda_g, flag, dx, dy, dz)
-
       end subroutine mfix1

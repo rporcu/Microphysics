@@ -155,7 +155,9 @@ module calc_drag_des_module
          particle_state, pvol, des_pos_new, des_vel_new, &
          des_radius, dx, dy, dz)
 
-         implicit none
+      use comp_mean_fields_module, only: comp_mean_fields
+
+      implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -191,7 +193,7 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Calculate mean fields (EPg).
-      CALL comp_mean_fields(slo, shi, lo, hi, &
+      call comp_mean_fields(slo, shi, lo, hi, &
          ep_g, particle_state, des_pos_new, &
          pvol, flag, size(des_radius), dx, dy, dz)
 

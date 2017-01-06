@@ -25,6 +25,14 @@ extern "C"
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
 
+  void init_fluid(int* slo, int* shi, const int* lo, const int* hi,
+                 Real* ep_g,    Real* ro_g,
+                 Real* rop_g,   Real* p_g,
+                 Real* u_g,     Real* v_g,      Real* w_g,
+                 Real* mu_g,    Real* lambda_g, 
+                 int* flag,
+                 Real* dx,       Real* dy,       Real* dz);
+
   void mfix_make_arrays_des(
                  int* particle_state,
                  int* particle_phase,
@@ -46,7 +54,7 @@ extern "C"
                  Real* des_vel_new,
                  Real* des_usr_var);
 
-  void mfix_comp_mean_fields(int* slo, int* shi, const int* lo, const int* hi,
+  void comp_mean_fields(int* slo, int* shi, const int* lo, const int* hi,
                  Real* ep_g,
                  int* particle_state,
                  Real* des_pos_new,
