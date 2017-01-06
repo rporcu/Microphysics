@@ -101,7 +101,7 @@ module output_manager_module
 ! Write standard output, if needed
       IF(CHECK_TIME(OUT_TIME)) THEN
          OUT_TIME = NEXT_TIME(OUT_DT)
-         CALL WRITE_OUT1(time, ep_g,p_g,ro_g)
+         CALL WRITE_OUT1(time,slo,shi,ep_g,p_g,ro_g)
 
          CALL NOTIFY_USER('.OUT;')
       ENDIF

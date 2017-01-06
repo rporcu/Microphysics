@@ -18,24 +18,23 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(p_g, gradPg,  particle_state, des_pos_new,&
+      SUBROUTINE CALC_PG_GRAD(slo, shi, lo, hi, &
+                              p_g, gradPg,  particle_state, des_pos_new,&
                               pvol, drag_fc, flag, dx, dy, dz)
 
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, entering_ghost
       use discretelement, only: exiting_particle, exiting_ghost
       use discretelement, only: nonexistent
 
-! Loop bounds for fluid grid
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-! Flags for cyclic BC with pressure drop
+      ! Flags for cyclic BC with pressure drop
       use geometry, only: CYCLIC_X_PD, CYCLIC_Y_PD, CYCLIC_Z_PD
-! Specified pressure drop
+
+      ! Specified pressure drop
       use bc, only: DELP_X, DELP_Y, DELP_Z
-! Domain length
+
+      ! Domain length
       use geometry, only: XLENGTH, YLENGTH, ZLENGTH
-! Gas phase pressure
 
       use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
 
@@ -46,12 +45,14 @@ MODULE CALC_PG_GRAD_MODULE
 
       implicit none
 
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), intent(in   ) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: gradpg&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       integer         , intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       real(c_real), intent(in   ) :: pvol(:)
       real(c_real), intent(in   ) :: des_pos_new(:,:)
@@ -69,16 +70,16 @@ MODULE CALC_PG_GRAD_MODULE
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(P_G, gradPg, flag, dx, dy, dz)
+      CALL CALC_GRAD_DES(slo, shi, lo, hi, P_G, gradPg, flag, dx, dy, dz)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
       cPG(2) = merge(DELP_Y/YLENGTH, ZERO, CYCLIC_Y_PD)
       cPG(3) = merge(DELP_Z/ZLENGTH, ZERO, CYCLIC_Z_PD)
 
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+      DO J = slo(2),shi(2)
+      DO I = slo(1),shi(1)
 
          gradPg(I,J,K,:) = cPG - gradPg(I,J,K,:)
 

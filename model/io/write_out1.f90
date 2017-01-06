@@ -12,16 +12,17 @@ MODULE WRITE_OUT1_MODULE
 !  Purpose: write out the field variables to standard output           C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_OUT1(time, ep_g,p_g,ro_g)
+      SUBROUTINE WRITE_OUT1(time,slo,shi,ep_g,p_g,ro_g)
 
       USE compar, only: iend3, jend3, kend3
-      USE compar, only: istart3, jstart3, kstart3
       USE compar, only: mype, pe_io
       USE funits, only: unit_out
       USE out_array_mod, only: out_array
       USE run, only: call_usr
 
       IMPLICIT NONE
+
+      integer, intent(in   ) :: slo(3),shi(3)
 
       INTERFACE
          SUBROUTINE USR_WRITE_OUT1
@@ -31,16 +32,16 @@ MODULE WRITE_OUT1_MODULE
       real(c_real), INTENT(IN) :: time
 
       real(c_real), INTENT(IN) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: ro_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), allocatable :: array1(:,:,:)
 
       if (myPE == PE_IO) then
-         allocate (array1(istart3:iend3, jstart3:jend3, kstart3:kend3) )
+         allocate ( array1(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       else
          allocate (array1(1,1,1))
       end if

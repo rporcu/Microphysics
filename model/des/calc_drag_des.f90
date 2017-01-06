@@ -4,7 +4,6 @@ module calc_drag_des_module
       use iso_c_binding , only: c_int
 
       use comp_mean_fields_module, only: comp_mean_fields
-      use compar, only:  istart3, iend3, jstart3, jend3, kstart3, kend3
       use discretelement, only: des_continuum_coupled
       use discretelement, only: des_explicitly_coupled
       use discretelement, only: normal_particle

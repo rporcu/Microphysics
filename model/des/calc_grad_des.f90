@@ -4,14 +4,13 @@ MODULE CALC_GRAD_DES_MODULE
    use iso_c_binding , only: c_int
 
    CONTAINS
-      SUBROUTINE CALC_GRAD_DES(PHI, DEL_PHI, flag, dx, dy, dz)
+      SUBROUTINE CALC_GRAD_DES(slo, shi, lo, hi, PHI, DEL_PHI, flag, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
 
       USE geometry, only: IMIN1, JMIN1, KMIN1
       USE geometry, only: IMAX1, JMAX1, KMAX1
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use functions, only: AVG
@@ -20,13 +19,14 @@ MODULE CALC_GRAD_DES_MODULE
 
       IMPLICIT NONE
 
-! Dummy Arguments:
-!---------------------------------------------------------------------//
-      real(c_real), INTENT(IN) :: PHI&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-      real(c_real), INTENT(OUT) :: DEL_PHI&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      real(c_real), intent(in   ) :: PHI&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: DEL_PHI&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
+      integer     , intent(in   ) :: FLAG&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
@@ -40,9 +40,9 @@ MODULE CALC_GRAD_DES_MODULE
         ody = 1.d0 / dy
         odz = 1.d0 / dz
 
-        DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+        DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+        DO I = slo(1),shi(1)
 
          DEL_PHI(I,J,K,:) = ZERO
          IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
