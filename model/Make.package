@@ -72,7 +72,6 @@ f90EXE_sources += scales_mod.f90
 f90EXE_sources += set_bc0.f90
 f90EXE_sources += set_bc1.f90
 f90EXE_sources += set_bc_flow.f90
-f90EXE_sources += set_constprop.f90
 f90EXE_sources += set_domain.f90
 f90EXE_sources += set_flags.f90
 f90EXE_sources += set_icbc_flags.f90

@@ -486,11 +486,25 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
         // Calculate face mass fluxes
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-          calc_mflux(
-            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-            (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-            (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-            (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
+        {
+            const Box& bx=mfi.validbox();
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+
+            calc_mflux(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+              (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+              (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
+        }
 
         // Update boundary conditions
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -751,17 +765,43 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Update wall velocities
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            set_wall_bc(
+          {
+            const Box& bx=mfi.validbox();
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+            set_wall_bc(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr());
+          }
 
           // Calculate face mass fluxes
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            calc_mflux(
+          {
+            const Box& bx=mfi.validbox();
+            const int* sslo = (*flag[lev])[mfi].loVect();
+            const int* sshi = (*flag[lev])[mfi].hiVect();
+
+            slo[0] = sslo[0]+2;
+            slo[1] = sslo[1]+2;
+            slo[2] = sslo[2]+2;
+
+            shi[0] = sshi[0]+2;
+            shi[1] = sshi[1]+2;
+            shi[2] = sshi[2]+2;
+            calc_mflux(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
               (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
               (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
               (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
               (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
+          }
 
           // Update boundary conditions
           for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)

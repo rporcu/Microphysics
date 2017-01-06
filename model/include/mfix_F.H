@@ -112,7 +112,7 @@ extern "C"
          int* flag,            Real* dt,
          Real* dx,             Real* dy,             Real* dz);
 
-  void calc_mflux(
+  void calc_mflux(int* slo, int* shi, const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
@@ -173,7 +173,7 @@ extern "C"
           Real* d_e,      Real* d_n,      Real* d_t,
           int*  flag);
 
-  void set_wall_bc(
+  void set_wall_bc(int* slo, int* shi, const int* lo, const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           int*  flag);
 

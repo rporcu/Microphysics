@@ -13,36 +13,37 @@ MODULE CALC_MFLUX_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_MFLUX (u, v, w, rop_e, rop_n, rop_t, &
+      SUBROUTINE CALC_MFLUX (slo, shi, lo, hi, u, v, w, rop_e, rop_n, rop_t, &
          flux_e, flux_n, flux_t, flag, dx, dy, dz) bind(C, name="calc_mflux")
 
       USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: iminus, jminus, kminus
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), intent(in   ) :: u&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_e&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_n&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_t&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_e&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_n&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_t&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in) :: dx, dy, dz
 

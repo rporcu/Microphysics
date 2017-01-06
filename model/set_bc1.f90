@@ -64,21 +64,21 @@ module set_bc1_module
 
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
-               CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_OUTFLOW')
-               CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_ADJUST_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_INFLOW')
             CASE ('P_INFLOW')
-               CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
             CASE ('OUTFLOW')
-               CALL set_outflow(L,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
                   flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)

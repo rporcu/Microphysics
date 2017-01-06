@@ -12,33 +12,35 @@ MODULE CORRECT_0_MODULE
 !  Purpose: Correct the fluid pressure and gas velocities              C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CORRECT_0(p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)&
-         bind(C, name="correct0")
+      SUBROUTINE CORRECT_0(slo,shi,lo,hi,&
+           p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)&
+           bind(C, name="correct0")
 
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE functions, only: ieast, jnorth, ktop
       USE ur_facs  , only: ur_fac
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), intent(inout) :: p_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: pp_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_e&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_n&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_t&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 
 !-----------------------------------------------
@@ -51,9 +53,9 @@ MODULE CORRECT_0_MODULE
 ! Underrelax pressure correction.  Velocity corrections should not be
 ! underrelaxed, so that the continuity eq. is satisfied.
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
             if(flag(i,j,k,1) <= 11) then
 

@@ -109,7 +109,7 @@ module solve_vel_star_module
       if(point_source) call point_source_u_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
@@ -118,7 +118,8 @@ module solve_vel_star_module
       if(des_continuum_coupled) &
          call gas_drag_u(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
-      call calc_resid_vel (u_g, v_g, w_g, a_m, b_m, &
+      call calc_resid_vel (slo, shi, lo, hi, &
+         u_g, v_g, w_g, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
          i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag)
@@ -228,7 +229,7 @@ module solve_vel_star_module
       if(point_source) call point_source_v_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
@@ -237,7 +238,8 @@ module solve_vel_star_module
       if(des_continuum_coupled) &
          call gas_drag_v(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
-      call calc_resid_vel (v_g, w_g, u_g, a_m, b_m, &
+      call calc_resid_vel (slo, shi, lo, hi, &
+         v_g, w_g, u_g, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
          i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag)
@@ -345,7 +347,7 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
@@ -354,7 +356,8 @@ module solve_vel_star_module
       if(des_continuum_coupled) &
          call gas_drag_w(a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
-      call calc_resid_vel (w_g, u_g, v_g, a_m, b_m, &
+      call calc_resid_vel (slo, shi, lo, hi, &
+         w_g, u_g, v_g, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
          i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag)

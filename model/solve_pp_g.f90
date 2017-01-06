@@ -117,13 +117,15 @@ module solve_pp_module
       if(abs(normg) < epsilon(zero)) then
 ! calculating the residual based on dominate term in correction equation
 ! and use this to form normalization factor
-        call calc_resid_pp (b_mmax, one, num_resid(resid_p), &
+        call calc_resid_pp (slo, shi, lo, hi, &
+         b_mmax, one, num_resid(resid_p), &
          den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
          normgloc = resid(resid_p)/den
       endif
 
-      call calc_resid_pp (b_m, normgloc, num_resid(resid_p),  &
+      call calc_resid_pp (slo, shi, lo, hi, &
+         b_m, normgloc, num_resid(resid_p),  &
          den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
       resg = resid(resid_p)

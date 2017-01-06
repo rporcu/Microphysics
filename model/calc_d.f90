@@ -14,7 +14,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
+      SUBROUTINE CALC_D(slo, shi, D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -29,7 +29,6 @@ MODULE CALC_D_MOD
 ! Size of IJK arrays and size of solids phase arrays.
 
       use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       use functions, only: AVG
       use param1, only: ZERO, SMALL_NUMBER
@@ -37,20 +36,22 @@ MODULE CALC_D_MOD
 
       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-! Pressure correction
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      ! Pressure correction
       real(c_real), INTENT(OUT) :: d(:,:,:)
-! "X", "Y", or "Z"
+
+      ! "X", "Y", or "Z"
       CHARACTER, INTENT(IN) :: axis
+
       real(c_real), INTENT(IN):: A_M&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
       real(c_real), INTENT(IN):: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx, dy, dz
 
 ! Local variables:

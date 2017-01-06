@@ -54,23 +54,24 @@ contains
 
 !-----------------------------------------------------------------------!
 
-! Set user specified initial conditions (IC)
+      ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, lo, hi, ep_g, p_g, u_g, v_g, w_g, flag)
 
-! Set the initial pressure field
+      ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
 
-! Set the initial fluid density
+      ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
          call calc_ro_g(slo, shi, ro_g,rop_g,p_g,ep_g,flag)
       else
          where (flag(:,:,:,1) < 100) ro_g = ro_g0
          where (flag(:,:,:,1) < 100) rop_g = ro_g0*ep_g
       endif
-! Remove undefined values at wall cells for scalars
+
+      ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
 
-! Set the initial viscosity
+      ! Set the initial viscosity
       if (is_undefined(ro_g0)) then
          call calc_mu_g(lambda_g,mu_g,flag)
       else

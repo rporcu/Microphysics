@@ -82,23 +82,20 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_RESID_PP(B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
+      SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
+         B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
          i_resid, j_resid, k_resid, flag)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1  , only: large_number, zero, one
       use run     , only: debug_resid
 
       implicit none
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-!   Vector b_m
+
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      !   Vector b_m
       real(c_real) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Normalization factor
       real(c_real), INTENT(IN) :: NORM
@@ -112,7 +109,7 @@
       ! Maximum value of Residual
       real(c_real), INTENT(OUT) :: MAX_RESID
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
@@ -134,9 +131,9 @@
       NCELLS = 0
       DEN1 = ONE
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
              IF(flag(i,j,k,1)==1) THEN
 
                ! evaluating the residual at cell (i,j,k):
@@ -205,49 +202,54 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CALC_RESID_VEL(vel, vels1, vels2, A_M, B_M, NUM, DEN, &
+      SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
+         vel, vels1, vels2, A_M, B_M, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use compar  , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use param1  , only: large_number, small_number, zero, one
       use matrix  , only: e, w, s, n, t, b
       use run     , only: debug_resid
 
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! primary velocity component
+
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! primary velocity component
       real(c_real), INTENT(IN) :: vel&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! other components used here only for scaling
+      ! other components used here only for scaling
       real(c_real), INTENT(IN) :: vels1&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: vels2&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! Septadiagonal matrix A_m
+      ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-! Vector b_m
+      ! Vector b_m
       real(c_real) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       INTEGER, INTENT(in) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
-! Numerator and denominator
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      ! Numerator and denominator
       real(c_real), INTENT(OUT) :: NUM, DEN
-! Average value of Residual
+
+      ! Average value of Residual
       real(c_real), INTENT(OUT) :: RESID
-! Maximum value of Residual
+
+      ! Maximum value of Residual
       real(c_real), INTENT(OUT) :: MAX_RESID
-! (i,j,k) of Maximum value of Residual
+
+      ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
+
 !-----------------------------------------------
 !     Local variables
 !-----------------------------------------------
@@ -265,7 +267,7 @@
 
       ! New local variables for DMP version
       real(c_real) :: resid_ijk&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !-----------------------------------------------
 
@@ -275,9 +277,9 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
             RESID_IJK(i,j,k) = ZERO
 
            ! Skip walls where some values are undefined.
@@ -328,9 +330,9 @@
 
       max_resid = resid_ijk( i_resid, j_resid, k_resid)
 
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
             IF (resid_ijk( i,j,k ) > max_resid) THEN
               i_resid = i
               j_resid = j

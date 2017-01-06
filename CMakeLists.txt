@@ -178,7 +178,6 @@ set(F90_sources
   model/set_bc0.f90
   model/set_bc1.f90
   model/set_bc_flow.f90
-  model/set_constprop.f90
   model/set_domain.f90
   model/set_flags.f90
   model/set_icbc_flags.f90

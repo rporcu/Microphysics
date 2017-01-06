@@ -12,7 +12,7 @@ MODULE SET_WALL_BC_MODULE
 !  Purpose: Set wall boundary conditions                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_WALL_BC(u_g,v_g,w_g, flag)&
+      SUBROUTINE SET_WALL_BC(slo,shi,lo,hi,u_g,v_g,w_g,flag)&
          bind(C, name="set_wall_bc")
 
 !-----------------------------------------------
@@ -20,18 +20,19 @@ MODULE SET_WALL_BC_MODULE
 !-----------------------------------------------
       USE bc, only: bc_defined, bc_type, dimension_bc
       USE bc, only: bc_i_e, bc_i_w, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-      USE compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
 
       implicit none
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), intent(inout) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
