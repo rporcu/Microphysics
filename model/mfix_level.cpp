@@ -384,8 +384,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
       {
         const Box& bx=mfi.validbox();
-        const int* lo = bx.loVect();
-        const int* hi = bx.hiVect();
 
         const int* sslo = (*flag[lev])[mfi].loVect();
         const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -398,7 +396,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         shi[1] = sshi[1]+2;
         shi[2] = sshi[2]+2;
 
-        calc_coeff_all(slo.dataPtr(), shi.dataPtr(), lo, hi,
+        calc_coeff_all(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
           (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
           (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -411,12 +409,26 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
       // Calculate the stress tensor trace and cross terms for all phases.
       for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        calc_trd_and_tau(
+      {
+        const Box& bx=mfi.validbox();
+
+        const int* sslo = (*flag[lev])[mfi].loVect();
+        const int* sshi = (*flag[lev])[mfi].hiVect();
+
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
+
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
+        calc_trd_and_tau(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
           (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
           (*trD_g[lev])[mfi].dataPtr(),    (*ep_g[lev])[mfi].dataPtr(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
           (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
           (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+      }
 
       // Backup field variable to old
       int nghost = ep_go[lev]->nGrow();

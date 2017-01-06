@@ -96,7 +96,7 @@ extern "C"
          Real* des_vel_new, Real* des_radius,
          Real* dx,       Real* dy,       Real* dz);
 
-  void calc_trd_and_tau(
+  void calc_trd_and_tau(int* slo, int* shi, const int* lo, const int* hi,
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
          Real* trd_g,    Real* ep_g,
          Real* u_g,      Real* v_g,     Real* w_g,

@@ -198,39 +198,39 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_trd_and_tau(tau_u_g,tau_v_g,tau_w_g,trd_g,&
+      subroutine calc_trd_and_tau(slo,shi,lo,hi,&
+         tau_u_g,tau_v_g,tau_w_g,trd_g,&
          ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz) &
         bind(C, name="calc_trd_and_tau")
 
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-      use compar, only: istart3,iend3,jstart3,jend3,kstart3,kend3
-
       implicit none
+
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Stress tensor cross terms.
       real(c_real), intent(inout) :: tau_u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: tau_v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: tau_w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: trd_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: ep_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: lambda_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-            (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx,dy,dz
 
@@ -238,9 +238,9 @@ module calc_coeff_module
       call calc_trd_g(trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      call calc_tau_u_g (tau_u_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
-      call calc_tau_v_g (tau_v_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
-      call calc_tau_w_g (tau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+      call calc_tau_u_g (slo,shi,lo,hi,tau_u_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+      call calc_tau_v_g (slo,shi,lo,hi,tau_v_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+      call calc_tau_w_g (slo,shi,lo,hi,tau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
 
       end subroutine calc_trd_and_tau
 
