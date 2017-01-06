@@ -37,7 +37,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use write_out1_module, only: write_out1
       use write_out3_module, only: write_out3
       use zero_norm_vel_module, only: zero_norm_vel
-      use init_fluid_module, only: init_fluid
 
       use fld_const, only: ro_g0
 
