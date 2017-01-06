@@ -12,7 +12,7 @@ contains
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   integer(c_int) function goal_seek_mFlux(NIT, gsmf, delp_n, mdot_n, &
+   integer(c_int) function goal_seek_mFlux(slo, shi, NIT, gsmf, delp_n, mdot_n, &
       flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)&
       bind(C, name="goal_seek_mFlux")
 
@@ -21,7 +21,7 @@ contains
 !-----------------------------------------------
       USE bc, only: delp_x, delp_y, delp_z, flux_g
       USE param1, only: one
-      USE compar   ,only: istart3, iend3, jstart3, jend3, kstart3, kend3, myPE, PE_IO
+      USE compar   ,only: myPE, PE_IO
       USE exit_mod, only: mfix_exit
       USE geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       USE utilities, ONLY: mfix_isnan
@@ -30,21 +30,20 @@ contains
 
       IMPLICIT NONE
 
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
+      integer     , intent(in   ) :: slo(3),shi(3)
+
       integer(c_int), intent(inout) :: nit
       integer(c_int), intent(inout) :: gsmf
       real(c_real), intent(inout) :: delp_n, mdot_n
 
       real(c_real), intent(inout) :: flux_ge&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gn&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gt&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
@@ -68,13 +67,13 @@ contains
 ! Calculate the average gas mass flux and error
       IF(CYCLIC_X_MF)THEN
          delp_n = delp_x
-         mdot_n = VAVG_Flux_G(flux_ge, ayz, flag)
+         mdot_n = vavg_flux_g(slo, shi, flux_ge, ayz, flag)
       ELSEIF(CYCLIC_Y_MF)THEN
          delp_n = delp_y
-         mdot_n = VAVG_Flux_G(flux_gn, axz, flag)
+         mdot_n = vavg_flux_g(slo, shi, flux_gn, axz, flag)
       ELSEIF(CYCLIC_Z_MF)THEN
          delp_n = delp_z
-         mdot_n = VAVG_Flux_G(flux_gt, axy, flag)
+         mdot_n = vavg_flux_g(slo, shi, flux_gt, axy, flag)
       ELSE
          RETURN
       ENDIF

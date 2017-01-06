@@ -704,9 +704,22 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-              converged = goal_seek_mFlux(&nit, &gsmf, &delP_MF, &lMFlux,
+            {
+              const int* sslo = (*flag[lev])[mfi].loVect();
+              const int* sshi = (*flag[lev])[mfi].hiVect();
+
+              slo[0] = sslo[0]+2;
+              slo[1] = sslo[1]+2;
+              slo[2] = sslo[2]+2;
+
+              shi[0] = sshi[0]+2;
+              shi[1] = sshi[1]+2;
+              shi[2] = sshi[2]+2;
+
+              converged = goal_seek_mFlux(slo.dataPtr(), shi.dataPtr(), &nit, &gsmf, &delP_MF, &lMFlux,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                 (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+            }
 
         } while(converged==0 && nit<max_nit);
 

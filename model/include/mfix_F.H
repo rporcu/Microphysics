@@ -202,7 +202,8 @@ extern "C"
 
   int check_convergence(int* nit);
 
-  int goal_seek_mFlux(int*nit, int* gsmf, Real* delP_MF, Real* lMFlux,
+  int goal_seek_mFlux(const int* slo, const int* shi,
+              int*nit,        int* gsmf,      Real* delP_MF,  Real* lMFlux,
               Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag,
               Real* dx     ,  Real* dy,       Real* dz);
 
