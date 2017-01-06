@@ -26,8 +26,6 @@ module des_time_march_module
       use calc_pg_grad_module, only: calc_pg_grad
       use cfnewvalues_module, only: cfnewvalues
       use comp_mean_fields_module, only: comp_mean_fields
-      use compar, only: iend3, jend3, kend3
-      use compar, only: istart3, jstart3, kstart3
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled
       use discretelement, only: dtsolid
       use discretelement, only: pip, s_time, do_nsearch
@@ -113,7 +111,7 @@ module des_time_march_module
       real(c_real), allocatable :: gradPg(:,:,:,:)
 !.......................................................................!
 
-      allocate (gradPg(istart3:iend3, jstart3:jend3, kstart3:kend3,3) )
+      allocate (gradPg (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3) )
 
 ! In case of restarts assign S_TIME from MFIX TIME
       S_TIME = TIME
@@ -135,8 +133,8 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(time, dt, nstep,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-             particle_state, des_radius, ro_sol, des_pos_new,&
+         CALL OUTPUT_MANAGER(slo, shi, time, dt, nstep,ep_g, p_g, ro_g, rop_g, &
+            u_g, v_g, w_g, particle_state, des_radius, ro_sol, des_pos_new,&
             des_vel_new, des_usr_var, omega_new, 0, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
@@ -229,8 +227,8 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(time, dt, nstep,ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, &
-                particle_state, des_radius, ro_sol, &
+            CALL OUTPUT_MANAGER(slo, shi, time, dt, nstep,ep_g, p_g, ro_g, &
+               rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 

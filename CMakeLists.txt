@@ -150,8 +150,6 @@ set(F90_sources
   model/io/out_bin_512r.f90
   model/io/out_bin_r.f90
   model/io/output_manager.f90
-  model/io/write_ab_m.f90
-  model/io/write_ab_m_var.f90
   model/io/write_error.f90
   model/io/write_header.f90
   model/io/write_out0.f90
@@ -216,7 +214,6 @@ set(F90_sources
   model/usr/usr_drag.f90
   model/usr/usr_init_namelist.f90
   model/usr/usr_mod.f90
-  model/usr/usr_physical_prop.f90
   model/usr/usr_write_out0.f90
   model/usr/usr_write_out1.f90
   model/usr/write_usr0.f90

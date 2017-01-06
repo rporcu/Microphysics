@@ -20,10 +20,6 @@
       use geometry, only: jmin1, jmax1, jmax
       use geometry, only: kmin1, kmax1
 
-      use compar, only: istart3, iend3
-      use compar, only: jstart3, jend3
-      use compar, only: kstart3, kend3
-
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3)

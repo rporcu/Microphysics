@@ -63,7 +63,7 @@ extern "C"
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void mfix_output_manager(
+  void mfix_output_manager(int* slo, int* shi,
          Real* time, Real* dt, int* nstep,
          Real* ep_g,    Real* p_g,
          Real* ro_g,    Real* rop_g,

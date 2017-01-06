@@ -1005,8 +1005,27 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
+  Array<int> slo(3);
+  Array<int> shi(3);
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-    mfix_output_manager(
+  {
+    const Box& bx=mfi.validbox();
+    const int* lo = bx.loVect();
+    const int* hi = bx.hiVect();
+
+    const int* sslo = (*flag[lev])[mfi].loVect();
+    const int* sshi = (*flag[lev])[mfi].hiVect();
+
+    slo[0] = sslo[0]+2;
+    slo[1] = sslo[1]+2;
+    slo[2] = sslo[2]+2;
+
+    shi[0] = sshi[0]+2;
+    shi[1] = sshi[1]+2;
+    shi[2] = sshi[2]+2;
+
+    mfix_output_manager(slo.dataPtr(), shi.dataPtr(),
       &time, &dt, &nstep,
       (*ep_g[lev])[mfi].dataPtr(),   (*p_g[lev])[mfi].dataPtr(),
       (*ro_g[lev])[mfi].dataPtr(),   (*rop_g[lev])[mfi].dataPtr(),
@@ -1016,6 +1035,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       ro_sol.dataPtr(), des_pos_new.dataPtr(),
       des_vel_new.dataPtr(), des_usr_var.dataPtr(),
       omega_new.dataPtr(), &estatus, &finish);
+  }
 }
 
 void

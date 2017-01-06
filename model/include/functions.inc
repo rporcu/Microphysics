@@ -36,7 +36,6 @@
 
 
       integer function iminus(i,j,k)
-      use compar, only: istart3
       use geometry, only  : imin1,imax1,cyclic_x
       use geometry, only: flag_mod
       implicit none
@@ -45,7 +44,7 @@
       if (i.eq.imin1 .and.  flag_mod(i,j,k,1) > 1) then
          iminus = i
       else
-         iminus = max(istart3, i-1)
+         iminus = max(1, i-1)
       end if
 
       if (cyclic_x .and. (iminus < imin1) .and. &
@@ -77,7 +76,6 @@
       ! ************************************************
 
       integer function jminus(i,j,k)
-      use compar, only: jstart3
       use geometry, only  : jmin1,jmax1,cyclic_y
       use geometry, only: flag_mod
       implicit none
@@ -86,7 +84,7 @@
       if (j.eq.jmin1 .and. flag_mod(i,j,k,1) > 1) then
          jminus = j
       else
-         jminus = max(jstart3, j-1)
+         jminus = max(1, j-1)
       end if
 
       if (cyclic_y .and. (jminus < jmin1) .and. &
@@ -118,7 +116,6 @@
 
       integer function kminus(i,j,k)
 
-      use compar, only: kstart3
       use geometry, only  : kmin1,kmax1,cyclic_z
       use geometry, only: flag_mod
       implicit none
@@ -127,7 +124,7 @@
       if (k.eq.kmin1 .and. flag_mod(i,j,k,1) > 1) then
          kminus = k
       else
-         kminus = max(kstart3, k-1)
+         kminus = max(1, k-1)
       end if
 
       if (cyclic_z .and. (kminus < kmin1) .and. &
@@ -262,7 +259,7 @@
 
       integer function im1(i)
 
-      use compar, only: nodesi, istart3
+      use compar, only: nodesi
       use geometry, only  : imin1, imin2, imax1, cyclic_x
       implicit none
       integer, intent(in) :: i
@@ -272,7 +269,7 @@
       elseif(cyclic_x .and. nodesi == 1 .and. i==imin1 ) then
          im1 = imax1
       else
-         im1 = max(istart3, i-1)
+         im1 = max(1, i-1)
       endif
 
       end function im1
@@ -300,7 +297,7 @@
 
       integer function jm1(j)
 
-      use compar, only: nodesj, jstart3
+      use compar, only: nodesj
       use geometry, only  : jmin1, jmin2, jmax1, cyclic_y
       implicit none
       integer, intent(in) :: j
@@ -310,7 +307,7 @@
       elseif(cyclic_y .and. nodesj == 1 .and. j==jmin1 ) then
          jm1 = jmax1
       else
-         jm1 = max(jstart3, j-1)
+         jm1 = max(1, j-1)
       endif
 
       end function jm1
@@ -338,7 +335,7 @@
 
       integer function km1(k)
 
-      use compar, only: nodesk, kstart3
+      use compar, only: nodesk
       use geometry, only: kmin1, kmin2, kmax1, cyclic_z
       implicit none
       integer, intent(in) :: k
@@ -348,7 +345,7 @@
       elseif(cyclic_z .and. nodesk == 1 .and. k==kmin1 ) then
          km1 = kmax1
       else
-         km1 = max(kstart3, k-1)
+         km1 = max(1, k-1)
       endif
 
       end function km1
