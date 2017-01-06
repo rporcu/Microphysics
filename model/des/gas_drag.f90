@@ -15,7 +15,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      SUBROUTINE GAS_DRAG_U(slo, shi, lo, hi, &
+                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -26,29 +27,30 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-! IJK of cell to east.
+      ! IJK of cell to east.
       use functions, only: ieast
-! Function for averaging to a scalar cell's east face.
+      ! Function for averaging to a scalar cell's east face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
-! Dummy Arguments:
-!---------------------------------------------------------------------//
-! Septadiagonal matrix A_m
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
@@ -64,9 +66,9 @@ MODULE GAS_DRAG_MODULE
 
 
 ! Average the interpoalted drag force from the cell corners to the cell face.
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+         DO J = slo(2),shi(2)
+            DO I = slo(1),shi(1)
 
                IF(flag(i,j,k,2)>= 2000 .and. &
                   flag(i,j,k,2)<=2011) then
@@ -94,7 +96,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      SUBROUTINE GAS_DRAG_V(slo, shi, lo, hi, &
+                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 
 ! Global Variables:
@@ -106,27 +109,28 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-! IJK of cell to north.
+      ! IJK of cell to north.
       use functions, only: jnorth
-! Function for averaging to a scalar cell's north face.
+
+      ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
@@ -140,9 +144,9 @@ MODULE GAS_DRAG_MODULE
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+         DO J = slo(2),shi(2)
+            DO I = slo(1),shi(1)
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) then
                   A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
@@ -166,7 +170,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      SUBROUTINE GAS_DRAG_W(slo, shi, lo, hi, &
+                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -177,27 +182,26 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-! Fluid grid loop bounds.
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
-! IJK of cell to top.
+      ! IJK of cell to top.
       use functions, only: ktop
-! Function for averaging to a scalar cell's north face.
+
+      ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
-! Dummy Arguments:
-!---------------------------------------------------------------------//
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: f_gds&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: drag_bm&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
       INTEGER, INTENT(IN   ) :: flag&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
@@ -211,9 +215,9 @@ MODULE GAS_DRAG_MODULE
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      DO K = kstart3, kend3
-         DO J = jstart3, jend3
-            DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+         DO J = slo(2),shi(2)
+            DO I = slo(1),shi(1)
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) then
                   A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
