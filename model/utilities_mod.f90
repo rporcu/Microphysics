@@ -57,14 +57,13 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      real(c_real) FUNCTION MAX_VEL_INLET(u_g,v_g,w_g)
+      real(c_real) FUNCTION MAX_VEL_INLET(slo,shi,lo,hi,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
       use bc, only: bc_defined, bc_type
       use bc, only: bc_plane
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
-      USE compar   , only: istart3, iend3, jstart3, jend3, kstart3, kend3
       use functions, only: iminus, jminus, kminus
       use param    , only: dimension_bc
       use param1   , only: zero, small_number
@@ -73,12 +72,14 @@ CONTAINS
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(IN   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -145,26 +146,27 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND (u_g,v_g,w_g,ep_g,flag)
+      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,lo,hi,u_g,v_g,w_g,ep_g,flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
       USE toleranc, only: max_inlet_vel
 
       IMPLICIT NONE
 
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
       real(c_real), INTENT(IN   ) :: u_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: w_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ep_g&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN) :: FLAG&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -177,9 +179,9 @@ CONTAINS
       CHECK_VEL_BOUND = .FALSE.
       ALL_IS_ERROR    = .FALSE.
 
-LOOP_FLUID: DO K = kstart3, kend3
-        DO J = jstart3, jend3
-        DO I = istart3, iend3
+LOOP_FLUID: DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+        DO I = slo(1),shi(1)
 
          IF (1.eq.flag(i,j,k,1)) THEN
             IF(ABS(U_G(I,J,K)) > MAX_INLET_VEL .OR. &

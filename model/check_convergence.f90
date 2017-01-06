@@ -114,7 +114,7 @@ MODULE CHECK_CONVERGENCE_MODULE
 ! Check upper bound (speed of sound) limit for gas velocity components.
 !      IF(MOMENTUM_X_EQ(0) .OR. MOMENTUM_Y_EQ(0) .OR. &
 !          MOMENTUM_Z_EQ(0)) THEN
-!         IF(CHECK_VEL_BOUND(u_g,v_g,w_g,ep_g,flag)) CHECK_CONVERGENCE = 2     !divergence
+!         IF(CHECK_VEL_BOUND(slo,shi,lo,hi,u_g,v_g,w_g,ep_g,flag)) CHECK_CONVERGENCE = 2     !divergence
 !      ENDIF
 
       RETURN

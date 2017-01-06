@@ -21,25 +21,26 @@ MODULE ur_facs
 !  Purpose: Under-relax equation.                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   SUBROUTINE UNDER_RELAX(VAR, A_M, B_M, AXIS, flag, EQ)
+   SUBROUTINE UNDER_RELAX(slo, shi, VAR, A_M, B_M, AXIS, flag, EQ)
 
    use param1, only: one
-   use compar, only: istart3, iend3, jstart3, jend3, kstart3, kend3
 
    implicit none
+
+   integer     , intent(in   ) :: slo(3),shi(3)
 
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Variable
-      real(c_real) :: Var(istart3:iend3, jstart3:jend3, kstart3:kend3)
+      real(c_real) :: Var(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix
       real(c_real) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 !   Vector b_m
       real(c_real) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer, intent(in   ) ::  flag&
-         (istart3:iend3,jstart3:jend3,kstart3:kend3,4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 ! Equation ID
       INTEGER :: EQ
 ! Axis ID: U, V, W, S (scalar)
@@ -60,9 +61,9 @@ MODULE ur_facs
 
       if (axis.eq.'S') then
 
-         do k = kstart3, kend3
-            do j = jstart3, jend3
-               do i = istart3, iend3
+         do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+               do i = slo(1),shi(1)
                   IF(flag(i,j,k,1) == 1) THEN
                      AP = A_M(I,J,K,0)
                      IF (AP /= (-ONE)) THEN
@@ -75,9 +76,9 @@ MODULE ur_facs
          end do
 
       else if (axis.eq.'U') then
-         do k = kstart3, kend3
-            do j = jstart3, jend3
-               do i = istart3, iend3
+         do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+               do i = slo(1),shi(1)
                   IF(flag(i,j,k,2) >= 2000 .and. &
                      flag(i,j,k,2) <= 2011) THEN
                      AP = A_M(I,J,K,0)
@@ -91,9 +92,9 @@ MODULE ur_facs
          end do
 
       else if (axis.eq.'V') then
-         do k = kstart3, kend3
-            do j = jstart3, jend3
-               do i = istart3, iend3
+         do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+               do i = slo(1),shi(1)
                   IF(flag(i,j,k,3) >= 2000 .and. &
                      flag(i,j,k,3) <= 2011) THEN
                      AP = A_M(I,J,K,0)
@@ -107,9 +108,9 @@ MODULE ur_facs
          end do
 
       else if (axis.eq.'W') then
-         do k = kstart3, kend3
-            do j = jstart3, jend3
-               do i = istart3, iend3
+         do k = slo(3),shi(3)
+            do j = slo(2),shi(2)
+               do i = slo(1),shi(1)
                   IF(flag(i,j,k,4) >= 2000 .and. &
                      flag(i,j,k,4) <= 2011) THEN
                      AP = A_M(I,J,K,0)

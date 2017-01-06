@@ -123,7 +123,7 @@ module solve_vel_star_module
          resid(resid_u), max_resid(resid_u), &
          i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag)
 
-      call under_relax (u_g, a_m, b_m, 'U', flag, 3)
+      call under_relax (slo, shi, u_g, a_m, b_m, 'U', flag, 3)
 
       return
    end subroutine solve_u_g_star
@@ -242,7 +242,7 @@ module solve_vel_star_module
          resid(resid_v), max_resid(resid_v), &
          i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag)
 
-      call under_relax (v_g, a_m, b_m, 'V', flag, 4)
+      call under_relax (slo, shi, v_g, a_m, b_m, 'V', flag, 4)
 
    END SUBROUTINE SOLVE_V_G_STAR
 
@@ -359,7 +359,7 @@ module solve_vel_star_module
          resid(resid_w), max_resid(resid_w), &
          i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag)
 
-      call under_relax (w_g, a_m, b_m, 'W', flag, 5)
+      call under_relax (slo, shi, w_g, a_m, b_m, 'W', flag, 5)
 
    END SUBROUTINE SOLVE_W_G_STAR
 
