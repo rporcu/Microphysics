@@ -19,3 +19,6 @@ f90EXE_sources +=   check_solids_common_discrete.f90
 f90EXE_sources +=   check_solids_dem.f90
 f90EXE_sources +=   check_solids_model_prereqs.f90
 f90EXE_sources +=   check_solids_phases.f90
+
+INCLUDE_LOCATIONS += $(MFIX_HOME)/model/check_data
+VPATH_LOCATIONS   += $(MFIX_HOME)/model/check_data

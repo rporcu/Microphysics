@@ -10,10 +10,10 @@ COMP =gcc
 USE_MPI=FALSE
 USE_OMP=FALSE
 
+USE_PARTICLES = TRUE
+USE_F90SOLVERS = TRUE
+
 EBASE = mfix
 
-INCLUDE_LOCATIONS += .
-VPATH_LOCATIONS   += .
-vpathdir          += .
-
+MFIX_HOME := ../..
 include ../Make.mfix

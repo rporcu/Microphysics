@@ -17,3 +17,6 @@ f90EXE_sources += write_out0.f90
 f90EXE_sources += write_out1.f90
 f90EXE_sources += write_out3.f90
 f90EXE_sources += write_table.f90
+
+INCLUDE_LOCATIONS += $(MFIX_HOME)/model/io
+VPATH_LOCATIONS   += $(MFIX_HOME)/model/io

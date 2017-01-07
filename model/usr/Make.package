@@ -13,3 +13,6 @@ f90EXE_sources += usr_write_out0.f90
 f90EXE_sources += usr_write_out1.f90
 f90EXE_sources += write_usr0.f90
 f90EXE_sources += write_usr1.f90
+
+INCLUDE_LOCATIONS += $(MFIX_HOME)/model/usr
+VPATH_LOCATIONS   += $(MFIX_HOME)/model/usr

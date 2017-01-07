@@ -5,3 +5,6 @@ f90EXE_sources += leq_bicgs.f90
 f90EXE_sources += leqsol_mod.f90
 f90EXE_sources += solve_lin_eq.f90
 f90EXE_sources += xerbla.f90
+
+INCLUDE_LOCATIONS += $(MFIX_HOME)/model/solvers
+VPATH_LOCATIONS   += $(MFIX_HOME)/model/solvers

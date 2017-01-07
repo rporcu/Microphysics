@@ -1,12 +1,10 @@
 CEXE_headers 	+= mfix_level.H
 CEXE_headers 	+= ParticleContainer.H
-CEXE_headers 	+= ParticleIterator.H
 FEXE_headers 	+= mfix_F.H
 
 CEXE_sources += main.cpp
 CEXE_sources += mfix_level.cpp
 CEXE_sources += ParticleContainer.cpp
-CEXE_sources += ParticleIterator.cpp
 
 f90EXE_sources +=   adjust_a_g.f90 	
 f90EXE_sources +=   adjust_dt_mod.f90 	
@@ -62,6 +60,7 @@ f90EXE_sources += param1_mod.f90
 f90EXE_sources += param_mod.f90
 f90EXE_sources += parse_line.f90
 f90EXE_sources += parse_resid_string.f90
+f90EXE_sources += physical_prop.f90
 f90EXE_sources += ps_mod.f90
 f90EXE_sources += read_namelist.f90
 f90EXE_sources += remove_comment.f90
@@ -96,4 +95,7 @@ f90EXE_sources += vavg_g.f90
 f90EXE_sources += xsi_mod.f90
 f90EXE_sources += zero_norm_vel.f90
 F90EXE_sources += boxlib_to_mfix.F90
+
+INCLUDE_LOCATIONS += $(MFIX_HOME)/model
+VPATH_LOCATIONS   += $(MFIX_HOME)/model
 
