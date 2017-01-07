@@ -14,13 +14,13 @@ BOXLIB_HOME ?= ../../..
 
 include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
 
-include $(MFIX_HOME)/model/FParallel.mak
-include $(MFIX_HOME)/model_c/Make.package
 include $(MFIX_HOME)/model/check_data/Make.package  
 include $(MFIX_HOME)/model/des/Make.package  
+include $(MFIX_HOME)/model/dmp_modules/Make.package  
 include $(MFIX_HOME)/model/io/Make.package  
 include $(MFIX_HOME)/model/solvers/Make.package  
 include $(MFIX_HOME)/model/usr/Make.package
+include $(MFIX_HOME)/model/Make.package
 
 include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
 include $(BOXLIB_HOME)/Src/C_ParticleLib/Make.package

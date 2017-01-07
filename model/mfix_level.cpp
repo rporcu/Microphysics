@@ -2,7 +2,10 @@
 
 #include <mfix_F.H>
 #include <mfix_level.H>
-#include <FMultiGrid.H>
+#include <MGT_Solver.H>
+#include <MacBndry.H>
+#include <stencil_types.H>
+#include <mg_cpp_f.h>
 
 mfix_level::~mfix_level ()
 {};
@@ -1209,21 +1212,56 @@ mfix_level::mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& 
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr());
 
-#if 0
    // Starting to define an interface to the BoxLib bicg solver
    int mg_bc[2*BL_SPACEDIM];
    make_mg_bc(mg_bc);
-   FMultiGrid fmg(geom[lev]);
 
-   fmg.set_bc(mg_bc);
+   std::vector<BoxArray> bav(1);
+   bav[0] = sol.boxArray();
+   std::vector<DistributionMapping> dmv(1);
+   dmv[0] = rhs.DistributionMap();
+   std::vector<Geometry> fgeom(1);
+   fgeom[0] = geom[lev];
 
-   fmg.set_const_gravity_coeffs();
+   const Real* dx      = geom[lev].CellSize();
 
-  fmg.define_matrix(matrix); 
+   Array< Array<Real> > xa(1);
+   Array< Array<Real> > xb(1);
+ 
+   xa[0].resize(BL_SPACEDIM);
+   xb[0].resize(BL_SPACEDIM);
+ 
+   for (int i = 0; i < BL_SPACEDIM; ++i)
+   {
+       xa[0][i] = 0;
+       xb[0][i] = 0;
+   }
 
-  Real rel_eps = 1.e-10;
-  Real abs_eps = 1.e-12;
-  Real final_resnorm = fmg.solve(sol, rhs, rel_eps, abs_eps, verbose = 1);
+   int stencil_type = CC_CROSS_STENCIL;
+
+#if 0
+   MGT_Solver mgt_solver(fgeom, mg_bc, bav, dmv, false, stencil_type);
+   mgt_solver.set_const_gravity_coeffs(xa, xb);
+
+   MultiFab* sol_p[1] = {&sol};
+   MultiFab* Rhs_p[1] = {&rhs};
+
+   MacBndry bndry(sol.boxArray(), 1, geom[lev]);
+
+   BCRec* phys_bc;
+   const int  src_comp = 0; 
+   const int dest_comp = 0; 
+   const int  num_comp = 1; 
+   bndry.setBndryValues(sol, src_comp, dest_comp, num_comp, *phys_bc);
+
+   int always_use_bnorm = 0;
+   int need_grad_phi = 0;
+   Real resnorm;
+   Real rel_tol = 1.e-8;
+   Real abs_tol = 1.e-12;
+
+   mgt_solver.solve(sol_p, Rhs_p, bndry, rel_tol, abs_tol,
+                    always_use_bnorm, resnorm, need_grad_phi);
 #endif
 
 }
