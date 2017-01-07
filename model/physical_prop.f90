@@ -42,19 +42,19 @@ contains
 
 !-----------------------------------------------------------------------
 
-! Calculate density only. This is invoked several times within iterate,
-! making it the most frequently called.
+      ! Calculate density only. This is invoked several times within iterate,
+      ! making it the most frequently called.
       if(level == 0) then
          if(is_undefined(ro_g0)) &
             call calc_ro_g(slo, shi, ro_g, rop_g, p_g, ep_g, flag)
 
-! Calculate everything except density. This is called at the start of
-! each iteration.
+      ! Calculate everything except density. This is called at the start of
+      ! each iteration.
       elseif(level == 1) then
 
-! Calculate everything. This is invoked via calc_coeff_all as part of
-! the initialization (before starting the time march) and at the start
-! of each step step thereafter.
+      ! Calculate everything. This is invoked via calc_coeff_all as part of
+      ! the initialization (before starting the time march) and at the start
+      ! of each step step thereafter.
       elseif(level == 2) then
          if(is_undefined(ro_g0)) &
             call calc_ro_g(slo, shi, ro_g, rop_g, p_g, ep_g, flag)

@@ -40,6 +40,8 @@ public:
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time);
 
+    void make_mg_bc (int mg_bc[]);
+
 protected:
     virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
 
@@ -57,9 +59,17 @@ protected:
 
     void mfix_calc_mflux (int lev);
 
+    void mfix_set_wall_bc (int lev);
+
     void mfix_set_bc1 (int lev, Real time, Real dt);
 
+    void mfix_solve_for_vels (int lev, Real dt);
+
+    void mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
+
     void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg);
+
+    void mfix_physical_prop (int lev, int calc_flag);
 
     void mfix_correct0 (int lev);
 
