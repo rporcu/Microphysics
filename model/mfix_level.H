@@ -53,6 +53,16 @@ protected:
 
     void mfix_comp_mean_fields (int lev);
 
+    void mfix_conv_rop (int lev, Real dt);
+
+    void mfix_calc_mflux (int lev);
+
+    void mfix_set_bc1 (int lev, Real time, Real dt);
+
+    void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg);
+
+    void mfix_correct0 (int lev);
+
 private:
 
     void ReadParameters ();

@@ -347,36 +347,6 @@ mfix_level::MakeNewLevel (int lev, Real time,
 }
 
 void
-mfix_level::usr3(int lev)
-{
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
-   Array<int> slo(3);
-   Array<int> shi(3);
-
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-  {
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-
-     slo[0] = sslo[0]+2;
-     slo[1] = sslo[1]+2;
-     slo[2] = sslo[2]+2;
-
-     shi[0] = sshi[0]+2;
-     shi[1] = sshi[1]+2;
-     shi[2] = sshi[2]+2;
-
-     mfix_usr3( slo.dataPtr(),              shi.dataPtr(),
-               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
-               (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
-               &dx, &dy, &dz);
-   }
-}
-
-void
 mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
                          Real dt, Real& prev_dt, Real time, Real normg)
 {
@@ -433,51 +403,10 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         prev_dt = dt;
 
         // Calculate bulk density (epg*ro_g) at cell faces
-        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        {
-          const Box& bx=mfi.validbox();
-          const int* lo = bx.loVect();
-          const int* hi = bx.hiVect();
-
-          const int* sslo = (*flag[lev])[mfi].loVect();
-          const int* sshi = (*flag[lev])[mfi].hiVect();
-
-          slo[0] = sslo[0]+2;
-          slo[1] = sslo[1]+2;
-          slo[2] = sslo[2]+2;
-
-          shi[0] = sshi[0]+2;
-          shi[1] = sshi[1]+2;
-          shi[2] = sshi[2]+2;
-
-          conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-            (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-            (*rop_g[lev])[mfi].dataPtr(),
-            (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-            (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
-        }
+        mfix_conv_rop(lev,dt);
 
         // Calculate face mass fluxes
-        for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        {
-            const Box& bx=mfi.validbox();
-            const int* sslo = (*flag[lev])[mfi].loVect();
-            const int* sshi = (*flag[lev])[mfi].hiVect();
-
-            slo[0] = sslo[0]+2;
-            slo[1] = sslo[1]+2;
-            slo[2] = sslo[2]+2;
-
-            shi[0] = sshi[0]+2;
-            shi[1] = sshi[1]+2;
-            shi[2] = sshi[2]+2;
-
-            calc_mflux(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-              (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
-        }
+        mfix_calc_mflux(lev);
 
         // Update boundary conditions
         for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -677,59 +606,9 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           }
 
           // Solve the pressure correction equation
-          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-          {
-            const Box& bx=mfi.validbox();
+          mfix_solve_for_pp(lev,dt,lnormg,resg);
 
-            const int* sslo = (*flag[lev])[mfi].loVect();
-            const int* sshi = (*flag[lev])[mfi].hiVect();
-
-            slo[0] = sslo[0]+2;
-            slo[1] = sslo[1]+2;
-            slo[2] = sslo[2]+2;
-
-            shi[0] = sshi[0]+2;
-            shi[1] = sshi[1]+2;
-            shi[2] = sshi[2]+2;
-
-            solve_pp_g(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
-              (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
-              (*ro_g[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
-              (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-              (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-              (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr(),     &dt,
-              &lnormg,                 &resg,     &dx, &dy, &dz);
-          }
-
-          eq_id=1;
-          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-            mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
-              (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
-
-          // Correct fluid pressure and velocities
-          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-          {
-            const Box& bx=mfi.validbox();
-
-            const int* sslo = (*flag[lev])[mfi].loVect();
-            const int* sshi = (*flag[lev])[mfi].hiVect();
-
-            slo[0] = sslo[0]+2;
-            slo[1] = sslo[1]+2;
-            slo[2] = sslo[2]+2;
-
-            shi[0] = sshi[0]+2;
-            shi[1] = sshi[1]+2;
-            shi[2] = sshi[2]+2;
-            correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-              (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
-              (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-              (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-              (*flag[lev])[mfi].dataPtr());
-          }
+          mfix_correct0(lev);
 
           // Update fluid density
           calc_flag = 0;
@@ -1230,4 +1109,178 @@ mfix_level::mfix_comp_mean_fields(int lev)
           particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
           (*flag[lev])[mfi].dataPtr());
   }
+}
+
+void
+mfix_level::mfix_calc_mflux(int lev)
+{
+  Array<int> slo(3);
+  Array<int> shi(3);
+
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  {
+     const Box& bx=mfi.validbox();
+     const int* lo = bx.loVect();
+     const int* hi = bx.hiVect();
+
+     const int* sslo = (*flag[lev])[mfi].loVect();
+     const int* sshi = (*flag[lev])[mfi].hiVect();
+
+     slo[0] = sslo[0]+2;
+     slo[1] = sslo[1]+2;
+     slo[2] = sslo[2]+2;
+
+     shi[0] = sshi[0]+2;
+     shi[1] = sshi[1]+2;
+     shi[2] = sshi[2]+2;
+
+     calc_mflux(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+       (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+       (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+       (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
+  }
+}
+
+void
+mfix_level::mfix_conv_rop(int lev, Real dt)
+{
+  Array<int> slo(3);
+  Array<int> shi(3);
+
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  {
+    const Box& bx=mfi.validbox();
+    const int* lo = bx.loVect();
+    const int* hi = bx.hiVect();
+
+    const int* sslo = (*flag[lev])[mfi].loVect();
+    const int* sshi = (*flag[lev])[mfi].hiVect();
+
+    slo[0] = sslo[0]+2;
+    slo[1] = sslo[1]+2;
+    slo[2] = sslo[2]+2;
+
+    shi[0] = sshi[0]+2;
+    shi[1] = sshi[1]+2;
+    shi[2] = sshi[2]+2;
+
+    conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+      (*rop_g[lev])[mfi].dataPtr(),
+      (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+      (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
+  }
+}
+
+void
+mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
+{
+    Array<int> slo(3);
+    Array<int> shi(3);
+
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
+
+    // Solve the pressure correction equation
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    {
+      const Box& bx=mfi.validbox();
+
+      const int* sslo = (*flag[lev])[mfi].loVect();
+      const int* sshi = (*flag[lev])[mfi].hiVect();
+
+      slo[0] = sslo[0]+2;
+      slo[1] = sslo[1]+2;
+      slo[2] = sslo[2]+2;
+
+      shi[0] = sshi[0]+2;
+      shi[1] = sshi[1]+2;
+      shi[2] = sshi[2]+2;
+
+      solve_pp_g(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+        (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
+        (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
+        (*ro_g[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
+        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+        (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+        (*flag[lev])[mfi].dataPtr(),     &dt,
+        &lnormg,                 &resg,     &dx, &dy, &dz);
+    }
+
+    int eq_id=1;
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+      mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
+        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
+
+}
+
+void
+mfix_level::mfix_correct0(int lev)
+{
+  Array<int> slo(3);
+  Array<int> shi(3);
+
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  {
+     const Box& bx=mfi.validbox();
+
+      const int* sslo = (*flag[lev])[mfi].loVect();
+      const int* sshi = (*flag[lev])[mfi].hiVect();
+
+      slo[0] = sslo[0]+2;
+      slo[1] = sslo[1]+2;
+      slo[2] = sslo[2]+2;
+
+      shi[0] = sshi[0]+2;
+      shi[1] = sshi[1]+2;
+      shi[2] = sshi[2]+2;
+
+      correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+        (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
+        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+        (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+        (*flag[lev])[mfi].dataPtr());
+  }
+}
+
+void
+mfix_level::usr3(int lev)
+{
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+   Array<int> slo(3);
+   Array<int> shi(3);
+
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  {
+     const int* sslo = (*flag[lev])[mfi].loVect();
+     const int* sshi = (*flag[lev])[mfi].hiVect();
+
+     slo[0] = sslo[0]+2;
+     slo[1] = sslo[1]+2;
+     slo[2] = sslo[2]+2;
+
+     shi[0] = sshi[0]+2;
+     shi[1] = sshi[1]+2;
+     shi[2] = sshi[2]+2;
+
+     mfix_usr3( slo.dataPtr(),              shi.dataPtr(),
+               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
+               (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
+               &dx, &dy, &dz);
+   }
 }
