@@ -35,7 +35,7 @@ project(MFIXEXA)
 
 set(CXX_sources
   model/main.cpp
-  model/mfix_level.cpp  
+  model/mfix_level.cpp
   model/ParticleContainer.cpp)
 set(CXX_includes
   model/mfix_level.H
@@ -140,19 +140,13 @@ set(F90_sources
   model/io/in_binary_512i_mod.f90
   model/io/open_file.f90
   model/io/open_files.f90
-  model/io/out_array.f90
-  model/io/out_array_k.f90
-  model/io/out_array_kc.f90
   model/io/out_bin_512.f90
   model/io/out_bin_512i.f90
   model/io/out_bin_512r.f90
-  model/io/out_bin_r.f90
   model/io/output_manager.f90
   model/io/write_error.f90
   model/io/write_header.f90
   model/io/write_out0.f90
-  model/io/write_out1.f90
-  model/io/write_out3.f90
   model/io/write_table.f90
   model/location_check.f90
   model/machine_mod.f90
@@ -212,8 +206,6 @@ set(F90_sources
   model/usr/usr_drag.f90
   model/usr/usr_init_namelist.f90
   model/usr/usr_mod.f90
-  model/usr/usr_write_out0.f90
-  model/usr/usr_write_out1.f90
   model/usr/write_usr0.f90
   model/usr/write_usr1.f90
   model/utilities_mod.f90

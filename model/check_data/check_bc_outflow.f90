@@ -143,7 +143,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 ! Purpose: Provided a detailed error message on bc                     !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_P_OUTFLOW(M_TOT, BCV)
+      SUBROUTINE CHECK_BC_P_OUTFLOW(BCV)
 
 ! Modules
 ! --------------------------------------------------------------------//
@@ -156,7 +156,6 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 ! --------------------------------------------------------------------//
 ! loop/variable indices
       INTEGER, INTENT(in) :: BCV
-      INTEGER, INTENT(in) :: M_TOT
 ! --------------------------------------------------------------------//
 
       CALL INIT_ERR_MSG("CHECK_BC_P_OUTFLOW")

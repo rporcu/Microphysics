@@ -4,7 +4,6 @@ module output_manager_module
    use iso_c_binding , only: c_int
 
    use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
-   use write_out1_module, only: write_out1
 
   contains
 !----------------------------------------------------------------------!
@@ -18,7 +17,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
      SUBROUTINE OUTPUT_MANAGER(slo, shi, time, dt, nstep, ep_g, p_g,   &
         ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol,&
-        des_pos_new, des_vel_new, des_usr_var, omega_new, exit_signal, &
+        des_pos_new, des_vel_new, des_usr_var, omega_new, &
         finished) bind(C, name="mfix_output_manager")
 
 ! Global Variables:
@@ -72,8 +71,6 @@ module output_manager_module
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-! Flag that the the user specified batch time (plus buffer) is met.
-      integer(c_int), intent(in) :: exit_signal
 ! Flag that a steady state case is completed.
       integer(c_int), intent(in) :: finished
 
@@ -97,14 +94,6 @@ module output_manager_module
 
 ! Get the current time before any IO operations begin
       WALL_START = WALL_TIME()
-
-! Write standard output, if needed
-      IF(CHECK_TIME(OUT_TIME)) THEN
-         OUT_TIME = NEXT_TIME(OUT_DT)
-         CALL WRITE_OUT1(time,slo,shi,ep_g,p_g,ro_g)
-
-         CALL NOTIFY_USER('.OUT;')
-      ENDIF
 
 ! Write special output, if needed
       IDX = 0

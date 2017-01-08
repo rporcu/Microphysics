@@ -1,15 +1,11 @@
 MODULE SET_MAX2_MODULE
    CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: SET_MAX2                                               C
-!  Purpose: calculate IMAX1,IMAX2,JMAX1,JMAX2,KMAX1,KMAX2,IJMAX2       C
-!                     IJKMAX2                                          C
-!                                                                      C
-!  Author: P. Nicoletti                               Date: 04-DEC-91  C
-!  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: SET_MAX2                                               !
+!  Purpose: calculate domain bounds.                                   !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_MAX2
 
 ! X-Axix partition specifications.
@@ -29,11 +25,6 @@ MODULE SET_MAX2_MODULE
       USE geometry, only: KMAX
       USE geometry, only: KMIN1, KMIN2, KMIN3, KMIN4
       USE geometry, only: KMAX1, KMAX2, KMAX3, KMAX4
-
-! Calculated array sizes.
-      USE geometry, only: IJMAX2
-      USE geometry, only: IJKMAX1, IJKMIN1
-      USE geometry, only: IJKMAX2, IJKMAX3, IJKMAX4
 
       IMPLICIT NONE
 
@@ -82,8 +73,8 @@ MODULE SET_MAX2_MODULE
 
 
 ! Initialize J's
-      KMIN1=1;  KMIN2=1;  KMIN3=1;  KMIN4=1
-      KMAX1=1;  KMAX2=1;  KMAX3=1;  KMAX4=1
+      KMIN1=1;  KMIN2=1;  KMIN3=1;
+      KMAX1=1;  KMAX2=1;  KMAX3=1;
 
 ! Set the domain specific values.
       KMIN1 = 2
@@ -93,27 +84,10 @@ MODULE SET_MAX2_MODULE
       IF(NODESK.NE.1) THEN
          KMIN3 = 0
          KMAX3 = KMAX + 3
-         KMIN4 = -1
-         KMAX4 = KMAX + 4
       ELSE
          KMIN3 = KMIN2
          KMAX3 = KMAX2
-         KMIN4 = KMIN3
-         KMAX4 = KMAX3
       ENDIF
-
-! Number of cells in I/J plane.
-      IJMAX2 = IMAX2*JMAX2
-! Totoal number of possible fluid cells.
-      IJKMAX2 = IMAX2*JMAX2*KMAX2
-
-      IJKMIN1 = IJMAX2 + 1
-      IJKMAX1 = IJKMAX2 - IJMAX2
-
-! Max cell count with one layer of ghost cells.
-      IJKMAX3 = (IMAX3-IMIN3+1)*(JMAX3-JMIN3+1)*(KMAX3-KMIN3+1)
-! Max cell count with two layers of ghost cells.
-      IJKMAX4 = (IMAX4-IMIN4+1)*(JMAX4-JMIN4+1)*(KMAX4-KMIN4+1)
 
       RETURN
       END SUBROUTINE SET_MAX2

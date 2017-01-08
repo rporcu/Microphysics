@@ -53,17 +53,6 @@
 ! Number of cells in the z or theta direction + 2
       INTEGER :: KMAX2
 
-! IMAX2 * JMAX2
-      INTEGER :: IJMAX2
-! IMAX2 * JMAX2 * KMAX2
-      INTEGER :: IJKMAX2
-! IMAX2 * JMAX2 * KMAX2
-      INTEGER :: IJKMAX3
-! IJMAX2 + 1
-      INTEGER :: IJKMIN1
-! IJKMAX2 - IJMAX2
-      INTEGER :: IJKMAX1
-
 ! For discretization in parallel
       INTEGER :: IMIN2, JMIN2, KMIN2
       INTEGER :: IMIN3, JMIN3, KMIN3

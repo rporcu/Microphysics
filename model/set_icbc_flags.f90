@@ -116,7 +116,7 @@ MODULE set_icbc_flags_module
          ENDIF
 
       ENDDO ! end do loop
-      ENDDO ! end do loop 
+      ENDDO ! end do loop
       ENDDO ! end do loop
 
       RETURN
