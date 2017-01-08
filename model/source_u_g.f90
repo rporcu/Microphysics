@@ -215,8 +215,8 @@ module source_u_g_module
       USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
-      USE geometry  , only: imin3, imax3, jmin3, jmax3, kmin3, kmax3
-      USE geometry  , only: jmax2, kmax2
+      USE geometry  , only: imax2, jmax2, kmax2
+      USE geometry  , only: imin2, jmin2, kmin2
       USE matrix, only: e, w, s, n, t, b
 
       IMPLICIT NONE
@@ -249,7 +249,7 @@ module source_u_g_module
 ! Phase index
       INTEGER :: M
 
-      real(c_real) :: ody, odz 
+      real(c_real) :: ody, odz
 !-----------------------------------------------
 
      ody = 1.d0 / dy
@@ -269,8 +269,8 @@ module source_u_g_module
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
       K1 = 1
-      DO J1 = jmin3,jmax3
-         DO I1 = imin3, imax3
+      DO J1 = jmin2,jmax2
+         DO I1 = imin2, imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
@@ -299,8 +299,8 @@ module source_u_g_module
 
 ! top xy plane
       K1 = KMAX2
-      DO J1 = jmin3,jmax3
-         DO I1 = imin3, imax3
+      DO J1 = jmin2,jmax2
+         DO I1 = imin2, imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -325,8 +325,8 @@ module source_u_g_module
 
 ! south xz plane
       J1 = 1
-      DO K1 = kmin3, kmax3
-         DO I1 = imin3, imax3
+      DO K1 = kmin2, kmax2
+         DO I1 = imin2, imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -351,8 +351,8 @@ module source_u_g_module
 
 ! north xz plane
       J1 = JMAX2
-      DO K1 = kmin3, kmax3
-         DO I1 = imin3, imax3
+      DO K1 = kmin2, kmax2
+         DO I1 = imin2, imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO

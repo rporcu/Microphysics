@@ -142,9 +142,9 @@
       INTEGER, PARAMETER :: DIMN = 3
 
 ! X, Y, Z position of cell faces of computational fluid grid
-      real(c_real), DIMENSION(:), ALLOCATABLE :: XE  !(0:DIMENSION_I)
-      real(c_real), DIMENSION(:), ALLOCATABLE :: YN  !(0:DIMENSION_J)
-      real(c_real), DIMENSION(:), ALLOCATABLE :: ZT  !(0:DIMENSION_K)
+      real(c_real), DIMENSION(:), ALLOCATABLE :: XE
+      real(c_real), DIMENSION(:), ALLOCATABLE :: YN
+      real(c_real), DIMENSION(:), ALLOCATABLE :: ZT
 
 
 ! Periodic wall BC

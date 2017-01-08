@@ -10,8 +10,6 @@ module set_outflow_module
 !  Purpose: Set specified outflow bc for pressure outflow,             C
 !  mass outflow, outflow and now also pressure inflow bc               C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 21-JAN-92  C
-!                                                                      C
 !  Comments:                                                           C
 !  If the outflow boundary is on the W, S or B side of the domain and  C
 !  the component of velocity through the plane is defined then this    C
@@ -49,7 +47,6 @@ module set_outflow_module
 
       use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
 
-      use param, only: dimension_m
       use param1, only: is_undefined, zero
       IMPLICIT NONE
 
@@ -88,7 +85,7 @@ module set_outflow_module
       INTEGER :: ip,im,jp,jm,kp,km
 ! local value for normal component of gas and solids velocity defined
 ! such that
-      real(c_real) :: RVEL_G, RVEL_S(DIMENSION_M)
+      real(c_real) :: rvel_g
 !---------------------------------------------------------------------//
 
 ! Loop over the range of boundary cells
@@ -109,7 +106,7 @@ module set_outflow_module
                   RVEL_G = U_G(im,j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,im,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,im,j,k,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,im,j,k,RVEL_G)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -145,7 +142,7 @@ module set_outflow_module
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,ip,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, ip,j,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, ip,j,k, RVEL_G)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -175,7 +172,7 @@ module set_outflow_module
                   RVEL_G = V_G(i,jm,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,jm,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jm,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jm,k, RVEL_G)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      V_G(I,J,K) = ROP_G(i,jm,k)*V_G(i,jm,k)/ROP_G(I,J,K)
@@ -197,7 +194,7 @@ module set_outflow_module
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,jp,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G, RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G)
 
                   IF (IS_UNDEFINED(V_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -221,7 +218,7 @@ module set_outflow_module
                   RVEL_G = W_G(i,j,km)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,j,km,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,i,j,km,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,i,j,km,RVEL_G)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      W_G(I,J,K) = ROP_G(i,j,km)*W_G(i,j,km)/ROP_G(I,J,K)
@@ -244,7 +241,7 @@ module set_outflow_module
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,j,kp,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G,RVEL_S)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G)
 
                   IF (IS_UNDEFINED(W_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -328,7 +325,7 @@ module set_outflow_module
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,FI,FJ,FK,RVEL_G,RVEL_S)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,FI,FJ,FK,RVEL_G)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -336,7 +333,6 @@ module set_outflow_module
 
 ! Global parameters
 !---------------------------------------------------------------------//
-      use param, only: dimension_m
       use param1, only: is_undefined, zero, one
 
       IMPLICIT NONE
@@ -366,7 +362,6 @@ module set_outflow_module
 ! while for an outflow on the western boundary this is the -u component,
 ! etc.
       real(c_real), INTENT(IN) :: RVEL_G
-      real(c_real), INTENT(IN), DIMENSION(DIMENSION_M) :: RVEL_S
 
 ! Local variables
 !---------------------------------------------------------------------//

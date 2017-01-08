@@ -2,15 +2,9 @@
 
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-! Number of partitions in axial direction
-      INTEGER :: DIMENSION_I  ! X-Axis
-      INTEGER :: DIMENSION_J  ! Y-Axis
-      INTEGER :: DIMENSION_K  ! Z-Axis
 ! Number of computational cells
       INTEGER :: DIMENSION_3  !
 
-! Total number of solids phases
-      INTEGER :: DIMENSION_M
 ! Maximum number of species.
       INTEGER :: DIMENSION_N_g ! Gas
       INTEGER :: DIMENSION_N_s ! Solids

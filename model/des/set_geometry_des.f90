@@ -23,8 +23,6 @@ MODULE SET_GEOMETRY_DES_MODULE
       USE geometry, only: IMIN2, IMAX2
       USE geometry, only: JMIN2, JMAX2
       USE geometry, only: KMIN2, KMAX2
-! Number of particles in the I/J/K direction
-      use param, only: DIMENSION_I, DIMENSION_J, DIMENSION_K
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -49,9 +47,9 @@ MODULE SET_GEOMETRY_DES_MODULE
 ! Initialize the error manager.
       CALL INIT_ERR_MSG("SET_GEOMETRY_DES")
 
-      Allocate( XE (0:DIMENSION_I), STAT=IER )
-      Allocate( YN (0:DIMENSION_J), STAT=IER )
-      Allocate( ZT (0:DIMENSION_K), STAT=IER )
+      Allocate( XE (0:imax2), STAT=IER )
+      Allocate( YN (0:jmax2), STAT=IER )
+      Allocate( ZT (0:kmax2), STAT=IER )
 
 ! Collect the error flags from all ranks. If all allocaitons were
 ! successfull, do nothing. Otherwise, flag the error and abort.

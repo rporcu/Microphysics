@@ -8,9 +8,7 @@ MODULE set_icbc_flags_module
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use geometry, only: imax2, jmax2, kmax2
-      use geometry, only: imax3, jmax3, kmax3
       use geometry, only: imin2, jmin2, kmin2
-      use geometry, only: imin3, jmin3, kmin3
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_
       use ic, only: MINF_, MOUT_, POUT_, OUTF_, PINF_, PSW_
       use mod_bc, only: mod_bc_i, mod_bc_j, mod_bc_k
@@ -79,7 +77,7 @@ MODULE set_icbc_flags_module
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
-         IF(K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)THEN
+         IF(K==KMIN2 .OR. K==KMAX2)THEN
             IF (CYCLIC_Z_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Z) THEN
@@ -89,7 +87,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMAX3)THEN
+         IF(J==JMIN2 .OR. J==JMAX2)THEN
             IF (CYCLIC_Y_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Y) THEN
@@ -99,7 +97,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3)THEN
+         IF(I==IMIN2 .OR. I==IMAX2)THEN
             IF (CYCLIC_X_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_X) THEN
@@ -109,14 +107,14 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 ! corner cells are wall cells
-         IF ((I==IMIN3 .OR. I==IMIN2 .OR. I==IMAX2 .OR. I==IMAX3) .AND. &
-             (J==JMIN3 .OR. J==JMIN2 .OR. J==JMAX2 .OR. J==JMIN3) .AND. &
-             (K==KMIN3 .OR. K==KMIN2 .OR. K==KMAX2 .OR. K==KMAX3)) THEN
+         IF ((I==IMIN2 .OR. I==IMAX2) .AND. &
+             (J==JMIN2 .OR. J==JMAX2) .AND. &
+             (K==KMIN2 .OR. K==KMAX2)) THEN
             IF (FLAG(i,j,k,1) /= FSW_) FLAG(i,j,k,1) = NSW_
          ENDIF
 
       ENDDO ! end do loop
-      ENDDO ! end do loop 
+      ENDDO ! end do loop
       ENDDO ! end do loop
 
       RETURN

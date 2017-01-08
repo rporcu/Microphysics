@@ -3,13 +3,9 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-! Maximum number of cell classes
-      INTEGER, PARAMETER :: MAX_CLASS = 1000000
 ! Maximum number of corner cells
       INTEGER, PARAMETER :: MAX_NCORN = 4000
 
-! Dimension for the upper triangle of an MxM matrix
-      INTEGER :: DIMENSION_LM
 ! Total number of species
       INTEGER :: DIMENSION_N_all
 

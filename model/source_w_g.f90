@@ -217,9 +217,8 @@ module source_w_g_module
       SUBROUTINE SOURCE_W_G_BC(slo,shi,lo,hi,A_M, B_M, W_G, flag, dx, dy, dz)
 
       use matrix, only: e, w, s, n, t, b
-      USE geometry , only: imax2,imin3,imax3
-      USE geometry , only: jmax2,jmin3,jmax3
-      USE geometry , only:       kmin3,kmax3
+      USE geometry , only: imax2,jmax2, kmax2
+      USE geometry , only: imin2,jmin2, kmin2
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
       USE functions, only: im1, jm1
@@ -278,8 +277,8 @@ module source_w_g_module
 
 ! south xz plane
       J1 = 1
-      DO K1 = kmin3,kmax3
-         DO I1 = imin3,imax3
+      DO K1 = kmin2,kmax2
+         DO I1 = imin2,imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -304,8 +303,8 @@ module source_w_g_module
 
 ! north xz plane
       J1 = JMAX2
-      DO K1 = kmin3, kmax3
-         DO I1 = imin3, imax3
+      DO K1 = kmin2, kmax2
+         DO I1 = imin2, imax2
             IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and oppostive to the adjacent fluid cell value)
@@ -334,8 +333,8 @@ module source_w_g_module
 
 ! west yz plane
       I1 = 1
-      DO K1 = kmin3, kmax3
-         DO J1 = jmin3, jmax3
+      DO K1 = kmin2, kmax2
+         DO J1 = jmin2, jmax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = -ONE
                A_M(I1,J1,K1,W) = ZERO
@@ -360,8 +359,8 @@ module source_w_g_module
 
 ! east yz plane
       I1 = IMAX2
-      DO K1 = kmin3,kmax3
-         DO J1 = jmin3,jmax3
+      DO K1 = kmin2,kmax2
+         DO J1 = jmin2,jmax2
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = -ONE
