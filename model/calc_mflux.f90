@@ -16,7 +16,6 @@ MODULE CALC_MFLUX_MODULE
       SUBROUTINE CALC_MFLUX (slo, shi, lo, hi, u, v, w, rop_e, rop_n, rop_t, &
          flux_e, flux_n, flux_t, flag, dx, dy, dz) bind(C, name="calc_mflux")
 
-      USE compar, only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE functions, only: iminus, jminus, kminus
 
       implicit none
@@ -51,6 +50,7 @@ MODULE CALC_MFLUX_MODULE
 !---------------------------------------------------------------------//
 ! Indices
       integer      :: i,j,k
+      integer      :: im1, jm1, km1
       real(c_real) :: ayz, axz, axy
 !---------------------------------------------------------------------//
 
@@ -58,40 +58,41 @@ MODULE CALC_MFLUX_MODULE
       axz = dx*dz
       ayz = dy*dz
 
-      DO K = kstart2, kend2
-        DO J = jstart2, jend2
-          DO I = istart2, iend2
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
-         IF (1.eq.flag(i,j,k,1)) THEN
+               if (flag(i,j,k,1) == 1) then
 
-            ! East face (i+1/2, j, k)
-            flux_E(i,j,k) = ROP_E(i,j,k)*AYZ*U(i,j,k)
+                  im1 = iminus(i,j,k)
+                  jm1 = jminus(i,j,k)
+                  km1 = kminus(i,j,k)
 
-            ! West face (i-1/2, j, k)
-            IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) then
-               flux_E(iminus(i,j,k),j,k) = ROP_E(iminus(i,j,k),j,k)*AYZ*U(iminus(i,j,k),j,k)
-            ENDIF
+                  ! East face (i+1/2, j, k)
+                  flux_e(i,j,k) = rop_e(i,j,k)*ayz*u(i,j,k)
 
-            ! North face (i, j+1/2, k)
-            flux_N(i,j,k) = ROP_N(i,j,k)*AXZ*V(i,j,k)
-            ! South face (i, j-1/2, k)
-            IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) then
-              flux_N(i,jminus(i,j,k),k) = ROP_N(i,jminus(i,j,k),k)*AXZ*V(i,jminus(i,j,k),k)
-            ENDIF
+                  ! West face (i-1/2, j, k)
+                  if (flag(im1,j,k,1) /= 1) &
+                     flux_e(im1,j,k) = rop_e(im1,j,k)*ayz*u(im1,j,k)
 
+                  ! North face (i, j+1/2, k)
+                  flux_n(i,j,k) = rop_n(i,j,k)*axz*v(i,j,k)
 
-            ! Top face (i, j, k+1/2)
-            flux_T(i,j,k) = ROP_T(i,j,k)*AXY*W(i,j,k)
+                  ! South face (i, j-1/2, k)
+                  if (flag(i,jm1,k,1) /= 1) &
+                     flux_n(i,jm1,k) = rop_n(i,jm1,k)*axz*v(i,jm1,k)
 
-            ! Bottom face (i, j, k-1/2)
-            IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) then
-               flux_T(i,j,kminus(i,j,k)) = ROP_T(i,j,kminus(i,j,k))*AXY*W(i,j,kminus(i,j,k))
-            ENDIF
+                  ! Top face (i, j, k+1/2)
+                  flux_t(i,j,k) = rop_t(i,j,k)*axy*w(i,j,k)
 
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
+                  ! Bottom face (i, j, k-1/2)
+                  if (flag(i,j,kminus(i,j,k),1) /= 1) &
+                     flux_t(i,j,km1) = rop_t(i,j,km1)*axy*w(i,j,km1)
+               endif
+
+            enddo
+         enddo
+      enddo
 
       END SUBROUTINE CALC_MFLUX
 END MODULE CALC_MFLUX_MODULE
