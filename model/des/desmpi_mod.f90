@@ -79,9 +79,8 @@
 !                    6 - particles info
 !                    7 - neighinfo
 !------------------------------------------------------------------------
-      subroutine des_dbgmpi(ptype)
+      subroutine des_dbgmpi()
       implicit none
-      integer ptype
 
       end subroutine des_dbgmpi
 

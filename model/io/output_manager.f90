@@ -18,7 +18,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
      SUBROUTINE OUTPUT_MANAGER(slo, shi, time, dt, nstep, ep_g, p_g,   &
         ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol,&
-        des_pos_new, des_vel_new, des_usr_var, omega_new, exit_signal, &
+        des_pos_new, des_vel_new, des_usr_var, omega_new, &
         finished) bind(C, name="mfix_output_manager")
 
 ! Global Variables:
@@ -72,8 +72,6 @@ module output_manager_module
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-! Flag that the the user specified batch time (plus buffer) is met.
-      integer(c_int), intent(in) :: exit_signal
 ! Flag that a steady state case is completed.
       integer(c_int), intent(in) :: finished
 

@@ -116,7 +116,7 @@ MODULE set_icbc_flags_module
          ENDIF
 
       ENDDO ! end do loop
-      ENDDO ! end do loop 
+      ENDDO ! end do loop
       ENDDO ! end do loop
 
       RETURN
@@ -136,7 +136,6 @@ MODULE set_icbc_flags_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_ICBC_FLAG(slo,shi,lo,hi,flag)
 
-      use compar, only: iend2, jend2, kend2
       use compar, only: mype
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
       use ic, only: UNDEF_CELL

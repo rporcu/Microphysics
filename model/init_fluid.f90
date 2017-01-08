@@ -44,9 +44,6 @@
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-! Local variables .....................................................//
-      real(c_real), parameter :: f2o3 = 2.d0/3.d0
-
 !-----------------------------------------------------------------------!
 
       ! Set user specified initial conditions (IC)
@@ -86,12 +83,11 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
 
-      use ic, only: dimension_ic, ic_type, ic_defined
+      use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
-      use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g
+      use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use scales, only: scale_pressure
       use param1, only: undefined, is_defined
-      use run, only: dem_solids
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int

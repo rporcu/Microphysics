@@ -12,7 +12,7 @@ MODULE CFNEWVALUES_MODULE
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(particle_state, des_radius, pmass, omoi, &
+      SUBROUTINE CFNEWVALUES(particle_state, pmass, omoi, &
          des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
@@ -27,7 +27,6 @@ MODULE CFNEWVALUES_MODULE
       IMPLICIT NONE
 
       INTEGER         , INTENT(IN   ) :: particle_state(:)
-      real(c_real), INTENT(IN   ) :: des_radius(:)
       real(c_real), INTENT(IN   ) :: omoi(:)
       real(c_real), INTENT(IN   ) :: pmass(:)
       real(c_real), INTENT(INOUT) :: des_pos_new(:,:)
