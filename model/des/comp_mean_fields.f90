@@ -13,11 +13,10 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      subroutine comp_mean_fields(slo, shi, lo, hi, ep_g, particle_state,&
-         des_pos_new, pvol, flag, nparticles, dx, dy, dz) &
+      subroutine comp_mean_fields(slo, shi, lo, hi, max_pip, ep_g, &
+         particle_state, des_pos_new, pvol, flag, dx, dy, dz) &
          bind(C, name="comp_mean_fields")
 
-      use discretelement, only: max_pip
       use param1, only: zero
 
       use discretelement, only: nonexistent, normal_ghost
@@ -26,11 +25,11 @@ module comp_mean_fields_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: max_pip
 
-      integer(c_int), intent(in   ) :: nparticles
-      integer(c_int), intent(in   ) :: particle_state(nparticles)
-      real(c_real), intent(in   ) :: des_pos_new(nparticles,3)
-      real(c_real), intent(in   ) :: pvol(nparticles)
+      integer(c_int), intent(in   ) :: particle_state(max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: pvol(max_pip)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 

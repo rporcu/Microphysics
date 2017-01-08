@@ -12,7 +12,7 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void set_domain(int* slo, int* shi, const int* lo, const int* hi, 
+  void set_domain(int* slo, int* shi, const int* lo, const int* hi,
                   int* flag, Real* dx, Real* dy, Real* dz);
 
   void mfix_main1(int* slo, int* shi, const int* lo, const int* hi,
@@ -55,9 +55,9 @@ extern "C"
                  Real* des_vel_new,
                  Real* des_usr_var);
 
-  void comp_mean_fields(int* slo, int* shi, const int* lo, const int* hi,
+  void comp_mean_fields(int* slo, int* shi, const int* lo, const int* hi, const int* max_pip,
          Real* ep_g, int* particle_state, Real* des_pos_new,
-         Real* pvol, int* flag, int* nparticles,
+         Real* pvol, int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
   void set_bc1(
@@ -82,7 +82,7 @@ extern "C"
          Real* omega_new,
          int* estatus, int* finsh);
 
-  void calc_coeff_all(int* slo, int* shi, const int* lo, const int* hi,
+  void calc_coeff_all(int* slo, int* shi, const int* lo, const int* hi, const int* max_pip,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
          Real* u_g,  Real* v_g,   Real* w_g,
@@ -93,7 +93,7 @@ extern "C"
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void calc_coeff(int* slo, int* shi, const int* lo, const int* hi,
+  void calc_coeff(int* slo, int* shi, const int* lo, const int* hi, const int* max_pip,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,

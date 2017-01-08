@@ -38,13 +38,14 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES(slo, shi, lo, hi, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+     SUBROUTINE DRAG_GS_DES(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
         gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
         fc, des_radius, particle_phase, dx, dy, dz)
 
         IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: max_pip
 
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -63,14 +64,14 @@ module drag_gs_des1_module
       integer     , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(in   ) :: pvol(:)
-      real(c_real), intent(in   ) :: des_radius(:)
-      real(c_real), intent(in   ) :: des_pos_new(:,:)
-      real(c_real), intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: pvol(max_pip)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
       real(c_real), intent(inout) :: fc(:,:)
 
-      integer     , intent(in   ) :: particle_state(:)
-      integer     , intent(in   ) :: particle_phase(:)
+      integer     , intent(in   ) :: particle_state(max_pip)
+      integer     , intent(in   ) :: particle_phase(max_pip)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -95,7 +96,7 @@ module drag_gs_des1_module
       vol = dx*dy*dz
 
 ! Calculate the gas phase forces acting on each particle.
-      DO NP=1,size(pvol)
+      DO NP=1,max_pip
 
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(NP)) CYCLE
 
@@ -149,14 +150,14 @@ module drag_gs_des1_module
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_GAS(slo, shi, lo, hi, &
+      SUBROUTINE DRAG_GS_GAS(slo, shi, lo, hi, max_pip, &
          ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3), max_pip
 
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -175,13 +176,13 @@ module drag_gs_des1_module
       real(c_real), intent(out  ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
-      real(c_real), intent(in   ) :: pvol(:)
-      real(c_real), intent(in   ) :: des_radius(:)
-      real(c_real), intent(in   ) :: des_pos_new(:,:)
-      real(c_real), intent(in   ) :: des_vel_new(:,:)
+      real(c_real), intent(in   ) :: pvol(max_pip)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
-      integer     , intent(in   ) :: particle_state(:)
-      integer     , intent(in   ) :: particle_phase(:)
+      integer     , intent(in   ) :: particle_state(max_pip)
+      integer     , intent(in   ) :: particle_phase(max_pip)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -201,9 +202,6 @@ module drag_gs_des1_module
       real(c_real) :: odx, ody, odz, vol
 !......................................................................!
 
-      write(6,*)'slo',slo; flush(6)
-      write(6,*)'shi',shi; flush(6)
-
 ! Initialize fluid cell values.
       F_GDS = ZERO
       DRAG_BM = ZERO
@@ -216,7 +214,7 @@ module drag_gs_des1_module
 
 ! Calculate the gas phase forces acting on each particle.
 
-      do np=1,size(pvol)
+      do np=1,max_pip
 
          if(nonexistent==particle_state(np)) cycle
 

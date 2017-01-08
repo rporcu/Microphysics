@@ -667,7 +667,9 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
 
-     calc_coeff(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     const int max_pip = particle_state.size();
+
+     calc_coeff(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
       (*flag[lev])[mfi].dataPtr(),    &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
       (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
@@ -690,6 +692,8 @@ mfix_level::mfix_calc_all_coeffs(int lev)
   Array<int> slo(3);
   Array<int> shi(3);
 
+  const int max_pip = particle_state.size();
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -705,7 +709,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
 
-     calc_coeff_all(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     calc_coeff_all(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
        (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -795,8 +799,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  // HACK HACK HACK -- This routine expect the particle array size to be passed
-  int nparticles = 5000;
+  const int max_pip = particle_state.size();
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
@@ -814,9 +817,9 @@ mfix_level::mfix_comp_mean_fields(int lev)
      shi[2] = sshi[2]+2;
 
      comp_mean_fields(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-          (*ep_g[lev])[mfi].dataPtr(),
+          &max_pip, (*ep_g[lev])[mfi].dataPtr(),
           particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
-          (*flag[lev])[mfi].dataPtr(), &nparticles, &dx, &dy, &dz );
+          (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
 }
 
@@ -903,11 +906,11 @@ mfix_level::mfix_set_wall_bc(int lev)
      slo[0] = sslo[0]+2;
      slo[1] = sslo[1]+2;
      slo[2] = sslo[2]+2;
- 
+
      shi[0] = sshi[0]+2;
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
- 
+
      set_wall_bc(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr());
@@ -934,11 +937,11 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
      slo[0] = sslo[0]+2;
      slo[1] = sslo[1]+2;
      slo[2] = sslo[2]+2;
- 
+
      shi[0] = sshi[0]+2;
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
- 
+
      conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),
@@ -1212,10 +1215,10 @@ mfix_level::mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& 
 
    Array< Array<Real> > xa(1);
    Array< Array<Real> > xb(1);
- 
+
    xa[0].resize(BL_SPACEDIM);
    xb[0].resize(BL_SPACEDIM);
- 
+
    for (int i = 0; i < BL_SPACEDIM; ++i)
    {
        xa[0][i] = 0;
@@ -1233,9 +1236,9 @@ mfix_level::mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& 
    MacBndry bndry(sol.boxArray(), 1, geom[lev]);
 
    BCRec* phys_bc;
-   const int  src_comp = 0; 
-   const int dest_comp = 0; 
-   const int  num_comp = 1; 
+   const int  src_comp = 0;
+   const int dest_comp = 0;
+   const int  num_comp = 1;
    bndry.setBndryValues(sol, src_comp, dest_comp, num_comp, *phys_bc);
 
    int always_use_bnorm = 0;
@@ -1287,4 +1290,3 @@ mfix_level::make_mg_bc (int mg_bc[])
     if (Geometry::IsSPHERICAL() || Geometry::IsRZ() )
         mg_bc[0] = MGT_BC_NEU;
 }
-
