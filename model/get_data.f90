@@ -32,7 +32,6 @@ MODULE GET_DATA_MODULE
       USE run            , only: run_type, run_name
       USE set_bc_flow_module, only: set_bc_flow
       USE set_flags_module, only: set_flags
-      USE set_geometry_des_module, only: set_geometry_des
       USE set_icbc_flags_module, only: set_icbc_flag
       USE set_max2_module, only: set_max2
       USE set_parameters_module, only: set_parameters

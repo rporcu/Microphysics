@@ -30,11 +30,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
       USE discretelement, only: INTG_EULER
 ! Max/Min particle radii
       USE discretelement, only: MAX_RADIUS, MIN_RADIUS
-! Runtime Flag: Periodic boundaries
-      USE discretelement, only: DES_PERIODIC_WALLS
-      USE discretelement, only: DES_PERIODIC_WALLS_X
-      USE discretelement, only: DES_PERIODIC_WALLS_Y
-      USE discretelement, only: DES_PERIODIC_WALLS_Z
 
 ! Subroutine access.
       use constant, only: MMAX
@@ -68,14 +63,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
          MAX_RADIUS = MAX(MAX_RADIUS, 0.5d0*D_P0(lM))
          MIN_RADIUS = MIN(MIN_RADIUS, 0.5d0*D_P0(lM))
       ENDDO
-
-! Derive periodicity from cyclic boundary flags.
-      DES_PERIODIC_WALLS_X = CYCLIC_X .OR. CYCLIC_X_PD
-      DES_PERIODIC_WALLS_Y = CYCLIC_Y .OR. CYCLIC_Y_PD
-      DES_PERIODIC_WALLS_Z = CYCLIC_Z .OR. CYCLIC_Z_PD
-
-      DES_PERIODIC_WALLS = (DES_PERIODIC_WALLS_X .OR.                  &
-        DES_PERIODIC_WALLS_Y .OR. DES_PERIODIC_WALLS_Z)
 
 ! Check for valid integration method
       SELECT CASE(trim(DES_INTG_METHOD))

@@ -91,20 +91,20 @@
 !-----------------------------------------------------------------<<<
 
 ! DES - Continuum
-      LOGICAL DES_CONTINUUM_COUPLED
+      LOGICAL :: DES_CONTINUUM_COUPLED
+      LOGICAL :: DES_EXPLICITLY_COUPLED
 
-! DES -
 ! With this logic the particles see the fluid but the fluid does
 ! not see the particles.
-      LOGICAL DES_ONEWAY_COUPLED
+      LOGICAL :: DES_ONEWAY_COUPLED
 
 ! Collision model, options are as follows
 !   linear spring dashpot model (default/undefined)
 !   'hertzian' model
       CHARACTER(LEN=64) :: DES_COLL_MODEL
-      INTEGER DES_COLL_MODEL_ENUM
-      INTEGER,PARAMETER ::  HERTZIAN=0
-      INTEGER,PARAMETER ::  LSD=1
+      INTEGER :: DES_COLL_MODEL_ENUM
+      INTEGER,PARAMETER :: HERTZIAN=0
+      INTEGER,PARAMETER :: LSD=1
 
 ! Integration method, options are as follows
 !   'euler' first-order scheme (default)
@@ -132,7 +132,6 @@
 ! that exists during last solid time step of dem simulation
       real(c_real) :: OVERLAP_MAX
 
-
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<
 
@@ -140,18 +139,6 @@
 ! User specified dimension of the system (by default 2D, but if 3D system is
 ! desired then it must be explicitly specified)
       INTEGER, PARAMETER :: DIMN = 3
-
-! X, Y, Z position of cell faces of computational fluid grid
-      real(c_real), DIMENSION(:), ALLOCATABLE :: XE
-      real(c_real), DIMENSION(:), ALLOCATABLE :: YN
-      real(c_real), DIMENSION(:), ALLOCATABLE :: ZT
-
-
-! Periodic wall BC
-      LOGICAL :: DES_PERIODIC_WALLS
-      LOGICAL :: DES_PERIODIC_WALLS_X
-      LOGICAL :: DES_PERIODIC_WALLS_Y
-      LOGICAL :: DES_PERIODIC_WALLS_Z
 
 ! Particle-particle and Particle-wall collision model parameters
 !----------------------------------------------------------------->>>
@@ -194,19 +181,13 @@
 ! Additional quantities
       real(c_real) :: MIN_RADIUS, MAX_RADIUS
 
-! Old and new particle positions, velocities (translational and
-! rotational)
-
 ! Defining user defined allocatable array
       INTEGER :: DES_USR_VAR_SIZE = 0
 
 !-----------------------------------------------------------------<<<
 
 
-! END of interpolation related data
-!-----------------------------------------------------------------<<<
 
-      LOGICAL :: DES_EXPLICITLY_COUPLED
 
 
       CONTAINS

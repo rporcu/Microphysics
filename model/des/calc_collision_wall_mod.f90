@@ -17,7 +17,6 @@
 
       USE discretelement, only: des_coll_model_enum
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
-      USE discretelement, only: des_periodic_walls_x, des_periodic_walls_y, des_periodic_walls_z
       USE discretelement, only: dimn, des_crossprdct
       USE discretelement, only: kn_w, kt_w, mew_w, dtsolid
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
@@ -45,6 +44,7 @@
 
       use geometry, only: imax1, jmax1, kmax1
       use geometry, only: xlength, ylength, zlength
+      use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param1, only: zero, one
 
       IMPLICIT NONE
@@ -87,9 +87,7 @@
       real(c_real), DIMENSION(3,6) :: NORM_FACE
 
 ! Skip this routine if the system is fully periodic.
-      IF((DES_PERIODIC_WALLS_X .AND. DES_PERIODIC_WALLS_Y) .AND. &
-         (DES_PERIODIC_WALLS_Z)) RETURN
-
+      if(cyclic_x .and. cyclic_y .and. cyclic_z) return
 
 ! West Face
       VERTEX(1,:,1) = (/ZERO, ZERO, ZERO/)

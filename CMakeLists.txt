@@ -110,7 +110,6 @@ set(F90_sources
   model/des/make_arrays_des.f90
   model/des/randomno_mod.f90
   model/des/read_particle_input.f90
-  model/des/set_geometry_des.f90
   model/des/set_phase_index.f90
   model/des/stl_functions_des_mod.f90
   model/des/vtp_mod.f90

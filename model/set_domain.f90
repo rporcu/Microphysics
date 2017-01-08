@@ -26,8 +26,6 @@ module set_domain_module
       use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
       use geometry, only: CYCLIC_Z, CYCLIC_Z_PD, CYCLIC_Z_MF
 
-      use set_geometry_des_module, only: set_geometry_des
-
       ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
 
@@ -60,8 +58,6 @@ module set_domain_module
       CYCLIC = CYCLIC_X .OR. CYCLIC_Y .OR. CYCLIC_Z
 
       ! End of what used to be in set_geometry
-
-      IF(DEM_SOLIDS) CALL SET_GEOMETRY_DES(dx,dy,dz)
 
       CALL CHECK_INITIAL_CONDITIONS(dx,dy,dz)
       CALL CHECK_BOUNDARY_CONDITIONS(dx,dy,dz)
