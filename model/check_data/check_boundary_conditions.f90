@@ -92,12 +92,12 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
             CASE ('MASS_INFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
                CALL CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
-               CALL CHECK_BC_INFLOW()
+               CALL CHECK_BC_INFLOW(MMAX,SKIP,BCV)
 
             CASE ('P_INFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
                CALL CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
-               CALL CHECK_BC_INFLOW()
+               CALL CHECK_BC_INFLOW(MMAX, SKIP, BCV)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('OUTFLOW')
@@ -111,20 +111,20 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 
             CASE ('P_OUTFLOW')
                CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
-               CALL CHECK_BC_P_OUTFLOW(BCV)
+               CALL CHECK_BC_P_OUTFLOW(MMAX, BCV)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('FREE_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
-               CALL CHECK_BC_WALLS(BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             CASE ('NO_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
-               CALL CHECK_BC_WALLS(BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             CASE ('PAR_SLIP_WALL')
                CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
-               CALL CHECK_BC_WALLS(BCV)
+               CALL CHECK_BC_WALLS(MMAX, SKIP, BCV)
 
             END SELECT
 

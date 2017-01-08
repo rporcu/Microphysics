@@ -124,12 +124,14 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MATVEC(VAR, A_M, Avar)
+  SUBROUTINE LEQ_MATVEC(VNAME, VAR, A_M, Avar)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+! Variable name
+    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
     real(c_real), INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -322,7 +324,7 @@ CONTAINS
                 endif
                 i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
                 if(i.gt.i2) i=i-i2 + i1 -1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
              ENDDO
 
           ENDDO
@@ -335,22 +337,22 @@ CONTAINS
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ELSE
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ENDIF
           ENDDO
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ELSE
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ENDIF
           ENDDO
@@ -377,7 +379,7 @@ CONTAINS
                    k = int( ik/isize ) + k1 -1
                 endif
                 i = (ik-1-(k-k1)*isize) + i1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
              ENDDO
           ENDIF
           IF (DO_KSWEEP) THEN
@@ -388,7 +390,7 @@ CONTAINS
                    i = int( ik/ksize ) + i1 -1
                 endif
                 k = (ik-1-(i-i1)*ksize) + k1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
              ENDDO
           ENDIF
 ! ----------------------------------------------------------------<<<
@@ -399,14 +401,14 @@ CONTAINS
           IF (DO_ISWEEP) THEN
              DO K=kstart,kend
                 DO I=istart,iend
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ENDDO
           ENDIF
           IF (DO_KSWEEP) THEN
              DO I=istart,iend
                 DO K=kstart,kend
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
                 ENDDO
              ENDDO
           ENDIF
@@ -439,17 +441,24 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE0(B_m, Var)
+  SUBROUTINE LEQ_MSOLVE0(VNAME, B_m, A_M, Var, CMETHOD)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+! Variable name
+    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
+! Septadiagonal matrix A_m
+    real(c_real), INTENT(IN) :: A_m&
+         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
+! sweep direction
+    CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -486,12 +495,14 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(B_m, A_M, Var)
+  SUBROUTINE LEQ_MSOLVE1(VNAME, B_m, A_M, Var, CMETHOD)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
+! Variable name
+    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -500,6 +511,8 @@ CONTAINS
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
+! sweep direction
+    CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -536,7 +549,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_ISWEEP(I, VAR, A_M, B_M)
+      SUBROUTINE LEQ_ISWEEP(I, Vname, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -544,6 +557,8 @@ CONTAINS
 !-----------------------------------------------
 !  Line position
       INTEGER, INTENT(IN) :: I
+! Variable name
+      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -608,7 +623,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_IKSWEEP(I, K, VAR, A_M, B_M)
+      SUBROUTINE LEQ_IKSWEEP(I, K, Vname, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -616,6 +631,8 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: I, K
+! Variable name
+      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
