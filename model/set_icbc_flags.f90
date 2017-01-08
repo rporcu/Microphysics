@@ -27,14 +27,14 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE SET_ICBC_FLAG(slo,shi,flag)
+      SUBROUTINE SET_ICBC_FLAG(slo,shi,lo,hi,flag)
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      CALL INIT_ICBC_FLAG(slo,shi,flag)
+      CALL INIT_ICBC_FLAG(slo,shi,lo,hi,flag)
 
       CALL SET_IC_FLAGS(slo,shi,flag)
 
@@ -43,7 +43,6 @@ MODULE set_icbc_flags_module
       CALL SET_BC_FLAGS_FLOW(slo,shi,flag)
 
 ! Verify that ICBC flags are set for all fluid cells.
-      CALL CHECK_ICBC_FLAG(slo,shi,flag)
 
       END SUBROUTINE SET_ICBC_FLAG
 
@@ -55,11 +54,11 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE INIT_ICBC_FLAG(slo,shi,flag)
+      SUBROUTINE INIT_ICBC_FLAG(slo,shi,lo,hi,flag)
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -135,10 +134,9 @@ MODULE set_icbc_flags_module
 !  Note that the error message may be incomplete
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_ICBC_FLAG(slo,shi,flag)
+      SUBROUTINE CHECK_ICBC_FLAG(slo,shi,lo,hi,flag)
 
       use compar, only: iend2, jend2, kend2
-      use compar, only: istart2, jstart2, kstart2
       use compar, only: mype
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
       use ic, only: UNDEF_CELL
@@ -147,7 +145,7 @@ MODULE set_icbc_flags_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -161,9 +159,9 @@ MODULE set_icbc_flags_module
       CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
 
       ! First check for any errors.
-      DO K = kStart2, kEnd2
-         DO J = jStart2, jEnd2
-            DO I = iStart2, iEnd2
+      do K = lo(1)-1,hi(1)+1
+         do J = lo(2)-1,hi(2)+1
+            do I = lo(3)-1,hi(3)+1
                IF (FLAG(i,j,k,1) == UNDEF_CELL) ERROR = .TRUE.
             ENDDO
          ENDDO
@@ -182,9 +180,9 @@ MODULE set_icbc_flags_module
          WRITE(ERR_MSG, 1100) trim(iVal(myPE))
          CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
 
-         DO K = kStart2, kEnd2
-            DO J = jStart2, jEnd2
-               DO I = iStart2, iEnd2
+         do K = lo(1)-1,hi(1)+1
+            do J = lo(2)-1,hi(2)+1
+               do I = lo(3)-1,hi(3)+1
                   IF (FLAG(i,j,k,1) == UNDEF_CELL) then
                      WRITE(ERR_MSG,1101) I, J, K
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)

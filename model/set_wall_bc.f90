@@ -64,10 +64,10 @@ MODULE SET_WALL_BC_MODULE
 
             SELECT CASE (TRIM(BC_TYPE(L)))
                CASE ('FREE_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, u_g, v_g, w_g, flag)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
                CASE ('NO_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, u_g, v_g, w_g, flag)
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
                CASE ('PAR_SLIP_WALL')
 ! updating the boundary velocity may improve convergence
@@ -90,17 +90,16 @@ MODULE SET_WALL_BC_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, &
-                              slo, shi, u_g, v_g, w_g, flag)
+                              slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       USE param1, only: one
-      USE compar   , only: istart2,iend2,jstart2,jend2,kstart2,kend2
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Starting and ending I index
       INTEGER, INTENT(IN) :: II1, II2
@@ -137,12 +136,12 @@ MODULE SET_WALL_BC_MODULE
       K1 = KK1
       K2 = KK2
 
-      IF(I1.LE.IEND2)   I1 = MAX(I1, ISTART2)
-      IF(J1.LE.JEND2)   J1 = MAX(J1, JSTART2)
-      IF(K1.LE.KEND2)   K1 = MAX(K1, KSTART2)
-      IF(I2.GE.ISTART2) I2 = MIN(I2, IEND2)
-      IF(J2.GE.JSTART2) J2 = MIN(J2, JEND2)
-      IF(K2.GE.KSTART2) K2 = MIN(K2, KEND2)
+      IF(I1.LE.hi(1)+1)   I1 = MAX(I1, lo(1)-1)
+      IF(J1.LE.hi(2)+1)   J1 = MAX(J1, lo(2)-1)
+      IF(K1.LE.hi(3)+1)   K1 = MAX(K1, lo(3)-1)
+      IF(I2.GE.lo(1)-1) I2 = MIN(I2, hi(1)+1)
+      IF(J2.GE.lo(2)-1) J2 = MIN(J2, hi(2)+1)
+      IF(K2.GE.lo(3)-1) K2 = MIN(K2, hi(3)+1)
 
       DO K = K1, K2
          DO J = J1, J2

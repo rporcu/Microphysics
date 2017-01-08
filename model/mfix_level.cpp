@@ -228,6 +228,8 @@ mfix_level::MakeNewLevel (int lev, Real time,
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
+       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+
        const int* sslo = (*flag[lev])[mfi].loVect();
        const int* sshi = (*flag[lev])[mfi].hiVect();
 
@@ -239,7 +241,8 @@ mfix_level::MakeNewLevel (int lev, Real time,
        shi[1] = sshi[1]+2;
        shi[2] = sshi[2]+2;
 
-       set_domain(slo.dataPtr(),shi.dataPtr(),(*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
+       set_domain(slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect(),
+                  (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
 
     // Matrix and rhs vector

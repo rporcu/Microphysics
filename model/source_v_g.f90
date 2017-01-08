@@ -38,7 +38,6 @@ module source_v_g_module
 ! Modules
 !---------------------------------------------------------------------//
       use compar, only: jmap
-      USE compar  , only: istart2, iend2, jstart2, jend2, kstart2, kend2
 
       USE constant, only: gravity
       USE bc, only: delp_y
@@ -115,9 +114,9 @@ module source_v_g_module
 ! Set reference phase to gas
       M = 0
 
-      DO K = kstart2, kend2
-        DO J = jstart2, jend2
-          DO I = istart2, iend2
+      DO K = lo(3), hi(3)
+        DO J = lo(2), hi(2)+1
+          DO I = lo(1), hi(1)
 
            EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
 

@@ -12,7 +12,8 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void set_domain(int* slo, int* shi, int* flag, Real* dx, Real* dy, Real* dz);
+  void set_domain(int* slo, int* shi, const int* lo, const int* hi, 
+                  int* flag, Real* dx, Real* dy, Real* dz);
 
   void mfix_main1(int* slo, int* shi, const int* lo, const int* hi,
                  Real* time,    Real* dt,

@@ -14,7 +14,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(slo, shi, D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
+      SUBROUTINE CALC_D(slo, shi, lo, hi, D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -28,36 +28,37 @@ MODULE CALC_D_MOD
 !---------------------------------------------------------------------//
 ! Size of IJK arrays and size of solids phase arrays.
 
-      use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
-
       use functions, only: AVG
       use param1, only: ZERO, SMALL_NUMBER
       use functions, only: ieast, jnorth, ktop
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Pressure correction
-      real(c_real), INTENT(OUT) :: d(:,:,:)
+      real(c_real), intent(  out) :: d&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! "X", "Y", or "Z"
-      CHARACTER, INTENT(IN) :: axis
+      CHARACTER, intent(in   ) :: axis
 
-      real(c_real), INTENT(IN):: A_M&
+      real(c_real), intent(in   ):: A_M&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
-      real(c_real), INTENT(IN):: ep_g&
+      real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: f_gds&
+      real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
+      integer     , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), INTENT(IN   ) :: dx, dy, dz
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables:
 !---------------------------------------------------------------------//
 ! Usual Indices
-      INTEGER :: I,J,K
+      INTEGER :: i,j,k
+      INTEGER :: ie,je,ke
       real(c_real) :: axy, axz, ayz, vol
 
       ! Temp variable 
@@ -73,9 +74,21 @@ MODULE CALC_D_MOD
 
       COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
 
-      DO K = kstart2, kend2
-        DO J = jstart2, jend2
-          DO I = istart2, iend2
+      ie = hi(1)
+      je = hi(2)
+      ke = hi(3)
+
+      if (axis.eq.'x') then
+          ie = hi(1)+1
+      else if (axis.eq.'y') then
+          je = hi(2)+1
+      else if (axis.eq.'z') then
+          ke = hi(3)+1
+      endif
+
+      do K = lo(3),ke
+        do J = lo(2),je
+          do I = lo(1),ie
 
          AM0 = -A_M(I,J,K,0)
 
