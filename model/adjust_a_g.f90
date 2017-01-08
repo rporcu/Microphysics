@@ -24,31 +24,27 @@
 
          USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
-         use compar, only: istart2,iend2,jstart2,jend2,kstart2,kend2
-
          implicit none
 
          integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 !---------------------------------------------------------------------//
-      CHARACTER, INTENT(IN) :: axis
+      CHARACTER, intent(in   ) :: axis
 
       ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(inout) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: ROP_G&
+      real(c_real), intent(in   ) :: ROP_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
-
-      INTEGER          IP
-      INTEGER          I, J, K
-
+     
+      integer      :: ip, i, j, k, ie, je, ke
       real(c_real) :: denominator, xxxm, xxxp
       real(c_real) :: axy, ayz, axz
 
@@ -56,9 +52,21 @@
       axz = dx*dz
       ayz = dy*dz
 
-      DO K = kstart2, kend2
-        DO J = jstart2, jend2
-          DO I = istart2, iend2
+      ie = hi(1)
+      je = hi(2)
+      ke = hi(3)
+ 
+      if (axis.eq.'x') then
+          ie = hi(1)+1
+      else if (axis.eq.'y') then
+          je = hi(2)+1
+      else if (axis.eq.'z') then
+          ke = hi(3)+1
+      endif
+
+      DO K = lo(3),ke
+        DO J = lo(2),je
+          DO I = lo(1),ie
 
          IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
 
