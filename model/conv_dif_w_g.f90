@@ -34,23 +34,23 @@ module w_g_conv_dif
       real(c_real) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN) :: flag&
+      integer     , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
@@ -80,17 +80,17 @@ module w_g_conv_dif
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      real(c_real), INTENT(OUT) :: U&
+      real(c_real), intent(OUT) :: U&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: V&
+      real(c_real), intent(OUT) :: V&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: WW&
+      real(c_real), intent(OUT) :: WW&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: u_g&
+      real(c_real), intent( in) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: v_g&
+      real(c_real), intent( in) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: w_g&
+      real(c_real), intent( in) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
@@ -133,21 +133,21 @@ module w_g_conv_dif
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      real(c_real), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
 ! fluxes through faces of given u-momentum cell
-      real(c_real), INTENT(OUT) :: flux_e, flux_w
-      real(c_real), INTENT(OUT) :: flux_n, flux_s
-      real(c_real), INTENT(OUT) :: flux_t, flux_b
+      real(c_real), intent(OUT) :: flux_e, flux_w
+      real(c_real), intent(OUT) :: flux_n, flux_s
+      real(c_real), intent(OUT) :: flux_t, flux_b
 
-      INTEGER, INTENT(IN) :: i, j, k
+      INTEGER, intent(IN) :: i, j, k
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -189,16 +189,16 @@ module w_g_conv_dif
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! diffusion through faces of given w-momentum cell
-      real(c_real), INTENT(OUT) :: d_fe, d_fw
-      real(c_real), INTENT(OUT) :: d_fn, d_fs
-      real(c_real), INTENT(OUT) :: d_ft, d_fb
+      real(c_real), intent(OUT) :: d_fe, d_fw
+      real(c_real), intent(OUT) :: d_fn, d_fs
+      real(c_real), intent(OUT) :: d_ft, d_fb
 
-      real(c_real), INTENT(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
+      INTEGER, intent(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      INTEGER, INTENT(IN) :: i, j, k
+      INTEGER, intent(IN) :: i, j, k
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
@@ -305,19 +305,19 @@ module w_g_conv_dif
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_U_g
-      real(c_real), INTENT(INOUT) :: A_W_g&
+      real(c_real), intent(inout) :: A_W_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: MU_G&
+      real(c_real), intent(in   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN) :: flag&
+      integer     , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 ! Local variables
@@ -450,26 +450,26 @@ module w_g_conv_dif
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_W_g
-      real(c_real), INTENT(INOUT) :: A_W_g&
+      real(c_real), intent(INOUT) :: A_W_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real), intent(IN   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
+      real(c_real), intent(IN   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
+      real(c_real), intent(IN   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(INOUT) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN) :: flag&
+      INTEGER, intent(IN) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 

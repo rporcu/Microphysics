@@ -65,27 +65,27 @@ MODULE CALC_MFLUX_MODULE
          IF (1.eq.flag(i,j,k,1)) THEN
 
             ! East face (i+1/2, j, k)
-            Flux_E(i,j,k) = ROP_E(i,j,k)*AYZ*U(i,j,k)
+            flux_E(i,j,k) = ROP_E(i,j,k)*AYZ*U(i,j,k)
 
             ! West face (i-1/2, j, k)
             IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) then
-               Flux_E(iminus(i,j,k),j,k) = ROP_E(iminus(i,j,k),j,k)*AYZ*U(iminus(i,j,k),j,k)
+               flux_E(iminus(i,j,k),j,k) = ROP_E(iminus(i,j,k),j,k)*AYZ*U(iminus(i,j,k),j,k)
             ENDIF
 
             ! North face (i, j+1/2, k)
-            Flux_N(i,j,k) = ROP_N(i,j,k)*AXZ*V(i,j,k)
+            flux_N(i,j,k) = ROP_N(i,j,k)*AXZ*V(i,j,k)
             ! South face (i, j-1/2, k)
             IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) then
-              Flux_N(i,jminus(i,j,k),k) = ROP_N(i,jminus(i,j,k),k)*AXZ*V(i,jminus(i,j,k),k)
+              flux_N(i,jminus(i,j,k),k) = ROP_N(i,jminus(i,j,k),k)*AXZ*V(i,jminus(i,j,k),k)
             ENDIF
 
 
             ! Top face (i, j, k+1/2)
-            Flux_T(i,j,k) = ROP_T(i,j,k)*AXY*W(i,j,k)
+            flux_T(i,j,k) = ROP_T(i,j,k)*AXY*W(i,j,k)
 
             ! Bottom face (i, j, k-1/2)
             IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) then
-               Flux_T(i,j,kminus(i,j,k)) = ROP_T(i,j,kminus(i,j,k))*AXY*W(i,j,kminus(i,j,k))
+               flux_T(i,j,kminus(i,j,k)) = ROP_T(i,j,kminus(i,j,k))*AXY*W(i,j,kminus(i,j,k))
             ENDIF
 
          ENDIF
