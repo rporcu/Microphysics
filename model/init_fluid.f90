@@ -50,7 +50,7 @@
 !-----------------------------------------------------------------------!
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, lo, hi, ep_g, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
 
       ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
@@ -84,13 +84,14 @@
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, lo, hi, ep_g, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
 
       use ic, only: dimension_ic, ic_type, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use scales, only: scale_pressure
       use param1, only: undefined, is_defined
+      use run, only: dem_solids
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
@@ -99,8 +100,6 @@
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
 
-      real(c_real), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
@@ -120,14 +119,14 @@
 ! local index for initial condition
       integer :: l
 ! Temporary variables for storing IC values
-      real(c_real) :: epgx, pgx, ugx, vgx, wgx
+      real(c_real) :: pgx, ugx, vgx, wgx
 !-----------------------------------------------
 
 !  Set the initial conditions.
       do l = 1, dimension_ic
          if (ic_defined(l)) then
 
-            epgx = ic_ep_g(l)
+! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(l)
             ugx = ic_u_g(l)
             vgx = ic_v_g(l)
@@ -138,7 +137,6 @@
                   do i = ic_i_w(l), ic_i_e(l)
 
                      if (flag(i,j,k,1)<100) then
-                        if (is_defined(epgx)) ep_g(i,j,k) = epgx
 
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
                            undefined, is_defined(pgx))

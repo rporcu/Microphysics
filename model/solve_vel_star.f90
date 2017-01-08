@@ -194,11 +194,11 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: d_n&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

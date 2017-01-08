@@ -44,11 +44,11 @@ module v_g_conv_dif
       real(c_real), INTENT(IN   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(INOUT) :: flux_ge&
+      real(c_real), INTENT(IN   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
+      real(c_real), INTENT(IN   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
+      real(c_real), INTENT(IN   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, INTENT(IN) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
