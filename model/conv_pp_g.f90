@@ -43,7 +43,6 @@ module conv_pp_g_module
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       use matrix   , only: e, w, s, n, t, b
       USE functions, only: iplus, iminus, jminus, jplus, kminus, kplus
 
@@ -79,9 +78,9 @@ module conv_pp_g_module
       ayz = dy*dz
 
 ! Calculate convection fluxes through each of the faces
-      DO K = kstart2, kend2
-        DO J = jstart2, jend2
-          DO I = istart2, iend2
+      DO K = lo(3)-1,hi(3)+1
+        DO J = lo(2)-1,hi(2)+1
+          DO I = lo(1)-1,hi(1)+1
          IF (flag(i,j,k,1)==1) THEN
 
 ! East face (i+1/2, j, k)

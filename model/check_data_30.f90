@@ -15,7 +15,6 @@ MODULE CHECK_DATA_30_MODULE
 
 ! Global variables: (common to sub-functions)
 !---------------------------------------------------------------------//
-      use compar, only: istart2,iend2, jstart2, jend2, kstart2, kend2
       use param1, only: zero
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
@@ -87,9 +86,9 @@ MODULE CHECK_DATA_30_MODULE
       IER = 0
       ERR_TAG=2000
 
-      DO K = KSTART2, KEND2
-      DO J = JSTART2, JEND2
-      DO I = ISTART2, IEND2
+      DO K = lo(3)-1,hi(3)+1
+      DO J = lo(2)-1,hi(2)+1
+      DO I = lo(1)-1,hi(1)+1
 
          if(flag(i,j,k,1) >= 10 .and. flag(i,j,k,1) <= 31) then
 
@@ -157,9 +156,9 @@ MODULE CHECK_DATA_30_MODULE
       IER = 0
       ERR_TAG = 3000
 
-      DO K = KSTART2, KEND2
-      DO J = JSTART2, JEND2
-      DO I = ISTART2, IEND2
+      DO K = lo(3)-1,hi(3)+1
+      DO J = lo(2)-1,hi(2)+1
+      DO I = lo(1)-1,hi(1)+1
          IF (flag(i,j,k,1)<100) THEN
 
 ! Gas viscosity must be non-negative.
@@ -167,9 +166,9 @@ MODULE CHECK_DATA_30_MODULE
                (IER, I, J, K, MU_G(I,J,K), '<', ZERO, 'MU_G')
 
          ENDIF ! IF(flag(i,j,k,1)<100)
-      ENDDO ! DO I = ISTART2, IEND2
-      ENDDO ! DO J = JSTART2, JEND2
-      ENDDO ! DO K = KSTART2, KEND2
+      ENDDO
+      ENDDO
+      ENDDO
 
       ! CALL GLOBAL_ALL_SUM(IER)
 

@@ -35,7 +35,6 @@ MODULE CHECK_DATA_20_MODULE
 ! Modules
 !-----------------------------------------------
       USE param1   , only: one, is_undefined, small_number
-      USE compar   , only: istart2, iend2, jstart2, jend2, kstart2, kend2
       USE functions, only: iminus, jminus, kminus
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
@@ -84,9 +83,9 @@ MODULE CHECK_DATA_20_MODULE
 ! Check whether all field variables are initialized in all fluid cells
 ! and flow boundary cells
 ! ---------------------------------------------------------------->>>
-      DO K = kstart2, kend2
-      DO J = jstart2, jend2
-      DO I = istart2, iend2
+      DO K = lo(3)-1,hi(3)+1
+      DO J = lo(2)-1,hi(2)+1
+      DO I = lo(1)-1,hi(1)+1
          IF (flag(i,j,k,1)<100) THEN
 
 ! check gas phase fields
@@ -125,10 +124,9 @@ MODULE CHECK_DATA_20_MODULE
                CALL REPORT_ERROR(ABORT, I, J, K-1, 'W_G')
 
          ENDIF  ! IF (flag(i,j,k,1)<100) THEN
-      ENDDO  ! end do I = istart2, iend2
-      ENDDO  ! end do J = jstart2, jend2
-      ENDDO  ! end do K = kstart2, kend2
-
+      ENDDO
+      ENDDO
+      ENDDO
 
       ! CALL GLOBAL_ALL_OR(ABORT)
       IF(ABORT) THEN
@@ -142,9 +140,9 @@ MODULE CHECK_DATA_20_MODULE
 ! Additional check for fluid or mass inflow cells
 ! --------------------------------------------------------------------//
 
-      DO K = kstart2, kend2
-      DO J = jstart2, jend2
-      DO I = istart2, iend2
+      DO K = lo(3)-1,hi(3)+1
+      DO J = lo(2)-1,hi(2)+1
+      DO I = lo(1)-1,hi(1)+1
 
          IF (FLAG(i,j,k,1)==1 .OR. FLAG(i,j,k,1)==20) THEN
 
@@ -153,9 +151,9 @@ MODULE CHECK_DATA_20_MODULE
                CALL REPORT_UNPHYSICAL(ABORT, I, J, K, 'EP_G', EP_G(I,J,K))
 
          ENDIF   ! IF (FLAG(i,j,k)==1 .OR. FLAG(i,j,k)==20) THEN
-      ENDDO   ! I = istart2, iend2
-      ENDDO   ! J = jstart2, jend2
-      ENDDO   ! K = kstart2, kend2
+      ENDDO
+      ENDDO
+      ENDDO
 
 
       ! CALL GLOBAL_ALL_OR(ABORT)
