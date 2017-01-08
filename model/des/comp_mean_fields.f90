@@ -13,9 +13,8 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-     subroutine comp_mean_fields(slo, shi, lo, hi, &
-                                 ep_g, particle_state, des_pos_new, pvol, flag, nparticles, &
-                                 dx, dy, dz) &
+      subroutine comp_mean_fields(slo, shi, lo, hi, ep_g, particle_state,&
+         des_pos_new, pvol, flag, nparticles, dx, dy, dz) &
          bind(C, name="comp_mean_fields")
 
       use discretelement, only: max_pip

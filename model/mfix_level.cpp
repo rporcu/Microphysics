@@ -248,8 +248,8 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // Void fraction
     ep_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
     ep_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    ep_g[lev]->setVal(0.);
-    ep_go[lev]->setVal(0.);
+    ep_g[lev]->setVal(1.0);
+    ep_go[lev]->setVal(1.0);
 
     // Gas pressure fraction
     p_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
@@ -624,13 +624,12 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                              des_vel_new.dataPtr(), des_usr_var.dataPtr());
   }
 
-  // Calculate mean fields using either interpolation or cell averaging.
-#if 0
+  // Calculate volume fraction, ep_g.
   if (solve_dem)
     mfix_comp_mean_fields(lev);
-#endif
 
-   mfix_init_fluid(lev);
+  // Initial fluid arrays: pressure, velocity, density, viscosity
+  mfix_init_fluid(lev);
 
   // Call user-defined subroutine to set constants, check data, etc.
   if (call_udf)
@@ -789,7 +788,7 @@ mfix_level::mfix_init_fluid(int lev)
                (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
                (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), 
+               (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
 }
@@ -803,6 +802,9 @@ mfix_level::mfix_comp_mean_fields(int lev)
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
+
+  // HACK HACK HACK -- This routine expect the particle array size to be passed
+  int nparticles = 5000;
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
@@ -824,7 +826,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
      comp_mean_fields(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
           (*ep_g[lev])[mfi].dataPtr(),
           particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
-          (*flag[lev])[mfi].dataPtr());
+          (*flag[lev])[mfi].dataPtr(), &nparticles, &dx, &dy, &dz );
   }
 }
 
@@ -1219,7 +1221,7 @@ mfix_level::mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& 
 
    fmg.set_const_gravity_coeffs();
 
-  fmg.define_matrix(matrix); 
+  fmg.define_matrix(matrix);
 
   Real rel_eps = 1.e-10;
   Real abs_eps = 1.e-12;
@@ -1265,4 +1267,3 @@ mfix_level::make_mg_bc (int mg_bc[])
     if (Geometry::IsSPHERICAL() || Geometry::IsRZ() )
         mg_bc[0] = MGT_BC_NEU;
 }
-
