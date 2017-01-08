@@ -53,9 +53,9 @@ MODULE SET_FLAGS_MODULE
 ! avoid unphysical strain rates in fluid cells adjacent to the flow
 ! boundary
 ! ---------------------------------------------------------------->>>
-      do i = slo(3),shi(3)
+      do k = slo(3),shi(3)
          do j = slo(2),shi(2)
-            do k = slo(1),shi(1)
+            do i = slo(1),shi(1)
 
               select case (flag(i,j,k,1))
                 case (PINF_, POUT_, MINF_, MOUT_, OUTF_)
@@ -250,9 +250,9 @@ MODULE SET_FLAGS_MODULE
      end do
 
 ! Clean up edge cases
-      do i = slo(3),shi(3)
+      do k = slo(3),shi(3)
          do j = slo(2),shi(2)
-            do k = slo(1),shi(1)
+            do i = slo(1),shi(1)
                if(IS_UNDEFINED(flag(i,j,k,2))) flag(i,j,k,2) = 0
                if(IS_UNDEFINED(flag(i,j,k,3))) flag(i,j,k,3) = 0
                if(IS_UNDEFINED(flag(i,j,k,4))) flag(i,j,k,4) = 0
