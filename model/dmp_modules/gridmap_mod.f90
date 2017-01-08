@@ -319,90 +319,66 @@
 ! consider cyclic boundary condition using the imap(:),jmap(:),kmap(:)
 ! indirection arrays
 
-      allocate( imap( imin4:imax4 ) )
-      allocate( jmap( jmin4:jmax4 ) )
-      allocate( kmap( kmin4:kmax4 ) )
+      allocate( imap( imin2:imax2 ) )
+      allocate( jmap( jmin2:jmax2 ) )
+      allocate( kmap( kmin2:kmax2 ) )
 
-      allocate( imap_c( imin4:imax4 ) )
-      allocate( jmap_c( jmin4:jmax4 ) )
-      allocate( kmap_c( kmin4:kmax4 ) )
+      allocate( imap_c( imin2:imax2 ) )
+      allocate( jmap_c( jmin2:jmax2 ) )
+      allocate( kmap_c( kmin2:kmax2 ) )
 
-      do kk=kmin4,kmax4
+      do kk=kmin2,kmax2
         kmap(kk) = kk
       enddo
 
-      do jj=jmin4,jmax4
+      do jj=jmin2,jmax2
         jmap(jj) = jj
       enddo
 
-      do ii=imin4,imax4
+      do ii=imin2,imax2
         imap(ii) = ii
       enddo
 
       if (CYC_ZL) then
          kmap( kmax2 ) = kmin1
          kmap( kmin2 ) = kmax1
-         if (kmax3.gt.kmax2) kmap(kmax3) = kmap(kmax2)+1
-         if (kmin3.lt.kmin2) kmap(kmin3) = kmap(kmin2)-1
-         if (kmax4.gt.kmax3) kmap(kmax4) = kmap(kmax3)+1
-         if (kmin4.lt.kmin3) kmap(kmin4) = kmap(kmin3)-1
       endif
 
       if (CYC_YL) then
          jmap( jmax2 ) = jmin1
          jmap( jmin2 ) = jmax1
-         if (jmax3.gt.jmax2) jmap(jmax3) = jmap(jmax2)+1
-         if (jmin3.lt.jmin2) jmap(jmin3) = jmap(jmin2)-1
-         if (jmax4.gt.jmax3) jmap(jmax4) = jmap(jmax3)+1
-         if (jmin4.lt.jmin3) jmap(jmin4) = jmap(jmin3)-1
       endif
 
       if (CYC_XL) then
          imap( imax2 ) = imin1
          imap( imin2 ) = imax1
-         if (imax3.gt.imax2) imap(imax3) = imap(imax2)+1
-         if (imin3.lt.imin2) imap(imin3) = imap(imin2)-1
-         if (imax4.gt.imax3) imap(imax4) = imap(imax3)+1
-         if (imin4.lt.imin3) imap(imin4) = imap(imin3)-1
       endif
 
-      do kk=kmin4,kmax4
+      do kk=kmin2,kmax2
         kmap_c(kk) = kk
       enddo
 
-      do jj=jmin4,jmax4
+      do jj=jmin2,jmax2
         jmap_c(jj) = jj
       enddo
 
-      do ii=imin4,imax4
+      do ii=imin2,imax2
          imap_c(ii) = ii
       enddo
 
       if (CYC_ZL.and.nodesk.eq.1) then
          kmap_c( kmax2 ) = kmin1
          kmap_c( kmin2 ) = kmax1
-         if (kmax3.gt.kmax2) kmap_c(kmax3) = kmap_c(kmax2)+1
-         if (kmin3.lt.kmin2) kmap_c(kmin3) = kmap_c(kmin2)-1
-         if (kmax4.gt.kmax3) kmap_c(kmax4) = kmap_c(kmax3)+1
-         if (kmin4.lt.kmin3) kmap_c(kmin4) = kmap_c(kmin3)-1
       endif
 
       if (CYC_YL.and.nodesj.eq.1) then
          jmap_c( jmax2 ) = jmin1
          jmap_c( jmin2 ) = jmax1
-         if (jmax3.gt.jmax2) jmap_c(jmax3) = jmap_c(jmax2)+1
-         if (jmin3.lt.jmin2) jmap_c(jmin3) = jmap_c(jmin2)-1
-         if (jmax4.gt.jmax3) jmap_c(jmax4) = jmap_c(jmax3)+1
-         if (jmin4.lt.jmin3) jmap_c(jmin4) = jmap_c(jmin3)-1
       endif
 
       if (CYC_XL.and.nodesi.eq.1) then
          imap_c( imax2 ) = imin1
          imap_c( imin2 ) = imax1
-         if (imax3.gt.imax2) imap_c(imax3) = imap_c(imax2)+1
-         if (imin3.lt.imin2) imap_c(imin3) = imap_c(imin2)-1
-         if (imax4.gt.imax3) imap_c(imax4) = imap_c(imax3)+1
-         if (imin4.lt.imin3) imap_c(imin4) = imap_c(imin3)-1
       endif
 ! End setup mapping to take care of cyclic boundary conditions
 ! ----------------------------------------------------------------<<<

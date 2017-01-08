@@ -394,12 +394,8 @@ MODULE WRITE_OUT0_MODULE
       WRITE (UNIT_OUT, 1900)
       WRITE (UNIT_OUT, 1901) ZERO_EP_S
       WRITE (UNIT_OUT, 1905) TOL_COM
-!
-!  Echo user defined input data
-!
-      WRITE (UNIT_OUT, '(/,1X,1A1)') CHAR(12)
-      IF (CALL_USR) CALL USR_WRITE_OUT0
-!
+
+
       RETURN
  1000 FORMAT(17X,'MM      MM  FFFFFFFFFF    IIIIII    XX      XX',/17X,&
          'MM      MM  FFFFFFFFFF    IIIIII    XX      XX',/17X,&

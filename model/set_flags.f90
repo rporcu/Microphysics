@@ -13,7 +13,6 @@ MODULE SET_FLAGS_MODULE
 
       use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
       use ic, only: NSW_
-      use geometry, only: ijkmax3
       use compar, only: mype, pe_io
       use param1, only: undefined_i
 
@@ -29,7 +28,6 @@ MODULE SET_FLAGS_MODULE
 !-----------------------------------------------
 ! Indices
       INTEGER :: i, j, k, ib, jb, kb
-      integer, allocatable :: arr1(:)
 !-----------------------------------------------
 
 !  Cell flag definitions
@@ -108,17 +106,8 @@ MODULE SET_FLAGS_MODULE
 ! ---------------------------------------------------------------->>>
       flag(:,:,:,2:4) = UNDEFINED_I
 
-      IF (MYPE.EQ.PE_IO) THEN
-         ALLOCATE (ARR1(IJKMAX3))
-      ELSE
-         ALLOCATE (ARR1(1))
-      ENDIF
-
       ! CALL GATHER(FLAG,ARR1,ROOT)
       ! CALL SCATTER(FLAG,ARR1,ROOT)
-
-      DEALLOCATE (ARR1)
-
 
       RETURN
 

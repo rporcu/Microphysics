@@ -9,13 +9,10 @@ f90EXE_sources += out_array_kc.f90
 f90EXE_sources += out_bin_512.f90
 f90EXE_sources += out_bin_512i.f90
 f90EXE_sources += out_bin_512r.f90
-f90EXE_sources += out_bin_r.f90
 f90EXE_sources += output_manager.f90
 f90EXE_sources += write_error.f90
 f90EXE_sources += write_header.f90
 f90EXE_sources += write_out0.f90
-f90EXE_sources += write_out1.f90
-f90EXE_sources += write_out3.f90
 f90EXE_sources += write_table.f90
 
 INCLUDE_LOCATIONS += $(MFIX_HOME)/model/io

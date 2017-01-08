@@ -33,8 +33,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use set_flags_module, only: set_flags1
       use set_ps_module, only: set_ps
       use write_out0_module, only: write_out0
-      use write_out1_module, only: write_out1
-      use write_out3_module, only: write_out3
       use zero_norm_vel_module, only: zero_norm_vel
 
       use fld_const, only: ro_g0

@@ -4,7 +4,6 @@ module output_manager_module
    use iso_c_binding , only: c_int
 
    use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
-   use write_out1_module, only: write_out1
 
   contains
 !----------------------------------------------------------------------!
@@ -95,14 +94,6 @@ module output_manager_module
 
 ! Get the current time before any IO operations begin
       WALL_START = WALL_TIME()
-
-! Write standard output, if needed
-      IF(CHECK_TIME(OUT_TIME)) THEN
-         OUT_TIME = NEXT_TIME(OUT_DT)
-         CALL WRITE_OUT1(time,slo,shi,ep_g,p_g,ro_g)
-
-         CALL NOTIFY_USER('.OUT;')
-      ENDIF
 
 ! Write special output, if needed
       IDX = 0
