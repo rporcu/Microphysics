@@ -12,8 +12,8 @@ module des_time_march_module
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, ep_g, p_g, u_g, v_g,&
-         w_g, ro_g, rop_g, mu_g, particle_state, particle_phase, &
+      SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, max_pip, ep_g, p_g, &
+         u_g, v_g, w_g, ro_g, rop_g, mu_g, particle_state, particle_phase, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          drag_fc, fc, tow, pairs, pair_count, flag, &
@@ -36,11 +36,12 @@ module des_time_march_module
       use param1, only: zero
       use run, only: CALL_USR
       use run, only: TSTOP
-      use discretelement, only: max_pip
+
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -133,9 +134,9 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(slo, shi, time, dt, nstep,ep_g, p_g, ro_g, rop_g, &
-            u_g, v_g, w_g, particle_state, des_radius, ro_sol, des_pos_new,&
-            des_vel_new, des_usr_var, omega_new, 0, 0)
+         CALL OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep,ep_g, p_g, &
+            ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol,&
+            des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
       NP = PIP
@@ -160,7 +161,7 @@ module des_time_march_module
                gradPg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
-         call calc_pg_grad(slo, shi, lo, hi, &
+         call calc_pg_grad(slo, shi, lo, hi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
                            pvol, drag_fc, flag, dx, dy, dz)
       ENDIF
@@ -188,10 +189,12 @@ module des_time_march_module
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
 ! Calculate pairs of colliding particles
-         CALL CALC_COLLISIONS(pairs, pair_count, particle_state, des_radius, des_pos_new)
+         CALL CALC_COLLISIONS(pairs, pair_count, particle_state, &
+            des_radius, des_pos_new)
 
 ! Calculate forces from particle-particle collisions
-         CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
+         CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, &
+            des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
          CALL calc_drag_des(slo,shi,lo,hi,max_pip,ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
@@ -201,7 +204,7 @@ module des_time_march_module
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(particle_state, des_radius, pmass, omoi, &
+         CALL CFNEWVALUES(max_pip, particle_state, des_radius, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
@@ -230,19 +233,19 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(slo, shi, time, dt, nstep,ep_g, p_g, ro_g, &
-               rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol, &
+            CALL OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep,ep_g, p_g,&
+               ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(CALL_USR) CALL USR2_DES(des_pos_new, des_vel_new, omega_new)
+         IF(CALL_USR) CALL USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
 ! END DEM time loop
 !-----------------------------------------------------------------<<<
 
-      IF(CALL_USR) CALL USR3_DES(des_pos_new, des_vel_new, omega_new)
+      IF(CALL_USR) CALL USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN

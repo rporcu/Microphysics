@@ -15,10 +15,11 @@ module output_manager_module
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     SUBROUTINE OUTPUT_MANAGER(slo, shi, time, dt, nstep, ep_g, p_g,   &
-        ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol,&
-        des_pos_new, des_vel_new, des_usr_var, omega_new, exit_signal, &
-        finished) bind(C, name="mfix_output_manager")
+     SUBROUTINE OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep, &
+        ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, particle_state, &
+        des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var,&
+        omega_new, exit_signal, finished) &
+        bind(C, name="mfix_output_manager")
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -34,11 +35,12 @@ module output_manager_module
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
       use write_des_data_module, only: write_des_data
-      use discretelement, only: max_pip
+
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), INTENT(IN   ) :: time, dt
       integer(c_int), intent(in   ) :: nstep
@@ -102,7 +104,8 @@ module output_manager_module
       DO LC = 1, DIMENSION_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            CALL WRITE_USR1 (LC, time, dt, des_pos_new, des_vel_new, omega_new)
+            CALL WRITE_USR1 (LC, time, dt, max_pip, des_pos_new,&
+               des_vel_new, omega_new)
             CALL NOTIFY_USER('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
@@ -112,7 +115,8 @@ module output_manager_module
       IF(DEM_SOLIDS) THEN
          IF(CHECK_TIME(VTP_TIME)) THEN
             VTP_TIME = NEXT_TIME(VTP_DT)
-            CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
+            CALL WRITE_DES_DATA(max_pip, des_radius, des_pos_new,&
+               des_vel_new, des_usr_var)
             CALL NOTIFY_USER('DES.vtp;')
          ENDIF
       ENDIF

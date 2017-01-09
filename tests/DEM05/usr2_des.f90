@@ -15,16 +15,18 @@
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR2_DES(des_pos_new, des_vel_new, omega_new)
+      SUBROUTINE USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
-      Use discretelement, only: MAX_PIP
+      use bl_fort_module, only : c_real
 
-      IMPLICIT NONE
+      implicit none
 
-      INTEGER :: LL
-      double precision, intent(inout) :: des_pos_new(max_pip,3)
-      double precision, intent(inout) :: des_vel_new(max_pip,3)
-      double precision, intent(inout) :: omega_new(max_pip,3)
+      integer     , intent(in   ) :: max_pip
+      real(c_real), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_real), intent(inout) :: des_vel_new(max_pip,3)
+      real(c_real), intent(inout) :: omega_new(max_pip,3)
+
+      integer :: ll
 
 ! Move particles 63-93 below particles 32-62 to fake a wall.
       DO LL=63,MAX_PIP

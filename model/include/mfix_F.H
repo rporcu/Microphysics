@@ -34,7 +34,7 @@ extern "C"
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
 
-  void mfix_make_arrays_des(
+  void mfix_make_arrays_des(const int* max_pip,
                  int* particle_state,
                  int* particle_phase,
                  Real* des_radius,
@@ -49,7 +49,7 @@ extern "C"
                  Real* fc,
                  Real* tow);
 
-  void mfix_write_des_data(
+  void mfix_write_des_data(const int* max_pip,
                  Real* des_radius,
                  Real* des_pos_new,
                  Real* des_vel_new,
@@ -70,7 +70,7 @@ extern "C"
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void mfix_output_manager(int* slo, int* shi,
+  void mfix_output_manager(int* slo, int* shi, const int* max_pip,
          Real* time, Real* dt, int* nstep,
          Real* ep_g,    Real* p_g,
          Real* ro_g,    Real* rop_g,
@@ -218,7 +218,8 @@ extern "C"
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
-  void  mfix_des_time_march(int* slo, int* shi, const int* lo, const int* hi,
+  void  mfix_des_time_march(
+          int* slo, int* shi, const int* lo, const int* hi, const int* max_pip,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,
           Real* ro_g,           Real* rop_g,          Real* mu_g,

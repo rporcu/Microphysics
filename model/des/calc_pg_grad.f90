@@ -18,7 +18,7 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(slo, shi, lo, hi, &
+      SUBROUTINE CALC_PG_GRAD(slo, shi, lo, hi, max_pip, &
                               p_g, gradPg,  particle_state, des_pos_new,&
                               pvol, drag_fc, flag, dx, dy, dz)
 
@@ -36,7 +36,7 @@ MODULE CALC_PG_GRAD_MODULE
       ! Domain length
       use geometry, only: XLENGTH, YLENGTH, ZLENGTH
 
-      use discretelement, only: MAX_PIP, DES_EXPLICITLY_COUPLED
+      use discretelement, only: DES_EXPLICITLY_COUPLED
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -46,6 +46,7 @@ MODULE CALC_PG_GRAD_MODULE
       implicit none
 
       integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -54,12 +55,13 @@ MODULE CALC_PG_GRAD_MODULE
       integer         , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
-      real(c_real), intent(in   ) :: pvol(:)
-      real(c_real), intent(in   ) :: des_pos_new(:,:)
-      real(c_real), intent(inout) :: drag_fc(:,:)
+      integer     , intent(in   ) :: particle_state(max_pip)
+      real(c_real), intent(in   ) :: pvol(max_pip)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(inout) :: drag_fc(max_pip,3)
+
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer         , intent(in   ) :: particle_state(:)
 
 ! Loop counters: Particle, fluid cell, neighbor cells
       INTEGER :: NP, I, J, K

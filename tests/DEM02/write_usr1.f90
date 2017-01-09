@@ -3,33 +3,18 @@
 !  Module name: WRITE_USR1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      integer, intent(in) :: l
-      double precision, intent(in) :: time, dt
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      integer,      intent(in   ) :: l, max_pip
+      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
       CASE(1); CALL WRITE_DES_OUT()
@@ -53,6 +38,8 @@
 !......................................................................!
       SUBROUTINE WRITE_DES_Out
 
+      use bl_fort_module, only : c_real
+
       use compar, only: mype, pe_io
       Use usr, only: bounce_count, max_height_hs, max_height
 
@@ -64,9 +51,9 @@
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: uHeight = 2030
 ! Absolute relative percent differnece with hard sphere model.
-      double precision :: apDiff
+      real(c_real) :: apDiff
 ! Max height of hard-sphere bounce
-      double precision :: maxHS
+      real(c_real) :: maxHS
 ! Loop counter
       integer :: k
 ! Save the last location of the loop counter

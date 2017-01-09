@@ -9,52 +9,27 @@ MODULE WRITE_DES_DATA_MODULE
 !  Subroutine: WRITE_DES_DATA                                          !
 !  Purpose: Writing DES output in Paraview format                      !
 !                                                                      !
-!                                                                      !
-!  Author: Jay Boyalakuntla                           Date: 26-Jul-06  !
-!  Reviewer: Sreekanth Pannala                        Date: 31-Oct-06  !
-!                                                                      !
-!  Reviewer: J. Musser                                Date: 20-Apr-10  !
-!  Comments: Split original subroutine into one for ParaView *.vtp     !
-!  files, and a second for TECPLOT files *.dat.                        !
-!                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE WRITE_DES_DATA(max_pip, des_radius, des_pos_new, des_vel_new, des_usr_var)
 
-      SUBROUTINE WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
+      use vtp, only: vtp_open_file, vtp_close_file
+      use vtp, only: add_vtp_to_pvd, vtp_write_element, vtp_write_data
+      use discretelement, only: s_time
+      use discretelement, only: des_usr_var_size
 
-         IMPLICIT NONE
+      implicit none
 
-         real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
-         real(c_real), DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
+! Dummy arguments ....................................................//
+      integer     , intent(in   ) :: max_pip
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_usr_var(max_pip,1)
 
-         CALL WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
-
-      RETURN
-      END SUBROUTINE WRITE_DES_DATA
-!-----------------------------------------------
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: WRITE_DES_VTP                                           !
-!  Purpose: Writing DES output in Paraview format                      !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-
-      SUBROUTINE WRITE_DES_VTP(des_radius, des_pos_new, des_vel_new, des_usr_var)
-
-      use vtp, only: add_vtp_to_pvd, vtp_close_file, vtp_open_file, vtp_write_element, vtp_write_data
-      use discretelement, only: S_TIME
-      use discretelement, only: DES_USR_VAR_SIZE
-
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-
-      IMPLICIT NONE
-
-      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
-      real(c_real), DIMENSION(:,:), INTENT(IN) :: des_vel_new, des_pos_new, des_usr_var
-
-      real(c_real), DIMENSION(:), ALLOCATABLE :: DES_DIAMETER !(PARTICLES)
-      CHARACTER(len=10) :: lNoP
-      CHARACTER(len=24) :: sTIMEc
+! Local variables ....................................................//
+      real(c_real), allocatable :: des_diameter(:)
+      character(len=10) :: lnop
+      character(len=24) :: stimec
 
       sTIMEc=''; WRITE(sTIMEc,"(ES24.16)") S_TIME
 
@@ -117,5 +92,5 @@ MODULE WRITE_DES_DATA_MODULE
       CALL ADD_VTP_TO_PVD
 
       RETURN
-      END SUBROUTINE WRITE_DES_VTP
+   END SUBROUTINE WRITE_DES_DATA
 END MODULE WRITE_DES_DATA_MODULE

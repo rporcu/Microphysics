@@ -12,12 +12,12 @@ MODULE CFNEWVALUES_MODULE
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(particle_state, des_radius, pmass, omoi, &
-         des_pos_new, des_vel_new, omega_new, fc, tow, &
+      SUBROUTINE CFNEWVALUES(max_pip, particle_state, des_radius, pmass,&
+         omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
       USE discretelement, only: dtsolid
-      USE discretelement, only: max_pip, intg_euler, intg_adams_bashforth
+      USE discretelement, only: intg_euler, intg_adams_bashforth
       USE discretelement, only: entering_particle, entering_ghost
       USE discretelement, only: nonexistent, exiting_ghost
       USE discretelement, only: normal_ghost
@@ -26,17 +26,18 @@ MODULE CFNEWVALUES_MODULE
 
       IMPLICIT NONE
 
-      INTEGER         , INTENT(IN   ) :: particle_state(:)
-      real(c_real), INTENT(IN   ) :: des_radius(:)
-      real(c_real), INTENT(IN   ) :: omoi(:)
-      real(c_real), INTENT(IN   ) :: pmass(:)
-      real(c_real), INTENT(INOUT) :: des_pos_new(:,:)
-      real(c_real), INTENT(INOUT) :: des_vel_new(:,:)
-      real(c_real), INTENT(INOUT) :: omega_new(:,:)
-      real(c_real), INTENT(INOUT) :: fc(:,:)
-      real(c_real), INTENT(INOUT) :: tow(:,:)
-      real(c_real), INTENT(INOUT) :: des_acc_old(:,:)
-      real(c_real), INTENT(INOUT) :: rot_acc_old(:,:)
+      integer     , intent(in   ) :: max_pip
+      integer     , intent(in   ) :: particle_state(max_pip)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      real(c_real), intent(in   ) :: omoi(max_pip)
+      real(c_real), intent(in   ) :: pmass(max_pip)
+      real(c_real), intent(inout) :: des_pos_new(max_pip,3)
+      real(c_real), intent(inout) :: des_vel_new(max_pip,3)
+      real(c_real), intent(inout) :: omega_new(max_pip,3)
+      real(c_real), intent(inout) :: fc(max_pip,3)
+      real(c_real), intent(inout) :: tow(max_pip,3)
+      real(c_real), intent(inout) :: des_acc_old(max_pip,3)
+      real(c_real), intent(inout) :: rot_acc_old(max_pip,3)
 
 !-----------------------------------------------
 ! Local Variables

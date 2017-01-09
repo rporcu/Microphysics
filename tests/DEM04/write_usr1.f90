@@ -3,36 +3,21 @@
 !  Module name: WRITE_USR1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      integer, intent(in) :: l
-      double precision, intent(in) :: time, dt
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      integer,      intent(in   ) :: l, max_pip
+      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME, &
+      CASE(1); CALL WRITE_DES_OUT(TIME, max_pip, &
          des_pos_new, des_vel_new, omega_new)
       END SELECT
 
@@ -52,33 +37,36 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new, omega_new)
+      SUBROUTINE WRITE_DES_Out(lTime, max_pip, &
+         des_pos_new, des_vel_new, omega_new)
 
-      Use discretelement, only: max_pip, mew, mew_w
+      Use discretelement, only: mew, mew_w
       use constant, only: gravity
       use param1, only: zero
       use toleranc, only: COMPARE
       use usr, only: u0
+      use bl_fort_module, only : c_real
 
-      IMPLICIT NONE
+      implicit none
 
 ! Passed variables
 !---------------------------------------------------------------------//
-      double precision, intent(in) :: ltime
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      real(c_real), intent(in   ) :: ltime
+      integer,      intent(in   ) :: max_pip
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: lUNIT = 2030
 ! Slip velocity at contact, error, non-dimensional values.
-      DOUBLE PRECISION :: SLIP, ERR, ANL_ND, DEM_ND
+      REAL(C_REAL) :: SLIP, ERR, ANL_ND, DEM_ND
 ! Flag that rolling friction already ended.
       LOGICAL, SAVE :: ROLLFRIC_END = .FALSE.
 
-      double precision, parameter :: lRad = 0.00050
+      real(c_real), parameter :: lRad = 0.00050
 ! Return: Rolling friction already ended.
       IF(ROLLFRIC_END) RETURN
 

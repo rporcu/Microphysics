@@ -3,37 +3,21 @@
 !  Module name: WRITE_USR1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      double precision, intent(in) :: time, dt
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
-
-      INTEGER, INTENT(IN) :: L
+      integer,      intent(in   ) :: l, max_pip
+      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME, des_pos_new, des_vel_new)
+      CASE(1); CALL WRITE_DES_OUT(TIME, max_pip, des_pos_new, des_vel_new)
       END SELECT
 
       RETURN
@@ -52,40 +36,37 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
+      SUBROUTINE WRITE_DES_Out(lTime, max_pip, des_pos_new, des_vel_new)
 
-      use discretelement, only: max_pip
-      Use run
-      Use usr
-      use compar
+      Use usr, only: b_r, h0, time_c, time_r, w0_r, y_s1, dydt_s1, &
+         y_s3, dydt_s3, y_s2, dydt_s2
+      use compar, only: mype, pe_io
       use constant, only: gravity
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
 ! Passed variables
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: lTime
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: ltime
+      integer,      intent(in   ) :: max_pip
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
-! file name
-      CHARACTER(len=64) :: FNAME1, FNAME2
-! logical used for testing is the data file already exists
-      LOGICAL :: F_EXISTS1, F_EXISTS2
 ! file unit for heat transfer data
-      INTEGER, PARAMETER :: uPos = 2030
-      INTEGER, PARAMETER :: uVel = 2031
+      integer, parameter :: upos = 2030
+      integer, parameter :: uvel = 2031
 
 ! Analytic position and velocity
-      double precision :: lPos_Y, lVel_Y
+      real(c_real) :: lPos_Y, lVel_Y
 ! Absolute relative error between MFIX solution and analytic solution.
-      double precision :: Pos_aErr, Pos_rErr
-      double precision :: Vel_aErr, Vel_rErr
+      real(c_real) :: Pos_aErr, Pos_rErr
+      real(c_real) :: Vel_aErr, Vel_rErr
 
-      double precision :: lGrav
-      double precision :: lRad
+      real(c_real) :: lGrav
+      real(c_real) :: lRad
       integer :: lStage
 
       IF(myPE /= PE_IO) RETURN

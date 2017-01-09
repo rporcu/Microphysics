@@ -6,18 +6,18 @@
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: L
-
-      double precision, intent(in) :: time, dt
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      integer,      intent(in   ) :: l, max_pip
+      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
+      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
 
       SELECT CASE(L)
       CASE(1); CALL WRITE_TEST_DATA(des_vel_new)
@@ -31,20 +31,21 @@
 !                                                                      !
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE WRITE_TEST_DATA(des_vel_new)
+      SUBROUTINE WRITE_TEST_DATA(max_pip, des_vel_new)
 
+      use bl_fort_module, only : c_real
       use compar, only: myPE, PE_IO
       use run, only: time
-      use discretelement, only: max_pip, particles
-
 
       implicit none
 
+      integer,      intent(in   ) :: max_pip
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+
       integer :: lc1, lc2
-      double precision :: ltime, gTemp, gTemp0
+      real(c_real) :: ltime, gTemp, gTemp0
 
       integer, parameter :: fUnit=2030
-      double precision, intent(in) :: des_vel_new(max_pip,3)
 
 ! This is a test of the setup
       lc2 = 0
@@ -78,14 +79,14 @@
 !                                                                      !
 !                                                                      !
 !----------------------------------------------------------------------!
-      double precision function ToT0(ptime)
+      real(c_real) function ToT0(ptime)
 
-      double precision, intent(in) :: pTime
+      real(c_real), intent(in) :: pTime
 
-      double precision, parameter :: A = 222.511014d0
-      double precision, parameter :: B =  91.382708d0
+      real(c_real), parameter :: A = 222.511014d0
+      real(c_real), parameter :: B =  91.382708d0
 
-      double precision :: expBto2
+      real(c_real) :: expBto2
 
       expBto2 = exp(B*pTime/2.0d0)
 

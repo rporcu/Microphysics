@@ -62,14 +62,11 @@
 
 ! PARALLEL PROCESSING: explanation of variables in parallel architecture
 ! pip - particles in each processor (includes the ghost particles)
-! max_pip - maximum allocated particles in processor
 
 ! Number of particles in the system (current)
       INTEGER :: PIP
 ! Global sum of particles (excluding ghost) in the system
       INTEGER :: TOT_PAR
-! Maximum particles permitted in the system at once
-      INTEGER, parameter :: MAX_PIP=5000
 
 ! End particle tracking quantities
 !-----------------------------------------------------------------<<<

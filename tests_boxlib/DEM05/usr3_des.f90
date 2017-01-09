@@ -12,19 +12,20 @@
 !       120(3), pg 281-291.                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE USR3_DES(des_pos_new, des_vel_new, omega_new)
+      SUBROUTINE USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
-      use constant, only: PI
       use compar, only: myPE, PE_IO
+      use constant, only: PI
 
-      use usr
+      use usr, only: init_angle, init_vel_t
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      integer     , intent(in   ) :: max_pip
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -33,13 +34,13 @@
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: UDF_UNIT = 2030
 ! Calculated tangential restitution coefficient.
-      DOUBLE PRECISION :: RST_COEFF(2)
+      REAL(C_REAL) :: RST_COEFF(2)
 ! Rebound Angle (degrees)
-      DOUBLE PRECISION :: RBND_ANGLE(2)
+      REAL(C_REAL) :: RBND_ANGLE(2)
 ! Particle loop counter
       INTEGER :: LC, NP
 ! XZ Velocity Mag
-      DOUBLE PRECISION :: VEL_XZ(2), ROT_XZ(2)
+      REAL(C_REAL) :: VEL_XZ(2), ROT_XZ(2)
 
 ! Particle-Wall Rebound Angle (degrees)
 !---------------------------------------------------------------------//

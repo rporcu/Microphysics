@@ -5,7 +5,7 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine make_arrays_des(particle_state, particle_phase, &
+   subroutine make_arrays_des(max_pip, particle_state, particle_phase, &
       des_radius,  ro_sol, pvol, pmass, omoi, des_pos_new, des_vel_new,&
       des_usr_var, omega_new, fc, tow) &
    bind(C, name="mfix_make_arrays_des")
@@ -18,7 +18,7 @@
       use iso_c_binding , only: c_int
 
 ! Global data .......................................................//
-      use discretelement, only: particles, max_pip
+      use discretelement, only: particles
       use discretelement, only: vtp_findex
       use error_manager, only: err_msg
 
@@ -33,18 +33,20 @@
 
       IMPLICIT NONE
 
-      real(c_real), intent(  out) :: pvol(max_pip)
-      real(c_real), intent(  out) :: pmass(max_pip)
-      real(c_real), intent(  out) :: des_radius(max_pip)
-      real(c_real), intent(  out) :: ro_sol(max_pip)
-      real(c_real), intent(  out) :: omoi(max_pip)
+      integer(c_int), intent(in   ) :: max_pip
 
-      real(c_real), intent(  out) :: des_vel_new(max_pip,3)
-      real(c_real), intent(  out) :: des_pos_new(max_pip,3)
-      real(c_real), intent(  out) :: omega_new(max_pip,3)
-      real(c_real), intent(  out) :: des_usr_var(max_pip,1)
-      integer(c_int)  , intent(  out) :: particle_state(max_pip)
-      integer(c_int)  , intent(  out) :: particle_phase(max_pip)
+      real(c_real)  , intent(  out) :: pvol(max_pip)
+      real(c_real)  , intent(  out) :: pmass(max_pip)
+      real(c_real)  , intent(  out) :: des_radius(max_pip)
+      real(c_real)  , intent(  out) :: ro_sol(max_pip)
+      real(c_real)  , intent(  out) :: omoi(max_pip)
+
+      real(c_real)  , intent(  out) :: des_vel_new(max_pip,3)
+      real(c_real)  , intent(  out) :: des_pos_new(max_pip,3)
+      real(c_real)  , intent(  out) :: omega_new(max_pip,3)
+      real(c_real)  , intent(  out) :: des_usr_var(max_pip,1)
+      integer(c_int), intent(  out) :: particle_state(max_pip)
+      integer(c_int), intent(  out) :: particle_phase(max_pip)
 
       real(c_real), intent(  out) :: fc(max_pip,3)
       real(c_real), intent(  out) :: tow(max_pip,3)
@@ -116,7 +118,8 @@
          omoi(l) = 2.5d0/(pmass(l)*des_radius(l)**2) !one over moi
       ENDDO
 
-      CALL SET_PHASE_INDEX(particle_phase,des_radius,ro_sol,particle_state)
+      CALL SET_PHASE_INDEX(max_pip, particle_phase, des_radius,&
+         ro_sol, particle_state)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.
@@ -125,13 +128,23 @@
 
    end subroutine make_arrays_des
 
-   subroutine mfix_write_des_data(des_radius, des_pos_new, des_vel_new, des_usr_var) &
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: MAKE_ARRAYS_DES                                        !
+!                                                                      !
+!  Purpose: DES - allocating DES arrays                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine mfix_write_des_data(max_pip, des_radius, des_pos_new, &
+      des_vel_new, des_usr_var) &
       bind(C, name="mfix_write_des_data")
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use discretelement       , only: max_pip, print_des_data, s_time
+      use discretelement, only: print_des_data, s_time
       use error_manager        , only: finl_err_msg
       use run                  , only: run_type
       use write_des_data_module, only: write_des_data
@@ -143,7 +156,8 @@
 
       IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME
-         CALL WRITE_DES_DATA(des_radius, des_pos_new, des_vel_new, des_usr_var)
+         CALL WRITE_DES_DATA(max_pip, des_radius, des_pos_new,&
+            des_vel_new, des_usr_var)
       ENDIF
 
       CALL FINL_ERR_MSG

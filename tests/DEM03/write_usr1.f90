@@ -3,36 +3,21 @@
 !  Module name: WRITE_USR1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR1(L, time, dt, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-      integer, intent(in) :: l
-      double precision, intent(in) :: time, dt
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
-      double precision, intent(in) :: omega_new(max_pip,3)
+      integer,      intent(in   ) :: l, max_pip
+      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
+      real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME, des_pos_new, des_vel_new)
+      CASE(1); CALL WRITE_DES_OUT(TIME, max_pip, des_pos_new, des_vel_new)
       END SELECT
 
       RETURN
@@ -51,9 +36,9 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime, des_pos_new, des_vel_new)
+      SUBROUTINE WRITE_DES_Out(lTime, max_pip, des_pos_new, des_vel_new)
 
-      Use discretelement, only: max_pip
+      use bl_fort_module, only : c_real
       Use usr, only: gx1, gx2, gy1, gy2, rk4_v4
       Use param1, only: undefined, is_defined
 
@@ -61,21 +46,22 @@
 
 ! Passed variables
 !---------------------------------------------------------------------//
-      DOUBLE PRECISION, INTENT(IN) :: lTime
-      double precision, intent(in) :: des_pos_new(max_pip,3)
-      double precision, intent(in) :: des_vel_new(max_pip,3)
+      integer,      intent(in   ) ::  max_pip
+      real(c_real), intent(in   ) :: ltime
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! file unit for heat transfer data
-      INTEGER, PARAMETER :: uPos1 = 2030
-      INTEGER, PARAMETER :: uPos2 = 2031
+      integer, parameter :: upos1 = 2030
+      integer, parameter :: upos2 = 2031
 
-      DOUBLE PRECISION, SAVE :: RK4_TIME = 0.0d0
-      DOUBLE PRECISION :: RK4_DT, RK4_DT_LAST
-      DOUBLE PRECISION TIME_INTERVAL
-      DOUBLE PRECISION, PARAMETER :: RK4_DT_DEFAULT = 1.0d-6
-      INTEGER :: I, RK4_STEPS
+      real(c_real), save :: rk4_time = 0.0d0
+      real(c_real) :: rk4_dt, rk4_dt_last
+      real(c_real) time_interval
+      real(c_real), parameter :: rk4_dt_default = 1.0d-6
+      integer :: i, rk4_steps
 
 
 ! Open the files.

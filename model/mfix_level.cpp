@@ -503,6 +503,8 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     Array<int> slo(3);
     Array<int> shi(3);
 
+    const int max_pip = particle_state.size();
+
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -517,20 +519,21 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
       shi[0] = sshi[0]+2;
       shi[1] = sshi[1]+2;
       shi[2] = sshi[2]+2;
-        mfix_des_time_march(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-          (*ep_g[lev])[mfi].dataPtr(),      (*p_g[lev])[mfi].dataPtr(),
-          (*u_g[lev])[mfi].dataPtr(),       (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-          (*ro_g[lev])[mfi].dataPtr(),      (*rop_g[lev])[mfi].dataPtr(),    (*mu_g[lev])[mfi].dataPtr(),
-          particle_state.dataPtr(), particle_phase.dataPtr(),
-          des_radius.dataPtr(),     ro_sol.dataPtr(),
-          pvol.dataPtr(),           pmass.dataPtr(),
-          omoi.dataPtr(),           des_usr_var.dataPtr(),
-          des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
-          des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
-          drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
-          pairs.dataPtr(),          &pair_count,
-          (*flag[lev])[mfi].dataPtr(),
-          &time, &dt, &dx, &dy, &dz, &nstep);
+      mfix_des_time_march(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
+        (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
+        (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+        (*mu_g[lev])[mfi].dataPtr(),
+        particle_state.dataPtr(), particle_phase.dataPtr(),
+        des_radius.dataPtr(),     ro_sol.dataPtr(),
+        pvol.dataPtr(),           pmass.dataPtr(),
+        omoi.dataPtr(),           des_usr_var.dataPtr(),
+        des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
+        des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
+        drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
+        pairs.dataPtr(),          &pair_count,
+        (*flag[lev])[mfi].dataPtr(),
+        &time, &dt, &dx, &dy, &dz, &nstep);
     }
 }
 
@@ -539,6 +542,8 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 {
   Array<int> slo(3);
   Array<int> shi(3);
+
+  const int max_pip = particle_state.size();
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
@@ -553,7 +558,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
     shi[1] = sshi[1]+2;
     shi[2] = sshi[2]+2;
 
-    mfix_output_manager(slo.dataPtr(), shi.dataPtr(),
+    mfix_output_manager(slo.dataPtr(), shi.dataPtr(), &max_pip,
       &time, &dt, &nstep,
       (*ep_g[lev])[mfi].dataPtr(),   (*p_g[lev])[mfi].dataPtr(),
       (*ro_g[lev])[mfi].dataPtr(),   (*rop_g[lev])[mfi].dataPtr(),
@@ -610,18 +615,23 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Allocate the particle arrays
   if (solve_dem)
   {
-     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-        mfix_make_arrays_des(
-               particle_state.dataPtr(),
-               particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
-               pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
-               des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-               des_usr_var.dataPtr(), omega_new.dataPtr(),
-               fc.dataPtr(), tow.dataPtr());
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) {
+      const int max_pip = particle_state.size();
 
-     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-         mfix_write_des_data(des_radius.dataPtr(),des_pos_new.dataPtr(),
-                             des_vel_new.dataPtr(), des_usr_var.dataPtr());
+      mfix_make_arrays_des(&max_pip,
+        particle_state.dataPtr(),
+        particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
+        pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
+        des_pos_new.dataPtr(), des_vel_new.dataPtr(),
+        des_usr_var.dataPtr(), omega_new.dataPtr(),
+        fc.dataPtr(), tow.dataPtr());
+    }
+
+    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
+      const int max_pip = particle_state.size();
+      mfix_write_des_data(&max_pip, des_radius.dataPtr(),des_pos_new.dataPtr(),
+        des_vel_new.dataPtr(), des_usr_var.dataPtr());
+    }
   }
 
   // Calculate volume fraction, ep_g.
