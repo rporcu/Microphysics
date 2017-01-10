@@ -218,7 +218,7 @@ CONTAINS
     INTEGER :: ICASE
 
     CHARACTER :: CH
-    LOGICAL :: DO_ISWEEP, DO_KSWEEP
+    LOGICAL :: DO_ISWEEP
     LOGICAL :: DO_REDBLACK, DO_ALL
 
 !-----------------------------------------------
@@ -240,7 +240,6 @@ CONTAINS
     DO ITER=1,NITER
 
        DO_ISWEEP   = .FALSE.
-       DO_KSWEEP   = .FALSE.
        DO_ALL      = .FALSE.
        DO_REDBLACK = .FALSE.
 
@@ -256,7 +255,6 @@ CONTAINS
 
 !      DO_ISWEEP = (CH .EQ. 'I') .OR. (CH .EQ. 'i')
 !      DO_JSWEEP = (CH .EQ. 'J') .OR. (CH .EQ. 'j')
-!      DO_KSWEEP = (CH .EQ. 'K') .OR. (CH .EQ. 'k')
 !      DO_ALL = (CH .EQ. 'A') .OR. (CH .EQ. 'a')
 !      DO_REDBLACK = (CH .EQ. 'R') .OR. (CH .EQ. 'r')
 !      DO_SENDRECV = (CH .EQ. 'S') .OR. (CH .EQ. 's')
@@ -283,7 +281,6 @@ CONTAINS
                 if(j.gt.j2) j=j-j2 + j1 -1
                 CALL LEQ_JKSWEEP(J, K, Var, A_m, B_m)
              ENDDO
-
           ENDDO
 
 ! IJ Loop
@@ -364,9 +361,9 @@ CONTAINS
 
 !  Not sure the purpose of us_ikloop
 !  The SMP directives below need review                        !Tingwen Jan 2012
-       IF(USE_IKLOOP) THEN
 ! use_ikloop is currently hard-wired to false (so goto else branch)
 ! ---------------------------------------------------------------->>>
+       IF(USE_IKLOOP) THEN
           i1 = istart
           k1 = kstart
           i2 = iend
@@ -384,17 +381,7 @@ CONTAINS
                 CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
              ENDDO
           ENDIF
-          IF (DO_KSWEEP) THEN
-             DO IK=1, ksize*isize
-                if (mod(ik,ksize).ne.0) then
-                   i = int( ik/ksize ) + i1
-                else
-                   i = int( ik/ksize ) + i1 -1
-                endif
-                k = (ik-1-(i-i1)*ksize) + k1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
-             ENDDO
-          ENDIF
+
 ! ----------------------------------------------------------------<<<
        ELSE   ! else branch of if(use_ikloop)
 !  Not sure the purpose of us_ikloop
@@ -403,13 +390,6 @@ CONTAINS
           IF (DO_ISWEEP) THEN
              DO K=kstart,kend
                 DO I=istart,iend
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
-                ENDDO
-             ENDDO
-          ENDIF
-          IF (DO_KSWEEP) THEN
-             DO I=istart,iend
-                DO K=kstart,kend
                    CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ENDDO
@@ -520,78 +500,6 @@ CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: LEQ_ISWEEP                                              C
-!  Purpose: Perform line sweep at coordinate I                         C
-!                                                                      C
-!  Author: Ed D'Azevedo                               Date: 21-JAN-99  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE LEQ_ISWEEP(I, VAR, A_M, B_M)
-
-      IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-!  Line position
-      INTEGER, INTENT(IN) :: I
-! Variable
-      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
-! Septadiagonal matrix A_m
-      real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
-      real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-      real(c_real), DIMENSION (JSTART:JEND) :: CC, DD, EE, BB
-      INTEGER :: NSTART, NEND, INFO
-      INTEGER :: IJK, J, K, IM1JK, IP1JK
-!-----------------------------------------------
-
-      NEND = JEND
-      NSTART = JSTART
-      K = 1
-
-      DO J=NSTART, NEND
-         IJK = FUNIJK(I,J,K)
-         IM1JK = funijk(iminus(i,j,k),j,k)
-         IP1JK = funijk(iplus(i,j,k),j,k)
-         DD(J) = A_M(I,J,K,  0)
-         CC(J) = A_M(I,J,K, -2)
-         EE(J) = A_M(I,J,K,  2)
-         BB(J) = B_M(I,J,K) -  A_M(I,J,K,-1) * Var( IM1JK )  &
-                          -  A_M(I,J,K, 1) * Var( IP1JK )
-      ENDDO
-
-      CC(NSTART) = ZERO
-      EE(NEND) = ZERO
-      INFO = 0
-!     CALL DGTSL( JEND-JSTART+1, CC, DD, EE, BB, INFO )
-      CALL DGTSV( JEND-JSTART+1, 1, CC(JSTART+1), DD, EE, BB, JEND-JSTART+1, INFO )
-
-      IF (INFO.NE.0) THEN
-         RETURN
-      ENDIF
-
-      DO J=NSTART, NEND
-         IJK = FUNIJK(I,J,K)
-         Var(IJK) =  BB(J)
-      ENDDO
-
-      RETURN
-      END SUBROUTINE LEQ_ISWEEP
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
 !  Subroutine: LEQ_IKSWEEP                                             C
 !  Purpose: Perform line sweep at coordinate I, K                      C
 !                                                                      C
@@ -646,7 +554,6 @@ CONTAINS
       CC(NSTART) = ZERO
       EE(NEND) = ZERO
       INFO = 0
-!     CALL DGTSL( JEND-JSTART+1, CC, DD, EE, BB, INFO )
       CALL DGTSV(NEND-NSTART+1, 1, CC(NSTART+1), DD, EE, BB, NEND-NSTART+1, INFO)
 
       IF (INFO.NE.0) THEN
