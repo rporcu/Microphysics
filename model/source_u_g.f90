@@ -269,8 +269,9 @@ module source_u_g_module
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
       K1 = 1
-      DO J1 = jmin2,jmax2
-         DO I1 = imin2, imax2
+      if (slo(3) .lt. k1) then
+      DO J1 = slo(2),shi(2)
+         DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
@@ -296,11 +297,13 @@ module source_u_g_module
             ENDIF
          ENDDO
       ENDDO
+      end if
 
 ! top xy plane
       K1 = KMAX2
-      DO J1 = jmin2,jmax2
-         DO I1 = imin2, imax2
+      if (shi(3) .gt. k1) then
+      DO J1 = slo(2),shi(2)
+         DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -322,11 +325,13 @@ module source_u_g_module
             ENDIF
          ENDDO
       ENDDO
+      end if
 
 ! south xz plane
       J1 = 1
-      DO K1 = kmin2, kmax2
-         DO I1 = imin2, imax2
+      if (slo(2) .lt. j1) then
+      DO K1 = slo(3),shi(3)
+         DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -348,11 +353,13 @@ module source_u_g_module
             ENDIF
          ENDDO
       ENDDO
+      end if
 
 ! north xz plane
       J1 = JMAX2
-      DO K1 = kmin2, kmax2
-         DO I1 = imin2, imax2
+      if (shi(2) .gt. j1) then
+      DO K1 = slo(3),shi(3)
+         DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_M(I1,J1,K1,E) = ZERO
                A_M(I1,J1,K1,W) = ZERO
@@ -374,6 +381,8 @@ module source_u_g_module
             ENDIF
          ENDDO
       ENDDO
+      end if
+
 ! End setting the default boundary conditions
 ! ----------------------------------------------------------------<<<
 

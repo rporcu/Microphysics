@@ -65,13 +65,16 @@ protected:
 
     void mfix_solve_for_vels (int lev, Real dt);
 
-    void mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
+    void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
     void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg);
 
     void mfix_physical_prop (int lev, int calc_flag);
 
     void mfix_correct0 (int lev);
+
+    int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix, 
+                        int precond_type, int maxiter, Real eps_rel, Real eps_abs);
 
 private:
 

@@ -2,10 +2,6 @@
 
 #include <mfix_F.H>
 #include <mfix_level.H>
-#include <MGT_Solver.H>
-#include <MacBndry.H>
-#include <stencil_types.H>
-#include <mg_cpp_f.h>
 
 mfix_level::~mfix_level ()
 {};
@@ -999,7 +995,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     int eq_id=3;
-    mfix_solve_linear_system(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+    mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve V-Momentum equation
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
@@ -1030,7 +1026,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=4;
-    mfix_solve_linear_system(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+    mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve W-Momentum equation
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
@@ -1061,7 +1057,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=5;
-    mfix_solve_linear_system(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+    mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     int nghost = u_g[lev]->nGrow();
     MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, nghost);
@@ -1108,7 +1104,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     }
 
     int eq_id=1;
-    mfix_solve_linear_system(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+    mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
       mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
@@ -1204,99 +1200,13 @@ mfix_level::usr3(int lev)
 }
 
 void
-mfix_level::mfix_solve_linear_system(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
+mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
 {
-    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
-      mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr());
+   for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+     mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr());
 
-#if 0
-   // Starting to define an interface to the BoxLib bicg solver
-   int mg_bc[2*BL_SPACEDIM];
-   make_mg_bc(mg_bc);
-
-   std::vector<BoxArray> bav(1);
-   bav[0] = sol.boxArray();
-   std::vector<DistributionMapping> dmv(1);
-   dmv[0] = rhs.DistributionMap();
-   std::vector<Geometry> fgeom(1);
-   fgeom[0] = geom[lev];
-
-   const Real* dx      = geom[lev].CellSize();
-
-   Array< Array<Real> > xa(1);
-   Array< Array<Real> > xb(1);
-
-   xa[0].resize(BL_SPACEDIM);
-   xb[0].resize(BL_SPACEDIM);
-
-   for (int i = 0; i < BL_SPACEDIM; ++i)
-   {
-       xa[0][i] = 0;
-       xb[0][i] = 0;
-   }
-
-   int stencil_type = CC_CROSS_STENCIL;
-
-   MGT_Solver mgt_solver(fgeom, mg_bc, bav, dmv, false, stencil_type);
-   mgt_solver.set_const_gravity_coeffs(xa, xb);
-
-   MultiFab* sol_p[1] = {&sol};
-   MultiFab* Rhs_p[1] = {&rhs};
-
-   MacBndry bndry(sol.boxArray(), 1, geom[lev]);
-
-   BCRec* phys_bc;
-   const int  src_comp = 0;
-   const int dest_comp = 0;
-   const int  num_comp = 1;
-   bndry.setBndryValues(sol, src_comp, dest_comp, num_comp, *phys_bc);
-
-   int always_use_bnorm = 0;
-   int need_grad_phi = 0;
-   Real resnorm;
-   Real rel_tol = 1.e-8;
-   Real abs_tol = 1.e-12;
-
-   mgt_solver.solve(sol_p, Rhs_p, bndry, rel_tol, abs_tol,
-                    always_use_bnorm, resnorm, need_grad_phi);
-#endif
-
-}
-
-void
-mfix_level::make_mg_bc (int mg_bc[])
-{
-    for ( int dir = 0; dir < BL_SPACEDIM; ++dir )
-    {
-        if ( geom[0].isPeriodic(dir) )
-        {
-            mg_bc[2*dir + 0] = 0;
-            mg_bc[2*dir + 1] = 0;
-        }
-        else
-        {
-              mg_bc[2*dir + 0] = MGT_BC_NEU;
-              mg_bc[2*dir + 1] = MGT_BC_DIR;
-#if 0
-            if (phys_bc->lo(dir) == Symmetry) {
-              mg_bc[2*dir + 0] = MGT_BC_NEU;
-            } else if (phys_bc->lo(dir) == Outflow) {
-              mg_bc[2*dir + 0] = MGT_BC_DIR;
-            } else {
-              BoxLib::Abort("Unknown lo bc in make_mg_bc");
-            }
-            if (phys_bc->hi(dir) == Symmetry) {
-              mg_bc[2*dir + 1] = MGT_BC_NEU;
-            } else if (phys_bc->hi(dir) == Outflow) {
-              mg_bc[2*dir + 1] = MGT_BC_DIR;
-            } else {
-              BoxLib::Abort("Unknown hi bc in make_mg_bc");
-            }
-#endif
-        }
-    }
-
-    // Set Neumann bc at r=0.
-    if (Geometry::IsSPHERICAL() || Geometry::IsRZ() )
-        mg_bc[0] = MGT_BC_NEU;
+    Real eps = 1.e-10;
+    int maxiter = 100;
+    int precond_type = 0;
+    solve_bicgstab(sol, rhs, matrix, precond_type, maxiter, eps, eps);
 }

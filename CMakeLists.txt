@@ -36,6 +36,7 @@ project(MFIXEXA)
 set(CXX_sources
   model/main.cpp
   model/mfix_level.cpp
+  model/solve_bicgstab.cpp
   model/ParticleContainer.cpp)
 set(CXX_includes
   model/mfix_level.H
@@ -182,6 +183,7 @@ set(F90_sources
   model/solvers/dgtsl.f90
   model/solvers/leq_bicgs.f90
   model/solvers/leqsol_mod.f90
+  model/solvers/matvec.f90
   model/solvers/solve_lin_eq.f90
   model/solvers/xerbla.f90
   model/source_pp_g.f90

@@ -15,7 +15,6 @@ MODULE WRITE_HEADER_MODULE
       USE funits, only: unit_log, dmp_log
       USE machine, only: id_hour, id_minute, id_day, id_month, id_year, id_node
       USE output, only: full_log, onemeg
-      USE param, only: dimension_3, dimension_n_g, dimension_n_s
       USE run, only: id_version, run_name
       use bl_fort_module, only : c_real
 
