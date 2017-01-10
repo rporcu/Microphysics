@@ -1,108 +1,7 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine LEQ_BICGS                                                C
-!  Purpose: Solve system of linear system using BICGS method           C
-!           Biconjugate gradients stabilized                           C
-!                                                                      C
-!  Author: Ed D'Azevedo                               Date: 21-JAN-99  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
 
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE LEQ_BICGS(VNO, VAR, A_M, B_m, sweep_type, &
-                           TOL, pc_type, ITMAX, IER) &
+                           TOL, pc_type, ITMAX, IER ) &
          bind(C, name="mfix_solve_lin_eq")
-
-         use compar, only: istart3, iend3
-         use compar, only: jstart3, jend3
-         use compar, only: kstart3, kend3
-         use compar, only: mype
-         use exit_mod, only: mfix_exit
-         use funits, only: unit_log, dmp_log
-         use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
-         use param, only: dimension_3
-         use solver_params, only: sweep_rsrs, sweep_asas, sweep_isis
-         use solver_params, only: pc_line, pc_diag, pc_none
-
-         use bl_fort_module, only : c_real
-         use iso_c_binding , only: c_int
-
-      IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! variable number (not really used here; see calling subroutine)
-      INTEGER, INTENT(IN) :: VNO
-! variable
-      real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
-! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-
-      ! Sweep direction of leq solver 
-      !     e.g., options = 'isis', 'rsrs' (default), 'asas'
-      ! Note: this setting only seems to matter when leq_pc='line'
-      integer         , intent(in) :: sweep_type
-! convergence tolerance (generally leq_tol)
-      real(c_real), INTENT(IN) :: TOL
-
-      ! preconditioner (leq_pc)
-      !  options = 'line' (default), 'diag', 'none'
-      INTEGER, INTENT(IN) :: pc_type
-
-! maximum number of iterations (generally leq_it)
-      INTEGER, INTENT(IN) :: ITMAX
-! error indicator
-      INTEGER, INTENT(INOUT) :: IER
-!-------------------------------------------------
-! Local Variables
-!-------------------------------------------------
-
-      if(pc_type.eq.pc_line) then   ! default
-         call LEQ_BICGS0( Vno, Var, A_m, B_m,  &
-            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
-
-      elseif(pc_type.eq.pc_diag) then
-         call LEQ_BICGS0( Vno, Var, A_m, B_m,   &
-            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
-
-      elseif(pc_type.eq.pc_none) then
-         call LEQ_BICGS0( Vno, Var, A_m, B_m,   &
-            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
-      else
-         IF(DMP_LOG)WRITE (UNIT_LOG,*) &
-           'preconditioner option not found - check mfix.dat and readme'
-         call mfix_exit(myPE)
-      endif
-
-      return
-      END SUBROUTINE LEQ_BICGS
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: LEQ_BICGS0                                              C
-!  Purpose: Compute residual of linear system                          C
-!                                                                      C
-!  Author: Ed D'Azevedo                               Date: 21-JAN-99  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE LEQ_BICGS0(VNO, VAR, A_M, B_m, sweep_type, &
-                            TOL, ITMAX, MATVEC, pc_type, IER )
 
          use compar, only: istart2, iend2
          use compar, only: istart3, iend3
@@ -113,7 +12,7 @@
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
          use functions, only: funijk
-         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
+         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts, leq_matvec
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
          use param, only: dimension_3
          use param1, only: zero, one, small_number
@@ -244,7 +143,7 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call MATVEC(Var, A_M, R)   ! returns R=A*Var
+      call LEQ_MATVEC(Var, A_M, R)   ! returns R=A*Var
 
       do k = kstart3,kend3
          do i = istart3,iend3
@@ -331,7 +230,7 @@
             call LEQ_MSOLVE1(P, A_m, Phat, sweep_type) ! returns Phat
          end if
 
-         call MATVEC(Phat, A_m, V)   ! returns V=A*Phat
+         call LEQ_MATVEC(Phat, A_m, V)   ! returns V=A*Phat
 
          if(is_serial) then
             RtildexV = dot_product( Rtilde, V )
@@ -369,7 +268,7 @@
 ! Recompute residual norm
 ! --------------------------------
                if (idebugl >= 1) then
-                  call MATVEC(Var, A_m, R)   ! returns R=A*Var
+                  call LEQ_MATVEC(Var, A_m, R)   ! returns R=A*Var
 !                  Rnorm = sqrt( dot_product_par( Var, Var ) )
 !                  print*,'leq_bicgs, initial Vnorm: ', Rnorm
 
@@ -408,7 +307,7 @@
             call LEQ_MSOLVE1( Svec, A_m, Shat, sweep_type)  ! returns Shat
          end if
 
-         call MATVEC( Shat, A_m, Tvec )   ! returns Tvec=A*Shat
+         call LEQ_MATVEC( Shat, A_m, Tvec )   ! returns Tvec=A*Shat
 
          if(is_serial) then
             TxS = dot_product( Tvec, Svec )
@@ -476,7 +375,7 @@
 
 
       if (idebugl >= 1) then
-         call MATVEC(Var, A_m, R)   ! returns R=A*Var
+         call LEQ_MATVEC(Var, A_m, R)   ! returns R=A*Var
          do kk = kstart3,kend3
             do jj = jstart3,jend3
                do ii = istart3,iend3
@@ -521,4 +420,4 @@
       deallocate(V)
 
       return
-      end subroutine LEQ_BICGS0
+      end subroutine LEQ_BICGS
