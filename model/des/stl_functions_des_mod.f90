@@ -27,18 +27,17 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine ClosestPtPointTriangle(pointp, points, closest_point)
       USE param1, only: zero, one
-      USE discretelement, only: dimn
 
       IMPLICIT NONE
 
 ! points are the three nodes of the triangle
 ! point p is the sphere center
       real(c_real), intent(in), dimension(3,3) :: points
-      real(c_real), intent(in), dimension(dimn) :: pointp
-      real(c_real), intent(out), dimension(dimn) ::  closest_point
+      real(c_real), intent(in), dimension(3) :: pointp
+      real(c_real), intent(out), dimension(3) ::  closest_point
 ! Local variables
       real(c_real), dimension(3) :: pointa, pointb, pointc
-      real(c_real), dimension(dimn) :: ab, ac, ap, bp,cp
+      real(c_real), dimension(3) :: ab, ac, ap, bp,cp
       real(c_real) :: d1, d2, d3, d4, vc, v, d5, d6, vb, w, va, denom
 
       pointa = points(1,:)

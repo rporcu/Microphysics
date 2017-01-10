@@ -60,18 +60,6 @@
       integer, parameter :: entering_ghost=5
       integer, parameter :: exiting_ghost=6
 
-! PARALLEL PROCESSING: explanation of variables in parallel architecture
-! pip - particles in each processor (includes the ghost particles)
-
-! Number of particles in the system (current)
-      INTEGER :: PIP
-! Global sum of particles (excluding ghost) in the system
-      INTEGER :: TOT_PAR
-
-! End particle tracking quantities
-!-----------------------------------------------------------------<<<
-
-
 
 ! Output/debug controls
 !----------------------------------------------------------------->>>
@@ -132,10 +120,6 @@
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<
 
-
-! User specified dimension of the system (by default 2D, but if 3D system is
-! desired then it must be explicitly specified)
-      INTEGER, PARAMETER :: DIMN = 3
 
 ! Particle-particle and Particle-wall collision model parameters
 !----------------------------------------------------------------->>>

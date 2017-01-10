@@ -1,7 +1,7 @@
       MODULE vtp
 
       use compar, only: numpes, mype, pe_io
-      use discretelement, only: s_time, vtp_findex, pip
+      use discretelement, only: s_time, vtp_findex
       use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
       use bl_fort_module, only : c_real
@@ -148,15 +148,18 @@
 ! Purpose: This routine opens the VTP file and calcualtes the offsets  !
 ! for dmp data collection.                                             !
 !``````````````````````````````````````````````````````````````````````!
-      SUBROUTINE VTP_OPEN_FILE(NoPc)
+      SUBROUTINE VTP_OPEN_FILE(max_pip, particle_state, NoPc)
 
 ! Modules
 !-----------------------------------------------
-      USE run, only: RUN_TYPE, RUN_NAME
+      use run, only: run_type, run_name
+      use discretelement, only: normal_particle
 
       IMPLICIT NONE
 
-      CHARACTER(len=*) :: NoPc
+      integer         , intent(in   ) :: max_pip
+      integer         , intent(in   ) :: particle_state(max_pip)
+      character(len=*), intent(  out) :: nopc
 
       INTEGER :: NumberOfPoints
 
@@ -170,9 +173,15 @@
 ! status of the vtp file to be written
       CHARACTER(LEN=8) :: STATUS_VTP
 
-! Initial the global count.
+      integer :: lc
+
+
 ! Calculate the number of 'real' particles on the local process.
-      LOCAL_CNT = PIP
+      local_cnt = 0
+      do lc=1,max_pip
+         if(particle_state(lc) == normal_particle) &
+            local_cnt = local_cnt + 1
+      enddo
 
 ! Calculate the total number of particles system-wide.
       global_cnt = local_cnt

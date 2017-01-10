@@ -12,18 +12,10 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use discretelement, only: PIP
       use exit_mod, only: mfix_exit
       use usr
 
       IMPLICIT NONE
-
-      INTEGER :: NP
-
-      IF(PIP /= 1) THEN
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      ENDIF
 
 ! Store the initial position and velocity
       RK4_POS(:) = (/0.0050d0, 0.0925d0, 0.0050d0/)

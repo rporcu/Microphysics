@@ -115,8 +115,8 @@ module output_manager_module
       IF(DEM_SOLIDS) THEN
          IF(CHECK_TIME(VTP_TIME)) THEN
             VTP_TIME = NEXT_TIME(VTP_DT)
-            CALL WRITE_DES_DATA(max_pip, des_radius, des_pos_new,&
-               des_vel_new, des_usr_var)
+            CALL WRITE_DES_DATA(max_pip, particle_state, des_radius, &
+               des_pos_new, des_vel_new, des_usr_var)
             CALL NOTIFY_USER('DES.vtp;')
          ENDIF
       ENDIF

@@ -15,7 +15,7 @@ MODULE READ_PAR_INPUT_MODULE
          des_pos_new, des_vel_new)
 
       use compar, only: myPE, pe_io
-      use discretelement, only: normal_particle,  pip, particles
+      use discretelement, only: normal_particle, particles
       use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
       use exit_mod, only: mfix_exit
       use run, only: bdist_io
@@ -71,13 +71,11 @@ MODULE READ_PAR_INPUT_MODULE
 
  1100 FORMAT('Error 1100: FATAL - DEM particle input file not found!')
 
-     pip = particles
-
 ! Read the file
 !----------------------------------------------------------------->>>
 ! In distributed IO the first line of the file will be number of
 ! particles in that processor
-      DO lcurpar = 1,pip
+      DO lcurpar = 1,particles
          particle_state(lcurpar) = normal_particle
          read (lunit,*) (des_pos_new(lcurpar,k),k=1,RDMN),&
             des_radius(lcurpar), ro_sol(lcurpar),&

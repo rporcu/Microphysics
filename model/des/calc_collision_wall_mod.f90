@@ -17,7 +17,7 @@
 
       USE discretelement, only: des_coll_model_enum
       USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
-      USE discretelement, only: dimn, des_crossprdct
+      USE discretelement, only: des_crossprdct
       USE discretelement, only: kn_w, kt_w, mew_w, dtsolid
       USE error_manager, only: err_msg, flush_err_msg, init_err_msg
       USE param1, only: small_number, zero
@@ -59,14 +59,14 @@
       INTEGER :: NF
       real(c_real) ::OVERLAP_N, SQRT_OVERLAP
 
-      real(c_real) :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(DIMN)
+      real(c_real) :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(3)
 ! local normal and tangential forces
-      real(c_real) :: NORMAL(DIMN), VREL_T(DIMN), DIST(DIMN), DISTMOD
-      real(c_real), DIMENSION(DIMN) :: FT, FN, OVERLAP_T
+      real(c_real) :: NORMAL(3), VREL_T(3), DIST(3), DISTMOD
+      real(c_real) :: FT(3), FN(3), OVERLAP_T(3)
 
       INTEGER :: PHASELL
 
-      real(c_real) :: TANGENT(DIMN)
+      real(c_real) :: TANGENT(3)
       real(c_real) :: FNMD
 ! local values used spring constants and damping coefficients
       real(c_real) ETAN_DES_W, ETAT_DES_W, KN_DES_W, KT_DES_W
@@ -304,8 +304,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE CFRELVEL_WALL(LL, VRN, VRT, NORM, DIST, DES_VEL_NEW, OMEGA_NEW)
 
-! Spatial array size (parameter)
-      use discretelement, only: DIMN
 ! Function for calculating the cross prodcut
       use discretelement, only: DES_CROSSPRDCT
 
@@ -323,18 +321,18 @@
 ! Magnitude of the total relative translational velocity.
       real(c_real), INTENT(OUT):: VRN
 ! Total relative translational velocity (vector).
-      real(c_real), DIMENSION(DIMN), INTENT(OUT):: VRT
+      real(c_real), INTENT(OUT):: VRT(3)
 ! Unit normal from particle center to closest point on stl (wall)
-      real(c_real), DIMENSION(DIMN), INTENT(IN) :: NORM
+      real(c_real), INTENT(IN) :: NORM(3)
 ! Distance between particle center and stl (wall).
       real(c_real), INTENT(IN) :: DIST
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Additional relative translational motion due to rotation
-      real(c_real), DIMENSION(DIMN) :: V_ROT
+      real(c_real) :: V_ROT(3)
 ! Total relative velocity at contact point
-      real(c_real), DIMENSION(DIMN) :: VRELTRANS
+      real(c_real) :: VRELTRANS(3)
 
 ! Total relative velocity + rotational contribution
       V_ROT = DIST*OMEGA_NEW(LL,:)

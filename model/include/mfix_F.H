@@ -50,6 +50,7 @@ extern "C"
                  Real* tow);
 
   void mfix_write_des_data(const int* max_pip,
+                 int* particle_state,
                  Real* des_radius,
                  Real* des_pos_new,
                  Real* des_vel_new,
@@ -249,7 +250,7 @@ extern "C"
 
   void mfix_finl_err_msg();
 
-  void mfix_solve_lin_eq(int* vno, Real* var, Real* A_m, Real* b_m, 
+  void mfix_solve_lin_eq(int* vno, Real* var, Real* A_m, Real* b_m,
                          int* sweep_type, Real* tol, int* precond_type,
                          int* max_it, int* ier,
                          int* slo, int* shi, const int* lo, const int* hi);

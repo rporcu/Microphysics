@@ -82,7 +82,7 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     f_gds.resize(nlevs_max);
     drag_bm.resize(nlevs_max);
 
-    int nparticles = 5000;
+    int nparticles = 100;
 
     particle_state.resize(  nparticles);
     particle_phase.resize(  nparticles);
@@ -625,8 +625,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
       const int max_pip = particle_state.size();
-      mfix_write_des_data(&max_pip, des_radius.dataPtr(),des_pos_new.dataPtr(),
-        des_vel_new.dataPtr(), des_usr_var.dataPtr());
+      mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
+        des_pos_new.dataPtr(), des_vel_new.dataPtr(), des_usr_var.dataPtr());
     }
   }
 

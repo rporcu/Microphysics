@@ -17,8 +17,6 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CHECK_IC_COMMON_DISCRETE
 
-! Simulation dimension (2D/3D)
-      USE discretelement, only: DIMN
 ! Flag indicating that the IC region is defined.
       USE ic, only: IC_DEFINED
 ! IC Region gas volume fraction.
@@ -125,7 +123,7 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
             IC2_END(3)  = IC_Z_T(ICV2)
 
             sep_axis  = .false.
-            DO idim = 1, dimn
+            DO idim = 1, 3
 
                ic_min = IC_ORIG(idim)
                ic_max = IC_END(idim)

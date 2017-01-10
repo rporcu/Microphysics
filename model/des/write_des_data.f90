@@ -10,7 +10,8 @@ MODULE WRITE_DES_DATA_MODULE
 !  Purpose: Writing DES output in Paraview format                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_DES_DATA(max_pip, des_radius, des_pos_new, des_vel_new, des_usr_var)
+      SUBROUTINE WRITE_DES_DATA(max_pip, particle_state, des_radius, &
+         des_pos_new, des_vel_new, des_usr_var)
 
       use vtp, only: vtp_open_file, vtp_close_file
       use vtp, only: add_vtp_to_pvd, vtp_write_element, vtp_write_data
@@ -21,6 +22,7 @@ MODULE WRITE_DES_DATA_MODULE
 
 ! Dummy arguments ....................................................//
       integer     , intent(in   ) :: max_pip
+      integer     , intent(in   ) :: particle_state(max_pip)
       real(c_real), intent(in   ) :: des_radius(max_pip)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
@@ -35,7 +37,7 @@ MODULE WRITE_DES_DATA_MODULE
 
 ! This routine opens the VTP file and calculates send/recv information.
 ! It returns back the number of points as a string.
-      CALL VTP_OPEN_FILE(lNoP)
+      CALL VTP_OPEN_FILE(max_pip, particle_state, lNoP)
 
 ! Standard VTP header information:
 !----------------------------------------------------------------------/

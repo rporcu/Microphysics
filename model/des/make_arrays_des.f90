@@ -137,8 +137,8 @@
 !  Purpose: DES - allocating DES arrays                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine mfix_write_des_data(max_pip, des_radius, des_pos_new, &
-      des_vel_new, des_usr_var) &
+   subroutine mfix_write_des_data(max_pip, particle_state, des_radius, &
+      des_pos_new, des_vel_new, des_usr_var) &
       bind(C, name="mfix_write_des_data")
 
       use bl_fort_module, only : c_real
@@ -149,6 +149,7 @@
       use run                  , only: run_type
       use write_des_data_module, only: write_des_data
 
+      integer     , intent(in   ) :: particle_state(max_pip)
       real(c_real), intent(in   ) :: des_radius (max_pip)
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
@@ -156,8 +157,8 @@
 
       IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME
-         CALL WRITE_DES_DATA(max_pip, des_radius, des_pos_new,&
-            des_vel_new, des_usr_var)
+         CALL WRITE_DES_DATA(max_pip, particle_state, des_radius,&
+            des_pos_new, des_vel_new, des_usr_var)
       ENDIF
 
       CALL FINL_ERR_MSG
