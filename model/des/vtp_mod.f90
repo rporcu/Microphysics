@@ -177,6 +177,7 @@
 
 
 ! Calculate the number of 'real' particles on the local process.
+      local_cnt = 0
       do lc=1,max_pip
          if(particle_state(lc) == normal_particle) &
             local_cnt = local_cnt + 1
