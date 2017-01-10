@@ -1105,11 +1105,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
-
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-      mfix_solve_lin_eq(&eq_id,  (*pp_g[lev])[mfi].dataPtr(),
-        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr());
-
 }
 
 void
@@ -1202,13 +1197,14 @@ mfix_level::usr3(int lev)
 void
 mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
 {
-   for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
-     mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr());
-
-    int sweep_type, precond_type, max_it;
+    int ier, sweep_type, precond_type, max_it;
     Real tol;
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
+
+    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+      mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr(),
+                        &sweep_type, &tol, &precond_type, &max_it, &ier);
 
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, tol);
 }

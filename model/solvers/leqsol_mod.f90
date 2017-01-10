@@ -124,14 +124,12 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MATVEC(VNAME, VAR, A_M, Avar)
+  SUBROUTINE LEQ_MATVEC(VAR, A_M, Avar)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! Variable name
-    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
     real(c_real), INTENT(IN) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -186,14 +184,13 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE(VNAME, B_m, A_M, Var, CMETHOD)
+  SUBROUTINE LEQ_MSOLVE(B_m, A_M, Var, sweep_type)
 
+    use solver_params, only: sweep_rsrs, sweep_isis, sweep_asas
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! Variable name
-    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -204,7 +201,7 @@ CONTAINS
     real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
-    CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
+    integer         , intent(in) :: sweep_type
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
@@ -220,10 +217,9 @@ CONTAINS
     INTEGER :: ISIZE, JSIZE, KSIZE
     INTEGER :: ICASE
 
-!     CHARACTER(LEN=4), PARAMETER :: CMETHOD = 'II'
     CHARACTER :: CH
-    LOGICAL :: DO_ISWEEP, DO_JSWEEP, DO_KSWEEP
-    LOGICAL :: DO_SENDRECV, DO_REDBLACK, DO_ALL
+    LOGICAL :: DO_ISWEEP, DO_KSWEEP
+    LOGICAL :: DO_REDBLACK, DO_ALL
 
 !-----------------------------------------------
 
@@ -238,19 +234,32 @@ CONTAINS
        enddo
     ENDIF
 
-    NITER = LEN( CMETHOD )
+!   NITER = LEN( CMETHOD )
+    NITER = 4
 
     DO ITER=1,NITER
 
-! Perform sweeps
-       CH = CMETHOD( ITER:ITER )
-       DO_ISWEEP = (CH .EQ. 'I') .OR. (CH .EQ. 'i')
-       DO_JSWEEP = (CH .EQ. 'J') .OR. (CH .EQ. 'j')
-       DO_KSWEEP = (CH .EQ. 'K') .OR. (CH .EQ. 'k')
-       DO_ALL = (CH .EQ. 'A') .OR. (CH .EQ. 'a')
-       DO_REDBLACK = (CH .EQ. 'R') .OR. (CH .EQ. 'r')
-       DO_SENDRECV = (CH .EQ. 'S') .OR. (CH .EQ. 's')
+       DO_ISWEEP   = .FALSE.
+       DO_KSWEEP   = .FALSE.
+       DO_ALL      = .FALSE.
+       DO_REDBLACK = .FALSE.
 
+       if ((iter .eq. 1 .or. iter .eq. 3) .and. (sweep_type .eq. sweep_rsrs)) &
+         do_redblack = .true.
+       if ((iter .eq. 1 .or. iter .eq. 3) .and. (sweep_type .eq. sweep_isis)) &
+         do_isweep   = .true.
+       if ((iter .eq. 1 .or. iter .eq. 3) .and. (sweep_type .eq. sweep_asas)) &
+         do_all      = .true.
+
+       ! Perform sweeps
+!      CH = CMETHOD( ITER:ITER )
+
+!      DO_ISWEEP = (CH .EQ. 'I') .OR. (CH .EQ. 'i')
+!      DO_JSWEEP = (CH .EQ. 'J') .OR. (CH .EQ. 'j')
+!      DO_KSWEEP = (CH .EQ. 'K') .OR. (CH .EQ. 'k')
+!      DO_ALL = (CH .EQ. 'A') .OR. (CH .EQ. 'a')
+!      DO_REDBLACK = (CH .EQ. 'R') .OR. (CH .EQ. 'r')
+!      DO_SENDRECV = (CH .EQ. 'S') .OR. (CH .EQ. 's')
 
 ! do_all true only for leq_pc='asas'
 ! ---------------------------------------------------------------->>>
@@ -272,7 +281,7 @@ CONTAINS
                 endif
                 j = (jk-1-(k-k1)*jsize) + j1 + mod(k,2)
                 if(j.gt.j2) j=j-j2 + j1 -1
-                CALL LEQ_JKSWEEP(J, K, Vname, Var, A_m, B_m)
+                CALL LEQ_JKSWEEP(J, K, Var, A_m, B_m)
              ENDDO
 
           ENDDO
@@ -294,7 +303,7 @@ CONTAINS
                 endif
                 i = (ij-1-(j-j1)*isize) + i1 + mod(j,2)
                 if(i.gt.i2) i=i-i2 + i1 -1
-                CALL LEQ_IJSWEEP(I, J, Vname, Var, A_m, B_m)
+                CALL LEQ_IJSWEEP(I, J, Var, A_m, B_m)
              ENDDO
 
           ENDDO
@@ -317,7 +326,7 @@ CONTAINS
                 endif
                 i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
                 if(i.gt.i2) i=i-i2 + i1 -1
-                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
              ENDDO
 
           ENDDO
@@ -330,22 +339,22 @@ CONTAINS
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ELSE
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ENDIF
           ENDDO
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ELSE
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ENDIF
           ENDDO
@@ -372,7 +381,7 @@ CONTAINS
                    k = int( ik/isize ) + k1 -1
                 endif
                 i = (ik-1-(k-k1)*isize) + i1
-                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
              ENDDO
           ENDIF
           IF (DO_KSWEEP) THEN
@@ -383,7 +392,7 @@ CONTAINS
                    i = int( ik/ksize ) + i1 -1
                 endif
                 k = (ik-1-(i-i1)*ksize) + k1
-                CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
              ENDDO
           ENDIF
 ! ----------------------------------------------------------------<<<
@@ -394,23 +403,21 @@ CONTAINS
           IF (DO_ISWEEP) THEN
              DO K=kstart,kend
                 DO I=istart,iend
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ENDDO
           ENDIF
           IF (DO_KSWEEP) THEN
              DO I=istart,iend
                 DO K=kstart,kend
-                   CALL LEQ_IKSWEEP(I, K, Vname, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
                 ENDDO
              ENDDO
           ENDIF
        ENDIF   ! end if/else (use(ikloop)
     ENDDO   ! end do iter=1,niter
 
-    RETURN
   END SUBROUTINE LEQ_MSOLVE
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -427,14 +434,12 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE0(VNAME, B_m, A_M, Var, CMETHOD)
+  SUBROUTINE LEQ_MSOLVE0(B_m, A_M, Var, sweep_type)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! Variable name
-    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -443,8 +448,8 @@ CONTAINS
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
-! sweep direction
-    CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
+    ! sweep direction
+    integer         , intent(in) :: sweep_type
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -479,14 +484,12 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(VNAME, B_m, A_M, Var, CMETHOD)
+  SUBROUTINE LEQ_MSOLVE1(B_m, A_M, Var, sweep_type)
 
     IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! Variable name
-    CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
@@ -495,8 +498,9 @@ CONTAINS
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
-! sweep direction
-    CHARACTER(LEN=4), INTENT(IN) :: CMETHOD
+
+    ! sweep direction
+    integer         , intent(in) :: sweep_type
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -529,7 +533,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_ISWEEP(I, Vname, VAR, A_M, B_M)
+      SUBROUTINE LEQ_ISWEEP(I, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -537,8 +541,6 @@ CONTAINS
 !-----------------------------------------------
 !  Line position
       INTEGER, INTENT(IN) :: I
-! Variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -603,7 +605,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_IKSWEEP(I, K, Vname, VAR, A_M, B_M)
+      SUBROUTINE LEQ_IKSWEEP(I, K, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -611,8 +613,6 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: I, K
-! Variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -678,7 +678,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_JKSWEEP(J, K, Vname, VAR, A_M, B_M)
+      SUBROUTINE LEQ_JKSWEEP(J, K, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -686,8 +686,6 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: J, K
-! Variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -723,7 +721,6 @@ CONTAINS
       CALL DGTSV(NEND-NSTART+1, 1, CC(NSTART+1), DD, EE, BB, NEND-NSTART+1, INFO)
 
       IF (INFO.NE.0) THEN
-         IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'ROUTINE = ', ' JKSWEEP'
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
          call mfix_exit(myPE)
@@ -752,7 +749,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_IJSWEEP(I, J, Vname, VAR, A_M, B_M)
+      SUBROUTINE LEQ_IJSWEEP(I, J, VAR, A_M, B_M)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -760,8 +757,6 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: I, J
-! Variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
@@ -797,7 +792,6 @@ CONTAINS
       CALL DGTSV(NEND-NSTART+1, 1, CC(NSTART+1), DD, EE, BB, NEND-NSTART+1, INFO)
 
       IF (INFO.NE.0) THEN
-         IF(DMP_LOG)WRITE (UNIT_LOG,*) 'VNAME = ', VNAME
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'ROUTINE = ', ' IJSWEEP'
          IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
          call mfix_exit(myPE)

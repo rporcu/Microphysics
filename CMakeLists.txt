@@ -185,7 +185,6 @@ set(F90_sources
   model/solvers/leq_bicgs.f90
   model/solvers/leqsol_mod.f90
   model/solvers/matvec.f90
-  model/solvers/solve_lin_eq.f90
   model/solvers/xerbla.f90
   model/source_pp_g.f90
   model/source_u_g.f90

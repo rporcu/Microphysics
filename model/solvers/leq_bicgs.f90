@@ -11,10 +11,11 @@
 !  Variables referenced:                                               C
 !  Variables modified:                                                 C
 !  Local variables:                                                    C
-!                                                                      C
+
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE LEQ_BICGS(VNAME, VNO, VAR, A_M, B_m, cmethod, &
-                           TOL, PC, ITMAX, IER)
+      SUBROUTINE LEQ_BICGS(VNO, VAR, A_M, B_m, sweep_type, &
+                           TOL, pc_type, ITMAX, IER) &
+         bind(C, name="mfix_solve_lin_eq")
 
          use compar, only: istart3, iend3
          use compar, only: jstart3, jend3
@@ -24,6 +25,8 @@
          use funits, only: unit_log, dmp_log
          use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1
          use param, only: dimension_3
+         use solver_params, only: sweep_rsrs, sweep_asas, sweep_isis
+         use solver_params, only: pc_line, pc_diag, pc_none
 
          use bl_fort_module, only : c_real
          use iso_c_binding , only: c_int
@@ -32,8 +35,6 @@
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
 ! variable number (not really used here; see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
 ! variable
@@ -45,15 +46,17 @@
       real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
 
-! Sweep direction of leq solver (leq_sweep)
-!     e.g., options = 'isis', 'rsrs' (default), 'asas'
-! Note: this setting only seems to matter when leq_pc='line'
-      CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
+      ! Sweep direction of leq solver 
+      !     e.g., options = 'isis', 'rsrs' (default), 'asas'
+      ! Note: this setting only seems to matter when leq_pc='line'
+      integer         , intent(in) :: sweep_type
 ! convergence tolerance (generally leq_tol)
       real(c_real), INTENT(IN) :: TOL
-! preconditioner (leq_pc)
-!     options = 'line' (default), 'diag', 'none'
-      CHARACTER(LEN=4), INTENT(IN) ::  PC
+
+      ! preconditioner (leq_pc)
+      !  options = 'line' (default), 'diag', 'none'
+      INTEGER, INTENT(IN) :: pc_type
+
 ! maximum number of iterations (generally leq_it)
       INTEGER, INTENT(IN) :: ITMAX
 ! error indicator
@@ -62,15 +65,17 @@
 ! Local Variables
 !-------------------------------------------------
 
-      if(PC.eq.'LINE') then   ! default
-         call LEQ_BICGS0( Vname, Vno, Var, A_m, B_m,  &
-            cmethod, TOL, ITMAX, LEQ_MATVEC, LEQ_MSOLVE, IER )
-      elseif(PC.eq.'DIAG') then
-         call LEQ_BICGS0( Vname, Vno, Var, A_m, B_m,   &
-            cmethod, TOL, ITMAX, LEQ_MATVEC, LEQ_MSOLVE1, IER )
-      elseif(PC.eq.'NONE') then
-         call LEQ_BICGS0( Vname, Vno, Var, A_m, B_m,   &
-            cmethod, TOL, ITMAX, LEQ_MATVEC, LEQ_MSOLVE0, IER )
+      if(pc_type.eq.pc_line) then   ! default
+         call LEQ_BICGS0( Vno, Var, A_m, B_m,  &
+            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
+
+      elseif(pc_type.eq.pc_diag) then
+         call LEQ_BICGS0( Vno, Var, A_m, B_m,   &
+            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
+
+      elseif(pc_type.eq.pc_none) then
+         call LEQ_BICGS0( Vno, Var, A_m, B_m,   &
+            sweep_type, TOL, ITMAX, LEQ_MATVEC, pc_type, IER )
       else
          IF(DMP_LOG)WRITE (UNIT_LOG,*) &
            'preconditioner option not found - check mfix.dat and readme'
@@ -96,8 +101,8 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_BICGS0(VNAME, VNO, VAR, A_M, B_m, cmethod, &
-                            TOL, ITMAX, MATVEC, MSOLVE, IER )
+      SUBROUTINE LEQ_BICGS0(VNO, VAR, A_M, B_m, sweep_type, &
+                            TOL, ITMAX, MATVEC, pc_type, IER )
 
          use compar, only: istart2, iend2
          use compar, only: istart3, iend3
@@ -113,34 +118,43 @@
          use param, only: dimension_3
          use param1, only: zero, one, small_number
 
+         use solver_params, only: pc_line, pc_none, pc_diag
+
          use bl_fort_module, only : c_real
          use iso_c_binding , only: c_int
 
-      IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments/procedure
-!-----------------------------------------------
-! variable name
-      CHARACTER(LEN=*), INTENT(IN) :: Vname
-! variable number (not really used here-see calling subroutine)
+         IMPLICIT NONE
+
+      ! variable number (not really used here-see calling subroutine)
       INTEGER, INTENT(IN) :: VNO
-! variable
+
+      ! variable
       real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
-! Septadiagonal matrix A_m
+
+      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector b_m
+
+      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
          (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Sweep direction of leq solver (leq_sweep)
-!     e.g., options = 'isis', 'rsrs' (default), 'asas'
-      CHARACTER(LEN=*), INTENT(IN) :: CMETHOD
+
+      ! Sweep direction of leq solver
+      !     e.g., options = 'isis', 'rsrs' (default), 'asas'
+      integer         , intent(in) :: sweep_type
+
+      ! Type of preconditioner
+      integer         , intent(in) :: pc_type
+
 ! convergence tolerance (generally leq_tol)
       real(c_real), INTENT(IN) :: TOL
+
 ! maximum number of iterations (generally leq_it)
       INTEGER, INTENT(IN) :: ITMAX
+
 ! error indicator
       INTEGER, INTENT(INOUT) :: IER
+
 ! dummy arguments/procedures set as indicated
 !     matvec->leq_matvec
 ! for preconditioner (leq_pc)
@@ -230,7 +244,7 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call MATVEC(Vname, Var, A_M, R)   ! returns R=A*Var
+      call MATVEC(Var, A_M, R)   ! returns R=A*Var
 
       do k = kstart3,kend3
          do i = istart3,iend3
@@ -258,7 +272,7 @@
       Rtilde(:) = R(:) + (2.0d0*Rtilde(:)-1.0d0)*1.0d-6*Rnorm0
 
       if (idebugl >= 1) then
-         if(myPE.eq.0) print*,'leq_bicgs, initial: ', Vname,' resid ', Rnorm0
+         if(myPE.eq.0) print*,'leq_bicgs, initial resid ', Rnorm0
       endif
 ! ----------------------------------------------------------------<<<
 
@@ -274,13 +288,13 @@
             rho(i-1) = dot_product_par( Rtilde, R )
          endif ! is_serial
 
-!         print*,'leq_bicgs, initial: ', Vname,' rho(i-1) ', rho(i-1)
+!         print*,'leq_bicgs, initial rho(i-1) ', rho(i-1)
 
          if (rho(i-1) .eq. zero) then
             if(i /= 1)then
 ! Method fails
 ! --------------------------------
-!               print*, 'leq_bicgs,',Vname,': rho(i-1) == 0 '
+!               print*, 'leq_bicgs: rho(i-1) == 0 '
                ier = -2
             else
 ! Method converged.  residual is already zero
@@ -309,8 +323,15 @@
 ! Solve A*Phat(:) = P(:)
 ! V(:) = A*Phat(:)
 ! --------------------------------
-         call MSOLVE(Vname, P, A_m, Phat, CMETHOD) ! returns Phat
-         call MATVEC(Vname, Phat, A_m, V)   ! returns V=A*Phat
+         if (pc_type.eq.pc_line) then   ! default
+            call LEQ_MSOLVE(P, A_m, Phat, sweep_type) ! returns Phat
+         else if (pc_type .eq. pc_none) then
+            call LEQ_MSOLVE0(P, A_m, Phat, sweep_type) ! returns Phat
+         else if (pc_type .eq. pc_diag) then
+            call LEQ_MSOLVE1(P, A_m, Phat, sweep_type) ! returns Phat
+         end if
+
+         call MATVEC(Phat, A_m, V)   ! returns V=A*Phat
 
          if(is_serial) then
             RtildexV = dot_product( Rtilde, V )
@@ -318,7 +339,7 @@
             RtildexV = dot_product_par( Rtilde, V )
          endif ! is_serial
 
-!         print*,'leq_bicgs, initial: ', Vname,' RtildexV ', RtildexV
+!         print*,'leq_bicgs, initial RtildexV: ', RtildexV
 
 ! compute alpha
 ! --------------------------------
@@ -339,7 +360,7 @@
             else
                Snorm = sqrt( dot_product_par( Svec, Svec ) )
             endif               ! is_serial
-!            print*,'leq_bicgs, initial: ', Vname,' Snorm ', real(Snorm)
+!            print*,'leq_bicgs, initial Snorm: ', real(Snorm)
 
 
             if (Snorm <= TOLMIN) then
@@ -348,9 +369,9 @@
 ! Recompute residual norm
 ! --------------------------------
                if (idebugl >= 1) then
-                  call MATVEC(Vname, Var, A_m, R)   ! returns R=A*Var
+                  call MATVEC(Var, A_m, R)   ! returns R=A*Var
 !                  Rnorm = sqrt( dot_product_par( Var, Var ) )
-!                  print*,'leq_bicgs, initial: ', Vname,' Vnorm ', Rnorm
+!                  print*,'leq_bicgs, initial Vnorm: ', Rnorm
 
                   do kk = kstart3,kend3
                      do jj = jstart3,jend3
@@ -367,7 +388,7 @@
                   else
                      Rnorm = sqrt( dot_product_par( R, R ) )
                   endif
-!                  print*,'leq_bicgs, initial: ', Vname,' Rnorm ', Rnorm
+!                  print*,'leq_bicgs, initial Rnorm: ', Rnorm
                endif            ! idebugl >= 1
                            isConverged = .TRUE.
                            EXIT
@@ -379,8 +400,15 @@
 ! Solve A*Shat(:) = Svec(:)
 ! Tvec(:) = A*Shat(:)
 ! --------------------------------
-         call MSOLVE( Vname, Svec, A_m, Shat, CMETHOD)  ! returns Shat
-         call MATVEC( Vname, Shat, A_m, Tvec )   ! returns Tvec=A*Shat
+         if (pc_type.eq.pc_line) then   ! default
+            call LEQ_MSOLVE( Svec, A_m, Shat, sweep_type)  ! returns Shat
+         else if (pc_type .eq. pc_none) then
+            call LEQ_MSOLVE0( Svec, A_m, Shat, sweep_type)  ! returns Shat
+         else if (pc_type .eq. pc_diag) then
+            call LEQ_MSOLVE1( Svec, A_m, Shat, sweep_type)  ! returns Shat
+         end if
+
+         call MATVEC( Shat, A_m, Tvec )   ! returns Tvec=A*Shat
 
          if(is_serial) then
             TxS = dot_product( Tvec, Svec )
@@ -448,7 +476,7 @@
 
 
       if (idebugl >= 1) then
-         call MATVEC(Vname, Var, A_m, R)   ! returns R=A*Var
+         call MATVEC(Var, A_m, R)   ! returns R=A*Var
          do kk = kstart3,kend3
             do jj = jstart3,jend3
                do ii = istart3,iend3
@@ -467,7 +495,7 @@
 
          if(myPE.eq.0) print*,'leq_bicgs: final Rnorm ', Rnorm
 
-         if(myPE.eq.0)  print*,'leq_bicgs ratio : ', Vname,' ',iter,  &
+         if(myPE.eq.0)  print*,'leq_bicgs ratio ', iter,  &
          ' L-2', Rnorm/Rnorm0
       endif   ! end if(idebugl >=1)
 
