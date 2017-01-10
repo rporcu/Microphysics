@@ -8,7 +8,7 @@
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
          use functions, only: funijk
-         use matvec_module, only: leq_matvec
+         use matvec_module, only: leq_matvec, leq_residual
          use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
          use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
          use param, only: dimension_3
@@ -140,7 +140,7 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call LEQ_MATVEC(B_M, Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
+      call leq_residual(b_m, Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
 
       if(is_serial) then
          Rnorm0 = zero
