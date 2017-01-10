@@ -161,9 +161,6 @@ CONTAINS
             enddo
          enddo
 
-       ! call send_recv(Avar,nlayers_bicgs)
-    RETURN
-
   CONTAINS
 
     INCLUDE 'functions.inc'
@@ -239,8 +236,6 @@ CONTAINS
              enddo
           enddo
        enddo
-
-       ! call send_recv(var,nlayers_bicgs)
     ENDIF
 
     NITER = LEN( CMETHOD )
@@ -281,7 +276,6 @@ CONTAINS
              ENDDO
 
           ENDDO
-          ! call send_recv(var,nlayers_bicgs)
 
 ! IJ Loop
 ! --------------------------------
@@ -304,7 +298,6 @@ CONTAINS
              ENDDO
 
           ENDDO
-          ! call send_recv(var,nlayers_bicgs)
 
 ! IK Loop
 ! --------------------------------
@@ -413,13 +406,6 @@ CONTAINS
              ENDDO
           ENDIF
        ENDIF   ! end if/else (use(ikloop)
-! ----------------------------------------------------------------<<<
-
-
-! this is called for all settings of leq_pc
-       ! IF (DO_SENDRECV) call send_recv(var,nlayers_bicgs)
-
-
     ENDDO   ! end do iter=1,niter
 
     RETURN
@@ -474,9 +460,7 @@ CONTAINS
        enddo
        enddo
        enddo
-    ! call send_recv(var,nlayers_bicgs)
 
-    return
   end subroutine leq_msolve0
 
 
@@ -528,11 +512,7 @@ CONTAINS
           enddo
        enddo
 
-    ! call send_recv(var,nlayers_bicgs)
-
-    return
   end subroutine leq_msolve1
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

@@ -1205,8 +1205,10 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
      mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr());
 
-    Real eps = 1.e-10;
-    int maxiter = 100;
-    int precond_type = 0;
-    solve_bicgstab(sol, rhs, matrix, precond_type, maxiter, eps, eps);
+    int sweep_type, precond_type, max_it;
+    Real tol;
+
+    get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
+
+    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, tol);
 }

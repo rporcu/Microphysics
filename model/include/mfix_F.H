@@ -254,4 +254,5 @@ extern "C"
   void leq_residual(const Real*, const Real*, const Real*, Real*,
                     int* slo, int* shi, const int* lo, const int* hi);
 
+  void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, Real* tol);
 }

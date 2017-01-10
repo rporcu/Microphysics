@@ -178,6 +178,7 @@ set(F90_sources
   model/set_wall_bc.f90
   model/solve_pp_g.f90
   model/solve_vel_star.f90
+  model/solver_params.f90
   model/solvers/BLAS.f90
   model/solvers/DGTSV.f90
   model/solvers/dgtsl.f90

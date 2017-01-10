@@ -43,6 +43,7 @@ int
 mfix_level::solve_bicgstab (MultiFab&       sol,
                             const MultiFab& rhs,
                             const MultiFab& A_m,
+                            int             sweep_type,
                             int             precond_type,
                             int             maxiter,
                             Real            eps_rel,

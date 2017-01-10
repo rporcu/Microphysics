@@ -74,7 +74,7 @@ protected:
     void mfix_correct0 (int lev);
 
     int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix, 
-                        int precond_type, int maxiter, Real eps_rel, Real eps_abs);
+                        int sweep_type, int precond_type, int maxiter, Real eps_rel, Real eps_abs);
 
 private:
 

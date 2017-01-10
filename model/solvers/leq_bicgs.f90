@@ -241,8 +241,6 @@
          enddo
       enddo
 
-      ! call send_recv(R,nlayers_bicgs)
-
       if(is_serial) then
          Rnorm0 = zero
          Rnorm0 = dot_product(R,R)
@@ -289,7 +287,6 @@
 ! --------------------------------
                ier = 0
             endif
-            ! call send_recv(var,2)
             deallocate(R)
             deallocate(Rtilde)
             deallocate(P)
@@ -485,8 +482,6 @@
             IER = -2
          endif
       endif
-
-      ! call send_recv(var,2)
 
       deallocate(R)
       deallocate(Rtilde)
