@@ -1,4 +1,3 @@
-
       SUBROUTINE LEQ_BICGS(VNO, VAR, A_M, B_m, sweep_type, &
                            TOL, pc_type, ITMAX, IER , slo, shi, lo, hi) &
          bind(C, name="mfix_solve_lin_eq")
@@ -39,7 +38,7 @@
         ! Sweep direction of leq solver
         !     e.g., options = 'isis', 'rsrs' (default), 'asas'
         integer         , intent(in) :: sweep_type
-  
+
         ! Type of preconditioner
         integer         , intent(in) :: pc_type
 
@@ -141,16 +140,7 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call LEQ_MATVEC(Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
-
-      do k = slo(3), shi(3)
-         do i = slo(1), shi(1)
-            do j = slo(1), shi(2)
-               IJK = funijk(i,j,k)
-               R(IJK) = B_M(I,J,K) - R(IJK)
-            enddo
-         enddo
-      enddo
+      call LEQ_MATVEC(B_M, Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
 
       if(is_serial) then
          Rnorm0 = zero

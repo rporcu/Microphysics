@@ -1,7 +1,8 @@
 module matvec_module
 
-  contains 
+  contains
 
+! rhs - Am*Var
   SUBROUTINE LEQ_MATVEC(rhs, var, A_m, res, slo, shi, lo, hi) &
     bind(C, name = "leq_residual")
 
@@ -28,13 +29,13 @@ module matvec_module
 ! Local variables
 !-----------------------------------------------
 ! Variable
-    INTEGER :: I, J, K, IJK
+    INTEGER :: I, J, K
 !-----------------------------------------------
 
     do k = lo(3),hi(3)
        do i = lo(2),hi(2)
           do j = lo(1),hi(1)
-             res(i,j,k) = rhs(i,j,k) -  & 
+             res(i,j,k) = rhs(i,j,k) -  &
                           ( A_m(i,j,k,-3) * Var(i,j,kminus(i,j,k))   &
                           + A_m(i,j,k,-2) * Var(i,jminus(i,j,k),k)   &
                           + A_m(i,j,k,-1) * Var(iminus(i,j,k),j,k)   &

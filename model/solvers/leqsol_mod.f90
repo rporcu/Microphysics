@@ -354,10 +354,10 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE0(B_m, A_M, Var, sweep_type, slo, shi)
+  SUBROUTINE LEQ_MSOLVE0(slo, shi, B_m, A_M, Var, sweep_type)
 
     IMPLICIT NONE
-  
+
   integer, intent(in) :: slo(3),shi(3)
 
 ! Vector b_m
@@ -404,7 +404,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(B_m, A_M, Var, sweep_type, slo, shi)
+  SUBROUTINE LEQ_MSOLVE1(slo, shi, B_m, A_M, Var, sweep_type)
 
     IMPLICIT NONE
 
