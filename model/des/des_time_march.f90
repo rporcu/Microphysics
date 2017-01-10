@@ -7,7 +7,6 @@ module des_time_march_module
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !     Subroutine: DES_TIME_MARCH                                       !
-!     Author: Jay Boyalakuntla                        Date: 21-Jun-04  !
 !                                                                      !
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
@@ -28,7 +27,7 @@ module des_time_march_module
       use cfnewvalues_module, only: cfnewvalues
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled
       use discretelement, only: dtsolid
-      use discretelement, only: pip, s_time, do_nsearch
+      use discretelement, only: s_time, do_nsearch
       use drag_gs_des1_module, only: drag_gs_des
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -93,9 +92,6 @@ module des_time_march_module
 !------------------------------------------------
 ! Local variables
 !------------------------------------------------
-! Total number of particles
-      INTEGER, SAVE :: NP=0
-
 ! time step loop counter index
       INTEGER :: NN
 
@@ -139,17 +135,16 @@ module des_time_march_module
             des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
-      NP = PIP
-      ! CALL GLOBAL_ALL_SUM(NP)
 
       IF(DES_CONTINUUM_COUPLED) THEN
-         WRITE(ERR_MSG, 1000) trim(iVal(factor)), trim(iVAL(NP))
+         WRITE(ERR_MSG, 1000) trim(iVal(factor))
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
       ELSE
          WRITE(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(factor))
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
       ENDIF
- 1000 FORMAT(/'DEM NITs: ',A,3x,'Total PIP: ', A)
+
+ 1000 FORMAT(/'DEM NITs: ',A)
  1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
       IF(CALL_USR) CALL USR0_DES
@@ -189,7 +184,7 @@ module des_time_march_module
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
 ! Calculate pairs of colliding particles
-         CALL CALC_COLLISIONS(pairs, pair_count, particle_state, &
+         CALL CALC_COLLISIONS(max_pip, pairs, pair_count, particle_state, &
             des_radius, des_pos_new)
 
 ! Calculate forces from particle-particle collisions
@@ -281,33 +276,44 @@ module des_time_march_module
 
    CONTAINS
 
-      SUBROUTINE CALC_COLLISIONS(pairs, pair_count, particle_state, des_radius, des_pos_new)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutine: calc_collisions                                          !
+! Purpose: Build a list of collision pairs.                            !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      SUBROUTINE CALC_COLLISIONS(max_pip, pairs, pair_count, &
+      particle_state, des_radius, des_pos_new)
 
-         USE discretelement, only: nonexistent
-         USE param1, only: small_number
+      use discretelement, only: nonexistent
+      use param1, only: small_number
 
-         IMPLICIT NONE
+      implicit none
 
-      integer, intent(out), dimension(:,:) :: pairs
-      integer, intent(out) :: pair_count
+! Dummy arguments ......................................................
+      integer, intent(in) :: max_pip
 
-      real(c_real), intent(in) :: des_pos_new(:,:)
-      real(c_real), intent(in) :: des_radius(:)
-      integer, intent(in) :: particle_state(:)
+      integer     , intent(  out) :: pair_count
+      integer     , intent(  out) :: pairs(6*max_pip,2)
 
-      INTEGER :: i, ll
+      real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
+      real(c_real), intent(in   ) :: des_radius(max_pip)
+      integer     , intent(in   ) :: particle_state(max_pip)
+
+! Local variables ......................................................
+      integer :: i, ll
       real(c_real) :: rad
       real(c_real) :: DIST(3), DIST_MAG, POS(3)
 
       pair_count = 0
 
-      DO LL = 1, PIP-1
+      DO LL = 1, max_PIP-1
 
          IF(NONEXISTENT==PARTICLE_STATE(LL)) CYCLE
          pos = DES_POS_NEW(LL,:)
          rad = DES_RADIUS(LL)
 
-         DO I = LL+1, PIP
+         DO I = LL+1, max_PIP
             IF(NONEXISTENT==PARTICLE_STATE(I)) CYCLE
 
             DIST(:) = DES_POS_NEW(I,:) - POS(:)
