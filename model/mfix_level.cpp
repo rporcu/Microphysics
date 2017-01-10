@@ -1171,8 +1171,8 @@ mfix_level::usr3(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-   Array<int> slo(3);
-   Array<int> shi(3);
+  Array<int> slo(3);
+  Array<int> shi(3);
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
@@ -1202,9 +1202,28 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
+    Array<int> slo(3);
+    Array<int> shi(3);
+
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
-      mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr(),
-                        &sweep_type, &tol, &precond_type, &max_it, &ier);
+    {
+       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+
+       const int* sslo = (*flag[lev])[mfi].loVect();
+       const int* sshi = (*flag[lev])[mfi].hiVect();
+
+       slo[0] = sslo[0]+2;
+       slo[1] = sslo[1]+2;
+       slo[2] = sslo[2]+2;
+
+       shi[0] = sshi[0]+2;
+       shi[1] = sshi[1]+2;
+       shi[2] = sshi[2]+2;
+
+       mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr(),
+                         &sweep_type, &tol, &precond_type, &max_it, &ier, 
+                         slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect());
+    }
 
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, tol);
 }

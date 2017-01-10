@@ -181,7 +181,6 @@ set(F90_sources
   model/solver_params.f90
   model/solvers/BLAS.f90
   model/solvers/DGTSV.f90
-  model/solvers/dgtsl.f90
   model/solvers/leq_bicgs.f90
   model/solvers/leqsol_mod.f90
   model/solvers/matvec.f90

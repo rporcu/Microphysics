@@ -8,9 +8,6 @@ MODULE leqsol
    use compar, only: istart, jstart, kstart
    use compar, only: istart1, jstart1, kstart1
    use compar, only: istart2, jstart2, kstart2
-   use compar, only: istart3, iend3
-   use compar, only: jstart3, jend3
-   use compar, only: kstart3, kend3
    use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
@@ -107,65 +104,6 @@ CONTAINS
     RETURN
   END SUBROUTINE REPORT_SOLVER_STATS
 
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: LEQ_MATVEC                                              C
-!  Purpose: Compute matrix vector multiplication                       C
-!           (for linear equation Ax=b compute Ax                       C
-!                                                                      C
-!  Author: Ed D'Azevedo                               Date: 21-JAN-99  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-  SUBROUTINE LEQ_MATVEC(VAR, A_M, Avar)
-
-    IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! Variable
-    real(c_real), INTENT(IN) :: Var(DIMENSION_3)
-! Septadiagonal matrix A_m
-    real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
-! Vector AVar
-    real(c_real), INTENT(OUT) :: AVar(DIMENSION_3)
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Variable
-    INTEGER :: I, J, K, IJK
-!-----------------------------------------------
-
-    do k = kstart,kend
-       do i = istart,iend
-          do j = jstart,jend
-             ijk = funijk(i,j,k)
-             AVar(ijk) =  A_m(i,j,k,-3) * Var(funijk(i,j,kminus(i,j,k)))   &
-                          + A_m(i,j,k,-2) * Var(funijk(i,jminus(i,j,k),k))   &
-                          + A_m(i,j,k,-1) * Var(funijk(iminus(i,j,k),j,k))   &
-                          + A_m(i,j,k, 0) * Var(funijk(i,j,k)            )   &
-                          + A_m(i,j,k, 1) * Var(funijk(iplus(i,j,k),j,k) )   &
-                          + A_m(i,j,k, 2) * Var(funijk(i,jplus(i,j,k),k) )   &
-                          + A_m(i,j,k, 3) * Var(funijk(i,j,kplus(i,j,k)) )
-               enddo
-            enddo
-         enddo
-
-  CONTAINS
-
-    INCLUDE 'functions.inc'
-
-  END SUBROUTINE LEQ_MATVEC
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: LEQ_MSOLVE                                              C
@@ -184,21 +122,23 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE(B_m, A_M, Var, sweep_type)
+  SUBROUTINE LEQ_MSOLVE(slo, shi, B_m, A_M, Var, sweep_type)
 
     use solver_params, only: sweep_rsrs, sweep_isis, sweep_asas
     IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
+
+    INTEGER, INTENT(IN) :: slo(3),shi(3)
+
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix A_m
     real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
-    real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
+    real(c_real), INTENT(INOUT) :: Var&
+         (DIMENSION_3)
+
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
     integer         , intent(in) :: sweep_type
@@ -224,9 +164,9 @@ CONTAINS
 !-----------------------------------------------
 
     IF (SETGUESS) THEN
-       do k = kstart3,kend3
-          do i = istart3,iend3
-             do j = jstart3,jend3
+       do k = slo(3),shi(3)
+          do i = slo(2),shi(2)
+             do j = slo(1),shi(1)
                 IJK = funijk(i,j,k)
                 VAR(IJK) = B_M(I,J,K)
              enddo
@@ -279,7 +219,7 @@ CONTAINS
                 endif
                 j = (jk-1-(k-k1)*jsize) + j1 + mod(k,2)
                 if(j.gt.j2) j=j-j2 + j1 -1
-                CALL LEQ_JKSWEEP(J, K, Var, A_m, B_m)
+                CALL LEQ_JKSWEEP(J, K, Var, A_m, B_m, slo, shi)
              ENDDO
           ENDDO
 
@@ -300,7 +240,7 @@ CONTAINS
                 endif
                 i = (ij-1-(j-j1)*isize) + i1 + mod(j,2)
                 if(i.gt.i2) i=i-i2 + i1 -1
-                CALL LEQ_IJSWEEP(I, J, Var, A_m, B_m)
+                CALL LEQ_IJSWEEP(I, J, Var, A_m, B_m, slo, shi)
              ENDDO
 
           ENDDO
@@ -323,7 +263,7 @@ CONTAINS
                 endif
                 i = (ik-1-(k-k1)*isize) + i1 + mod(k,2)
                 if(i.gt.i2) i=i-i2 + i1 -1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
              ENDDO
 
           ENDDO
@@ -336,22 +276,22 @@ CONTAINS
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ELSE
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ENDIF
           ENDDO
           DO k=kstart,kend
              IF(mod(k,2).ne.0)THEN
                 DO I=istart,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ELSE
                 DO I=istart+1,iend,2
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ENDIF
           ENDDO
@@ -378,7 +318,7 @@ CONTAINS
                    k = int( ik/isize ) + k1 -1
                 endif
                 i = (ik-1-(k-k1)*isize) + i1
-                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
              ENDDO
           ENDIF
 
@@ -390,7 +330,7 @@ CONTAINS
           IF (DO_ISWEEP) THEN
              DO K=kstart,kend
                 DO I=istart,iend
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m)
+                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ENDDO
           ENDIF
@@ -414,18 +354,18 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE0(B_m, A_M, Var, sweep_type)
+  SUBROUTINE LEQ_MSOLVE0(B_m, A_M, Var, sweep_type, slo, shi)
 
     IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
+  
+  integer, intent(in) :: slo(3),shi(3)
+
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix A_m
     real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
     ! sweep direction
@@ -437,9 +377,9 @@ CONTAINS
 !-----------------------------------------------
 
 ! do nothing or no preconditioning
-      DO K = kstart3, kend3
-        DO J = jstart3, jend3
-          DO I = istart3, iend3
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
          IJK = FUNIJK(i,j,k)
           var(ijk) = b_m(i,j,k)
        enddo
@@ -464,18 +404,19 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(B_m, A_M, Var, sweep_type)
+  SUBROUTINE LEQ_MSOLVE1(B_m, A_M, Var, sweep_type, slo, shi)
 
     IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! Vector b_m
+
+    integer, intent(in) :: slo(3),shi(3)
+
+    ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
-! Septadiagonal matrix A_m
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+    ! Septadiagonal matrix A_m
     real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
 
@@ -513,7 +454,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_IKSWEEP(I, K, VAR, A_M, B_M)
+      SUBROUTINE LEQ_IKSWEEP(I, K, VAR, A_M, B_M, slo, shi)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -521,14 +462,15 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: I, K
+      INTEGER, INTENT(IN) :: slo(3), shi(3)
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Vector b_m
       real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -585,22 +527,20 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_JKSWEEP(J, K, VAR, A_M, B_M)
+      SUBROUTINE LEQ_JKSWEEP(J, K, VAR, A_M, B_M, slo, shi)
 
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
+      INTEGER, INTENT(IN) :: slo(3), shi(3)
 ! Line position
       INTEGER, INTENT(IN) :: J, K
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Vector b_m
       real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -656,7 +596,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE LEQ_IJSWEEP(I, J, VAR, A_M, B_M)
+      SUBROUTINE LEQ_IJSWEEP(I, J, VAR, A_M, B_M, slo, shi)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -664,14 +604,15 @@ CONTAINS
 !-----------------------------------------------
 ! Line position
       INTEGER, INTENT(IN) :: I, J
+      INTEGER, INTENT(IN) :: slo(3),shi(3)
 ! Variable
       real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Vector b_m
       real(c_real), INTENT(IN) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

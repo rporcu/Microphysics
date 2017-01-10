@@ -1,3 +1,6 @@
+module matvec_module
+
+  contains 
 
   SUBROUTINE LEQ_MATVEC(rhs, var, A_m, res, slo, shi, lo, hi) &
     bind(C, name = "leq_residual")
@@ -45,3 +48,4 @@
 
   END SUBROUTINE LEQ_MATVEC
 
+end module matvec_module

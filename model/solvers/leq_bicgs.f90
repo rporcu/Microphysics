@@ -1,19 +1,17 @@
 
       SUBROUTINE LEQ_BICGS(VNO, VAR, A_M, B_m, sweep_type, &
-                           TOL, pc_type, ITMAX, IER ) &
+                           TOL, pc_type, ITMAX, IER , slo, shi, lo, hi) &
          bind(C, name="mfix_solve_lin_eq")
 
          use compar, only: istart2, iend2
-         use compar, only: istart3, iend3
          use compar, only: jstart2, jend2
-         use compar, only: jstart3, jend3
          use compar, only: kstart2, kend2
-         use compar, only: kstart3, kend3
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
          use functions, only: funijk
-         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts, leq_matvec
-         use leqsol, only: leq_matvec, leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
+         use matvec_module, only: leq_matvec
+         use leqsol, only: is_serial, icheck_bicgs, minimize_dotproducts
+         use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, dot_product_par2, iter_tot
          use param, only: dimension_3
          use param1, only: zero, one, small_number
 
@@ -24,26 +22,26 @@
 
          IMPLICIT NONE
 
-      ! variable number (not really used here-see calling subroutine)
-      INTEGER, INTENT(IN) :: VNO
+        INTEGER, INTENT(IN) :: slo(3),shi(3),lo(3),hi(3)
+        INTEGER, INTENT(IN) :: vno
 
-      ! variable
-      real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
+        ! variable
+        real(c_real), DIMENSION(DIMENSION_3), INTENT(INOUT) :: Var
 
-      ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3, -3:3)
+        ! Septadiagonal matrix A_m
+        real(c_real), INTENT(INOUT) :: A_m&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
-         (istart3:iend3, jstart3:jend3, kstart3:kend3)
+        ! Vector b_m
+        real(c_real), INTENT(INOUT) :: B_m&
+           (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Sweep direction of leq solver
-      !     e.g., options = 'isis', 'rsrs' (default), 'asas'
-      integer         , intent(in) :: sweep_type
-
-      ! Type of preconditioner
-      integer         , intent(in) :: pc_type
+        ! Sweep direction of leq solver
+        !     e.g., options = 'isis', 'rsrs' (default), 'asas'
+        integer         , intent(in) :: sweep_type
+  
+        ! Type of preconditioner
+        integer         , intent(in) :: pc_type
 
 ! convergence tolerance (generally leq_tol)
       real(c_real), INTENT(IN) :: TOL
@@ -124,9 +122,9 @@
 ! ---------------------------------------------------------------->>>
       if (do_unit_scaling) then
 
-         do k = kstart2,kend2
-            do i = istart2,iend2
-               do j = jstart2,jend2
+         do k = lo(3)-1, hi(3)+1
+            do i = lo(1)-1, hi(1)+1
+               do j = lo(2)-1, hi(2)+1
                   IJK = funijk(i,j,k)
                   aijmax = maxval(abs(A_M(i,j,k,:)) )
                   OAM = one/aijmax
@@ -143,11 +141,11 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call LEQ_MATVEC(Var, A_M, R)   ! returns R=A*Var
+      call LEQ_MATVEC(Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
 
-      do k = kstart3,kend3
-         do i = istart3,iend3
-            do j = jstart3,jend3
+      do k = slo(3), shi(3)
+         do i = slo(1), shi(1)
+            do j = slo(1), shi(2)
                IJK = funijk(i,j,k)
                R(IJK) = B_M(I,J,K) - R(IJK)
             enddo
@@ -223,14 +221,14 @@
 ! V(:) = A*Phat(:)
 ! --------------------------------
          if (pc_type.eq.pc_line) then   ! default
-            call LEQ_MSOLVE(P, A_m, Phat, sweep_type) ! returns Phat
+            call LEQ_MSOLVE(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
          else if (pc_type .eq. pc_none) then
-            call LEQ_MSOLVE0(P, A_m, Phat, sweep_type) ! returns Phat
+            call LEQ_MSOLVE0(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
          else if (pc_type .eq. pc_diag) then
-            call LEQ_MSOLVE1(P, A_m, Phat, sweep_type) ! returns Phat
+            call LEQ_MSOLVE1(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
          end if
 
-         call LEQ_MATVEC(Phat, A_m, V)   ! returns V=A*Phat
+         call LEQ_MATVEC(Phat, A_m, V, slo, shi, lo, hi)   ! returns V=A*Phat
 
          if(is_serial) then
             RtildexV = dot_product( Rtilde, V )
@@ -268,13 +266,13 @@
 ! Recompute residual norm
 ! --------------------------------
                if (idebugl >= 1) then
-                  call LEQ_MATVEC(Var, A_m, R)   ! returns R=A*Var
+                  call LEQ_MATVEC(Var, A_m, R, slo, shi, lo, hi)   ! returns R=A*Var
 !                  Rnorm = sqrt( dot_product_par( Var, Var ) )
 !                  print*,'leq_bicgs, initial Vnorm: ', Rnorm
 
-                  do kk = kstart3,kend3
-                     do jj = jstart3,jend3
-                        do ii = istart3,iend3
+                  do kk = slo(3),shi(3)
+                     do jj = slo(2),shi(2)
+                        do ii = slo(1),shi(1)
                            IJK = funijk(ii,jj,kk)
                            R(IJK) = B_M(iI,jJ,kK) - R(IJK)
                         enddo
@@ -300,14 +298,14 @@
 ! Tvec(:) = A*Shat(:)
 ! --------------------------------
          if (pc_type.eq.pc_line) then   ! default
-            call LEQ_MSOLVE( Svec, A_m, Shat, sweep_type)  ! returns Shat
+            call LEQ_MSOLVE(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
          else if (pc_type .eq. pc_none) then
-            call LEQ_MSOLVE0( Svec, A_m, Shat, sweep_type)  ! returns Shat
+            call LEQ_MSOLVE0(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
          else if (pc_type .eq. pc_diag) then
-            call LEQ_MSOLVE1( Svec, A_m, Shat, sweep_type)  ! returns Shat
+            call LEQ_MSOLVE1(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
          end if
 
-         call LEQ_MATVEC( Shat, A_m, Tvec )   ! returns Tvec=A*Shat
+         call LEQ_MATVEC(Shat, A_m, Tvec, slo, shi, lo, hi )   ! returns Tvec=A*Shat
 
          if(is_serial) then
             TxS = dot_product( Tvec, Svec )
@@ -375,10 +373,10 @@
 
 
       if (idebugl >= 1) then
-         call LEQ_MATVEC(Var, A_m, R)   ! returns R=A*Var
-         do kk = kstart3,kend3
-            do jj = jstart3,jend3
-               do ii = istart3,iend3
+         call LEQ_MATVEC(Var, A_m, R, slo, shi, lo, hi)   ! returns R=A*Var
+         do kk = slo(3),shi(3)
+            do jj = slo(2),shi(2)
+               do ii = slo(1),shi(1)
                   IJK = funijk(ii,jj,kk)
                   R(IJK) = R(IJK) - B_M(iI,jJ,kK)
                enddo

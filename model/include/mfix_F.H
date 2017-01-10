@@ -251,7 +251,8 @@ extern "C"
 
   void mfix_solve_lin_eq(int* vno, Real* var, Real* A_m, Real* b_m, 
                          int* sweep_type, Real* tol, int* precond_type,
-                         int* max_it, int* ier);
+                         int* max_it, int* ier,
+                         int* slo, int* shi, const int* lo, const int* hi);
 
   void leq_residual(const Real*, const Real*, const Real*, Real*,
                     int* slo, int* shi, const int* lo, const int* hi);
