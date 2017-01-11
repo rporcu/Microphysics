@@ -1,13 +1,5 @@
 module leqsol
 
-   use compar, ONLY: istart, iend, jstart, jend, kstart, kend
-   use compar, only: iend, jend, kend
-   use compar, only: iend1, jend1, kend1
-   use compar, only: iend2, jend2, kend2
-   use compar, only: iend3, jend3, kend3
-   use compar, only: istart, jstart, kstart
-   use compar, only: istart1, jstart1, kstart1
-   use compar, only: istart2, jstart2, kstart2
    use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
@@ -144,7 +136,6 @@ CONTAINS
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
-    LOGICAL, PARAMETER :: USE_IKLOOP = .FALSE.
     LOGICAL, PARAMETER :: SETGUESS = .TRUE.
 !-----------------------------------------------
 ! Local variables
@@ -171,6 +162,7 @@ CONTAINS
           enddo
        enddo
     ENDIF
+
 
 !   NITER = LEN( CMETHOD )
     NITER = 4
@@ -202,10 +194,10 @@ CONTAINS
        IF(DO_ALL) THEN        ! redblack for all sweeps, not used by default
 ! JK Loop
 ! --------------------------------
-          j1 = jstart
-          k1 = kstart
-          j2 = jend
-          k2 = kend
+          j1 = slo(2)
+          k1 = slo(3)
+          j2 = shi(2)
+          k2 = shi(3)
           jsize = j2-j1+1
           ksize = k2-k1+1
           DO icase = 1, 2
@@ -223,10 +215,10 @@ CONTAINS
 
 ! IJ Loop
 ! --------------------------------
-          i1 = istart
-          j1 = jstart
-          i2 = iend
-          j2 = jend
+          i1 = slo(1)
+          j1 = slo(2)
+          i2 = shi(1)
+          j2 = shi(2)
           isize = i2-i1+1
           jsize = j2-j1+1
           DO icase = 1, 2
@@ -245,10 +237,10 @@ CONTAINS
 
 ! IK Loop
 ! --------------------------------
-          i1 = istart
-          k1 = kstart
-          i2 = iend
-          k2 = kend
+          i1 = slo(1)
+          k1 = slo(3)
+          i2 = shi(1)
+          k2 = shi(3)
           isize = i2-i1+1
           ksize = k2-k1+1
 
@@ -271,24 +263,24 @@ CONTAINS
 ! do_redblack only true leq_pc='rsrs'
 ! ---------------------------------------------------------------->>>
        IF(DO_REDBLACK) THEN
-          DO k=kstart,kend
+          DO k=slo(3),shi(3)
              IF(mod(k,2).ne.0)THEN
-                DO I=istart+1,iend,2
+                DO I=slo(1)+1,shi(1),2
                    CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ELSE
-                DO I=istart,iend,2
+                DO I=slo(1),shi(1),2
                    CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ENDIF
           ENDDO
-          DO k=kstart,kend
+          DO k=slo(3),shi(3)
              IF(mod(k,2).ne.0)THEN
-                DO I=istart,iend,2
+                DO I=slo(1),shi(1),2
                    CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ELSE
-                DO I=istart+1,iend,2
+                DO I=slo(1)+1,shi(1),2
                    CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
                 ENDDO
              ENDIF
@@ -299,40 +291,14 @@ CONTAINS
 
 !  Not sure the purpose of us_ikloop
 !  The SMP directives below need review                        !Tingwen Jan 2012
-! use_ikloop is currently hard-wired to false (so goto else branch)
 ! ---------------------------------------------------------------->>>
-       IF(USE_IKLOOP) THEN
-          i1 = istart
-          k1 = kstart
-          i2 = iend
-          k2 = kend
-          isize = i2-i1+1
-          ksize = k2-k1+1
-          IF (DO_ISWEEP) THEN
-             DO IK=1, ksize*isize
-                if (mod(ik,isize).ne.0) then
-                   k = int( ik/isize ) + k1
-                else
-                   k = int( ik/isize ) + k1 -1
-                endif
-                i = (ik-1-(k-k1)*isize) + i1
+       IF (DO_ISWEEP) THEN
+          DO K=slo(3),shi(3)
+             DO I=slo(1),shi(1)
                 CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
              ENDDO
-          ENDIF
-
-! ----------------------------------------------------------------<<<
-       ELSE   ! else branch of if(use_ikloop)
-!  Not sure the purpose of us_ikloop
-!  The SMP directives below need review                        !Tingwen Jan 2012
-! ---------------------------------------------------------------->>>
-          IF (DO_ISWEEP) THEN
-             DO K=kstart,kend
-                DO I=istart,iend
-                   CALL LEQ_IKSWEEP(I, K, Var, A_m, B_m, slo, shi)
-                ENDDO
-             ENDDO
-          ENDIF
-       ENDIF   ! end if/else (use(ikloop)
+          ENDDO
+       ENDIF
     ENDDO   ! end do iter=1,niter
 
   END SUBROUTINE LEQ_MSOLVE
@@ -476,9 +442,8 @@ CONTAINS
       INTEGER :: J
 !-----------------------------------------------
 
-
-      NSTART = slo(2)+2
-      NEND = shi(2)-2
+      NSTART = slo(2)
+      NEND = shi(2)
 
       DO J = slo(2), shi(2)
          DD(J) = A_M(I,J,K,  0)
@@ -501,7 +466,7 @@ CONTAINS
          RETURN
       ENDIF
 
-      DO J = slo(2)+2, shi(2)-2
+      DO J = slo(2), shi(2)
          Var(i,j,k) = BB(J)
       ENDDO
 
@@ -541,12 +506,12 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      real(c_real), DIMENSION (ISTART:IEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION (SLO(1):SHI(1)) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO, I
 !-----------------------------------------------
 
-      NEND = IEND
-      NSTART = ISTART
+      NEND = shi(1)
+      NSTART = slo(1)
 
       DO I=NSTART,NEND
          DD(I) = A_M(I,J,K,  0)
@@ -612,12 +577,12 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      real(c_real), DIMENSION (KSTART:KEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION (SLO(3):SHI(3)) :: CC, DD, EE, BB
       INTEGER :: NEND, NSTART, INFO, K
 !-----------------------------------------------
 
-      NEND = KEND
-      NSTART = KSTART
+      NEND = shi(3)
+      NSTART = slo(3)
 
       DO K=NSTART, NEND
          DD(K) = A_M(I,J,K,  0)
