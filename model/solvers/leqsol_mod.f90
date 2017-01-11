@@ -14,7 +14,6 @@ module leqsol
    use functions, only: iplus, jplus, kplus, iminus, jminus, kminus
    use funits, only: dmp_log, unit_log
    use param, only: DIM_EQS
-   use param, only: dimension_3
    use param1, only: zero
 
    use bl_fort_module, only : c_real
@@ -165,8 +164,8 @@ CONTAINS
 
     IF (SETGUESS) THEN
        do k = slo(3),shi(3)
-          do i = slo(2),shi(2)
-             do j = slo(1),shi(1)
+          do j = slo(2),shi(2)
+             do i = slo(1),shi(1)
                 VAR(i,j,k) = B_M(I,J,K)
              enddo
           enddo
@@ -477,6 +476,10 @@ CONTAINS
       INTEGER :: J
 !-----------------------------------------------
 
+
+      NSTART = slo(2)+2
+      NEND = shi(2)-2
+
       DO J = slo(2), shi(2)
          DD(J) = A_M(I,J,K,  0)
          CC(J) = A_M(I,J,K, -2)
@@ -498,7 +501,7 @@ CONTAINS
          RETURN
       ENDIF
 
-      DO J = slo(2), shi(2)
+      DO J = slo(2)+2, shi(2)-2
          Var(i,j,k) = BB(J)
       ENDDO
 
@@ -653,7 +656,7 @@ CONTAINS
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(in) :: r2&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-       
+
     real(c_real) :: prod
     integer :: i, j, k
 
