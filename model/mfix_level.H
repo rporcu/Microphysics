@@ -31,8 +31,8 @@ public:
 
     void Restart();
 
-    void evolve_fluid (int lev, int nstep, int set_normg, 
-                       Real dt, Real& prev_dt, Real time, Real normg); 
+    void evolve_fluid (int lev, int nstep, int set_normg,
+                       Real dt, Real& prev_dt, Real time, Real normg);
 
     void evolve_dem (int lev, int nstep, Real dt, Real time);
 
@@ -73,7 +73,7 @@ protected:
 
     void mfix_correct0 (int lev);
 
-    int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix, 
+    int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
                         int sweep_type, int precond_type, int maxiter, Real eps_rel, Real eps_abs);
 
 private:
@@ -83,7 +83,7 @@ private:
     void InitLevelData (int lev, Real dt, Real time);
 
     void MakeNewLevel (int lev, Real time,
-		       const BoxArray& new_grids, const DistributionMapping& new_dmap);
+           const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
@@ -167,7 +167,7 @@ private:
 
     Array<int> particle_state;
     Array<int> particle_phase;
- 
+
     Array<Real> des_radius;
     Array<Real> ro_sol;
     Array<Real> pvol;
@@ -186,7 +186,7 @@ private:
 
     // runtime parameters
 
-    int verbose = 1;
+    int verbose = 2;
 
     int solve_fluid;
     int solve_dem;

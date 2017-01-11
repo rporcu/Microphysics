@@ -51,7 +51,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 {
     // We're not quite ready to use this yet ... just want it all to compile
     int ret = 0, nit = 1;
-    if (0 == 1) {
+
     const int ncomp  = 1;
     const int nghost = sol.nGrow();
 
@@ -73,28 +73,36 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     Array<int> slo(3);
     Array<int> shi(3);
 
+    std::cout << "Hello from BiCGStab! " << '\n';
+
+    std::cout << "Calc leq_residual " << '\n';
+
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-        const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
 
-        const int* sslo = rhs[mfi].loVect();
-        const int* sshi = rhs[mfi].hiVect();
+      const int* sslo = rhs[mfi].loVect();
+      const int* sshi = rhs[mfi].hiVect();
 
-        slo[0] = sslo[0]+2;
-        slo[1] = sslo[1]+2;
-        slo[2] = sslo[2]+2;
- 
-        shi[0] = sshi[0]+2;
-        shi[1] = sshi[1]+2;
-        shi[2] = sshi[2]+2;
+      slo[0] = sslo[0]+2;
+      slo[1] = sslo[1]+2;
+      slo[2] = sslo[2]+2;
 
-        // Compute r = rhs - A_m*sol
-        leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(), r[mfi].dataPtr(),
-                     slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+      shi[0] = sshi[0]+2;
+      shi[1] = sshi[1]+2;
+      shi[2] = sshi[2]+2;
+
+      // Compute r = rhs - A_m*sol
+      leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
+                   r[mfi].dataPtr(), slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
     }
 
+
+    std::cout << "copy sol to sorig " << '\n';
     MultiFab::Copy(sorig,sol,0,0,1,0);
+    std::cout << "copy r to rh " << '\n';
     MultiFab::Copy(rh,   r,  0,0,1,0);
+    std::cout << "done with copy " << '\n';
 
     sol.setVal(0);
 
@@ -103,142 +111,224 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor() )
     {
-        std::cout << "BiCGStab: Initial error (error0) =        " << rnorm0 << '\n';
+      std::cout << "BiCGStab: Initial error (error0) =        " << rnorm0 << '\n';
     }
     Real rho_1 = 0, alpha = 0, omega = 0;
 
     if ( rnorm0 == 0 || rnorm0 < eps_abs )
     {
-        if ( verbose > 0 && ParallelDescriptor::IOProcessor())
-	{
-            std::cout << "BiCGStab: niter = 0,"
-                      << ", rnorm = " << rnorm 
-                      << ", eps_abs = " << eps_abs << std::endl;
-	}
-        return ret;
+      if ( verbose > 0 && ParallelDescriptor::IOProcessor())
+      {
+        std::cout << "BiCGStab: niter = 0,"
+                  << ", rnorm = " << rnorm
+                  << ", eps_abs = " << eps_abs << std::endl;
+      }
+      return ret;
     }
+
+
+
 
     for (; nit <= maxiter; ++nit)
     {
-        const Real rho = dotxy(rh,r);
-        if ( rho == 0 ) 
-	{
-            ret = 1; break; }
-        if ( nit == 1 )
+      const Real rho = dotxy(rh,r);
+      if ( rho == 0 )
         {
-            MultiFab::Copy(p,r,0,0,1,0);
+          ret = 1; break; }
+      if ( nit == 1 )
+      {
+        MultiFab::Copy(p,r,0,0,1,0);
+      }
+      else
+      {
+        const Real beta = (rho/rho_1)*(alpha/omega);
+        sxay(p, p, -omega, v);
+        sxay(p, r,   beta, p);
+      }
+
+      //    if ( use_jacobi_precond )
+      if ( precond_type == 0 ) // pc_type == line
+      {
+        ph.setVal(0);
+        // Lp.jacobi_smooth(ph, p, temp_bc_mode);
+      }
+      else if ( precond_type = 1 ) // pc_type == diag
+      {
+        for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+        {
+          const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+
+          const int* sslo = rhs[mfi].loVect();
+          const int* sshi = rhs[mfi].hiVect();
+
+          slo[0] = sslo[0]+2;
+          slo[1] = sslo[1]+2;
+          slo[2] = sslo[2]+2;
+
+          shi[0] = sshi[0]+2;
+          shi[1] = sshi[1]+2;
+          shi[2] = sshi[2]+2;
+
+          leq_msolve1(bx.loVect(),bx.hiVect(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
+                      ph[mfi].dataPtr(), &sweep_type);
         }
-        else
+      }
+      else // pc_type ==None
+      {
+        MultiFab::Copy(ph,p,0,0,1,0);
+      }
+
+
+      for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+      {
+        const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+
+        const int* sslo = rhs[mfi].loVect();
+        const int* sshi = rhs[mfi].hiVect();
+
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
+
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
+
+        leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
+                   slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+      }
+
+
+      if ( Real rhTv = dotxy(rh,v) )
+      {
+        alpha = rho/rhTv;
+      }
+      else
+      {
+        ret = 2; break;
+      }
+      sxay(sol, sol,  alpha, ph);
+      sxay(s,     r, -alpha,  v);
+
+      rnorm = s.norm0();
+
+      if ( verbose > 2 && ParallelDescriptor::IOProcessor())
+      {
+        std::cout << "BiCGStab: Half Iter " << nit << " rel. err. "
+                  << rnorm/(rnorm0) << '\n';
+      }
+
+      if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
+
+      //    if ( use_jacobi_precond )
+      if ( precond_type == 0 ) // pc_type == line
+      {
+        ph.setVal(0);
+        // Lp.jacobi_smooth(ph, p, temp_bc_mode);
+      }
+      else if ( precond_type = 1 ) // pc_type == diag
+      {
+        for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
-            const Real beta = (rho/rho_1)*(alpha/omega);
-            sxay(p, p, -omega, v);
-            sxay(p, r,   beta, p);
+          const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+
+          const int* sslo = rhs[mfi].loVect();
+          const int* sshi = rhs[mfi].hiVect();
+
+          slo[0] = sslo[0]+2;
+          slo[1] = sslo[1]+2;
+          slo[2] = sslo[2]+2;
+
+          shi[0] = sshi[0]+2;
+          shi[1] = sshi[1]+2;
+          shi[2] = sshi[2]+2;
+
+          leq_msolve1(bx.loVect(),bx.hiVect(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
+                      sh[mfi].dataPtr(), &sweep_type);
         }
+      }
+      else // pc_type ==None
+      {
+        MultiFab::Copy(sh,s,0,0,1,0);
+      }
 
-//      if ( use_jacobi_precond )
-        if ( precond_type == 0 )
-        {
-            ph.setVal(0);
-//          Lp.jacobi_smooth(ph, p, temp_bc_mode);
-        }
-        else 
-        {
-            MultiFab::Copy(ph,p,0,0,1,0); }
-//      Lp.apply(v, ph, temp_bc_mode);
 
-        if ( Real rhTv = dotxy(rh,v) )
-	{
-            alpha = rho/rhTv;
-	}
-        else
-	{
-            ret = 2; break;
-	}
-        sxay(sol, sol,  alpha, ph);
-        sxay(s,     r, -alpha,  v);
+      for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+      {
+        const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
 
-        rnorm = s.norm0();
+        const int* sslo = rhs[mfi].loVect();
+        const int* sshi = rhs[mfi].hiVect();
 
-        if ( verbose > 2 && ParallelDescriptor::IOProcessor())
-        {
-            std::cout << "BiCGStab: Half Iter " << nit << " rel. err. "
-                      << rnorm/(rnorm0) << '\n';
-        }
+        slo[0] = sslo[0]+2;
+        slo[1] = sslo[1]+2;
+        slo[2] = sslo[2]+2;
 
-        if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
+        shi[0] = sshi[0]+2;
+        shi[1] = sshi[1]+2;
+        shi[2] = sshi[2]+2;
 
-//      if ( use_jacobi_precond )
-        if ( precond_type == 0 )
-        {
-            sh.setVal(0);
-//          Lp.jacobi_smooth(sh, s, temp_bc_mode);
-        }
-        else
-        {
-            MultiFab::Copy(sh,s,0,0,1,0);
-        }
-//      Lp.apply(t, sh, temp_bc_mode);
-        //
-        // This is a little funky.  I want to elide one of the reductions
-        // in the following two dotxy()s.  We do that by calculating the "local"
-        // values and then reducing the two local values at the same time.
-        //
-        Real vals[2] = { dotxy(t,t,true), dotxy(t,s,true) };
+        leq_matvec(sh[mfi].dataPtr(), A_m[mfi].dataPtr(), t[mfi].dataPtr(),
+                   slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+      }
 
-        ParallelDescriptor::ReduceRealSum(vals,2);
+      // This is a little funky.  I want to elide one of the reductions
+      // in the following two dotxy()s.  We do that by calculating the "local"
+      // values and then reducing the two local values at the same time.
+      Real vals[2] = { dotxy(t,t,true), dotxy(t,s,true) };
 
-        if ( vals[0] )
-	{
-            omega = vals[1]/vals[0];
-	}
-        else
-	{
-            ret = 3; break;
-	}
-        sxay(sol, sol,  omega, sh);
-        sxay(r,     s, -omega,  t);
+      ParallelDescriptor::ReduceRealSum(vals,2);
 
-        rnorm = r.norm0();
+      if ( vals[0] )
+      {
+        omega = vals[1]/vals[0];
+      }
+      else
+      {
+        ret = 3; break;
+      }
+      sxay(sol, sol,  omega, sh);
+      sxay(r,     s, -omega,  t);
 
-        if ( verbose > 2 && ParallelDescriptor::IOProcessor())
-        {
-            std::cout << "BiCGStab: Iteration " << nit << " rel. err. "
-                      << rnorm/(rnorm0) << '\n';
-        }
+      rnorm = r.norm0();
 
-        if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
+      if ( verbose > 2 && ParallelDescriptor::IOProcessor())
+      {
+        std::cout << "BiCGStab: Iteration " << nit << " rel. err. "
+                  << rnorm/(rnorm0) << '\n';
+      }
 
-        if ( omega == 0 )
-	{
-            ret = 4; break;
-	}
-        rho_1 = rho;
+      if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
+
+      if ( omega == 0 )
+      {
+        ret = 4; break;
+      }
+      rho_1 = rho;
     }
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor())
     {
-        std::cout << "BiCGStab: Final: Iteration " << nit << " rel. err. "
-                  << rnorm/(rnorm0) << '\n';
+      std::cout << "BiCGStab: Final: Iteration " << nit << " rel. err. "
+                << rnorm/(rnorm0) << '\n';
     }
 
     if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
     {
-        if ( ParallelDescriptor::IOProcessor())
-            BoxLib::Error("BiCGStab:: failed to converge!");
-        ret = 8;
+      if ( ParallelDescriptor::IOProcessor())
+        BoxLib::Error("BiCGStab:: failed to converge!");
+      ret = 8;
     }
 
     if ( ( ret == 0 || ret == 8 ) && (rnorm < rnorm0) )
     {
-        sol.plus(sorig, 0, 1, 0);
-    } 
-    else 
+      sol.plus(sorig, 0, 1, 0);
+    }
+    else
     {
-        sol.setVal(0);
-        sol.plus(sorig, 0, 1, 0);
+      sol.setVal(0);
+      sol.plus(sorig, 0, 1, 0);
     }
 
-    }
     return ret;
 }
-

@@ -3,7 +3,8 @@ module matvec_module
   contains
 
   ! returns Am*Var
-  subroutine leq_matvec(var, A_m, res, slo, shi, lo, hi)
+  subroutine leq_matvec(var, A_m, res, slo, shi, lo, hi)&
+    bind(C, name = "leq_matvec")
 
     use bl_fort_module, only : c_real
     use iso_c_binding , only: c_int
@@ -45,7 +46,11 @@ module matvec_module
 
   end subroutine leq_matvec
 
-  ! returns (Rhs - Am*Var)
+
+
+
+
+! returns (Rhs - Am*Var)
   subroutine leq_residual(rhs, var, A_m, res, slo, shi, lo, hi) &
     bind(C, name = "leq_residual")
 

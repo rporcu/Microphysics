@@ -1205,6 +1205,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     Array<int> slo(3);
     Array<int> shi(3);
 
+#if(1)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
        const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -1220,10 +1221,13 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
        shi[1] = sshi[1]+2;
        shi[2] = sshi[2]+2;
 
-       mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),rhs[mfi].dataPtr(),
-                         &sweep_type, &tol, &precond_type, &max_it, &ier, 
+       mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),
+                         rhs[mfi].dataPtr(),
+                         &sweep_type, &tol, &precond_type, &max_it, &ier,
                          slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect());
     }
-
+#else
+    std::cout << "ELSE " << '\n';
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, tol);
+#endif
 }

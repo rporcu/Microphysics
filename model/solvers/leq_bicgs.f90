@@ -214,41 +214,6 @@
          Svec(:,:,:) = R(:,:,:) - alpha(i) * V(:,:,:)
 
 
-! Check norm of Svec(:,:,:); if small enough:
-! set X(:,:,:) = X(:,:,:) + alpha(i)*Phat(:,:,:) and stop
-! --------------------------------
-         if(.not.minimize_dotproducts) then
-
-            Snorm = sqrt( dot_product_par(Svec,Svec,slo,shi) )
-
-            if (Snorm <= TOLMIN) then
-               Var(:,:,:) = Var(:,:,:) + alpha(i)*Phat(:,:,:)
-
-! Recompute residual norm
-! --------------------------------
-               if (idebugl >= 1) then
-                  call LEQ_MATVEC(Var, A_m, R, slo, shi, lo, hi)   ! returns R=A*Var
-!                  Rnorm = sqrt( dot_product_par(Var,Var,slo,shi) )
-!                  print*,'leq_bicgs, initial Vnorm: ', Rnorm
-
-                  do kk = slo(3),shi(3)
-                     do jj = slo(2),shi(2)
-                        do ii = slo(1),shi(1)
-                           R(iI,jJ,kK) = B_M(iI,jJ,kK) - R(iI,jJ,kK)
-                        enddo
-                     enddo
-                  enddo
-
-                   Rnorm = sqrt( dot_product_par(R,R,slo,shi) )
-
-               endif            ! idebugl >= 1
-                           isConverged = .TRUE.
-                           EXIT
-            endif               ! end if (Snorm <= TOLMIN)
-         endif                  ! end if (.not.minimize_dotproducts)
-
-
-
 ! Solve A*Shat(:) = Svec(:,:,:)
 ! Tvec(:) = A*Shat(:)
 ! --------------------------------

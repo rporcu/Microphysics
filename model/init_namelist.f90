@@ -349,7 +349,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <valid value="NONE" note="No preconditioner"/>
 !  <valid value="LINE" note="Line relaxation"/>
 !  <valid value="DIAG" note="Diagonal Scaling"/>
-      LEQ_PC(:) = 'LINE'
+      LEQ_PC(:) = 'DIAG'
 !</keyword>
 
 
