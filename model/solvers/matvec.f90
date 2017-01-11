@@ -28,9 +28,9 @@ module matvec_module
     INTEGER :: I, J, K
 !-----------------------------------------------
 
-    do k = lo(3),hi(3)
-       do i = lo(2),hi(2)
-          do j = lo(1),hi(1)
+    do k = slo(3),shi(3)
+       do i = slo(1),shi(1)
+          do j = slo(2),shi(2)
              res(i,j,k) = &
                           ( A_m(i,j,k,-3) * Var(i,j,kminus(i,j,k))   &
                           + A_m(i,j,k,-2) * Var(i,jminus(i,j,k),k)   &
@@ -75,9 +75,9 @@ module matvec_module
     INTEGER :: I, J, K
 !-----------------------------------------------
 
-    do k = lo(3),hi(3)
-       do i = lo(2),hi(2)
-          do j = lo(1),hi(1)
+    do k = slo(3),shi(3)
+       do i = slo(1),shi(1)
+          do j = slo(2),shi(2)
              res(i,j,k) = rhs(i,j,k) -  &
                           ( A_m(i,j,k,-3) * Var(i,j,kminus(i,j,k))   &
                           + A_m(i,j,k,-2) * Var(i,jminus(i,j,k),k)   &

@@ -659,9 +659,9 @@ CONTAINS
 
     prod = 0.0d0
 
-    do k = kstart1, kend1
-       do i = istart1, iend1
-          do j = jstart1, jend1
+    do k = slo(3),shi(3)
+       do i = slo(1),shi(1)
+          do j = slo(2),shi(2)
                prod = prod + r1(i,j,k)*r2(i,j,k)
           enddo
        enddo

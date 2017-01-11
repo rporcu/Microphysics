@@ -157,12 +157,13 @@
       do i=1,itmax
 
           rho(i-1) = dot_product_par(Rtilde,R,slo,shi)
+!         print*, 'leq_bicgs: initial rho(i-1) == 0 '
 
          if (rho(i-1) .eq. zero) then
             if(i /= 1)then
 ! Method fails
 ! --------------------------------
-!               print*, 'leq_bicgs: rho(i-1) == 0 '
+!              print*, 'leq_bicgs: rho(i-1) == 0 '
                ier = -2
             else
 ! Method converged.  residual is already zero
@@ -186,7 +187,6 @@
             beta(i-1) = ( rho(i-1)/rho(i-2) )*( alpha(i-1) / omega(i-1) )
                P(:,:,:) = R(:,:,:) + beta(i-1)*( P(:,:,:) - omega(i-1)*V(:,:,:) )
          endif ! i.eq.1
-
 
 ! Solve A*Phat(:,:,:) = P(:,:,:)
 ! V(:,:,:) = A*Phat(:,:,:)
@@ -291,8 +291,6 @@
                   print*,'RtildexV, rho(i-1) ', RtildexV, rho(i-1)
                endif
             endif
-
-!           call mfix_exit(myPE)
 
 ! Check convergence; continue if necessary
 ! for continuation, it is necessary that omega(i) .ne. 0
