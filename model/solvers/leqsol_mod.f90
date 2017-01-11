@@ -424,15 +424,15 @@ CONTAINS
     ! sweep direction
     integer         , intent(in) :: sweep_type
 
-    integer :: i,j,k,
+    integer :: i,j,k
 
-       do k=kstart2,kend2
-          do i=istart2,iend2
-             do j=jstart2,jend2
-                var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
-             enddo
+    do k = slo(3),shi(3)
+       do i = slo(1),shi(1)
+          do j = slo(2),shi(2)
+             var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
           enddo
        enddo
+    enddo
 
   end subroutine leq_msolve1
 
@@ -461,7 +461,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: I, K
       INTEGER, INTENT(IN) :: slo(3), shi(3)
 ! Variable
-      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
@@ -471,15 +472,12 @@ CONTAINS
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      real(c_real), DIMENSION(JSTART:JEND) :: CC, DD, EE, BB
+      real(c_real), DIMENSION(slo(2):shi(2)) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO
       INTEGER :: J
 !-----------------------------------------------
 
-      NEND = JEND
-      NSTART = JSTART
-
-      DO J=NSTART, NEND
+      DO J = slo(2), shi(2)
          DD(J) = A_M(I,J,K,  0)
          CC(J) = A_M(I,J,K, -2)
          EE(J) = A_M(I,J,K,  2)
@@ -500,11 +498,10 @@ CONTAINS
          RETURN
       ENDIF
 
-      DO J=NSTART, NEND
+      DO J = slo(2), shi(2)
          Var(i,j,k) = BB(J)
       ENDDO
 
-      RETURN
       END SUBROUTINE LEQ_IKSWEEP
 
 
@@ -530,7 +527,8 @@ CONTAINS
 ! Line position
       INTEGER, INTENT(IN) :: J, K
 ! Variable
-      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
@@ -600,7 +598,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: I, J
       INTEGER, INTENT(IN) :: slo(3),shi(3)
 ! Variable
-      real(c_real), INTENT(INOUT) :: Var(DIMENSION_3)
+      real(c_real), INTENT(INOUT) :: Var&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
@@ -632,17 +631,10 @@ CONTAINS
       INFO = 0
       CALL DGTSV(NEND-NSTART+1, 1, CC(NSTART+1), DD, EE, BB, NEND-NSTART+1, INFO)
 
-      IF (INFO.NE.0) THEN
-         IF(DMP_LOG)WRITE (UNIT_LOG,*) 'ROUTINE = ', ' IJSWEEP'
-         IF(DMP_LOG)WRITE (UNIT_LOG,*) 'DGTSV RETURNS INFO = ', INFO
-         call mfix_exit(myPE)
-      ENDIF
-
       DO K=NSTART, NEND
-         Var(i,j,k) = BB(i,j,k)
+         Var(i,j,k) = BB(k)
       ENDDO
 
-      RETURN
       END SUBROUTINE LEQ_IJSWEEP
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
