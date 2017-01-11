@@ -1,4 +1,4 @@
-MODULE leqsol
+module leqsol
 
    use compar, ONLY: istart, iend, jstart, jend, kstart, kend
    use compar, only: iend, jend, kend
@@ -11,7 +11,7 @@ MODULE leqsol
    use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
-   use functions, only: funijk, iplus, jplus, kplus, iminus, jminus, kminus
+   use functions, only: iplus, jplus, kplus, iminus, jminus, kminus
    use funits, only: dmp_log, unit_log
    use param, only: DIM_EQS
    use param, only: dimension_3
@@ -137,7 +137,7 @@ CONTAINS
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
     real(c_real), INTENT(INOUT) :: Var&
-         (DIMENSION_3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Sweep direction of leq solver (leq_sweep)
 !     e.g., options = 'isis', 'rsrs' (default), 'asas'
@@ -152,7 +152,7 @@ CONTAINS
 !-----------------------------------------------
 !
     INTEGER :: ITER, NITER
-    INTEGER :: IJK, I , J, K
+    INTEGER :: I , J, K
     INTEGER :: I1, J1, K1, I2, J2, K2, IK, JK, IJ
     INTEGER :: ISIZE, JSIZE, KSIZE
     INTEGER :: ICASE
@@ -167,8 +167,7 @@ CONTAINS
        do k = slo(3),shi(3)
           do i = slo(2),shi(2)
              do j = slo(1),shi(1)
-                IJK = funijk(i,j,k)
-                VAR(IJK) = B_M(I,J,K)
+                VAR(i,j,k) = B_M(I,J,K)
              enddo
           enddo
        enddo
@@ -367,21 +366,22 @@ CONTAINS
     real(c_real), INTENT(IN) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
-    real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
+    real(c_real), INTENT(OUT) :: Var&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
     ! sweep direction
     integer         , intent(in) :: sweep_type
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-    integer :: ijk,i,j,k
+    integer :: i,j,k
 !-----------------------------------------------
 
 ! do nothing or no preconditioning
       DO K = slo(3),shi(3)
         DO J = slo(2),shi(2)
           DO I = slo(1),shi(1)
-         IJK = FUNIJK(i,j,k)
-          var(ijk) = b_m(i,j,k)
+          var(i,j,k) = b_m(i,j,k)
        enddo
        enddo
        enddo
@@ -417,22 +417,19 @@ CONTAINS
     ! Septadiagonal matrix A_m
     real(c_real), INTENT(IN) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-! Variable
-    real(c_real), INTENT(OUT) :: Var(DIMENSION_3)
+
+    real(c_real), INTENT(OUT) :: Var&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     ! sweep direction
     integer         , intent(in) :: sweep_type
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-    integer :: i,j,k, ijk
-!-----------------------------------------------
+
+    integer :: i,j,k,
 
        do k=kstart2,kend2
           do i=istart2,iend2
              do j=jstart2,jend2
-                ijk = funijk( i,j,k )
-                var(ijk) = b_m(i,j,k)/A_m(i,j,k,0)
+                var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
              enddo
           enddo
        enddo
@@ -476,21 +473,20 @@ CONTAINS
 !-----------------------------------------------
       real(c_real), DIMENSION(JSTART:JEND) :: CC, DD, EE, BB
       INTEGER :: NSTART, NEND, INFO
-      INTEGER :: IJK, J
+      INTEGER :: J
 !-----------------------------------------------
 
       NEND = JEND
       NSTART = JSTART
 
       DO J=NSTART, NEND
-         IJK = funijk(i,j,k)
          DD(J) = A_M(I,J,K,  0)
          CC(J) = A_M(I,J,K, -2)
          EE(J) = A_M(I,J,K,  2)
-         BB(J) = B_M(I,J,K) -  A_M(I,J,K,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
-                          -  A_M(I,J,K, 1) * Var( funijk(iplus(i,j,k),j,k) ) &
-                          -  A_M(I,J,K,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
-                          -  A_M(I,J,K, 3) * Var( funijk(i,j,kplus(i,j,k)) )
+         BB(J) = B_M(I,J,K) -  A_M(I,J,K,-1) * Var(iminus(i,j,k),j,k) &
+                            -  A_M(I,J,K, 1) * Var( iplus(i,j,k),j,k) &
+                            -  A_M(I,J,K,-3) * Var(i,j,kminus(i,j,k)) &
+                            -  A_M(I,J,K, 3) * Var(i,j, kplus(i,j,k))
       ENDDO
 
       CC(NSTART) = ZERO
@@ -505,7 +501,7 @@ CONTAINS
       ENDIF
 
       DO J=NSTART, NEND
-         Var(funijk(i,j,k)) = BB(J)
+         Var(i,j,k) = BB(J)
       ENDDO
 
       RETURN
@@ -545,21 +541,20 @@ CONTAINS
 ! Local variables
 !-----------------------------------------------
       real(c_real), DIMENSION (ISTART:IEND) :: CC, DD, EE, BB
-      INTEGER :: NSTART, NEND, INFO, IJK, I
+      INTEGER :: NSTART, NEND, INFO, I
 !-----------------------------------------------
 
       NEND = IEND
       NSTART = ISTART
 
       DO I=NSTART,NEND
-         IJK = FUNIJK(I,J,K)
          DD(I) = A_M(I,J,K,  0)
          CC(I) = A_M(I,J,K, -1)
          EE(I) = A_M(I,J,K,  1)
-         BB(I) = B_M(I,J,K)    -  A_M(I,J,K,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
-                             -  A_M(I,J,K, 2) * Var( funijk(i,jplus(i,j,k) ,k) ) &
-                             -  A_M(I,J,K,-3) * Var( funijk(i,j,kminus(i,j,k)) ) &
-                             -  A_M(I,J,K, 3) * Var( funijk(i,j ,kplus(i,j,k))  )
+         BB(I) = B_M(I,J,K)  -  A_M(I,J,K,-2) * Var(i,jminus(i,j,k),k) &
+                             -  A_M(I,J,K, 2) * Var(i,jplus(i,j,k) ,k) &
+                             -  A_M(I,J,K,-3) * Var(i,j,kminus(i,j,k)) &
+                             -  A_M(I,J,K, 3) * Var(i,j ,kplus(i,j,k))
       ENDDO
 
       CC(NSTART) = ZERO
@@ -574,8 +569,7 @@ CONTAINS
       ENDIF
 
       DO I=NSTART, NEND
-         IJK = FUNIJK(I,J,K)
-         Var(IJK) = BB(I)
+         Var(i,j,k) = BB(I)
       ENDDO
 
       RETURN
@@ -617,21 +611,20 @@ CONTAINS
 ! Local variables
 !-----------------------------------------------
       real(c_real), DIMENSION (KSTART:KEND) :: CC, DD, EE, BB
-      INTEGER :: NEND, NSTART, INFO, IJK, K
+      INTEGER :: NEND, NSTART, INFO, K
 !-----------------------------------------------
 
       NEND = KEND
       NSTART = KSTART
 
       DO K=NSTART, NEND
-         IJK = FUNIJK(I,J,K)
          DD(K) = A_M(I,J,K,  0)
          CC(K) = A_M(I,J,K, -3)
          EE(K) = A_M(I,J,K,  3)
-         BB(K) = B_M(I,J,K)    -  A_M(I,J,K,-2) * Var( funijk(i,jminus(i,j,k),k) ) &
-                             -  A_M(I,J,K, 2) * Var( funijk(i,jplus(i,j,k),k) ) &
-                             -  A_M(I,J,K,-1) * Var( funijk(iminus(i,j,k),j,k) ) &
-                             -  A_M(I,J,K, 1) * Var( funijk(iplus(i,j,k),j,k) )
+         BB(K) = B_M(I,J,K)  -  A_M(I,J,K,-2) * Var(i,jminus(i,j,k),k) &
+                             -  A_M(I,J,K, 2) * Var(i, jplus(i,j,k),k) &
+                             -  A_M(I,J,K,-1) * Var(iminus(i,j,k),j,k) &
+                             -  A_M(I,J,K, 1) * Var( iplus(i,j,k),j,k)
       ENDDO
 
       CC(NSTART) = ZERO
@@ -646,8 +639,7 @@ CONTAINS
       ENDIF
 
       DO K=NSTART, NEND
-         IJK = FUNIJK(I,J,K)
-         Var(IJK) = BB(K)
+         Var(i,j,k) = BB(i,j,k)
       ENDDO
 
       RETURN
@@ -658,74 +650,33 @@ CONTAINS
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+  real(c_real) function dot_product_par(r1,r2,slo,shi)
 
-  real(c_real) function dot_product_par(r1,r2)
+    use bl_fort_module, only : c_real
 
-   use compar, only: imap_c, jmap_c, kmap_c
     implicit none
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-    real(c_real), intent(in), dimension(DIMENSION_3) :: r1,r2
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
+    integer, intent(in) :: slo(3),shi(3)
+
+    real(c_real), intent(in) :: r1&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+    real(c_real), intent(in) :: r2&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+       
     real(c_real) :: prod
-    integer :: i, j, k, ijk
-!-----------------------------------------------
+    integer :: i, j, k
 
-       prod = 0.0d0
+    prod = 0.0d0
 
-          do k = kstart1, kend1
-             do i = istart1, iend1
-                do j = jstart1, jend1
-                   ijk = FUNIJK(IMAP_C(i),JMAP_C(j),KMAP_C(k))
-                   prod = prod + r1(ijk)*r2(ijk)
-                enddo
-             enddo
+    do k = kstart1, kend1
+       do i = istart1, iend1
+          do j = jstart1, jend1
+               prod = prod + r1(i,j,k)*r2(i,j,k)
           enddo
+       enddo
+    enddo
 
-          dot_product_par = prod
+    dot_product_par = prod
 
   end function dot_product_par
 
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-  function dot_product_par2(r1,r2,r3,r4)
-
-   use compar, only: imap_c, jmap_c, kmap_c
-    implicit none
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-    real(c_real), intent(in), dimension(DIMENSION_3) :: r1,r2,r3,r4
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-    real(c_real), Dimension(2) :: prod, dot_product_par2
-    integer :: i, j, k, ijk
-!-----------------------------------------------
-
-       prod(:) = 0.0d0
-
-       do k = kstart1, kend1
-          do i = istart1, iend1
-             do j = jstart1, jend1
-
-                ijk = FUNIJK(IMAP_C(i),JMAP_C(j),KMAP_C(k))
-                prod(1) = prod(1) + r1(ijk)*r2(ijk)
-                prod(2) = prod(2) + r3(ijk)*r4(ijk)
-             enddo
-          enddo
-       enddo
-
-       dot_product_par2 = prod
-
-  end function dot_product_par2
-
-END MODULE leqsol
+end module leqsol

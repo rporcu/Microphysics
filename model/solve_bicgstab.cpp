@@ -103,7 +103,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor() )
     {
-        std::cout << "CGSolver_BiCGStab: Initial error (error0) =        " << rnorm0 << '\n';
+        std::cout << "BiCGStab: Initial error (error0) =        " << rnorm0 << '\n';
     }
     Real rho_1 = 0, alpha = 0, omega = 0;
 
@@ -111,7 +111,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     {
         if ( verbose > 0 && ParallelDescriptor::IOProcessor())
 	{
-            std::cout << "CGSolver_BiCGStab: niter = 0,"
+            std::cout << "BiCGStab: niter = 0,"
                       << ", rnorm = " << rnorm 
                       << ", eps_abs = " << eps_abs << std::endl;
 	}
@@ -161,7 +161,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
         if ( verbose > 2 && ParallelDescriptor::IOProcessor())
         {
-            std::cout << "CGSolver_BiCGStab: Half Iter " << nit << " rel. err. "
+            std::cout << "BiCGStab: Half Iter " << nit << " rel. err. "
                       << rnorm/(rnorm0) << '\n';
         }
 
@@ -202,7 +202,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
         if ( verbose > 2 && ParallelDescriptor::IOProcessor())
         {
-            std::cout << "CGSolver_BiCGStab: Iteration " << nit << " rel. err. "
+            std::cout << "BiCGStab: Iteration " << nit << " rel. err. "
                       << rnorm/(rnorm0) << '\n';
         }
 
@@ -217,14 +217,14 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor())
     {
-        std::cout << "CGSolver_BiCGStab: Final: Iteration " << nit << " rel. err. "
+        std::cout << "BiCGStab: Final: Iteration " << nit << " rel. err. "
                   << rnorm/(rnorm0) << '\n';
     }
 
     if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
     {
         if ( ParallelDescriptor::IOProcessor())
-            BoxLib::Error("CGSolver_BiCGStab:: failed to converge!");
+            BoxLib::Error("BiCGStab:: failed to converge!");
         ret = 8;
     }
 

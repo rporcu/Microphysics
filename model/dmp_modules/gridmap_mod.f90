@@ -21,8 +21,6 @@ contains
       use compar, only: iend2, jend2, kend2
       use compar, only: iend3, jend3, kend3
       use compar, only: imap, jmap, kmap
-      use compar, only: imap_c, jmap_c, kmap_c
-      use compar, only: imap_c, jmap_c, kmap_c
       use compar, only: istart, jstart, kstart
       use compar, only: istart1, jstart1, kstart1
       use compar, only: istart2, jstart2, kstart2
@@ -88,10 +86,6 @@ contains
       allocate( jmap( jmin2:jmax2 ) )
       allocate( kmap( kmin2:kmax2 ) )
 
-      allocate( imap_c( imin2:imax2 ) )
-      allocate( jmap_c( jmin2:jmax2 ) )
-      allocate( kmap_c( kmin2:kmax2 ) )
-
       do kk=kmin2,kmax2
         kmap(kk) = kk
       enddo
@@ -119,32 +113,6 @@ contains
          imap( imin2 ) = imax1
       endif
 
-      do kk=kmin2,kmax2
-        kmap_c(kk) = kk
-      enddo
-
-      do jj=jmin2,jmax2
-        jmap_c(jj) = jj
-      enddo
-
-      do ii=imin2,imax2
-         imap_c(ii) = ii
-      enddo
-
-      if (CYC_ZL.and.nodesk.eq.1) then
-         kmap_c( kmax2 ) = kmin1
-         kmap_c( kmin2 ) = kmax1
-      endif
-
-      if (CYC_YL.and.nodesj.eq.1) then
-         jmap_c( jmax2 ) = jmin1
-         jmap_c( jmin2 ) = jmax1
-      endif
-
-      if (CYC_XL.and.nodesi.eq.1) then
-         imap_c( imax2 ) = imin1
-         imap_c( imin2 ) = imax1
-      endif
 ! End setup mapping to take care of cyclic boundary conditions
 ! ----------------------------------------------------------------<<<
 
