@@ -1205,7 +1205,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     Array<int> slo(3);
     Array<int> shi(3);
 
-#if(1)
+#if(0)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
        const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));

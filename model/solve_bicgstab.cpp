@@ -61,21 +61,19 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab ph(ba, ncomp, nghost, dm);
     MultiFab sh(ba, ncomp, nghost, dm);
 
-    MultiFab sorig(ba, ncomp, 0, dm);
-    MultiFab p    (ba, ncomp, 0, dm);
-    MultiFab r    (ba, ncomp, 0, dm);
-    MultiFab s    (ba, ncomp, 0, dm);
-    MultiFab rh   (ba, ncomp, 0, dm);
-    MultiFab v    (ba, ncomp, 0, dm);
-    MultiFab t    (ba, ncomp, 0, dm);
+    MultiFab sorig(ba, ncomp, nghost, dm);
+    MultiFab p    (ba, ncomp, nghost, dm);
+    MultiFab r    (ba, ncomp, nghost, dm);
+    MultiFab s    (ba, ncomp, nghost, dm);
+    MultiFab rh   (ba, ncomp, nghost, dm);
+    MultiFab v    (ba, ncomp, nghost, dm);
+    MultiFab t    (ba, ncomp, nghost, dm);
 
 //  Lp.residual(r, rhs, sol, bc_mode);
     Array<int> slo(3);
     Array<int> shi(3);
 
     std::cout << "Hello from BiCGStab! " << '\n';
-
-    std::cout << "Calc leq_residual " << '\n';
 
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
@@ -98,9 +96,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     }
 
 
-    std::cout << "copy sol to sorig " << '\n';
     MultiFab::Copy(sorig,sol,0,0,1,0);
-    std::cout << "copy r to rh " << '\n';
     MultiFab::Copy(rh,   r,  0,0,1,0);
     std::cout << "done with copy " << '\n';
 
