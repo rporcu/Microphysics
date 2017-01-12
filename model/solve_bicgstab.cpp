@@ -73,8 +73,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     Array<int> slo(3);
     Array<int> shi(3);
 
+
     // Unit scaling
-    //---------------------------------------------------------------------------
+    //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -96,7 +97,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
 
     // Compute initial residual r = rhs - A*sol
-    //---------------------------------------------------------------------------
+    //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -116,7 +117,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
                    r[mfi].dataPtr(), slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
     }
-
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
@@ -145,7 +145,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
 
     // Main loop
-    //----------------------------------------------------------------------------
+    //-------------------------------------------------------------------
     for (; nit <= maxiter; ++nit)
     {
 
@@ -168,13 +168,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         sxay(p, r,   beta, p);
       }
 
-
-      std::cout << "p-dot " << dotxy(p,p) << '\n';
-
-
       //  A*ph = p
       //  v = A*Ph
-      //---------------------------------------------------------------------------
+      //-----------------------------------------------------------------
       if ( precond_type == 0 ) // pc_type == line
       {
         std::cout << " DNE should not be here" << '\n';
@@ -207,9 +203,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
 
 
-      std::cout << "ph-dot " << dotxy(ph,ph) << '\n';
-
-
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
         const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -228,15 +221,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
       }
-      std::cout << "v-dot " << dotxy(v,v) << '\n';
-
 
       Real rhTv = dotxy(rh,v,true);
       ParallelDescriptor::ReduceRealSum(rhTv);
 
-
       // Compute alpha
-      //-------------------------------------------------
+      //----------------------------------------------------------------
       if ( rhTv )
       {
         alpha = rho/rhTv;
@@ -246,14 +236,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         ret = 2; break;
       }
       // Compute s
-      //-------------------------------------------------
+      //----------------------------------------------------------------
       sxay(s,     r, -alpha,  v);
 
-      std::cout << "s-dot " << dotxy(s,s) << '\n';
 
       // A*sh = s
       // t=A*sh
-      //-------------------------------------------------
+      //----------------------------------------------------------------
       if ( precond_type == 0 ) // pc_type == line
       {
         ph.setVal(0);
@@ -284,8 +273,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(sh,s,0,0,1,nghost);
       }
 
-      std::cout << "sh-dot " << dotxy(sh,sh) << '\n';
-
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
         const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -305,8 +292,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
       }
 
-      std::cout << "t-dot " << dotxy(t,t) << '\n';
-
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
@@ -315,7 +300,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
 
       // Compute omega
-      // ----------------------------------------------------------
+      // ---------------------------------------------------------------
       if ( vals[0] )
       {
         omega = vals[1]/vals[0];
@@ -336,23 +321,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       ParallelDescriptor::ReduceRealSum(rnorm);
       rnorm = sqrt(rnorm);
 
-
-      std::cout << "\n "  << '\n';
-      std::cout << "iter, Rnorm " << nit << "  " << rnorm << '\n';
-      std::cout << " alpha, omega " << alpha << "  " << omega << '\n';
-      std::cout << " TxS, TxT " << vals[1]  << "  " << vals[0] << '\n';
-      std::cout << " RtildexV, rho  " << rhTv << "  " << rho << '\n';
-
-
-      if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
-
-
-      if ( verbose > 2 && ParallelDescriptor::IOProcessor())
-      {
-        std::cout << "BiCGStab: Iteration " << nit << " rel. err. "
-                  << rnorm/(rnorm0) << '\n';
-      }
-
       if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
 
       if ( omega == 0 )
@@ -362,28 +330,32 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       rho_1 = rho;
     }
 
+
     if ( verbose > 0 && ParallelDescriptor::IOProcessor())
     {
-      std::cout << "BiCGStab: Final: Iteration " << nit << " rel. err. "
-                << rnorm/(rnorm0) << '\n';
+      std::cout << "BiCGStab: final Rnorm " << rnorm << '\n';
+      std::cout << "BiCGStab: ratio " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
     }
 
-    if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
-    {
-      if ( ParallelDescriptor::IOProcessor())
-        BoxLib::Error("BiCGStab:: failed to converge!");
-      ret = 8;
-    }
+    // HACK: MFIX isn't enforcing this. It sets an error flag but does
+    // do anything with that information.
+    //-------------------------------------------------------------------
+    // if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
+    // {
+    //   if ( ParallelDescriptor::IOProcessor())
+    //     BoxLib::Error("BiCGStab:: failed to converge!");
+    //   ret = 8;
+    // }
 
-    if ( ( ret == 0 || ret == 8 ) && (rnorm < rnorm0) )
-    {
-      sol.plus(sorig, 0, 1, 0);
-    }
-    else
-    {
-      sol.setVal(0);
-      sol.plus(sorig, 0, 1, 0);
-    }
+    // if ( ( ret == 0 || ret == 8 ) && (rnorm < rnorm0) )
+    // {
+    //   sol.plus(sorig, 0, 1, 0);
+    // }
+    // else
+    // {
+    //   sol.setVal(0);
+    //   sol.plus(sorig, 0, 1, 0);
+    // }
 
     return ret;
 }

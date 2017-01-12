@@ -116,7 +116,6 @@ end subroutine leq_scale
 ! Variable
     INTEGER :: I, J, K
 !-----------------------------------------------
-    real(c_real) :: prod
 
     do k = slo(3),shi(3)
        do i = slo(1),shi(1)
@@ -134,18 +133,6 @@ end subroutine leq_scale
           enddo
        enddo
     enddo
-
-
-    prod = 0.0d0
-    do k = slo(3),shi(3)
-       do i = slo(1),shi(1)
-          do j = slo(2),shi(2)
-               prod = prod + res(i,j,k)*res(i,j,k)
-          enddo
-       enddo
-    enddo
-    write(6,*)'dot prod',prod
-1000 format(3(1x,I3),es12.4)
 
   end subroutine leq_residual
 

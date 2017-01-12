@@ -6,7 +6,7 @@
          use exit_mod, only: mfix_exit
          use matvec_module, only: leq_matvec, leq_residual, leq_scale
          use leqsol, only: icheck_bicgs, minimize_dotproducts
-         use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, iter_tot
+         use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par
          use param, only: dimension_3
          use param1, only: zero, one, small_number
 
@@ -57,7 +57,7 @@
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
-      INTEGER, PARAMETER :: idebugl = 30
+      INTEGER, PARAMETER :: idebugl = 0
       real(c_real), PARAMETER :: ratiotol = 0.2
       LOGICAL, PARAMETER :: do_unit_scaling = .true.
 !-----------------------------------------------
@@ -173,9 +173,6 @@
                P(:,:,:) = R(:,:,:) + beta(i-1)*( P(:,:,:) - omega(i-1)*V(:,:,:) )
          endif ! i.eq.1
 
-
-         print*,'p-dot ', dot_product_par(p,p,slo,shi)
-
 ! Solve A*Phat(:,:,:) = P(:,:,:)
 ! V(:,:,:) = A*Phat(:,:,:)
 ! --------------------------------
@@ -187,23 +184,7 @@
             call LEQ_MSOLVE1(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
          end if
 
-
-         print*,'ph-dot ', dot_product_par(phat,phat,slo,shi)
-
-
-         ! write(*,*) 'p'
-         ! do kk = slo(3),shi(3)
-         !    do jj = slo(2),shi(2)
-         !       do ii = slo(1),shi(1)
-         !          write(*,*) p(ii,jj,kk)
-         !       enddo
-         !    enddo
-         ! enddo
-
          call LEQ_MATVEC(Phat, A_m, V, slo, shi, lo, hi)   ! returns V=A*Phat
-
-
-         print*,'v-dot ', dot_product_par(v,v,slo,shi)
 
          RtildexV = dot_product_par(Rtilde,V,slo,shi)
 
@@ -215,7 +196,6 @@
 ! --------------------------------
          Svec(:,:,:) = R(:,:,:) - alpha(i) * V(:,:,:)
 
-         print*,'s-dot ', dot_product_par(svec,svec,slo,shi)
 
 ! Solve A*Shat(:) = Svec(:,:,:)
 ! Tvec(:) = A*Shat(:)
@@ -228,11 +208,8 @@
             call LEQ_MSOLVE1(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
          end if
 
-         print*,'sh-dot ', dot_product_par(shat,shat,slo,shi)
 
          call LEQ_MATVEC(Shat, A_m, Tvec, slo, shi, lo, hi )   ! returns Tvec=A*Shat
-
-         print*,'t-dot ', dot_product_par(tvec,tvec,slo,shi)
 
          TxS = dot_product_par(Tvec,Svec,slo,shi)
          TxT = dot_product_par(Tvec,Tvec,slo,shi)
@@ -271,10 +248,7 @@
 ! for continuation, it is necessary that omega(i) .ne. 0
             isconverged = (Rnorm <= TOL*Rnorm0)
 
-            if (isconverged) then
-               iter_tot(vno) = iter_tot(vno) + iter + 1
-               EXIT
-            endif
+            if (isconverged) EXIT
          endif                  ! end if(.not.minimize_dotproducts)
 
 ! Advance the iteration count
@@ -309,7 +283,6 @@
       IER = 0
       if (.not.isconverged) then
          IER = -1
-         iter_tot(vno) = iter_tot(vno) + iter
          if (real(Rnorm) >= ratiotol*real(Rnorm0)) then
             IER = -2
          endif
