@@ -109,6 +109,7 @@ CONTAINS
 
   SUBROUTINE LEQ_MSOLVE1(slo, shi, B_m, A_M, Var, sweep_type) &
      bind(C, name = "leq_msolve1")
+   use param1, only: small_number
 
     IMPLICIT NONE
 
@@ -131,9 +132,11 @@ CONTAINS
     integer :: i,j,k
 
     do k = slo(3),shi(3)
-       do i = slo(1),shi(1)
-          do j = slo(2),shi(2)
-             var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
+       do j = slo(2),shi(2)
+          do i = slo(1),shi(1)
+             if(abs(A_M(i,j,k,0))>small_number) &
+                var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
+             write(6,*) i,j,k,var(i,j,k);flush(6)
           enddo
        enddo
     enddo

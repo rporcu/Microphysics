@@ -11,7 +11,7 @@ dotxy (const MultiFab& r,
        bool            local = false)
 {
     const int ncomp = 1;
-    const int nghost = 0;
+    const int nghost = 1;
     return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
 }
 
@@ -26,7 +26,7 @@ sxay (MultiFab&       ss,
     const int ncomp  = 1;
     const int sscomp = 0;
     const int xxcomp = 0;
-    MultiFab::LinComb(ss, 1.0, xx, xxcomp, a, yy, yycomp, sscomp, ncomp, 0);
+    MultiFab::LinComb(ss, 1.0, xx, xxcomp, a, yy, yycomp, sscomp, ncomp, 1);
 }
 
 inline
@@ -73,8 +73,30 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     Array<int> slo(3);
     Array<int> shi(3);
 
-    std::cout << "Hello from BiCGStab! " << '\n';
+    // Unit scaling
+    //---------------------------------------------------------------------------
+    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+    {
+      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
 
+      const int* sslo = rhs[mfi].loVect();
+      const int* sshi = rhs[mfi].hiVect();
+
+      slo[0] = sslo[0]+2;
+      slo[1] = sslo[1]+2;
+      slo[2] = sslo[2]+2;
+
+      shi[0] = sshi[0]+2;
+      shi[1] = sshi[1]+2;
+      shi[2] = sshi[2]+2;
+
+      leq_scale(rhs[mfi].dataPtr(), A_m[mfi].dataPtr(),
+                slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+    }
+
+
+    // Compute initial residual r = rhs - A*sol
+    //---------------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
@@ -96,18 +118,17 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     }
 
 
-    MultiFab::Copy(sorig,sol,0,0,1,0);
-    MultiFab::Copy(rh,   r,  0,0,1,0);
-    std::cout << "done with copy " << '\n';
+    MultiFab::Copy(sorig,sol,0,0,1,nghost);
+    MultiFab::Copy(rh,   r,  0,0,1,nghost);
 
-    sol.setVal(0);
-
-    Real rnorm = r.norm0();
-    const Real rnorm0   = rnorm;
+    //Real rnorm = r.norm0(0,1);  HACK Below gives same value a MFIX
+    Real rnorm = dotxy(r,r,true);
+    ParallelDescriptor::ReduceRealSum(rnorm);
+    const Real rnorm0   = sqrt(rnorm);
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor() )
     {
-      std::cout << "BiCGStab: Initial error (error0) =        " << rnorm0 << '\n';
+      std::cout << "BiCGStab: Initial error (error0) = " << rnorm0 << '\n';
     }
     Real rho_1 = 0, alpha = 0, omega = 0;
 
@@ -123,17 +144,22 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     }
 
 
-
-
+    // Main loop
+    //----------------------------------------------------------------------------
     for (; nit <= maxiter; ++nit)
     {
-      const Real rho = dotxy(rh,r);
+
+      Real rho = dotxy(rh,r,true);
       if ( rho == 0 )
-        {
-          ret = 1; break; }
+      {
+        ret = 1;
+        break;
+      }
+
+
       if ( nit == 1 )
       {
-        MultiFab::Copy(p,r,0,0,1,0);
+        MultiFab::Copy(p,r,0,0,1,nghost);
       }
       else
       {
@@ -142,13 +168,19 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         sxay(p, r,   beta, p);
       }
 
-      //    if ( use_jacobi_precond )
+
+      std::cout << "p-dot " << dotxy(p,p) << '\n';
+
+
+      //  A*ph = p
+      //  v = A*Ph
+      //---------------------------------------------------------------------------
       if ( precond_type == 0 ) // pc_type == line
       {
+        std::cout << " DNE should not be here" << '\n';
         ph.setVal(0);
-        // Lp.jacobi_smooth(ph, p, temp_bc_mode);
       }
-      else if ( precond_type = 1 ) // pc_type == diag
+      else if ( precond_type == 1) // pc_type == diag
       {
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
@@ -165,14 +197,17 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           shi[1] = sshi[1]+2;
           shi[2] = sshi[2]+2;
 
-          leq_msolve1(bx.loVect(),bx.hiVect(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
+          leq_msolve1(slo.dataPtr(),shi.dataPtr(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       ph[mfi].dataPtr(), &sweep_type);
         }
       }
       else // pc_type ==None
       {
-        MultiFab::Copy(ph,p,0,0,1,0);
+        MultiFab::Copy(ph,p,0,0,1,nghost);
       }
+
+
+      std::cout << "ph-dot " << dotxy(ph,ph) << '\n';
 
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
@@ -193,9 +228,16 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
       }
+      std::cout << "v-dot " << dotxy(v,v) << '\n';
 
 
-      if ( Real rhTv = dotxy(rh,v) )
+      Real rhTv = dotxy(rh,v,true);
+      ParallelDescriptor::ReduceRealSum(rhTv);
+
+
+      // Compute alpha
+      //-------------------------------------------------
+      if ( rhTv )
       {
         alpha = rho/rhTv;
       }
@@ -203,26 +245,20 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         ret = 2; break;
       }
-      sxay(sol, sol,  alpha, ph);
+      // Compute s
+      //-------------------------------------------------
       sxay(s,     r, -alpha,  v);
 
-      rnorm = s.norm0();
+      std::cout << "s-dot " << dotxy(s,s) << '\n';
 
-      if ( verbose > 2 && ParallelDescriptor::IOProcessor())
-      {
-        std::cout << "BiCGStab: Half Iter " << nit << " rel. err. "
-                  << rnorm/(rnorm0) << '\n';
-      }
-
-      if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
-
-      //    if ( use_jacobi_precond )
+      // A*sh = s
+      // t=A*sh
+      //-------------------------------------------------
       if ( precond_type == 0 ) // pc_type == line
       {
         ph.setVal(0);
-        // Lp.jacobi_smooth(ph, p, temp_bc_mode);
       }
-      else if ( precond_type = 1 ) // pc_type == diag
+      else if ( precond_type == 1 ) // pc_type == diag
       {
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
@@ -239,15 +275,16 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           shi[1] = sshi[1]+2;
           shi[2] = sshi[2]+2;
 
-          leq_msolve1(bx.loVect(),bx.hiVect(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
+          leq_msolve1(slo.dataPtr(),shi.dataPtr(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       sh[mfi].dataPtr(), &sweep_type);
         }
       }
       else // pc_type ==None
       {
-        MultiFab::Copy(sh,s,0,0,1,0);
+        MultiFab::Copy(sh,s,0,0,1,nghost);
       }
 
+      std::cout << "sh-dot " << dotxy(sh,sh) << '\n';
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
@@ -268,13 +305,17 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
       }
 
+      std::cout << "t-dot " << dotxy(t,t) << '\n';
+
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
       Real vals[2] = { dotxy(t,t,true), dotxy(t,s,true) };
-
       ParallelDescriptor::ReduceRealSum(vals,2);
 
+
+      // Compute omega
+      // ----------------------------------------------------------
       if ( vals[0] )
       {
         omega = vals[1]/vals[0];
@@ -283,10 +324,28 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         ret = 3; break;
       }
+
+      sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
+
       sxay(r,     s, -omega,  t);
 
-      rnorm = r.norm0();
+
+      //rnorm = s.norm0();
+      rnorm = dotxy(r,r,true);
+      ParallelDescriptor::ReduceRealSum(rnorm);
+      rnorm = sqrt(rnorm);
+
+
+      std::cout << "\n "  << '\n';
+      std::cout << "iter, Rnorm " << nit << "  " << rnorm << '\n';
+      std::cout << " alpha, omega " << alpha << "  " << omega << '\n';
+      std::cout << " TxS, TxT " << vals[1]  << "  " << vals[0] << '\n';
+      std::cout << " RtildexV, rho  " << rhTv << "  " << rho << '\n';
+
+
+      if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
+
 
       if ( verbose > 2 && ParallelDescriptor::IOProcessor())
       {

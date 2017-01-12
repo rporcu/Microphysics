@@ -186,7 +186,7 @@ private:
 
     // runtime parameters
 
-    int verbose = 2;
+    int verbose = 3;
 
     int solve_fluid;
     int solve_dem;

@@ -4,7 +4,7 @@
 
          use compar, only: mype, pe_io, numpes
          use exit_mod, only: mfix_exit
-         use matvec_module, only: leq_matvec, leq_residual
+         use matvec_module, only: leq_matvec, leq_residual, leq_scale
          use leqsol, only: icheck_bicgs, minimize_dotproducts
          use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par, iter_tot
          use param, only: dimension_3
@@ -57,7 +57,7 @@
 !-----------------------------------------------
 ! Local parameters
 !-----------------------------------------------
-      INTEGER, PARAMETER :: idebugl = 0
+      INTEGER, PARAMETER :: idebugl = 30
       real(c_real), PARAMETER :: ratiotol = 0.2
       LOGICAL, PARAMETER :: do_unit_scaling = .true.
 !-----------------------------------------------
@@ -67,8 +67,7 @@
       real(c_real), DIMENSION(:,:,:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
 
       real(c_real), DIMENSION(0:ITMAX+1) :: alpha, beta, omega, rho
-      real(c_real) :: TxS, TxT, RtildexV, &
-                          aijmax, oam
+      real(c_real) :: TxS, TxT, RtildexV, aijmax, oam
       real(c_real) :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
       LOGICAL :: isconverged
       INTEGER :: i, j, k, ii, jj, kk
@@ -100,33 +99,20 @@
 ! Adding all by Handan Liu
 ! zero out R, Rtilde, P, Phat, Svec, Shat, Tvec, V
 ! --------------------------------
-         R(:,:,:)      = zero
-         Rtilde(:,:,:) = zero
-         P(:,:,:)      = zero
-         Phat(:,:,:)   = zero
-         Svec(:,:,:)   = zero
-         Shat(:,:,:)   = zero
-         Tvec(:,:,:)   = zero
-         V(:,:,:)      = zero
+      R(:,:,:)      = zero
+      Rtilde(:,:,:) = zero
+      P(:,:,:)      = zero
+      Phat(:,:,:)   = zero
+      Svec(:,:,:)   = zero
+      Shat(:,:,:)   = zero
+      Tvec(:,:,:)   = zero
+      V(:,:,:)      = zero
 
       TOLMIN = EPSILON( one )
 
 ! Scale matrix to have unit diagonal
 ! ---------------------------------------------------------------->>>
-      if (do_unit_scaling) then
-
-         do k = lo(3)-1, hi(3)+1
-            do i = lo(1)-1, hi(1)+1
-               do j = lo(2)-1, hi(2)+1
-                  aijmax = maxval(abs(A_M(i,j,k,:)) )
-                  OAM = one/aijmax
-                  A_M(I,J,K,:) = A_M(I,J,K,:)*OAM
-                  B_M(I,J,K)   = B_M(I,J,K)*OAM
-               enddo
-            enddo
-         enddo
-      endif
-! ----------------------------------------------------------------<<<
+      if (do_unit_scaling) call leq_scale(b_m, A_M, slo, shi, lo, hi)
 
 
 ! Compute initial residual (R = b-A*x) for Ax=b
@@ -142,8 +128,8 @@
 ! is used to supply the guess, this line could potentially be the source
 ! of small differences between runs.  the random number is shifted below
 ! between -1 and 1 and then scaled by factor 1.0D-6*Rnorm0
-      call random_number(Rtilde(:,:,:))
-      Rtilde(:,:,:) = R(:,:,:) + (2.0d0*Rtilde(:,:,:)-1.0d0)*1.0d-6*Rnorm0
+      !call random_number(Rtilde(:,:,:))
+      Rtilde(:,:,:) = R(:,:,:)! + (2.0d0*Rtilde(:,:,:)-1.0d0)*1.0d-6*Rnorm0
 
       if (idebugl >= 1) then
          if(myPE.eq.0) print*,'leq_bicgs, initial resid ', Rnorm0
@@ -157,7 +143,6 @@
       do i=1,itmax
 
           rho(i-1) = dot_product_par(Rtilde,R,slo,shi)
-!         print*, 'leq_bicgs: initial rho(i-1) == 0 '
 
          if (rho(i-1) .eq. zero) then
             if(i /= 1)then
@@ -188,6 +173,9 @@
                P(:,:,:) = R(:,:,:) + beta(i-1)*( P(:,:,:) - omega(i-1)*V(:,:,:) )
          endif ! i.eq.1
 
+
+         print*,'p-dot ', dot_product_par(p,p,slo,shi)
+
 ! Solve A*Phat(:,:,:) = P(:,:,:)
 ! V(:,:,:) = A*Phat(:,:,:)
 ! --------------------------------
@@ -199,11 +187,25 @@
             call LEQ_MSOLVE1(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
          end if
 
+
+         print*,'ph-dot ', dot_product_par(phat,phat,slo,shi)
+
+
+         ! write(*,*) 'p'
+         ! do kk = slo(3),shi(3)
+         !    do jj = slo(2),shi(2)
+         !       do ii = slo(1),shi(1)
+         !          write(*,*) p(ii,jj,kk)
+         !       enddo
+         !    enddo
+         ! enddo
+
          call LEQ_MATVEC(Phat, A_m, V, slo, shi, lo, hi)   ! returns V=A*Phat
 
-          RtildexV = dot_product_par(Rtilde,V,slo,shi)
 
-!         print*,'leq_bicgs, initial RtildexV: ', RtildexV
+         print*,'v-dot ', dot_product_par(v,v,slo,shi)
+
+         RtildexV = dot_product_par(Rtilde,V,slo,shi)
 
 ! compute alpha
 ! --------------------------------
@@ -213,6 +215,7 @@
 ! --------------------------------
          Svec(:,:,:) = R(:,:,:) - alpha(i) * V(:,:,:)
 
+         print*,'s-dot ', dot_product_par(svec,svec,slo,shi)
 
 ! Solve A*Shat(:) = Svec(:,:,:)
 ! Tvec(:) = A*Shat(:)
@@ -225,7 +228,11 @@
             call LEQ_MSOLVE1(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
          end if
 
+         print*,'sh-dot ', dot_product_par(shat,shat,slo,shi)
+
          call LEQ_MATVEC(Shat, A_m, Tvec, slo, shi, lo, hi )   ! returns Tvec=A*Shat
+
+         print*,'t-dot ', dot_product_par(tvec,tvec,slo,shi)
 
          TxS = dot_product_par(Tvec,Svec,slo,shi)
          TxT = dot_product_par(Tvec,Tvec,slo,shi)
@@ -238,9 +245,10 @@
 
 ! compute new guess for Var
 ! --------------------------------
-            Var(:,:,:) = Var(:,:,:) +  &
-               alpha(i)*Phat(:,:,:) + omega(i)*Shat(:,:,:)
-               R(:,:,:) = Svec(:,:,:) - omega(i)*Tvec(:,:,:)
+         Var(:,:,:) = Var(:,:,:) +  &
+            alpha(i)*Phat(:,:,:) + omega(i)*Shat(:,:,:)
+
+         R(:,:,:) = Svec(:,:,:) - omega(i)*Tvec(:,:,:)
 
 
 ! --------------------------------
@@ -250,7 +258,9 @@
 
             if (idebugl.ge.1) then
                if (myPE.eq.PE_IO) then
-                  print*,'iter, Rnorm ', iter, Rnorm, Snorm
+                  print*,'     '
+                  print*,'     '
+                  print*,'iter, Rnorm ', iter, Rnorm
                   print*,'alpha(i), omega(i) ', alpha(i), omega(i)
                   print*,'TxS, TxT ', TxS, TxT
                   print*,'RtildexV, rho(i-1) ', RtildexV, rho(i-1)
