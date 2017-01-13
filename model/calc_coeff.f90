@@ -44,29 +44,29 @@ module calc_coeff_module
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: max_pip
 
-      real(c_real), intent(inout) :: ro_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) ::  p_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ep_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: mu_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: mu_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT  ) :: f_gds&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT  ) :: drag_bm&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-
       integer(c_int), intent(in   ) :: flag&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      real(c_real), intent(inout) :: ro_g&
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ep_g&
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: rop_g&
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: f_gds&
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: drag_bm&
+            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       real(c_real), intent(in   ) :: pvol(max_pip)
       real(c_real), intent(in   ) :: des_radius(max_pip)
@@ -101,17 +101,6 @@ module calc_coeff_module
 !  Purpose: This routine directs the calculation of all physical and   !
 !           transport properties, and exchange rates.                  !
 !                                                                      !
-!  Author: M. Syamlal                                 Date: 25-AUG-05  !
-!  Reviewer:                                          Date:            !
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!  Literature/Document References:                                     !
-!                                                                      !
-!  Variables referenced:                                               !
-!  Variables modified:                                                 !
-!  Local variables:                                                    !
-!                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_coeff(slo, shi, lo, hi, max_pip, flag, plevel, &
          ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,&
@@ -119,8 +108,8 @@ module calc_coeff_module
          des_radius, dx, dy, dz)&
         bind(C, name="calc_coeff")
 
-      use discretelement, only: DES_EXPLICITLY_COUPLED
-      use discretelement, only: DES_CONTinUUM_COUPLED
+      use discretelement, only: des_explicitly_coupled
+      use discretelement, only: des_continuum_coupled
 
       implicit none
 
@@ -137,14 +126,9 @@ module calc_coeff_module
 
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(inout) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -152,11 +136,16 @@ module calc_coeff_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(out  ) :: f_gds&
+
+      real(c_real), intent(inout) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(out  ) :: drag_bm&
+      real(c_real), intent(inout) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: f_gds&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       real(c_real), intent(in   ) :: pvol(max_pip)
@@ -186,17 +175,6 @@ module calc_coeff_module
 !  Subroutine: CALC_TRD_AND_TAU                                        !
 !  Purpose: This routine directs the calculation of all physical and   !
 !           transport properties, and exchange rates.                  !
-!                                                                      !
-!  Author: M. Syamlal                                 Date: 25-AUG-05  !
-!  Reviewer:                                          Date:            !
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!  Literature/Document References:                                     !
-!                                                                      !
-!  Variables referenced:                                               !
-!  Variables modified:                                                 !
-!  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_trd_and_tau(slo,shi,lo,hi,&

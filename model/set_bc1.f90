@@ -25,7 +25,11 @@ module set_bc1_module
 
       implicit none
 
-      integer(c_int), intent(in ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      real(c_real),   intent(in   ) :: dt, time, dx, dy, dz
+
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -47,10 +51,6 @@ module set_bc1_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(in   ) :: dt, time, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -188,8 +188,15 @@ module set_bc1_module
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
-      ! index for boundary condition
-      INTEGER, intent(IN) :: BCV
+! index for boundary condition
+      integer, intent(in) :: bcv
+      real(c_real), intent(in) :: dt, time, dx, dy, dz
+
+      real(c_real), intent(in   ) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
 
       real(c_real), intent(inout) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -197,11 +204,6 @@ module set_bc1_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in) :: dt, time, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//

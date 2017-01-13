@@ -26,19 +26,19 @@ MODULE CONV_ROP_MODULE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
 
-      real(c_real), intent(inout) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_ge&
+      real(c_real), intent(  out) :: rop_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_gn&
+      real(c_real), intent(  out) :: rop_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_gt&
+      real(c_real), intent(  out) :: rop_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: flag&
@@ -83,23 +83,24 @@ MODULE CONV_ROP_MODULE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      ! macroscopic density (rho_prime)
-      real(c_real), INTENT(IN) :: ROP(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      ! Velocity components
-      real(c_real), INTENT(IN) :: U&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: V&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: W&
+! macroscopic density (rho_prime)
+      real(c_real), intent(in   ) :: rop&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Face value of density (for calculating convective fluxes)
-      real(c_real), INTENT(OUT) :: ROP_E&
+! Velocity components
+      real(c_real), intent(in   ) :: u&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: ROP_N&
+      real(c_real), intent(in   ) :: v&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: ROP_T&
+      real(c_real), intent(in   ) :: w&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+! Face value of density (for calculating convective fluxes)
+      real(c_real), intent(  out) :: rop_e&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: rop_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag&
@@ -201,27 +202,27 @@ MODULE CONV_ROP_MODULE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      ! Discretization scheme
+! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
 
-      ! macroscopic density (rho_prime)
+! macroscopic density (rho_prime)
       real(c_real), INTENT(in) :: rop&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Velocity components
-      real(c_real), INTENT(IN) :: u&
+! Velocity components
+      real(c_real), INTENT(IN   ) :: u&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: v&
+      real(c_real), INTENT(IN   ) :: v&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: w&
+      real(c_real), INTENT(IN   ) :: w&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Face value of density (for calculating convective fluxes)
-      real(c_real), INTENT(OUT) :: rop_e&
+! Face value of density (for calculating convective fluxes)
+      real(c_real), intent(  out) :: rop_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: rop_n&
+      real(c_real), intent(  out) :: rop_n&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: rop_t&
+      real(c_real), intent(  out) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag&

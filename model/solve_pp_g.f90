@@ -14,7 +14,7 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(slo, shi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-      ro_g, pp_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
+      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
       flag, dt, normg, resg, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
@@ -38,6 +38,7 @@ module solve_pp_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -48,8 +49,6 @@ module solve_pp_module
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(  out) :: pp_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -69,14 +68,13 @@ module solve_pp_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
       real(c_real), intent(  out) :: a_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Normalization factor for gas pressure correction residual.
 ! At start of the iterate loop normg will either be 1 (i.e. not
@@ -101,7 +99,6 @@ module solve_pp_module
       ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
 ! initializing
-      pp_g = 0.0d0
       call init_ab_m (slo, shi, a_m, b_m)
 
 ! Forming the sparse matrix equation.

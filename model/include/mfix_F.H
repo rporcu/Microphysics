@@ -168,7 +168,7 @@ extern "C"
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,
           Real* rop_g,    Real* rop_go,
-          Real* ro_g,     Real* pp_g,
+          Real* ro_g,
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,

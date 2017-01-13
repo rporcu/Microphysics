@@ -49,6 +49,7 @@ module solve_vel_star_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -70,8 +71,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: tau_u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(  out) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_gn&
@@ -84,14 +83,16 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      real(c_real), intent(  out) :: d_e&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: a_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
 !.....................................................................//
 
 ! initialize matrix and vector
@@ -169,30 +170,29 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
 ! Dummy arguments ....................................................//
-      real(c_real), intent(inout) :: u_g&
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
+
+      real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: tau_v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: d_n&
+      real(c_real), intent(in   ) :: tau_v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -206,13 +206,15 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER(C_INT), intent(in   ) :: flag&
+      integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+
+      real(c_real), intent(  out) :: d_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: A_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      real(c_real), intent(  out) :: b_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
 
 ! initialize matrix and vector
@@ -288,30 +290,29 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
 ! Dummy arguments ....................................................//
-      real(c_real), intent(inout) :: u_g&
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
+
+      real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: tau_w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: d_t&
+      real(c_real), intent(in   ) :: tau_w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -325,13 +326,15 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+
+      real(c_real), intent(  out) :: d_t&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: A_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      real(c_real), intent(  out) :: b_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
 
 ! initialize matrix and vector
