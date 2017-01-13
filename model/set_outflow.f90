@@ -52,31 +52,31 @@ module set_outflow_module
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
-      ! Boundary condition number
-      INTEGER, INTENT(IN) :: BCV
-
-      real(c_real), INTENT(INOUT) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
+! Boundary condition number
+      integer, intent(in   ) :: bcv
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      real(c_real), intent(inout) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: flux_ge&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: flux_gn&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: flux_gt&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -118,7 +118,7 @@ module set_outflow_module
 !   is set and may differ from the value of the adjacent fluid cell.
 ! - For the solids phase this seems unnecessary..? Differences may arise
                   IF (ROP_G(I,J,K) > ZERO) THEN
-                    U_G(I,J,K) = ROP_G(im,j,k)*U_G(im,j,k)/ROP_G(I,J,K)
+                     U_G(I,J,K) = ROP_G(im,j,k)*U_G(im,j,k)/ROP_G(I,J,K)
                   ELSE
                      U_G(I,J,K) = ZERO
                   ENDIF

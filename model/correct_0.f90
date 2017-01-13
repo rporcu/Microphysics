@@ -23,15 +23,7 @@ MODULE CORRECT_0_MODULE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      real(c_real), intent(inout) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: pp_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -42,6 +34,14 @@ MODULE CORRECT_0_MODULE
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
+      real(c_real), intent(inout) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !-----------------------------------------------
 ! Local variables

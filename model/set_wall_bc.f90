@@ -23,7 +23,9 @@ MODULE SET_WALL_BC_MODULE
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -31,8 +33,7 @@ MODULE SET_WALL_BC_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
@@ -90,7 +91,7 @@ MODULE SET_WALL_BC_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, &
-                              slo, shi, lo, hi, u_g, v_g, w_g, flag)
+         slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -101,23 +102,22 @@ MODULE SET_WALL_BC_MODULE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      ! Starting and ending I index
-      INTEGER, INTENT(IN) :: II1, II2
+! Starting and ending I index
+      integer      , intent(in   ) :: ii1, ii2
+! Starting and ending J index
+      integer     , intent(in   ) :: jj1, jj2
+! Starting and ending K index
+      integer     , intent(in   ) :: kk1, kk2
 
-      ! Starting and ending J index
-      INTEGER, INTENT(IN) :: JJ1, JJ2
-
-      ! Starting and ending K index
-      INTEGER, INTENT(IN) :: KK1, KK2
-
-      real(c_real), INTENT(INOUT) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(INOUT) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
+      integer     , intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      real(c_real), intent(inout) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

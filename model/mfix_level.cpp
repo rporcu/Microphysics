@@ -686,6 +686,14 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
       pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
       des_radius.dataPtr(), &dx, &dy, &dz );
   }
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+
+  if (solve_dem)
+  {
+    f_gds[lev]->FillBoundary(geom[lev].periodicity());
+    drag_bm[lev]->FillBoundary(geom[lev].periodicity());
+  }
 }
 
 void
@@ -725,6 +733,15 @@ mfix_level::mfix_calc_all_coeffs(int lev)
        des_vel_new.dataPtr(), des_radius.dataPtr(),
        (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
   }
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+
+  if (solve_dem)
+  {
+    ep_g[lev]->FillBoundary(geom[lev].periodicity());
+    f_gds[lev]->FillBoundary(geom[lev].periodicity());
+    drag_bm[lev]->FillBoundary(geom[lev].periodicity());
+  }
 }
 
 void
@@ -759,6 +776,10 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
        (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
   }
+  tau_u_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_v_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_w_g[lev]->FillBoundary(geom[lev].periodicity());
+  trD_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -787,12 +808,23 @@ mfix_level::mfix_init_fluid(int lev)
      shi[2] = sshi[2]+2;
 
      init_fluid(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-               (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
-               (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
-               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-               (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+       (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
+       (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
+       (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+       (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
+       (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
+
+  ep_g[lev]->FillBoundary(geom[lev].periodicity());
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+  p_g[lev]->FillBoundary(geom[lev].periodicity());
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
+  mu_g[lev]->FillBoundary(geom[lev].periodicity());
+  lambda_g[lev]->FillBoundary(geom[lev].periodicity());
+
 }
 
 void
@@ -827,6 +859,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
           particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
           (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
+  ep_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -860,6 +893,9 @@ mfix_level::mfix_calc_mflux(int lev)
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
   }
+  flux_gE[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gN[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gT[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -894,6 +930,16 @@ mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
       (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
       (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
   }
+  p_g[lev]->FillBoundary(geom[lev].periodicity());
+  ep_g[lev]->FillBoundary(geom[lev].periodicity());
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gE[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gN[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gT[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -921,6 +967,9 @@ mfix_level::mfix_set_wall_bc(int lev)
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr());
   }
+    u_g[lev]->FillBoundary(geom[lev].periodicity());
+    v_g[lev]->FillBoundary(geom[lev].periodicity());
+    w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1116,16 +1165,21 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
-        (*ro_g[lev])[mfi].dataPtr(),     (*pp_g[lev])[mfi].dataPtr(),
+        (*ro_g[lev])[mfi].dataPtr(),
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
         (*flag[lev])[mfi].dataPtr(),     &dt,
         &lnormg,                 &resg,     &dx, &dy, &dz);
     }
+    pp_g[lev]->setVal(0.);
+    A_m[lev]->FillBoundary(geom[lev].periodicity());
+    b_m[lev]->FillBoundary(geom[lev].periodicity());
 
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
+
+    pp_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1136,25 +1190,29 @@ mfix_level::mfix_correct0(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+    const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
+    const int* sslo = (*flag[lev])[mfi].loVect();
+    const int* sshi = (*flag[lev])[mfi].hiVect();
 
-      slo[0] = sslo[0]+2;
-      slo[1] = sslo[1]+2;
-      slo[2] = sslo[2]+2;
+    slo[0] = sslo[0]+2;
+    slo[1] = sslo[1]+2;
+    slo[2] = sslo[2]+2;
 
-      shi[0] = sshi[0]+2;
-      shi[1] = sshi[1]+2;
-      shi[2] = sshi[2]+2;
+    shi[0] = sshi[0]+2;
+    shi[1] = sshi[1]+2;
+    shi[2] = sshi[2]+2;
 
-      correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
-        (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
-        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-        (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-        (*flag[lev])[mfi].dataPtr());
+    correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
+      (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+      (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
+      (*flag[lev])[mfi].dataPtr());
   }
+  p_g[lev]->FillBoundary(geom[lev].periodicity());
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1183,6 +1241,8 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
         (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
         (*flag[lev])[mfi].dataPtr());
   }
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void

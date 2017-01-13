@@ -21,6 +21,7 @@ MODULE CALC_MFLUX_MODULE
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real), intent(in) :: dx, dy, dz
 
       real(c_real), intent(in   ) :: u&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -34,17 +35,16 @@ MODULE CALC_MFLUX_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(in) :: dx, dy, dz
+      real(c_real), intent(  out) :: flux_e&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: flux_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: flux_t&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
 
 ! Local variables
 !---------------------------------------------------------------------//

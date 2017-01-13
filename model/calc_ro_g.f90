@@ -21,16 +21,18 @@ contains
 ! Dummy arguments ....................................................//
       integer(c_int), intent(in   ) :: slo(3), shi(3)
 
-      real(c_real), intent(inout) ::  ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) ::   p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) ::  ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer, intent(in   ) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+
+      real(c_real), intent(  out) ::  ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables .....................................................//
       integer :: i,j,k

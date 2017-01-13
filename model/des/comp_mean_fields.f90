@@ -32,11 +32,11 @@ module comp_mean_fields_module
       real(c_real), intent(in   ) :: pvol(max_pip)
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 !-----------------------------------------------
 ! Local variables
