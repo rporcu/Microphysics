@@ -46,8 +46,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             sweep_type,
                             int             precond_type,
                             int             maxiter,
-                            Real            eps_rel,
-                            Real            eps_abs)
+                            Real            eps_rel)
 {
     // We're not quite ready to use this yet ... just want it all to compile
     int ret = 0, nit = 1;
@@ -73,6 +72,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     Array<int> slo(3);
     Array<int> shi(3);
 
+    const Real eps_abs=1.0E-12;
 
     // Unit scaling
     //-------------------------------------------------------------------

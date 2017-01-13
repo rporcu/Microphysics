@@ -1227,6 +1227,6 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
                          slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect());
     }
 #else
-    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, tol);
+    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol);
 #endif
 }
