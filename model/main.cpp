@@ -11,18 +11,16 @@
 
 int main (int argc, char* argv[])
 {
+  // BoxLib will now read the inputs file and the command line arguments, but the 
+  //        command line arguments are in mfix-format so it will just ignore them.
+  BoxLib::Initialize(argc,argv);
+
   // Copy arguments into MFIX -- note that the first argument is now the name of the
   //      inputs file to be read by BoxLib, so we only pass the arguments after that
   for(int i=2; i < argc; i++) {
     int nlen = strlen(argv[i]);
     mfix_add_argument(argv[i], &nlen);
   }
-
-  // We only want BoxLib to read the inputs file -- at this point the command-line 
-  //    arguments are only to be read by the MFIX read_namelist, but we may want to 
-  //    change this later.
-  int argc_for_boxlib = 2;
-  BoxLib::Initialize(argc_for_boxlib,argv);
 
   Real strt_time = ParallelDescriptor::second();
 
