@@ -955,7 +955,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
        (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
   }
 
-  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_gE[lev]->FillBoundary(geom[lev].periodicity());
+  rop_gN[lev]->FillBoundary(geom[lev].periodicity());
+  rop_gT[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -996,8 +998,13 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
     }
 
+    A_m[lev]->FillBoundary(geom[lev].periodicity());
+    b_m[lev]->FillBoundary(geom[lev].periodicity());
+    d_e[lev]->FillBoundary(geom[lev].periodicity());
+
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
+
 
     // Solve V-Momentum equation
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
@@ -1026,6 +1033,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
     }
+
+    A_m[lev]->FillBoundary(geom[lev].periodicity());
+    b_m[lev]->FillBoundary(geom[lev].periodicity());
+    d_n[lev]->FillBoundary(geom[lev].periodicity());
 
     eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
@@ -1058,6 +1069,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
     }
 
+    A_m[lev]->FillBoundary(geom[lev].periodicity());
+    b_m[lev]->FillBoundary(geom[lev].periodicity());
+    d_t[lev]->FillBoundary(geom[lev].periodicity());
+
     eq_id=5;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
@@ -1065,6 +1080,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, nghost);
     MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, nghost);
     MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, nghost);
+
+    u_g[lev]->FillBoundary(geom[lev].periodicity());
+    v_g[lev]->FillBoundary(geom[lev].periodicity());
+    w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
