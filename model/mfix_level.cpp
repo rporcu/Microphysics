@@ -954,6 +954,8 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
   }
+
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
