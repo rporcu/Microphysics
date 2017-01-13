@@ -9,7 +9,7 @@ mfix_level::~mfix_level ()
 mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
  : AmrCore(rb,max_level_in,n_cell_in,coord)
 {
-//  ReadParameters();
+    ReadParameters();
 
     // Geometry on all levels has just been defined in the AmrCore constructor
 
@@ -107,32 +107,25 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 void
 mfix_level::ReadParameters ()
 {
-#if 0
     {
-  ParmParse pp;  // Traditionally, max_step and stop_time do not have prefix.
-  pp.query("max_step", max_step);
-  pp.query("stop_time", stop_time);
+    ParmParse pp;  // Traditionally, max_step and stop_time do not have prefix.
+    pp.query("max_step", max_step);
+    pp.query("stop_time", stop_time);
     }
 
     {
-  ParmParse pp("amr"); // Traditionally, these have prefix, amr.
-
-  pp.query("check_file", check_file);
-  pp.query("check_int", check_int);
-
-  pp.query("plot_file", plot_file);
-  pp.query("plot_int", plot_int);
-
-  pp.query("restart", restart_chkfile);
+    ParmParse pp("amr"); // Traditionally, these have prefix, amr.
+    pp.query("check_file", check_file);
+    pp.query("check_int", check_int);
+    pp.query("plot_file", plot_file);
+    pp.query("plot_int", plot_int);
+    pp.query("restart", restart_chkfile);
     }
 
     {
-  ParmParse pp("warpx");
-
-  pp.query("cfl", cfl);
-  pp.query("verbose", verbose);
+    ParmParse pp("mfix");
+    pp.query("verbose", verbose);
     }
-#endif
 }
 
 void
@@ -184,6 +177,7 @@ mfix_level::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid dupliates
     }
+    std::cout << "BA " << ba << std::endl;
     return ba;
 }
 

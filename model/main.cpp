@@ -11,14 +11,18 @@
 
 int main (int argc, char* argv[])
 {
-
-  // Copy arguments into MFIX
-  for(int i=1; i < argc; i++) {
+  // Copy arguments into MFIX -- note that the first argument is now the name of the
+  //      inputs file to be read by BoxLib, so we only pass the arguments after that
+  for(int i=2; i < argc; i++) {
     int nlen = strlen(argv[i]);
     mfix_add_argument(argv[i], &nlen);
   }
 
-  BoxLib::Initialize(argc,argv);
+  // We only want BoxLib to read the inputs file -- at this point the command-line 
+  //    arguments are only to be read by the MFIX read_namelist, but we may want to 
+  //    change this later.
+  int argc_for_boxlib = 2;
+  BoxLib::Initialize(argc_for_boxlib,argv);
 
   Real strt_time = ParallelDescriptor::second();
 
@@ -46,8 +50,6 @@ int main (int argc, char* argv[])
     &normg, &set_normg, &call_udf,
     &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
     &xlength, &ylength, &zlength, &coord);
-
-  int max_grid_size = 1024;
 
   // This defines the physical size of the box using {xlength,ylength,zlength} from mfix.dat
   RealBox real_box;

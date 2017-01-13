@@ -194,8 +194,8 @@ private:
     int max_nit;
     int call_udf;
 
-//  int max_step   = std::numeric_limits<int>::max();
-//  Real stop_time = std::numeric_limits<Real>::max();
+    int max_step;
+    Real stop_time;
 
     Real cfl = 0.7;
 
