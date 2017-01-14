@@ -304,7 +304,7 @@
 ! Set an approximate pressure field assuming that the pressure drop
 ! balances the weight of the bed, if the initial pressure-field is not
 ! specified
-      do j = domhi(2)+1, domhi(2), -1
+      do j = domhi(2)+1, domlo(2), -1
 
 ! Find the average weight per unit area over an x-z slice
          bed_weight = 0.0

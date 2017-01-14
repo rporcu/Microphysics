@@ -128,8 +128,6 @@ end subroutine leq_scale
                 + A_m(i,j,k, 1) * Var(iplus(i,j,k),j,k)    &
                 + A_m(i,j,k, 2) * Var(i,jplus(i,j,k),k)    &
                 + A_m(i,j,k, 3) * Var(i,j,kplus(i,j,k))  )
-
-!             write(6,1000) i,j,k,res(i,j,k)
           enddo
        enddo
     enddo
