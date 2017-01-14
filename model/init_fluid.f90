@@ -173,9 +173,7 @@
       USE constant , only: gravity
       USE eos, ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
-      USE geometry, only: imax1, jmax1, kmax1
-      USE geometry, only: imin1, jmin1, kmin1
-      USE geometry, only: jmax2
+      USE geometry, only: domlo,domhi
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
       USE param1   , only: is_defined, zero, undefined, is_undefined
@@ -234,10 +232,10 @@
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx
-         do i = imax1, imin1, -1
+         do i = domhi(1), domlo(1), -1
             pj = pj + dpodx*dx
-            do k = kmin1, kmax1
-               do j = jmin1, jmax1
+            do k = domlo(3), domhi(3)
+               do j = domlo(2), domhi(2)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -247,10 +245,10 @@
       if (is_defined(delp_y)) then
          dpody = delp_y/ylength
          pj = pj - dpody*dy
-         do j = jmax1, jmin1, -1
+         do j = domhi(2), domlo(2), -1
             pj = pj + dpody*dy
-            do k = kmin1, kmax1
-               do i = imin1, imax1
+            do k = domlo(3), domhi(3)
+               do i = domlo(1), domhi(1)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -260,10 +258,10 @@
       if (is_defined(delp_z)) then
          dpodz = delp_z/zlength
          pj = pj - dpodz*dz
-         do k = kmax1, kmin1, -1
+         do k = domhi(3), domlo(3), -1
             pj = pj + dpodz*dz
-            do j = jmin1, jmax1
-               do i = imin1, imax1
+            do j = domlo(2), domhi(2)
+               do i = domlo(1), domhi(1)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -306,13 +304,13 @@
 ! Set an approximate pressure field assuming that the pressure drop
 ! balances the weight of the bed, if the initial pressure-field is not
 ! specified
-      DO J = JMAX2, JMIN1, -1
+      do j = domhi(2), domhi(2), -1
 
 ! Find the average weight per unit area over an x-z slice
          bed_weight = 0.0
          area = 0.0
-         do k = kmin1, kmax1
-            do i = imin1, imax1
+         do k = domlo(3), domhi(3)
+            do i = domlo(1), domhi(1)
                if (flag(i,j,k)==1) then
                   darea = dx*dz
                   area = area + darea
@@ -333,12 +331,12 @@
          IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
 
          PJ = PJ + BED_WEIGHT
-         DO K = KMIN1, KMAX1
-            DO I = IMIN1, IMAX1
+         DO K = domlo(3),domhi(3)
+            DO I = domlo(1),domhi(1)
                IF(flag(i,j,k) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
                   P_G(I,J,K)=SCALE_PRESSURE(PJ)
-            ENDDO    ! end do (i=imin1,imax1)
-         ENDDO   ! end do (k = kmin1,kmax1)
+            ENDDO
+         ENDDO
       ENDDO   ! end do (j=jmax2,jimn1, -1)
 ! end setting an undefined pressure in an initial condition region
 ! ----------------------------------------------------------------<<<
