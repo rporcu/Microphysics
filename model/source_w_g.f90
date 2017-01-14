@@ -46,7 +46,7 @@ module source_w_g_module
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax
-      USE geometry, only: kmax1, cyclic_z_pd
+      USE geometry , only: domhi, cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
 
@@ -160,7 +160,7 @@ module source_w_g_module
 ! Pressure term
             PGT = P_G(i,j,ktop(i,j,k))
             IF (CYCLIC_Z_PD) THEN
-               IF (KMAP(K).EQ.KMAX1) PGT = P_G(i,j,ktop(i,j,k)) - DELP_Z
+               IF (KMAP(K).EQ.domhi(3)) PGT = P_G(i,j,ktop(i,j,k)) - DELP_Z
             ENDIF
             SDP = -P_SCALE*EPGA*(PGT - P_G(I,J,K))*AXY
 

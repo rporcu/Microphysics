@@ -34,6 +34,8 @@
       integer :: imax2, jmax2, kmax2
       integer :: imin2, jmin2, kmin2
 
+      integer :: domlo(3),domhi(3)
+
 !  one or more periodic boundary condition is used
       LOGICAL :: CYCLIC
 ! Variable to flag periodic boundary condition in X

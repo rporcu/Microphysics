@@ -46,7 +46,7 @@ module source_v_g_module
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax
-      USE geometry, only: jmax1, cyclic_y_pd
+      USE geometry, only: domhi, cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
 
@@ -156,7 +156,7 @@ module source_v_g_module
 ! Pressure term
             PGN = P_G(i,jnorth(i,j,k),k)
             IF (CYCLIC_Y_PD) THEN
-               IF (JMAP(J).EQ.JMAX1)PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
+               IF (JMAP(J).EQ.domhi(2))PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
             ENDIF
             SDP = -P_SCALE*EPGA*(PGN - P_G(I,J,K))*AXZ
 

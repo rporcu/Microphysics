@@ -8,22 +8,27 @@ MODULE SET_MAX2_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_MAX2
 
-! X-Axix partition specifications.
-      USE geometry, only: IMAX
       USE geometry, only: IMIN1, IMIN2
       USE geometry, only: IMAX1, IMAX2
 
-! Y-Axix partition specifications.
-      USE geometry, only: JMAX
       USE geometry, only: JMIN1, JMIN2
       USE geometry, only: JMAX1, JMAX2
 
-! Z-Axix partition specifications.
-      USE geometry, only: KMAX
       USE geometry, only: KMIN1, KMIN2
       USE geometry, only: KMAX1, KMAX2
 
+      use geometry, only: imax, jmax, kmax
+      use geometry, only: domlo, domhi
+
       IMPLICIT NONE
+
+      domlo(1) = 0 + 2
+      domlo(2) = 0 + 2
+      domlo(3) = 0 + 2
+
+      domhi(1) = imax-1 + 2 
+      domhi(2) = jmax-1 + 2 
+      domhi(3) = kmax-1 + 2 
 
 ! Set the domain specific values.
       IMIN2 = 1

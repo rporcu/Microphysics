@@ -596,6 +596,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
+#if 0
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      std::cout << "U " << (*u_g[lev])[mfi] << std::endl;
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -603,6 +604,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      std::cout << "W " << (*w_g[lev])[mfi] << std::endl;
   exit(0);
+#endif
 
   // Allocate the particle arrays
   if (solve_dem)
