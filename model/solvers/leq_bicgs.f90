@@ -7,7 +7,6 @@
          use matvec_module, only: leq_matvec, leq_residual, leq_scale
          use leqsol, only: icheck_bicgs, minimize_dotproducts
          use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par
-         use param, only: dimension_3
          use param1, only: zero, one, small_number
 
          use solver_params, only: pc_line, pc_none, pc_diag

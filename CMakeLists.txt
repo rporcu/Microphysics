@@ -136,8 +136,6 @@ set(F90_sources
   model/init_fluid.f90
   model/init_namelist.f90
   model/io/funits_mod.f90
-  model/io/in_binary_512_mod.f90
-  model/io/in_binary_512i_mod.f90
   model/io/open_file.f90
   model/io/open_files.f90
   model/io/out_bin_512.f90

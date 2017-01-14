@@ -337,7 +337,7 @@
                   P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO
          ENDDO
-      ENDDO   ! end do (j=jmax2,jimn1, -1)
+      ENDDO
 ! end setting an undefined pressure in an initial condition region
 ! ----------------------------------------------------------------<<<
 

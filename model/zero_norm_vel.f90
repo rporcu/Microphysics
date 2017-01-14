@@ -26,7 +26,7 @@ module zero_norm_vel_module
 ! Modules
 !-----------------------------------------------
       USE param1   , only: zero
-      USE geometry , only: imax2, jmax2, kmax2
+      use geometry, only: domlo, domhi
       USE functions, only: iminus, jminus, kminus
 
       IMPLICIT NONE
@@ -67,12 +67,12 @@ module zero_norm_vel_module
                W_G(I,J,K) = ZERO
 
                if (flag(i,j,k,1) /= 106 .and. flag(i,j,k,1) /= 107) then
-                  if(i < imax2) u_g(iminus(i,j,k),j,k) = zero
-                  if(j < jmax2) then
+                  if(i < domhi(1)+1) u_g(iminus(i,j,k),j,k) = zero
+                  if(j < domhi(2)+1) then
                     if (jminus(i,j,k) .lt. slo(2)) print *,"SETTING TO ZERO OUTSIDE THE GRID AT ", i,jminus(i,j,k),k
                     v_g(i,jminus(i,j,k),k) = zero
                   end if
-                  if(k < kmax2) w_g(i,j,kminus(i,j,k)) = zero
+                  if(k < domhi(3)+1) w_g(i,j,kminus(i,j,k)) = zero
                endif
             endif
 

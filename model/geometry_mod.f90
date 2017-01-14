@@ -28,12 +28,6 @@
 ! Number of cells
       integer :: imax, jmax, kmax
 
-! Number of cells +/-
-      integer :: imax1, jmax1, kmax1
-      integer :: imin1, jmin1, kmin1
-      integer :: imax2, jmax2, kmax2
-      integer :: imin2, jmin2, kmin2
-
       integer :: domlo(3),domhi(3)
 
 !  one or more periodic boundary condition is used

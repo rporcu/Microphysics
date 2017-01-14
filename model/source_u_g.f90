@@ -215,9 +215,8 @@ module source_u_g_module
       USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
-      USE geometry  , only: imax2, jmax2, kmax2
-      USE geometry  , only: imin2, jmin2, kmin2
       USE matrix, only: e, w, s, n, t, b
+      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -300,7 +299,7 @@ module source_u_g_module
       end if
 
 ! top xy plane
-      K1 = KMAX2
+      K1 = DOMHI(3)+1
       if (shi(3) .gt. k1) then
       DO J1 = slo(2),shi(2)
          DO I1 = slo(1),shi(1)
@@ -356,7 +355,7 @@ module source_u_g_module
       end if
 
 ! north xz plane
-      J1 = JMAX2
+      J1 = DOMHI(2)+1
       if (shi(2) .gt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)

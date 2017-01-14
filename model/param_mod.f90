@@ -2,8 +2,6 @@
 
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-! Number of computational cells
-      INTEGER :: DIMENSION_3  !
 
 ! Maximum number of species.
       INTEGER :: DIMENSION_N_g ! Gas

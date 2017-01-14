@@ -16,13 +16,6 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use geometry, only: imin1
-      use geometry, only: imax1
-      use geometry, only: jmin1
-      use geometry, only: jmax1
-      use geometry, only: kmin1
-      use geometry, only: kmax1
-
       use geometry, only: imax,jmax,domlo,domhi
 
       IMPLICIT NONE

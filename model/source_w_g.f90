@@ -217,11 +217,10 @@ module source_w_g_module
       SUBROUTINE SOURCE_W_G_BC(slo,shi,lo,hi,A_M, B_M, W_G, flag, dx, dy, dz)
 
       use matrix, only: e, w, s, n, t, b
-      USE geometry , only: imax2,jmax2, kmax2
-      USE geometry , only: imin2,jmin2, kmin2
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
       USE functions, only: im1, jm1
+      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -304,7 +303,7 @@ module source_w_g_module
       end if
 
 ! north xz plane
-      J1 = JMAX2
+      J1 = DOMHI(2)+1
       if (shi(2) .gt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
@@ -364,7 +363,7 @@ module source_w_g_module
       end if
 
 ! east yz plane
-      I1 = IMAX2
+      I1 = DOMHI(1)+1
       if (shi(1) .gt. i1) then
       DO K1 = slo(3),shi(3)
          DO J1 = slo(2),shi(2)

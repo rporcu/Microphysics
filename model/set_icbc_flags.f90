@@ -4,11 +4,10 @@ MODULE set_icbc_flags_module
       use bc, only: bc_y_n, bc_y_s, bc_j_s, bc_j_n
       use bc, only: bc_z_t, bc_z_b, bc_k_b, bc_k_t
       use bc, only: dimension_bc, bc_type, bc_x_e, bc_defined
+      use geometry, only: domlo, domhi
       use compar, only: iend3, jend3, kend3
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax2, jmax2, kmax2
-      use geometry, only: imin2, jmin2, kmin2
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_
       use ic, only: MINF_, MOUT_, POUT_, OUTF_, PINF_, PSW_
       use mod_bc, only: mod_bc_i, mod_bc_j, mod_bc_k
@@ -75,7 +74,7 @@ MODULE set_icbc_flags_module
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
-         IF(K==KMIN2 .OR. K==KMAX2)THEN
+         IF(K==DOMLO(3)-1 .OR. K==DOMHI(3)+1)THEN
             IF (CYCLIC_Z_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Z) THEN
@@ -85,7 +84,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(J==JMIN2 .OR. J==JMAX2)THEN
+         IF(J==DOMLO(2)-1 .OR. J==DOMHI(2)+1)THEN
             IF (CYCLIC_Y_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Y) THEN
@@ -95,7 +94,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(I==IMIN2 .OR. I==IMAX2)THEN
+         IF(I==DOMLO(1)-1 .OR. I==DOMHI(1)+1)THEN
             IF (CYCLIC_X_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_X) THEN
@@ -105,9 +104,9 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 ! corner cells are wall cells
-         IF ((I==IMIN2 .OR. I==IMAX2) .AND. &
-             (J==JMIN2 .OR. J==JMAX2) .AND. &
-             (K==KMIN2 .OR. K==KMAX2)) THEN
+         if ((i==domlo(1)-1 .or. i==domhi(1)+1) .and. &
+             (j==domlo(2)-1 .or. j==domhi(2)+1) .and. &
+             (k==domlo(3)-1 .or. k==domhi(3)+1)) then
             IF (FLAG(i,j,k,1) /= FSW_) FLAG(i,j,k,1) = NSW_
          ENDIF
 
@@ -341,8 +340,8 @@ MODULE set_icbc_flags_module
 
       use compar       , only: nodesi, nodesj, nodesk
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-      use geometry     , only: imax2, jmax2, kmax2
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
+      use geometry, only: domlo, domhi
 
       USE open_files_mod, only: open_pe_log
 
@@ -399,20 +398,20 @@ MODULE set_icbc_flags_module
                CALL MOD_BC_K(BCV,flag,slo,shi)
 
             ! Extend the boundaries for cyclic implementation
-            IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (IMAX2 - 1) .AND. &
+            IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (DOMHI(1)+1 - 1) .AND. &
                CYCLIC_X .AND. NODESI > 1) THEN
                    BC_I_W(BCV) = 1
-                   BC_I_E(BCV) = IMAX2
+                   BC_I_E(BCV) = DOMHI(1)+1
             ENDIF
-            IF(BC_J_S(BCV) == 2 .AND. BC_J_N(BCV) == (JMAX2 - 1) .AND. &
+            IF(BC_J_S(BCV) == 2 .AND. BC_J_N(BCV) == (DOMHI(2)+1 - 1) .AND. &
                CYCLIC_Y .AND. NODESJ > 1) THEN
                BC_J_S(BCV) = 1
-               BC_J_N(BCV) = JMAX2
+               BC_J_N(BCV) = DOMHI(2)+1
             ENDIF
-            IF(BC_K_B(BCV) == 2 .AND. BC_K_T(BCV) == (KMAX2 - 1) .AND. &
+            IF(BC_K_B(BCV) == 2 .AND. BC_K_T(BCV) == (DOMHI(3)+1 - 1) .AND. &
                CYCLIC_Z .AND. NODESK > 1) THEN
                BC_K_B(BCV) = 1
-               BC_K_T(BCV) = KMAX2
+               BC_K_T(BCV) = DOMHI(3)+1
             ENDIF
 
             ! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag

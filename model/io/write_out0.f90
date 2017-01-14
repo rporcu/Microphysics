@@ -31,7 +31,6 @@ MODULE WRITE_OUT0_MODULE
       USE geometry, only: cyclic_x, cyclic_y, cyclic_z
       USE geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       USE geometry, only: imax, jmax, kmax
-      USE geometry, only: imax2, jmax2, kmax2
       USE geometry, only: xlength, ylength, zlength
       USE ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
       USE ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
@@ -48,6 +47,7 @@ MODULE WRITE_OUT0_MODULE
       USE toleranc, only: tol_com, zero_ep_s
       USE ur_facs, only: ur_fac
       USE write_table_mod, only: write_table
+      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -160,21 +160,21 @@ MODULE WRITE_OUT0_MODULE
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
          LEGEND(3) = 'X_E'
-         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, IMAX2)
+         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, DOMHI(1)+1)
          WRITE (UNIT_OUT, 1212) IMAX
          WRITE (UNIT_OUT, 1213) XLENGTH
          WRITE (UNIT_OUT, 1220)
          LEGEND(1) = '  J'
          LEGEND(2) = ' DY'
          LEGEND(3) = 'Y_N'
-         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, JMAX2)
+         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, DOMHI(2)+1)
          WRITE (UNIT_OUT, 1221) JMAX
          WRITE (UNIT_OUT, 1222) YLENGTH
          WRITE (UNIT_OUT, 1230)
          LEGEND(1) = '  K'
          LEGEND(2) = ' DZ'
          LEGEND(3) = 'Z_T'
-         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, KMAX2)
+         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, DOMHI(3)+1)
          WRITE (UNIT_OUT, 1231) KMAX
          WRITE (UNIT_OUT, 1232) ZLENGTH
 

@@ -17,7 +17,7 @@ MODULE GET_PS_MODULE
 
       USE calc_cell_module, only: calc_loc, calc_cell
       USE geometry, only: imax, jmax, kmax
-      USE geometry, only: imax2, jmax2, kmax2
+      USE geometry, only: domhi
       USE location_check_module, only: location_check
       USE param1, only: undefined_i, is_undefined, is_defined
       USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
@@ -121,12 +121,12 @@ MODULE GET_PS_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF(PS_I_W(PSV)<1 .OR. PS_I_W(PSV)>IMAX2) IER = 1
-      IF(PS_I_E(PSV)<1 .OR. PS_I_E(PSV)>IMAX2) IER = 1
-      IF(PS_J_S(PSV)<1 .OR. PS_J_S(PSV)>JMAX2) IER = 1
-      IF(PS_J_N(PSV)<1 .OR. PS_J_N(PSV)>JMAX2) IER = 1
-      IF(PS_K_B(PSV)<1 .OR. PS_K_B(PSV)>KMAX2) IER = 1
-      IF(PS_K_T(PSV)<1 .OR. PS_K_T(PSV)>KMAX2) IER = 1
+      IF(PS_I_W(PSV)<1 .OR. PS_I_W(PSV)>domhi(1)+1) IER = 1
+      IF(PS_I_E(PSV)<1 .OR. PS_I_E(PSV)>domhi(1)+1) IER = 1
+      IF(PS_J_S(PSV)<1 .OR. PS_J_S(PSV)>domhi(2)+1) IER = 1
+      IF(PS_J_N(PSV)<1 .OR. PS_J_N(PSV)>domhi(2)+1) IER = 1
+      IF(PS_K_B(PSV)<1 .OR. PS_K_B(PSV)>domhi(3)+1) IER = 1
+      IF(PS_K_T(PSV)<1 .OR. PS_K_T(PSV)>domhi(3)+1) IER = 1
       IF(PS_K_B(PSV) > PS_K_T(PSV)) IER = 1
       IF(PS_J_S(PSV) > PS_J_N(PSV)) IER = 1
       IF(PS_I_W(PSV) > PS_I_E(PSV)) IER = 1

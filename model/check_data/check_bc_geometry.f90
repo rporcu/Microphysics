@@ -192,9 +192,10 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: XLENGTH, IMAX, IMAX2
-      use geometry, only: YLENGTH, JMAX, JMAX2
-      use geometry, only: ZLENGTH, KMAX, KMAX2
+      use geometry, only: domhi
+      use geometry, only: XLENGTH, IMAX
+      use geometry, only: YLENGTH, JMAX
+      use geometry, only: ZLENGTH, KMAX
 ! Function to compare two values
       use toleranc, only: COMPARE
 
@@ -236,8 +237,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
                I_W = 1
                I_E = 1
             ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
-               I_W = IMAX2
-               I_E = IMAX2
+               I_W = domhi(1)+1
+               I_E = domhi(1)+1
             ENDIF
          ENDIF
 
@@ -264,8 +265,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
                J_S = 1
                J_N = 1
             ELSE IF (COMPARE(BC_Y_S(BCV),YLENGTH)) THEN
-               J_S = JMAX2
-               J_N = JMAX2
+               J_S = domhi(2)+1
+               J_N = domhi(2)+1
             ENDIF
          ENDIF
 ! checking/setting corresponding j indices according to specified y
@@ -290,8 +291,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
                K_B = 1
                K_T = 1
             ELSEIF(COMPARE(BC_Z_B(BCV),ZLENGTH)) THEN
-               K_B = KMAX2
-               K_T = KMAX2
+               K_B = domhi(3)+1
+               K_T = domhi(3)+1
             ENDIF
          ENDIF
 ! checking/setting corresponding j indices according to specified y
@@ -308,12 +309,12 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF (BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>KMAX2) IER = 1
-      IF (BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>JMAX2) IER = 1
-      IF (BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>IMAX2) IER = 1
-      IF (BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>KMAX2) IER = 1
-      IF (BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>JMAX2) IER = 1
-      IF (BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>IMAX2) IER = 1
+      IF (BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
+      IF (BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
+      IF (BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
+      IF (BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
+      IF (BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
+      IF (BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
       IF (BC_K_B(BCV) > BC_K_T(BCV)) IER = 1
       IF (BC_J_S(BCV) > BC_J_N(BCV)) IER = 1
       IF (BC_I_W(BCV) > BC_I_E(BCV)) IER = 1
@@ -356,9 +357,10 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: IMAX, IMAX2
-      use geometry, only: JMAX, JMAX2
-      use geometry, only: KMAX, KMAX2
+      use geometry, only: domhi
+      use geometry, only: IMAX
+      use geometry, only: JMAX
+      use geometry, only: KMAX
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -468,12 +470,12 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF(BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>IMAX2) IER = 1
-      IF(BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>IMAX2) IER = 1
-      IF(BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>JMAX2) IER = 1
-      IF(BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>JMAX2) IER = 1
-      IF(BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>KMAX2) IER = 1
-      IF(BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>KMAX2) IER = 1
+      IF(BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
+      IF(BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
+      IF(BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
+      IF(BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
+      IF(BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
+      IF(BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
       IF(BC_K_B(BCV) > BC_K_T(BCV)) IER = 1
       IF(BC_J_S(BCV) > BC_J_N(BCV)) IER = 1
       IF(BC_I_W(BCV) > BC_I_E(BCV)) IER = 1
