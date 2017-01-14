@@ -16,6 +16,13 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
+      use geometry, only: imin1
+      use geometry, only: imax1
+      use geometry, only: jmin1
+      use geometry, only: jmax1
+      use geometry, only: kmin1
+      use geometry, only: kmax1
+
       use geometry, only: imax,jmax,domlo,domhi
 
       IMPLICIT NONE
@@ -83,8 +90,8 @@
       open(unit=fUnit, file='POST_UG_NORMS.dat', &
          position='append', status='old')
 
-      L1 = L1/dble(domhi(2)-domhi(2)+1)
-      L2 = L2/dble(domhi(2)-domhi(2)+1)
+      L1 = L1/dble(domhi(2)-domlo(2)+1)
+      L2 = L2/dble(domhi(2)-domlo(2)+1)
 
       write(fUnit,1200) jmax, L1, L2, LI
       close(fUnit)
@@ -102,11 +109,14 @@
 ! Calculate the U velocity solution at center of domain
       k = domlo(3) + (domhi(3)-domlo(3))/2
       j = domlo(2) + (domhi(2)-domlo(2))/2
+
       do i = domlo(1), domhi(1)
          xt = xt + dx
 ! Calculate the exact solution
          lPg = Pg(xt)
          Pg_MFIX = P_G(i,j,k)
+
+         write(6,*)xt,lPg,pg_mfix
 
          absErr = abs(lPg - Pg_MFIX)
          relErr = abs(absErr/max(abs(lPg), 1.0d-15))
