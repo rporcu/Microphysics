@@ -106,9 +106,8 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
       use ic, only: IC_Y_n, IC_Y_s, IC_J_n, IC_J_s
       use ic, only: IC_Z_t, IC_Z_b, IC_K_t, IC_K_b
 ! User specified: System geometry
-      use geometry, only: IMAX, IMIN1, IMAX1
-      use geometry, only: JMAX, JMIN1, JMAX1
-      use geometry, only: KMAX, KMIN1, KMAX1
+      use geometry, only: imax, jmax, kmax
+      use geometry, only: domlo, domhi
 ! Flag: New run or a restart.
       use run, only: RUN_TYPE
 
@@ -226,16 +225,16 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
              WRITE(ERR_MSG, 1101) ICV, 'IC_I_W > IC_I_E'
              write(*,*)' dump:',IC_I_W(ICV),IC_I_E(ICV)
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_I_W(ICV) < IMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_I_W < IMIN1'
+         ELSEIF(IC_I_W(ICV) < domlo(1)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_I_W < domlo(1)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_I_W(ICV) > IMAX1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_I_W > IMAX1'
+         ELSEIF(IC_I_W(ICV) > domhi(1)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_I_W > domhi(1)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_I_E(ICV) < IMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_I_E < IMIN1'
+         ELSEIF(IC_I_E(ICV) < domlo(1)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_I_E < domlo(1)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_I_E(ICV) > IMAX1) THEN
+         ELSEIF(IC_I_E(ICV) > domhi(1)) THEN
              WRITE(ERR_MSG, 1101) ICV, 'IC_Z_t and IC_K_t'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
@@ -256,17 +255,17 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
          IF(IC_J_S(ICV) > IC_J_N(ICV)) THEN
              WRITE(ERR_MSG, 1101) ICV, 'IC_J_S > IC_J_N'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_J_S(ICV)<JMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_J_S < JMIN1'
+         ELSEIF(IC_J_S(ICV)<domlo(2)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_J_S < domlo(2)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_J_S(ICV)>JMAX1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_J_S >  JMAX1'
+         ELSEIF(IC_J_S(ICV)>domhi(2)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_J_S >  domhi(2)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_J_N(ICV)<JMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_J_N < JMIN1'
+         ELSEIF(IC_J_N(ICV)<domlo(2)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_J_N < domlo(2)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_J_N(ICV)>JMAX1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_J_N > JMAX1'
+         ELSEIF(IC_J_N(ICV)>domhi(2)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_J_N > domhi(2)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
@@ -287,17 +286,17 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
          IF(IC_K_B(ICV) > IC_K_T(ICV)) THEN
              WRITE(ERR_MSG, 1101) ICV, 'IC_K_B > IC_K_T'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_K_B(ICV) < KMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_K_B < KMIN1'
+         ELSEIF(IC_K_B(ICV) < domlo(3)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_K_B < domlo(3)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_K_B(ICV) > KMAX1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_K_B > KMAX1'
+         ELSEIF(IC_K_B(ICV) > domhi(3)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_K_B > domhi(3)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_K_T(ICV) < KMIN1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_K_T < KMIN1'
+         ELSEIF(IC_K_T(ICV) < domlo(3)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_K_T < domlo(3)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IC_K_T(ICV) > KMAX1) THEN
-             WRITE(ERR_MSG, 1101) ICV, 'IC_K_T > KMAX1'
+         ELSEIF(IC_K_T(ICV) > domhi(3)) THEN
+             WRITE(ERR_MSG, 1101) ICV, 'IC_K_T > domhi(3)'
              CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 

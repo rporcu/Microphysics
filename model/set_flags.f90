@@ -173,7 +173,7 @@ MODULE SET_FLAGS_MODULE
             FLAG(i,j,kminus(i,j,k),4) = 0
 
             if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
-! make the upper (E, N, T) boundary permeable
+               ! make the upper (E, N, T) boundary permeable
                IF (I == IMAX2) THEN
                   IF ((J/=1.AND.J/=0) .AND. (J/=JMAX2)) THEN
                      IF ((K/=1.AND.K/=0) .AND. (K/=KMAX2)) THEN
