@@ -10,7 +10,7 @@ fi
 rm -f POST_* &> /dev/null
 
 rm -f ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} DES_ONEWAY_COUPLED=.F.
+time -p ${MFIX} inputs DES_ONEWAY_COUPLED=.F.
 
 post_dats=AUTOTEST/POST*.dat
 
