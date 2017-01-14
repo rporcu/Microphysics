@@ -16,9 +16,7 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use geometry, only: imin1, imax1, imax
-      use geometry, only: jmin1, jmax1, jmax
-      use geometry, only: kmin1, kmax1
+      use geometry, only: imax,jmax,domlo,domhi
 
       IMPLICIT NONE
 
@@ -61,9 +59,9 @@
       yt = -0.5d0*dy
 
 ! Calculate the U velocity solution at center of domain
-      k = kmin1 + (kmax1-kmin1)/2
-      i = imin1 + (imax1-imin1)/2
-      do j = jmin1, jmax1
+      k = domlo(3) + (domhi(3)-domlo(3))/2
+      i = domlo(1) + (domhi(1)-domlo(1))/2
+      do j = domlo(2), domhi(2)
          yt = yt + dy
 ! Calculate the exact solution
          lUg = Ug(yt)
@@ -85,8 +83,8 @@
       open(unit=fUnit, file='POST_UG_NORMS.dat', &
          position='append', status='old')
 
-      L1 = L1/dble(jmax1-jmin1+1)
-      L2 = L2/dble(jmax1-jmin1+1)
+      L1 = L1/dble(domhi(2)-domhi(2)+1)
+      L2 = L2/dble(domhi(2)-domhi(2)+1)
 
       write(fUnit,1200) jmax, L1, L2, LI
       close(fUnit)
@@ -102,9 +100,9 @@
       xt = -0.5d0*dx
 
 ! Calculate the U velocity solution at center of domain
-      k = kmin1 + (kmax1-kmin1)/2
-      j = jmin1 + (jmax1-jmin1)/2
-      do i = imin1, imax1
+      k = domlo(3) + (domhi(3)-domlo(3))/2
+      j = domlo(2) + (domhi(2)-domlo(2))/2
+      do i = domlo(1), domhi(1)
          xt = xt + dx
 ! Calculate the exact solution
          lPg = Pg(xt)
@@ -124,8 +122,8 @@
       open(unit=fUnit, file='POST_PG_NORMS.dat', &
          position='append', status='old')
 
-      L1 = L1/dble(imax1-imin1+1)
-      L2 = L2/dble(imax1-imin1+1)
+      L1 = L1/dble(domhi(1)-domlo(1)+1)
+      L2 = L2/dble(domhi(1)-domlo(1)+1)
 
       write(fUnit,1200) imax, L1, L2, LI
       close(fUnit)
