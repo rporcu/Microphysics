@@ -243,15 +243,13 @@ MODULE SET_BC0_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_IJK_P_G (slo, shi, RO_G0, flag)
 
-! IJK location where Ppg is fixed.
+      ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_G
 
       use geometry, only: CYCLIC_X, CYCLIC_X_PD, CYCLIC_X_MF
       use geometry, only: CYCLIC_Y, CYCLIC_Y_PD, CYCLIC_Y_MF
       use geometry, only: CYCLIC_Z, CYCLIC_Z_PD, CYCLIC_Z_MF
-      use geometry, only: iMAX1, iMin1
-      use geometry, only: jMAX1, jMin1
-      use geometry, only: kMAX1, kMin1
+      use geometry, only: domlo, domhi
 
       use funits, only: DMP_LOG
 
@@ -324,29 +322,29 @@ MODULE SET_BC0_MODULE
          l1 = UNDEFINED_I; u1=l1
 
 ! If there are cyclic boundaries, flag a cell along the positive
-! domain extreme in the cyclic direction (e.g., JMAX1).
+! domain extreme in the cyclic direction (e.g., domhi(2)).
       IF(CYCLIC_Y .OR. CYCLIC_Y_PD .OR. CYCLIC_Y_MF) THEN
 
          Map = 'JKI_MAP'
-         l3 = JMAX1
-         l2 = KMIN1;  u2 = KMAX1
-         l1 = IMIN1;  u1 = IMAX1
+         l3 = domhi(2)
+         l2 = domlo(3);  u2 = domhi(3)
+         l1 = domlo(1);  u1 = domhi(1)
          lMsg='Cyclic in Y'
 
       ELSEIF(CYCLIC_X .OR. CYCLIC_X_PD .OR. CYCLIC_X_MF) THEN
 
          Map = 'IKJ_MAP'
-         l3 = IMAX1
-         l2 = KMIN1;  u2 = KMAX1
-         l1 = JMIN1;  u1 = JMAX1
+         l3 = domhi(1)
+         l2 = domlo(3);  u2 = domhi(3)
+         l1 = domlo(2);  u1 = domhi(2)
          lMsg='Cyclic in X'
 
       ELSEIF(CYCLIC_Z .OR. CYCLIC_Z_PD .OR. CYCLIC_Z_MF) THEN
 
          Map = 'KIJ_MAP'
-         l3 = KMAX1
-         l2 = IMIN1;  u2 = IMAX1
-         l1 = JMIN1;  u1 = JMAX1
+         l3 = domhi(3)
+         l2 = domlo(1);  u2 = domhi(1)
+         l1 = domlo(2);  u1 = domhi(2)
          lMsg='Cyclic in Z'
 
       ENDIF
@@ -355,9 +353,9 @@ MODULE SET_BC0_MODULE
 ! this case to maximize search region for 2D problems.
       IF(IS_UNDEFINED(l3)) THEN
          Map = 'KIJ_MAP'
-         l3 = max((KMAX1-KMIN1)/2+1,2)
-         l2 = IMIN1;  u2 = IMAX1
-         l1 = JMIN1;  u1 = JMAX1
+         l3 = max((domhi(3)-domlo(3))/2+1,2)
+         l2 = domlo(1);  u2 = domhi(1)
+         l1 = domlo(2);  u1 = domhi(2)
          lMsg='Center of domain'
       ENDIF
 
