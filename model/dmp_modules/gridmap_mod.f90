@@ -29,10 +29,8 @@ contains
       use functions, only: funijk
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax2, jmax2, kmax2
-      use geometry, only: imin2, jmin2, kmin2
 
-      use geometry, only: imax1, imin1, jmax1, jmin1, kmax1, kmin1
+      use geometry, only: domlo, domhi
       use compar, only: nodesi, nodesj, nodesk
 
       implicit none
@@ -55,26 +53,26 @@ contains
       CYC_YL = (CYCLIC_Y .OR. CYCLIC_Y_PD)
       CYC_ZL = (CYCLIC_Z .OR. CYCLIC_Z_PD)
 
-      istart1   = imin1
-      iend1     = imax1
-      jstart1   = jmin1
-      jend1     = jmax1
-      kstart1   = kmin1
-      kend1     = kmax1
+      istart1   = domlo(1)
+      iend1     = domhi(1)
+      jstart1   = domlo(2)
+      jend1     = domhi(2)
+      kstart1   = domlo(3)
+      kend1     = domhi(3)
 
-      istart2   = imin2
-      iend2     = imax2
-      jstart2   = jmin2
-      jend2     = jmax2
-      kstart2   = kmin2
-      kend2     = kmax2
+      istart2   = domlo(1)-1
+      iend2     = domhi(1)+1
+      jstart2   = domlo(2)-1
+      jend2     = domhi(2)+1
+      kstart2   = domlo(3)-1
+      kend2     = domhi(3)+1
 
-      istart3   = imin2
-      iend3     = imax2
-      jstart3   = jmin2
-      jend3     = jmax2
-      kstart3   = kmin2
-      kend3     = kmax2
+      istart3   = domlo(1)-1
+      iend3     = domhi(1)+1
+      jstart3   = domlo(2)-1
+      jend3     = domhi(2)+1
+      kstart3   = domlo(3)-1
+      kend3     = domhi(3)+1
 
 
 ! Setup mapping to take care of cyclic boundary conditions
@@ -82,35 +80,35 @@ contains
 ! consider cyclic boundary condition using the imap(:),jmap(:),kmap(:)
 ! indirection arrays
 
-      allocate( imap( imin2:imax2 ) )
-      allocate( jmap( jmin2:jmax2 ) )
-      allocate( kmap( kmin2:kmax2 ) )
+      allocate( imap( domlo(1)-1:domhi(1)+1 ) )
+      allocate( jmap( domlo(2)-1:domhi(2)+1 ) )
+      allocate( kmap( domlo(3)-1:domhi(3)+1 ) )
 
-      do kk=kmin2,kmax2
+      do kk=domlo(3)-1,domhi(3)+1
         kmap(kk) = kk
       enddo
 
-      do jj=jmin2,jmax2
+      do jj=domlo(2)-1,domhi(2)+1
         jmap(jj) = jj
       enddo
 
-      do ii=imin2,imax2
+      do ii=domlo(1)-1,domhi(1)+1
         imap(ii) = ii
       enddo
 
       if (CYC_ZL) then
-         kmap( kmax2 ) = kmin1
-         kmap( kmin2 ) = kmax1
+         kmap( domhi(3)+1 ) = domlo(3)
+         kmap( domlo(3)-1 ) = domhi(3)
       endif
 
       if (CYC_YL) then
-         jmap( jmax2 ) = jmin1
-         jmap( jmin2 ) = jmax1
+         jmap( domhi(2)+1 ) = domlo(2)
+         jmap( domlo(2)-1 ) = domhi(2)
       endif
 
       if (CYC_XL) then
-         imap( imax2 ) = imin1
-         imap( imin2 ) = imax1
+         imap( domhi(1)+1 ) = domlo(1)
+         imap( domlo(1)-1 ) = domhi(1)
       endif
 
 ! End setup mapping to take care of cyclic boundary conditions
@@ -126,12 +124,12 @@ contains
       kstart = kstart1
       kend = kend1
 
-      if(istart2.eq.imin2) istart = istart2
-      if(iend2.eq.imax2) iend = iend2
-      if(jstart2.eq.jmin2) jstart = jstart2
-      if(jend2.eq.jmax2) jend = jend2
-      if(kstart2.eq.kmin2) kstart = kstart2
-      if(kend2.eq.kmax2) kend = kend2
+      if(istart2.eq.domlo(1)-1) istart = istart2
+      if(iend2  .eq.domhi(1)+1) iend = iend2
+      if(jstart2.eq.domlo(2)-1) jstart = jstart2
+      if(jend2  .eq.domhi(2)+1) jend = jend2
+      if(kstart2.eq.domlo(3)-1) kstart = kstart2
+      if(kend2  .eq.domhi(3)+1) kend = kend2
 
 ! Setup coefficients of FUINIJK
       c0 = 1 - istart3

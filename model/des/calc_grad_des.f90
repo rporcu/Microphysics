@@ -9,8 +9,7 @@ MODULE CALC_GRAD_DES_MODULE
 ! Modules
 !-----------------------------------------------
 
-      USE geometry, only: IMIN1, JMIN1, KMIN1
-      USE geometry, only: IMAX1, JMAX1, KMAX1
+      USE geometry, only: domlo,domhi
 
       use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       use functions, only: AVG
@@ -47,13 +46,13 @@ MODULE CALC_GRAD_DES_MODULE
          DEL_PHI(I,J,K,:) = ZERO
          IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
-         IF((I>IMIN1).AND.(I<IMAX1)) THEN
+         IF((I > domlo(1)).AND.(I < domhi(1))) THEN
             DEL_PHI(I,J,K,1) = oDX*(AVG(PHI(I,J,K),PHI(iplus(i,j,k),j,k)) -     &
                AVG(PHI(iminus(i,j,k),j,k),PHI(I,J,K)))
-         ELSEIF(I == IMIN1) THEN
+         ELSEIF(I == domlo(1)) THEN
             DEL_PHI(I,J,K,1) = 2.0d0*oDX *                            &
                (AVG(PHI(I,J,K),PHI(iplus(i,j,k),j,k)) -  PHI(I,J,K))
-         ELSEIF(I == IMAX1) THEN
+         ELSEIF(I == domhi(1)) THEN
             DEL_PHI(I,J,K,1) = 2.0d0*oDX *                            &
                (PHI(I,J,K) - AVG(PHI(iminus(i,j,k),j,k), PHI(I,J,K)))
          ELSE
@@ -61,13 +60,13 @@ MODULE CALC_GRAD_DES_MODULE
          ENDIF
 
 
-         IF((J>JMIN1) .AND. (J<JMAX1)) THEN
+         IF((J > domlo(2)) .AND. (J < domhi(2))) THEN
             DEL_PHI(I,J,K,2) = oDY*(AVG(PHI(I,J,K),PHI(i,jplus(i,j,k),k)) -     &
                AVG(PHI(i,jminus(i,j,k),k),PHI(I,J,K)))
-         ELSEIF(J == JMIN1) THEN
+         ELSEIF(J == domlo(2)) THEN
             DEL_PHI(I,J,K,2) = 2.0d0*oDY *                            &
                (AVG(PHI(I,J,K),PHI(i,jplus(i,j,k),k)) - PHI(I,J,K))
-         ELSEIF(J == JMAX1) THEN
+         ELSEIF(J == domhi(2)) THEN
             DEL_PHI(I,J,K,2) = 2.0d0*oDY *                            &
                (PHI(I,J,K)- AVG(PHI(i,jminus(i,j,k),k),PHI(I,J,K)))
          ELSE
@@ -75,13 +74,13 @@ MODULE CALC_GRAD_DES_MODULE
          ENDIF
 
 
-         IF((K>KMIN1) .AND. (K<KMAX1)) THEN
+         IF((K > domlo(3)) .AND. (K < domhi(3))) THEN
             DEL_PHI(I,J,K,3) = oDZ*(AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) -  &
                AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
-         ELSEIF(K == KMIN1) THEN
+         ELSEIF(K == domlo(3)) THEN
             DEL_PHI(I,J,K,3) = 2.0d0*oDZ *                         &
                (AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) - PHI(I,J,K))
-         ELSEIF(K == KMAX1) THEN
+         ELSEIF(K == domhi(3)) THEN
             DEL_PHI(I,J,K,3) = 2.0d0*oDZ *                         &
                (PHI(I,J,K) - AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
          ELSE

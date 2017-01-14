@@ -36,19 +36,18 @@
 
 
       integer function iminus(i,j,k)
-      use geometry, only  : imin1,imax1,cyclic_x
-      use geometry, only: flag_mod
+      use geometry, only  : domlo,domhi,cyclic_x,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imin1 .and.  flag_mod(i,j,k,1) > 1) then
+      if (i.eq.domlo(1) .and.  flag_mod(i,j,k,1) > 1) then
          iminus = i
       else
          iminus = max(1, i-1)
       end if
 
-      if (cyclic_x .and. (iminus < imin1) .and. &
-         flag_mod(i,j,k,1)<100) iminus = imax1
+      if (cyclic_x .and. (iminus < domlo(1)) .and. &
+         flag_mod(i,j,k,1)<100) iminus = domhi(1)
 
       end function iminus
 
@@ -57,38 +56,36 @@
 
       integer function iplus(i,j,k)
       use compar, only: iend3
-      use geometry, only  : imin1,imax1,cyclic_x
-      use geometry, only: flag_mod
+      use geometry, only  : domlo,domhi,cyclic_x,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (i.eq.imax1 .and. flag_mod(i,j,k,1) > 1) then
+      if (i.eq.domhi(1) .and. flag_mod(i,j,k,1) > 1) then
          iplus = i
       else
          iplus = min(iend3, i+1)
       end if
 
-      if (cyclic_x .and. (iplus > imax1) .and. &
-         flag_mod(i,j,k,1)<100) iplus = imin1
+      if (cyclic_x .and. (iplus > domhi(1)) .and. &
+         flag_mod(i,j,k,1)<100) iplus = domlo(1)
 
       end function iplus
 
       ! ************************************************
 
       integer function jminus(i,j,k)
-      use geometry, only  : jmin1,jmax1,cyclic_y
-      use geometry, only: flag_mod
+      use geometry, only  : domlo,domhi,cyclic_y,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmin1 .and. flag_mod(i,j,k,1) > 1) then
+      if (j.eq.domlo(2) .and. flag_mod(i,j,k,1) > 1) then
          jminus = j
       else
          jminus = max(1, j-1)
       end if
 
-      if (cyclic_y .and. (jminus < jmin1) .and. &
-         flag_mod(i,j,k,1)<100) jminus = jmax1
+      if (cyclic_y .and. (jminus < domlo(2)) .and. &
+         flag_mod(i,j,k,1)<100) jminus = domhi(2)
 
       end function jminus
 
@@ -96,19 +93,18 @@
 
       integer function jplus(i,j,k)
       use compar, only: jend3
-      use geometry, only  : jmin1,jmax1,cyclic_y
-      use geometry, only: flag_mod
+      use geometry, only  : domlo,domhi,cyclic_y,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (j.eq.jmax1 .and. flag_mod(i,j,k,1) > 1) then
+      if (j.eq.domhi(2) .and. flag_mod(i,j,k,1) > 1) then
          jplus = j
       else
          jplus = min(jend3, j+1)
       end if
 
-      if (cyclic_y .and. (jplus > jmax1) .and. &
-         flag_mod(i,j,k,1)<100) jplus = jmin1
+      if (cyclic_y .and. (jplus > domhi(2)) .and. &
+         flag_mod(i,j,k,1)<100) jplus = domlo(2)
 
       end function jplus
 
@@ -116,19 +112,18 @@
 
       integer function kminus(i,j,k)
 
-      use geometry, only  : kmin1,kmax1,cyclic_z
-      use geometry, only: flag_mod
+      use geometry, only  : domlo,domhi,cyclic_z,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmin1 .and. flag_mod(i,j,k,1) > 1) then
+      if (k.eq.domlo(3) .and. flag_mod(i,j,k,1) > 1) then
          kminus = k
       else
          kminus = max(1, k-1)
       end if
 
-      if (cyclic_z .and. (kminus < kmin1) .and. &
-         flag_mod(i,j,k,1)<100) kminus = kmax1
+      if (cyclic_z .and. (kminus < domlo(3)) .and. &
+         flag_mod(i,j,k,1)<100) kminus = domhi(3)
 
       end function kminus
 
@@ -137,19 +132,18 @@
       integer function kplus(i,j,k)
 
       use compar, only: kend3
-      use geometry, only: kmin1,kmax1,cyclic_z
-      use geometry, only: flag_mod
+      use geometry, only: domlo,domhi,cyclic_z,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
 
-      if (k.eq.kmax1 .and. flag_mod(i,j,k,1) > 1) then
+      if (k.eq.domhi(3) .and. flag_mod(i,j,k,1) > 1) then
          kplus = k
       else
          kplus = min(kend3, k+1)
       end if
 
-      if (cyclic_z .and. (kplus > kmax1) .and. &
-         flag_mod(i,j,k,1)<100) kplus = kmin1
+      if (cyclic_z .and. (kplus > domhi(3)) .and. &
+         flag_mod(i,j,k,1)<100) kplus = domlo(3)
 
       end function kplus
 
@@ -260,14 +254,14 @@
       integer function im1(i)
 
       use compar, only: nodesi
-      use geometry, only  : imin1, imin2, imax1, cyclic_x
+      use geometry, only  : domlo,domhi,cyclic_x
       implicit none
       integer, intent(in) :: i
 
-      if(i==imin2) then
-         im1 = imin2
-      elseif(cyclic_x .and. nodesi == 1 .and. i==imin1 ) then
-         im1 = imax1
+      if(i .eq. domlo(1)-1) then
+         im1 = domlo(1)-1
+      elseif(cyclic_x .and. nodesi == 1 .and. i==domlo(1) ) then
+         im1 = domhi(1)
       else
          im1 = max(1, i-1)
       endif
@@ -279,14 +273,14 @@
       integer function ip1(i)
 
       use compar, only: nodesi, iend3
-      use geometry, only  : imin1, imax2, imax1, cyclic_x
+      use geometry, only  : domlo, domhi, cyclic_x
       implicit none
       integer, intent(in) :: i
 
-      if(i==imax2) then
-         ip1 = imax2
-      elseif(cyclic_x .and. nodesi == 1 .and. i==imax1 ) then
-         ip1 = imin1
+      if(i .eq. domhi(1)+1) then
+         ip1 = domhi(1)+1
+      elseif(cyclic_x .and. nodesi == 1 .and. i==domhi(1) ) then
+         ip1 = domlo(1)
       else
          ip1 = min(iend3, i+1)
       endif
@@ -297,15 +291,15 @@
 
       integer function jm1(j)
 
-      use compar, only: nodesj
-      use geometry, only  : jmin1, jmin2, jmax1, cyclic_y
+      use compar  , only: nodesj
+      use geometry, only  : domlo, domhi, cyclic_y
       implicit none
       integer, intent(in) :: j
 
-      if(j==jmin2) then
-         jm1 = jmin2
-      elseif(cyclic_y .and. nodesj == 1 .and. j==jmin1 ) then
-         jm1 = jmax1
+      if(j .eq. domlo(2)-1) then
+         jm1 = domlo(2)-1
+      elseif(cyclic_y .and. nodesj == 1 .and. j==domlo(2) ) then
+         jm1 = domhi(2)
       else
          jm1 = max(1, j-1)
       endif
@@ -317,14 +311,14 @@
       integer function jp1(j)
 
       use compar, only: nodesj, jend3
-      use geometry, only  : jmin1, jmax2, jmax1, cyclic_y
+      use geometry, only  : domlo, domhi, cyclic_y
       implicit none
       integer, intent(in) :: j
 
-      if(j==jmax2) then
-         jp1 = jmax2
-      elseif(cyclic_y .and. nodesj == 1 .and. j==jmax1 ) then
-         jp1 = jmin1
+      if(j .eq. domhi(2)+1) then
+         jp1 = domhi(2)+1
+      elseif(cyclic_y .and. nodesj == 1 .and. j==domhi(2) ) then
+         jp1 = domlo(2)
       else
          jp1 = min(jend3, j+1)
       endif
@@ -335,15 +329,15 @@
 
       integer function km1(k)
 
-      use compar, only: nodesk
-      use geometry, only: kmin1, kmin2, kmax1, cyclic_z
+      use compar  , only: nodesk
+      use geometry, only: domlo,domhi,cyclic_z
       implicit none
       integer, intent(in) :: k
 
-      if(k==kmin2) then
-         km1 = kmin2
-      elseif(cyclic_z .and. nodesk == 1 .and. k==kmin1 ) then
-         km1 = kmax1
+      if(k .eq. domlo(3)-1) then
+         km1 = domlo(3)-1
+      elseif(cyclic_z .and. nodesk == 1 .and. k==domlo(3) ) then
+         km1 = domhi(3)
       else
          km1 = max(1, k-1)
       endif
@@ -355,14 +349,14 @@
       integer function kp1(k)
 
       use compar, only: nodesk, kend3
-      use geometry, only: kmin1, kmax2, kmax1, cyclic_z
+      use geometry, only: domlo,domhi,cyclic_z
       implicit none
       integer, intent(in) :: k
 
-      if(k==kmax2) then
-         kp1 = kmax2
-      elseif(cyclic_z .and. nodesk == 1 .and. k==kmax1 ) then
-         kp1 = kmin1
+      if(k .eq. domhi(3)+1) then
+         kp1 = domhi(3)+1
+      elseif(cyclic_z .and. nodesk == 1 .and. k==domhi(3) ) then
+         kp1 = domlo(3)
       else
          kp1 = min(kend3, k+1)
       endif

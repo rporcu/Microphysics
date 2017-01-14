@@ -1,7 +1,5 @@
 MODULE functions
 
-  USE geometry, only: imax1, jmax1, kmax1
-
 ! Functions for generating IJK indices for indicated basis:
 !---------------------------------------------------------------------//
 ! INTEGER :: FUNIJK

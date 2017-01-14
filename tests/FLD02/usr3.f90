@@ -10,8 +10,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz)
 
-      use geometry, only: imin1, jmin1, kmin1
-      use geometry, only: imax1, jmax1, kmax1
+      use geometry, only: domlo, domhi
 
       use param1, only: small_number, half
       use bl_fort_module, only : c_real
@@ -49,15 +48,17 @@
       yt = -0.5d0*dy
 
 ! generate grid locations for exact solution calculation
-      k = kmin1 + (kmax1-kmin1)/2
-      i = imin1 + (imax1-imin1)/2
-      do j = jmin1, jmax1
-! Calculate cell height (assumed uniform spacing)
+      k = domlo(3) + (domhi(3)-domlo(3))/2
+      i = domlo(1) + (domhi(1)-domlo(1))/2
+      do j = domlo(2), domhi(2)
+
+         ! Calculate cell height (assumed uniform spacing)
          yt = yt + dy
-! Calculate exact solution
+
+         ! Calculate exact solution
          lUg = Ug(yt)
 
-! Get the MFIX solution
+         ! Get the MFIX solution
          Ug_MFIX = U_G(i,j,k)
 
          absErr = abs(lUg - Ug_MFIX)

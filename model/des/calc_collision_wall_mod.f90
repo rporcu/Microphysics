@@ -42,7 +42,7 @@
             particle_state,  des_radius, des_pos_new, &
             des_vel_new, omega_new, fc, tow)
 
-      use geometry, only: imax1, jmax1, kmax1
+      use geometry, only: domlo,domhi
       use geometry, only: xlength, ylength, zlength
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param1, only: zero, one
@@ -133,9 +133,9 @@
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(LL)) CYCLE
 
 ! If no neighboring facet in the surrounding 27 cells, then exit
-         if(i > 2 .and. i<imax1 .and. &
-            j > 2 .and. j<jmax1 .and. &
-            k > 2 .and. k<kmax1) then
+         if(i > 2 .and. i<domhi(1) .and. &
+            j > 2 .and. j<domhi(2) .and. &
+            k > 2 .and. k<domhi(3)) then
             CYCLE
          ENDIF
 
@@ -149,15 +149,15 @@
 
             if(nf==1 .and. i==2) then
                if(des_pos_new(ll,1) > des_radius(LL)) cycle
-            elseif(nf==2 .and. i==imax1) then
+            elseif(nf==2 .and. i==domhi(1)) then
                if(des_pos_new(ll,1) < xlength - des_radius(LL)) cycle
             elseif(nf==3 .and. j==2) then
                if(des_pos_new(ll,2) > des_radius(LL)) cycle
-            elseif(nf==4 .and. j==jmax1) then
+            elseif(nf==4 .and. j==domhi(2)) then
                if(des_pos_new(ll,2) < ylength - des_radius(LL)) cycle
             elseif(nf==5 .and. k==2) then
                if(des_pos_new(ll,3) > des_radius(LL)) cycle
-            elseif(nf==6 .and. k==kmax1) then
+            elseif(nf==6 .and. k==domhi(3)) then
                if(des_pos_new(ll,3) < zlength - des_radius(LL)) cycle
             endif
 
