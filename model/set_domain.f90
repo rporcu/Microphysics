@@ -59,21 +59,21 @@ module set_domain_module
 
       ! End of what used to be in set_geometry
 
-      CALL CHECK_INITIAL_CONDITIONS(dx,dy,dz)
-      CALL CHECK_BOUNDARY_CONDITIONS(dx,dy,dz)
-      CALL check_point_sources(dx,dy,dz)
+      call check_initial_conditions(dx,dy,dz)
+      call check_boundary_conditions(dx,dy,dz)
+      call check_point_sources(dx,dy,dz)
 
-! This call needs to occur before any of the IC/BC checks.
-      CALL SET_ICBC_FLAG(slo,shi,lo,hi,flag)
+      ! This call needs to occur before any of the IC/BC checks.
+      call set_icbc_flag(slo,shi,lo,hi,flag)
 
       ! Compute area of boundary surfaces.
       call get_bc_area(dx,dy,dz)
 
       ! Convert (mass, volume) flows to velocities.
-      CALL SET_BC_FLOW
+      call set_bc_flow
 
       ! Set the flags for identifying computational cells
-      CALL SET_FLAGS(slo,shi,flag)
+      call set_flags(slo,shi,flag)
 
       end subroutine set_domain
 end module set_domain_module

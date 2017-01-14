@@ -62,19 +62,19 @@ MODULE SET_FLAGS_MODULE
                 jb = min( shi(2), max (slo(2), j) )
                 kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
-                   flag(ib,jb,kb,1) = FSW_
+                    flag(ib,jb,kb,1) = FSW_
 
                 ib = min( shi(1), max (slo(1), i-1) )
                 jb = min( shi(2), max (slo(2), j) )
                 kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
-                   flag(ib,jb,kb,1) = FSW_
+                    flag(ib,jb,kb,1) = FSW_
 
                 ib = min( shi(1), max (slo(1), i) )
                 jb = min( shi(2), max (slo(2), j+1) )
                 kb = min( shi(3), max (slo(3), k) )
                 if (flag(ib,jb,kb,1) == NSW_) &
-                   flag(ib,jb,kb,1) = FSW_
+                    flag(ib,jb,kb,1) = FSW_
 
                 ib = min( shi(1), max (slo(1), i) )
                 jb = min( shi(2), max (slo(2), j-1) )
@@ -86,13 +86,17 @@ MODULE SET_FLAGS_MODULE
                 jb = min( shi(2), max (slo(2), j) )
                 kb = min( shi(3), max (slo(3), k+1) )
                 if (flag(ib,jb,kb,1) == NSW_) &
-                   flag(ib,jb,kb,1) = FSW_
+                    flag(ib,jb,kb,1) = FSW_
 
                 ib = min( shi(1), max (slo(1), i) )
                 jb = min( shi(2), max (slo(2), j) )
                 kb = min( shi(3), max (slo(3), k-1) )
                 if (flag(ib,jb,kb,1) == NSW_) &
-                   flag(ib,jb,kb,1) = FSW_
+                    flag(ib,jb,kb,1) = FSW_
+
+                if (ib .lt. slo(1) .or. ib .gt. shi(1)) print *,'BAD IB ',ib
+                if (jb .lt. slo(2) .or. jb .gt. shi(2)) print *,'BAD IB ',jb
+                if (kb .lt. slo(3) .or. kb .gt. shi(3)) print *,'BAD IB ',kb
 
               end select
 
@@ -106,14 +110,7 @@ MODULE SET_FLAGS_MODULE
 ! ---------------------------------------------------------------->>>
       flag(:,:,:,2:4) = UNDEFINED_I
 
-      ! CALL GATHER(FLAG,ARR1,ROOT)
-      ! CALL SCATTER(FLAG,ARR1,ROOT)
-
-      RETURN
-
       END SUBROUTINE SET_FLAGS
-
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

@@ -48,6 +48,9 @@ module zero_norm_vel_module
 ! Indices
       integer :: i,j,k
 
+                    print *,"SLO ",slo(:)
+                    print *,"SHI ",shi(:)
+
       do k = slo(3),shi(3)
         do j = slo(2),shi(2)
           do i = slo(1),shi(1)
@@ -63,9 +66,12 @@ module zero_norm_vel_module
                V_G(I,J,K) = ZERO
                W_G(I,J,K) = ZERO
 
-               if(flag(i,j,k,1) /= 106 .and. flag(i,j,k,1) /= 107) then
+               if (flag(i,j,k,1) /= 106 .and. flag(i,j,k,1) /= 107) then
                   if(i < imax2) u_g(iminus(i,j,k),j,k) = zero
-                  if(j < jmax2) v_g(i,jminus(i,j,k),k) = zero
+                  if(j < jmax2) then
+                    if (jminus(i,j,k) .lt. slo(2)) print *,"SETTING TO ZERO OUTSIDE THE GRID AT ", i,jminus(i,j,k),k
+                    v_g(i,jminus(i,j,k),k) = zero
+                  end if
                   if(k < kmax2) w_g(i,j,kminus(i,j,k)) = zero
                endif
             endif

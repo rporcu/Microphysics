@@ -40,8 +40,6 @@ MODULE set_icbc_flags_module
 
       CALL SET_BC_FLAGS_FLOW(slo,shi,flag)
 
-! Verify that ICBC flags are set for all fluid cells.
-
       END SUBROUTINE SET_ICBC_FLAG
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -248,17 +246,14 @@ MODULE set_icbc_flags_module
       INTEGER :: ICV
       INTEGER :: I, J, K
 
-      CALL INIT_ERR_MSG("SET_IC_FLAGS")
-
-
       IC_LP: DO ICV=1, DIMENSION_IC
 
          IF(.NOT.IC_DEFINED(ICV)) CYCLE IC_LP
 
-! Skip checks for PATCH restarts.
+         ! Skip checks for PATCH restarts.
          IF (IC_TYPE(ICV) == 'PATCH') CYCLE IC_LP
 
-!  Set ICBC flag
+         !  Set ICBC flag
          DO K = IC_K_B(ICV), IC_K_T(ICV)
             DO J = IC_J_S(ICV), IC_J_N(ICV)
                DO I = IC_I_W(ICV), IC_I_E(ICV)
@@ -267,17 +262,7 @@ MODULE set_icbc_flags_module
             ENDDO
          ENDDO
 
-
       ENDDO IC_LP
-
-! Update the ICBC flag on ghost cells.
-      ! CALL SEND_RECV(FLAG, 1)
-
-
-! Clean up and return.
-      CALL FINL_ERR_MSG
-
-      RETURN
 
       END SUBROUTINE SET_IC_FLAGS
 
@@ -304,44 +289,43 @@ MODULE set_icbc_flags_module
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-! loop/variable indices
-      INTEGER :: I , J , K
-! loop index
-      INTEGER :: BCV
+      ! loop/variable indices
+      integer :: I , J , K
+      integer :: istart, iend
+      integer :: jstart, jend
+      integer :: kstart, kend
+
+      ! loop index
+      integer :: BCV
 
 !-----------------------------------------------
 
-      CALL INIT_ERR_MSG("SET_BC_FLAGS_WALL")
-
-! Set the wall flags.
+      ! Set the wall flags.
       DO BCV=1, DIMENSION_BC
+
          IF(.NOT.BC_DEFINED(BCV)) CYCLE
 
          IF(BC_TYPE(BCV)=='FREE_SLIP_WALL' .OR. &
             BC_TYPE(BCV)=='NO_SLIP_WALL'   .OR. &
             BC_TYPE(BCV)=='PAR_SLIP_WALL') THEN
 
-            DO K = BC_K_B(BCV), BC_K_T(BCV)
-            DO J = BC_J_S(BCV), BC_J_N(BCV)
-            DO I = BC_I_W(BCV), BC_I_E(BCV)
+            ! We don't want to write outside of the current grid
+            istart = max(slo(1), bc_i_w(bcv))
+            jstart = max(slo(2), bc_j_s(bcv))
+            kstart = max(slo(3), bc_k_b(bcv))
+            iend   = min(shi(1), bc_i_e(bcv))
+            jend   = min(shi(2), bc_j_n(bcv))
+            kend   = min(shi(3), bc_k_t(bcv))
 
-               SELECT CASE (TRIM(BC_TYPE(BCV)))
-                  CASE('FREE_SLIP_WALL'); FLAG(i,j,k,1) = FSW_
-                  CASE('NO_SLIP_WALL');   FLAG(i,j,k,1) = NSW_
-                  CASE('PAR_SLIP_WALL');  FLAG(i,j,k,1) = PSW_
-               END SELECT
-            ENDDO
-            ENDDO
-            ENDDO
+            SELECT CASE (TRIM(BC_TYPE(BCV)))
+               CASE('FREE_SLIP_WALL'); FLAG(istart:iend,jstart:jend,kstart:kend,1) = FSW_
+               CASE('NO_SLIP_WALL'  ); FLAG(istart:iend,jstart:jend,kstart:kend,1) = NSW_
+               CASE('PAR_SLIP_WALL' ); FLAG(istart:iend,jstart:jend,kstart:kend,1) = PSW_
+            END SELECT
 
          ENDIF
       ENDDO
 
-      ! CALL SEND_RECV(FLAG,1)
-
-      CALL FINL_ERR_MSG
-
-      RETURN
       END SUBROUTINE SET_BC_FLAGS_WALL
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -369,20 +353,23 @@ MODULE set_icbc_flags_module
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-! loop/variable indices
-      INTEGER :: BCV, I, J, K
+      ! loop/variable indices
+      INTEGER :: bcv, i, j, k
+      integer :: istart, iend
+      integer :: jstart, jend
+      integer :: kstart, kend
 
       INTEGER :: IER
 
-! error indicator
+      ! error indicator
       LOGICAL :: ERROR
-! surface indictors
+
+      ! surface indictors
       LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 
       CALL INIT_ERR_MSG("SET_BC_FLAGS_FLOW")
 
-
-! FIND THE FLOW SURFACES
+      ! Find the flow surfaces
       ERROR = .FALSE.
 
       DO BCV = 1, DIMENSION_BC
@@ -411,7 +398,7 @@ MODULE set_icbc_flags_module
             IF(Z_CONSTANT .AND. IS_DEFINED(BC_Z_B(BCV)))                &
                CALL MOD_BC_K(BCV,flag,slo,shi)
 
-! Extend the boundaries for cyclic implementation
+            ! Extend the boundaries for cyclic implementation
             IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (IMAX2 - 1) .AND. &
                CYCLIC_X .AND. NODESI > 1) THEN
                    BC_I_W(BCV) = 1
@@ -428,15 +415,25 @@ MODULE set_icbc_flags_module
                BC_K_T(BCV) = KMAX2
             ENDIF
 
-! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag
-! this as an error. The next triple-loop will take care of reporting the
-! error.
+            ! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag
+            ! this as an error. The next triple-loop will take care of reporting the
+            ! error.
             ERROR = .FALSE.
-            DO K = BC_K_B(BCV), BC_K_T(BCV)
-            DO J = BC_J_S(BCV), BC_J_N(BCV)
-            DO I = BC_I_W(BCV), BC_I_E(BCV)
 
-! Verify that the FLOW BC is overwriting a wall.
+            ! We don't want to write outside of the current grid
+
+            istart = max(slo(1), bc_i_w(bcv))
+            jstart = max(slo(2), bc_j_s(bcv))
+            kstart = max(slo(3), bc_k_b(bcv))
+            iend   = min(shi(1), bc_i_e(bcv))
+            jend   = min(shi(2), bc_j_n(bcv))
+            kend   = min(shi(3), bc_k_t(bcv))
+
+            DO K = kstart, kend
+            DO J = jstart, jend
+            DO I = istart, iend
+
+               ! Verify that the FLOW BC is overwriting a wall.
                IF(flag(i,j,k,1) == NSW_ .or. &
                   flag(i,j,k,1) == FSW_ .or. &
                   flag(i,j,k,1) == PSW_) then

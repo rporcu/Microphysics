@@ -89,27 +89,27 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 
       call init_output_vars(time, dt)
 
-! Parse residual strings
+      ! Parse residual strings
       call parse_resid_string ()
 
-! Write the initial part of the standard output file
+      ! Write the initial part of the standard output file
       call write_out0(time, dt, dx, dy, dz)
 
-! Write the initial part of the special output file(s)
+      ! Write the initial part of the special output file(s)
       call write_usr0
 
       call init_err_msg('MFIX')
 
-! Set the flags for wall surfaces impermeable and identify flow
-! boundaries using FLAG_E, FLAG_N, and FLAG_T
+      ! Set the flags for wall surfaces impermeable and identify flow
+      ! boundaries using FLAG_E, FLAG_N, and FLAG_T
       call set_flags1(slo,shi,flag)
       flag_mod = flag
 
       ! Find corner cells and set their face areas to zero
       call get_corner_cells(slo,shi,lo,hi,flag)
       flag_mod = flag
-
-! Set point sources.
+ 
+      ! Set point sources.
       call set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate

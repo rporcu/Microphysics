@@ -586,11 +586,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      shi[1] = sshi[1]+2;
      shi[2] = sshi[2]+2;
 
-     std::cout << "LO = " << bx.loVect()[0] << " " << bx.loVect()[1] << " " << bx.loVect()[2] << std::endl;
-     std::cout << "HI = " << bx.hiVect()[0] << " " << bx.hiVect()[1] << " " << bx.hiVect()[2] << std::endl;
-     std::cout << "SLO = " << slo[0] << " " << slo[1] << " " << slo[2] << std::endl;
-     std::cout << "SHI = " << shi[0] << " " << shi[1] << " " << shi[2] << std::endl;
-
      mfix_main1(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -601,6 +596,13 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+     std::cout << "U " << (*u_g[lev])[mfi] << std::endl;
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+     std::cout << "V " << (*v_g[lev])[mfi] << std::endl;
+  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+     std::cout << "W " << (*w_g[lev])[mfi] << std::endl;
+  exit(0);
 
   // Allocate the particle arrays
   if (solve_dem)
