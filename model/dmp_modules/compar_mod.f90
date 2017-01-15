@@ -41,13 +41,8 @@
       integer, allocatable,dimension(:) :: imap, jmap, kmap
 
       integer :: &
-                istart3, iend3, jstart3, jend3, &
-                kstart3, kend3, istart2, iend2, jstart2, jend2, &
-                kstart2, kend2, istart1, iend1, jstart1, jend1, &
-                kstart1, kend1
+                istart3, iend3, jstart3, jend3, kstart3, kend3
 
       integer :: istart, iend, jstart, jend, kstart, kend
 
-      integer :: c0, c1, c2
-
-      END MODULE compar
+      end module compar
