@@ -53,8 +53,8 @@ MODULE GET_PS_MODULE
       Z_CONSTANT = .TRUE.
 
       IF(IS_DEFINED(PS_X_W(PSV)) .AND. IS_DEFINED(PS_X_E(PSV))) THEN
-         CALL CALC_CELL(PS_X_W(PSV), DX, IMAX, I_W)
-         CALL CALC_CELL(PS_X_E(PSV), DX, IMAX, I_E)
+         I_W = CALC_CELL(PS_X_W(PSV), DX)
+         I_E = CALC_CELL(PS_X_E(PSV), DX)
          IF (PS_X_W(PSV) /= PS_X_E(PSV)) THEN
             X_CONSTANT = .FALSE.
             I_W = I_W + 1
@@ -76,8 +76,8 @@ MODULE GET_PS_MODULE
 
 !  If there is no variation in the I direction set indices to 1
       IF (IS_DEFINED(PS_Y_S(PSV)).AND. IS_DEFINED(PS_Y_N(PSV))) THEN
-         CALL CALC_CELL(PS_Y_S(PSV), DY, JMAX, J_S)
-         CALL CALC_CELL(PS_Y_N(PSV), DY, JMAX, J_N)
+         J_S = CALC_CELL(PS_Y_S(PSV), DY)
+         J_N = CALC_CELL(PS_Y_N(PSV), DY)
          IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) THEN
             Y_CONSTANT = .FALSE.
             J_S = J_S + 1
@@ -98,8 +98,8 @@ MODULE GET_PS_MODULE
       ENDIF
 
       IF (IS_DEFINED(PS_Z_B(PSV)) .AND. IS_DEFINED(PS_Z_T(PSV))) THEN
-         CALL CALC_CELL(PS_Z_B(PSV), DZ, KMAX, K_B)
-         CALL CALC_CELL(PS_Z_T(PSV), DZ, KMAX, K_T)
+        K_B = CALC_CELL(PS_Z_B(PSV), DZ)
+        K_T = CALC_CELL(PS_Z_T(PSV), DZ)
          IF (PS_Z_B(PSV) /= PS_Z_T(PSV)) THEN
             Z_CONSTANT = .FALSE.
             K_B = K_B + 1

@@ -3,7 +3,7 @@ MODULE CALC_CELL_MODULE
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
+CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine name: CALC_CELL                                          C
@@ -12,55 +12,21 @@ MODULE CALC_CELL_MODULE
 !     half of the i, j or k cell that the x, y, or z position          C
 !     intersects                                                       C
 !                                                                      C
-!  Author: P. Nicoletti                               Date: 02-DEC-91  C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+   pure integer function calc_cell(location, dx)
 
-      SUBROUTINE CALC_CELL(REACTOR_LOC, D_DIR, N_DIR, CELL_LOC)
+      use param1, only : half
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param1, only : half
-      IMPLICIT NONE
+      implicit none
 
-      ! the x, y or z location along the axis for which the cell index (i, j
-      ! or k) is to be found
-      real(c_real), INTENT(IN) :: REACTOR_LOC
+! the x, y or z location
+      real(c_real), intent(in) :: location
+! the cell lengths along the corresponding axis (dx, dy or dz)
+      real(c_real), intent(in) :: dx
 
-      ! number of cells in the corresponding direction (IMAX, JMAX, or KMAX)
-      INTEGER, INTENT(IN) :: N_DIR
+      calc_cell = floor(location/dx + half) + 1
 
-      ! the cell lengths along the corresponding axis (DX, DY or DZ)
-      real(c_real), INTENT(IN) :: D_DIR
-
-      ! the i, j, or k cell index that corresponds to the x, y or z
-      ! reactor_location (calculated value)
-      INTEGER, INTENT(INOUT) :: CELL_LOC
-
-      ! loop counter
-      INTEGER :: LC
-
-      ! start and end coordinate for cell
-      real(c_real) :: CELL_START, CELL_END
-!-----------------------------------------------
-
-      CELL_LOC = -1
-      CELL_START = 0.0d0
-
-      DO LC = 2, N_DIR + 1
-         CELL_END = CELL_START + D_DIR
-         IF (REACTOR_LOC <= CELL_START + HALF*D_DIR) THEN
-            CELL_LOC = LC - 1
-            RETURN
-         ELSEIF (REACTOR_LOC <= CELL_END + HALF*D_DIR) THEN
-            CELL_LOC = LC
-            RETURN
-         ENDIF
-         CELL_START = CELL_END
-      ENDDO
-
-      END SUBROUTINE CALC_CELL
+   end function calc_cell
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC

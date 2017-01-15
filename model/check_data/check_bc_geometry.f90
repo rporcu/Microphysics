@@ -228,9 +228,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
 
 ! setting indices to 1 if there is no variation in the i (x) direction
-         CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
+         I_W = CALC_CELL (BC_X_W(BCV), DX)
          I_W = I_W + 1
-         CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
+         I_E = CALC_CELL (BC_X_E(BCV), DX)
 ! BC along zy plane, checking if far west or far east of domain
          IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
             IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
@@ -256,9 +256,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       IF(IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
 ! setting indices to 1 if there is no variation in the j (y) direction
-         CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
+         J_S = CALC_CELL (BC_Y_S(BCV), DY)
          J_S = J_S + 1
-         CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
+         J_N = CALC_CELL (BC_Y_N(BCV), DY)
 ! BC along xz plane, checking if far south or far north of domain
          IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
             IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
@@ -282,9 +282,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
 ! setting indices to 1 if there is no variation in the k (z) direction
-         CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
+         K_B = CALC_CELL (BC_Z_B(BCV), DZ)
          K_B = K_B + 1
-         CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
+         K_T = CALC_CELL (BC_Z_T(BCV), DZ)
 ! BC along xy plane, checking if far bottom or far top of domain
          IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
             IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
@@ -399,8 +399,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       Z_CONSTANT = .TRUE.
 
       IF (IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
-         CALL CALC_CELL (BC_X_W(BCV), DX, IMAX, I_W)
-         CALL CALC_CELL (BC_X_E(BCV), DX, IMAX, I_E)
+         I_W = CALC_CELL (BC_X_W(BCV), DX)
+         I_E = CALC_CELL (BC_X_E(BCV), DX)
          IF (BC_X_W(BCV) /= BC_X_E(BCV)) THEN
             X_CONSTANT = .FALSE.
             I_W = I_W + 1
@@ -420,8 +420,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       ENDIF
 
       IF (IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
-         CALL CALC_CELL (BC_Y_S(BCV), DY, JMAX, J_S)
-         CALL CALC_CELL (BC_Y_N(BCV), DY, JMAX, J_N)
+         J_S = CALC_CELL (BC_Y_S(BCV), DY)
+         J_N = CALC_CELL (BC_Y_N(BCV), DY)
          IF(BC_Y_S(BCV) /= BC_Y_N(BCV)) THEN
             Y_CONSTANT = .FALSE.
             J_S = J_S + 1
@@ -441,8 +441,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       ENDIF
 
       IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
-         CALL CALC_CELL (BC_Z_B(BCV), DZ, KMAX, K_B)
-         CALL CALC_CELL (BC_Z_T(BCV), DZ, KMAX, K_T)
+         K_B = CALC_CELL (BC_Z_B(BCV), DZ)
+         K_T = CALC_CELL (BC_Z_T(BCV), DZ)
          IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) THEN
             Z_CONSTANT = .FALSE.
             K_B = K_B + 1

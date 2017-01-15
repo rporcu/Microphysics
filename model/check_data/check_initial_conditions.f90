@@ -208,9 +208,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
          IF (IS_DEFINED(IC_X_W(ICV)).AND. IS_DEFINED(IC_X_E(ICV))) THEN
-            CALL CALC_CELL (IC_X_W(ICV), DX, IMAX, I_W)
+            I_W = CALC_CELL (IC_X_W(ICV), DX)
             I_W = I_W + 1
-            CALL CALC_CELL (IC_X_E(ICV), DX, IMAX, I_E)
+            I_E = CALC_CELL (IC_X_E(ICV), DX)
             IF (IC_I_W(ICV)/=UNDEFINED_I .OR. IC_I_E(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_I_W(ICV), I_W, ICV, 'IC - west')
                CALL LOCATION_CHECK (IC_I_E(ICV), I_E, ICV, 'IC - east')
@@ -240,9 +240,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
          ENDIF
 
          IF (IS_DEFINED(IC_Y_S(ICV)) .AND. IS_DEFINED(IC_Y_N(ICV))) THEN
-            CALL CALC_CELL (IC_Y_S(ICV), DY, JMAX, J_S)
+            J_S = CALC_CELL (IC_Y_S(ICV), DY)
             J_S = J_S + 1
-            CALL CALC_CELL (IC_Y_N(ICV), DY, JMAX, J_N)
+            J_N = CALC_CELL (IC_Y_N(ICV), DY)
             IF (IC_J_S(ICV)/=UNDEFINED_I .OR. IC_J_N(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_J_S(ICV), J_S, ICV, 'IC - south')
                CALL LOCATION_CHECK (IC_J_N(ICV), J_N, ICV, 'IC - north')
@@ -271,9 +271,9 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 
 
          IF (IS_DEFINED(IC_Z_B(ICV)) .AND. IS_DEFINED(IC_Z_T(ICV))) THEN
-            CALL CALC_CELL (IC_Z_B(ICV), DZ, KMAX, K_B)
+            K_B = CALC_CELL (IC_Z_B(ICV), DZ)
             K_B = K_B + 1
-            CALL CALC_CELL (IC_Z_T(ICV), DZ, KMAX, K_T)
+            K_T = CALC_CELL (IC_Z_T(ICV), DZ)
             IF (IC_K_B(ICV)/=UNDEFINED_I .OR. IC_K_T(ICV)/=UNDEFINED_I) THEN
                CALL LOCATION_CHECK (IC_K_B(ICV), K_B, ICV, 'IC - bottom')
                CALL LOCATION_CHECK (IC_K_T(ICV), K_T, ICV, 'IC - top')
