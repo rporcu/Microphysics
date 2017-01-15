@@ -116,25 +116,35 @@
 !-----------------------------------------------
 ! indices
       integer :: i, j, k
+      integer :: istart, iend
+      integer :: jstart, jend
+      integer :: kstart, kend
 ! local index for initial condition
-      integer :: l
+      integer :: icv
 ! Temporary variables for storing IC values
       real(c_real) :: pgx, ugx, vgx, wgx
 !-----------------------------------------------
 
 !  Set the initial conditions.
-      do l = 1, dimension_ic
-         if (ic_defined(l)) then
+      do icv = 1, dimension_ic
+         if (ic_defined(icv)) then
 
 ! Use the volume fraction already calculated from particle data
-            pgx = ic_p_g(l)
-            ugx = ic_u_g(l)
-            vgx = ic_v_g(l)
-            wgx = ic_w_g(l)
+            pgx = ic_p_g(icv)
+            ugx = ic_u_g(icv)
+            vgx = ic_v_g(icv)
+            wgx = ic_w_g(icv)
 
-            do k = ic_k_b(l), ic_k_t(l)
-               do j = ic_j_s(l), ic_j_n(l)
-                  do i = ic_i_w(l), ic_i_e(l)
+            istart = max(slo(1), ic_i_w(icv))
+            jstart = max(slo(2), ic_j_s(icv))
+            kstart = max(slo(3), ic_k_b(icv))
+            iend   = min(shi(1), ic_i_e(icv))
+            jend   = min(shi(2), ic_j_n(icv))
+            kend   = min(shi(3), ic_k_t(icv))
+
+            do k = kstart, kend
+               do j = jstart, jend
+                  do i = istart, iend
 
                      if (flag(i,j,k,1)<100) then
 
@@ -173,7 +183,6 @@
       USE constant , only: gravity
       USE eos, ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
-      USE geometry, only: domlo,domhi
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
       USE param1   , only: is_defined, zero, undefined, is_undefined
@@ -232,10 +241,10 @@
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx
-         do i = domhi(1), domlo(1), -1
+         do i = hi(1), lo(1), -1
             pj = pj + dpodx*dx
-            do k = domlo(3), domhi(3)
-               do j = domlo(2), domhi(2)
+            do k = lo(3), hi(3)
+               do j = lo(2), hi(2)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -245,10 +254,10 @@
       if (is_defined(delp_y)) then
          dpody = delp_y/ylength
          pj = pj - dpody*dy
-         do j = domhi(2), domlo(2), -1
+         do j = hi(2), lo(2), -1
             pj = pj + dpody*dy
-            do k = domlo(3), domhi(3)
-               do i = domlo(1), domhi(1)
+            do k = lo(3), hi(3)
+               do i = lo(1), hi(1)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -258,10 +267,10 @@
       if (is_defined(delp_z)) then
          dpodz = delp_z/zlength
          pj = pj - dpodz*dz
-         do k = domhi(3), domlo(3), -1
+         do k = hi(3), lo(3), -1
             pj = pj + dpodz*dz
-            do j = domlo(2), domhi(2)
-               do i = domlo(1), domhi(1)
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
                   if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
@@ -304,13 +313,13 @@
 ! Set an approximate pressure field assuming that the pressure drop
 ! balances the weight of the bed, if the initial pressure-field is not
 ! specified
-      do j = domhi(2)+1, domlo(2), -1
+      do j = hi(2)+1, lo(2), -1
 
 ! Find the average weight per unit area over an x-z slice
          bed_weight = 0.0
          area = 0.0
-         do k = domlo(3), domhi(3)
-            do i = domlo(1), domhi(1)
+         do k = lo(3), hi(3)
+            do i = lo(1), hi(1)
                if (flag(i,j,k)==1) then
                   darea = dx*dz
                   area = area + darea
@@ -331,8 +340,8 @@
          IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
 
          PJ = PJ + BED_WEIGHT
-         DO K = domlo(3),domhi(3)
-            DO I = domlo(1),domhi(1)
+         DO K = lo(3),hi(3)
+            DO I = lo(1),hi(1)
                IF(flag(i,j,k) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
                   P_G(I,J,K)=SCALE_PRESSURE(PJ)
             ENDDO
