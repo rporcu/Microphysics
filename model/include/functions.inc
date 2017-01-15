@@ -44,7 +44,6 @@
       ! ************************************************
 
       integer function iplus(i,j,k)
-      use compar, only: iend3
       use geometry, only  : domlo,domhi,cyclic_x,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
@@ -52,7 +51,7 @@
       if (i.eq.domhi(1) .and. flag_mod(i,j,k,1) > 1) then
          iplus = i
       else
-         iplus = min(iend3, i+1)
+         iplus = min(domhi(1)+1, i+1)
       end if
 
       if (cyclic_x .and. (iplus > domhi(1)) .and. &
@@ -81,7 +80,6 @@
       ! ************************************************
 
       integer function jplus(i,j,k)
-      use compar, only: jend3
       use geometry, only  : domlo,domhi,cyclic_y,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
@@ -89,7 +87,7 @@
       if (j.eq.domhi(2) .and. flag_mod(i,j,k,1) > 1) then
          jplus = j
       else
-         jplus = min(jend3, j+1)
+         jplus = min(domhi(2)+1, j+1)
       end if
 
       if (cyclic_y .and. (jplus > domhi(2)) .and. &
@@ -120,7 +118,6 @@
 
       integer function kplus(i,j,k)
 
-      use compar, only: kend3
       use geometry, only: domlo,domhi,cyclic_z,flag_mod
       implicit none
       integer, intent(in) :: i,j,k
@@ -128,7 +125,7 @@
       if (k.eq.domhi(3) .and. flag_mod(i,j,k,1) > 1) then
          kplus = k
       else
-         kplus = min(kend3, k+1)
+         kplus = min(domhi(3)+1, k+1)
       end if
 
       if (cyclic_z .and. (kplus > domhi(3)) .and. &
@@ -261,7 +258,7 @@
 
       integer function ip1(i)
 
-      use compar, only: nodesi, iend3
+      use compar, only: nodesi
       use geometry, only  : domlo, domhi, cyclic_x
       implicit none
       integer, intent(in) :: i
@@ -271,7 +268,7 @@
       elseif(cyclic_x .and. nodesi == 1 .and. i==domhi(1) ) then
          ip1 = domlo(1)
       else
-         ip1 = min(iend3, i+1)
+         ip1 = min(domhi(1)+1, i+1)
       endif
 
       end function ip1
@@ -299,7 +296,7 @@
 
       integer function jp1(j)
 
-      use compar, only: nodesj, jend3
+      use compar, only: nodesj
       use geometry, only  : domlo, domhi, cyclic_y
       implicit none
       integer, intent(in) :: j
@@ -309,7 +306,7 @@
       elseif(cyclic_y .and. nodesj == 1 .and. j==domhi(2) ) then
          jp1 = domlo(2)
       else
-         jp1 = min(jend3, j+1)
+         jp1 = min(domhi(2)+1, j+1)
       endif
 
       end function jp1
@@ -337,7 +334,7 @@
 
       integer function kp1(k)
 
-      use compar, only: nodesk, kend3
+      use compar, only: nodesk
       use geometry, only: domlo,domhi,cyclic_z
       implicit none
       integer, intent(in) :: k
@@ -347,7 +344,7 @@
       elseif(cyclic_z .and. nodesk == 1 .and. k==domhi(3) ) then
          kp1 = domlo(3)
       else
-         kp1 = min(kend3, k+1)
+         kp1 = min(domhi(3)+1, k+1)
       endif
 
       end function kp1

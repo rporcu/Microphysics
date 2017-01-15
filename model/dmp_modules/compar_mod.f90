@@ -40,9 +40,6 @@
 ! of cyclic conditions...
       integer, allocatable,dimension(:) :: imap, jmap, kmap
 
-      integer :: &
-                istart3, iend3, jstart3, jend3, kstart3, kend3
-
       integer :: istart, iend, jstart, jend, kstart, kend
 
       end module compar

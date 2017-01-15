@@ -33,7 +33,6 @@ MODULE GET_DATA_MODULE
       USE set_bc_flow_module, only: set_bc_flow
       USE set_flags_module, only: set_flags
       USE set_icbc_flags_module, only: set_icbc_flag
-      USE set_max2_module, only: set_max2
       USE set_parameters_module, only: set_parameters
       USE write_header_module, only: write_header
 
@@ -66,8 +65,6 @@ MODULE GET_DATA_MODULE
       CALL CHECK_GEOMETRY_PREREQS
       CALL CHECK_DMP_PREREQS
 
-! Set up the physical domain indices (cell index max/min values).
-!     CALL SET_MAX2
       domlo(1) = 0 + 2
       domlo(2) = 0 + 2
       domlo(3) = 0 + 2

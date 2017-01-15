@@ -16,10 +16,8 @@ contains
    SUBROUTINE GRIDMAP_INIT
 
       use compar, only: iend, jend, kend
-      use compar, only: iend3, jend3, kend3
       use compar, only: imap, jmap, kmap
       use compar, only: istart, jstart, kstart
-      use compar, only: istart3, jstart3, kstart3
       use compar, only: mype, numpes
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
@@ -46,15 +44,6 @@ contains
       CYC_XL = (CYCLIC_X .OR. CYCLIC_X_PD)
       CYC_YL = (CYCLIC_Y .OR. CYCLIC_Y_PD)
       CYC_ZL = (CYCLIC_Z .OR. CYCLIC_Z_PD)
-
-      istart3   = domlo(1)-1
-      jstart3   = domlo(2)-1
-      kstart3   = domlo(3)-1
-
-      iend3     = domhi(1)+1
-      jend3     = domhi(2)+1
-      kend3     = domhi(3)+1
-
 
 ! Setup mapping to take care of cyclic boundary conditions
 ! ---------------------------------------------------------------->>>
