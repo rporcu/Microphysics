@@ -26,7 +26,6 @@ contains
       use compar, only: istart2, jstart2, kstart2
       use compar, only: istart3, jstart3, kstart3
       use compar, only: mype, numpes
-      use functions, only: funijk
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
 

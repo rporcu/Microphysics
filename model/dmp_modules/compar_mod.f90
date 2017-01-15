@@ -48,8 +48,6 @@
 
       integer :: istart, iend, jstart, jend, kstart, kend
 
-! Funijk coefficients
       integer :: c0, c1, c2
-
 
       END MODULE compar

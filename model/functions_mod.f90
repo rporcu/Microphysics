@@ -1,10 +1,5 @@
 MODULE functions
 
-! Functions for generating IJK indices for indicated basis:
-!---------------------------------------------------------------------//
-! INTEGER :: FUNIJK
-
-
 ! Logical functions to determine whether index is on my PE's domain or
 ! indicated subset:
 !---------------------------------------------------------------------//

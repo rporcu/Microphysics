@@ -1,17 +1,18 @@
-MODULE SET_MAX2_MODULE
-   CONTAINS
+module set_max2_module
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Module name: SET_MAX2                                               !
+!  Module name: set_max2                                               !
 !  Purpose: calculate domain bounds.                                   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE SET_MAX2
+      subroutine set_max2
 
       use geometry, only: imax, jmax, kmax
       use geometry, only: domlo, domhi
 
-      IMPLICIT NONE
+      implicit none
 
       domlo(1) = 0 + 2
       domlo(2) = 0 + 2
@@ -21,6 +22,6 @@ MODULE SET_MAX2_MODULE
       domhi(2) = jmax-1 + 2
       domhi(3) = kmax-1 + 2
 
-      RETURN
-      END SUBROUTINE SET_MAX2
-END MODULE SET_MAX2_MODULE
+      end subroutine set_max2
+
+end module set_max2_module

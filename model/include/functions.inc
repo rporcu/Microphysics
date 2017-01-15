@@ -22,17 +22,6 @@
 ! END SUBROUTINE subname
 
 !---------------------------------------------------------------------//
-! Functions for generating the LOCAL 3-D array index IJK from the
-! 1-D indices I, J, and K.
-      INTEGER FUNCTION funijk(li,lj,lk)
-      USE compar, only: c0, c1, c2
-      implicit none
-      INTEGER, INTENT(IN) :: LI, LJ, LK
-      funijk = c0 + li + lj*c1 + lk*c2
-      END FUNCTION funijk
-
-! Misc
-!---------------------------------------------------------------------//
 
 
       integer function iminus(i,j,k)

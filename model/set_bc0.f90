@@ -1,10 +1,11 @@
-MODULE SET_BC0_MODULE
+module set_bc0_module
 
    use param1, only: is_defined
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
+   contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: set_bc0                                                 C
@@ -16,7 +17,7 @@ MODULE SET_BC0_MODULE
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0(slo, shi, lo, hi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
+      subroutine set_bc0(slo, shi, lo, hi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -63,19 +64,19 @@ MODULE SET_BC0_MODULE
             CASE ('PAR_SLIP_WALL')
             CASE ('P_OUTFLOW')
                write(6,*) 'po',l; flush(6)
-               CALL SET_BC0_OUTFLOW(L,slo,shi,p_g,ep_g)
+               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
             CASE ('MASS_OUTFLOW')
                write(6,*) 'mo',l; flush(6)
-               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             CASE ('OUTFLOW')
                write(6,*) 'of',l; flush(6)
-               CALL SET_BC0_OUTFLOW(L,slo,shi,p_g,ep_g)
+               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
             CASE ('MASS_INFLOW')
                write(6,*) 'mi',l; flush(6)
-               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             CASE ('P_INFLOW')
                write(6,*) 'pi',l; flush(6)
-               CALL SET_BC0_INFLOW(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
             END SELECT
          ENDIF
       ENDDO
@@ -83,8 +84,7 @@ MODULE SET_BC0_MODULE
 ! Make T_g nonzero in k=0,1 ghost layers when k-decomposition employed
       ! call send_recv(P_G,2)
 
-      RETURN
-      END SUBROUTINE SET_BC0
+      end subroutine set_bc0
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -102,7 +102,7 @@ MODULE SET_BC0_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_OUTFLOW(BCV,slo,shi,p_g,ep_g)
+      subroutine set_bc0_outflow(BCV,slo,shi,p_g,ep_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -138,14 +138,15 @@ MODULE SET_BC0_MODULE
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
       DO I = BC_I_W(BCV), BC_I_E(BCV)
+
          P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
          IF (IS_DEFINED(BC_EP_G(BCV))) EP_G(I,J,K) = BC_EP_G(BCV)
 
-      ENDDO   ! do i
-      ENDDO   ! do j
-      ENDDO   ! do k
+      end do
+      end do
+      end do
 
-      END SUBROUTINE SET_BC0_OUTFLOW
+      end subroutine set_bc0_outflow
 
 
 
@@ -164,7 +165,7 @@ MODULE SET_BC0_MODULE
 !  for the simulation.                                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_BC0_INFLOW(BCV,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+      SUBROUTINE set_bc0_inflow(BCV,slo,shi,p_g,ep_g,u_g,v_g,w_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -223,12 +224,11 @@ MODULE SET_BC0_MODULE
             CASE ('B'); W_G(i,j,km1(k)) = BC_W_G(BCV)
          END SELECT
 
-      ENDDO   ! do i
-      ENDDO   ! do j
-      ENDDO   ! do k
+      end do
+      end do
+      end do
 
-      RETURN
-      END SUBROUTINE SET_BC0_INFLOW
+      END SUBROUTINE set_bc0_inflow
 
 
 
@@ -588,6 +588,6 @@ MODULE SET_BC0_MODULE
       endif
 
       IERR = 0
-      RETURN
-      END SUBROUTINE IJK_Pg_SEARCH
-END MODULE SET_BC0_MODULE
+
+      end subroutine IJK_Pg_SEARCH
+end module set_bc0_module
