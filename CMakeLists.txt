@@ -118,7 +118,6 @@ set(F90_sources
   model/discretization_mod.f90
   model/display_resid.f90
   model/dmp_modules/compar_mod.f90
-  model/dmp_modules/gridmap_mod.f90
   model/drag_mod.f90
   model/eos_mod.f90
   model/error_manager_mod.f90

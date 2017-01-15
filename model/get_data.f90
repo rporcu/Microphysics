@@ -25,7 +25,6 @@ MODULE GET_DATA_MODULE
       USE check_solids_phases_module, only: check_solids_phases
       USE error_manager  , only: init_error_manager
       USE get_bc_area_module, only: get_bc_area
-      USE gridmap        , only: gridmap_init
       USE init_namelist_module, only: init_namelist
       USE open_files_mod, only: open_files
       USE read_namelist_module, only: read_namelist
@@ -73,10 +72,7 @@ MODULE GET_DATA_MODULE
       domhi(2) = jmax-1 + 2
       domhi(3) = kmax-1 + 2
 
-! Partition the domain and set indices
-      CALL GRIDMAP_INIT
-
-! Check the minimum solids phase requirements.
+      ! Check the minimum solids phase requirements.
       CALL CHECK_SOLIDS_MODEL_PREREQS
 
       CALL CHECK_RUN_CONTROL(time, dt)

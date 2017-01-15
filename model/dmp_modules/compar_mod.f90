@@ -29,6 +29,4 @@
 ! nodesi = nproc for a 2D problem.
       integer :: nodesi, nodesj, nodesk
 
-      integer :: istart, iend, jstart, jend, kstart, kend
-
       end module compar
