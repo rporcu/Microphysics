@@ -23,30 +23,31 @@ MODULE CALC_CELL_MODULE
 !-----------------------------------------------
       USE param1, only : half
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! the x, y or z location along the axis for which the cell index (i, j
-! or k) is to be found
+
+      ! the x, y or z location along the axis for which the cell index (i, j
+      ! or k) is to be found
       real(c_real), INTENT(IN) :: REACTOR_LOC
-! number of cells in the corresponding direction (IMAX, JMAX, or KMAX)
+
+      ! number of cells in the corresponding direction (IMAX, JMAX, or KMAX)
       INTEGER, INTENT(IN) :: N_DIR
-! the cell lengths along the corresponding axis (DX, DY or DZ)
+
+      ! the cell lengths along the corresponding axis (DX, DY or DZ)
       real(c_real), INTENT(IN) :: D_DIR
-! the i, j, or k cell index that corresponds to the x, y or z
-! reactor_location (calculated value)
+
+      ! the i, j, or k cell index that corresponds to the x, y or z
+      ! reactor_location (calculated value)
       INTEGER, INTENT(INOUT) :: CELL_LOC
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! loop counter
+
+      ! loop counter
       INTEGER :: LC
-! start and end coordinate for cell
+
+      ! start and end coordinate for cell
       real(c_real) :: CELL_START, CELL_END
 !-----------------------------------------------
 
       CELL_LOC = -1
       CELL_START = 0.0d0
+
       DO LC = 2, N_DIR + 1
          CELL_END = CELL_START + D_DIR
          IF (REACTOR_LOC <= CELL_START + HALF*D_DIR) THEN
@@ -58,7 +59,7 @@ MODULE CALC_CELL_MODULE
          ENDIF
          CELL_START = CELL_END
       ENDDO
-      RETURN
+
       END SUBROUTINE CALC_CELL
 
 
@@ -76,27 +77,21 @@ MODULE CALC_CELL_MODULE
 
       SUBROUTINE CALC_LOC(D_DIR, CELL_LOC, REACTOR_LOC)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
       IMPLICIT NONE
-!-----------------------------------------------
-! Dummy arguments
-!-----------------------------------------------
-! the i, j, or k cell index that corresponds to the x, y or z
-! reactor_location to be found
+
+      ! the i, j, or k cell index that corresponds to the x, y or z
+      ! reactor_location to be found
       INTEGER, INTENT(IN) :: CELL_LOC
-! the cell lengths along the corresponding axis (DX, DY or DZ)
+
+      ! the cell lengths along the corresponding axis (DX, DY or DZ)
       real(c_real), INTENT(IN) :: D_DIR
-! the x, y or z location along the axis that corresponds to the i, j
-! k cell index  (calculated value)
+
+      ! the x, y or z location along the axis that corresponds to the i, j
+      ! k cell index  (calculated value)
       real(c_real), INTENT(INOUT) :: REACTOR_LOC
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! loop counter
+
+      ! loop counter
       INTEGER :: LC
-!-----------------------------------------------
 
       REACTOR_LOC = 0.0d0
       LC = 2
@@ -104,7 +99,7 @@ MODULE CALC_CELL_MODULE
          REACTOR_LOC = REACTOR_LOC + D_DIR*(CELL_LOC-2)
          LC = CELL_LOC + 1
       ENDIF
-      RETURN
+
       END SUBROUTINE CALC_LOC
 
 

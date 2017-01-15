@@ -192,7 +192,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: domhi
+      use geometry, only: domlo, domhi
       use geometry, only: XLENGTH, IMAX
       use geometry, only: YLENGTH, JMAX
       use geometry, only: ZLENGTH, KMAX
@@ -234,8 +234,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! BC along zy plane, checking if far west or far east of domain
          IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
             IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
-               I_W = 1
-               I_E = 1
+               I_W = domlo(1)-1
+               I_E = domlo(1)-1
             ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
                I_W = domhi(1)+1
                I_E = domhi(1)+1
@@ -262,8 +262,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! BC along xz plane, checking if far south or far north of domain
          IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
             IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
-               J_S = 1
-               J_N = 1
+               J_S = domlo(2)-1
+               J_N = domlo(2)-1
             ELSE IF (COMPARE(BC_Y_S(BCV),YLENGTH)) THEN
                J_S = domhi(2)+1
                J_N = domhi(2)+1
@@ -288,8 +288,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! BC along xy plane, checking if far bottom or far top of domain
          IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
             IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
-               K_B = 1
-               K_T = 1
+               K_B = domlo(3)-1
+               K_T = domlo(3)-1
             ELSEIF(COMPARE(BC_Z_B(BCV),ZLENGTH)) THEN
                K_B = domhi(3)+1
                K_T = domhi(3)+1
@@ -309,12 +309,12 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF (BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
-      IF (BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
-      IF (BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
-      IF (BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
-      IF (BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
-      IF (BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
+      IF (BC_K_B(BCV)<domlo(3)-1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
+      IF (BC_J_S(BCV)<domlo(3)-1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
+      IF (BC_I_W(BCV)<domlo(2)-1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
+      IF (BC_K_T(BCV)<domlo(2)-1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
+      IF (BC_J_N(BCV)<domlo(1)-1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
+      IF (BC_I_E(BCV)<domlo(1)-1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
       IF (BC_K_B(BCV) > BC_K_T(BCV)) IER = 1
       IF (BC_J_S(BCV) > BC_J_N(BCV)) IER = 1
       IF (BC_I_W(BCV) > BC_I_E(BCV)) IER = 1
@@ -357,7 +357,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
-      use geometry, only: domhi
+      use geometry, only: domlo,domhi
       use geometry, only: IMAX
       use geometry, only: JMAX
       use geometry, only: KMAX
@@ -470,12 +470,12 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF(BC_I_W(BCV)<1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
-      IF(BC_I_E(BCV)<1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
-      IF(BC_J_S(BCV)<1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
-      IF(BC_J_N(BCV)<1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
-      IF(BC_K_B(BCV)<1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
-      IF(BC_K_T(BCV)<1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
+      IF(BC_I_W(BCV)<domlo(1)-1 .OR. BC_I_W(BCV)>domhi(1)+1) IER = 1
+      IF(BC_I_E(BCV)<domlo(1)-1 .OR. BC_I_E(BCV)>domhi(1)+1) IER = 1
+      IF(BC_J_S(BCV)<domlo(2)-1 .OR. BC_J_S(BCV)>domhi(2)+1) IER = 1
+      IF(BC_J_N(BCV)<domlo(2)-1 .OR. BC_J_N(BCV)>domhi(2)+1) IER = 1
+      IF(BC_K_B(BCV)<domlo(3)-1 .OR. BC_K_B(BCV)>domhi(3)+1) IER = 1
+      IF(BC_K_T(BCV)<domlo(3)-1 .OR. BC_K_T(BCV)>domhi(3)+1) IER = 1
       IF(BC_K_B(BCV) > BC_K_T(BCV)) IER = 1
       IF(BC_J_S(BCV) > BC_J_N(BCV)) IER = 1
       IF(BC_I_W(BCV) > BC_I_E(BCV)) IER = 1
