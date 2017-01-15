@@ -218,7 +218,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+       const Box& bx = mfi.validbox();
 
        const int* sslo = (*flag[lev])[mfi].loVect();
        const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -496,7 +496,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -572,7 +572,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -664,7 +664,7 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -712,7 +712,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -756,7 +756,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -792,7 +792,7 @@ mfix_level::mfix_init_fluid(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -837,7 +837,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -868,7 +868,7 @@ mfix_level::mfix_calc_mflux(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -940,7 +940,7 @@ mfix_level::mfix_set_wall_bc(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -973,7 +973,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+     const Box& bx = mfi.validbox();
 
      const int* sslo = (*flag[lev])[mfi].loVect();
      const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1011,7 +1011,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1046,7 +1046,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1080,7 +1080,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1133,7 +1133,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1174,7 +1174,7 @@ mfix_level::mfix_correct0(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-    const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+    const Box& bx = mfi.validbox();
 
     const int* sslo = (*flag[lev])[mfi].loVect();
     const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1206,7 +1206,7 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-      const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+      const Box& bx = mfi.validbox();
 
       const int* sslo = (*flag[lev])[mfi].loVect();
       const int* sshi = (*flag[lev])[mfi].hiVect();
@@ -1270,7 +1270,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 #if(0)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-       const Box& bx = (mfi.validbox()).shift(IntVect(2,2,2));
+       const Box& bx = mfi.validbox();
 
        const int* sslo = (*flag[lev])[mfi].loVect();
        const int* sshi = (*flag[lev])[mfi].hiVect();
