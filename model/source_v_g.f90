@@ -37,8 +37,6 @@ module source_v_g_module
 
 ! Modules
 !---------------------------------------------------------------------//
-      use compar, only: jmap
-
       USE constant, only: gravity
       USE bc, only: delp_y
 
@@ -46,7 +44,7 @@ module source_v_g_module
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
       USE functions, only: jnorth, jsouth
       USE functions, only: zmax
-      USE geometry, only: domhi, cyclic_y_pd
+      USE geometry,  only: domlo, domhi, cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
 
@@ -155,9 +153,11 @@ module source_v_g_module
 ! Surface forces
 ! Pressure term
             PGN = P_G(i,jnorth(i,j,k),k)
-            IF (CYCLIC_Y_PD) THEN
-               IF (JMAP(J).EQ.domhi(2))PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
-            ENDIF
+            if ( CYCLIC_Y_PD) then
+              if ( (j .eq. domlo(2)-1) .or. (j .eq. domhi(2)) ) &
+               PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
+            end if
+
             SDP = -P_SCALE*EPGA*(PGN - P_G(I,J,K))*AXZ
 
 ! Volumetric forces

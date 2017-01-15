@@ -29,17 +29,6 @@
 ! nodesi = nproc for a 2D problem.
       integer :: nodesi, nodesj, nodesk
 
-! root represents the 'root' processor. For now it is defaulted to
-! zero
-      integer :: root=0
-
-! nlayers_bicgs - Number of layers for send_recv in bicgs
-      integer :: nlayers_bicgs = 1
-
-! Variables used for mapping i, j, k to ii, jj, kk to take care of
-! of cyclic conditions...
-      integer, allocatable,dimension(:) :: imap, jmap, kmap
-
       integer :: istart, iend, jstart, jend, kstart, kend
 
       end module compar

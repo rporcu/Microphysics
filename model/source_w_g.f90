@@ -38,7 +38,6 @@ module source_w_g_module
 
 ! Modules
 !---------------------------------------------------------------------//
-      use compar, only: kmap
       USE constant, only: gravity
       USE bc, only: delp_z
 
@@ -46,7 +45,7 @@ module source_w_g_module
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ktop
       USE functions, only: zmax
-      USE geometry , only: domhi, cyclic_z_pd
+      USE geometry , only: domlo, domhi, cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
 
@@ -159,9 +158,12 @@ module source_w_g_module
 
 ! Pressure term
             PGT = P_G(i,j,ktop(i,j,k))
-            IF (CYCLIC_Z_PD) THEN
-               IF (KMAP(K).EQ.domhi(3)) PGT = P_G(i,j,ktop(i,j,k)) - DELP_Z
-            ENDIF
+
+            if ( CYCLIC_Z_PD) then
+              if ( (k .eq. domlo(3)-1) .or. (k .eq. domhi(3)) ) &
+               PGT = P_G(i,j,ktop(i,j,k)) - DELP_Z
+            end if
+
             SDP = -P_SCALE*EPGA*(PGT - P_G(I,J,K))*AXY
 
 ! Volumetric forces

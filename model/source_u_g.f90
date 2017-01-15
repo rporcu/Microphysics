@@ -33,7 +33,6 @@ module source_u_g_module
 
 ! Modules
 !---------------------------------------------------------------------//
-      use compar  , only: imap
       USE constant, only: gravity
       USE bc      , only: delp_x
 
@@ -41,7 +40,7 @@ module source_u_g_module
       USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
       USE functions, only: zmax
 
-      USE geometry, only: domhi, cyclic_x_pd
+      USE geometry, only: domlo, domhi, cyclic_x_pd
 
       use matrix, only: e, w, s, n, t, b
 
@@ -153,9 +152,11 @@ module source_u_g_module
 ! Surface forces
 ! Pressure term
             PGE = P_G(ieast(i,j,k),j,k)
-            IF (CYCLIC_X_PD) THEN
-               IF (IMAP(I).EQ.domhi(1)) PGE = P_G(ieast(i,j,k),j,k) - DELP_X
-            ENDIF
+            if ( CYCLIC_X_PD) then 
+              if ( (i .eq. domlo(1)-1) .or. (i .eq. domhi(1)) ) &
+                PGE = P_G(ieast(i,j,k),j,k) - DELP_X
+            end if
+
             SDP = -P_SCALE*EPGA*(PGE - P_G(I,J,K))*AYZ
 
 ! Volumetric forces
@@ -299,7 +300,7 @@ module source_u_g_module
       end if
 
 ! top xy plane
-      K1 = DOMHI(3)+1
+      K1 = domhi(3)+1
       if (shi(3) .gt. k1) then
       DO J1 = slo(2),shi(2)
          DO I1 = slo(1),shi(1)
@@ -355,7 +356,7 @@ module source_u_g_module
       end if
 
 ! north xz plane
-      J1 = DOMHI(2)+1
+      J1 = domhi(2)+1
       if (shi(2) .gt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
