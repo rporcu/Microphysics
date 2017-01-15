@@ -83,13 +83,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       const int* sslo = rhs[mfi].loVect();
       const int* sshi = rhs[mfi].hiVect();
 
-      slo[0] = sslo[0]+2;
-      slo[1] = sslo[1]+2;
-      slo[2] = sslo[2]+2;
-
-      shi[0] = sshi[0]+2;
-      shi[1] = sshi[1]+2;
-      shi[2] = sshi[2]+2;
+      slo[0] = sslo[0];
+      slo[1] = sslo[1];
+      slo[2] = sslo[2];
+      shi[0] = sshi[0];
+      shi[1] = sshi[1];
+      shi[2] = sshi[2];
 
       leq_scale(rhs[mfi].dataPtr(), A_m[mfi].dataPtr(),
                 slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
@@ -105,13 +104,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       const int* sslo = rhs[mfi].loVect();
       const int* sshi = rhs[mfi].hiVect();
 
-      slo[0] = sslo[0]+2;
-      slo[1] = sslo[1]+2;
-      slo[2] = sslo[2]+2;
-
-      shi[0] = sshi[0]+2;
-      shi[1] = sshi[1]+2;
-      shi[2] = sshi[2]+2;
+      slo[0] = sslo[0];
+      slo[1] = sslo[1];
+      slo[2] = sslo[2];
+      shi[0] = sshi[0];
+      shi[1] = sshi[1];
+      shi[2] = sshi[2];
 
       // Compute r = rhs - A_m*sol
       leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
@@ -185,13 +183,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           const int* sslo = rhs[mfi].loVect();
           const int* sshi = rhs[mfi].hiVect();
 
-          slo[0] = sslo[0]+2;
-          slo[1] = sslo[1]+2;
-          slo[2] = sslo[2]+2;
-
-          shi[0] = sshi[0]+2;
-          shi[1] = sshi[1]+2;
-          shi[2] = sshi[2]+2;
+          slo[0] = sslo[0];
+          slo[1] = sslo[1];
+          slo[2] = sslo[2];
+          shi[0] = sshi[0];
+          shi[1] = sshi[1];
+          shi[2] = sshi[2];
 
           leq_msolve1(slo.dataPtr(),shi.dataPtr(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       ph[mfi].dataPtr(), &sweep_type);
@@ -210,13 +207,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         const int* sslo = rhs[mfi].loVect();
         const int* sshi = rhs[mfi].hiVect();
 
-        slo[0] = sslo[0]+2;
-        slo[1] = sslo[1]+2;
-        slo[2] = sslo[2]+2;
-
-        shi[0] = sshi[0]+2;
-        shi[1] = sshi[1]+2;
-        shi[2] = sshi[2]+2;
+        slo[0] = sslo[0];
+        slo[1] = sslo[1];
+        slo[2] = sslo[2];
+        shi[0] = sshi[0];
+        shi[1] = sshi[1];
+        shi[2] = sshi[2];
 
         leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
@@ -256,13 +252,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           const int* sslo = rhs[mfi].loVect();
           const int* sshi = rhs[mfi].hiVect();
 
-          slo[0] = sslo[0]+2;
-          slo[1] = sslo[1]+2;
-          slo[2] = sslo[2]+2;
-
-          shi[0] = sshi[0]+2;
-          shi[1] = sshi[1]+2;
-          shi[2] = sshi[2]+2;
+          slo[0] = sslo[0];
+          slo[1] = sslo[1];
+          slo[2] = sslo[2];
+          shi[0] = sshi[0];
+          shi[1] = sshi[1];
+          shi[2] = sshi[2];
 
           leq_msolve1(slo.dataPtr(),shi.dataPtr(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       sh[mfi].dataPtr(), &sweep_type);
@@ -280,13 +275,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         const int* sslo = rhs[mfi].loVect();
         const int* sshi = rhs[mfi].hiVect();
 
-        slo[0] = sslo[0]+2;
-        slo[1] = sslo[1]+2;
-        slo[2] = sslo[2]+2;
-
-        shi[0] = sshi[0]+2;
-        shi[1] = sshi[1]+2;
-        shi[2] = sshi[2]+2;
+        slo[0] = sslo[0];
+        slo[1] = sslo[1];
+        slo[2] = sslo[2];
+        shi[0] = sshi[0];
+        shi[1] = sshi[1];
+        shi[2] = sshi[2];
 
         leq_matvec(sh[mfi].dataPtr(), A_m[mfi].dataPtr(), t[mfi].dataPtr(),
                    slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
