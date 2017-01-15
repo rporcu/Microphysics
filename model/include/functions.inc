@@ -244,13 +244,7 @@
       implicit none
       integer, intent(in) :: i
 
-      if(i .eq. domlo(1)-1) then
-         im1 = domlo(1)-1
-      elseif(cyclic_x .and. nodesi == 1 .and. i==domlo(1) ) then
-         im1 = domhi(1)
-      else
-         im1 = max(1, i-1)
-      endif
+      im1 = max(domlo(1)-1, i-1)
 
       end function im1
 
@@ -263,13 +257,7 @@
       implicit none
       integer, intent(in) :: i
 
-      if(i .eq. domhi(1)+1) then
-         ip1 = domhi(1)+1
-      elseif(cyclic_x .and. nodesi == 1 .and. i==domhi(1) ) then
-         ip1 = domlo(1)
-      else
-         ip1 = min(domhi(1)+1, i+1)
-      endif
+      ip1 = min(domhi(1)+1, i+1)
 
       end function ip1
 
@@ -282,13 +270,7 @@
       implicit none
       integer, intent(in) :: j
 
-      if(j .eq. domlo(2)-1) then
-         jm1 = domlo(2)-1
-      elseif(cyclic_y .and. nodesj == 1 .and. j==domlo(2) ) then
-         jm1 = domhi(2)
-      else
-         jm1 = max(1, j-1)
-      endif
+      jm1 = max(domlo(2)-1, j-1)
 
       end function jm1
 
@@ -301,13 +283,7 @@
       implicit none
       integer, intent(in) :: j
 
-      if(j .eq. domhi(2)+1) then
-         jp1 = domhi(2)+1
-      elseif(cyclic_y .and. nodesj == 1 .and. j==domhi(2) ) then
-         jp1 = domlo(2)
-      else
-         jp1 = min(domhi(2)+1, j+1)
-      endif
+      jp1 = min(domhi(2)+1, j+1)
 
       end function jp1
 
@@ -320,13 +296,7 @@
       implicit none
       integer, intent(in) :: k
 
-      if(k .eq. domlo(3)-1) then
-         km1 = domlo(3)-1
-      elseif(cyclic_z .and. nodesk == 1 .and. k==domlo(3) ) then
-         km1 = domhi(3)
-      else
-         km1 = max(1, k-1)
-      endif
+      km1 = max(domlo(3)-1, k-1)
 
       end function km1
 
@@ -339,13 +309,7 @@
       implicit none
       integer, intent(in) :: k
 
-      if(k .eq. domhi(3)+1) then
-         kp1 = domhi(3)+1
-      elseif(cyclic_z .and. nodesk == 1 .and. k==domhi(3) ) then
-         kp1 = domlo(3)
-      else
-         kp1 = min(domhi(3)+1, k+1)
-      endif
+      kp1 = min(domhi(3)+1, k+1)
 
       end function kp1
 
