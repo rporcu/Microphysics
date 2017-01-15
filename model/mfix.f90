@@ -21,16 +21,13 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use iso_c_binding , only: c_int
 
       use calc_coeff_module, only: calc_coeff
-      use corner_module, only: get_corner_cells
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
-      use geometry, only: flag_mod
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined
       use parse_resid_string_module, only: parse_resid_string
       use set_bc0_module, only: set_bc0
-      use set_flags_module, only: set_flags1
       use set_ps_module, only: set_ps
       use write_out0_module, only: write_out0
       use zero_norm_vel_module, only: zero_norm_vel
@@ -85,7 +82,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !---------------------------------------------------------------------//
-      flag_mod = flag
 
       call init_output_vars(time, dt)
 
@@ -100,15 +96,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
 
       call init_err_msg('MFIX')
 
-      ! Set the flags for wall surfaces impermeable and identify flow
-      ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      call set_flags1(slo,shi,flag)
-      flag_mod = flag
-
-      ! Find corner cells and set their face areas to zero
-      call get_corner_cells(slo,shi,lo,hi,flag)
-      flag_mod = flag
- 
       ! Set point sources.
       call set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
 

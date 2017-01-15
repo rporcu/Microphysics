@@ -234,6 +234,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
        set_domain(slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect(),
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
+    flag[lev]->FillBoundary(geom[lev].periodicity());
 
     // Matrix and rhs vector
     A_m[lev].reset(new MultiFab(grids[lev],7,nghost,dmap[lev],Fab_allocate));
@@ -525,6 +526,8 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         (*flag[lev])[mfi].dataPtr(),
         &time, &dt, &dx, &dy, &dz, &nstep);
     }
+    ep_g[lev]->FillBoundary(geom[lev].periodicity());
+    rop_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -596,6 +599,15 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
+  p_g[lev]->FillBoundary(geom[lev].periodicity());
+  ep_g[lev]->FillBoundary(geom[lev].periodicity());
+  ro_g[lev]->FillBoundary(geom[lev].periodicity());
+  rop_g[lev]->FillBoundary(geom[lev].periodicity());
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+
 #if 0
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
      std::cout << "U " << (*u_g[lev])[mfi] << std::endl;
