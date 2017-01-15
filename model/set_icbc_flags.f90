@@ -5,7 +5,6 @@ MODULE set_icbc_flags_module
       use bc, only: bc_z_t, bc_z_b, bc_k_b, bc_k_t
       use bc, only: dimension_bc, bc_type, bc_x_e, bc_defined
       use geometry, only: domlo, domhi
-      use compar, only: iend3, jend3, kend3
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry    , only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_

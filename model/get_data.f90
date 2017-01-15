@@ -37,6 +37,9 @@ MODULE GET_DATA_MODULE
       USE set_parameters_module, only: set_parameters
       USE write_header_module, only: write_header
 
+      use geometry, only: domlo, domhi
+      use geometry, only: imax, jmax, kmax
+
       IMPLICIT NONE
 
       real(c_real), intent(  out) :: time, dt
@@ -64,7 +67,14 @@ MODULE GET_DATA_MODULE
       CALL CHECK_DMP_PREREQS
 
 ! Set up the physical domain indices (cell index max/min values).
-      CALL SET_MAX2
+!     CALL SET_MAX2
+      domlo(1) = 0 + 2
+      domlo(2) = 0 + 2
+      domlo(3) = 0 + 2
+ 
+      domhi(1) = imax-1 + 2
+      domhi(2) = jmax-1 + 2
+      domhi(3) = kmax-1 + 2
 
 ! Partition the domain and set indices
       CALL GRIDMAP_INIT

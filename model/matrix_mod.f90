@@ -16,7 +16,6 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      USE compar, only: iend3, jend3, kend3
       USE compar, only: mype
       USE funits, only: dmp_log
       USE param1, only: zero, one
