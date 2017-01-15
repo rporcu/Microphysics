@@ -24,7 +24,7 @@ CONTAINS
 ! the cell lengths along the corresponding axis (dx, dy or dz)
       real(c_real), intent(in) :: dx
 
-      calc_cell = floor(location/dx + half) + 1
+      calc_cell = floor(location/dx + half) - 1
 
    end function calc_cell
 
