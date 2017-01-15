@@ -133,9 +133,9 @@
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(LL)) CYCLE
 
 ! If no neighboring facet in the surrounding 27 cells, then exit
-         if(i > 2 .and. i<domhi(1) .and. &
-            j > 2 .and. j<domhi(2) .and. &
-            k > 2 .and. k<domhi(3)) then
+         if(i > domlo(1) .and. i < domhi(1) .and. &
+            j > domlo(2) .and. j < domhi(2) .and. &
+            k > domlo(3) .and. k < domhi(3)) then
             CYCLE
          ENDIF
 
@@ -147,15 +147,15 @@
 
          DO NF = 1, 6
 
-            if(nf==1 .and. i==2) then
+            if(nf==1     .and. i==domlo(1)) then
                if(des_pos_new(ll,1) > des_radius(LL)) cycle
             elseif(nf==2 .and. i==domhi(1)) then
                if(des_pos_new(ll,1) < xlength - des_radius(LL)) cycle
-            elseif(nf==3 .and. j==2) then
+            elseif(nf==3 .and. j==domlo(2)) then
                if(des_pos_new(ll,2) > des_radius(LL)) cycle
             elseif(nf==4 .and. j==domhi(2)) then
                if(des_pos_new(ll,2) < ylength - des_radius(LL)) cycle
-            elseif(nf==5 .and. k==2) then
+            elseif(nf==5 .and. k==domlo(3)) then
                if(des_pos_new(ll,3) > des_radius(LL)) cycle
             elseif(nf==6 .and. k==domhi(3)) then
                if(des_pos_new(ll,3) < zlength - des_radius(LL)) cycle
