@@ -32,7 +32,7 @@
       if (i.eq.domlo(1) .and.  flag_mod(i,j,k,1) > 1) then
          iminus = i
       else
-         iminus = max(1, i-1)
+         iminus = max(domlo(1)-1, i-1)
       end if
 
       if (cyclic_x .and. (iminus < domlo(1)) .and. &
@@ -69,7 +69,7 @@
       if (j.eq.domlo(2) .and. flag_mod(i,j,k,1) > 1) then
          jminus = j
       else
-         jminus = max(1, j-1)
+         jminus = max(domlo(2)-1, j-1)
       end if
 
       if (cyclic_y .and. (jminus < domlo(2)) .and. &
@@ -106,7 +106,7 @@
       if (k.eq.domlo(3) .and. flag_mod(i,j,k,1) > 1) then
          kminus = k
       else
-         kminus = max(1, k-1)
+         kminus = max(domlo(3)-1, k-1)
       end if
 
       if (cyclic_z .and. (kminus < domlo(3)) .and. &
