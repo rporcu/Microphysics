@@ -394,17 +394,17 @@ MODULE set_icbc_flags_module
                CALL MOD_BC_K(BCV,flag,slo,shi)
 
             ! Extend the boundaries for cyclic implementation
-            IF(BC_I_W(BCV) == 2 .AND. BC_I_E(BCV) == (DOMHI(1)+1 - 1) .AND. &
+            IF(BC_I_W(BCV) == domlo(1) .AND. BC_I_E(BCV) == DOMHI(1) .AND. &
                CYCLIC_X .AND. NODESI > 1) THEN
                    BC_I_W(BCV) = 1
                    BC_I_E(BCV) = DOMHI(1)+1
             ENDIF
-            IF(BC_J_S(BCV) == 2 .AND. BC_J_N(BCV) == (DOMHI(2)+1 - 1) .AND. &
+            IF(BC_J_S(BCV) == domlo(1) .AND. BC_J_N(BCV) == DOMHI(2) .AND. &
                CYCLIC_Y .AND. NODESJ > 1) THEN
                BC_J_S(BCV) = 1
                BC_J_N(BCV) = DOMHI(2)+1
             ENDIF
-            IF(BC_K_B(BCV) == 2 .AND. BC_K_T(BCV) == (DOMHI(3)+1 - 1) .AND. &
+            IF(BC_K_B(BCV) == domlo(3) .AND. BC_K_T(BCV) == DOMHI(3) .AND. &
                CYCLIC_Z .AND. NODESK > 1) THEN
                BC_K_B(BCV) = 1
                BC_K_T(BCV) = DOMHI(3)+1
