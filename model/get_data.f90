@@ -71,14 +71,6 @@ MODULE GET_DATA_MODULE
       domhi(2) = jmax-1
       domhi(3) = kmax-1
 
-!     domlo(1) = 0 + 2
-!     domlo(2) = 0 + 2
-!     domlo(3) = 0 + 2
- 
-!     domhi(1) = imax-1 + 2
-!     domhi(2) = jmax-1 + 2
-!     domhi(3) = kmax-1 + 2
-
       ! Check the minimum solids phase requirements.
       CALL CHECK_SOLIDS_MODEL_PREREQS
 
