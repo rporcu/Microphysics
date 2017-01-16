@@ -602,16 +602,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-#if 0
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     std::cout << "U " << (*u_g[lev])[mfi] << std::endl;
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     std::cout << "V " << (*v_g[lev])[mfi] << std::endl;
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-     std::cout << "W " << (*w_g[lev])[mfi] << std::endl;
-  exit(0);
-#endif
-
   // Allocate the particle arrays
   if (solve_dem)
   {

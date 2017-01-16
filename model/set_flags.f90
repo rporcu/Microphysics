@@ -151,13 +151,12 @@ contains
          do j = slo(2),shi(2)
            do i = slo(1),shi(1)
 
-! If the flag is greater than or equal to 2000, there is no
-! internal surface.
+         ! If the flag is greater than or equal to 2000, there is no
+         ! internal surface.
          IF (flag(i,j,k,1)>=100) then
 
-! ---------------------------------------------------------------->>>
-! the default is equivalent to an impermeable surface and these cells
-! will be treated as such in the momentum routines
+         ! the default is equivalent to an impermeable surface and these cells
+         ! will be treated as such in the momentum routines
             flag(i,j,k,2) = 0
             flag(i,j,k,3) = 0
             flag(i,j,k,4) = 0
@@ -173,7 +172,7 @@ contains
                        (K>=(domlo(3)-1)) .and. (K<=(domhi(3)+1)) .and. &
                        (flag(iminus(i,j,k),j,k,1) < 100) ) then
                            flag(iminus(i,j,k),j,k,2) = 2000
-                  end if
+                   end if
                end if
 
                if (J == domhi(2)+1) then
@@ -194,17 +193,27 @@ contains
 
             ENDIF
 
+            ENDIF
+
+          end do
+        end do
+     end do
+
+      do k = slo(3),shi(3)
+         do j = slo(2),shi(2)
+           do i = slo(1),shi(1)
+
 ! ----------------------------------------------------------------<<<
-         ELSEIF (flag(i,j,k,1)==1) then
+         IF (flag(i,j,k,1)==1) then
 ! ---------------------------------------------------------------->>>
 
             IF ( flag(iminus(i,j,k),j,k,1) < 100 .and. &
                IS_UNDEFINED(flag(iminus(i,j,k),j,k,2))) &
-               flag(iminus(i,j,k),j,k,2) = 2000 + flag(iminus(i,j,k),j,k,1)
+                 flag(iminus(i,j,k),j,k,2) = 2000 + flag(iminus(i,j,k),j,k,1)
 
             IF ( flag(iplus(i,j,k),j,k,1) < 100 .and. &
                IS_UNDEFINED(flag(i,j,k,2))) &
-               flag(i,j,k,2) = 2000 + flag(iplus(i,j,k),j,k,1)
+                  flag(i,j,k,2) = 2000 + flag(iplus(i,j,k),j,k,1)
 
             IF ( flag(i,jminus(i,j,k),k,1) < 100 .and. &
                IS_UNDEFINED(flag(i,jminus(i,j,k),k,3))) &

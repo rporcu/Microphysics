@@ -28,7 +28,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_U_G(slo, shi, lo, hi, &
-         A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+         A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! Modules
@@ -57,7 +57,7 @@ module source_u_g_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: p_g&
@@ -113,44 +113,44 @@ module source_u_g_module
         DO J = lo(2), hi(2)
           DO I = lo(1), hi(1)+1
 
-          EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
+         EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
-! Impermeable internal surface
+         ! Impermeable internal surface
          IF (flag(i,j,k,2) < 1000) THEN
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
-            B_M(I,J,K) = ZERO
+            A_m(I,J,K,E) = ZERO
+            A_m(I,J,K,W) = ZERO
+            A_m(I,J,K,N) = ZERO
+            A_m(I,J,K,S) = ZERO
+            A_m(I,J,K,T) = ZERO
+            A_m(I,J,K,B) = ZERO
+            A_m(I,J,K,0) = -ONE
+            b_m(I,J,K) = ZERO
 
-! Dilute flow
+         ! Dilute flow
          ELSEIF (EPGA <= DIL_EP_S) THEN
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
-            B_M(I,J,K) = ZERO
-! set velocity equal to that of west or east cell if solids are present
-! in those cells else set velocity equal to known value
+            A_m(I,J,K,E) = ZERO
+            A_m(I,J,K,W) = ZERO
+            A_m(I,J,K,N) = ZERO
+            A_m(I,J,K,S) = ZERO
+            A_m(I,J,K,T) = ZERO
+            A_m(I,J,K,B) = ZERO
+            A_m(I,J,K,0) = -ONE
+            b_m(I,J,K) = ZERO
+
+            ! set velocity equal to that of west or east cell if solids are present
+            ! in those cells else set velocity equal to known value
             IF (EP_G(iwest(i,j,k),j,k) > DIL_EP_S) THEN
-               A_M(I,J,K,W) = ONE
+               A_m(I,J,K,W) = ONE
             ELSE IF (EP_G(ieast(i,j,k),j,k) > DIL_EP_S) THEN
-               A_M(I,J,K,E) = ONE
+               A_m(I,J,K,E) = ONE
             ELSE
-               B_M(I,J,K) = -U_G(I,J,K)
+               b_m(I,J,K) = -U_G(I,J,K)
             ENDIF
 
-! Normal case
+         ! Normal case
          ELSE
 
-! Surface forces
-! Pressure term
+            ! Pressure term
             PGE = P_G(ieast(i,j,k),j,k)
             if ( CYCLIC_X_PD) then
               if ( (i .eq. domlo(1)-1) .or. (i .eq. domhi(1)) ) &
@@ -159,33 +159,34 @@ module source_u_g_module
 
             SDP = -P_SCALE*EPGA*(PGE - P_G(I,J,K))*AYZ
 
-! Volumetric forces
+            ! Volumetric forces
             ROGA  = HALF * (RO_G(I,J,K) + RO_G(ieast(i,j,k),j,k))
             ROPGA = HALF * (ROP_G(I,J,K) + ROP_G(ieast(i,j,k),j,k))
-! Previous time step
+
+            ! Previous time step
             V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT
 
-! Body force
+            ! Body force
             VBF = ROGA*GRAVITY(1)
 
             ltau_u_g = tau_u_g(i,j,k)
 
 ! Collect the terms
-            A_M(I,J,K,0) = -(A_M(I,J,K,E)+A_M(I,J,K,W)+&
-               A_M(I,J,K,N)+A_M(I,J,K,S)+A_M(I,J,K,T)+A_M(I,J,K,B)+&
+            A_m(I,J,K,0) = -(A_m(I,J,K,E)+A_m(I,J,K,W)+&
+               A_m(I,J,K,N)+A_m(I,J,K,S)+A_m(I,J,K,T)+A_m(I,J,K,B)+&
                V0*VOL)
 
-            B_M(I,J,K) = B_M(I,J,K) -(SDP + lTAU_U_G + &
+            b_m(I,J,K) = b_m(I,J,K) -(SDP + lTAU_U_G + &
                ( (V0)*U_GO(I,J,K) + VBF)*VOL )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
 
-      ENDDO   ! end do loop over ijk
-      ENDDO   ! end do loop over ijk
+          ENDDO   ! end do loop over ijk
+        ENDDO   ! end do loop over ijk
       ENDDO   ! end do loop over ijk
 
-! modifications for bc
-      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_M, B_M, U_G, flag, dx, dy, dz)
+      ! modifications for bc
+      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -209,7 +210,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_M, B_M, U_G, flag, dx, dy, dz)
+      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
 
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -228,7 +229,7 @@ module source_u_g_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Velocity u_g
@@ -275,25 +276,25 @@ module source_u_g_module
             IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = -ONE
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = -ONE
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ELSEIF (flag(i1,j1,k1,1) == 101) THEN
 ! Setting the wall velocity equal to the adjacent fluid velocity (set
 ! the boundary cell value equal to adjacent fluid cell value)
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = ONE
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = ONE
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -305,23 +306,23 @@ module source_u_g_module
       DO J1 = slo(2),shi(2)
          DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = -ONE
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = -ONE
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ELSEIF (flag(i1,j1,k1,1) == 101) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = ONE
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = ONE
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -333,23 +334,23 @@ module source_u_g_module
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = -ONE
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = -ONE
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ELSEIF (flag(i1,j1,k1,1) == 101) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ONE
-               A_M(I1,J1,K1,S) = ZERO
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ONE
+               A_m(I1,J1,K1,S) = ZERO
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -361,23 +362,23 @@ module source_u_g_module
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = -ONE
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = -ONE
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ELSEIF (flag(i1,j1,k1,1) == 101) THEN
-               A_M(I1,J1,K1,E) = ZERO
-               A_M(I1,J1,K1,W) = ZERO
-               A_M(I1,J1,K1,N) = ZERO
-               A_M(I1,J1,K1,S) = ONE
-               A_M(I1,J1,K1,T) = ZERO
-               A_M(I1,J1,K1,B) = ZERO
-               A_M(I1,J1,K1,0) = -ONE
-               B_M(I1,J1,K1) = ZERO
+               A_m(I1,J1,K1,E) = ZERO
+               A_m(I1,J1,K1,W) = ZERO
+               A_m(I1,J1,K1,N) = ZERO
+               A_m(I1,J1,K1,S) = ONE
+               A_m(I1,J1,K1,T) = ZERO
+               A_m(I1,J1,K1,B) = ZERO
+               A_m(I1,J1,K1,0) = -ONE
+               b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
       ENDDO
@@ -404,22 +405,22 @@ module source_u_g_module
                   DO J = J1, J2
                      DO I = I1, I2
                         IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
+                        A_m(I,J,K,E) = ZERO
+                        A_m(I,J,K,W) = ZERO
+                        A_m(I,J,K,N) = ZERO
+                        A_m(I,J,K,S) = ZERO
+                        A_m(I,J,K,T) = ZERO
+                        A_m(I,J,K,B) = ZERO
+                        A_m(I,J,K,0) = -ONE
+                        b_m(I,J,K) = ZERO
                         if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
-                           A_M(I,J,K,N) = -ONE
+                           A_m(I,J,K,N) = -ONE
                         else iF (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
-                           A_M(I,J,K,S) = -ONE
+                           A_m(I,J,K,S) = -ONE
                         else iF (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
-                           A_M(I,J,K,T) = -ONE
+                           A_m(I,J,K,T) = -ONE
                         else iF (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
-                           A_M(I,J,K,B) = -ONE
+                           A_m(I,J,K,B) = -ONE
                         ENDIF
                      ENDDO
                   ENDDO
@@ -436,22 +437,22 @@ module source_u_g_module
                   DO J = J1, J2
                      DO I = I1, I2
                         IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
+                        A_m(I,J,K,E) = ZERO
+                        A_m(I,J,K,W) = ZERO
+                        A_m(I,J,K,N) = ZERO
+                        A_m(I,J,K,S) = ZERO
+                        A_m(I,J,K,T) = ZERO
+                        A_m(I,J,K,B) = ZERO
+                        A_m(I,J,K,0) = -ONE
+                        b_m(I,J,K) = ZERO
                         if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
-                           A_M(I,J,K,N) = ONE
+                           A_m(I,J,K,N) = ONE
                         else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
-                           A_M(I,J,K,S) = ONE
+                           A_m(I,J,K,S) = ONE
                         else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
-                           A_M(I,J,K,T) = ONE
+                           A_m(I,J,K,T) = ONE
                         else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
-                           A_M(I,J,K,B) = ONE
+                           A_m(I,J,K,B) = ONE
                         ENDIF
                      ENDDO
                   ENDDO
@@ -468,53 +469,53 @@ module source_u_g_module
                   DO J = J1, J2
                      DO I = I1, I2
                         IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
+                        A_m(I,J,K,E) = ZERO
+                        A_m(I,J,K,W) = ZERO
+                        A_m(I,J,K,N) = ZERO
+                        A_m(I,J,K,S) = ZERO
+                        A_m(I,J,K,T) = ZERO
+                        A_m(I,J,K,B) = ZERO
+                        A_m(I,J,K,0) = -ONE
+                        b_m(I,J,K) = ZERO
                         if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,N) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_UW_G(L)
+                              A_m(I,J,K,N) = -HALF
+                              A_m(I,J,K,0) = -HALF
+                              b_m(I,J,K) = -BC_UW_G(L)
                            ELSE
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
-                              A_M(I,J,K,N) = -(HALF*BC_HW_G(L)-ODY)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                              A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
+                              A_m(I,J,K,N) = -(HALF*BC_HW_G(L)-ODY)
+                              b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,S) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_UW_G(L)
+                              A_m(I,J,K,S) = -HALF
+                              A_m(I,J,K,0) = -HALF
+                              b_m(I,J,K) = -BC_UW_G(L)
                            ELSE
-                              A_M(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                              A_m(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
+                              A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
+                              b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,T) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_UW_G(L)
+                              A_m(I,J,K,T) = -HALF
+                              A_m(I,J,K,0) = -HALF
+                              b_m(I,J,K) = -BC_UW_G(L)
                            ELSE
-                              A_M(I,J,K,0)=-(HALF*BC_HW_G(L)+ODZ)
-                              A_M(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                              A_m(I,J,K,0)=-(HALF*BC_HW_G(L)+ODZ)
+                              A_m(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
+                              b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,B) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_UW_G(L)
+                              A_m(I,J,K,B) = -HALF
+                              A_m(I,J,K,0) = -HALF
+                              b_m(I,J,K) = -BC_UW_G(L)
                            ELSE
-                              A_M(I,J,K,B) = -(HALF*BC_HW_G(L)-ODZ)
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                              A_m(I,J,K,B) = -(HALF*BC_HW_G(L)-ODZ)
+                              A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
+                              b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
                         ENDIF
                      ENDDO
@@ -538,14 +539,14 @@ module source_u_g_module
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           A_M(I,J,K,E) = ZERO
-                           A_M(I,J,K,W) = ONE
-                           A_M(I,J,K,N) = ZERO
-                           A_M(I,J,K,S) = ZERO
-                           A_M(I,J,K,T) = ZERO
-                           A_M(I,J,K,B) = ZERO
-                           A_M(I,J,K,0) = -ONE
-                           B_M(I,J,K) = ZERO
+                           A_m(I,J,K,E) = ZERO
+                           A_m(I,J,K,W) = ONE
+                           A_m(I,J,K,N) = ZERO
+                           A_m(I,J,K,S) = ZERO
+                           A_m(I,J,K,T) = ZERO
+                           A_m(I,J,K,B) = ZERO
+                           A_m(I,J,K,0) = -ONE
+                           b_m(I,J,K) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -566,23 +567,23 @@ module source_u_g_module
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           A_M(I,J,K,E) = ZERO
-                           A_M(I,J,K,W) = ONE
-                           A_M(I,J,K,N) = ZERO
-                           A_M(I,J,K,S) = ZERO
-                           A_M(I,J,K,T) = ZERO
-                           A_M(I,J,K,B) = ZERO
-                           A_M(I,J,K,0) = -ONE
-                           B_M(I,J,K) = ZERO
+                           A_m(I,J,K,E) = ZERO
+                           A_m(I,J,K,W) = ONE
+                           A_m(I,J,K,N) = ZERO
+                           A_m(I,J,K,S) = ZERO
+                           A_m(I,J,K,T) = ZERO
+                           A_m(I,J,K,B) = ZERO
+                           A_m(I,J,K,0) = -ONE
+                           b_m(I,J,K) = ZERO
                            IM = IM1(I)
-                           A_M(iminus(i,j,k),j,k,E) = ZERO
-                           A_M(iminus(i,j,k),j,k,W) = ONE
-                           A_M(iminus(i,j,k),j,k,N) = ZERO
-                           A_M(iminus(i,j,k),j,k,S) = ZERO
-                           A_M(iminus(i,j,k),j,k,T) = ZERO
-                           A_M(iminus(i,j,k),j,k,B) = ZERO
-                           A_M(iminus(i,j,k),j,k,0) = -ONE
-                           B_M(iminus(i,j,k),j,k) = ZERO
+                           A_m(iminus(i,j,k),j,k,E) = ZERO
+                           A_m(iminus(i,j,k),j,k,W) = ONE
+                           A_m(iminus(i,j,k),j,k,N) = ZERO
+                           A_m(iminus(i,j,k),j,k,S) = ZERO
+                           A_m(iminus(i,j,k),j,k,T) = ZERO
+                           A_m(iminus(i,j,k),j,k,B) = ZERO
+                           A_m(iminus(i,j,k),j,k,0) = -ONE
+                           b_m(iminus(i,j,k),j,k) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -596,14 +597,14 @@ module source_u_g_module
                   DO K = K1, K2
                      DO J = J1, J2
                         DO I = I1, I2
-                           A_M(iplus(i,j,k),j,k,E) = ONE
-                           A_M(iplus(i,j,k),j,k,W) = ZERO
-                           A_M(iplus(i,j,k),j,k,N) = ZERO
-                           A_M(iplus(i,j,k),j,k,S) = ZERO
-                           A_M(iplus(i,j,k),j,k,T) = ZERO
-                           A_M(iplus(i,j,k),j,k,B) = ZERO
-                           A_M(iplus(i,j,k),j,k,0) = -ONE
-                           B_M(iplus(i,j,k),j,k) = ZERO
+                           A_m(iplus(i,j,k),j,k,E) = ONE
+                           A_m(iplus(i,j,k),j,k,W) = ZERO
+                           A_m(iplus(i,j,k),j,k,N) = ZERO
+                           A_m(iplus(i,j,k),j,k,S) = ZERO
+                           A_m(iplus(i,j,k),j,k,T) = ZERO
+                           A_m(iplus(i,j,k),j,k,B) = ZERO
+                           A_m(iplus(i,j,k),j,k,0) = -ONE
+                           b_m(iplus(i,j,k),j,k) = ZERO
                         ENDDO
                      ENDDO
                   ENDDO
@@ -626,26 +627,27 @@ module source_u_g_module
                   DO J = J1, J2
                      DO I = I1, I2
 ! setting the velocity in the boundary cell equal to what is known
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = -U_G(I,J,K)
+                        A_m(I,J,K,E) = ZERO
+                        A_m(I,J,K,W) = ZERO
+                        A_m(I,J,K,N) = ZERO
+                        A_m(I,J,K,S) = ZERO
+                        A_m(I,J,K,T) = ZERO
+                        A_m(I,J,K,B) = ZERO
+                        A_m(I,J,K,0) = -ONE
+                        b_m(I,J,K) = -U_G(I,J,K)
                         IF (BC_PLANE(L) == 'W') THEN
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the adjacent fluid cell equal to what is
 ! known in that cell
-                           A_M(iwest(i,j,k),j,k,E) = ZERO
-                           A_M(iwest(i,j,k),j,k,W) = ZERO
-                           A_M(iwest(i,j,k),j,k,N) = ZERO
-                           A_M(iwest(i,j,k),j,k,S) = ZERO
-                           A_M(iwest(i,j,k),j,k,T) = ZERO
-                           A_M(iwest(i,j,k),j,k,B) = ZERO
-                           A_M(iwest(i,j,k),j,k,0) = -ONE
-                           B_M(iwest(i,j,k),j,k) = -U_G(iwest(i,j,k),j,k)
+                           A_m(iwest(i,j,k),j,k,E) = ZERO
+                           A_m(iwest(i,j,k),j,k,W) = ZERO
+                           A_m(iwest(i,j,k),j,k,N) = ZERO
+                           A_m(iwest(i,j,k),j,k,S) = ZERO
+                           A_m(iwest(i,j,k),j,k,T) = ZERO
+                           A_m(iwest(i,j,k),j,k,B) = ZERO
+                           A_m(iwest(i,j,k),j,k,0) = -ONE
+                           b_m(iwest(i,j,k),j,k) = -U_G(iwest(i,j,k),j,k)
+                           if (j.eq.lo(2)) print *,'5:SETTING B TO U_G ',iwest(i,j,k), b_m(iwest(i,j,k),j,k)
                         ENDIF
                      ENDDO
                   ENDDO
@@ -660,7 +662,6 @@ module source_u_g_module
          ENDIF   ! end if (bc_defined)
       ENDDO   ! end L do loop over dimension_bc
 
-      RETURN
       END SUBROUTINE SOURCE_U_G_BC
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -672,7 +673,7 @@ module source_u_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_M, B_M, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_m, b_m, flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
@@ -686,7 +687,7 @@ module source_u_g_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), INTENT(INOUT) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag &
@@ -733,7 +734,7 @@ module source_u_g_module
 
             pSource =  PS_MASSFLOW_G(PSV) * (vol/PS_VOLUME(PSV))
 
-            B_M(I,J,K) = B_M(I,J,K) - pSource *                        &
+            b_m(I,J,K) = b_m(I,J,K) - pSource *                        &
                PS_U_g(PSV) * PS_VEL_MAG_g(PSV)
 
          enddo
