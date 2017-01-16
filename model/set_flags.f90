@@ -228,7 +228,7 @@ contains
         end do
      end do
 
-! Clean up edge cases
+      ! Clean up edge cases
       do k = slo(3),shi(3)
          do j = slo(2),shi(2)
             do i = slo(1),shi(1)
@@ -238,24 +238,6 @@ contains
             end do
          end do
       end do
-! ----------------------------------------------------------------<<<
-
-! Fill the ghost layers using gather and scatter
-      ! call gather( flag_e, flag_temp )
-      ! flag_e = flag_temp
-      ! call scatter( flag_e, flag_temp )
-      ! call gather( flag_n, flag_temp )
-      ! flag_n = flag_temp
-      ! call scatter( flag_n, flag_temp )
-      ! call gather( flag_t, flag_temp )
-      ! flag_t = flag_temp
-      ! call scatter( flag_t, flag_temp )
-
-! deallocate storage of temporary flag arrays
-      ! deallocate( flag_temp )
-      ! call send_recv(flag_t,1)
-      ! call send_recv(flag_n,1)
-      ! call send_recv(flag_e,1)
 
       end subroutine set_flags1
 

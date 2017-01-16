@@ -25,7 +25,6 @@ module solve_vel_star_module
          bind(C, name="solve_u_g_star")
 
 ! Module procedures ..................................................//
-      USE matrix, only: init_ab_m
       USE u_g_conv_dif, only: conv_dif_u_g
       USE source_u_g_module, only: source_u_g
       USE source_u_g_module, only: point_source_u_g
@@ -95,9 +94,6 @@ module solve_vel_star_module
 
 !.....................................................................//
 
-! initialize matrix and vector
-      call init_ab_m (slo, shi, a_m, b_m)
-
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
@@ -147,7 +143,6 @@ module solve_vel_star_module
 
 
 ! Module procedures ...................................................//
-      USE matrix, only: init_ab_m
       USE v_g_conv_dif, only: conv_dif_v_g
       USE source_v_g_module, only: source_v_g
       USE source_v_g_module, only: point_source_v_g
@@ -217,9 +212,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
 
-! initialize matrix and vector
-      call init_ab_m (slo, shi, a_m, b_m)
-
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
@@ -267,7 +259,6 @@ module solve_vel_star_module
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
-      USE matrix, only: init_ab_m
       USE w_g_conv_dif, only: conv_dif_w_g
       USE source_w_g_module, only: source_w_g
       USE source_w_g_module, only: point_source_w_g
@@ -336,9 +327,6 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
-
-! initialize matrix and vector
-      call init_ab_m(slo, shi, a_m, b_m)
 
 ! calculate the convection-diffusion terms
       call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &

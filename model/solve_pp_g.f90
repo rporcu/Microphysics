@@ -19,7 +19,6 @@ module solve_pp_module
       bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
-      use matrix  , only: init_ab_m
       use conv_pp_g_module, only: conv_pp_g
       use source_pp_module, only: source_pp_g
       use residual, only: calc_resid_pp
@@ -97,9 +96,6 @@ module solve_pp_module
 !.....................................................................//
 
       ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-
-! initializing
-      call init_ab_m (slo, shi, a_m, b_m)
 
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
