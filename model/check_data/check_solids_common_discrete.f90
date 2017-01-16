@@ -41,8 +41,6 @@ MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
 
       implicit none
 

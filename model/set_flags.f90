@@ -15,7 +15,6 @@ contains
 
       use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
       use ic, only: NSW_
-      use compar, only: mype, pe_io
       use param1, only: undefined_i
 
       IMPLICIT NONE

@@ -239,8 +239,7 @@
 
       integer function im1(i)
 
-      use compar, only: nodesi
-      use geometry, only  : domlo,domhi,cyclic_x
+      use geometry, only  : domlo
       implicit none
       integer, intent(in) :: i
 
@@ -252,8 +251,7 @@
 
       integer function ip1(i)
 
-      use compar, only: nodesi
-      use geometry, only  : domlo, domhi, cyclic_x
+      use geometry, only  : domhi
       implicit none
       integer, intent(in) :: i
 
@@ -265,8 +263,7 @@
 
       integer function jm1(j)
 
-      use compar  , only: nodesj
-      use geometry, only  : domlo, domhi, cyclic_y
+      use geometry, only  : domlo
       implicit none
       integer, intent(in) :: j
 
@@ -278,8 +275,7 @@
 
       integer function jp1(j)
 
-      use compar, only: nodesj
-      use geometry, only  : domlo, domhi, cyclic_y
+      use geometry, only  : domhi
       implicit none
       integer, intent(in) :: j
 
@@ -291,8 +287,7 @@
 
       integer function km1(k)
 
-      use compar  , only: nodesk
-      use geometry, only: domlo,domhi,cyclic_z
+      use geometry, only: domlo
       implicit none
       integer, intent(in) :: k
 
@@ -304,8 +299,7 @@
 
       integer function kp1(k)
 
-      use compar, only: nodesk
-      use geometry, only: domlo,domhi,cyclic_z
+      use geometry, only: domhi
       implicit none
       integer, intent(in) :: k
 

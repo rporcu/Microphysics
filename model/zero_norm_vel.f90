@@ -26,7 +26,7 @@ module zero_norm_vel_module
 ! Modules
 !-----------------------------------------------
       USE param1   , only: zero
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
       USE functions, only: iminus, jminus, kminus
 
       IMPLICIT NONE

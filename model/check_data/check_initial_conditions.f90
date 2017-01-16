@@ -106,7 +106,6 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
       use ic, only: IC_Y_n, IC_Y_s, IC_J_n, IC_J_s
       use ic, only: IC_Z_t, IC_Z_b, IC_K_t, IC_K_b
 ! User specified: System geometry
-      use geometry, only: imax, jmax, kmax
       use geometry, only: domlo, domhi
 ! Flag: New run or a restart.
       use run, only: RUN_TYPE

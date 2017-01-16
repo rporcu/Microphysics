@@ -151,7 +151,6 @@ CONTAINS
   SUBROUTINE LEQ_MSOLVE(slo, shi, B_m, A_M, Var, sweep_type)&
      bind(C, name = "leq_msolve")
 
-    use solver_params, only: sweep_rsrs, sweep_isis, sweep_asas
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: slo(3),shi(3)

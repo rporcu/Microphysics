@@ -13,15 +13,13 @@ MODULE WRITE_HEADER_MODULE
 
       USE compar, only: mype, pe_io
       USE funits, only: unit_log, dmp_log
-      USE machine, only: id_hour, id_minute, id_day, id_month, id_year, id_node
-      USE output, only: full_log, onemeg
-      USE run, only: id_version, run_name
+      USE machine, only: id_hour, id_minute, id_day, id_month, id_year
+      USE output, only: full_log
+      USE run, only: run_name
       use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 
-!     Memory required for the run
-      real(c_real) :: MEMORY
 !-----------------------------------------------
 
       IF(DMP_LOG)WRITE (UNIT_LOG, *) ' '

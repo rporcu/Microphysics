@@ -38,7 +38,6 @@ module set_domain_module
 
       use param1, only: is_defined
 
-      use run, only: dem_solids
       use geometry, only: flag_mod
 
       implicit none

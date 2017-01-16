@@ -16,7 +16,6 @@ MODULE GET_PS_MODULE
       subroutine get_ps(PSV,dx,dy,dz)
 
       USE calc_cell_module, only: calc_loc, calc_cell
-      USE geometry, only: imax, jmax, kmax
       USE geometry, only: domlo, domhi
       USE location_check_module, only: location_check
       USE param1, only: undefined_i, is_undefined, is_defined

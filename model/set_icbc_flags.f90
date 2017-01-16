@@ -286,8 +286,6 @@ MODULE set_icbc_flags_module
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      ! loop/variable indices
-      integer :: I , J , K
       integer :: istart, iend
       integer :: jstart, jend
       integer :: kstart, kend
@@ -339,7 +337,7 @@ MODULE set_icbc_flags_module
       use compar       , only: nodesi, nodesj, nodesk
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
 
       USE open_files_mod, only: open_pe_log
 

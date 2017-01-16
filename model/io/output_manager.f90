@@ -27,7 +27,6 @@ module output_manager_module
       use compar, only: myPE, PE_IO
 
       use machine, only: wall_time
-      use output, only: OUT_TIME, OUT_DT
       use output, only: USR_TIME, USR_DT
       use output, only: VTP_TIME, VTP_DT
       use param, only: DIMENSION_USR

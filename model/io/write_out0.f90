@@ -47,7 +47,7 @@ MODULE WRITE_OUT0_MODULE
       USE toleranc, only: tol_com, zero_ep_s
       USE ur_facs, only: ur_fac
       USE write_table_mod, only: write_table
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
 
       IMPLICIT NONE
 

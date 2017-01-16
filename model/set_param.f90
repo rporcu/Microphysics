@@ -10,11 +10,6 @@ CONTAINS
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_PARAMETERS
 
-! Global Varialbes:
-!---------------------------------------------------------------------//
-! Number of solids
-      use constant, only: MMAX
-
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Maximum number of species.

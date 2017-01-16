@@ -218,7 +218,7 @@ module source_v_g_module
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: jminus, jplus, jm1
       use matrix, only: e, w, s, n, t, b
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
 
       IMPLICIT NONE
 

@@ -222,7 +222,7 @@ module source_w_g_module
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
       USE functions, only: im1, jm1
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
 
       IMPLICIT NONE
 

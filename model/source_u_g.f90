@@ -152,7 +152,7 @@ module source_u_g_module
 ! Surface forces
 ! Pressure term
             PGE = P_G(ieast(i,j,k),j,k)
-            if ( CYCLIC_X_PD) then 
+            if ( CYCLIC_X_PD) then
               if ( (i .eq. domlo(1)-1) .or. (i .eq. domhi(1)) ) &
                 PGE = P_G(ieast(i,j,k),j,k) - DELP_X
             end if
@@ -217,7 +217,7 @@ module source_u_g_module
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
       USE matrix, only: e, w, s, n, t, b
-      use geometry, only: domlo, domhi
+      use geometry, only: domhi
 
       IMPLICIT NONE
 

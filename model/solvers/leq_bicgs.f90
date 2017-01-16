@@ -2,7 +2,7 @@
                            TOL, pc_type, ITMAX, IER , slo, shi, lo, hi) &
          bind(C, name="mfix_solve_lin_eq")
 
-         use compar, only: mype, pe_io, numpes
+         use compar, only: mype, pe_io
          use exit_mod, only: mfix_exit
          use matvec_module, only: leq_matvec, leq_residual, leq_scale
          use leqsol, only: icheck_bicgs, minimize_dotproducts
@@ -66,12 +66,11 @@
       real(c_real), DIMENSION(:,:,:), allocatable :: R,Rtilde, P,Phat, Svec, Shat, Tvec,V
 
       real(c_real), DIMENSION(0:ITMAX+1) :: alpha, beta, omega, rho
-      real(c_real) :: TxS, TxT, RtildexV, aijmax, oam
+      real(c_real) :: TxS, TxT, RtildexV
       real(c_real) :: Rnorm, Rnorm0, Snorm, TOLMIN, pnorm
       LOGICAL :: isconverged
-      INTEGER :: i, j, k, ii, jj, kk
+      INTEGER :: i, ii, jj, kk
       INTEGER :: iter
-      real(c_real), DIMENSION(2) :: TxS_TxT
 !-----------------------------------------------
 
       allocate(R(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)))

@@ -193,9 +193,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
       use geometry, only: domlo, domhi
-      use geometry, only: XLENGTH, IMAX
-      use geometry, only: YLENGTH, JMAX
-      use geometry, only: ZLENGTH, KMAX
+      use geometry, only: XLENGTH
+      use geometry, only: YLENGTH
+      use geometry, only: ZLENGTH
 ! Function to compare two values
       use toleranc, only: COMPARE
 
@@ -358,9 +358,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
       use geometry, only: domlo,domhi
-      use geometry, only: IMAX
-      use geometry, only: JMAX
-      use geometry, only: KMAX
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
