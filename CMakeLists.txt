@@ -147,6 +147,7 @@ set(F90_sources
   model/io/write_table.f90
   model/location_check.f90
   model/machine_mod.f90
+  model/matrix_mod.f90
   model/mfix.f90
   model/mod_bc.f90
   model/output_mod.f90
