@@ -109,8 +109,9 @@ MODULE MOD_BC
       ERROR = .FALSE.
       DO K = BC_K_B(BCV), BC_K_T(BCV)
          DO J = BC_J_S(BCV), BC_J_N(BCV)
-! Verify that the the fluid and wall cells match the FLAG.
-! Only check cells that you own and contain fluid.
+
+            ! Verify that the the fluid and wall cells match the FLAG.
+            ! Only check cells that you own and contain fluid.
             IF(FLAG(i_fluid,j,k,1) /= FLUID_ .and. (&
                flag(i_wall,j,k,1) /= NSW_ .or. &
                flag(i_wall,j,k,1) /= FSW_ .or. &

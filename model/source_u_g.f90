@@ -525,7 +525,7 @@ module source_u_g_module
 ! Setting p_inflow or p_outflow flow boundary conditions
 ! ---------------------------------------------------------------->>>
             ELSEIF (BC_TYPE(L)=='P_INFLOW' .OR. BC_TYPE(L)=='P_OUTFLOW') THEN
-               IF (BC_PLANE(L) == 'W') THEN
+                IF (BC_PLANE(L) == 'W') THEN
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the boundary cell equal to the velocity of
 ! the adjacent fluid cell

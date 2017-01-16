@@ -12,30 +12,28 @@ MODULE LOCATION_CHECK_MODULE
       SUBROUTINE LOCATION_CHECK(CELL_SPECIFIED, CELL_CALCULATED,       &
          COUNTER, MESSAGE)
 
-! Global variables:
-!---------------------------------------------------------------------//
-! Module procedure for error message management.
+      ! Module procedure for error message management.
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
       IMPLICIT NONE
 
-! Dummy arguments:
-!---------------------------------------------------------------------//
-! Cell index specified in the input file.
+      ! Cell index specified in the input file.
       INTEGER, INTENT(IN) :: CELL_SPECIFIED
-! Cell index calculated for location coordinate.
+
+      ! Cell index calculated for location coordinate.
       INTEGER, INTENT(IN) :: CELL_CALCULATED
-! Index for BC, IC, or IS
+
+      ! Index for BC, IC, or IS
       INTEGER, INTENT(IN) :: COUNTER
-! Error message to print out
+
+      ! Error message to print out
       CHARACTER(len=*) :: MESSAGE
 !......................................................................!
 
-
 ! Check that the cell_specified in the data input equals to the cell
 ! calculated.
-      IF(CELL_SPECIFIED == CELL_CALCULATED) RETURN
 
+      IF(CELL_SPECIFIED == CELL_CALCULATED) RETURN
 
       IF(MESSAGE(6:6)=='b' .OR. MESSAGE(6:6)=='t') RETURN
       IF(MESSAGE(6:6)=='s' .OR. MESSAGE(6:6)=='n') RETURN
