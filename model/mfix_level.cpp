@@ -213,24 +213,12 @@ mfix_level::MakeNewLevel (int lev, Real time,
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = mfi.validbox();
+       const Box&  bx = mfi.validbox();
+       const Box& sbx = (*flag[lev])[mfi].box();
 
-       const int* sslo = (*flag[lev])[mfi].loVect();
-       const int* sshi = (*flag[lev])[mfi].hiVect();
-
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-       set_domain(slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect(),
+       set_domain(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
     flag[lev]->FillBoundary(geom[lev].periodicity());
@@ -238,8 +226,6 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // Matrix and rhs vector
     A_m[lev].reset(new MultiFab(grids[lev],7,nghost,dmap[lev],Fab_allocate));
     b_m[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    A_m[lev]->setVal(0.);
-    b_m[lev]->setVal(0.);
 
     // Void fraction
     ep_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
@@ -997,9 +983,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    // Set all the matrix elements and rhs to zero
-    A_m[lev]->setVal(0.0);
-    b_m[lev]->setVal(0.0);
+    // Re-set all the matrix elements (except the center) and rhs to zero
+    A_m[lev]->setVal( 0.);
+    A_m[lev]->setVal(-1.,4);
+    b_m[lev]->setVal( 0.);
 
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
@@ -1035,9 +1022,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
-    // Re-set all the matrix elements and rhs to zero
-    A_m[lev]->setVal(0.0);
-    b_m[lev]->setVal(0.0);
+    // Re-set all the matrix elements (except the center) and rhs to zero
+    A_m[lev]->setVal( 0.);
+    A_m[lev]->setVal(-1.,4);
+    b_m[lev]->setVal( 0.);
 
     // Solve V-Momentum equation
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
@@ -1073,9 +1061,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
-    // Re-set all the matrix elements and rhs to zero
-    A_m[lev]->setVal(0.0);
-    b_m[lev]->setVal(0.0);
+    // Re-set all the matrix elements (except the center) and rhs to zero
+    A_m[lev]->setVal( 0.);
+    A_m[lev]->setVal(-1.,4);
+    b_m[lev]->setVal( 0.);
 
     // Solve W-Momentum equation
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
@@ -1131,9 +1120,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    // Re-set all the matrix elements and rhs to zero
-    A_m[lev]->setVal(0.0);
-    b_m[lev]->setVal(0.0);
+    // Re-set all the matrix elements (except the center) and rhs to zero
+    A_m[lev]->setVal( 0.);
+    A_m[lev]->setVal(-1.,4);
+    b_m[lev]->setVal( 0.);
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
