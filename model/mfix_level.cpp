@@ -879,11 +879,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    // Re-set all the matrix elements (except the center) and rhs to zero
-    A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4,1,0);
-    b_m[lev]->setVal( 0.);
-
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -909,11 +904,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
-    // Re-set all the matrix elements (except the center) and rhs to zero
-    A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4,1,0);
-    b_m[lev]->setVal( 0.);
-
     // Solve V-Momentum equation
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -938,11 +928,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
     eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
-
-    // Re-set all the matrix elements (except the center) and rhs to zero
-    A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4,1,0);
-    b_m[lev]->setVal( 0.);
 
     // Solve W-Momentum equation
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
@@ -988,11 +973,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
-
-    // Re-set all the matrix elements (except the center) and rhs to zero
-    A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4,1,0);
-    b_m[lev]->setVal( 0.);
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
