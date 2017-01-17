@@ -152,9 +152,9 @@ MODULE set_icbc_flags_module
       CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
 
       ! First check for any errors.
-      do K = lo(1)-1,hi(1)+1
+      do K = lo(3)-1,hi(3)+1
          do J = lo(2)-1,hi(2)+1
-            do I = lo(3)-1,hi(3)+1
+            do I = lo(1)-1,hi(1)+1
                IF (FLAG(i,j,k,1) == UNDEF_CELL) ERROR = .TRUE.
             ENDDO
          ENDDO
@@ -173,9 +173,9 @@ MODULE set_icbc_flags_module
          WRITE(ERR_MSG, 1100) trim(iVal(myPE))
          CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
 
-         do K = lo(1)-1,hi(1)+1
+         do K = lo(3)-1,hi(3)+1
             do J = lo(2)-1,hi(2)+1
-               do I = lo(3)-1,hi(3)+1
+               do I = lo(1)-1,hi(1)+1
                   IF (FLAG(i,j,k,1) == UNDEF_CELL) then
                      WRITE(ERR_MSG,1101) I, J, K
                      CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
@@ -381,15 +381,12 @@ MODULE set_icbc_flags_module
             Y_CONSTANT = (BC_Y_S(BCV) == BC_Y_N(BCV))
             Z_CONSTANT = (BC_Z_B(BCV) == BC_Z_T(BCV))
 
-            write(*,*) 'call mod_bc_i',bcv
             IF(X_CONSTANT .AND. IS_DEFINED(BC_X_W(BCV)))                &
                CALL MOD_BC_I(BCV,flag,slo,shi)
 
-            write(*,*) 'call mod_bc_j',bcv
             IF(Y_CONSTANT .AND. IS_DEFINED(BC_Y_S(BCV)))                &
                CALL MOD_BC_J(BCV,flag,slo,shi)
 
-            write(*,*) 'call mod_bc_k',bcv
             IF(Z_CONSTANT .AND. IS_DEFINED(BC_Z_B(BCV)))                &
                CALL MOD_BC_K(BCV,flag,slo,shi)
 
@@ -399,7 +396,7 @@ MODULE set_icbc_flags_module
                    BC_I_W(BCV) = 1
                    BC_I_E(BCV) = DOMHI(1)+1
             ENDIF
-            IF(BC_J_S(BCV) == domlo(1) .AND. BC_J_N(BCV) == DOMHI(2) .AND. &
+            IF(BC_J_S(BCV) == domlo(2) .AND. BC_J_N(BCV) == DOMHI(2) .AND. &
                CYCLIC_Y .AND. NODESJ > 1) THEN
                BC_J_S(BCV) = 1
                BC_J_N(BCV) = DOMHI(2)+1
