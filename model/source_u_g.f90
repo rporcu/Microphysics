@@ -83,8 +83,6 @@ module source_u_g_module
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: i,j,k
-! Phase index
-      INTEGER :: m
 ! Pressure at east cell
       real(c_real) :: PgE
 ! Average volume fraction
@@ -105,9 +103,6 @@ module source_u_g_module
       odt = 1.0d0/dt
       ayz = dy*dz
       vol = dx*dy*dz
-
-! Set reference phase to gas
-      M = 0
 
       DO K = lo(3), hi(3)
         DO J = lo(2), hi(2)
@@ -218,7 +213,7 @@ module source_u_g_module
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
       USE functions, only: iminus, iplus, im1
       USE matrix, only: e, w, s, n, t, b
-      use geometry, only: domhi
+      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -247,18 +242,12 @@ module source_u_g_module
       INTEGER :: L
 ! Indices
       INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2
-! Phase index
-      INTEGER :: M
 
       real(c_real) :: ody, odz
 !-----------------------------------------------
 
      ody = 1.d0 / dy
      odz = 1.d0 / dz
-
-! Set reference phase to gas
-      M = 0
-
 
 ! Set the default boundary conditions
 ! The NS default setting is the where bc_type='dummy' or any default
@@ -269,7 +258,7 @@ module source_u_g_module
 ! no penetration condition.
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
-      K1 = 1
+      K1 = domlo(3)-1
       if (slo(3) .lt. k1) then
       DO J1 = slo(2),shi(2)
          DO I1 = slo(1),shi(1)
@@ -329,7 +318,7 @@ module source_u_g_module
       end if
 
 ! south xz plane
-      J1 = 1
+      J1 = domlo(2)-1
       if (slo(2) .lt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)

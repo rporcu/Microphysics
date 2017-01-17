@@ -89,8 +89,6 @@ module source_w_g_module
 !---------------------------------------------------------------------//
 ! Indices
       INTEGER :: i,j,k
-! Phase index
-      INTEGER :: m
 ! Pressure at top cell
       real(c_real) :: PgT
 ! Average volume fraction
@@ -110,9 +108,6 @@ module source_w_g_module
       odt = 1.0d0/dt
       axy = dx*dy
       vol = dx*dy*dz
-
-! Set reference phase to gas
-      M = 0
 
       DO K = lo(3),hi(3)+1
         DO J = lo(2),hi(2)
@@ -222,7 +217,7 @@ module source_w_g_module
       USE functions, only: ieast, iwest, jnorth, jsouth, kbot, ktop
       USE functions, only: kminus, kplus
       USE functions, only: im1, jm1
-      use geometry, only: domhi
+      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -252,9 +247,6 @@ module source_w_g_module
 ! Indices
       INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2, &
                  IM, JM
-! Phase index
-      INTEGER :: M
-
       real(c_real) :: odx, ody
 !---------------------------------------------------------------------//
 
@@ -262,10 +254,6 @@ module source_w_g_module
       ody = 1.0d0/dy
 
 !---------------------------------------------------------------------//
-
-! Set reference phase to gas
-      M = 0
-
 
 ! Set the default boundary conditions
 ! The NS default setting is the where bc_type='dummy' or any default
@@ -277,7 +265,7 @@ module source_w_g_module
 ! ---------------------------------------------------------------->>>
 
 ! south xz plane
-      J1 = 1
+      j1 = domlo(2)-1
       if (slo(2) .lt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
@@ -305,7 +293,7 @@ module source_w_g_module
       end if
 
 ! north xz plane
-      J1 = DOMHI(2)+1
+      j1 = domhi(2)+1
       if (shi(2) .gt. j1) then
       DO K1 = slo(3),shi(3)
          DO I1 = slo(1),shi(1)
@@ -337,7 +325,7 @@ module source_w_g_module
       end if
 
 ! west yz plane
-      I1 = 1
+      i1 = domlo(1)-1
       if (slo(1) .lt. i1) then
       DO K1 = slo(3),shi(3)
          DO J1 = slo(2),shi(2)
@@ -365,7 +353,7 @@ module source_w_g_module
       end if
 
 ! east yz plane
-      I1 = DOMHI(1)+1
+      i1 = domhi(1)+1
       if (shi(1) .gt. i1) then
       DO K1 = slo(3),shi(3)
          DO J1 = slo(2),shi(2)
@@ -725,9 +713,6 @@ module source_w_g_module
 !-----------------------------------------------
 
       vol = dx*dy*dz
-
-! Set reference phase to gas
-      M = 0
 
 ! Calculate the mass going into each (i,j,k) cell. This is done for each
 ! call in case the point source is time dependent.

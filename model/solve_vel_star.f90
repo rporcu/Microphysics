@@ -88,11 +88,15 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: d_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: a_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !.....................................................................//
+
+      a_m(:,:,:,:) =  0.0d0
+      a_m(:,:,:,0) = -1.0d0
+      b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
@@ -212,6 +216,10 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
 
+      a_m(:,:,:,:) =  0.0d0
+      a_m(:,:,:,0) = -1.0d0
+      b_m(:,:,:)   =  0.0d0
+
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
@@ -327,6 +335,10 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !.....................................................................//
+
+      a_m(:,:,:,:) =  0.0d0
+      a_m(:,:,:,0) = -1.0d0
+      b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &

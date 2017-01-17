@@ -67,9 +67,9 @@ module comp_mean_fields_module
             EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Fluid cell containing the particle
-         i = floor(des_pos_new(np,1)*odx) + 1
-         j = floor(des_pos_new(np,2)*ody) + 1
-         k = floor(des_pos_new(np,3)*odz) + 1
+         i = floor(des_pos_new(np,1)*odx) - 1
+         j = floor(des_pos_new(np,2)*ody) - 1
+         k = floor(des_pos_new(np,3)*odz) - 1
 
 ! Particle phase for data binning.
 ! Accumulate total solids volume (by phase)

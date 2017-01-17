@@ -105,9 +105,9 @@ MODULE CALC_PG_GRAD_MODULE
                exiting_ghost==particle_state(np)) cycle
 
 ! Fluid cell containing the particle
-            i = floor(des_pos_new(np,1)*odx) + 1
-            j = floor(des_pos_new(np,2)*ody) + 1
-            k = floor(des_pos_new(np,3)*odz) + 1
+            i = floor(des_pos_new(np,1)*odx) - 1
+            j = floor(des_pos_new(np,2)*ody) - 1
+            k = floor(des_pos_new(np,3)*odz) - 1
 
             if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
 
