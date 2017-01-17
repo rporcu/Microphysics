@@ -430,17 +430,9 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             {
-              const int* sslo = (*flag[lev])[mfi].loVect();
-              const int* sshi = (*flag[lev])[mfi].hiVect();
+              const Box& sbx = (*flag[lev])[mfi].box();
 
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-              converged = goal_seek_mFlux(slo.dataPtr(), shi.dataPtr(), &nit, &gsmf, &delP_MF, &lMFlux,
+              converged = goal_seek_mFlux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
                 (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
             }
@@ -482,18 +474,10 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-      const Box& bx = mfi.validbox();
+       const Box& bx = mfi.validbox();
+       const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-      mfix_des_time_march(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
+       mfix_des_time_march(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(), &max_pip,
         (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
         (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
@@ -524,16 +508,8 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-    const int* sslo = (*flag[lev])[mfi].loVect();
-    const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-    mfix_output_manager(slo.dataPtr(), shi.dataPtr(), &max_pip,
+     const Box& sbx = (*flag[lev])[mfi].box();
+     mfix_output_manager(sbx.loVect(), sbx.hiVect(), &max_pip,
       &time, &dt, &nstep,
       (*ep_g[lev])[mfi].dataPtr(),   (*p_g[lev])[mfi].dataPtr(),
       (*ro_g[lev])[mfi].dataPtr(),   (*rop_g[lev])[mfi].dataPtr(),
@@ -559,17 +535,10 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     mfix_main1(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     mfix_main1(sbx.loVect(), sbx.hiVect(), 
+                 bx.loVect(),  bx.hiVect(),
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
@@ -641,19 +610,11 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
+     const Box& sbx = (*flag[lev])[mfi].box();
      const int max_pip = particle_state.size();
 
-     calc_coeff(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
+     calc_coeff(sbx.loVect(), sbx.hiVect(), 
+                 bx.loVect(), bx.hiVect(), &max_pip,
       (*flag[lev])[mfi].dataPtr(),    &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
       (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
@@ -689,17 +650,9 @@ mfix_level::mfix_calc_all_coeffs(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     calc_coeff_all(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(), &max_pip,
+     calc_coeff_all(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(), &max_pip,
        (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
@@ -733,17 +686,9 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     calc_trd_and_tau(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     calc_trd_and_tau(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
        (*trD_g[lev])[mfi].dataPtr(),    (*ep_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
@@ -769,17 +714,9 @@ mfix_level::mfix_init_fluid(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     init_fluid(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     init_fluid(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -814,17 +751,9 @@ mfix_level::mfix_comp_mean_fields(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     comp_mean_fields(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     comp_mean_fields(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
           &max_pip, (*ep_g[lev])[mfi].dataPtr(),
           particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
           (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
@@ -845,17 +774,9 @@ mfix_level::mfix_calc_mflux(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
-
-     calc_mflux(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     calc_mflux(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
@@ -878,18 +799,11 @@ mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-    const int* sslo = (*flag[lev])[mfi].loVect();
-    const int* sshi = (*flag[lev])[mfi].hiVect();
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-    set_bc1(
+     set_bc1(
       &time,                   &dt,
-       slo.dataPtr(),           shi.dataPtr(),
+       sbx.loVect(),           sbx.hiVect(),
       (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
       (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -917,18 +831,9 @@ mfix_level::mfix_set_wall_bc(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-
-     slo[0] = sslo[0];
-     slo[1] = sslo[1];
-     slo[2] = sslo[2];
-     shi[0] = sshi[0];
-     shi[1] = sshi[1];
-     shi[2] = sshi[2];
-
-     set_wall_bc(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     set_wall_bc(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*flag[lev])[mfi].dataPtr());
   }
@@ -950,18 +855,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
-
-     slo[0] = sslo[0];
-     slo[1] = sslo[1];
-     slo[2] = sslo[2];
-     shi[0] = sshi[0];
-     shi[1] = sshi[1];
-     shi[2] = sshi[2];
-
-     conv_rop(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     conv_rop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
@@ -985,7 +881,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
     // Re-set all the matrix elements (except the center) and rhs to zero
     A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4);
+    A_m[lev]->setVal(-1.,4,1,0);
     b_m[lev]->setVal( 0.);
 
     // Solve U-Momentum equation
@@ -993,18 +889,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
+      const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
-
-      solve_u_g_star(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      solve_u_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1024,7 +911,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
     // Re-set all the matrix elements (except the center) and rhs to zero
     A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4);
+    A_m[lev]->setVal(-1.,4,1,0);
     b_m[lev]->setVal( 0.);
 
     // Solve V-Momentum equation
@@ -1032,18 +919,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
+      const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
-
-      solve_v_g_star(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      solve_v_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1063,7 +941,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
     // Re-set all the matrix elements (except the center) and rhs to zero
     A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4);
+    A_m[lev]->setVal(-1.,4,1,0);
     b_m[lev]->setVal( 0.);
 
     // Solve W-Momentum equation
@@ -1071,18 +949,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
+      const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
-
-      solve_w_g_star(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      solve_w_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1122,25 +991,16 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
     // Re-set all the matrix elements (except the center) and rhs to zero
     A_m[lev]->setVal( 0.);
-    A_m[lev]->setVal(-1.,4);
+    A_m[lev]->setVal(-1.,4,1,0);
     b_m[lev]->setVal( 0.);
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
+      const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
-
-      solve_pp_g(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+      solve_pp_g(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
@@ -1169,19 +1029,10 @@ mfix_level::mfix_correct0(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-    const Box& bx = mfi.validbox();
+     const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-    const int* sslo = (*flag[lev])[mfi].loVect();
-    const int* sshi = (*flag[lev])[mfi].hiVect();
-
-    slo[0] = sslo[0];
-    slo[1] = sslo[1];
-    slo[2] = sslo[2];
-    shi[0] = sshi[0];
-    shi[1] = sshi[1];
-    shi[2] = sshi[2];
-
-    correct0(slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect(),
+     correct0(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
@@ -1201,19 +1052,10 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-      const Box& bx = mfi.validbox();
+     const Box& bx = mfi.validbox();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-      const int* sslo = (*flag[lev])[mfi].loVect();
-      const int* sshi = (*flag[lev])[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
-
-      physical_prop(slo.dataPtr(), shi.dataPtr(), &calc_flag,
+     physical_prop(sbx.loVect(), sbx.hiVect(), &calc_flag,
         (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
         (*flag[lev])[mfi].dataPtr());
@@ -1234,17 +1076,9 @@ mfix_level::usr3(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const int* sslo = (*flag[lev])[mfi].loVect();
-     const int* sshi = (*flag[lev])[mfi].hiVect();
+     const Box& sbx = (*flag[lev])[mfi].box();
 
-     slo[0] = sslo[0];
-     slo[1] = sslo[1];
-     slo[2] = sslo[2];
-     shi[0] = sshi[0];
-     shi[1] = sshi[1];
-     shi[2] = sshi[2];
-
-     mfix_usr3( slo.dataPtr(),              shi.dataPtr(),
+     mfix_usr3( sbx.loVect(),               sbx.hiVect(),
                (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
                (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
                &dx, &dy, &dz);
@@ -1266,21 +1100,12 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
        const Box& bx = mfi.validbox();
-
-       const int* sslo = (*flag[lev])[mfi].loVect();
-       const int* sshi = (*flag[lev])[mfi].hiVect();
-
-       slo[0] = sslo[0];
-       slo[1] = sslo[1];
-       slo[2] = sslo[2];
-       shi[0] = sshi[0];
-       shi[1] = sshi[1];
-       shi[2] = sshi[2];
+       const Box& sbx = (*flag[lev])[mfi].box();
 
        mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),
                          rhs[mfi].dataPtr(),
                          &sweep_type, &tol, &precond_type, &max_it, &ier,
-                         slo.dataPtr(), shi.dataPtr(), bx.loVect(), bx.hiVect());
+                         sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect());
     }
 #else
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol);
