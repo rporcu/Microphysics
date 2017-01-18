@@ -32,7 +32,7 @@ module source_v_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_V_G(slo, shi, lo, hi, &
                             A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            v_g, v_go, tau_v_g, flag, dx, dy, dz)
+                            v_g, vlo, vhi, v_go, tau_v_g, flag, dx, dy, dz)
 
 
 ! Modules
@@ -53,7 +53,8 @@ module source_v_g_module
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -73,11 +74,11 @@ module source_v_g_module
       real(c_real), INTENT(IN   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), INTENT(IN   ) :: v_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), INTENT(IN   ) :: tau_v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -174,7 +175,7 @@ module source_v_g_module
                A_M(I,J,K,N)+A_M(I,J,K,S)+A_M(I,J,K,T)+A_M(I,J,K,B)+&
                V0*VOL)
             B_M(I,J,K) = B_M(I,J,K) - (SDP + lTAU_V_G +  &
-               ((V0)*V_GO(I,J,K) + VBF)*VOL )
+               ((V0)*v_go(I,J,K) + VBF)*VOL )
 
          ENDIF
       ENDDO
@@ -182,7 +183,7 @@ module source_v_g_module
       ENDDO
 
 ! modifications for bc
-      CALL SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,V_G,flag,dx,dy,dz)
+      CALL SOURCE_V_G_BC(slo,shi,lo,hi,A_m,b_m,v_g,vlo,vhi,flag,dx,dy,dz)
 
       RETURN
       END SUBROUTINE SOURCE_V_G
@@ -204,7 +205,7 @@ module source_v_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,v_g,flag,dx,dy,dz)
+      SUBROUTINE SOURCE_V_G_BC(slo,shi,lo,hi,A_m,b_m,v_g,vlo,vhi,flag,dx,dy,dz)
 
 !-----------------------------------------------
 ! Modules
@@ -218,6 +219,7 @@ module source_v_g_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -229,7 +231,7 @@ module source_v_g_module
 
       ! Velocity v_g
       real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

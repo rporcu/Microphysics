@@ -203,7 +203,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
-         vel, vels1, vels2, A_M, B_M, NUM, DEN, &
+         vel, vnlo, vnhi, vels1, vt1lo, vt1hi, vels2, vt2lo, vt2hi, A_M, B_M, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
@@ -215,17 +215,18 @@
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: vnlo(3), vnhi(3), vt1lo(3), vt1hi(3), vt2lo(3), vt2hi(3)
 
       ! primary velocity component
       real(c_real), INTENT(IN) :: vel&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3))
 
       ! other components used here only for scaling
       real(c_real), INTENT(IN) :: vels1&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vt1lo(1):vt1hi(1),vt1lo(2):vt1hi(2),vt1lo(3):vt1hi(3))
       real(c_real), INTENT(IN) :: vels2&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vt2lo(1):vt2hi(1),vt2lo(2):vt2hi(2),vt2lo(3):vt2hi(3))
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&

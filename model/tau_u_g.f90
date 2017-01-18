@@ -41,8 +41,9 @@ MODULE CALC_TAU_U_G_MODULE
 !  mu.grad(u)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_U_G(slo,shi,lo,hi,&
-                              lTAU_U_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+      SUBROUTINE CALC_TAU_U_G(slo,shi,lo,hi,lTAU_U_G,trd_g,ep_g, &
+                              u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                              lambda_g,mu_g,flag,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -51,20 +52,20 @@ MODULE CALC_TAU_U_G_MODULE
       IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       ! TAU_U_g
-      real(c_real), INTENT(INOUT) :: trd_g&
+      real(c_real), intent(inout) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: lTAU_U_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
+      real(c_real), intent(  out) :: lTAU_U_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), INTENT(IN   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -96,9 +97,9 @@ MODULE CALC_TAU_U_G_MODULE
 !             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
-        DO K = slo(3),shi(3)
-          DO J = slo(2),shi(2)
-            DO I = slo(1),shi(1)
+        DO K = ulo(3),uhi(3)
+          DO J = ulo(2),uhi(2)
+            DO I = ulo(1),uhi(1)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
@@ -115,14 +116,14 @@ MODULE CALC_TAU_U_G_MODULE
 !              d/dx (lambda.trcD) xdxdydz
 ! delta (lambda.trcD)Ap |E-W : at (i+1 - i-1), j, k
                SBV = (LAMBDA_G(ieast(i,j,k),j,k)*TRD_G(ieast(i,j,k),j,k)-&
-                      LAMBDA_G(i,j,k)*TRD_G(i,j,k))*AYZ
+                      LAMBDA_G(i           ,j,k)*TRD_G(i           ,j,k))*AYZ
 
 ! shear stress terms at i+1/2, j, k
 ! part of 1/x d/dx(x.tau_xx) xdxdydz =>
 !         1/x d/dx (x.mu.du/dx) xdxdydz =>
 ! delta (mu du/dx)Ayz |E-W : at (i+1 - i-1), j, k
                SSX = MU_G(ieast(i,j,k),j,k)*(U_G(iplus(i,j,k),j,k)-U_G(I,J,K))*ODX*AYZ - &
-                  MU_G(i,j,k)*(U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX*AYZ
+                     MU_G(i,j,k)*(U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX*AYZ
 
 ! part of d/dy (tau_xy) xdxdydz =>
 !         d/dy (mu.dv/dx) xdxdydz =>

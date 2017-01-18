@@ -18,7 +18,9 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine solve_u_g_star(slo, shi, lo, hi, u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
+      subroutine solve_u_g_star(slo, shi, lo, hi, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, u_go, &
+         p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
          f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
 
@@ -47,17 +49,18 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: u_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -102,12 +105,13 @@ module solve_vel_star_module
       b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
+      call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag, dx, dy, dz)
+                      u_g, ulo, uhi, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_u_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -124,7 +128,7 @@ module solve_vel_star_module
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         u_g, v_g, w_g, a_m, b_m, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
          i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag)
@@ -143,7 +147,9 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_v_g_star(slo, shi, lo, hi, u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
+   subroutine solve_v_g_star(slo, shi, lo, hi, &
+      u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, v_go, &
+      p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       bind(C, name="solve_v_g_star")
@@ -172,18 +178,18 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: v_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -225,12 +231,13 @@ module solve_vel_star_module
       b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
+      call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         v_g, v_go, tau_v_g, flag, dx, dy, dz)
+                      v_g, vlo, vhi, v_go, tau_v_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_v_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -247,7 +254,7 @@ module solve_vel_star_module
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         v_g, w_g, u_g, a_m, b_m, &
+         v_g, vlo, vhi, w_g, wlo, whi, u_g, ulo, uhi, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
          i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag)
@@ -265,7 +272,9 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_w_g_star(slo, shi, lo, hi, u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
+   subroutine solve_w_g_star(slo, shi, lo, hi, &
+      u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, w_go, &
+      p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       bind(C, name="solve_w_g_star")
@@ -294,17 +303,18 @@ module solve_vel_star_module
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: w_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -346,12 +356,13 @@ module solve_vel_star_module
       b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
+      call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, &
+                        u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         w_g, w_go, tau_w_g, flag, dx, dy, dz)
+                      w_g, wlo, whi, w_go, tau_w_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_w_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -368,7 +379,7 @@ module solve_vel_star_module
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         w_g, u_g, v_g, a_m, b_m, &
+         w_g, wlo, whi, u_g, ulo, uhi, v_g, vlo, vhi, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
          i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag)

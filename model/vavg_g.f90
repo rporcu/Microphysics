@@ -26,7 +26,7 @@ MODULE VAVG_MOD
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      real(c_real) function vavg_g (slo, shi, vel_g, ep_g, vol, flag)
+      real(c_real) function vavg_g (slo, shi, vel_g, vlo, vhi, ep_g, vol, flag)
 
 !-----------------------------------------------
 !   M o d u l e s
@@ -35,14 +35,14 @@ MODULE VAVG_MOD
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3)
 
       ! Cell volume
       real(c_real), INTENT(IN   ) :: VOL
 
       ! component of gas velocity
       real(c_real), INTENT(IN   ) :: vel_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), INTENT(IN   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

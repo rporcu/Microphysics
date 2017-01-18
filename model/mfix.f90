@@ -6,10 +6,10 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
+subroutine mfix1(slo, shi, lo, hi, time, dt, &
+   u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
    p_g, ep_g, ro_g, rop_g, &
-   d_e, d_n, d_t, &
-   flux_ge, flux_gn, flux_gt, &
+   d_e, d_n, d_t, flux_ge, flux_gn, flux_gt, &
    trD_g, lambda_g, mu_g, flag, &
    dx, dy, dz) &
    bind(C, name="mfix_main1")
@@ -37,6 +37,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) :: time, dt
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -54,18 +55,18 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(inout) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: d_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -75,11 +76,11 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: flux_gE&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: flux_gN&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: flux_gT&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 !---------------------------------------------------------------------//
 
@@ -100,9 +101,9 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
-      call zero_norm_vel(slo,shi,lo,hi,u_g,v_g,w_g,flag)
+      call zero_norm_vel(slo,shi,lo,hi,u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi,flag)
 
       ! Set boundary conditions
-      call set_bc0(slo,shi,lo,hi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
+      call set_bc0(slo,shi,lo,hi,p_g,ep_g,u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi,ro_g0,flag)
 
       end subroutine mfix1

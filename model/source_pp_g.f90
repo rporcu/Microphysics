@@ -28,8 +28,9 @@ module source_pp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
+subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, &
+                       u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                       p_g, ep_g, rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
       USE eos, ONLY: DROODP_G
@@ -42,7 +43,8 @@ subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -58,12 +60,13 @@ subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_
 
       real(c_real), intent(in   ) :: dt
 
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(in   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), INTENT(IN   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ep_g&
@@ -74,12 +77,14 @@ subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), INTENT(IN   ) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), INTENT(IN   ) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), INTENT(IN   ) :: d_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx,dy,dz

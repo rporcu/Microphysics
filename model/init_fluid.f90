@@ -3,7 +3,8 @@
 !  Subroutine: init_fluid                                              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+   subroutine init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, &
+                         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                          mu_g, lambda_g, flag, dx, dy, dz) &
       bind(C, name="init_fluid")
 
@@ -20,6 +21,7 @@
 
 ! Dummy arguments .....................................................//
       integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -30,11 +32,11 @@
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: lambda_g&
@@ -47,7 +49,7 @@
 !-----------------------------------------------------------------------!
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, lo, hi, p_g, u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, flag)
 
       ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
@@ -81,7 +83,8 @@
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, lo, hi, p_g, &
+                     u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, flag)
 
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
@@ -95,37 +98,34 @@
       IMPLICIT NONE
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       integer, intent(in) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! indices
       integer :: i, j, k
       integer :: istart, iend
       integer :: jstart, jend
       integer :: kstart, kend
-! local index for initial condition
-      integer :: icv
-! Temporary variables for storing IC values
-      real(c_real) :: pgx, ugx, vgx, wgx
-!-----------------------------------------------
 
-!  Set the initial conditions.
+      ! local index for initial condition
+      integer :: icv
+
+      ! Temporary variables for storing IC values
+      real(c_real) :: pgx, ugx, vgx, wgx
+
+      !  Set the initial conditions.
       do icv = 1, dimension_ic
          if (ic_defined(icv)) then
 
-! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(icv)
             ugx = ic_u_g(icv)
             vgx = ic_v_g(icv)
@@ -142,19 +142,65 @@
                do j = jstart, jend
                   do i = istart, iend
 
-                     if (flag(i,j,k,1)<100) then
-
+                     ! Use the volume fraction already calculated from particle data
+                     if (flag(i,j,k,1)<100) &
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
                            undefined, is_defined(pgx))
-
-                        if (is_defined(ugx)) u_g(i,j,k) = ugx
-                        if (is_defined(vgx)) v_g(i,j,k) = vgx
-                        if (is_defined(wgx)) w_g(i,j,k) = wgx
-
-                     endif
                   enddo
                enddo
             enddo
+
+            if (is_defined(ugx)) then
+              istart = max(ulo(1), ic_i_w(icv))
+              jstart = max(ulo(2), ic_j_s(icv))
+              kstart = max(ulo(3), ic_k_b(icv))
+              iend   = min(uhi(1), ic_i_e(icv))
+              jend   = min(uhi(2), ic_j_n(icv))
+              kend   = min(uhi(3), ic_k_t(icv))
+
+              do k = kstart, kend
+                do j = jstart, jend
+                  do i = istart, iend
+                     if (flag(i,j,k,1) < 100) u_g(i,j,k) = ugx
+                  enddo
+                enddo
+              enddo
+            end if
+
+            if (is_defined(vgx)) then
+              istart = max(vlo(1), ic_i_w(icv))
+              jstart = max(vlo(2), ic_j_s(icv))
+              kstart = max(vlo(3), ic_k_b(icv))
+              iend   = min(vhi(1), ic_i_e(icv))
+              jend   = min(vhi(2), ic_j_n(icv))
+              kend   = min(vhi(3), ic_k_t(icv))
+  
+              do k = kstart, kend
+                do j = jstart, jend
+                  do i = istart, iend
+                     if (flag(i,j,k,1) < 100) v_g(i,j,k) = vgx
+                  enddo
+                enddo
+              enddo
+            end if
+
+            if (is_defined(vgx)) then
+              istart = max(wlo(1), ic_i_w(icv))
+              jstart = max(wlo(2), ic_j_s(icv))
+              kstart = max(wlo(3), ic_k_b(icv))
+              iend   = min(whi(1), ic_i_e(icv))
+              jend   = min(whi(2), ic_j_n(icv))
+              kend   = min(whi(3), ic_k_t(icv))
+  
+              do k = kstart, kend
+                do j = jstart, jend
+                  do i = istart, iend
+                     if (flag(i,j,k,1) < 100) w_g(i,j,k) = wgx
+                  enddo
+                enddo
+              enddo
+            end if
+
          endif
       enddo
 

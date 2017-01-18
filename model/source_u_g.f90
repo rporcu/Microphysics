@@ -29,7 +29,7 @@ module source_u_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_U_G(slo, shi, lo, hi, &
          A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag, dx, dy, dz)
+         u_g, ulo, uhi, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -50,6 +50,7 @@ module source_u_g_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_m
@@ -71,11 +72,11 @@ module source_u_g_module
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: u_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: tau_u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -172,7 +173,7 @@ module source_u_g_module
                V0*VOL)
 
             b_m(I,J,K) = b_m(I,J,K) -(SDP + lTAU_U_G + &
-               ( (V0)*U_GO(I,J,K) + VBF)*VOL )
+               ( (V0)*u_go(I,J,K) + VBF)*VOL )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
 
@@ -181,7 +182,7 @@ module source_u_g_module
       ENDDO   ! end do loop over ijk
 
       ! modifications for bc
-      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
+      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, u_g, ulo, uhi, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -205,7 +206,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
+      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m,u_g,ulo,uhi,flag,dx,dy,dz)
 
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -218,6 +219,7 @@ module source_u_g_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -229,7 +231,7 @@ module source_u_g_module
 
       ! Velocity u_g
       real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

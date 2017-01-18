@@ -38,23 +38,25 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-        gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
+     SUBROUTINE DRAG_GS_DES(slo, shi, lo, hi, max_pip, &
+        u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+        ep_g, ro_g, mu_g, gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
         fc, des_radius, particle_phase, dx, dy, dz)
 
         IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
       integer(c_int), intent(in ) :: max_pip
 
-      real(c_real), intent(in   ) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
@@ -151,22 +153,23 @@ module drag_gs_des1_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DRAG_GS_GAS(slo, shi, lo, hi, max_pip, &
-         ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-         f_gds, drag_bm, particle_phase, particle_state, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+         ep_g, ro_g, mu_g, f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3), max_pip
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
-      real(c_real), intent(in   ) :: ep_g&
+      real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&

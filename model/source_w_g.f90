@@ -34,7 +34,7 @@ module source_w_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_W_G(slo, shi, lo, hi, &
                             A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            w_g, w_go, tau_w_g, flag, dx, dy, dz)
+                            w_g, wlo, whi, w_go, tau_w_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -55,7 +55,8 @@ module source_w_g_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: wlo(3), whi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -75,12 +76,14 @@ module source_w_g_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), INTENT(IN   ) :: w_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), INTENT(IN   ) :: tau_w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dt, dx, dy, dz

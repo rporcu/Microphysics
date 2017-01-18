@@ -13,7 +13,8 @@ module solve_pp_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(slo, shi, lo, hi, &
-      u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
+      u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+      p_g, ep_g, rop_g, rop_go, &
       ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
       flag, dt, normg, resg, dx, dy, dz)&
       bind(C, name="solve_pp_g")
@@ -36,15 +37,16 @@ module solve_pp_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      integer(c_int), intent(in) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      real(c_real) , intent(in) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
@@ -100,8 +102,9 @@ module solve_pp_module
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
-      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
-         rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
+      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, &
+                       u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                       p_g, ep_g, rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
       if(point_source) call point_source_pp_g (slo, shi, lo, hi, b_m, b_mmax, flag, dx, dy, dz)
 

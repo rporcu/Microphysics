@@ -14,8 +14,9 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(slo, shi, lo, hi, u_g, v_g, w_g, rop_g, &
-         rop_ge, rop_gn, rop_gt, &
+      SUBROUTINE CONV_ROP(slo, shi, lo, hi, &
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+         rop_g, rop_ge, rop_gn, rop_gt, &
          flag, dt, dx, dy, dz) bind(C, name="conv_rop")
 
 ! Modules
@@ -25,35 +26,41 @@ MODULE CONV_ROP_MODULE
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), intent(  out) :: rop_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(  out) :: rop_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(  out) :: rop_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
-
+      stop
 
       IF (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
+         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, &
+                         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                         ROP_gE, ROP_gN, ROP_gT, flag)
       ELSE
          CALL CONV_ROP1 (DISCRETIZE(1), &
                          slo, shi, lo, hi, &
-                         flag, rop_g, u_g, v_g, w_g, &
+                         flag, rop_g, &
+                         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                          rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
       ENDIF
 
@@ -70,7 +77,9 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
+      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, &
+                           u, ulo, uhi, v, vlo, vhi, w, wlo, whi, &
+                           ROP_E, ROP_N, ROP_T, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -81,7 +90,8 @@ MODULE CONV_ROP_MODULE
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
 ! macroscopic density (rho_prime)
       real(c_real), intent(in   ) :: rop&
@@ -89,19 +99,19 @@ MODULE CONV_ROP_MODULE
 
 ! Velocity components
       real(c_real), intent(in   ) :: u&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Face value of density (for calculating convective fluxes)
       real(c_real), intent(  out) :: rop_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(  out) :: rop_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(  out) :: rop_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -112,19 +122,20 @@ MODULE CONV_ROP_MODULE
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = ulo(3),uhi(3)
+        DO J = ulo(2),uhi(2)
+          DO I = ulo(1),uhi(1)
 
-         IF (1.eq.flag(i,j,k,1)) THEN
+            IF (1.eq.flag(i,j,k,1)) THEN
 
-! East face (i+1/2, j, k)
+            ! East face (i+1/2, j, k)
             IF (U(i,j,k) >= ZERO) THEN
                ROP_E(i,j,k) = ROP(i,j,k)
             ELSE
                ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
             ENDIF
-! West face (i-1/2, j, k)
+
+            ! West face (i-1/2, j, k)
             IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                IF (U(iminus(i,j,k),j,k) >= ZERO) THEN
                   ROP_E(iminus(i,j,k),j,k) = ROP(iwest(i,j,k),j,k)
@@ -133,14 +144,25 @@ MODULE CONV_ROP_MODULE
                ENDIF
             ENDIF
 
+         ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
 
-! North face (i, j+1/2, k)
+      DO K = vlo(3),vhi(3)
+        DO J = vlo(2),vhi(2)
+          DO I = vlo(1),vhi(1)
+
+            IF (1.eq.flag(i,j,k,1)) THEN
+
+            ! North face (i, j+1/2, k)
             IF (V(i,j,k) >= ZERO) THEN
                ROP_N(i,j,k) = ROP(i,j,k)
             ELSE
                ROP_N(i,j,k) = ROP(i,jnorth(i,j,k),k)
             ENDIF
-! South face (i, j-1/2, k)
+
+            ! South face (i, j-1/2, k)
             IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
                IF (V(i,jminus(i,j,k),k) >= ZERO) THEN
                  ROP_N(i,jminus(i,j,k),k) = ROP(i,jsouth(i,j,k),k)
@@ -149,14 +171,25 @@ MODULE CONV_ROP_MODULE
                ENDIF
             ENDIF
 
+         ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
 
-! Top face (i, j, k+1/2)
+      DO K = wlo(3),whi(3)
+        DO J = wlo(2),whi(2)
+          DO I = wlo(1),whi(1)
+
+           IF (1.eq.flag(i,j,k,1)) THEN
+
+            ! Top face (i, j, k+1/2)
             IF (W(i,j,k) >= ZERO) THEN
                ROP_T(i,j,k) = ROP(i,j,k)
             ELSE
                ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
             ENDIF
-! Bottom face (i, j, k-1/2)
+
+            ! Bottom face (i, j, k-1/2)
             IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
                IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
                   ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
@@ -186,8 +219,8 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP1(DISC, &
-                           slo, shi, lo, hi, flag, &
-                           rop, u, v, w, &
+                           slo, shi, lo, hi, flag, rop, &
+                           u, ulo, uhi, v, vlo, vhi, w, wlo, whi, &
                            rop_e, rop_n, rop_t, &
                            dt, dx, dy, dz)
 
@@ -200,7 +233,8 @@ MODULE CONV_ROP_MODULE
       USE xsi, only: calc_xsi
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
@@ -211,19 +245,19 @@ MODULE CONV_ROP_MODULE
 
 ! Velocity components
       real(c_real), INTENT(IN   ) :: u&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), INTENT(IN   ) :: v&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), INTENT(IN   ) :: w&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Face value of density (for calculating convective fluxes)
       real(c_real), intent(  out) :: rop_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(  out) :: rop_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(  out) :: rop_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

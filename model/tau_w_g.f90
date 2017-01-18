@@ -41,8 +41,10 @@ MODULE CALC_TAU_W_G_MODULE
 !  mu.grad(w)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_W_G(slo,shi,lo,hi,&
-                              lTAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+      SUBROUTINE CALC_TAU_W_G(slo,shi,lo,hi,lTAU_W_G,trd_g,ep_g, &
+                              u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                              lambda_g,mu_g,flag,dx,dy,dz)
+
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -52,21 +54,22 @@ MODULE CALC_TAU_W_G_MODULE
       IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       ! TAU_W_g
       real(c_real), INTENT(INOUT) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(OUT) :: lTAU_w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), INTENT(IN   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), INTENT(IN   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: mu_g&
@@ -96,9 +99,9 @@ MODULE CALC_TAU_W_G_MODULE
 !             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
-        DO K = slo(3),shi(3)
-         DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+        DO K = wlo(3),whi(3)
+         DO J = wlo(2),whi(2)
+          DO I = wlo(1),whi(1)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
 
