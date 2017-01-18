@@ -16,9 +16,6 @@ module u_g_conv_dif
 !  center coefficient and the source vector are negative;              C
 !  See source_u_g                                                      C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 24-DEC-96  C
-!                                                                      C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_DIF_U_G(slo, shi, lo, hi, A_M, mu_g, &
          u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
@@ -79,7 +76,7 @@ module u_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, &
-                                   u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi)
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi,flag)
 
       use functions, only: avg
       use functions, only: iplus
@@ -102,6 +99,8 @@ module u_g_conv_dif
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      integer, intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -109,16 +108,17 @@ module u_g_conv_dif
       INTEGER :: I,J,K
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            U(I,J,K) = AVG(U_G(I,J,K), U_G(iplus(i,j,k),j,k))
-            V(I,J,K) = AVG(V_G(I,J,K), V_G(iplus(i,j,k),j,k))
-            WW(I,J,K) = AVG(W_G(I,J,K), W_G(iplus(i,j,k),j,k))
-          ENDDO
-        ENDDO
-      ENDDO
+      do k = ulo(3),uhi(3)
+         do j = ulo(2),uhi(2)
+            do i = ulo(1)+1,uhi(1)-1
+               u(i,j,k) = avg(u_g(i,j,k), u_g(iplus(i,j,k),j,k))
+               v(i,j,k) = avg(v_g(i,j,k), v_g(iplus(i,j,k),j,k))
+               ww(i,j,k) = avg(w_g(i,j,k), w_g(iplus(i,j,k),j,k))
+            enddo
+         enddo
+      enddo
 
+      return
       END SUBROUTINE GET_UCELL_GVTERMS
 
 
@@ -130,7 +130,7 @@ module u_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GCFLUX_TERMS(&
          slo, shi, lo, hi, &
-         FLUX_E, FLUX_W, FLUX_N, FLUX_S,FLUX_T, FLUX_B, &   
+         FLUX_E, FLUX_W, FLUX_N, FLUX_S,FLUX_T, FLUX_B, &
          flux_ge, ulo, uhi, flux_gn, vlo, vhi, flux_gt, wlo, whi, i, j, k)
 
 ! Modules
@@ -162,6 +162,7 @@ module u_g_conv_dif
 ! First calculate the fluxes at the faces
       Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(iplus(i,j,k),j,k))
       Flux_w = HALF * (Flux_gE(iminus(i,j,k),j,k) + Flux_gE(i,j,k))
+
       Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(iplus(i,j,k),j,k))
       Flux_s = HALF * (Flux_gN(i,jminus(i,j,k),k) + &
          Flux_gN(iplus(i,jminus(i,j,k),k),jminus(i,j,k),k))
@@ -274,19 +275,11 @@ module u_g_conv_dif
 !  The off-diagonal coefficients calculated here must be positive.     C
 !  The center coefficient and the source vector are negative. See      C
 !  source_u_g.                                                         C
-!  Implement FOUP discretization                                       C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 29-APR-96  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_U_G0(slo,shi,lo,hi,A_U_G,mu_g,&
-                              flux_ge,ulo,uhi,flux_gn,vlo,vhi,flux_gt,wlo,whi,&
-                              flag, dx, dy, dz)
+         flux_ge,ulo,uhi,flux_gn,vlo,vhi,flux_gt,wlo,whi,&
+         flag, dx, dy, dz)
 
       use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
@@ -326,9 +319,9 @@ module u_g_conv_dif
 
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = ulo(3),uhi(3)
+        DO J = ulo(2),uhi(2)
+          DO I = ulo(1),uhi(1)-1
 
                IF(flag(i,j,k,2) >= 2000 .and. &
                   flag(i,j,k,2) <= 2011) THEN
@@ -417,13 +410,6 @@ module u_g_conv_dif
 !  Implements higher order discretization.                             C
 !  See source_u_g                                                      C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 20-MAR-97  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_U_G1(slo,shi,lo,hi,A_U_G, MU_G, &
          u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
@@ -494,16 +480,16 @@ module u_g_conv_dif
       allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
       CALL GET_UCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, &
-                             u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi)
+         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi,flag)
 
 ! shear indicator:
       incr=1
       CALL CALC_XSI (DISCRETIZE(3), slo, shi, lo, hi, U_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
                      dt, dx, dy, dz)
 
-      do K = slo(3),shi(3)
-         do J = slo(2),shi(2) 
-            do I = slo(1),shi(1) 
+      do K = ulo(3),uhi(3)
+         do J = ulo(2),uhi(2)
+            do I = ulo(1),uhi(1)-1
 
                IF(flag(i,j,k,2) >= 2000 .and. &
                   flag(i,j,k,2) <= 2011) THEN

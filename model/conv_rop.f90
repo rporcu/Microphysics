@@ -50,7 +50,6 @@ MODULE CONV_ROP_MODULE
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
-      stop
 
       IF (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
          CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, &
