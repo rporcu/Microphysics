@@ -226,7 +226,7 @@ module source_u_g_module
 
       SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
 
-      use ic, only: NSW_, FSW_
+      use ic, only: NSW_, FSW_, PSW_
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
@@ -324,112 +324,12 @@ module source_u_g_module
      endif
 
 
-
-
-     do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-
-! No-slip walls
-               if (flag(i,j-1,k,1) == NSW_) then
-                  b_m(i,j-1,k) = zero
-                  A_m(i,j-1,k,:) = zero
-                  A_m(i,j-1,k,0) = -one
-                  A_m(i,j-1,k,n) = -one
-
-               else if (flag(i,j+1,k,1) == NSW_) then
-                  b_m(i,j+1,k) = zero
-                  A_m(i,j+1,k,:) = zero
-                  A_m(i,j+1,k,0) = -one
-                  A_m(i,j+1,k,s) = -one
-
-               else if (flag(i,j,k-1,1) == NSW_) then
-                  b_m(i,j,k-1) = zero
-                  A_m(i,j,k-1,:) = zero
-                  A_m(i,j,k-1,0) = -one
-                  A_m(i,j,k-1,t) = -one
-
-               else if (flag(i,j,k+1,1) == NSW_) then
-                  b_m(i,j,k+1) = zero
-                  A_m(i,j,k+1,:) = zero
-                  A_m(i,j,k+1,0) = -one
-                  A_m(i,j,k+1,b) = -one
-
-! Free-slip walls
-               else if (flag(i,j-1,k,1) == FSW_) then
-                  b_m(i,j-1,k) = zero
-                  A_m(i,j-1,k,:) = zero
-                  A_m(i,j-1,k,0) = -one
-                  A_m(i,j-1,k,n) =  one
-
-               else if (flag(i,j+1,k,1) == FSW_) then
-                  b_m(i,j+1,k) = zero
-                  A_m(i,j+1,k,:) = zero
-                  A_m(i,j+1,k,0) = -one
-                  A_m(i,j+1,k,s) =  one
-
-               else if (flag(i,j,k-1,1) == FSW_) then
-                  b_m(i,j,k-1) = zero
-                  A_m(i,j,k-1,:) = zero
-                  A_m(i,j,k-1,0) = -one
-                  A_m(i,j,k-1,t) =  one
-
-               else if (flag(i,j,k+1,1) == FSW_) then
-                  b_m(i,j,k+1) = zero
-                  A_m(i,j,k+1,:) = zero
-                  A_m(i,j,k+1,0) = -one
-                  A_m(i,j,k+1,b) =  one
-
-               endif
-            enddo
-         enddo
-      enddo
-
-
-! Setting user specified boundary conditions
+! Setting wall boundary conditions
+! ---------------------------------------------------------------->>>
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
 
-
-
-            ! IF (BC_TYPE(L) == 'NO_SLIP_WALL') THEN
-            !    I1 = BC_I_W(L)
-            !    I2 = BC_I_E(L)
-            !    J1 = BC_J_S(L)
-            !    J2 = BC_J_N(L)
-            !    K1 = BC_K_B(L)
-            !    K2 = BC_K_T(L)
-            !    DO K = K1, K2
-            !       DO J = J1, J2
-            !          DO I = I1, I2
-            !             IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-            !             A_m(I,J,K,E) = ZERO
-            !             A_m(I,J,K,W) = ZERO
-            !             A_m(I,J,K,N) = ZERO
-            !             A_m(I,J,K,S) = ZERO
-            !             A_m(I,J,K,T) = ZERO
-            !             A_m(I,J,K,B) = ZERO
-            !             A_m(I,J,K,0) = -ONE
-            !             b_m(I,J,K) = ZERO
-            !             if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
-            !                A_m(I,J,K,N) = -ONE
-            !             else iF (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
-            !                A_m(I,J,K,S) = -ONE
-            !             else iF (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
-            !                A_m(I,J,K,T) = -ONE
-            !             else iF (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
-            !                A_m(I,J,K,B) = -ONE
-            !             ENDIF
-            !          ENDDO
-            !       ENDDO
-            !    ENDDO
-
-
-
-
-! Setting wall boundary conditions
-! ---------------------------------------------------------------->>>
-            IF (BC_TYPE(L) == 'PAR_SLIP_WALL') THEN
+            IF (BC_TYPE(L) == 'NO_SLIP_WALL') THEN
                I1 = BC_I_W(L)
                I2 = BC_I_E(L)
                J1 = BC_J_S(L)
@@ -442,22 +342,165 @@ module source_u_g_module
                   if(j1 == slo(2) ) j1=j1+1
                   if(j1 == shi(2) ) j1=j1-1
                   j2=j1
-               endif
 
-               if(k1 == k2)then
+               elseif(k1 == k2)then
                   if(k1 == slo(3) ) k1=k1+1
                   if(k1 == shi(3) ) k1=k1-1
                   k2=k1
+               else
+                  write(*,*) 'Unknown BC location to shift...'; stop 9999
                endif
-
 
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
 
-! --- NORTH FLOW -------> WALL TO SOUTH
+! --- NORTH FLOW -------> NO-SLIP WALL TO SOUTH
+                        if (flag(i,j-1,k,1) == NSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
+                           A_m(i,j,k,s) = zero
 
-                        if (flag(i,j-1,k,1) == 102) THEN
+                           b_m(i,j-1,k) = zero
+                           A_m(i,j-1,k,:) = zero
+                           A_m(i,j-1,k,0) = -one
+                        endif
+
+! --- SOUTH FLOW -------> NO-SLIP WALL TO NORTH
+                        if (flag(i,j+1,k,1) == NSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,n)
+                           A_m(i,j,k,n) = zero
+
+                           b_m(i,j+1,k) = zero
+                           A_m(i,j+1,k,:) = zero
+                           A_m(i,j+1,k,0) = -one
+                        endif
+
+! --- TOP FLOW -------> NO-SLIP WALL TO BOTTOM
+                        if (flag(i,j,k-1,1) == NSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                           A_m(i,j,k,b) = zero
+
+                           b_m(i,j,k-1) = zero
+                           A_m(i,j,k-1,:) = zero
+                           A_m(i,j,k-1,0) = -one
+                        endif
+
+! --- BOTTOM FLOW -------> NO-SLIP WALL TO TOP
+                        if (flag(i,j,k+1,1) == NSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                           A_m(i,j,k,t) = zero
+
+                           b_m(i,j,k+1) = zero
+                           A_m(i,j,k+1,:) = zero
+                           A_m(i,j,k+1,0) = -one
+                        endif
+
+                     enddo
+                  enddo
+               enddo
+
+
+            elseif (bc_type(l) == 'FREE_SLIP_WALL') then
+
+               I1 = BC_I_W(L)
+               I2 = BC_I_E(L)
+               J1 = BC_J_S(L)
+               J2 = BC_J_N(L)
+               K1 = BC_K_B(L)
+               K2 = BC_K_T(L)
+
+! Shift the index into to domain
+               if(j1 == j2) then
+                  if(j1 == slo(2) ) j1=j1+1
+                  if(j1 == shi(2) ) j1=j1-1
+                  j2=j1
+
+               elseif(k1 == k2)then
+                  if(k1 == slo(3) ) k1=k1+1
+                  if(k1 == shi(3) ) k1=k1-1
+                  k2=k1
+               else
+                  write(*,*) 'Unknown BC location to shift...'; stop 9999
+               endif
+
+               DO K = K1, K2
+                  DO J = J1, J2
+                     DO I = I1, I2
+
+! --- NORTH FLOW -------> NO-SLIP WALL TO SOUTH
+                        if (flag(i,j-1,k,1) == FSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
+                           A_m(i,j,k,s) = zero
+
+                           b_m(i,j-1,k) = zero
+                           A_m(i,j-1,k,:) = zero
+                           A_m(i,j-1,k,0) = -one
+                        endif
+
+! --- SOUTH FLOW -------> NO-SLIP WALL TO NORTH
+                        if (flag(i,j+1,k,1) == FSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
+                           A_m(i,j,k,n) = zero
+
+                           b_m(i,j+1,k) = zero
+                           A_m(i,j+1,k,:) = zero
+                           A_m(i,j+1,k,0) = -one
+                        endif
+
+! --- TOP FLOW -------> NO-SLIP WALL TO BOTTOM
+                        if (flag(i,j,k-1,1) == FSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
+                           A_m(i,j,k,b) = zero
+
+                           b_m(i,j,k-1) = zero
+                           A_m(i,j,k-1,:) = zero
+                           A_m(i,j,k-1,0) = -one
+                        endif
+
+! --- BOTTOM FLOW -------> NO-SLIP WALL TO TOP
+                        if (flag(i,j,k+1,1) == FSW_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
+                           A_m(i,j,k,t) = zero
+
+                           b_m(i,j,k+1) = zero
+                           A_m(i,j,k+1,:) = zero
+                           A_m(i,j,k+1,0) = -one
+                        endif
+                     enddo
+                  enddo
+               enddo
+
+
+
+            elseif (bc_type(l) == 'PAR_SLIP_WALL') then
+               I1 = BC_I_W(L)
+               I2 = BC_I_E(L)
+               J1 = BC_J_S(L)
+               J2 = BC_J_N(L)
+               K1 = BC_K_B(L)
+               K2 = BC_K_T(L)
+
+! Shift the index into to domain
+               if(j1 == j2) then
+                  if(j1 == slo(2) ) j1=j1+1
+                  if(j1 == shi(2) ) j1=j1-1
+                  j2=j1
+
+               else if(k1 == k2)then
+                  if(k1 == slo(3) ) k1=k1+1
+                  if(k1 == shi(3) ) k1=k1-1
+                  k2=k1
+               else
+                  write(*,*) 'Unknown BC location to shift...'; stop 9998
+               endif
+
+
+               do k = k1, k2
+                  do j = j1, j2
+                     do i = i1, i2
+
+! --- NORTH FLOW -------> WALL TO SOUTH
+                        if (flag(i,j-1,k,1) == PSW_) THEN
                            if (is_undefined(bc_hw_g(l))) then
                               A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                               b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_uw_g(l)
@@ -472,17 +515,14 @@ module source_u_g_module
                            A_m(i,j-1,k,:) = zero
                            A_m(i,j-1,k,0) = -one
                            b_m(i,j-1,k) = zero
+                        endif
 
 ! --- SOUTH FLOW -------> WALL TO NORTH
-
-                        else if (flag(i,j+1,k,1) == 102) THEN
-
+                        if (flag(i,j+1,k,1) == PSW_) then
                            if (is_undefined(bc_hw_g(l))) then
-
                               A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)
                               b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,n)*bc_uw_g(l)
                               A_m(i,j,k,n) = zero
-
                            else
                               write(*,*) '--FATAL 2 - NOT UPDATED'; stop 2900
                               A_m(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
@@ -493,39 +533,42 @@ module source_u_g_module
                            A_m(i,j+1,k,:) = zero
                            A_m(i,j+1,k,0) = -one
                            b_m(i,j+1,k) = zero
+                        endif
 
 ! --- TOP FLOW -------> WALL TO BOTTOM
-
-                        else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
-
-                           write(*,*) '--FATAL 3 - NOT UPDATED'; stop 3900
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_m(I,J,K,T) = -HALF
-                              A_m(I,J,K,0) = -HALF
-                              b_m(I,J,K) = -BC_UW_G(L)
-                           ELSE
+                        if (flag(i,j,k-1,1) == PSW_) then
+                           if (is_undefined(bc_hw_g(l))) then
+                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,b)*bc_uw_g(l)
+                              A_m(i,j,k,b) = zero
+                           else
+                              write(*,*) '--FATAL 3 - NOT UPDATED'; stop 3900
                               A_m(I,J,K,0)=-(HALF*BC_HW_G(L)+ODZ)
                               A_m(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
 
+                           A_m(i,j,k-1,:) = zero
+                           A_m(i,j,k-1,0) = -one
+                           b_m(i,j,k-1) = zero
+                        endif
 
 ! --- BOTTOM FLOW -------> WALL TO TOP
-                        else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
-                           write(*,*) '--FATAL 4 - NOT UPDATED'; stop 4900
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_m(I,J,K,B) = -HALF
-                              A_m(I,J,K,0) = -HALF
-                              b_m(I,J,K) = -BC_UW_G(L)
-                           ELSE
+                        if (flag(i,j,k+1,1) == PSW_) then
+                           if (is_undefined(bc_hw_g(l))) then
+                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,t)*bc_uw_g(l)
+                              A_m(i,j,k,t) = zero
+                           else
+                              write(*,*) '--FATAL 4 - NOT UPDATED'; stop 4900
                               A_m(I,J,K,B) = -(HALF*BC_HW_G(L)-ODZ)
                               A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
-                           ENDIF
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
+                           endif
+                        endif
+                     enddo
+                  enddo
+               enddo
 
 
 ! Setting p_inflow or p_outflow flow boundary conditions
