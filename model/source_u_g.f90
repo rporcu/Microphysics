@@ -178,13 +178,29 @@ module source_u_g_module
 
           ENDDO   ! end do loop over ijk
         ENDDO   ! end do loop over ijk
-      ENDDO   ! end do loop over ijk
+     ENDDO   ! end do loop over ijk
+
+
+     ! do k = slo(3),shi(3)
+     !     do j = slo(2),shi(2)
+     !        do i = slo(1),shi(1)
+     !           write(5555,"(3(i3),8(es12.4))")i,j,k,a_m(i,j,k,:),b_m(i,j,k)
+     !        enddo
+     !     enddo
+     !  enddo
 
       ! modifications for bc
       CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
+     ! do k = slo(3),shi(3)
+     !     do j = slo(2),shi(2)
+     !        do i = slo(1),shi(1)
+     !           write(6666,"(3(i3),8(es12.4))")i,j,k,a_m(i,j,k,:),b_m(i,j,k)
+     !        enddo
+     !     enddo
+     !  enddo
 
-
+     !  stop 99999
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -308,6 +324,8 @@ module source_u_g_module
      endif
 
 
+
+
      do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
@@ -393,7 +411,7 @@ module source_u_g_module
                         A_m(I,J,K,B) = ZERO
                         A_m(I,J,K,0) = -ONE
                         b_m(I,J,K) = ZERO
-                        if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
+                        if (flag(i,jnorth(i,j,k),k,1) == 1) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_m(I,J,K,N) = -HALF
                               A_m(I,J,K,0) = -HALF
@@ -403,16 +421,41 @@ module source_u_g_module
                               A_m(I,J,K,N) = -(HALF*BC_HW_G(L)-ODY)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
-                        else if (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
+
+
+
+
+                        elseif (flag(i,jsouth(i,j,k),k,1)==1) THEN
+
+
+
+
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_m(I,J,K,S) = -HALF
-                              A_m(I,J,K,0) = -HALF
-                              b_m(I,J,K) = -BC_UW_G(L)
+
+                              ! cn7 = A_m(i,jsouth(i,j,k),k,n)
+                              ! cs8 = -half
+                              ! c08 = -half
+                              ! s8  = -bc_uw_g(l)
+
+
+                              A_m(i,jsouth(i,j,k),k,0) = A_m(i,jsouth(i,j,k),k,0) - A_m(i,jsouth(i,j,k),k,n)
+                              b_m(i,jsouth(i,j,k),k) = b_m(i,jsouth(i,j,k),k) - 2.0d0*a_m(i,jsouth(i,j,k),k,n)*bc_uw_g(l)
+
+                              A_m(i,jsouth(i,j,k),k,n) = 0.0d0
+
+                              A_m(I,J,K,:) = 0.0d0
+                              A_m(I,J,K,0) = -1.0d0
+                              b_m(I,J,K) = 0.0d0
                            ELSE
                               A_m(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
                               A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
+
+
+
+
+
                         else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_m(I,J,K,T) = -HALF
