@@ -19,7 +19,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_M, MU_G, &
+      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_m, MU_G, &
                               u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                               flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
@@ -34,7 +34,7 @@ module w_g_conv_dif
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(IN   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -59,13 +59,13 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_M, MU_G, &
+         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, MU_G, &
                             flux_ge, ulo, uhi, &
                             flux_gn, vlo, vhi, &
                             flux_gt, wlo, whi, &
                             flag, dx, dy, dz)
       ELSE
-         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_M, MU_G, &
+         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, MU_G, &
                             u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                             flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
       ENDIF
@@ -298,7 +298,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(slo, shi, lo, hi, A_W_G, mu_g, &
+      SUBROUTINE STORE_A_W_G0(slo, shi, lo, hi, A_w_g, mu_g, &
                               flux_ge, ulo, uhi, flux_gn, vlo, vhi, flux_gt, wlo, whi, &
                               flag, dx, dy, dz)
 
@@ -315,9 +315,9 @@ module w_g_conv_dif
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
-      ! Septadiagonal matrix A_U_g
-      real(c_real), intent(inout) :: A_W_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      ! Septadiagonal matrix A_w_g
+      real(c_real), intent(inout) :: A_w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(in   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -444,7 +444,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(slo, shi, lo, hi, A_W_G, MU_G, &
+      SUBROUTINE STORE_A_w_g1(slo, shi, lo, hi, A_w_g, MU_G, &
                               u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                               flux_ge, flux_gn, flux_gt, flag,  &
                               dt, dx, dy, dz)
@@ -464,9 +464,9 @@ module w_g_conv_dif
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
-      ! Septadiagonal matrix A_W_g
-      real(c_real), intent(inout) :: A_W_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      ! Septadiagonal matrix A_w_g
+      real(c_real), intent(inout) :: A_w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(in   ) :: MU_G&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

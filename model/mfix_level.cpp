@@ -227,10 +227,6 @@ mfix_level::MakeNewLevel (int lev, Real time,
     }
     flag[lev]->FillBoundary(geom[lev].periodicity());
 
-    // Matrix and rhs vector
-    A_m[lev].reset(new MultiFab(grids[lev],7,nghost,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-
     // ********************************************************************************
     // Cell-based arrays
     // ********************************************************************************
@@ -958,7 +954,14 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    // *******************************************************************************
     // Solve U-Momentum equation
+    // *******************************************************************************
+
+    // Matrix and rhs vector
+    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate,x_nodal_flag));
+    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate,x_nodal_flag));
+
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
@@ -989,7 +992,14 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
+    // *******************************************************************************
     // Solve V-Momentum equation
+    // *******************************************************************************
+
+    // Matrix and rhs vector
+    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate,y_nodal_flag));
+    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate,y_nodal_flag));
+
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
@@ -1020,7 +1030,14 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
+    // *******************************************************************************
     // Solve W-Momentum equation
+    // *******************************************************************************
+
+    // Matrix and rhs vector
+    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate,z_nodal_flag));
+    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate,z_nodal_flag));
+
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
@@ -1067,6 +1084,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
+
+    // Matrix and rhs vector
+    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate));
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)

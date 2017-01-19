@@ -83,7 +83,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
+         b_m, NORM, NUM, DEN, RESID, MAX_RESID, &
          i_resid, j_resid, k_resid, flag)
 
       use param1  , only: large_number, zero, one
@@ -137,7 +137,7 @@
              IF(flag(i,j,k,1)==1) THEN
 
                ! evaluating the residual at cell (i,j,k):
-               NUM1 = ABS(B_M(I,J,K))
+               NUM1 = ABS(b_m(I,J,K))
                IF (NUM1 > MAX_RESID) THEN
                   MAX_RESID = NUM1
                   i_resid = i
@@ -200,7 +200,7 @@
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
          vel,   vnlo,  vnhi, &
          vels1, vt1lo, vt1hi, &
-         vels2, vt2lo, vt2hi, A_M, B_M, NUM, DEN, &
+         vels2, vt2lo, vt2hi, A_m, b_m, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
@@ -229,11 +229,11 @@
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3),-3:3)
 
       ! Vector b_m
       real(c_real) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3))
 
       INTEGER, INTENT(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -293,14 +293,14 @@
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
 
-                  NUM1 = B_M(I,J,K) - (&
-                     A_M(I,J,K,0)*vel(i,j,k)+&
-                     A_M(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
-                     A_M(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
-                     A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
-                     A_M(I,J,K,S)*vel(i,jminus(i,j,k),k)+&
-                     A_M(I,J,K,T)*vel(i,j, kplus(i,j,k))+&
-                     A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)))
+                  NUM1 = b_m(I,J,K) - (&
+                     A_m(I,J,K,0)*vel(i,j,k)+&
+                     A_m(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
+                     A_m(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
+                     A_m(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
+                     A_m(I,J,K,S)*vel(i,jminus(i,j,k),k)+&
+                     A_m(I,J,K,T)*vel(i,j, kplus(i,j,k))+&
+                     A_m(I,J,K,B)*vel(i,j,kminus(i,j,k)))
 
 ! Ignore momentum residual in stagnant regions.  Need an alternative
 ! criteria for residual scaling for such cases.
@@ -308,7 +308,7 @@
 
                   IF (magvel > SMALL_NUMBER) THEN
                      NUM1 = ABS(NUM1)
-                     DEN1 = ABS(A_M(I,J,K,0)*magvel)
+                     DEN1 = ABS(A_m(I,J,K,0)*magvel)
 
 ! Storing value of residual at each (i,j,k) location
                      RESID_IJK(i,j,k) = NUM1

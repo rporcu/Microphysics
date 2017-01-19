@@ -227,11 +227,11 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
 
-! setting indices to 1 if there is no variation in the i (x) direction
          I_W = CALC_CELL (BC_X_W(BCV), DX)
          I_W = I_W + 1
          I_E = CALC_CELL (BC_X_E(BCV), DX)
-! BC along zy plane, checking if far west or far east of domain
+
+         ! Is this bc on the lo or hi x-face?
          IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
             IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
                I_W = domlo(1)-1
@@ -242,8 +242,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             ENDIF
          ENDIF
 
-! checking/setting corresponding i indices according to specified x
-! coordinates
          IF(BC_I_W(BCV)/=UNDEFINED_I .OR. BC_I_E(BCV)/=UNDEFINED_I) THEN
             CALL LOCATION_CHECK (BC_I_W(BCV), I_W, BCV, 'BC - west')
             CALL LOCATION_CHECK (BC_I_E(BCV), I_E, BCV, 'BC - east')
@@ -255,11 +253,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 
       IF(IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
-! setting indices to 1 if there is no variation in the j (y) direction
          J_S = CALC_CELL (BC_Y_S(BCV), DY)
          J_S = J_S + 1
          J_N = CALC_CELL (BC_Y_N(BCV), DY)
-! BC along xz plane, checking if far south or far north of domain
          IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
             IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
                J_S = domlo(2)-1

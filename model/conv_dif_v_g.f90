@@ -19,7 +19,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_V_G(slo, shi, lo, hi, A_M, mu_g, &
+      SUBROUTINE CONV_DIF_V_G(slo, shi, lo, hi, A_m, mu_g, &
                               u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
                               flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
@@ -34,7 +34,7 @@ module v_g_conv_dif
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
 
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -299,9 +299,9 @@ module v_g_conv_dif
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
-      ! Septadiagonal matrix A_V_g
-      real(c_real), intent(inout) :: A_V_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      ! Septadiagonal matrix A_v_g
+      real(c_real), intent(inout) :: A_v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -428,8 +428,8 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G1(&
-         slo, shi, lo, hi, A_V_G, mu_g, &
+      SUBROUTINE STORE_A_v_g1(&
+         slo, shi, lo, hi, A_v_g, mu_g, &
          u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
          flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
 
@@ -449,7 +449,7 @@ module v_g_conv_dif
 
       ! Septadiagonal matrix A_V_g
       real(c_real), intent(inout) :: A_V_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

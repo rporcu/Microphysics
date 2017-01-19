@@ -15,7 +15,7 @@
 
    contains
 
-      subroutine adjust_a_g(axis, slo, shi, lo, hi, A_M, B_M, ROP_G, dx, dy, dz)
+      subroutine adjust_a_g(axis, slo, shi, lo, hi, A_M, B_M, alo, ahi, rop_g, dx, dy, dz)
 
          USE functions, only: avg
          USE functions, only: ip1
@@ -27,18 +27,19 @@
          implicit none
 
          integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+         integer     , intent(in   ) :: alo(3),ahi(3)
 !---------------------------------------------------------------------//
       CHARACTER, intent(in   ) :: axis
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3)
 
       ! Vector b_m
       real(c_real), intent(inout) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real), intent(in   ) :: ROP_G&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -82,11 +83,11 @@
                IP = IP1(I)
 
                if (axis .eq. 'U') then
-                  denominator = ROP_G(ieast(i,j,k),j,k)*AYZ
+                  denominator = rop_g(ieast(i,j,k),j,k)*AYZ
                else if (axis .eq. 'V') then
-                  denominator = ROP_G(i,jnorth(i,j,k),k)*AXZ
+                  denominator = rop_g(i,jnorth(i,j,k),k)*AXZ
                else if (axis .eq. 'W') then
-                  denominator = ROP_G(i,j,ktop(i,j,k))*AXY
+                  denominator = rop_g(i,j,ktop(i,j,k))*AXY
                end if
 
                xxxm = ONE
@@ -95,11 +96,11 @@
             ELSE IF (B_M(I,J,K) > ZERO) THEN
 
                if (axis .eq. 'U') then
-                  denominator = ROP_G(i,j,k)*AYZ
+                  denominator = rop_g(i,j,k)*AYZ
                else if (axis .eq. 'V') then
-                  denominator = ROP_G(i,j,k)*AXZ
+                  denominator = rop_g(i,j,k)*AXZ
                else if (axis .eq. 'W') then
-                  denominator = ROP_G(i,j,k)*AXY
+                  denominator = rop_g(i,j,k)*AXY
                end if
 
                xxxm = ZERO

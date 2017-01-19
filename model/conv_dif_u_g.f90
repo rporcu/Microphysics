@@ -32,7 +32,7 @@ module u_g_conv_dif
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -293,7 +293,7 @@ module u_g_conv_dif
 
       ! Septadiagonal matrix A_U_g
       real(c_real), intent(inout) :: A_U_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: MU_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -411,7 +411,7 @@ module u_g_conv_dif
 !  See source_u_g                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_U_G1(slo,shi,lo,hi,A_U_G, MU_G, &
+      SUBROUTINE STORE_A_U_G1(slo,shi,lo,hi, A_U_G, MU_G, &
          u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
          flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
@@ -452,7 +452,7 @@ module u_g_conv_dif
 !---------------------------------------------------------------------//
 ! Septadiagonal matrix A_U_g
       real(c_real), intent(inout) :: A_U_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: dt
 ! Local variables
@@ -494,7 +494,7 @@ module u_g_conv_dif
                IF(flag(i,j,k,2) >= 2000 .and. &
                   flag(i,j,k,2) <= 2011) THEN
 
-! Calculate convection-diffusion fluxes through each of the faces
+                  ! Calculate convection-diffusion fluxes through each of the faces
                   CALL GET_UCELL_GCFLUX_TERMS(&
                      slo, shi, lo, hi, &
                      flux_e, flux_w, flux_n, &
@@ -522,6 +522,7 @@ module u_g_conv_dif
 
                   ! North face (i+1/2, j+1/2, k)
                   A_U_G(I,J,K,N) = D_Fn - XSI_N(i,j,k) * Flux_n
+                  if (jplus(i,j,k).le.uhi(2)) &
                   A_U_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n*&
                      (ONE - XSI_N(i,j,k))
 
@@ -534,8 +535,9 @@ module u_g_conv_dif
 
                   ! Top face (i+1/2, j, k+1/2)
                   A_U_G(I,J,K,T) = D_Ft - XSI_T(i,j,k) * Flux_t
-                  A_U_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t*&
-                     (ONE - XSI_T(i,j,k))
+                  if (kplus(i,j,k).le.uhi(3)) &
+                     A_U_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t*&
+                        (ONE - XSI_T(i,j,k))
 
                   ! Bottom face (i+1/2, j, k-1/2)
                   IF(flag(i,j,kminus(i,j,k),2) < 2000 .or. &
