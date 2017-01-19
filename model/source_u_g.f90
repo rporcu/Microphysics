@@ -390,6 +390,43 @@ module source_u_g_module
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
 
+
+
+            ! IF (BC_TYPE(L) == 'NO_SLIP_WALL') THEN
+            !    I1 = BC_I_W(L)
+            !    I2 = BC_I_E(L)
+            !    J1 = BC_J_S(L)
+            !    J2 = BC_J_N(L)
+            !    K1 = BC_K_B(L)
+            !    K2 = BC_K_T(L)
+            !    DO K = K1, K2
+            !       DO J = J1, J2
+            !          DO I = I1, I2
+            !             IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
+            !             A_m(I,J,K,E) = ZERO
+            !             A_m(I,J,K,W) = ZERO
+            !             A_m(I,J,K,N) = ZERO
+            !             A_m(I,J,K,S) = ZERO
+            !             A_m(I,J,K,T) = ZERO
+            !             A_m(I,J,K,B) = ZERO
+            !             A_m(I,J,K,0) = -ONE
+            !             b_m(I,J,K) = ZERO
+            !             if (1.eq.flag(i,jnorth(i,j,k),k,1)) THEN
+            !                A_m(I,J,K,N) = -ONE
+            !             else iF (1.eq.flag(i,jsouth(i,j,k),k,1)) THEN
+            !                A_m(I,J,K,S) = -ONE
+            !             else iF (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
+            !                A_m(I,J,K,T) = -ONE
+            !             else iF (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
+            !                A_m(I,J,K,B) = -ONE
+            !             ENDIF
+            !          ENDDO
+            !       ENDDO
+            !    ENDDO
+
+
+
+
 ! Setting wall boundary conditions
 ! ---------------------------------------------------------------->>>
             IF (BC_TYPE(L) == 'PAR_SLIP_WALL') THEN
@@ -399,64 +436,69 @@ module source_u_g_module
                J2 = BC_J_N(L)
                K1 = BC_K_B(L)
                K2 = BC_K_T(L)
+
+! Shift the index into to domain
+               if(j1 == j2) then
+                  if(j1 == slo(2) ) j1=j1+1
+                  if(j1 == shi(2) ) j1=j1-1
+                  j2=j1
+               endif
+
+               if(k1 == k2)then
+                  if(k1 == slo(3) ) k1=k1+1
+                  if(k1 == shi(3) ) k1=k1-1
+                  k2=k1
+               endif
+
+
                DO K = K1, K2
                   DO J = J1, J2
                      DO I = I1, I2
-                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_m(I,J,K,E) = ZERO
-                        A_m(I,J,K,W) = ZERO
-                        A_m(I,J,K,N) = ZERO
-                        A_m(I,J,K,S) = ZERO
-                        A_m(I,J,K,T) = ZERO
-                        A_m(I,J,K,B) = ZERO
-                        A_m(I,J,K,0) = -ONE
-                        b_m(I,J,K) = ZERO
-                        if (flag(i,jnorth(i,j,k),k,1) == 1) THEN
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_m(I,J,K,N) = -HALF
-                              A_m(I,J,K,0) = -HALF
-                              b_m(I,J,K) = -BC_UW_G(L)
-                           ELSE
-                              A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
-                              A_m(I,J,K,N) = -(HALF*BC_HW_G(L)-ODY)
-                              b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
-                           ENDIF
 
+! --- NORTH FLOW -------> WALL TO SOUTH
 
+                        if (flag(i,j-1,k,1) == 102) THEN
+                           if (is_undefined(bc_hw_g(l))) then
+                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
+                              b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_uw_g(l)
+                              A_m(i,j,k,s) = zero
+                           else
+                              write(*,*) '--FATAL 1 - NOT UPDATED'; stop 1900
+                              A_m(i,j,k,0) = -(half*bc_hw_g(l)+ody)
+                              A_m(i,j,k,n) = -(half*bc_hw_g(l)-ody)
+                              b_m(i,j,k) = -bc_hw_g(l)*bc_uw_g(l)
+                           endif
 
+                           A_m(i,j-1,k,:) = zero
+                           A_m(i,j-1,k,0) = -one
+                           b_m(i,j-1,k) = zero
 
-                        elseif (flag(i,jsouth(i,j,k),k,1)==1) THEN
+! --- SOUTH FLOW -------> WALL TO NORTH
 
+                        else if (flag(i,j+1,k,1) == 102) THEN
 
+                           if (is_undefined(bc_hw_g(l))) then
 
+                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)
+                              b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,n)*bc_uw_g(l)
+                              A_m(i,j,k,n) = zero
 
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-
-                              ! cn7 = A_m(i,jsouth(i,j,k),k,n)
-                              ! cs8 = -half
-                              ! c08 = -half
-                              ! s8  = -bc_uw_g(l)
-
-
-                              A_m(i,jsouth(i,j,k),k,0) = A_m(i,jsouth(i,j,k),k,0) - A_m(i,jsouth(i,j,k),k,n)
-                              b_m(i,jsouth(i,j,k),k) = b_m(i,jsouth(i,j,k),k) - 2.0d0*a_m(i,jsouth(i,j,k),k,n)*bc_uw_g(l)
-
-                              A_m(i,jsouth(i,j,k),k,n) = 0.0d0
-
-                              A_m(I,J,K,:) = 0.0d0
-                              A_m(I,J,K,0) = -1.0d0
-                              b_m(I,J,K) = 0.0d0
-                           ELSE
+                           else
+                              write(*,*) '--FATAL 2 - NOT UPDATED'; stop 2900
                               A_m(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
                               A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
-                           ENDIF
+                           endif
 
+                           A_m(i,j+1,k,:) = zero
+                           A_m(i,j+1,k,0) = -one
+                           b_m(i,j+1,k) = zero
 
-
-
+! --- TOP FLOW -------> WALL TO BOTTOM
 
                         else if (1.eq.flag(i,j,ktop(i,j,k),1)) THEN
+
+                           write(*,*) '--FATAL 3 - NOT UPDATED'; stop 3900
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_m(I,J,K,T) = -HALF
                               A_m(I,J,K,0) = -HALF
@@ -466,7 +508,11 @@ module source_u_g_module
                               A_m(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
                               b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
                            ENDIF
+
+
+! --- BOTTOM FLOW -------> WALL TO TOP
                         else if (1.eq.flag(i,j,kbot(i,j,k),1)) THEN
+                           write(*,*) '--FATAL 4 - NOT UPDATED'; stop 4900
                            IF (IS_UNDEFINED(BC_HW_G(L))) THEN
                               A_m(I,J,K,B) = -HALF
                               A_m(I,J,K,0) = -HALF
