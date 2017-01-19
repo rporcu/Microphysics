@@ -348,7 +348,7 @@ module source_u_g_module
                   if(k1 == shi(3) ) k1=k1-1
                   k2=k1
                else
-                  write(*,*) 'Unknown BC location to shift...'; stop 9999
+                  cycle
                endif
 
                DO K = K1, K2
@@ -420,7 +420,7 @@ module source_u_g_module
                   if(k1 == shi(3) ) k1=k1-1
                   k2=k1
                else
-                  write(*,*) 'Unknown BC location to shift...'; stop 9999
+                  cycle
                endif
 
                DO K = K1, K2
@@ -491,7 +491,7 @@ module source_u_g_module
                   if(k1 == shi(3) ) k1=k1-1
                   k2=k1
                else
-                  write(*,*) 'Unknown BC location to shift...'; stop 9998
+                  cycle
                endif
 
 
