@@ -227,7 +227,10 @@ module source_u_g_module
       SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
 
       use ic, only: NSW_, FSW_, PSW_
-      USE bc, only: bc_hw_g, bc_uw_g
+      use ic, only: PINF_, POUT_
+      use ic, only: MINF_, MOUT_
+
+      USE bc, only: bc_hw_g, bc_uw_g, bc_u_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
       USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
@@ -427,7 +430,7 @@ module source_u_g_module
                   DO J = J1, J2
                      DO I = I1, I2
 
-! --- NORTH FLOW -------> NO-SLIP WALL TO SOUTH
+! --- NORTH FLOW -------> FREE-SLIP WALL TO SOUTH
                         if (flag(i,j-1,k,1) == FSW_) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                            A_m(i,j,k,s) = zero
@@ -437,7 +440,7 @@ module source_u_g_module
                            A_m(i,j-1,k,0) = -one
                         endif
 
-! --- SOUTH FLOW -------> NO-SLIP WALL TO NORTH
+! --- SOUTH FLOW -------> FREE-SLIP WALL TO NORTH
                         if (flag(i,j+1,k,1) == FSW_) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                            A_m(i,j,k,n) = zero
@@ -447,7 +450,7 @@ module source_u_g_module
                            A_m(i,j+1,k,0) = -one
                         endif
 
-! --- TOP FLOW -------> NO-SLIP WALL TO BOTTOM
+! --- TOP FLOW -------> FREE-SLIP WALL TO BOTTOM
                         if (flag(i,j,k-1,1) == FSW_) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                            A_m(i,j,k,b) = zero
@@ -457,7 +460,7 @@ module source_u_g_module
                            A_m(i,j,k-1,0) = -one
                         endif
 
-! --- BOTTOM FLOW -------> NO-SLIP WALL TO TOP
+! --- BOTTOM FLOW -------> FREE-SLIP WALL TO TOP
                         if (flag(i,j,k+1,1) == FSW_) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                            A_m(i,j,k,t) = zero
@@ -574,81 +577,103 @@ module source_u_g_module
 ! Setting p_inflow or p_outflow flow boundary conditions
 ! ---------------------------------------------------------------->>>
             ELSEIF (BC_TYPE(L)=='P_INFLOW' .OR. BC_TYPE(L)=='P_OUTFLOW') THEN
-                IF (BC_PLANE(L) == 'W') THEN
+
 ! if the fluid cell is on the west side of the outflow/inflow boundary
 ! then set the velocity in the boundary cell equal to the velocity of
 ! the adjacent fluid cell
-                  I1 = BC_I_W(L)
-                  I2 = BC_I_E(L)
-                  J1 = BC_J_S(L)
-                  J2 = BC_J_N(L)
-                  K1 = BC_K_B(L)
-                  K2 = BC_K_T(L)
-                  DO K = K1, K2
-                     DO J = J1, J2
-                        DO I = I1, I2
-                           A_m(I,J,K,E) = ZERO
-                           A_m(I,J,K,W) = ONE
-                           A_m(I,J,K,N) = ZERO
-                           A_m(I,J,K,S) = ZERO
-                           A_m(I,J,K,T) = ZERO
-                           A_m(I,J,K,B) = ZERO
-                           A_m(I,J,K,0) = -ONE
-                           b_m(I,J,K) = ZERO
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ENDIF
+               i1 = bc_i_w(l)
+               i2 = bc_i_e(l)
+               j1 = bc_j_s(l)
+               j2 = bc_j_n(l)
+               k1 = bc_k_b(l)
+               k2 = bc_k_t(l)
+
+! Shift the index into to domain
+               if(i1 == j2) then
+                  if(i1 == slo(2) ) i1=i1+1
+                  if(i1 == shi(2) ) i1=i1-1
+                  i2=i1
+               else
+                  cycle
+               endif
+
+               DO K = K1, K2
+                  DO J = J1, J2
+                     DO I = I1, I2
+
+                        if(flag(i+1,j,k,1) == PINF_ .or. &
+                           flag(i+1,j,k,1) == POUT_) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
+                           A_m(i,j,k,e) = zero
+
+                           b_m(i+1,j,k) = zero
+                           A_m(i+1,j,k,:) = zero
+                           A_m(i+1,j,k,0) = -one
+
+                        endif
+                     enddo
+                  enddo
+               enddo
+
 ! end setting of p_inflow or p_otuflow flow boundary conditions
 ! ----------------------------------------------------------------<<<
 
 
-! Setting bc that are defined but not nsw, fsw, psw, p_inflow,
-! p_outflow, or outflow (at this time, this section addresses
-! mass_inflow and mass_outflow type boundaries)
+! Mass_inflow and mass_outflow type boundaries)
 ! ---------------------------------------------------------------->>>
             ELSE
-               I1 = BC_I_W(L)
-               I2 = BC_I_E(L)
-               J1 = BC_J_S(L)
-               J2 = BC_J_N(L)
-               K1 = BC_K_B(L)
-               K2 = BC_K_T(L)
-               DO K = K1, K2
-                  DO J = J1, J2
-                     DO I = I1, I2
-! setting the velocity in the boundary cell equal to what is known
-                        A_m(I,J,K,E) = ZERO
-                        A_m(I,J,K,W) = ZERO
-                        A_m(I,J,K,N) = ZERO
-                        A_m(I,J,K,S) = ZERO
-                        A_m(I,J,K,T) = ZERO
-                        A_m(I,J,K,B) = ZERO
-                        A_m(I,J,K,0) = -ONE
-                        b_m(I,J,K) = -U_G(I,J,K)
-                        IF (BC_PLANE(L) == 'W') THEN
-! if the fluid cell is on the west side of the outflow/inflow boundary
-! then set the velocity in the adjacent fluid cell equal to what is
-! known in that cell
-                           A_m(iwest(i,j,k),j,k,E) = ZERO
-                           A_m(iwest(i,j,k),j,k,W) = ZERO
-                           A_m(iwest(i,j,k),j,k,N) = ZERO
-                           A_m(iwest(i,j,k),j,k,S) = ZERO
-                           A_m(iwest(i,j,k),j,k,T) = ZERO
-                           A_m(iwest(i,j,k),j,k,B) = ZERO
-                           A_m(iwest(i,j,k),j,k,0) = -ONE
-                           b_m(iwest(i,j,k),j,k) = -U_G(iwest(i,j,k),j,k)
-                           if (j.eq.lo(2)) print *,'5:SETTING B TO U_G ',iwest(i,j,k), b_m(iwest(i,j,k),j,k)
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF   ! end if/else (bc_type)
-                    ! ns, fs, psw; else
-                    ! p_inflow, p_outflow, or outflow; else
-! end setting of 'else' flow boundary conditions
-! (mass_inflow/mass_outflow)
-! ----------------------------------------------------------------<<<
+
+               i1 = bc_i_w(l)
+               i2 = bc_i_e(l)
+               j1 = bc_j_s(l)
+               j2 = bc_j_n(l)
+               k1 = bc_k_b(l)
+               k2 = bc_k_t(l)
+
+               if(i1 == i2) then
+                  if(i1 == slo(1) ) i1=i1+1
+                  if(i1 == shi(1) ) i1=i1-1
+                  i2=i1
+               endif
+
+               if(j1 == j2) then
+                  if(j1 == slo(2) ) j1=j1+1
+                  if(j1 == shi(2) ) j1=j1-1
+                  j2=j1
+               endif
+
+               if(k1 == k2)then
+                  if(k1 == slo(3) ) k1=k1+1
+                  if(k1 == shi(3) ) k1=k1-1
+                  k2=k1
+               endif
+
+               do k = k1, k2
+                  do j = j1, j2
+                     do i = i1, i2
+
+                        if(flag(i+1,j,k,1) == MINF_ .or. &
+                           flag(i+1,j,k,1) == MOUT_) then
+                           A_m(i,j,k,:) =  zero
+                           A_m(i,j,k,0) = -one
+                           b_m(i,j,k) = -bc_u_g(l)
+
+                           b_m(i+1,j,k) = zero
+                           A_m(i+1,j,k,:) = zero
+                           A_m(i+1,j,k,0) = -one
+                        endif
+
+                        if(flag(i-1,j,k,1) == MINF_ .or. &
+                           flag(i-1,j,k,1) == MOUT_) then
+
+                           A_m(i-1,j,k,:) =  zero
+                           A_m(i-1,j,k,0) = -one
+                           b_m(i-1,j,k) = -bc_u_g(l)
+                        endif
+                     enddo
+                  enddo
+               enddo
+            endif
 
          ENDIF   ! end if (bc_defined)
       ENDDO   ! end L do loop over dimension_bc
