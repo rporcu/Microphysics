@@ -181,26 +181,8 @@ module source_u_g_module
      ENDDO   ! end do loop over ijk
 
 
-     ! do k = slo(3),shi(3)
-     !     do j = slo(2),shi(2)
-     !        do i = slo(1),shi(1)
-     !           write(5555,"(3(i3),8(es12.4))")i,j,k,a_m(i,j,k,:),b_m(i,j,k)
-     !        enddo
-     !     enddo
-     !  enddo
-
-      ! modifications for bc
+! modifications for bc
       CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
-
-     ! do k = slo(3),shi(3)
-     !     do j = slo(2),shi(2)
-     !        do i = slo(1),shi(1)
-     !           write(6666,"(3(i3),8(es12.4))")i,j,k,a_m(i,j,k,:),b_m(i,j,k)
-     !        enddo
-     !     enddo
-     !  enddo
-
-     !  stop 99999
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -230,13 +212,12 @@ module source_u_g_module
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
 
-      USE bc, only: bc_hw_g, bc_uw_g, bc_u_g
-      USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-      USE bc, only: dimension_bc, bc_type, bc_defined, bc_plane
-      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-      USE functions, only: iminus, iplus, im1
-      USE matrix, only: e, w, s, n, t, b
-      use geometry, only: domlo, domhi
+      use bc, only: dimension_bc, bc_type, bc_defined, bc_plane
+      use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+      use bc, only: bc_hw_g, bc_uw_g, bc_u_g
+
+      use matrix, only: e, w, s, n, t, b
+      use param1, only: is_defined
 
       IMPLICIT NONE
 
@@ -272,63 +253,6 @@ module source_u_g_module
      ody = 1.d0 / dy
      odz = 1.d0 / dz
 
-     if(.false.) then
-
-        do k=slo(3),shi(3)
-           write(6,"(2/'Scalar flag k-plane: ',i2)") k
-           do j=shi(2),slo(2),-1
-              write(6,"(3x,'j=',i2,3x)",advance='no') j
-              do i=slo(1),shi(1)-1
-                 write(6,"(i6)",advance='no') flag(i,j,k,1)
-              enddo
-              write(6,"(i6)",advance='yes') flag(shi(1),j,k,1)
-           enddo
-        enddo
-
-        do k=slo(3),shi(3)
-           write(6,"(2/'Flag EAST flag k-plane: ',i2)") k
-           do j=shi(2),slo(2),-1
-              write(6,"(3x,'j=',i2,3x)",advance='no') j
-              do i=slo(1),shi(1)-1
-                 write(6,"(i6)",advance='no') flag(i,j,k,2)
-              enddo
-              write(6,"(i6)",advance='yes') flag(shi(1),j,k,2)
-           enddo
-        enddo
-
-        do k=slo(3),shi(3)
-           write(6,"(2/'Flag NORTH flag k-plane: ',i2)") k
-           do j=shi(2),slo(2),-1
-              write(6,"(3x,'j=',i2,3x)",advance='no') j
-              do i=slo(1),shi(1)-1
-                 write(6,"(i6)",advance='no') flag(i,j,k,3)
-              enddo
-              write(6,"(i6)",advance='yes') flag(shi(1),j,k,3)
-           enddo
-        enddo
-
-
-        do k=slo(3),shi(3)
-           write(6,"(2/'Flag TOP flag k-plane: ',i2)") k
-           do j=shi(2),slo(2),-1
-              write(6,"(3x,'j=',i2,3x)",advance='no') j
-              do i=slo(1),shi(1)-1
-                 write(6,"(i6)",advance='no') flag(i,j,k,4)
-              enddo
-              write(6,"(i6)",advance='yes') flag(shi(1),j,k,4)
-           enddo
-        enddo
-
-        write(6,"(2/'  ')")
-        write(6,"('  slo',3(i3),'      shi',3(i3))")   slo,   shi
-        write(6,"('   lo',3(i3),'       hi',3(i3))")    lo,    hi
-        write(6,"('domlo',3(i3),'    domhi',3(i3))") domlo, domhi
-
-     endif
-
-
-! Setting boundary conditions
-! ---------------------------------------------------------------->>>
      do l = 1, dimension_bc
         if (bc_defined(l)) then
 
@@ -362,8 +286,11 @@ module source_u_g_module
                   do i = i1, i2
 
 ! --- EAST FLUID ---------------------------------------------------------->
-                     if(flag(i-1,j,k,1) == MINF_ .or. &
-                        flag(i-1,j,k,1) == MOUT_) then
+
+! MASS INFLOW
+                     if(is_defined(bc_u_g(l)) .and. (&
+                        flag(i-1,j,k,1) == MINF_ .or. &
+                        flag(i-1,j,k,1) == MOUT_)) then
 
                         A_m(i-1,j,k,:) =  zero
                         A_m(i-1,j,k,0) = -one
@@ -371,6 +298,8 @@ module source_u_g_module
                      endif
 
 ! --- WEST FLUID ---------------------------------------------------------->
+
+! PRESSURE IN/OUTFLOW
                      if(flag(i+1,j,k,1) == PINF_ .or. &
                         flag(i+1,j,k,1) == POUT_) then
                         A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
@@ -379,11 +308,11 @@ module source_u_g_module
                         b_m(i+1,j,k) = zero
                         A_m(i+1,j,k,:) = zero
                         A_m(i+1,j,k,0) = -one
-                     endif
 
-
-                     if(flag(i+1,j,k,1) == MINF_ .or. &
-                        flag(i+1,j,k,1) == MOUT_) then
+! MASS INFLOW
+                     else if(is_defined(bc_u_g(l)) .and. (&
+                        flag(i+1,j,k,1) == MINF_ .or. &
+                        flag(i+1,j,k,1) == MOUT_)) then
                         A_m(i,j,k,:) =  zero
                         A_m(i,j,k,0) = -one
                         b_m(i,j,k) = -bc_u_g(l)
@@ -403,30 +332,28 @@ module source_u_g_module
                         b_m(i,j-1,k) = zero
                         A_m(i,j-1,k,:) = zero
                         A_m(i,j-1,k,0) = -one
-                     endif
 
 ! FREE-SLIP WALL
-                     if (flag(i,j-1,k,1) == FSW_) then
+                     else if (flag(i,j-1,k,1) == FSW_) then
                         A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                         A_m(i,j,k,s) = zero
 
                         b_m(i,j-1,k) = zero
                         A_m(i,j-1,k,:) = zero
                         A_m(i,j-1,k,0) = -one
-                     endif
 
 ! PARTIAL-SLIP WALL
-                     if (flag(i,j-1,k,1) == PSW_) THEN
+                     else if (flag(i,j-1,k,1) == PSW_) THEN
                         if (is_undefined(bc_hw_g(l))) then
                            A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)
                            b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,s)*bc_uw_g(l)
-                           A_m(i,j,k,s) = zero
                         else
-                           write(*,*) '--FATAL 1 - NOT UPDATED'; stop 1900
-                           A_m(i,j,k,0) = -(half*bc_hw_g(l)+ody)
-                           A_m(i,j,k,n) = -(half*bc_hw_g(l)-ody)
-                           b_m(i,j,k) = -bc_hw_g(l)*bc_uw_g(l)
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,s)*&
+                              (half*bc_hw_g(l)-ody)/(half*bc_hw_g(l)+ody)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,s)*&
+                              bc_hw_g(l)*bc_uw_g(l)/(half*bc_hw_g(l)+ody)
                         endif
+                        A_m(i,j,k,s) = zero
 
                         A_m(i,j-1,k,:) = zero
                         A_m(i,j-1,k,0) = -one
@@ -443,30 +370,28 @@ module source_u_g_module
                         b_m(i,j+1,k) = zero
                         A_m(i,j+1,k,:) = zero
                         A_m(i,j+1,k,0) = -one
-                     endif
 
 ! FREE-SLIP WALL
-                     if (flag(i,j+1,k,1) == FSW_) then
+                     else if (flag(i,j+1,k,1) == FSW_) then
                         A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                         A_m(i,j,k,n) = zero
 
                         b_m(i,j+1,k) = zero
                         A_m(i,j+1,k,:) = zero
                         A_m(i,j+1,k,0) = -one
-                     endif
 
 ! PARTIAL-SLIP WALL TO NORTH
-                     if (flag(i,j+1,k,1) == PSW_) then
+                     else if (flag(i,j+1,k,1) == PSW_) then
                         if (is_undefined(bc_hw_g(l))) then
                            A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)
                            b_m(i,j,k) = b_m(i,j,k) - 2.0*A_m(i,j,k,n)*bc_uw_g(l)
-                           A_m(i,j,k,n) = zero
                         else
-                           write(*,*) '--FATAL 2 - NOT UPDATED'; stop 2900
-                           A_m(I,J,K,S) = -(HALF*BC_HW_G(L)-ODY)
-                           A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODY)
-                           b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,n)*&
+                              (half*bc_hw_g(l)-ody)/(half*bc_hw_g(l)+ody)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,n)*&
+                              bc_hw_g(l)*bc_uw_g(l)/(half*bc_hw_g(l)+ody)
                         endif
+                        A_m(i,j,k,n) = zero
 
                         A_m(i,j+1,k,:) = zero
                         A_m(i,j+1,k,0) = -one
@@ -485,30 +410,28 @@ module source_u_g_module
                         b_m(i,j,k-1) = zero
                         A_m(i,j,k-1,:) = zero
                         A_m(i,j,k-1,0) = -one
-                     endif
 
 ! FREE-SLIP WALL
-                     if (flag(i,j,k-1,1) == FSW_) then
+                     else if (flag(i,j,k-1,1) == FSW_) then
                         A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                         A_m(i,j,k,b) = zero
 
                         b_m(i,j,k-1) = zero
                         A_m(i,j,k-1,:) = zero
                         A_m(i,j,k-1,0) = -one
-                     endif
 
 ! PARTIAL-SLIP WALL
-                     if (flag(i,j,k-1,1) == PSW_) then
+                     else if (flag(i,j,k-1,1) == PSW_) then
                         if (is_undefined(bc_hw_g(l))) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
                            b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,b)*bc_uw_g(l)
-                           A_m(i,j,k,b) = zero
                         else
-                           write(*,*) '--FATAL 3 - NOT UPDATED'; stop 3900
-                           A_m(I,J,K,0)=-(HALF*BC_HW_G(L)+ODZ)
-                           A_m(I,J,K,T)=-(HALF*BC_HW_G(L)-ODZ)
-                           b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
-                        ENDIF
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,b)*&
+                              (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,b)*&
+                              bc_hw_g(l)*bc_uw_g(l)/(half*bc_hw_g(l)+odz)
+                        endif
+                        A_m(i,j,k,b) = zero
 
                         A_m(i,j,k-1,:) = zero
                         A_m(i,j,k-1,0) = -one
@@ -526,29 +449,32 @@ module source_u_g_module
                         b_m(i,j,k+1) = zero
                         A_m(i,j,k+1,:) = zero
                         A_m(i,j,k+1,0) = -one
-                     endif
 
-! FREE-SLIP WALL TO TOP
-                     if (flag(i,j,k+1,1) == FSW_) then
+! FREE-SLIP WALL
+                     else if (flag(i,j,k+1,1) == FSW_) then
                         A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                         A_m(i,j,k,t) = zero
 
                         b_m(i,j,k+1) = zero
                         A_m(i,j,k+1,:) = zero
                         A_m(i,j,k+1,0) = -one
-                     endif
+
 ! PARTIAL-SLIP WALL
-                     if (flag(i,j,k+1,1) == PSW_) then
+                     else if (flag(i,j,k+1,1) == PSW_) then
                         if (is_undefined(bc_hw_g(l))) then
                            A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
                            b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,t)*bc_uw_g(l)
-                           A_m(i,j,k,t) = zero
                         else
-                           write(*,*) '--FATAL 4 - NOT UPDATED'; stop 4900
-                           A_m(I,J,K,B) = -(HALF*BC_HW_G(L)-ODZ)
-                           A_m(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
-                           b_m(I,J,K) = -BC_HW_G(L)*BC_UW_G(L)
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,t)*&
+                              (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,t)*&
+                              bc_hw_g(l)*bc_uw_g(l)/(half*bc_hw_g(l)+odz)
                         endif
+                        A_m(i,j,k,t) = zero
+
+                        A_m(i,j,k+1,:) = zero
+                        A_m(i,j,k+1,0) = -one
+                        b_m(i,j,k+1) = zero
                      endif
                   enddo
                enddo

@@ -1,9 +1,5 @@
 module source_v_g_module
 
-   use bc, only: bc_hw_g, bc_vw_g
-   use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-   use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
-
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
@@ -197,23 +193,20 @@ module source_v_g_module
 !     coefficients are positive.                                       C
 !     The drag terms are excluded from the source at this stage        C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 7-JUN-96   C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
       SUBROUTINE SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,v_g,flag,dx,dy,dz)
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
+      use ic, only: NSW_, FSW_, PSW_
+      use ic, only: PINF_, POUT_
+      use ic, only: MINF_, MOUT_
 
-      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
-      USE functions, only: jminus, jplus, jm1
+      use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
+      use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+      use bc, only: bc_hw_g, bc_vw_g, bc_v_g
+
       use matrix, only: e, w, s, n, t, b
-      use geometry, only: domlo, domhi
+      use param1, only: is_defined
 
       IMPLICIT NONE
 
@@ -249,290 +242,232 @@ module source_v_g_module
      odx = 1.d0 / dx
      odz = 1.d0 / dz
 
-!-----------------------------------------------
 
-! Set the default boundary conditions
-! The NS default setting is the where bc_type='dummy' or any default
-! (i.e., bc_type=undefined) wall boundary regions are handled. Note that
-! the north and south xz planes do not have to be explicitly addressed for
-! the v-momentum equation. In this direction the velocities are defined
-! at the wall (due staggered grid). They are defined as zero for a
-! no penetration condition.
-! ---------------------------------------------------------------->>>
+     do l = 1, dimension_bc
+        if (bc_defined(l)) then
 
-! Setting user specified boundary conditions
-      DO L = 1, DIMENSION_BC
-         IF (BC_DEFINED(L)) THEN
+            i1 = bc_i_w(l)
+            i2 = bc_i_e(l)
+            j1 = bc_j_s(l)
+            j2 = bc_j_n(l)
+            k1 = bc_k_b(l)
+            k2 = bc_k_t(l)
 
-! Setting wall boundary conditions
-! ---------------------------------------------------------------->>>
-            IF (BC_TYPE(L) == 'NO_SLIP_WALL') THEN
-               I1 = BC_I_W(L)
-               I2 = BC_I_E(L)
-               J1 = BC_J_S(L)
-               J2 = BC_J_N(L)
-               K1 = BC_K_B(L)
-               K2 = BC_K_T(L)
-               DO K = K1, K2
-                  DO J = J1, J2
-                     DO I = I1, I2
-                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
-                        IF (1.eq.flag(ieast(i,j,k),j,k,1)) then
-                           A_M(I,J,K,E) = -ONE
-                        ELSEIF (1.eq.flag(iwest(i,j,k),j,k,1)) then
-                           A_M(I,J,K,W) = -ONE
-                        ELSEIF (1.eq.flag(i,j,ktop(i,j,k),1)) then
-                           A_M(I,J,K,T) = -ONE
-                        ELSEIF (1.eq.flag(i,j,kbot(i,j,k),1)) then
-                           A_M(I,J,K,B) = -ONE
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
+            if(i1 == i2) then
+               if(i1 == slo(1) ) i1=i1+1
+               if(i1 == shi(1) ) i1=i1-1
+               i2=i1
+            endif
 
-            ELSEIF (BC_TYPE(L) == 'FREE_SLIP_WALL') THEN
-               I1 = BC_I_W(L)
-               I2 = BC_I_E(L)
-               J1 = BC_J_S(L)
-               J2 = BC_J_N(L)
-               K1 = BC_K_B(L)
-               K2 = BC_K_T(L)
-               DO K = K1, K2
-                  DO J = J1, J2
-                     DO I = I1, I2
-                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
-                        IF (1.eq.flag(ieast(i,j,k),j,k,1)) then
-                           A_M(I,J,K,E) = ONE
-                        ELSEIF (1.eq.flag(iwest(i,j,k),j,k,1)) then
-                           A_M(I,J,K,W) = ONE
-                        ELSEIF (1.eq.flag(i,j,ktop(i,j,k),1)) then
-                           A_M(I,J,K,T) = ONE
-                        ELSEIF (1.eq.flag(i,j,kbot(i,j,k),1)) then
-                           A_M(I,J,K,B) = ONE
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
+            if(j1 == j2) then
+               if(j1 == slo(2) ) j1=j1+1
+               if(j1 == shi(2) ) j1=j1-1
+               j2=j1
+            endif
 
-            ELSEIF (BC_TYPE(L) == 'PAR_SLIP_WALL') THEN
-               I1 = BC_I_W(L)
-               I2 = BC_I_E(L)
-               J1 = BC_J_S(L)
-               J2 = BC_J_N(L)
-               K1 = BC_K_B(L)
-               K2 = BC_K_T(L)
-               DO K = K1, K2
-                  DO J = J1, J2
-                     DO I = I1, I2
-                        IF (flag(i,j,k,1)<100) CYCLE  ! skip redefined cells
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = ZERO
-                        IF (1.eq.flag(ieast(i,j,k),j,k,1)) then
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,E) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_VW_G(L)
-                           ELSE
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODX)
-                              A_M(I,J,K,E) = -(HALF*BC_HW_G(L)-ODX)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
-                           ENDIF
-                        ELSEIF (1.eq.flag(iwest(i,j,k),j,k,1)) then
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,W) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_VW_G(L)
-                           ELSE
-                              A_M(I,J,K,W) = -(HALF*BC_HW_G(L)-ODX)
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODX)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
-                           ENDIF
-                        ELSEIF (1.eq.flag(i,j,ktop(i,j,k),1)) then
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,T) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_VW_G(L)
-                           ELSE
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
-                              A_M(I,J,K,T) = -(HALF*BC_HW_G(L)-ODZ)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
-                           ENDIF
-                        ELSEIF (1.eq.flag(i,j,kbot(i,j,k),1)) then
-                           IF (IS_UNDEFINED(BC_HW_G(L))) THEN
-                              A_M(I,J,K,B) = -HALF
-                              A_M(I,J,K,0) = -HALF
-                              B_M(I,J,K) = -BC_VW_G(L)
-                           ELSE
-                              A_M(I,J,K,B) = -(HALF*BC_HW_G(L)-ODZ)
-                              A_M(I,J,K,0) = -(HALF*BC_HW_G(L)+ODZ)
-                              B_M(I,J,K) = -BC_HW_G(L)*BC_VW_G(L)
-                           ENDIF
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
+            if(k1 == k2)then
+               if(k1 == slo(3) ) k1=k1+1
+               if(k1 == shi(3) ) k1=k1-1
+               k2=k1
+            endif
 
-! end setting of wall boundary conditions
-! ----------------------------------------------------------------<<<
+            do k = k1, k2
+               do j = j1, j2
+                  do i = i1, i2
 
-! Setting p_inflow or p_outflow flow boundary conditions
-! ---------------------------------------------------------------->>>
-            ELSE IF (BC_TYPE(L)=='P_INFLOW' .OR. BC_TYPE(L)=='P_OUTFLOW') THEN
-               IF (BC_PLANE(L) == 'S') THEN
-! if the fluid cell is on the south side of the outflow/inflow boundary
-! then set the velocity in the boundary cell equal to the velocity of
-! the adjacent fluid cell
-                  I1 = BC_I_W(L)
-                  I2 = BC_I_E(L)
-                  J1 = BC_J_S(L)
-                  J2 = BC_J_N(L)
-                  K1 = BC_K_B(L)
-                  K2 = BC_K_T(L)
-                  DO K = K1, K2
-                     DO J = J1, J2
-                        DO I = I1, I2
-                           A_M(I,J,K,E) = ZERO
-                           A_M(I,J,K,W) = ZERO
-                           A_M(I,J,K,N) = ZERO
-                           A_M(I,J,K,S) = ONE
-                           A_M(I,J,K,T) = ZERO
-                           A_M(I,J,K,B) = ZERO
-                           A_M(I,J,K,0) = -ONE
-                           B_M(I,J,K) = ZERO
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ENDIF
-! end setting of p_inflow or p_otuflow flow boundary conditions
-! ----------------------------------------------------------------<<<
+! --- EAST FLUID ---------------------------------------------------------->
 
-! Setting outflow flow boundary conditions
-! ---------------------------------------------------------------->>>
-            ELSEIF (BC_TYPE(L) == 'OUTFLOW') THEN
-               IF (BC_PLANE(L) == 'S') THEN
-                  I1 = BC_I_W(L)
-                  I2 = BC_I_E(L)
-                  J1 = BC_J_S(L)
-                  J2 = BC_J_N(L)
-                  K1 = BC_K_B(L)
-                  K2 = BC_K_T(L)
-                  DO K = K1, K2
-                     DO J = J1, J2
-                        DO I = I1, I2
-                           A_M(I,J,K,E) = ZERO
-                           A_M(I,J,K,W) = ZERO
-                           A_M(I,J,K,N) = ZERO
-                           A_M(I,J,K,S) = ONE
-                           A_M(I,J,K,T) = ZERO
-                           A_M(I,J,K,B) = ZERO
-                           A_M(I,J,K,0) = -ONE
-                           B_M(I,J,K) = ZERO
-                           A_M(i,jminus(i,j,k),k,E) = ZERO
-                           A_M(i,jminus(i,j,k),k,W) = ZERO
-                           A_M(i,jminus(i,j,k),k,N) = ZERO
-                           A_M(i,jminus(i,j,k),k,S) = ONE
-                           A_M(i,jminus(i,j,k),k,T) = ZERO
-                           A_M(i,jminus(i,j,k),k,B) = ZERO
-                           A_M(i,jminus(i,j,k),k,0) = -ONE
-                           B_M(i,jminus(i,j,k),k) = ZERO
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ELSEIF (BC_PLANE(L) == 'N') THEN
-                  I1 = BC_I_W(L)
-                  I2 = BC_I_E(L)
-                  J1 = BC_J_S(L)
-                  J2 = BC_J_N(L)
-                  K1 = BC_K_B(L)
-                  K2 = BC_K_T(L)
-                  DO K = K1, K2
-                     DO J = J1, J2
-                        DO I = I1, I2
-                           A_M(i,jplus(i,j,k),k,E) = ZERO
-                           A_M(i,jplus(i,j,k),k,W) = ZERO
-                           A_M(i,jplus(i,j,k),k,N) = ONE
-                           A_M(i,jplus(i,j,k),k,S) = ZERO
-                           A_M(i,jplus(i,j,k),k,T) = ZERO
-                           A_M(i,jplus(i,j,k),k,B) = ZERO
-                           A_M(i,jplus(i,j,k),k,0) = -ONE
-                           B_M(i,jplus(i,j,k),k) = ZERO
-                        ENDDO
-                     ENDDO
-                  ENDDO
-               ENDIF
-! end setting of outflow flow boundary conditions
-! ----------------------------------------------------------------<<<
+! NO-SLIP WALL
+                     if (flag(i-1,j,k,1) == NSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
+                        A_m(i,j,k,w) = zero
 
-! Setting bc that are defined but not nsw, fsw, psw, p_inflow,
-! p_outflow, or outflow (at this time, this section addresses
-! mass_inflow and mass_outflow type boundaries)
-! ---------------------------------------------------------------->>>
-            ELSE
-               I1 = BC_I_W(L)
-               I2 = BC_I_E(L)
-               J1 = BC_J_S(L)
-               J2 = BC_J_N(L)
-               K1 = BC_K_B(L)
-               K2 = BC_K_T(L)
-               DO K = K1, K2
-                  DO J = J1, J2
-                     DO I = I1, I2
-! setting the velocity in the boundary cell equal to what is known
-                        A_M(I,J,K,E) = ZERO
-                        A_M(I,J,K,W) = ZERO
-                        A_M(I,J,K,N) = ZERO
-                        A_M(I,J,K,S) = ZERO
-                        A_M(I,J,K,T) = ZERO
-                        A_M(I,J,K,B) = ZERO
-                        A_M(I,J,K,0) = -ONE
-                        B_M(I,J,K) = -V_G(I,J,K)
-                        IF (BC_PLANE(L) == 'S') THEN
-! if the fluid cell is on the south side of the outflow/inflow boundary
-! then set the velocity in the adjacent fluid cell equal to what is
-! known in that cell
-                           A_M(i,jsouth(i,j,k),k,E) = ZERO
-                           A_M(i,jsouth(i,j,k),k,W) = ZERO
-                           A_M(i,jsouth(i,j,k),k,N) = ZERO
-                           A_M(i,jsouth(i,j,k),k,S) = ZERO
-                           A_M(i,jsouth(i,j,k),k,T) = ZERO
-                           A_M(i,jsouth(i,j,k),k,B) = ZERO
-                           A_M(i,jsouth(i,j,k),k,0) = -ONE
-                           B_M(i,jsouth(i,j,k),k) = -V_G(i,jsouth(i,j,k),k)
-                        ENDIF
-                     ENDDO
-                  ENDDO
-               ENDDO
-            ENDIF   ! end if/else (bc_type)
-                    ! ns, fs, psw; else
-                    ! p_inflow, p_outflow, or outflow; else
-! end setting of 'else' flow boundary conditions
-! (mass_inflow/mass_outflow)
-! ----------------------------------------------------------------<<<
+                        b_m(i-1,j,k) = zero
+                        A_m(i-1,j,k,:) = zero
+                        A_m(i-1,j,k,0) = -one
 
-         ENDIF   ! end if (bc_defined)
-      ENDDO   ! end L do loop over dimension_bc
+! FREE-SLIP WALL
+                     else if (flag(i-1,j,k,1) == FSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
+                        A_m(i,j,k,w) = zero
+
+                        b_m(i-1,j,k) = zero
+                        A_m(i-1,j,k,:) = zero
+                        A_m(i-1,j,k,0) = -one
+
+! PARTIAL-SLIP WALL
+                     else if (flag(i-1,j,k,1) == PSW_) then
+                        if (is_undefined(bc_hw_g(l))) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
+                           b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,w)*bc_vw_g(l)
+                        else
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,w)*&
+                              (half*bc_hw_g(l)-odx)/(half*bc_hw_g(l)+odx)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,w)*&
+                              bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odx)
+                        endif
+                        A_m(i,j,k,w) = zero
+
+                        A_m(i,j,k-1,:) = zero
+                        A_m(i,j,k-1,0) = -one
+                        b_m(i,j,k-1) = zero
+                     endif
+
+! --- WEST FLUID ---------------------------------------------------------->
+
+! NO-SLIP WALL
+                     if (flag(i+1,j,k,1) == NSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
+                        A_m(i,j,k,e) = zero
+
+                        b_m(i+1,j,k) = zero
+                        A_m(i+1,j,k,:) = zero
+                        A_m(i+1,j,k,0) = -one
+
+! FREE-SLIP WALL
+                     else if (flag(i+1,j,k,1) == FSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
+                        A_m(i,j,k,e) = zero
+
+                        b_m(i+1,j,k) = zero
+                        A_m(i+1,j,k,:) = zero
+                        A_m(i+1,j,k,0) = -one
+
+! PARTIAL-SLIP WALL
+                     else if (flag(i+1,j,k,1) == PSW_) then
+                        if (is_undefined(bc_hw_g(l))) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
+                           b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,e)*bc_vw_g(l)
+                        else
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,e)*&
+                              (half*bc_hw_g(l)-odx)/(half*bc_hw_g(l)+odx)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,e)*&
+                              bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odx)
+                        endif
+                        A_m(i,j,k,e) = zero
+
+                        A_m(i,j,k-1,:) = zero
+                        A_m(i,j,k-1,0) = -one
+                        b_m(i,j,k-1) = zero
+                     endif
+
+! --- NORTH FLUID --------------------------------------------------------->
+
+! MASS INFLOW
+                     if(is_defined(bc_v_g(l)) .and. (&
+                        flag(i,j-1,k,1) == MINF_ .or. &
+                        flag(i,j-1,k,1) == MOUT_)) then
+                        A_m(i,j-1,k,:) =  zero
+                        A_m(i,j-1,k,0) = -one
+                        b_m(i,j-1,k) = -bc_v_g(l)
+                     endif
+
+! --- SOUTH FLUID --------------------------------------------------------->
+
+! PRESSURE IN/OUTFLOW
+                     if(flag(i,j+1,k,1) == PINF_ .or. &
+                        flag(i,j+1,k,1) == POUT_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
+                        A_m(i,j,k,n) = zero
+
+                        b_m(i,j+1,k) = zero
+                        A_m(i,j+1,k,:) = zero
+                        A_m(i,j+1,k,0) = -one
+
+! MASS INFLOW
+                     else if(is_defined(bc_v_g(l)) .and. (&
+                        flag(i,j+1,k,1) == MINF_ .or. &
+                        flag(i,j+1,k,1) == MOUT_)) then
+                        A_m(i,j,k,:) =  zero
+                        A_m(i,j,k,0) = -one
+                        b_m(i,j,k) = -bc_v_g(l)
+
+                        b_m(i,j+1,k) = zero
+                        A_m(i,j+1,k,:) = zero
+                        A_m(i,j+1,k,0) = -one
+                     endif
+
+! --- TOP FLUID ----------------------------------------------------------->
+
+! NO-SLIP WALL
+                     if (flag(i,j,k-1,1) == NSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                        A_m(i,j,k,b) = zero
+
+                        b_m(i,j,k-1) = zero
+                        A_m(i,j,k-1,:) = zero
+                        A_m(i,j,k-1,0) = -one
+
+! FREE-SLIP WALL
+                     else if (flag(i,j,k-1,1) == FSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
+                        A_m(i,j,k,b) = zero
+
+                        b_m(i,j,k-1) = zero
+                        A_m(i,j,k-1,:) = zero
+                        A_m(i,j,k-1,0) = -one
+
+! PARTIAL-SLIP WALL
+                     else if (flag(i,j,k-1,1) == PSW_) then
+                        if (is_undefined(bc_hw_g(l))) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                           b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,b)*bc_vw_g(l)
+                        else
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,b)*&
+                              (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,b)*&
+                              bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odz)
+                        endif
+                        A_m(i,j,k,b) = zero
+
+                        A_m(i,j,k-1,:) = zero
+                        A_m(i,j,k-1,0) = -one
+                        b_m(i,j,k-1) = zero
+                     endif
+
+! --- BOTTOM FLUID -------------------------------------------------------->
+
+! NO-SLIP WALL
+                     if (flag(i,j,k+1,1) == NSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                        A_m(i,j,k,t) = zero
+
+                        b_m(i,j,k+1) = zero
+                        A_m(i,j,k+1,:) = zero
+                        A_m(i,j,k+1,0) = -one
+
+! FREE-SLIP WALL
+                     else if (flag(i,j,k+1,1) == FSW_) then
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
+                        A_m(i,j,k,t) = zero
+
+                        b_m(i,j,k+1) = zero
+                        A_m(i,j,k+1,:) = zero
+                        A_m(i,j,k+1,0) = -one
+
+! PARTIAL-SLIP WALL
+                     else if (flag(i,j,k+1,1) == PSW_) then
+                        if (is_undefined(bc_hw_g(l))) then
+                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                           b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,t)*bc_vw_g(l)
+                        else
+                           A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,t)*&
+                              (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
+                           b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,t)*&
+                              bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odz)
+                        endif
+                        A_m(i,j,k,t) = zero
+
+                        A_m(i,j,k+1,:) = zero
+                        A_m(i,j,k+1,0) = -one
+                        b_m(i,j,k+1) = zero
+                     endif
+
+                  enddo
+               enddo
+            enddo
+         endif
+      enddo
 
       RETURN
       END SUBROUTINE SOURCE_V_G_BC
