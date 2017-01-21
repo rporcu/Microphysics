@@ -4,50 +4,34 @@ module source_u_g_module
    use iso_c_binding , only: c_int
    use param1        , only: zero, half, one, undefined, is_undefined, small_number
 
-  contains
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOURCE_U_g                                              C
-!  Purpose: Determine source terms for U_g momentum eq. The terms      C
-!  appear in the center coefficient and RHS vector. The center         C
-!  coefficient and source vector are negative.  The off-diagonal       C
-!  coefficients are positive.                                          C
-!  The drag terms are excluded from the source at this stage.          C
-!                                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 14-MAY-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_U_G(slo, shi, lo, hi, &
-         A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag, dx, dy, dz)
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_U_g                                              !
+!  Purpose: Determine source terms for U_g momentum eq. The terms      !
+!  appear in the center coefficient and RHS vector. The center         !
+!  coefficient and source vector are negative.  The off-diagonal       !
+!  coefficients are positive.                                          !
+!  The drag terms are excluded from the source at this stage.          !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine source_u_g(slo, shi, lo, hi, A_m, b_m, &
+      dt, p_g, ep_g, ro_g, rop_g, rop_go, u_g, u_go, &
+      tau_u_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE constant, only: gravity
       USE bc      , only: delp_x
 
-      USE functions, only: avg
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus,ieast,iwest
-      USE functions, only: zmax
+      USE functions, only: avg, zmax, ieast
 
       USE geometry, only: domlo, domhi, cyclic_x_pd
 
       use matrix, only: e, w, s, n, t, b
-
       USE scales, only: p_scale
-      USE toleranc, only: dil_ep_s
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -94,7 +78,6 @@ module source_u_g_module
 ! Source terms (Volumetric)
       real(c_real) :: V0, Vbf
 ! local stress tensor quantity
-      real(c_real) :: ltau_u_g
       real(c_real) :: odt
       real(c_real) :: ayz
       real(c_real) :: vol
@@ -104,109 +87,60 @@ module source_u_g_module
       ayz = dy*dz
       vol = dx*dy*dz
 
-      DO K = lo(3), hi(3)
-        DO J = lo(2), hi(2)
-          DO I = lo(1), hi(1)+1
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
 
-         EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
+               epga = avg(ep_g(i,j,k),ep_g(ieast(i,j,k),j,k))
 
-         ! Impermeable internal surface
-         IF (flag(i,j,k,2) < 1000) THEN
-            A_m(I,J,K,E) = ZERO
-            A_m(I,J,K,W) = ZERO
-            A_m(I,J,K,N) = ZERO
-            A_m(I,J,K,S) = ZERO
-            A_m(I,J,K,T) = ZERO
-            A_m(I,J,K,B) = ZERO
-            A_m(I,J,K,0) = -ONE
-            b_m(I,J,K) = ZERO
+! Pressure term
+               PGE = P_G(ieast(i,j,k),j,k)
+               if(cyclic_x_pd) then
+                  if ((i == domlo(1)-1) .or. (i == domhi(1))) &
+                     pge = pge - delp_x
+               end if
+               sdp = -p_scale*epga*(pge - p_g(i,j,k))*ayz
 
-         ! Dilute flow
-         ELSEIF (EPGA <= DIL_EP_S) THEN
-            A_m(I,J,K,E) = ZERO
-            A_m(I,J,K,W) = ZERO
-            A_m(I,J,K,N) = ZERO
-            A_m(I,J,K,S) = ZERO
-            A_m(I,J,K,T) = ZERO
-            A_m(I,J,K,B) = ZERO
-            A_m(I,J,K,0) = -ONE
-            b_m(I,J,K) = ZERO
+! Volumetric forces
+               roga  = half * (ro_g(i,j,k) + ro_g(ieast(i,j,k),j,k))
+               ropga = half * (rop_g(i,j,k) + rop_g(ieast(i,j,k),j,k))
 
-            ! set velocity equal to that of west or east cell if solids are present
-            ! in those cells else set velocity equal to known value
-            IF (EP_G(iwest(i,j,k),j,k) > DIL_EP_S) THEN
-               A_m(I,J,K,W) = ONE
-            ELSE IF (EP_G(ieast(i,j,k),j,k) > DIL_EP_S) THEN
-               A_m(I,J,K,E) = ONE
-            ELSE
-               b_m(I,J,K) = -U_G(I,J,K)
-            ENDIF
+! Previous time step
+               v0 = half * (rop_go(i,j,k) + rop_go(ieast(i,j,k),j,k))*odt
 
-         ! Normal case
-         ELSE
-
-            ! Pressure term
-            PGE = P_G(ieast(i,j,k),j,k)
-            if ( CYCLIC_X_PD) then
-              if ( (i .eq. domlo(1)-1) .or. (i .eq. domhi(1)) ) &
-                PGE = P_G(ieast(i,j,k),j,k) - DELP_X
-            end if
-
-            SDP = -P_SCALE*EPGA*(PGE - P_G(I,J,K))*AYZ
-
-            ! Volumetric forces
-            ROGA  = HALF * (RO_G(I,J,K) + RO_G(ieast(i,j,k),j,k))
-            ROPGA = HALF * (ROP_G(I,J,K) + ROP_G(ieast(i,j,k),j,k))
-
-            ! Previous time step
-            V0 = HALF * (ROP_GO(I,J,K) + ROP_GO(ieast(i,j,k),j,k))*ODT
-
-            ! Body force
-            VBF = ROGA*GRAVITY(1)
-
-            ltau_u_g = tau_u_g(i,j,k)
+! Body force
+               vbf = roga*gravity(1)
 
 ! Collect the terms
-            A_m(I,J,K,0) = -(A_m(I,J,K,E)+A_m(I,J,K,W)+&
-               A_m(I,J,K,N)+A_m(I,J,K,S)+A_m(I,J,K,T)+A_m(I,J,K,B)+&
-               V0*VOL)
+               A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
+                                A_m(i,j,k,n) + A_m(i,j,k,s) + &
+                                A_m(i,j,k,t) + A_m(i,j,k,b) + &
+                                v0*vol)
 
-            b_m(I,J,K) = b_m(I,J,K) -(SDP + lTAU_U_G + &
-               ( (V0)*U_GO(I,J,K) + VBF)*VOL )
+               b_m(i,j,k) = b_m(i,j,k) -(sdp + tau_u_g(i,j,k) + &
+                  ((v0)*u_go(i,j,k) + vbf)*vol)
 
-         ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
+            enddo
+         enddo
+      enddo
 
-          ENDDO   ! end do loop over ijk
-        ENDDO   ! end do loop over ijk
-     ENDDO   ! end do loop over ijk
-
-
-! modifications for bc
-      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
-
-      RETURN
-      END SUBROUTINE SOURCE_U_G
+      return
+   end subroutine source_u_g
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOURCE_U_g_BC                                           C
-!  Purpose: Determine source terms for U_g momentum eq. The terms      C
-!     appear in the center coefficient and RHS vector. The center      C
-!     coefficient and source vector are negative. The off-diagonal     C
-!     coefficients are positive.                                       C
-!     The drag terms are excluded from the source at this stage.       C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 15-MAY-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_U_g_BC                                           !
+!                                                                      !
+!  Purpose: Determine source terms for U_g momentum eq. The terms      !
+!     appear in the center coefficient and RHS vector. The center      !
+!     coefficient and source vector are negative. The off-diagonal     !
+!     coefficients are positive.                                       !
+!     The drag terms are excluded from the source at this stage.       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine source_u_g_bc(slo, shi, lo, hi, A_m, b_m, &
+      u_g, flag, dx, dy, dz)
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_

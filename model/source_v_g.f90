@@ -5,76 +5,61 @@ module source_v_g_module
 
    use param1, only: zero, half, one, undefined, is_undefined, small_number
 
-  contains
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOURCE_V_g                                              C
-!  Purpose: Determine source terms for V_g momentum eq. The terms      C
-!  appear in the center coefficient and RHS vector. The center         C
-!  coefficient and source vector are negative.  The off-diagonal       C
-!  coefficients are positive.                                          C
-!  The drag terms are excluded from the source at this stage.          C
-!                                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 7-JUN-96   C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SOURCE_V_G(slo, shi, lo, hi, &
-                            A_M, B_M, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-                            v_g, v_go, tau_v_g, flag, dx, dy, dz)
-
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_V_g                                              !
+!  Purpose: Determine source terms for V_g momentum eq. The terms      !
+!  appear in the center coefficient and RHS vector. The center         !
+!  coefficient and source vector are negative.  The off-diagonal       !
+!  coefficients are positive.                                          !
+!  The drag terms are excluded from the source at this stage.          !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine source_v_g(slo, shi, lo, hi, &
+      A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE constant, only: gravity
-      USE bc, only: delp_y
+      use constant, only: gravity
+      use bc, only: delp_y
 
-      USE functions, only: avg
-      USE functions, only: iminus,iplus,jminus,jplus,kminus,kplus, jnorth
-      USE functions, only: jnorth, jsouth
-      USE functions, only: zmax
-      USE geometry,  only: domlo, domhi, cyclic_y_pd
+      use functions, only: avg, zmax, jnorth
+      use geometry,  only: domlo, domhi, cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
 
-      USE scales, only: p_scale
-      USE toleranc, only: dil_ep_s
+      use scales, only: p_scale
 
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(inout) :: a_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      ! vector b_m
+      real(c_real), intent(inout) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: p_g&
+      real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ep_g&
+      real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ro_g&
+      real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: rop_g&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: rop_go&
+      real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_go&
+      real(c_real), intent(in   ) :: v_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: tau_v_g&
+      real(c_real), intent(in   ) :: tau_v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -93,8 +78,6 @@ module source_v_g_module
       real(c_real) :: Sdp
 ! Source terms (Volumetric)
       real(c_real) :: V0, Vbf
-! jackson terms: local stress tensor quantity
-      real(c_real) :: ltau_v_g
       real(c_real) :: odt
       real(c_real) :: axz, vol
 !---------------------------------------------------------------------//
@@ -104,98 +87,56 @@ module source_v_g_module
       vol = dx*dy*dz
 
       DO K = lo(3), hi(3)
-        DO J = lo(2), hi(2)+1
-          DO I = lo(1), hi(1)
+         DO J = lo(2), hi(2)
+            DO I = lo(1), hi(1)
 
-           EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
+               epga = avg(ep_g(i,j,k),ep_g(i,jnorth(i,j,k),k))
 
-! Impermeable internal surface
-         IF (flag(i,j,k,3)<1000) THEN
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
-            B_M(I,J,K) = ZERO
-
-! dilute flow
-         ELSEIF (EPGA <= DIL_EP_S) THEN
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
-            B_M(I,J,K) = ZERO
-            IF (EP_G(i,jsouth(i,j,k),k) > DIL_EP_S) THEN
-               A_M(I,J,K,S) = ONE
-            ELSE IF (EP_G(i,jnorth(i,j,k),k) > DIL_EP_S) THEN
-               A_M(I,J,K,N) = ONE
-            ELSE
-               B_M(I,J,K) = -V_G(I,J,K)
-            ENDIF
-
-! Normal case
-         ELSE
-
-! Surface forces
 ! Pressure term
-            PGN = P_G(i,jnorth(i,j,k),k)
-            if ( CYCLIC_Y_PD) then
-              if ( (j .eq. domlo(2)-1) .or. (j .eq. domhi(2)) ) &
-               PGN = P_G(i,jnorth(i,j,k),k) - DELP_Y
-            end if
-
-            SDP = -P_SCALE*EPGA*(PGN - P_G(I,J,K))*AXZ
+               pgn = p_g(i,jnorth(i,j,k),k)
+               if ( cyclic_y_pd) then
+                  if((j==domlo(2)-1) .or. (j==domhi(2)) ) &
+                     pgn = pgn - delp_y
+               end if
+               sdp = -p_scale*epga*(pgn - p_g(i,j,k))*axz
 
 ! Volumetric forces
-            ROGA = AVG(RO_G(I,J,K),RO_G(i,jnorth(i,j,k),k))
-            ROPGA = AVG(ROP_G(I,J,K),ROP_G(i,jnorth(i,j,k),k))
+               roga = avg(ro_g(i,j,k),ro_g(i,jnorth(i,j,k),k))
+               ropga = avg(rop_g(i,j,k),rop_g(i,jnorth(i,j,k),k))
 ! Previous time step
-            V0 = AVG(ROP_GO(I,J,K),ROP_GO(i,jnorth(i,j,k),k))*ODT
+               v0 = avg(rop_go(i,j,k),rop_go(i,jnorth(i,j,k),k))*odt
 
 ! Body force
-            VBF = ROGA*GRAVITY(2)
-
-! if jackson, implement jackson form of governing equations (ep_g dot
-! del tau_g): multiply by void fraction otherwise by 1
-            ltau_v_g = tau_v_g(i,j,k)
-
+               vbf = roga*gravity(2)
 
 ! Collect the terms
-            A_M(I,J,K,0) = -(A_M(I,J,K,E)+A_M(I,J,K,W)+&
-               A_M(I,J,K,N)+A_M(I,J,K,S)+A_M(I,J,K,T)+A_M(I,J,K,B)+&
-               V0*VOL)
-            B_M(I,J,K) = B_M(I,J,K) - (SDP + lTAU_V_G +  &
-               ((V0)*V_GO(I,J,K) + VBF)*VOL )
+               A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
+                                A_m(i,j,k,n) + A_m(i,j,k,s) + &
+                                A_m(i,j,k,t) + A_m(i,j,k,b)+ v0*vol)
 
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
+               b_m(i,j,k) = b_m(i,j,k) - (sdp + tau_v_g(i,j,k) +  &
+                  ((v0)*v_go(i,j,k) + vbf)*vol )
 
-! modifications for bc
-      CALL SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,V_G,flag,dx,dy,dz)
+            enddo
+         enddo
+      enddo
 
-      RETURN
-      END SUBROUTINE SOURCE_V_G
+      return
+      end subroutine source_v_g
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOURCE_V_g_BC                                           C
-!  Purpose: Determine source terms for V_g momentum eq. The terms      C
-!     appear in the center coefficient and RHS vector. The center      C
-!     coefficient and source vector are negative.  The off-diagonal    C
-!     coefficients are positive.                                       C
-!     The drag terms are excluded from the source at this stage        C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE SOURCE_V_G_BC(slo,shi,lo,hi,A_M,B_M,v_g,flag,dx,dy,dz)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_V_g_BC                                           !
+!  Purpose: Determine source terms for V_g momentum eq. The terms      !
+!     appear in the center coefficient and RHS vector. The center      !
+!     coefficient and source vector are negative.  The off-diagonal    !
+!     coefficients are positive.                                       !
+!     The drag terms are excluded from the source at this stage        !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      subroutine source_v_g_bc(slo, shi, lo, hi, A_m, b_m, &
+         v_g, flag, dx, dy, dz)
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
@@ -311,7 +252,19 @@ module source_v_g_module
                         A_m(i,j,k-1,:) = zero
                         A_m(i,j,k-1,0) = -one
                         b_m(i,j,k-1) = zero
+
+                     else if (flag(i-1,j,k,1) == PINF_ .or. &
+                        flag(i-1,j,k,1) == POUT_ ) then
+
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
+                        A_m(i,j,k,w) = zero
+
+                        b_m(i-1,j,k) = zero
+                        A_m(i-1,j,k,:) = zero
+                        A_m(i-1,j,k,0) = -one
                      endif
+
+
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
@@ -349,6 +302,17 @@ module source_v_g_module
                         A_m(i,j,k-1,:) = zero
                         A_m(i,j,k-1,0) = -one
                         b_m(i,j,k-1) = zero
+
+
+                     else if (flag(i+1,j,k,1) == PINF_ .or. &
+                        flag(i+1,j,k,1) == POUT_ ) then
+
+                        A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
+                        A_m(i,j,k,e) = zero
+
+                        b_m(i+1,j,k) = zero
+                        A_m(i+1,j,k,:) = zero
+                        A_m(i+1,j,k,0) = -one
                      endif
 
 ! --- NORTH FLUID --------------------------------------------------------->
@@ -469,21 +433,18 @@ module source_v_g_module
          endif
       enddo
 
-      RETURN
-      END SUBROUTINE SOURCE_V_G_BC
+      return
+      end subroutine source_v_g_bc
 
 
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: POINT_SOURCE_V_G                                        C
-!  Purpose: Adds point sources to the gas phase V-Momentum equation.   C
-!                                                                      C
-!  Author: J. Musser                                  Date: 10-JUN-13  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_V_G(slo, shi, lo, hi, A_M, B_M, flag, dx, dy, dz)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: POINT_SOURCE_V_G                                        !
+!  Purpose: Adds point sources to the gas phase V-Momentum equation.   !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      subroutine point_source_v_g(slo, shi, lo, hi, a_m, b_m, &
+         flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t

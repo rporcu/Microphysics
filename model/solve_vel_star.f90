@@ -26,7 +26,7 @@ module solve_vel_star_module
 
 ! Module procedures ..................................................//
       USE u_g_conv_dif, only: conv_dif_u_g
-      USE source_u_g_module, only: source_u_g
+      USE source_u_g_module, only: source_u_g, source_u_g_bc
       USE source_u_g_module, only: point_source_u_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -91,7 +91,7 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-  
+
       integer :: i,j,k
 
 !.....................................................................//
@@ -108,6 +108,9 @@ module solve_vel_star_module
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          u_g, u_go, tau_u_g, flag, dx, dy, dz)
+
+! modifications for bc
+      call source_u_g_bc (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_u_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -151,7 +154,7 @@ module solve_vel_star_module
 
 ! Module procedures ...................................................//
       USE v_g_conv_dif, only: conv_dif_v_g
-      USE source_v_g_module, only: source_v_g
+      USE source_v_g_module, only: source_v_g, source_v_g_bc
       USE source_v_g_module, only: point_source_v_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -232,6 +235,9 @@ module solve_vel_star_module
       call source_v_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
+! modifications for bc
+      call source_v_g_bc(slo, shi, lo, hi, A_m, b_m, v_g, flag, dx, dy, dz)
+
 ! add in point sources
       if(point_source) call point_source_v_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
 
@@ -272,7 +278,7 @@ module solve_vel_star_module
 
 ! Module procedures ..................................................//
       USE w_g_conv_dif, only: conv_dif_w_g
-      USE source_w_g_module, only: source_w_g
+      USE source_w_g_module, only: source_w_g, source_w_g_bc
       USE source_w_g_module, only: point_source_w_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -352,6 +358,9 @@ module solve_vel_star_module
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          w_g, w_go, tau_w_g, flag, dx, dy, dz)
+
+! modifications for bc
+      call source_w_g_bc (slo, shi, lo, hi, A_m, b_m, w_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_w_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
