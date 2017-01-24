@@ -39,7 +39,7 @@ The make command may fail with an error involving mempool; if so rerun ```make -
 Go to the MFIX directory, run cmake and run make (make sure BOXLIB_HOME is still set)
 ```shell
 cd <MFIX source directory>
-cmake .
+cmake -DCMAKE_CXX_FLAGS="-std=c++11" .
 make
 ```
 
