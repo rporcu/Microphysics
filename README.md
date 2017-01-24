@@ -1,4 +1,4 @@
-# Test cases for MFIX-Exa
+# Building and running Test cases for MFIX-Exa
 
 ## Directory overview
 
@@ -13,11 +13,11 @@
 ## Building BoxLib on Joule (Joule specific)
 For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
 ```shell
-module load gnu/6.1.0
-export CC=/nfs/apps/Compilers/GNU/6.1.0/bin/gcc
-export CXX=/nfs/apps/Compilers/GNU/6.1.0/bin/g++
-export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
-export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
+> module load gnu/6.1.0
+> export CC=/nfs/apps/Compilers/GNU/6.1.0/bin/gcc
+> export CXX=/nfs/apps/Compilers/GNU/6.1.0/bin/g++
+> export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
+> export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
 
 ## Build instructions
@@ -26,95 +26,92 @@ _Example: Building and installing BoxLib_
 
 Clone BoxLib repo and set environment variable.
 ```shell
-git clone https://github.com/BoxLib-Codes/BoxLib
-cd BoxLib
-git checkout 16.12.2
-export BOXLIB_HOME=$PWD
-cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
-make -j -k install
+> git clone https://github.com/BoxLib-Codes/BoxLib
+> cd BoxLib
+> git checkout 16.12.2
+> export BOXLIB_HOME=$PWD
+> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
+> make -j -k install
 ```
 The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
 
 
 Go to the MFIX directory, run cmake and run make (make sure BOXLIB_HOME is still set)
 ```shell
-cd <MFIX source directory>
-cmake -DCMAKE_CXX_FLAGS="-std=c++11" .
-make
+> cd <MFIX source directory>
+> cmake -DCMAKE_CXX_FLAGS="-std=c++11" .
+> make
 ```
-
-
-
 
 ---------------------------------------------------------------------
 
+## Building MFIX-Exa
 
+To build MFIX-Exa, run cmake then make.
 
-## Building MFIX
-
-This version of MFIX is built by invoking cmake from your run
-directory that contains any modified user source files. The
-following examples use DEM01 as the example case.
-
-Another tweak
-
-### Example: Serial executable
+### Building with defaults
 ```shell
-cd <path to>/mfix
-cd tests/DEM01
-cmake ../..
-make -j
+> cd <path to>/mfix
+> cmake .
+> make -j
 ```
 
-### Example: Compiler specific flags
+### Building with user-defined files (UDFs)
+
+To build MFIX-Exa for case with case-specific user-defined source files (UDFs),
+run cmake from the directory for that case. The following examples use DEM01 as the example
+case.
+
 ```shell
-cd <path to>/mfix
-mkdir build
-cd build
-cmake -D CMAKE_Fortran_FLAGS="-O2 -g -ffpe-trap=invalid -fimplicit-none" ..
-ctest -R DEM01
+> cd <path to>/mfix
+> cd tests/DEM01
+> ls
+mfix.dat usr.f90 usr_mof.f90
+> cmake ../..
+> make -j
 ```
 
-### Example: Distributed memory (MPI) executable
+### Building with compiler flags
+
+You can specify compiler options with CMAKE_Fortran_FLAGS and CMAKE_CXX_FLAGS,
+either specified on the command line or by editing them in CMakeCache.txt.
+
 ```shell
-cd <path to>/mfix
-cd tests/DEM01
-cmake -DMPI=1 ../..
-make -j
+> cmake -DCMAKE_Fortran_FLAGS="-O2 -g -ffpe-trap=invalid -fimplicit-none" -DCMAKE_CXX_FLAGS="-std=c++11" ..
 ```
 
-### Example: Shared memory (OpenMP) executable
+### Building with SMP or DMP
+
+Specify DMP or SMP to building with MPI or OpenMP support.
+
 ```shell
-cd <path to>/mfix
-cd tests/DEM01
-cmake -DSMP=1 ../..
-make -j
+> cmake -DDMP=1 ../..   # for distributed memory (MPI) executable
+> cmake -DSMP=1 ../..   # for shared memory (OpenMP) executable
 ```
 
-## Example: Passing compiler flags:
+## Running MFIX Test Suite
+
+Running tests requires the `numdiff` command, which can be installed with `apt
+install numdiff` on Ubuntu.
+
+### Listing all tests without running them
 ```shell
-cd <path to>/mfix
-cd tests/DEM01
-FC='gfortran -g -O0' cmake ../..
-make -j
+> ctest -N
 ```
 
-## Example:  Running all tests
+### Running all tests
 ```shell
-cd <path to>/mfix
-mkdir build
-cd build
-cmake ..
-make test
+> ctest
 ```
 
-### Example: Running a particular test
+### Running a particular test by <index> listed in ctest -N
 ```shell
-cd <path to>/mfix
-mkdir build
-cd build
-cmake ..
-ctest -R DEM01
+> ctest -I 3       # run the third test listed by ctest -N
+```
+
+### Running a particular test by name
+```shell
+> ctest -R DEM01  # running all tests with "DEM01" in the test name
 ```
 
 
