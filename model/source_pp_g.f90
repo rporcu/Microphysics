@@ -14,18 +14,6 @@ module source_pp_module
 !         coefficient and the source vector are negative. See          C
 !         conv_Pp_g                                                    C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 21-JUN-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
 subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
