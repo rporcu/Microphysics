@@ -10,7 +10,7 @@
 
 
 
-## Building BoxLib on Joule (Joule specific)
+## Prerequisite: BoxLib Environment on Joule (Joule specific)
 For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
 ```shell
 > module load gnu/6.1.0
@@ -20,9 +20,7 @@ For the Joule environment, load the gnu module and set environment variables fir
 > export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
 
-## Build instructions
-
-_Example: Building and installing BoxLib_
+## Prerequisite: Build and Install BoxLib
 
 Clone BoxLib repo and set environment variable.
 ```shell
@@ -94,19 +92,32 @@ Specify DMP or SMP to building with MPI or OpenMP support.
 Running tests requires the `numdiff` command, which can be installed with `apt
 install numdiff` on Ubuntu.
 
-### Listing all tests without running them
-```shell
-> ctest -N
-```
-
 ### Running all tests
 ```shell
 > ctest
 ```
 
-### Running a particular test by <index> listed in ctest -N
+### Listing all tests (without running them)
 ```shell
-> ctest -I 3       # run the third test listed by ctest -N
+> ctest -N
+Test project ~/mfixexa
+  Test #1: tests_FLD01
+  Test #2: tests_FLD02
+  Test #3: tests_DEM01
+  Test #4: tests_DEM02
+  Test #5: tests_DEM03
+  Test #6: tests_DEM04
+  Test #7: tests_DEM05
+  Test #8: tests_DEM06
+
+Total Tests: 8
+```
+
+### Running a particular test by the index listed in ctest -N
+```shell
+> ctest -I 3             # run the third test
+Test project ~/mfixexa
+    Start 3: tests_DEM01
 ```
 
 ### Running a particular test by name
