@@ -128,7 +128,7 @@ module solve_vel_star_module
          u_g, v_g, w_g, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
-         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag)
+         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag,'U')
 
       call under_relax (slo, shi, u_g, a_m, b_m, 'U', flag, 3)
 
@@ -254,7 +254,7 @@ module solve_vel_star_module
          v_g, w_g, u_g, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
-         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag)
+         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag,'V')
 
       call under_relax (slo, shi, v_g, a_m, b_m, 'V', flag, 4)
 
@@ -379,7 +379,7 @@ module solve_vel_star_module
          w_g, u_g, v_g, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
-         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag)
+         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag,'W')
 
       call under_relax (slo, shi, w_g, a_m, b_m, 'W', flag, 5)
 

@@ -91,9 +91,9 @@ MODULE CALC_TAU_V_G_MODULE
 !             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
-        DO K = slo(3),shi(3)
-         DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+        DO K = lo(3),hi(3)
+         DO J = lo(2),hi(2)-1
+          DO I = lo(1),hi(1)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
             IF (flag(i,j,k,3) > 1000 .AND. EPGA>DIL_EP_S) THEN
