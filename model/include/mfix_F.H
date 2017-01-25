@@ -18,7 +18,7 @@ extern "C"
   void fill_bc(Real* s, const int* slo, const int* shi,
                int* bc);
 
-  void mfix_main1(const int* slo, const int* shi, 
+  void mfix_main1(const int* slo, const int* shi,
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
@@ -60,8 +60,8 @@ extern "C"
                  Real* des_vel_new,
                  Real* des_usr_var);
 
-  void comp_mean_fields( 
-         const int* slo, const int* shi, 
+  void comp_mean_fields(
+         const int* slo, const int* shi,
          const int* lo, const int* hi, const int* max_pip,
          Real* ep_g, int* particle_state, Real* des_pos_new,
          Real* pvol, int* flag,
@@ -91,7 +91,7 @@ extern "C"
          int* estatus, int* finsh);
 
   void calc_coeff_all(
-         const int* slo, const int* shi, 
+         const int* slo, const int* shi,
          const int* lo, const int* hi, const int* max_pip,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
@@ -104,7 +104,7 @@ extern "C"
          Real* dx,       Real* dy,       Real* dz);
 
   void calc_coeff(
-         const int* slo, const int* shi, 
+         const int* slo, const int* shi,
          const int* lo,  const int* hi, const int* max_pip,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
@@ -117,7 +117,7 @@ extern "C"
          Real* dx,       Real* dy,       Real* dz);
 
   void calc_trd_and_tau(
-         const int* slo, const int* shi, 
+         const int* slo, const int* shi,
          const int* lo,  const int* hi,
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
          Real* trd_g,    Real* ep_g,
@@ -127,7 +127,7 @@ extern "C"
          Real* dx,       Real* dy,       Real* dz);
 
   void conv_rop(
-         const int* slo,       const int* shi, 
+         const int* slo,       const int* shi,
          const int*  lo,       const int*  hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
@@ -136,7 +136,7 @@ extern "C"
          Real* dx,             Real* dy,             Real* dz);
 
   void calc_mflux(
-         const int* slo, const int* shi, 
+         const int* slo, const int* shi,
          const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
@@ -149,8 +149,11 @@ extern "C"
          Real* ep_g, Real* rop_g, int* flag);
 
   void solve_u_g_star(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* u_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -162,8 +165,11 @@ extern "C"
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_v_g_star(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* v_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -175,8 +181,11 @@ extern "C"
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_w_g_star(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* w_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -188,7 +197,7 @@ extern "C"
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_pp_g(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,
@@ -202,7 +211,7 @@ extern "C"
           Real* dx,       Real* dy,       Real* dz);
 
   void correct0(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
           Real* p_g,      Real* pp_g,
           Real* u_g,      Real* v_g,      Real* w_g,
@@ -210,7 +219,7 @@ extern "C"
           int*  flag);
 
   void set_wall_bc(
-          const int* slo, const int* shi, 
+          const int* slo, const int* shi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           int*  flag);
@@ -242,7 +251,7 @@ extern "C"
   int check_convergence(int* nit);
 
   int goal_seek_mFlux(
-              const int* slo, const int* shi, 
+              const int* slo, const int* shi,
               int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
               Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag,
               Real* dx     ,  Real* dy,       Real* dz);
@@ -250,7 +259,7 @@ extern "C"
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
   void  mfix_des_time_march(
-          const int* slo,       const int* shi, 
+          const int* slo,       const int* shi,
           const int*  lo,       const int* hi,        const int* max_pip,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,

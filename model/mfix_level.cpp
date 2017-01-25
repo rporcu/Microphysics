@@ -551,7 +551,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     mfix_main1(sbx.loVect(), sbx.hiVect(), 
+     mfix_main1(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(),  bx.hiVect(),
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -625,7 +625,7 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      const Box& sbx = (*flag[lev])[mfi].box();
      const int max_pip = particle_state.size();
 
-     calc_coeff(sbx.loVect(), sbx.hiVect(), 
+     calc_coeff(sbx.loVect(), sbx.hiVect(),
                  bx.loVect(), bx.hiVect(), &max_pip,
       (*flag[lev])[mfi].dataPtr(),    &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
@@ -796,7 +796,7 @@ mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
        const Box& sbx = (*flag[lev])[mfi].box();
-  
+
        set_bc1(
         &time,                   &dt,
          sbx.loVect(),           sbx.hiVect(),
@@ -876,7 +876,12 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
       solve_u_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -901,7 +906,12 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
       solve_v_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -926,7 +936,12 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
       solve_w_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1068,7 +1083,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 }
 
 void
-mfix_level::fill_mf_bc(int lev, MultiFab& mf) 
+mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 {
 
   // NOTE -- double check the order of these! (ASA)
@@ -1092,7 +1107,7 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 }
 
 void
-mfix_level::fill_mf_bc(int lev, iMultiFab& mf) 
+mfix_level::fill_mf_bc(int lev, iMultiFab& mf)
 {
   mf.FillBoundary(geom[lev].periodicity());
 }

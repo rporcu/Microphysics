@@ -18,7 +18,9 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine solve_u_g_star(slo, shi, lo, hi, u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
+      subroutine solve_u_g_star(&
+         slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+         u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
          f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
 
@@ -47,17 +49,32 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: u_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(in   ) :: flux_ge&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(in   ) :: tau_u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      real(c_real), intent(in   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: flux_gn&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+
+      real(c_real), intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(in   ) :: flux_gt&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -68,14 +85,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: tau_u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
@@ -85,12 +94,12 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(  out) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: a_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(  out) :: d_e&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 !.....................................................................//
 
 ! Initialize a_m and b_m
@@ -144,7 +153,9 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_v_g_star(slo, shi, lo, hi, u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
+   subroutine solve_v_g_star(&
+      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       bind(C, name="solve_v_g_star")
@@ -174,17 +185,32 @@ module solve_vel_star_module
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(in   ) :: flux_ge&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: v_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: flux_gn&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: tau_v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+
+      real(c_real), intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(in   ) :: flux_gt&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -194,14 +220,6 @@ module solve_vel_star_module
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: tau_v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -213,7 +231,7 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(  out) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
@@ -269,23 +287,24 @@ module solve_vel_star_module
 !  Purpose: Solve starred velocity components                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_w_g_star(slo, shi, lo, hi, u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
+   subroutine solve_w_g_star(&
+      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
-      USE w_g_conv_dif, only: conv_dif_w_g
-      USE source_w_g_module, only: source_w_g, source_w_g_bc
-      USE source_w_g_module, only: point_source_w_g
-      USE calc_d_mod, only: calc_d
-      USE adjust_a, only: adjust_a_g
+      use w_g_conv_dif, only: conv_dif_w_g
+      use source_w_g_module, only: source_w_g, source_w_g_bc
+      use source_w_g_module, only: point_source_w_g
+      use calc_d_mod, only: calc_d
+      use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_w
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
 
 ! Global data .........................................................//
-! Fluid array bounds
 ! Flag for coupling fluid and dem via gas-solid drag
    use discretelement, only: des_continuum_coupled
 ! Flag for existence of point souces
@@ -298,17 +317,32 @@ module solve_vel_star_module
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(in   ) :: flux_ge&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(in   ) :: flux_gn&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: w_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(in   ) :: flux_gt&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(in   ) :: tau_w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
@@ -318,14 +352,6 @@ module solve_vel_star_module
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: tau_w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -337,7 +363,7 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: d_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(  out) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
