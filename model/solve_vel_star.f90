@@ -26,7 +26,7 @@ module solve_vel_star_module
 
 ! Module procedures ..................................................//
       USE u_g_conv_dif, only: conv_dif_u_g
-      USE source_u_g_module, only: source_u_g
+      USE source_u_g_module, only: source_u_g, source_u_g_bc
       USE source_u_g_module, only: point_source_u_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -91,15 +91,13 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-  
-      integer :: i,j,k
-
 !.....................................................................//
 
 ! Initialize a_m and b_m
       a_m(:,:,:,:) =  0.0d0
       a_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
+      d_e(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
@@ -108,6 +106,9 @@ module solve_vel_star_module
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          u_g, u_go, tau_u_g, flag, dx, dy, dz)
+
+! modifications for bc
+      call source_u_g_bc (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_u_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -127,7 +128,7 @@ module solve_vel_star_module
          u_g, v_g, w_g, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
-         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag)
+         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag,'U')
 
       call under_relax (slo, shi, u_g, a_m, b_m, 'U', flag, 3)
 
@@ -151,7 +152,7 @@ module solve_vel_star_module
 
 ! Module procedures ...................................................//
       USE v_g_conv_dif, only: conv_dif_v_g
-      USE source_v_g_module, only: source_v_g
+      USE source_v_g_module, only: source_v_g, source_v_g_bc
       USE source_v_g_module, only: point_source_v_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -232,6 +233,9 @@ module solve_vel_star_module
       call source_v_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          v_g, v_go, tau_v_g, flag, dx, dy, dz)
 
+! modifications for bc
+      call source_v_g_bc(slo, shi, lo, hi, A_m, b_m, v_g, flag, dx, dy, dz)
+
 ! add in point sources
       if(point_source) call point_source_v_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
 
@@ -250,7 +254,7 @@ module solve_vel_star_module
          v_g, w_g, u_g, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
-         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag)
+         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag,'V')
 
       call under_relax (slo, shi, v_g, a_m, b_m, 'V', flag, 4)
 
@@ -272,7 +276,7 @@ module solve_vel_star_module
 
 ! Module procedures ..................................................//
       USE w_g_conv_dif, only: conv_dif_w_g
-      USE source_w_g_module, only: source_w_g
+      USE source_w_g_module, only: source_w_g, source_w_g_bc
       USE source_w_g_module, only: point_source_w_g
       USE calc_d_mod, only: calc_d
       USE adjust_a, only: adjust_a_g
@@ -344,6 +348,7 @@ module solve_vel_star_module
       a_m(:,:,:,:) =  0.0d0
       a_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
+      d_t(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
@@ -352,6 +357,9 @@ module solve_vel_star_module
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          w_g, w_go, tau_w_g, flag, dx, dy, dz)
+
+! modifications for bc
+      call source_w_g_bc (slo, shi, lo, hi, A_m, b_m, w_g, flag, dx, dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_w_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
@@ -371,7 +379,7 @@ module solve_vel_star_module
          w_g, u_g, v_g, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
-         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag)
+         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag,'W')
 
       call under_relax (slo, shi, w_g, a_m, b_m, 'W', flag, 5)
 

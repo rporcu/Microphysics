@@ -96,9 +96,9 @@ MODULE CALC_TAU_U_G_MODULE
 !             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
-        DO K = slo(3),shi(3)
-          DO J = slo(2),shi(2)
-            DO I = slo(1),shi(1)
+        DO K = lo(3),hi(3)
+          DO J = lo(2),hi(2)
+            DO I = lo(1),hi(1)-1
 
             EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 

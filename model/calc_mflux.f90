@@ -62,33 +62,30 @@ MODULE CALC_MFLUX_MODULE
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if (flag(i,j,k,1) == 1) then
+               im1 = iminus(i,j,k)
+               jm1 = jminus(i,j,k)
+               km1 = kminus(i,j,k)
 
-                  im1 = iminus(i,j,k)
-                  jm1 = jminus(i,j,k)
-                  km1 = kminus(i,j,k)
+               ! East face (i+1/2, j, k)
+               flux_e(i,j,k) = rop_e(i,j,k)*ayz*u(i,j,k)
 
-                  ! East face (i+1/2, j, k)
-                  flux_e(i,j,k) = rop_e(i,j,k)*ayz*u(i,j,k)
+               ! West face (i-1/2, j, k)
+               if (flag(im1,j,k,1) /= 1) &
+                  flux_e(im1,j,k) = rop_e(im1,j,k)*ayz*u(im1,j,k)
 
-                  ! West face (i-1/2, j, k)
-                  if (flag(im1,j,k,1) /= 1) &
-                     flux_e(im1,j,k) = rop_e(im1,j,k)*ayz*u(im1,j,k)
+               ! North face (i, j+1/2, k)
+               flux_n(i,j,k) = rop_n(i,j,k)*axz*v(i,j,k)
 
-                  ! North face (i, j+1/2, k)
-                  flux_n(i,j,k) = rop_n(i,j,k)*axz*v(i,j,k)
+               ! South face (i, j-1/2, k)
+               if (flag(i,jm1,k,1) /= 1) &
+                  flux_n(i,jm1,k) = rop_n(i,jm1,k)*axz*v(i,jm1,k)
 
-                  ! South face (i, j-1/2, k)
-                  if (flag(i,jm1,k,1) /= 1) &
-                     flux_n(i,jm1,k) = rop_n(i,jm1,k)*axz*v(i,jm1,k)
+               ! Top face (i, j, k+1/2)
+               flux_t(i,j,k) = rop_t(i,j,k)*axy*w(i,j,k)
 
-                  ! Top face (i, j, k+1/2)
-                  flux_t(i,j,k) = rop_t(i,j,k)*axy*w(i,j,k)
-
-                  ! Bottom face (i, j, k-1/2)
-                  if (flag(i,j,kminus(i,j,k),1) /= 1) &
-                     flux_t(i,j,km1) = rop_t(i,j,km1)*axy*w(i,j,km1)
-               endif
+               ! Bottom face (i, j, k-1/2)
+               if (flag(i,j,kminus(i,j,k),1) /= 1) &
+                  flux_t(i,j,km1) = rop_t(i,j,km1)*axy*w(i,j,km1)
 
             enddo
          enddo

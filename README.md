@@ -61,7 +61,7 @@ Another tweak
 ### Example: Serial executable
 ```shell
 cd <path to>/mfix
-cd test/DEM01
+cd tests/DEM01
 cmake ../..
 make -j
 ```
@@ -78,7 +78,7 @@ ctest -R DEM01
 ### Example: Distributed memory (MPI) executable
 ```shell
 cd <path to>/mfix
-cd test/DEM01
+cd tests/DEM01
 cmake -DMPI=1 ../..
 make -j
 ```
@@ -86,7 +86,7 @@ make -j
 ### Example: Shared memory (OpenMP) executable
 ```shell
 cd <path to>/mfix
-cd test/DEM01
+cd tests/DEM01
 cmake -DSMP=1 ../..
 make -j
 ```
@@ -94,7 +94,7 @@ make -j
 ## Example: Passing compiler flags:
 ```shell
 cd <path to>/mfix
-cd test/DEM01
+cd tests/DEM01
 FC='gfortran -g -O0' cmake ../..
 make -j
 ```

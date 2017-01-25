@@ -254,16 +254,19 @@ MODULE CHECK_BC_INFLOW_MODULE
       IF(IS_UNDEFINED(BC_U_G(BCV))) THEN
          BC_U_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_U_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
       ENDIF
 
       IF(IS_UNDEFINED(BC_V_G(BCV))) THEN
          BC_V_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_V_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
       ENDIF
 
       IF(IS_UNDEFINED(BC_W_G(BCV))) THEN
          BC_W_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_W_g',BCV))
+         CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
       ENDIF
 
       DO M = 1, M_TOT
@@ -274,20 +277,26 @@ MODULE CHECK_BC_INFLOW_MODULE
          ELSE
             IF(IS_UNDEFINED(BC_U_S(BCV,M))) THEN
                BC_U_S(BCV,M) = ZERO
-               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) THEN
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_U_s',BCV,M))
+                  CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
+               ENDIF
             ENDIF
 
             IF(IS_UNDEFINED(BC_V_S(BCV,M))) THEN
                BC_V_S(BCV,M) = ZERO
-               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) THEN
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_V_s',BCV,M))
+                  CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
+               ENDIF
             ENDIF
 
             IF(IS_UNDEFINED(BC_W_S(BCV,M))) THEN
                BC_W_S(BCV,M) = ZERO
-               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) &
+               IF(ABS(BC_ROP_S(BCV,M)) > ZERO) THEN
                   WRITE(ERR_MSG, 1300) trim(iVar('BC_W_s',BCV,M))
+                  CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
+               ENDIF
             ENDIF
          ENDIF
       ENDDO

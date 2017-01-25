@@ -125,71 +125,53 @@
 !-----------------------------------------------
 
 ! initializing values
-      NUM = ZERO
-      DEN = ZERO
-      MAX_RESID = -ONE
-      NCELLS = 0
-      DEN1 = ONE
+      num = zero
+      den = zero
+      max_resid = -one
+      ncells = 0
+      den1 = one
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-             IF(flag(i,j,k,1)==1) THEN
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
-               ! evaluating the residual at cell (i,j,k):
-               NUM1 = ABS(B_M(I,J,K))
-               IF (NUM1 > MAX_RESID) THEN
-                  MAX_RESID = NUM1
+! evaluating the residual at cell (i,j,k):
+               num1 = abs(b_m(i,j,k))
+               if (num1 > max_resid) then
+                  max_resid = num1
                   i_resid = i
                   j_resid = j
                   k_resid = k
-            ENDIF
+               endif
 
 ! adding to terms that are accumulated
-            NCELLS = NCELLS + 1
-            NUM = NUM + NUM1
-            DEN = DEN + DEN1
-         ENDIF
+               ncells = ncells + 1
+               num = num + num1
+               den = den + den1
 
-      ENDDO
-      ENDDO
-      ENDDO
+            enddo
+         enddo
+      enddo
 
+! Normalizing the residual
+      if (abs(den*norm) > epsilon(den*norm)) then
+         resid = num/(den*norm)
+         max_resid = ncells*max_resid/(den*norm)
+      elseif (abs(num) < epsilon(num)) then
+         resid = zero
+         max_resid = zero
+         i_resid = 0
+         j_resid = 0
+         k_resid = 0
+      else
+         resid = large_number
+         max_resid = large_number
+      endif
 
-      IF (.not.debug_resid) THEN
-         ! Normalizing the residual
-         IF (DEN*NORM > ZERO) THEN
-            ! if norm=1 then this simply becomes an unscaled 'average' residual
-            resid = NUM/(DEN*NORM)
-         ELSEIF (abs(NUM) < epsilon(NUM)) THEN
-            resid = zero
-         ELSE
-            resid = LARGE_NUMBER
-         ENDIF
-      ELSE   ! if(debug_resid) branch
-         ! Normalizing the residual
-         IF (abs(DEN*NORM) > epsilon(DEN*NORM)) THEN
-            resid = NUM/(DEN*NORM)
-            max_resid = NCELLS*MAX_RESID/(DEN*NORM)
-         ELSEIF (abs(NUM) < epsilon(NUM)) THEN
-            resid = zero
-            max_resid = zero
-            i_resid = 0
-            j_resid = 0
-            k_resid = 0
-         ELSE
-            resid = LARGE_NUMBER
-            max_resid = LARGE_NUMBER
-         ENDIF
-      ENDIF   ! end if/else debug_resid branch
+      return
 
-      RETURN
+      end subroutine calc_resid_pp
 
-    CONTAINS
-
-      INCLUDE 'functions.inc'
-
-      END SUBROUTINE CALC_RESID_PP
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -201,10 +183,9 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
          vel, vels1, vels2, A_M, B_M, NUM, DEN, &
-         RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
+         RESID, MAX_RESID, i_resid, j_resid, k_resid, flag,axis)
 
 !-----------------------------------------------
 ! Modules
@@ -250,6 +231,8 @@
       ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
 
+      character, intent(in) :: axis
+
 !-----------------------------------------------
 !     Local variables
 !-----------------------------------------------
@@ -269,100 +252,107 @@
       real(c_real) :: resid_ijk&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
+
+      integer :: llo(3),lhi(3)
 !-----------------------------------------------
 
+      llo = lo
+      lhi = hi
+
+      if(axis == 'U') then
+         lhi(1) = hi(1) -1
+      elseif(axis == 'V') then
+         lhi(2) = hi(2) -1
+      elseif(axis == 'W') then
+         lhi(3) = hi(3) -1
+      else
+         stop
+      endif
+
 ! initializing
-      NUM = ZERO
-      DEN = ZERO
-      MAX_RESID = -ONE
-      NCELLS = 0
+      num = zero
+      den = zero
+      max_resid = -one
+      ncells = 0
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            RESID_IJK(i,j,k) = ZERO
-
-           ! Skip walls where some values are undefined.
-           IF(flag(i,j,k,1)>=100) cycle
-
-           IF (flag(i,j,k,2) > 1000) THEN
+      do k = llo(3),lhi(3)
+         do j = llo(2),lhi(2)
+            do i = llo(1),lhi(1)
+               resid_ijk(i,j,k) = zero
 
 ! evaluating the residual at cell (i,j,k):
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
 
-              NUM1 = B_M(I,J,K) - (&
-                 A_M(I,J,K,0)*vel(i,j,k)+&
-                 A_M(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
-                 A_M(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
-                 A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
-                 A_M(I,J,K,S)*vel(i,jminus(i,j,k),k))
+               num1 = b_m(i,j,k) - (&
+                  a_m(i,j,k,0)*vel(i,j,k)+&
+                  a_m(i,j,k,e)*vel(iplus(i,j,k), j,k) + &
+                  a_m(i,j,k,w)*vel(iminus(i,j,k),j,k) + &
+                  a_m(i,j,k,n)*vel(i,jplus(i,j,k), k) + &
+                  a_m(i,j,k,s)*vel(i,jminus(i,j,k),k) + &
+                  a_m(i,j,k,t)*vel(i,j,kplus(i,j,k) ) + &
+                  a_m(i,j,k,b)*vel(i,j,kminus(i,j,k)) )
 
-              NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
-                 A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
+! Ignore momentum residual in stagnant regions.  Need an alternative
+! criteria for residual scaling for such cases.
+               magvel = sqrt(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
 
-            ! Ignore momentum residual in stagnant regions.  Need an alternative
-            ! criteria for residual scaling for such cases.
-            magvel = SQRT(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
+               if (magvel > small_number) then
+                  num1 = abs(num1)
+                  den1 = abs(a_m(i,j,k,0)*magvel)
 
-            IF (magvel > SMALL_NUMBER) THEN
-               NUM1 = ABS(NUM1)
-               DEN1 = ABS(A_M(I,J,K,0)*magvel)
+! Storing value of residual at each (i,j,k) location
+                  resid_ijk(i,j,k) = num1
 
-               ! Storing value of residual at each (i,j,k) location
-               RESID_IJK(i,j,k) = NUM1
+! Adding to terms that are accumulated
+                  ncells = ncells + 1
+                  num = num + num1
+                  den = den + den1
+               endif
+            enddo
+         enddo
+      enddo
 
-               ! Adding to terms that are accumulated
-               NCELLS = NCELLS + 1
-               NUM = NUM + NUM1
-               DEN = DEN + DEN1
-            ENDIF
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
 
-      IF (.not.debug_resid) RETURN
-
-      i_RESID = 1
-      j_RESID = 1
-      k_RESID = 1
+      i_resid = 1
+      j_resid = 1
+      k_resid = 1
 
       max_resid = resid_ijk( i_resid, j_resid, k_resid)
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            IF (resid_ijk( i,j,k ) > max_resid) THEN
-              i_resid = i
-              j_resid = j
-              k_resid = k
-              max_resid = resid_ijk(i,j,k)
-            ENDIF
-          ENDDO
-        ENDDO
-      ENDDO
+      do k = llo(3),lhi(3)
+         do j = llo(2),lhi(2)
+            do i = llo(1),lhi(1)
+               if (resid_ijk( i,j,k ) > max_resid) then
+                  i_resid = i
+                  j_resid = j
+                  k_resid = k
+                  max_resid = resid_ijk(i,j,k)
+               endif
+            enddo
+         enddo
+      enddo
 
       ! Normalizing the residual
-      IF (DEN > ZERO) THEN
-         resid = NUM/DEN
-         max_resid = NCELLS * max_resid / DEN
-      ELSEIF (abs(NUM) < epsilon(NUM)) THEN
-         resid = ZERO
-         max_resid = ZERO
+      if (den > zero) then
+         resid = num/den
+         max_resid = ncells * max_resid / den
+      elseif (abs(num) < epsilon(num)) then
+         resid = zero
+         max_resid = zero
          i_resid = 0
          j_resid = 0
          k_resid = 0
-      ELSE
-         resid = LARGE_NUMBER
-         max_resid = LARGE_NUMBER
-      ENDIF
+      else
+         resid = large_number
+         max_resid = large_number
+      endif
 
-      RETURN
+      return
 
-    CONTAINS
+    contains
 
-      INCLUDE 'functions.inc'
+      include 'functions.inc'
 
-   END SUBROUTINE CALC_RESID_VEL
-      END MODULE residual
+   end subroutine calc_resid_vel
+end module residual
