@@ -363,9 +363,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
-      Array<int> slo(3);
-      Array<int> shi(3);
-
       // Update boundary conditions
       mfix_set_bc1(lev,time,dt);
 
@@ -493,9 +490,6 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     const int max_pip = particle_state.size();
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -527,9 +521,6 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   const int max_pip = particle_state.size();
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -551,9 +542,6 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
@@ -631,9 +619,6 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -668,9 +653,6 @@ mfix_level::mfix_calc_all_coeffs(int lev)
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
-
-  Array<int> slo(3);
-  Array<int> shi(3);
 
   const int max_pip = particle_state.size();
 
@@ -707,9 +689,6 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -732,9 +711,6 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 void
 mfix_level::mfix_init_fluid(int lev)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
@@ -768,9 +744,6 @@ mfix_level::mfix_init_fluid(int lev)
 void
 mfix_level::mfix_comp_mean_fields(int lev)
 {
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -793,9 +766,6 @@ mfix_level::mfix_comp_mean_fields(int lev)
 void
 mfix_level::mfix_calc_mflux(int lev)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
@@ -819,9 +789,6 @@ mfix_level::mfix_calc_mflux(int lev)
 void
 mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
 {
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -857,9 +824,6 @@ mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
 void
 mfix_level::mfix_set_wall_bc(int lev)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -877,9 +841,6 @@ mfix_level::mfix_set_wall_bc(int lev)
 void
 mfix_level::mfix_conv_rop(int lev, Real dt)
 {
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -904,9 +865,6 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_vels(int lev, Real dt)
 {
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -999,9 +957,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 {
-    Array<int> slo(3);
-    Array<int> shi(3);
-
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -1036,9 +991,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 void
 mfix_level::mfix_correct0(int lev)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -1059,9 +1011,6 @@ mfix_level::mfix_correct0(int lev)
 void
 mfix_level::mfix_physical_prop(int lev, int calc_flag)
 {
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -1083,9 +1032,6 @@ mfix_level::usr3(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  Array<int> slo(3);
-  Array<int> shi(3);
-
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& sbx = (*flag[lev])[mfi].box();
@@ -1104,9 +1050,6 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     Real tol;
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
-
-    Array<int> slo(3);
-    Array<int> shi(3);
 
 #if(0)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
@@ -1127,6 +1070,24 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 void
 mfix_level::fill_mf_bc(int lev, MultiFab& mf) 
 {
+
+  // NOTE -- double check the order of these! (ASA)
+  Array<int> bc_type(6);
+  bc_type[0] = FOEXTRAP;  // xlo
+  bc_type[1] = FOEXTRAP;  // ylo
+  bc_type[2] = FOEXTRAP;  // zlo
+  bc_type[3] = FOEXTRAP;  // xhi
+  bc_type[4] = FOEXTRAP;  // yhi
+  bc_type[5] = FOEXTRAP;  // zhi
+
+  // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
+  for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+  {
+      const Box& sbx = mf[mfi].box();
+      fill_bc(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),bc_type.dataPtr());
+  }
+
+  // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
   mf.FillBoundary(geom[lev].periodicity());
 }
 

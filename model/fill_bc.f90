@@ -17,18 +17,17 @@
 ! :::       reasonable values for arithmetic to live
 ! ::: -----------------------------------------------------------
 
-      subroutine fill_bc(s,slo,shi,domlo,domhi,bc) &
+      subroutine fill_bc(s,slo,shi,bc) &
          bind(C, name="fill_bc")
 
       use iso_c_binding , only: c_int
       use bl_fort_module, only: c_real
-      use bl_fort_module, only: c_real
 
-      use bl_fort_module, only: c_real
+      use geometry      , only: domlo, domhi
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),domlo(3),domhi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: bc(3,2)
 
       real(c_real), intent(inout) ::  s&
@@ -846,14 +845,16 @@
 ! ****************************************************************************
 ! ****************************************************************************
 !
-      subroutine hoextraptocc(s,slo,shi,domlo,domhi,bc)
+      subroutine hoextraptocc(s,slo,shi,bc)
 
       use iso_c_binding , only: c_int
       use bl_fort_module, only: c_real
 
+      use geometry      , only: domlo, domhi
+
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),domlo(3),domhi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: bc(3,2)
 
       real(c_real), intent(inout) ::  s&
