@@ -58,10 +58,16 @@ int main (int argc, char* argv[])
   real_box.setHi(2, zlength);
 
   // This sets the boundary conditions to be doubly or triply periodic
-  int is_periodic[BL_SPACEDIM];
-  is_periodic[0] = cyclic_x;
-  is_periodic[1] = cyclic_y;
-  is_periodic[2] = cyclic_z;
+  Array<int> is_per(3);
+  is_per[0] = cyclic_x;
+  is_per[1] = cyclic_y;
+  is_per[2] = cyclic_z;
+
+  // This is equivalent to reading "geometry.is_per = ..." from the inputs file, but here we 
+  //      read cyclic_* from "mfix.dat" and initialize the ParmParse table here so when we call Geometry::Setup
+  //      from the AmrCore constructor it will see it. 
+  ParmParse pp("geometry");
+  pp.addarr("is_periodic",is_per);
 
   int max_level = 0;
   int lev = 0;
