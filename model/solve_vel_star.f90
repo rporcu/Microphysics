@@ -109,8 +109,9 @@ module solve_vel_star_module
       d_e(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_u_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
+      call conv_dif_u_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
+         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+         flag, dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
