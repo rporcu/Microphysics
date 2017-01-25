@@ -15,6 +15,11 @@ extern "C"
   void set_domain(const int* slo, const int* shi, const int* lo, const int* hi,
                   int* flag, Real* dx, Real* dy, Real* dz);
 
+  void fill_bc(Real* s,
+               const int* slo, const int* shi,
+               const int* dlo, const int* dhi,
+               const int* bc);
+
   void mfix_main1(const int* slo, const int* shi, 
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
