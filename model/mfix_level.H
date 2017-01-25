@@ -205,10 +205,6 @@ private:
     std::string plot_file {"plt"};
     int check_int = -1;
     int plot_int = -1;
-
-    static IntVect x_nodal_flag;
-    static IntVect y_nodal_flag;
-    static IntVect z_nodal_flag;
 };
 
 #endif

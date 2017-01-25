@@ -18,13 +18,11 @@ extern "C"
   void mfix_main1(const int* slo, const int* shi, 
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
-                 Real* u_g,     const int* ulo, const int* uhi, 
-                 Real* v_g,     const int* vlo, const int* vhi, 
-                 Real* w_g,     const int* wlo, const int* whi, 
+                 Real* u_g,     Real* v_g,      Real* w_g,
                  Real* p_g,     Real* ep_g,
                  Real* ro_g,    Real* rop_g,
-                 Real* d_e,     Real* d_n,      Real* d_t,     
-                 Real* flux_gE, Real* flux_gN,  Real* flux_gT, 
+                 Real* d_e,     Real* d_n,      Real* d_t,
+                 Real* flux_gE, Real* flux_gN,  Real* flux_gT,
                  Real* trD_g,   Real* lambda_g, Real* mu_g,
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
@@ -32,9 +30,7 @@ extern "C"
   void init_fluid(const int* slo, const int* shi, const int* lo, const int* hi,
                  Real* ep_g,    Real* ro_g,
                  Real* rop_g,   Real* p_g,
-                 Real* u_g,     const int* ulo, const int* uhi, 
-                 Real* v_g,     const int* vlo, const int* vhi, 
-                 Real* w_g,     const int* wlo, const int* whi, 
+                 Real* u_g,     Real* v_g,      Real* w_g,
                  Real* mu_g,    Real* lambda_g,
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
@@ -73,9 +69,7 @@ extern "C"
          const int* slo, const int* shi,
          Real* p_g,      Real* ep_g,
          Real* ro_g,     Real* rop_g,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,      Real* v_g,      Real* w_g,
          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
@@ -85,9 +79,8 @@ extern "C"
          Real* time, Real* dt, int* nstep,
          Real* ep_g,    Real* p_g,
          Real* ro_g,    Real* rop_g,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,     Real* v_g,
+         Real* w_g,
          int* particle_state,    Real* des_radius,
          Real* ro_sol,           Real* des_pos_new,
          Real* des_vel_new,      Real* des_usr_var,
@@ -99,9 +92,7 @@ extern "C"
          const int* lo, const int* hi, const int* max_pip,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,  Real* v_g,   Real* w_g,
          Real* mu_g, Real* f_gds, Real* drag_bm,
          int* particle_phase,  int* particle_state,
          Real* pvol, Real* des_pos_new,
@@ -115,23 +106,11 @@ extern "C"
          int* flag, int* level,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,  Real* v_g,   Real* w_g,
          Real* mu_g, Real* f_gds, Real* drag_bm,
          int* particle_phase,  int* particle_state,
          Real* pvol, Real* des_pos_new,
          Real* des_vel_new, Real* des_radius,
-         Real* dx,       Real* dy,       Real* dz);
-
-  void calc_trd_g(
-         const int* slo, const int* shi, 
-         const int* lo,  const int* hi,
-         Real* trd_g,    
-         Real* u_g,      const int* ulo, const int* uhi, 
-         Real* v_g,      const int* vlo, const int* vhi, 
-         Real* w_g,      const int* wlo, const int* whi, 
-         int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
   void calc_trd_and_tau(
@@ -139,9 +118,7 @@ extern "C"
          const int* lo,  const int* hi,
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
          Real* trd_g,    Real* ep_g,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,      Real* v_g,     Real* w_g,
          Real* lambda_g, Real* mu_g,
          int* flag,
          Real* dx,       Real* dy,       Real* dz);
@@ -149,9 +126,7 @@ extern "C"
   void conv_rop(
          const int* slo,       const int* shi, 
          const int*  lo,       const int*  hi,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          int* flag,            Real* dt,
@@ -160,9 +135,7 @@ extern "C"
   void calc_mflux(
          const int* slo, const int* shi, 
          const int* lo, const int* hi,
-         Real* u_g,     const int* ulo, const int* uhi, 
-         Real* v_g,     const int* vlo, const int* vhi, 
-         Real* w_g,     const int* wlo, const int* whi, 
+         Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
          int* flag,
@@ -175,9 +148,7 @@ extern "C"
   void solve_u_g_star(
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           Real* u_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_u_g,  Real* d_e,
@@ -190,9 +161,7 @@ extern "C"
   void solve_v_g_star(
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           Real* v_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_v_g,  Real* d_n,
@@ -205,9 +174,7 @@ extern "C"
   void solve_w_g_star(
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           Real* w_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_w_g,  Real* d_t,
@@ -220,9 +187,7 @@ extern "C"
   void solve_pp_g(
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,
           Real* rop_g,    Real* rop_go,
           Real* ro_g,
@@ -237,19 +202,37 @@ extern "C"
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
           Real* p_g,      Real* pp_g,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t,
           int*  flag);
 
   void set_wall_bc(
           const int* slo, const int* shi, 
           const int* lo,  const int* hi,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,      Real* v_g,      Real* w_g,
           int*  flag);
+
+  void mfix_iterate(
+         Real* u_g,            Real* v_g,            Real* w_g,
+         Real* u_go,           Real* v_go,           Real* w_go,
+         Real* p_g,            Real* pp_g,
+         Real* ep_g,           Real* ro_g,
+         Real* rop_g,          Real* rop_go,
+         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
+         Real* d_e,            Real* d_n,            Real* d_t,
+         Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
+         Real* mu_g,           Real* f_gds,
+         Real* A_m,            Real* b_m,            Real* drag_bm,
+         Real* tau_u_g,        Real* tau_v_g,        Real* tau_w_g,
+         int* particle_phase,  int* particle_state,
+         Real* pvol,           Real* des_radius,
+         Real* des_pos_new,    Real* des_vel_new,
+         int* flag,
+         Real* time,           Real* dt,             int* nstep,
+         int* ier,             int* nit,
+         int* mustit, int* gsmf,
+         Real* delP_MF, Real* lMFlux, Real* resg,
+         Real* lnormg, int* lset_normg);
 
   void display_resid(int* nit);
 
@@ -267,9 +250,7 @@ extern "C"
           const int* slo,       const int* shi, 
           const int*  lo,       const int* hi,        const int* max_pip,
           Real* ep_g,           Real* p_g,
-          Real* u_g,     const int* ulo, const int* uhi, 
-          Real* v_g,     const int* vlo, const int* vhi, 
-          Real* w_g,     const int* wlo, const int* whi, 
+          Real* u_g,            Real* v_g,            Real* w_g,
           Real* ro_g,           Real* rop_g,          Real* mu_g,
           int* particle_state,  int* particle_phase,
           Real* des_radius,     Real* ro_sol,
@@ -291,10 +272,9 @@ extern "C"
   void mfix_usr2();
 
   void mfix_usr3(const int* slo, const int* shi,
-                 Real* u_g,     const int* ulo, const int* uhi, 
-                 Real* v_g,     const int* vlo, const int* vhi, 
-                 Real* w_g,     const int* wlo, const int* whi, 
-                 Real* p_g,      Real* dx ,     Real* dy,   Real* dz);
+                 Real* u_g,     Real* v_g,
+                 Real* w_g,     Real* p_g,
+                 Real* dx ,     Real* dy,   Real* dz);
 
   void mfix_finl_err_msg();
 

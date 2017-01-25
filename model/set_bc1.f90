@@ -12,8 +12,7 @@ module set_bc1_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-     SUBROUTINE SET_BC1(time, dt, slo, shi, p_g, ep_g, ro_g, rop_g, &
-                        u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+     SUBROUTINE SET_BC1(time, dt, slo, shi, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
                         flux_ge, flux_gn, flux_gt, flag, dx, dy, dz) &
        bind(C, name="set_bc1")
 
@@ -27,7 +26,6 @@ module set_bc1_module
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
       real(c_real),   intent(in   ) :: dt, time, dx, dy, dz
 
       integer(c_int), intent(in   ) :: flag&
@@ -42,17 +40,17 @@ module set_bc1_module
       real(c_real), intent(inout) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):shi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_ge&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gn&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: flux_gt&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):shi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -66,31 +64,24 @@ module set_bc1_module
 
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
-               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g, &
-                                u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                flux_ge,flux_gn,flux_gt,flag)
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+                  flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L, time, dt, slo, shi, &
-                                           u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                           rop_g,ep_g,dx,dy,dz)
+                  u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_OUTFLOW')
-               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g, &
-                                u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                flux_ge,flux_gn,flux_gt,flag)
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+                  flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_ADJUST_OUTFLOW(L, time, dt, slo, shi, &
-                                           u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                           rop_g,ep_g,dx,dy,dz)
+                  u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_INFLOW')
             CASE ('P_INFLOW')
-               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g, &
-                                u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                flux_ge,flux_gn,flux_gt,flag)
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+                  flux_ge,flux_gn,flux_gt,flag)
             CASE ('OUTFLOW')
-               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g, &
-                                u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                flux_ge,flux_gn,flux_gt,flag)
+               CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
+                  flux_ge,flux_gn,flux_gt,flag)
                CALL SET_BC1_REPORT_OUTFLOW(L,time, dt, slo, shi, &
-                                u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                rop_g,ep_g,dx,dy,dz)
+                  u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             END SELECT
          ENDIF   ! end if (bc_defined(l))
       ENDDO    ! end do loop (l=1,dimension_bc)
@@ -107,8 +98,7 @@ module set_bc1_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_BC1_REPORT_OUTFLOW(BCV, time, dt, slo, shi,&
-                                        u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                        rop_g, ep_g, dx, dy, dz)
+         u_g, v_g, w_g, rop_g, ep_g, dx, dy, dz)
 
       use bc, only: bc_dt_0, bc_time
       use bc, only: bc_mout_g
@@ -121,15 +111,14 @@ module set_bc1_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(in) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: ep_g&
@@ -143,9 +132,7 @@ module set_bc1_module
 
       IF (IS_UNDEFINED(BC_DT_0(BCV))) RETURN
 
-      CALL CALC_OUTFLOW(BCV,slo,shi, &
-                        u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi,&
-                        rop_g,ep_g,dx,dy,dz)
+      CALL CALC_OUTFLOW(BCV,slo,shi,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &
@@ -178,8 +165,7 @@ module set_bc1_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_BC1_ADJUST_OUTFLOW(BCV, time, dt, slo, shi, &
-                                        u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                                        rop_g, ep_g, dx, dy, dz)
+         u_g, v_g, w_g, rop_g, ep_g, dx, dy, dz)
 
       use bc, only: bc_dt_0, bc_time
       use bc, only: bc_i_w, bc_i_e
@@ -200,8 +186,7 @@ module set_bc1_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
 ! index for boundary condition
       integer, intent(in) :: bcv
@@ -214,11 +199,11 @@ module set_bc1_module
 
 
       real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -226,9 +211,7 @@ module set_bc1_module
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
-      CALL CALC_OUTFLOW(BCV,slo,shi, &
-                        u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi,&
-                        rop_g,ep_g,dx,dy,dz)
+      CALL CALC_OUTFLOW(BCV,slo,shi,u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
 
 ! Calculate and accumulate the actual mass and volume outflow
       IF (TIME + 0.1d0*DT>=BC_TIME(BCV) .OR. &

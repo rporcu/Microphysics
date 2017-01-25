@@ -29,7 +29,7 @@ module source_u_g_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SOURCE_U_G(slo, shi, lo, hi, &
          A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, ulo, uhi, u_go, tau_u_g, flag, dx, dy, dz)
+         u_g, u_go, tau_u_g, flag, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -50,16 +50,15 @@ module source_u_g_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: b_m&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -72,11 +71,11 @@ module source_u_g_module
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_go&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: tau_u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -105,23 +104,31 @@ module source_u_g_module
       ayz = dy*dz
       vol = dx*dy*dz
 
-      DO K = ulo(3), uhi(3)
-        DO J = ulo(2), uhi(2)
-          DO I = ulo(1), uhi(1)
+      DO K = lo(3), hi(3)
+        DO J = lo(2), hi(2)
+          DO I = lo(1), hi(1)+1
 
          EPGA = AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
 
          ! Impermeable internal surface
          IF (flag(i,j,k,2) < 1000) THEN
-
-            A_m(I,J,K,:) = ZERO
+            A_m(I,J,K,E) = ZERO
+            A_m(I,J,K,W) = ZERO
+            A_m(I,J,K,N) = ZERO
+            A_m(I,J,K,S) = ZERO
+            A_m(I,J,K,T) = ZERO
+            A_m(I,J,K,B) = ZERO
             A_m(I,J,K,0) = -ONE
             b_m(I,J,K) = ZERO
 
          ! Dilute flow
          ELSEIF (EPGA <= DIL_EP_S) THEN
-
-            A_m(I,J,K,:) = ZERO
+            A_m(I,J,K,E) = ZERO
+            A_m(I,J,K,W) = ZERO
+            A_m(I,J,K,N) = ZERO
+            A_m(I,J,K,S) = ZERO
+            A_m(I,J,K,T) = ZERO
+            A_m(I,J,K,B) = ZERO
             A_m(I,J,K,0) = -ONE
             b_m(I,J,K) = ZERO
 
@@ -165,7 +172,7 @@ module source_u_g_module
                V0*VOL)
 
             b_m(I,J,K) = b_m(I,J,K) -(SDP + lTAU_U_G + &
-               ( (V0)*u_go(I,J,K) + VBF)*VOL )
+               ( (V0)*U_GO(I,J,K) + VBF)*VOL )
 
          ENDIF   ! end branching on cell type (ip/dilute/block/else branches)
 
@@ -174,7 +181,7 @@ module source_u_g_module
       ENDDO   ! end do loop over ijk
 
       ! modifications for bc
-      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, u_g, ulo, uhi, flag, dx, dy, dz)
+      CALL SOURCE_U_G_BC (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
       RETURN
       END SUBROUTINE SOURCE_U_G
@@ -198,7 +205,7 @@ module source_u_g_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m,b_m,u_g,ulo,uhi,flag,dx,dy,dz)
+      SUBROUTINE SOURCE_U_G_BC(slo,shi,lo,hi,A_m, b_m, U_G, flag, dx, dy, dz)
 
       USE bc, only: bc_hw_g, bc_uw_g
       USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
@@ -211,25 +218,23 @@ module source_u_g_module
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: b_m&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Velocity u_g
       real(c_real), INTENT(IN   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
-
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
@@ -253,10 +258,10 @@ module source_u_g_module
 ! no penetration condition.
 ! ---------------------------------------------------------------->>>
 ! bottom xy plane
-      if (ulo(3) .eq. domlo(3)-1) then
-         K1 = domlo(3)-1
-         DO J1 = ulo(2),uhi(2)
-         DO I1 = ulo(1),uhi(1)
+      K1 = domlo(3)-1
+      if (slo(3) .lt. k1) then
+      DO J1 = slo(2),shi(2)
+         DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
 ! Setting the wall velocity to zero (set the boundary cell value equal
 ! and opposite to the adjacent fluid cell value)
@@ -281,13 +286,13 @@ module source_u_g_module
                b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
-         ENDDO
+      ENDDO
       end if
 
 ! top xy plane
-      if (uhi(3) .eq. domhi(3)+1) then
-         K1 = domhi(3)+1
-         DO J1 = slo(2),shi(2)
+      K1 = domhi(3)+1
+      if (shi(3) .gt. k1) then
+      DO J1 = slo(2),shi(2)
          DO I1 = slo(1),shi(1)
             IF (flag(i1,j1,k1,1) == 100) THEN
                A_m(I1,J1,K1,E) = ZERO
@@ -309,7 +314,7 @@ module source_u_g_module
                b_m(I1,J1,K1) = ZERO
             ENDIF
          ENDDO
-         ENDDO
+      ENDDO
       end if
 
 ! south xz plane
@@ -657,8 +662,7 @@ module source_u_g_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_m, b_m, ulo, uhi, &
-                                  flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_m, b_m, flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
@@ -666,15 +670,14 @@ module source_u_g_module
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(IN   ) :: A_m&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: b_m&
-         (ulo(1):uhi(1),ulo(2):shi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

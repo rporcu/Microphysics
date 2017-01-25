@@ -28,7 +28,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      iminus = max(domlo(1)-1, i-1)
+!     if (i.eq.domlo(1) .and.  flag_mod(i,j,k,1) > 1) then
+!        iminus = i
+!     else
+         iminus = max(domlo(1)-1, i-1)
+!     end if
 
       if (cyclic_x .and. (iminus < domlo(1)) .and. &
          flag_mod(i,j,k,1)<100) iminus = domhi(1)
@@ -43,7 +47,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      iplus = min(domhi(1)+1, i+1)
+!     if (i.eq.domhi(1) .and. flag_mod(i,j,k,1) > 1) then
+!        iplus = i
+!     else
+         iplus = min(domhi(1)+1, i+1)
+!     end if
 
       if (cyclic_x .and. (iplus > domhi(1)) .and. &
          flag_mod(i,j,k,1)<100) iplus = domlo(1)
@@ -57,7 +65,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      jminus = max(domlo(2)-1, j-1)
+!     if (j.eq.domlo(2) .and. flag_mod(i,j,k,1) > 1) then
+!        jminus = j
+!     else
+         jminus = max(domlo(2)-1, j-1)
+!     end if
 
       if (cyclic_y .and. (jminus < domlo(2)) .and. &
          flag_mod(i,j,k,1)<100) jminus = domhi(2)
@@ -71,7 +83,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      jplus = min(domhi(2)+1, j+1)
+!     if (j.eq.domhi(2) .and. flag_mod(i,j,k,1) > 1) then
+!        jplus = j
+!     else
+         jplus = min(domhi(2)+1, j+1)
+!     end if
 
       if (cyclic_y .and. (jplus > domhi(2)) .and. &
          flag_mod(i,j,k,1)<100) jplus = domlo(2)
@@ -86,7 +102,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      kminus = max(domlo(3)-1, k-1)
+!     if (k.eq.domlo(3) .and. flag_mod(i,j,k,1) > 1) then
+!        kminus = k
+!     else
+         kminus = max(domlo(3)-1, k-1)
+!     end if
 
       if (cyclic_z .and. (kminus < domlo(3)) .and. &
          flag_mod(i,j,k,1)<100) kminus = domhi(3)
@@ -101,7 +121,11 @@
       implicit none
       integer, intent(in) :: i,j,k
 
-      kplus = min(domhi(3)+1, k+1)
+!     if (k.eq.domhi(3) .and. flag_mod(i,j,k,1) > 1) then
+!        kplus = k
+!     else
+         kplus = min(domhi(3)+1, k+1)
+!     end if
 
       if (cyclic_z .and. (kplus > domhi(3)) .and. &
          flag_mod(i,j,k,1)<100) kplus = domlo(3)

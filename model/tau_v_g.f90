@@ -39,40 +39,36 @@ MODULE CALC_TAU_V_G_MODULE
 !  (i.e., those of the form mu.grad(v)                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_V_G(slo,shi,lo,hi,lTAU_V_G,trd_g,ep_g,&
-                              u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                              lambda_g,mu_g,flag,dx,dy,dz)
+      SUBROUTINE CALC_TAU_V_G(slo,shi,lo,hi,&
+                              lTAU_V_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
 
-      use param1, only: zero
-      use toleranc, only: dil_ep_s
+      USE param1, only: zero
+      USE toleranc, only: dil_ep_s
       IMPLICIT NONE
 
-      integer(c_int), intent(in) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-      real(c_real), intent(inout) :: trd_g&
+      ! TAU_V_g
+      real(c_real), INTENT(INOUT) :: trd_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(OUT) :: lTAU_V_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(  out) :: lTAU_V_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-
-      real(c_real), intent(in   ) :: ep_g&
+      real(c_real), INTENT(IN   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
-      real(c_real), intent(in   ) :: lambda_g&
+      real(c_real), INTENT(IN   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: mu_g&
+      real(c_real), INTENT(IN   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, intent(in   ) :: flag&
+      real(c_real), INTENT(IN   ) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN   ) :: lambda_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN   ) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), intent(in   ) :: dx,dy,dz
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -95,9 +91,9 @@ MODULE CALC_TAU_V_G_MODULE
 !             use of the *tmp variables below
 !---------------------------------------------------------------------//
 
-        DO K = vlo(3),vhi(3)
-         DO J = vlo(2),vhi(2)
-          DO I = vlo(1),vhi(1)
+        DO K = slo(3),shi(3)
+         DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
 
             EPGA = AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
             IF (flag(i,j,k,3) > 1000 .AND. EPGA>DIL_EP_S) THEN

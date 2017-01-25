@@ -14,7 +14,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(slo, shi, lo, hi, D, AXIS, A_m, alo, ahi, ep_g, f_gds, flag, dx, dy, dz)
+      SUBROUTINE CALC_D(slo, shi, lo, hi, D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -35,7 +35,6 @@ MODULE CALC_D_MOD
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: alo(3),ahi(3)
 
       ! Pressure correction
       real(c_real), intent(  out) :: d&
@@ -44,8 +43,8 @@ MODULE CALC_D_MOD
       ! "X", "Y", or "Z"
       CHARACTER, intent(in   ) :: axis
 
-      real(c_real), intent(in   ):: A_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3), -3:3)
+      real(c_real), intent(in   ):: A_M&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
@@ -91,7 +90,7 @@ MODULE CALC_D_MOD
         do J = lo(2),je
           do I = lo(1),ie
 
-         AM0 = -A_m(I,J,K,0)
+         AM0 = -A_M(I,J,K,0)
 
          if (axis.eq.'X') then
             if(flag(i,j,k,2) >= 2000 .and. &

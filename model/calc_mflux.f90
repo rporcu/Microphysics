@@ -13,42 +13,37 @@ MODULE CALC_MFLUX_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_MFLUX (slo, shi, lo, hi, &
-                             u, ulo, uhi, v, vlo, vhi, w, wlo, whi, &
-                             rop_e, rop_n, rop_t, &
+      SUBROUTINE CALC_MFLUX (slo, shi, lo, hi, u, v, w, rop_e, rop_n, rop_t, &
          flux_e, flux_n, flux_t, flag, dx, dy, dz) bind(C, name="calc_mflux")
 
       USE functions, only: iminus, jminus, kminus
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(in) :: dx, dy, dz
 
       real(c_real), intent(in   ) :: u&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_e&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_n&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_t&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: flux_e&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: flux_n&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: flux_t&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 
 ! Local variables

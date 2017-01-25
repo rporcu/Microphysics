@@ -12,8 +12,7 @@ MODULE SET_WALL_BC_MODULE
 !  Purpose: Set wall boundary conditions                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_WALL_BC(slo,shi,lo,hi,&
-                             u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, flag)&
+      SUBROUTINE SET_WALL_BC(slo,shi,lo,hi,u_g,v_g,w_g,flag)&
          bind(C, name="set_wall_bc")
 
 !-----------------------------------------------
@@ -25,17 +24,15 @@ MODULE SET_WALL_BC_MODULE
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
-
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -68,12 +65,10 @@ MODULE SET_WALL_BC_MODULE
 
             SELECT CASE (TRIM(BC_TYPE(L)))
                CASE ('FREE_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, &
-                                     u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, flag) 
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
                CASE ('NO_SLIP_WALL')
-                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, &
-                                     u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, flag) 
+                  CALL SET_WALL_BC1 (I1, I2, J1, J2, K1, K2, slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
                CASE ('PAR_SLIP_WALL')
 ! updating the boundary velocity may improve convergence
@@ -96,9 +91,7 @@ MODULE SET_WALL_BC_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE SET_WALL_BC1(II1, II2, JJ1, JJ2, KK1, KK2, &
-                              slo, shi, lo, hi, &
-                              u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                              flag)
+         slo, shi, lo, hi, u_g, v_g, w_g, flag)
 
 !-----------------------------------------------
 ! Modules
@@ -107,8 +100,7 @@ MODULE SET_WALL_BC_MODULE
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
 ! Starting and ending I index
       integer      , intent(in   ) :: ii1, ii2
@@ -121,11 +113,11 @@ MODULE SET_WALL_BC_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -144,13 +136,11 @@ MODULE SET_WALL_BC_MODULE
       K1 = KK1
       K2 = KK2
 
-      IF(I1.LE.hi(1)+1) I1 = MAX(I1, lo(1)-1)
+      IF(I1.LE.hi(1)+1)   I1 = MAX(I1, lo(1)-1)
+      IF(J1.LE.hi(2)+1)   J1 = MAX(J1, lo(2)-1)
+      IF(K1.LE.hi(3)+1)   K1 = MAX(K1, lo(3)-1)
       IF(I2.GE.lo(1)-1) I2 = MIN(I2, hi(1)+1)
-
-      IF(J1.LE.hi(2)+1) J1 = MAX(J1, lo(2)-1)
       IF(J2.GE.lo(2)-1) J2 = MIN(J2, hi(2)+1)
-
-      IF(K1.LE.hi(3)+1) K1 = MAX(K1, lo(3)-1)
       IF(K2.GE.lo(3)-1) K2 = MIN(K2, hi(3)+1)
 
       DO K = K1, K2

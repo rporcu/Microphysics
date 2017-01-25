@@ -23,9 +23,7 @@
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3(slo, shi, &
-                      u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                      p_g, dx, dy, dz)
+      SUBROUTINE USR3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz)
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
@@ -34,15 +32,14 @@
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(in) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in) :: dx, dy, dz

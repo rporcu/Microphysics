@@ -1,4 +1,4 @@
-module calc_trd_g_module
+MODULE CALC_TRD_G_MODULE
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
@@ -24,29 +24,37 @@ module calc_trd_g_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine calc_trd_g(slo,shi,lo,hi,trd_g,u_g, &
-         ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi,flag,dx,dy,dz) &
-         bind(C, name="calc_trd_g")
+      SUBROUTINE CALC_TRD_G(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
+
+      USE functions, only: iminus, jminus, kminus
 
       IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
+!-----------------------------------------------
+!   G l o b a l   P a r a m e t e r s
+!-----------------------------------------------
       real(c_real), intent(inout) :: trd_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      integer(c_int) :: i, j, k
-      real(c_real)   :: odx, ody, odz
+!-----------------------------------------------
+!   D u m m y   A r g u m e n t s
+!-----------------------------------------------
+!
+! Indices
+      INTEGER :: I, J, K
+
+      real(c_real) :: odx, ody, odz
 
       odx = 1.d0 / dx
       ody = 1.d0 / dy
@@ -56,22 +64,20 @@ module calc_trd_g_module
 ! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
 !=======================================================================
 
-      ! We only loop over interior "valid" cells here
-      do k = lo(3),hi(3)
-        do j = lo(2),hi(2)
-          do i = lo(1),hi(1)
-
-            if (flag(i,j,k,1) < 100) then
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
+            IF (flag(i,j,k,1)<100) THEN
 
               TRD_G(i,j,k) = &
-                 (U_G(I,J,K)-U_G(i-1,j,k))*odx + &
-                 (V_G(I,J,K)-V_G(i,j-1,k))*ody + &
-                 (W_G(I,J,K)-W_G(i,j,k-1))*odz
+                 (U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX + &
+                 (V_G(I,J,K)-V_G(i,jminus(i,j,k),k))*ODY + &
+                 (W_G(I,J,K)-W_G(i,j,kminus(i,j,k)))*ODZ
 
-             end if
-          end do
-        end do
-      end do
+             ENDIF
+          END DO
+        END DO
+      END DO
 
-      end subroutine calc_trd_g
-end module calc_trd_g_module
+      END SUBROUTINE CALC_TRD_G
+END MODULE CALC_TRD_G_MODULE

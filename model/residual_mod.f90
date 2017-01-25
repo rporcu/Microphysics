@@ -83,7 +83,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         b_m, NORM, NUM, DEN, RESID, MAX_RESID, &
+         B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
          i_resid, j_resid, k_resid, flag)
 
       use param1  , only: large_number, zero, one
@@ -137,7 +137,7 @@
              IF(flag(i,j,k,1)==1) THEN
 
                ! evaluating the residual at cell (i,j,k):
-               NUM1 = ABS(b_m(I,J,K))
+               NUM1 = ABS(B_M(I,J,K))
                IF (NUM1 > MAX_RESID) THEN
                   MAX_RESID = NUM1
                   i_resid = i
@@ -193,14 +193,17 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CALC_RESID_U                                            C
-!  Purpose: Calculate residuals for u-momentum equation.               C
+!  Subroutine: CALC_RESID_VEL                                          C
+!  Purpose: Calculate residuals for momentum equations                 C
+!                                                                      C
+!  Author: M. Syamlal                                 Date: 21-MAY-96  C
+!  Reviewer:                                          Date:            C
+!                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
-         vel,   vnlo,  vnhi, &
-         vels1, vt1lo, vt1hi, &
-         vels2, vt2lo, vt2hi, A_m, b_m, NUM, DEN, &
+         vel, vels1, vels2, A_M, B_M, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, flag)
 
 !-----------------------------------------------
@@ -212,28 +215,25 @@
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: vnlo(3),  vnhi(3)
-      integer(c_int), intent(in   ) :: vt1lo(3), vt1hi(3)
-      integer(c_int), intent(in   ) :: vt2lo(3), vt2hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! primary velocity component
       real(c_real), INTENT(IN) :: vel&
-         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! other components used here only for scaling
       real(c_real), INTENT(IN) :: vels1&
-         (vt1lo(1):vt1hi(1),vt1lo(2):vt1hi(2),vt1lo(3):vt1hi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN) :: vels2&
-         (vt2lo(1):vt2hi(1),vt2lo(2):vt2hi(2),vt2lo(3):vt2hi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3),-3:3)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real) :: B_m&
-         (vnlo(1):vnhi(1),vnlo(2):vnhi(2),vnlo(3):vnhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       INTEGER, INTENT(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -277,50 +277,49 @@
       MAX_RESID = -ONE
       NCELLS = 0
 
-      DO K = vnlo(3)+1,vnhi(3)-1
-         DO J = vnlo(2)+1,vnhi(2)-1
-            DO I = vnlo(1)+1,vnhi(1)-1
-               RESID_IJK(i,j,k) = ZERO
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
+            RESID_IJK(i,j,k) = ZERO
 
+           ! Skip walls where some values are undefined.
+           IF(flag(i,j,k,1)>=100) cycle
 
-! Skip walls where some values are undefined.
-               IF(flag(i,j,k,1)>=100) cycle
-
-! This isn't correct. The flag "2" should be axis dependent.
-               IF (flag(i,j,k,2) > 1000) THEN
+           IF (flag(i,j,k,2) > 1000) THEN
 
 ! evaluating the residual at cell (i,j,k):
 !   RESp = B-sum(Anb*VARnb)-Ap*VARp
 !   (where nb = neighbor cells and p = center/0 cell)
 
-                  NUM1 = b_m(I,J,K) - (&
-                     A_m(I,J,K,0)*vel(i,j,k)+&
-                     A_m(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
-                     A_m(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
-                     A_m(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
-                     A_m(I,J,K,S)*vel(i,jminus(i,j,k),k)+&
-                     A_m(I,J,K,T)*vel(i,j, kplus(i,j,k))+&
-                     A_m(I,J,K,B)*vel(i,j,kminus(i,j,k)))
+              NUM1 = B_M(I,J,K) - (&
+                 A_M(I,J,K,0)*vel(i,j,k)+&
+                 A_M(I,J,K,E)*vel( iplus(i,j,k),j,k)+&
+                 A_M(I,J,K,W)*vel(iminus(i,j,k),j,k)+&
+                 A_M(I,J,K,N)*vel(i, jplus(i,j,k),k)+&
+                 A_M(I,J,K,S)*vel(i,jminus(i,j,k),k))
 
-! Ignore momentum residual in stagnant regions.  Need an alternative
-! criteria for residual scaling for such cases.
-                  magvel = SQRT(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
+              NUM1 = NUM1 - ( A_M(I,J,K,T)*vel(i,j,kplus(i,j,k))+&
+                 A_M(I,J,K,B)*vel(i,j,kminus(i,j,k)) )
 
-                  IF (magvel > SMALL_NUMBER) THEN
-                     NUM1 = ABS(NUM1)
-                     DEN1 = ABS(A_m(I,J,K,0)*magvel)
+            ! Ignore momentum residual in stagnant regions.  Need an alternative
+            ! criteria for residual scaling for such cases.
+            magvel = SQRT(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
 
-! Storing value of residual at each (i,j,k) location
-                     RESID_IJK(i,j,k) = NUM1
+            IF (magvel > SMALL_NUMBER) THEN
+               NUM1 = ABS(NUM1)
+               DEN1 = ABS(A_M(I,J,K,0)*magvel)
 
-! Adding to terms that are accumulated
-                     NCELLS = NCELLS + 1
-                     NUM = NUM + NUM1
-                     DEN = DEN + DEN1
-                  ENDIF
-               ENDIF
-            ENDDO
-         ENDDO
+               ! Storing value of residual at each (i,j,k) location
+               RESID_IJK(i,j,k) = NUM1
+
+               ! Adding to terms that are accumulated
+               NCELLS = NCELLS + 1
+               NUM = NUM + NUM1
+               DEN = DEN + DEN1
+            ENDIF
+         ENDIF
+      ENDDO
+      ENDDO
       ENDDO
 
       IF (.not.debug_resid) RETURN
@@ -366,5 +365,4 @@
       INCLUDE 'functions.inc'
 
    END SUBROUTINE CALC_RESID_VEL
-
-END MODULE residual
+      END MODULE residual

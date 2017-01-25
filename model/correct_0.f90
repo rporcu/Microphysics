@@ -12,9 +12,8 @@ MODULE CORRECT_0_MODULE
 !  Purpose: Correct the fluid pressure and gas velocities              C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CORRECT_0(slo,shi,lo,hi,p_g,pp_g, &
-           u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-           d_e,d_n,d_t,flag)&
+      SUBROUTINE CORRECT_0(slo,shi,lo,hi,&
+           p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t,flag)&
            bind(C, name="correct0")
 
       USE functions, only: ieast, jnorth, ktop
@@ -22,30 +21,28 @@ MODULE CORRECT_0_MODULE
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), intent(in   ) :: pp_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_e&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_n&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_t&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
       real(c_real), intent(inout) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

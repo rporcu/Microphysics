@@ -17,9 +17,7 @@ module set_bc0_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0(slo, shi, lo, hi, p_g, ep_g, &
-                         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-                         ro_g0, flag)
+      subroutine set_bc0(slo, shi, lo, hi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -29,18 +27,17 @@ module set_bc0_module
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: ro_g0
 
@@ -55,43 +52,34 @@ module set_bc0_module
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
-      call SET_IJK_P_G(slo,shi,ro_g0,flag)
+      CALL SET_IJK_P_G(slo,shi,ro_g0,flag)
 
       DO L = 1, DIMENSION_BC
          IF (BC_DEFINED(L)) THEN
 
-            select case (TRIM(BC_TYPE(L)))
+            SELECT CASE (TRIM(BC_TYPE(L)))
 
-            case ('FREE_SLIP_WALL')
-            case ('NO_SLIP_WALL')
-            case ('PAR_SLIP_WALL')
-
-            case ('P_OUTFLOW')
+            CASE ('FREE_SLIP_WALL')
+            CASE ('NO_SLIP_WALL')
+            CASE ('PAR_SLIP_WALL')
+            CASE ('P_OUTFLOW')
                write(6,*) 'po',l; flush(6)
-               call set_bc0_outflow(L,slo,shi,p_g,ep_g)
-
-            case ('MASS_OUTFLOW')
+               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
+            CASE ('MASS_OUTFLOW')
                write(6,*) 'mo',l; flush(6)
-               call set_bc0_inflow(L,slo,shi,p_g,ep_g,&
-                                   u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi)
-
-            case ('OUTFLOW')
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+            CASE ('OUTFLOW')
                write(6,*) 'of',l; flush(6)
-               call set_bc0_outflow(L,slo,shi,p_g,ep_g)
-
-            case ('MASS_INFLOW')
+               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
+            CASE ('MASS_INFLOW')
                write(6,*) 'mi',l; flush(6)
-               call set_bc0_inflow(L,slo,shi,p_g,ep_g,&
-                                   u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi)
-
-            case ('P_INFLOW')
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+            CASE ('P_INFLOW')
                write(6,*) 'pi',l; flush(6)
-               call set_bc0_inflow(L,slo,shi,p_g,ep_g,&
-                                   u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi)
-
-            end select
-         endIF
-      endDO
+               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+            END SELECT
+         ENDIF
+      ENDDO
 
 ! Make T_g nonzero in k=0,1 ghost layers when k-decomposition employed
       ! call send_recv(P_G,2)
@@ -177,8 +165,7 @@ module set_bc0_module
 !  for the simulation.                                                 C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0_inflow(BCV,slo,shi,p_g,ep_g,&
-                                u_g,ulo,uhi,v_g,vlo,vhi,w_g,wlo,whi)
+      SUBROUTINE set_bc0_inflow(BCV,slo,shi,p_g,ep_g,u_g,v_g,w_g)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -195,8 +182,7 @@ module set_bc0_module
       use functions, only: im1, jm1, km1
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! index for boundary condition
       INTEGER, INTENT(IN) :: BCV
@@ -206,22 +192,17 @@ module set_bc0_module
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !--------------------------------------------------------------------//
 ! indices
       INTEGER :: I, J, K
 !--------------------------------------------------------------------//
-
-      print *,'LOOPING IN SET_BC0_INFLOW OVER '
-      print *,' I: ', BC_I_W(BCV), BC_I_E(BCV)
-      print *,' J: ', BC_J_S(BCV), BC_J_N(BCV)
-      print *,' K: ', BC_K_B(BCV), BC_K_T(BCV)
 
       DO K = BC_K_B(BCV), BC_K_T(BCV)
       DO J = BC_J_S(BCV), BC_J_N(BCV)
@@ -234,20 +215,22 @@ module set_bc0_module
          V_G(I,J,K) = BC_V_G(BCV)
          W_G(I,J,K) = BC_W_G(BCV)
 
-         ! When the boundary plane is located on the E, N, T side of the domain
-         ! (fluid cell is located w, s, b), set the component of velocity normal
-         ! to the boundary plane of the adjacent fluid cell
-         select case (TRIM(BC_PLANE(BCV)))
-            case ('W'); U_G(im1(i),j,k) = BC_U_G(BCV)
-            case ('S'); V_G(i,jm1(j),k) = BC_V_G(BCV)
-            case ('B'); W_G(i,j,km1(k)) = BC_W_G(BCV)
-         end select
+! When the boundary plane is located on the E, N, T side of the domain
+! (fluid cell is located w, s, b), set the component of velocity normal
+! to the boundary plane of the adjacent fluid cell
+         SELECT CASE (TRIM(BC_PLANE(BCV)))
+            CASE ('W'); U_G(im1(i),j,k) = BC_U_G(BCV)
+            CASE ('S'); V_G(i,jm1(j),k) = BC_V_G(BCV)
+            CASE ('B'); W_G(i,j,km1(k)) = BC_W_G(BCV)
+         END SELECT
 
       end do
       end do
       end do
 
-      end subroutine set_bc0_inflow
+      END SUBROUTINE set_bc0_inflow
+
+
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -258,7 +241,7 @@ module set_bc0_module
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine SET_IJK_P_G (slo, shi, RO_G0, flag)
+      SUBROUTINE SET_IJK_P_G (slo, shi, RO_G0, flag)
 
       ! IJK location where Ppg is fixed.
       use bc, only: IJK_P_G
@@ -320,7 +303,7 @@ module set_bc0_module
          IF(dFlag) write(*,"(3x,A)")                                   &
             'No gas phase: IJK_P_g remaining undefined.'
          return
-      endIF
+      ENDIF
 
 ! If there are no cyclic boundaries, look for a pressure outflow.
       lpBCV: DO BCV = 1, DIMENSION_BC
@@ -330,8 +313,8 @@ module set_bc0_module
             IF(dFlag) write(*,"(3x,A)")                                &
                'Outflow PC defined: IJK_P_g remaining undefined.'
             RETURN
-         endIF
-      endDO lpBCV
+         ENDIF
+      ENDDO lpBCV
 
 ! Initialize.
          l3 = UNDEFINED_I
@@ -364,7 +347,7 @@ module set_bc0_module
          l1 = domlo(2);  u1 = domhi(2)
          lMsg='Cyclic in Z'
 
-      endIF
+      ENDIF
 
 ! No cyclic boundaries or pressure outflows. The IJ plane is used in
 ! this case to maximize search region for 2D problems.
@@ -374,7 +357,7 @@ module set_bc0_module
          l2 = domlo(1);  u2 = domhi(1)
          l1 = domlo(2);  u1 = domhi(2)
          lMsg='Center of domain'
-      endIF
+      ENDIF
 
 ! Debugging messages.
       IF(dFlag) THEN
@@ -383,24 +366,24 @@ module set_bc0_module
          write(*,"( 5x,'l2:',2(2x,I4))") l2, u2
          write(*,"( 5x,'l1:',2(2x,I4))") l1, u1
          write(*,"( 5x,'Msg: ',A)") trim(lMsg)
-      endIF
+      ENDIF
 
 ! Invoke the search routine.
-      call IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr, flag, slo, shi)
+      CALL IJK_Pg_SEARCH(l3, l2, u2, l1, u1, MAP, dFlag, iErr, flag, slo, shi)
 
       IF(iErr == 0) RETURN
 
 ! Error management.
       IF(DMP_LOG) THEN
-         select case (iErr)
-         case ( 1001);  WRITE(UNIT_LOG, 1001); WRITE(*,1001)
-         case ( 2000);  WRITE(UNIT_LOG, 2000); WRITE(*,2000)
-         case ( 2001);  WRITE(UNIT_LOG, 2001); WRITE(*,2001)
-         case ( 2002);  WRITE(UNIT_LOG, 2002); WRITE(*,2002)
-         case DEFAULT
+         SELECT CASE (iErr)
+         CASE ( 1001);  WRITE(UNIT_LOG, 1001); WRITE(*,1001)
+         CASE ( 2000);  WRITE(UNIT_LOG, 2000); WRITE(*,2000)
+         CASE ( 2001);  WRITE(UNIT_LOG, 2001); WRITE(*,2001)
+         CASE ( 2002);  WRITE(UNIT_LOG, 2002); WRITE(*,2002)
+         CASE DEFAULT
             WRITE(UNIT_LOG, 1000) iErr
             WRITE(*,1000) iErr
-         end select
+         END SELECT
 
          WRITE(UNIT_LOG, 9000) MAP(1:1), l3, MAP(2:2),                 &
             l2, u2, MAP(3:3), l1, u1
@@ -410,10 +393,10 @@ module set_bc0_module
          WRITE(*, 9999)
          WRITE(UNIT_LOG, 9999)
 
-      endIF
+      ENDIF
 
 
-      call MFIX_EXIT(myPE)
+      CALL MFIX_EXIT(myPE)
 
 
  1000 FORMAT(//1X,70('*')/' From: SET_IJK_Pg',/,                       &
@@ -436,7 +419,7 @@ module set_bc0_module
 
  9999 FORMAT(/' Fatal Error --> Invoking MFIX_EXIT',/1x,70('*'),2/)
 
-      end subroutine SET_IJK_P_G
+      END SUBROUTINE SET_IJK_P_G
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -444,7 +427,7 @@ module set_bc0_module
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine IJK_Pg_SEARCH(ll3, ll2, lu2, ll1, lu1, lMAP,          &
+      SUBROUTINE IJK_Pg_SEARCH(ll3, ll2, lu2, ll1, lu1, lMAP,          &
          ldFlag, iErr, flag, slo, shi)
 
 ! Modules
@@ -523,16 +506,16 @@ module set_bc0_module
          lp2: do lc2 = lS2, lE2
          lp1: do lc1 = lS1, lE1
 ! Map the loop counters to I/J/K indices.
-            select case (lMap)
-            case ('JKI_MAP')
+            SELECT CASE (lMap)
+            CASE ('JKI_MAP')
                I=lc1; J=ll3; K=lc2
-            case ('IKJ_MAP')
+            CASE ('IKJ_MAP')
                I=ll3; J=lc1; K=lc2
-            case ('KIJ_MAP')
+            CASE ('KIJ_MAP')
                I=lc2; J=lc1; K=ll3
-            case DEFAULT
+            CASE DEFAULT
                iErr = 1001
-            end select
+            END SELECT
 
 ! If there is fluid at this location, store the IJK and exit loops.
             if(1.eq.flag(i,j,k,1)) then
@@ -547,7 +530,7 @@ module set_bc0_module
 ! Sync gIJK across all processes. Select the lowest ranked process that
 ! has gIJK defined. This choice is arbitray and doesn't really matter.
 ! It just needs to be consistent.
-         ! call global_all_sum(gIJK)
+         ! CALL global_all_sum(gIJK)
          proc_lp: do proc=0, numPEs-1
             if(gIJK(proc,1) /= 0) then
                IJK_P_g(1) = gIJK(proc,1)

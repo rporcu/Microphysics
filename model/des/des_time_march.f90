@@ -12,8 +12,7 @@ module des_time_march_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, max_pip, ep_g, p_g, &
-         u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-         ro_g, rop_g, mu_g, particle_state, particle_phase, &
+         u_g, v_g, w_g, ro_g, rop_g, mu_g, particle_state, particle_phase, &
          des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          drag_fc, fc, tow, pairs, pair_count, flag, &
@@ -41,7 +40,6 @@ module des_time_march_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
-      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(inout) :: ep_g&
@@ -49,11 +47,11 @@ module des_time_march_module
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: rop_g&
@@ -154,8 +152,7 @@ module des_time_march_module
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
             call drag_gs_des(slo, shi, lo, hi, max_pip, &
-               u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-               ep_g, ro_g, mu_g, &
+               ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                gradPg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
@@ -195,9 +192,7 @@ module des_time_march_module
             des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
-         CALL calc_drag_des(slo,shi,lo,hi,max_pip,&
-            u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
-            ep_g, ro_g, mu_g, gradPg, &
+         CALL calc_drag_des(slo,shi,lo,hi,max_pip,ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
             particle_state, fc,drag_fc,pvol, des_pos_new,des_vel_new,&
             des_radius,particle_phase,flag, dx, dy, dz)
 
