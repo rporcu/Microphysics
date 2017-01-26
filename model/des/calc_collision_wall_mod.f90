@@ -80,7 +80,6 @@
       real(c_real) :: MAX_DISTSQ
       INTEGER :: MAX_NF
       real(c_real), DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
-      integer :: i,j,k
 !     Vertex Coordinates X ,Y and Z
       real(c_real), DIMENSION(3,3,6) :: VERTEX
 !     Face normal vector (normalized)
@@ -132,13 +131,6 @@
 ! or is already marked as a potential exiting particle
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(LL)) CYCLE
 
-! If no neighboring facet in the surrounding 27 cells, then exit
-         if(i > domlo(1) .and. i < domhi(1) .and. &
-            j > domlo(2) .and. j < domhi(2) .and. &
-            k > domlo(3) .and. k < domhi(3)) then
-            CYCLE
-         ENDIF
-
 ! Check particle LL for wall contacts
          RADSQ = DES_RADIUS(LL)*DES_RADIUS(LL)
 
@@ -147,17 +139,17 @@
 
          DO NF = 1, 6
 
-            if(nf==1     .and. i==domlo(1)) then
+            if(nf==1    ) then
                if(des_pos_new(ll,1) > des_radius(LL)) cycle
-            elseif(nf==2 .and. i==domhi(1)) then
+            elseif(nf==2) then
                if(des_pos_new(ll,1) < xlength - des_radius(LL)) cycle
-            elseif(nf==3 .and. j==domlo(2)) then
+            elseif(nf==3) then
                if(des_pos_new(ll,2) > des_radius(LL)) cycle
-            elseif(nf==4 .and. j==domhi(2)) then
+            elseif(nf==4) then
                if(des_pos_new(ll,2) < ylength - des_radius(LL)) cycle
-            elseif(nf==5 .and. k==domlo(3)) then
+            elseif(nf==5) then
                if(des_pos_new(ll,3) > des_radius(LL)) cycle
-            elseif(nf==6 .and. k==domhi(3)) then
+            elseif(nf==6) then
                if(des_pos_new(ll,3) < zlength - des_radius(LL)) cycle
             endif
 
