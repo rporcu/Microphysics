@@ -230,8 +230,8 @@ module v_g_conv_dif
                    AVG_H(MU_G(i,jn,k), &
                          MU_G(ieast(i,jn,k),jn,k)))*ODX*AYZ
 ! West face (i-1/2, j+1/2, k)
-      D_Fw = AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k),MU_G(i,jc,k)),&
-                   AVG_H(MU_G(iwest(i,j,k),jnorth(iwest(i,j,k),j,k),k),&
+      D_Fw = AVG_H(AVG_H(MU_G(i-1,j,k),MU_G(i,jc,k)),&
+                   AVG_H(MU_G(i-1,jnorth(i-1,j,k),k),&
                          MU_G(i           ,jn,k)))*ODX*AYZ
 
       ! North face (i, j+1, k)

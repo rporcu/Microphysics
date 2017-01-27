@@ -26,7 +26,7 @@ contains
       USE constant, only: gravity
       USE bc, only: delp_z
 
-      USE functions, only: avg, zmax, ktop
+      USE functions, only: avg, ktop
       USE geometry , only: domlo, domhi, cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b

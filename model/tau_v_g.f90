@@ -120,9 +120,9 @@ MODULE CALC_TAU_V_G_MODULE
                            AVG_H(MU_G(i,jnorth(i,j,k),k), &
                                  MU_G(ieast(i,jnorth(i,j,k),k),jnorth(i,j,k),k))) &
                     *(U_G(I,JPlus(i,j,k),K)-U_G(I,J,K))*ODY*AYZ &
-                    - AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k), &
+                    - AVG_H(AVG_H(MU_G(i-1,j,k), &
                                   MU_G(i,j,k)), &
-                            AVG_H(MU_G(iwest(i,j,k),jnorth(iwest(i,j,k),j,k),k), &
+                            AVG_H(MU_G(i-1,jnorth(i-1,j,k),k), &
                                   MU_G(i,jnorth(i,j,k),k))) &
                     *(U_G(IMinus(i,j,k),JPlus(i,j,k),K)-U_G(IMinus(i,j,k),J,K))*ODY*AYZ
 

@@ -7,7 +7,7 @@ MODULE functions
 ! LOGICAL :: IS_ON_myPE_plus2layers
 
 
-! ieast, iwest, jsouth, jnorth, kbot, ktop:
+! ieast, jsouth, jnorth, kbot, ktop:
 ! Functions for calculating indicated directional shift in given IJK
 ! index. This will return the ijk index of the computational cell
 ! corresponding to the indicated shift when that computational cell
@@ -26,9 +26,7 @@ MODULE functions
 !---------------------------------------------------------------------//
 ! Additional functions
 !---------------------------------------------------------------------//
-! real(c_real)     :: ZMAX
 ! integer FUNCTION :: FUNLM
-
 
 CONTAINS
 

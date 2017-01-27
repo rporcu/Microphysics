@@ -75,7 +75,7 @@ MODULE CONV_ROP_MODULE
 ! Modules
 !---------------------------------------------------------------------//
       USE functions, only: ieast, jnorth, ktop
-      USE functions, only: iwest, jsouth, kbot
+      USE functions, only: jsouth, kbot
       USE functions, only: iminus, jminus, kminus
       USE param1, only: zero
 
@@ -127,7 +127,7 @@ MODULE CONV_ROP_MODULE
 ! West face (i-1/2, j, k)
             IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                IF (U(iminus(i,j,k),j,k) >= ZERO) THEN
-                  ROP_E(iminus(i,j,k),j,k) = ROP(iwest(i,j,k),j,k)
+                  ROP_E(iminus(i,j,k),j,k) = ROP(i-1,j,k)
                ELSE
                   ROP_E(iminus(i,j,k),j,k) = ROP(i,j,k)
                ENDIF
@@ -194,7 +194,7 @@ MODULE CONV_ROP_MODULE
 ! Modules
 !---------------------------------------------------------------------//
       USE functions, only: ieast, jnorth, ktop
-      USE functions, only: iwest, jsouth, kbot
+      USE functions, only: jsouth, kbot
       USE functions, only: iminus, jminus, kminus
       USE param1, only: one
       USE xsi, only: calc_xsi
@@ -260,7 +260,7 @@ MODULE CONV_ROP_MODULE
 ! West face (i-1/2, j, k)
             IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                ROP_E(iminus(i,j,k),j,k) = &
-                  ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(iwest(i,j,k),j,k) + &
+                  ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(i-1,j,k) + &
                   XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
             ENDIF
 

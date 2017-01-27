@@ -126,10 +126,10 @@ MODULE CALC_TAU_W_G_MODULE
                            AVG_H(MU_G(i,j,ktop(i,j,k)), &
                                  MU_G(ieast(i,j,ktop(i,j,k)),j,ktop(i,j,k)))) &
                     *(U_G(I,J,KPlus(i,j,k))-U_G(I,J,K))*ODZ*AYZ &
-                   - AVG_H(AVG_H(MU_G(iwest(i,j,k),j,k), &
+                   - AVG_H(AVG_H(MU_G(i-1,j,k), &
                                  MU_G(i,j,k)), &
-                           AVG_H(MU_G(iwest(i,j,ktop(i,j,k)),j,ktop(i,j,k)), &
-                                 MU_G(i,j,ktop(i,j,k)))) &
+                           AVG_H(MU_G(i-1,j,ktop(i,j,k)), &
+                                 MU_G(i  ,j,ktop(i,j,k)))) &
                      *(U_G(IMinus(i,j,k),J,KPlus(i,j,k))-U_G(IMinus(i,j,k),J,K))*ODZ*AXZ
 ! DY(J)*HALF(DZ(k)+DZ(kp)) = oX_E(IM)*AYZ_W(IMJK), but avoids singularity
 

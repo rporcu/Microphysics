@@ -25,7 +25,7 @@ contains
       use constant, only: gravity
       use bc, only: delp_y
 
-      use functions, only: avg, zmax, jnorth
+      use functions, only: avg, jnorth
       use geometry,  only: domlo, domhi, cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b

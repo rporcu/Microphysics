@@ -24,7 +24,7 @@ contains
       USE constant, only: gravity
       USE bc      , only: delp_x
 
-      USE functions, only: avg, zmax, ieast
+      USE functions, only: avg
 
       USE geometry, only: domlo, domhi, cyclic_x_pd
 
@@ -91,10 +91,10 @@ contains
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               epga = avg(ep_g(i,j,k),ep_g(ieast(i,j,k),j,k))
+               epga = avg(ep_g(i,j,k),ep_g(i+1,j,k))
 
 ! Pressure term
-               PGE = P_G(ieast(i,j,k),j,k)
+               PGE = P_G(i+1,j,k)
                if(cyclic_x_pd) then
                   if ((i == domlo(1)-1) .or. (i == domhi(1))) &
                      pge = pge - delp_x
@@ -102,11 +102,11 @@ contains
                sdp = -p_scale*epga*(pge - p_g(i,j,k))*ayz
 
 ! Volumetric forces
-               roga  = half * (ro_g(i,j,k) + ro_g(ieast(i,j,k),j,k))
-               ropga = half * (rop_g(i,j,k) + rop_g(ieast(i,j,k),j,k))
+               roga  = half * (ro_g(i,j,k) + ro_g(i+1,j,k))
+               ropga = half * (rop_g(i,j,k) + rop_g(i+1,j,k))
 
 ! Previous time step
-               v0 = half * (rop_go(i,j,k) + rop_go(ieast(i,j,k),j,k))*odt
+               v0 = half * (rop_go(i,j,k) + rop_go(i+1,j,k))*odt
 
 ! Body force
                vbf = roga*gravity(1)

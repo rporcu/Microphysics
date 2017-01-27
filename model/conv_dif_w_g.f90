@@ -226,9 +226,7 @@ module w_g_conv_dif
       JM = JM1(J)
 
       ktmp = ktop(i,j,k)
-
-      itmp = iwest(i,j,k)
-
+      itmp = i-1
       jtmp  = jsouth(i,j,k)
 
       IF (flag(i,j,k,1)>=100) THEN

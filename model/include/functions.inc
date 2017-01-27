@@ -146,23 +146,9 @@
          ieast = iplus(i,j,k)
       end if
 
+      ieast = i+1
+
       end function ieast
-
-      ! ************************************************
-
-      integer function iwest(i,j,k)
-
-      use geometry, only: flag_mod
-      implicit none
-      integer, intent(in) :: i,j,k
-
-      if (flag_mod(iminus(i,j,k),j,k,1) >= 100) then
-         iwest = i
-      else
-         iwest = iminus(i,j,k)
-      end if
-
-      end function iwest
 
       ! ************************************************
 
@@ -308,14 +294,6 @@
 
 ! Misc
 !---------------------------------------------------------------------//
-
-! Function that returns the maximum of zero or input
-      DOUBLE PRECISION FUNCTION ZMAX(XXX)
-      USE param1, only: zero
-      implicit none
-      DOUBLE PRECISION XXX
-      ZMAX       = MAX(XXX, ZERO)
-      END FUNCTION ZMAX
 
 ! Arithmetic average
       DOUBLE PRECISION FUNCTION AVG(XXXm, XXXp)
