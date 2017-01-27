@@ -68,38 +68,38 @@
       if (nlft .gt. 0) then
          ilo = domlo(1)
 
-	 if (bc(1,1) .eq. FOEXTRAP) then
-	    do i = 1, nlft
+         if (bc(1,1) .eq. FOEXTRAP) then
+            do i = 1, nlft
                s(ilo-i,:,:) = s(ilo,:,:)
-	    end do
-	 else if (bc(1,1) .eq. HOEXTRAP) then
-	    do i = 2, nlft
+            end do
+         else if (bc(1,1) .eq. HOEXTRAP) then
+            do i = 2, nlft
                s(ilo-i,:,:) = s(ilo,:,:)
-	    end do
+            end do
             if (ilo+2 .le. ie) then
                   s(ilo-1,:,:) = (15*s(ilo,:,:) - 10*s(ilo+1,:,:) + &
                        3*s(ilo+2,:,:)) * 0.125d0
             else  
                   s(ilo-1,:,:) = half*(3*s(ilo,:,:) - s(ilo+1,:,:))
             end if
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-	    do i = 1, nlft
+         else if (bc(1,1) .eq. REFLECT_EVEN) then
+            do i = 1, nlft
                s(ilo-i,:,:) = s(ilo+i-1,:,:)
-	    end do
-	 else if (bc(1,1) .eq. REFLECT_ODD) then
-	    do i = 1, nlft
+            end do
+         else if (bc(1,1) .eq. REFLECT_ODD) then
+            do i = 1, nlft
                s(ilo-i,:,:) = -s(ilo+i-1,:,:)
-	    end do
-	 end if
+            end do
+         end if
       end if
 
       if (nrgt .gt. 0) then
          ihi = domhi(1)
 
-	 if (bc(1,2) .eq. FOEXTRAP) then
-	    do i = 1, nrgt
+         if (bc(1,2) .eq. FOEXTRAP) then
+            do i = 1, nrgt
                s(ihi+i,:,:) = s(ihi,:,:)
-	    end do
+            end do
          else if (bc(1,2) .eq. HOEXTRAP) then
             do i = 2, nrgt
                s(ihi+i,:,:) = s(ihi,:,:)
@@ -110,25 +110,25 @@
             else
                   s(ihi+1,:,:) = half*(3*s(ihi,:,:) - s(ihi-1,:,:))
             end if
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-	    do i = 1, nrgt
+         else if (bc(1,2) .eq. REFLECT_EVEN) then
+            do i = 1, nrgt
                   s(ihi+i,:,:) = s(ihi-i+1,:,:)
-	    end do
-	 else if (bc(1,2) .eq. REFLECT_ODD) then
-	    do i = 1, nrgt
-                  s(ihi+i,:,:) = -s(ihi-i+1,:,:)
-	    end do
-	 end if
+            end do
+        else if (bc(1,2) .eq. REFLECT_ODD) then
+            do i = 1, nrgt
+               s(ihi+i,:,:) = -s(ihi-i+1,:,:)
+            end do
+        end if
       end if
 
       if (nbot .gt. 0) then
          jlo = domlo(2)
          
-	 if (bc(2,1) .eq. FOEXTRAP) then
+         if (bc(2,1) .eq. FOEXTRAP) then
 !	    THIS IS A HACK SO WE DONT OVERWRITE INFLOW BC'S IN DEM06
 !	    do j = 1, nbot
 !               s(:,jlo-j,:) = s(:,jlo,:)
-!	    end do
+!           end do
          else if (bc(2,1) .eq. HOEXTRAP) then
             do j = 2, nbot
                s(:,jlo-j,:) = s(:,jlo,:)
@@ -136,28 +136,28 @@
             if (jlo+2 .le. je) then
                s(:,jlo-1,:) = (15.*s(:,jlo,:) - 10.*s(:,jlo+1,:) + &
                                 3.*s(:,jlo+2,:)) * 0.125d0
-	    else
+            else
                s(:,jlo-1,:) = half*(3*s(:,jlo,:) - s(:,jlo+1,:))
-	    end if
-	 else if (bc(2,1) .eq. REFLECT_EVEN) then
-	    do j = 1, nbot 
+            end if
+         else if (bc(2,1) .eq. REFLECT_EVEN) then
+            do j = 1, nbot 
                s(:,jlo-j,:) = s(:,jlo+j-1,:)
-	    end do
-	 else if (bc(2,1) .eq. REFLECT_ODD) then
-	    do j = 1, nbot
+            end do
+         else if (bc(2,1) .eq. REFLECT_ODD) then
+            do j = 1, nbot
                s(:,jlo-j,:) = -s(:,jlo+j-1,:)
-	    end do
-	 end if
+            end do
+         end if
       end if
 
       if (ntop .gt. 0) then
          jhi = domhi(2)
 
-	 if (bc(2,2) .eq. FOEXTRAP) then
+         if (bc(2,2) .eq. FOEXTRAP) then
 !	    THIS IS A HACK SO WE DONT OVERWRITE OUTFLOW BC'S IN DEM06
 !	    do j = 1, ntop
 !              s(:,jhi+j,:) = s(:,jhi,:)
-!	    end do
+!           end do
          else if (bc(2,2) .eq. HOEXTRAP) then
             do j = 2, ntop
                s(:,jhi+j,:) = s(:,jhi,:)
@@ -165,27 +165,27 @@
             if (jhi-2 .ge. js) then
                   s(:,jhi+1,:) = (15*s(:,jhi,:) - 10*s(:,jhi-1,:) + &
                        3*s(:,jhi-2,:)) * 0.125d0
-	    else
+            else
                   s(:,jhi+1,:) = half*(3*s(:,jhi,:) - s(:,jhi-1,:))
-	    end if
-	 else if (bc(2,2) .eq. REFLECT_EVEN) then
-	    do j = 1, ntop
+            end if
+         else if (bc(2,2) .eq. REFLECT_EVEN) then
+            do j = 1, ntop
                s(:,jhi+j,:) = s(:,jhi-j+1,:)
-	    end do
-	 else if (bc(2,2) .eq. REFLECT_ODD) then
-	    do j = 1, ntop
+            end do
+         else if (bc(2,2) .eq. REFLECT_ODD) then
+            do j = 1, ntop
                s(:,jhi+j,:) = -s(:,jhi-j+1,:)
-	    end do
-	 end if
+            end do
+         end if
       end if
 
       if (ndwn .gt. 0) then
          klo = domlo(3)
 
-	 if (bc(3,1) .eq. FOEXTRAP) then
-	    do k = 1, ndwn
+         if (bc(3,1) .eq. FOEXTRAP) then
+            do k = 1, ndwn
                s(:,:,klo-k) = s(:,:,klo)
-	    end do
+            end do
          else if (bc(3,1) .eq. HOEXTRAP) then
             do k = 2, ndwn
                s(:,:,klo-k) = s(:,:,klo)
@@ -193,27 +193,27 @@
             if (klo+2 .le. ke) then
                   s(:,:,klo-1) = (15*s(:,:,klo) - 10*s(:,:,klo+1) + &
                        3*s(:,:,klo+2)) * 0.125d0
-	    else
+         else
                   s(:,:,klo-1) = half*(3*s(:,:,klo) - s(:,:,klo+1))
-	    end if
-	 else if (bc(3,1) .eq. REFLECT_EVEN) then
-	    do k = 1, ndwn
+            end if
+         else if (bc(3,1) .eq. REFLECT_EVEN) then
+            do k = 1, ndwn
                s(:,:,klo-k) = s(:,:,klo+k-1)
-	    end do
-	 else if (bc(3,1) .eq. REFLECT_ODD) then
-	    do k = 1, ndwn
+            end do
+         else if (bc(3,1) .eq. REFLECT_ODD) then
+            do k = 1, ndwn
                s(:,:,klo-k) = -s(:,:,klo+k-1)
-	    end do
-	 end if
+            end do
+         end if
       end if
 
       if (nup .gt. 0) then
          khi = domhi(3)
 
-	 if (bc(3,2) .eq. FOEXTRAP) then
-	    do k = 1, nup
+         if (bc(3,2) .eq. FOEXTRAP) then
+            do k = 1, nup
                s(:,:,khi+k) = s(:,:,khi)
-	    end do
+            end do
          else if (bc(3,2) .eq. HOEXTRAP) then
             do k = 2, nup
                s(:,:,khi+k) = s(:,:,khi)
@@ -221,18 +221,18 @@
             if (khi-2 .ge. ks) then
                s(:,:,khi+1) = (15.*s(:,:,khi) - 10*s(:,:,khi-1) + &
                                 3.*s(:,:,khi-2)) * 0.125d0
-	    else
+            else
                s(:,:,khi+1) = half*(3*s(:,:,khi) - s(:,:,khi-1))
-	    end if
-	 else if (bc(3,2) .eq. REFLECT_EVEN) then
-	    do k = 1, nup
+            end if
+         else if (bc(3,2) .eq. REFLECT_EVEN) then
+            do k = 1, nup
                s(:,:,khi+k) = s(:,:,khi-k+1)
-	    end do
-	 else if (bc(3,2) .eq. REFLECT_ODD) then
-	    do k = 1, nup
+            end do
+         else if (bc(3,2) .eq. REFLECT_ODD) then
+            do k = 1, nup
                s(:,:,khi+k) = -s(:,:,khi-k+1)
-	    end do
-	 end if
+            end do
+         end if
       end if
 !
 !    First correct the i-j edges and all corners
@@ -696,14 +696,14 @@
          end if
       end if
 
-      end subroutine fill_bc
+    end subroutine fill_bc
 
 ! 
 ! ****************************************************************************
 ! ****************************************************************************
 ! ****************************************************************************
 !
-      subroutine hoextraptocc(s,slo,shi,bc)
+    subroutine hoextraptocc(s,slo,shi)
 
       use iso_c_binding , only: c_int
       use bl_fort_module, only: c_real
@@ -713,7 +713,6 @@
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: bc(3,2)
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
