@@ -121,7 +121,7 @@ module solve_vel_star_module
       call source_u_g_bc (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_u_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_u_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -256,7 +256,7 @@ module solve_vel_star_module
       call source_v_g_bc(slo, shi, lo, hi, A_m, b_m, v_g, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_v_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_v_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -389,7 +389,7 @@ module solve_vel_star_module
       call source_w_g_bc (slo, shi, lo, hi, A_m, b_m, w_g, flag, dx, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_w_g (slo, shi, lo, hi, a_m, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_w_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)

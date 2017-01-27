@@ -500,8 +500,9 @@ module w_g_conv_dif
 
 ! shear indicator:
       incr=0
-      CALL CALC_XSI (DISCRETIZE(5), slo, shi, lo, hi, W_G, U, V, WW, XSI_E, XSI_N,&
-         XSI_T, incr,dt, dx, dy, dz)
+      CALL CALC_XSI (DISCRETIZE(5), slo, shi, lo, hi, &
+                     W_G, U, V, WW, XSI_E, XSI_N, XSI_T, &
+                     dt, dx, dy, dz)
 
       DO K = slo(3),hi(3)
         DO J = lo(2),hi(2)

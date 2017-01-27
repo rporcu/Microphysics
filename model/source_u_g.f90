@@ -146,7 +146,7 @@ contains
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
 
-      use bc, only: dimension_bc, bc_type, bc_defined, bc_plane
+      use bc, only: dimension_bc, bc_type, bc_defined
       use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 
@@ -427,7 +427,7 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, A_m, b_m, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, b_m, flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
@@ -435,10 +435,6 @@ contains
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      ! Septadiagonal matrix A_m
-      real(c_real), INTENT(IN   ) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: b_m&
@@ -454,7 +450,7 @@ contains
 !-----------------------------------------------
 ! Indices
       INTEGER :: I, J, K
-      INTEGER :: PSV, M
+      INTEGER :: PSV
       INTEGER :: lIE, lIW
 ! terms of bm expression
       real(c_real) :: pSource
@@ -462,9 +458,6 @@ contains
 !-----------------------------------------------
 
       vol = dx*dy*dz
-
-! Set reference phase to gas
-      M = 0
 
 ! Calculate the mass going into each (i,j,k) cell. This is done for each
 ! call in case the point source is time dependent.

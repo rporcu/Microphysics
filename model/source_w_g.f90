@@ -143,7 +143,7 @@ contains
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
 
-      use bc, only: dimension_bc, bc_defined, bc_type, bc_plane
+      use bc, only: dimension_bc, bc_defined, bc_type
       use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
 
@@ -443,7 +443,7 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_W_G(slo, shi, lo, hi, A_M, B_M, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_W_G(slo, shi, lo, hi, B_M, flag, dx, dy, dz)
 
 !-----------------------------------------------
 ! Modules
@@ -455,10 +455,6 @@ contains
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      ! Septadiagonal matrix A_m
-      real(c_real), INTENT(IN   ) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
@@ -473,7 +469,7 @@ contains
 !-----------------------------------------------
 ! Indices
       INTEGER :: I, J, K
-      INTEGER :: PSV, M
+      INTEGER :: PSV
       INTEGER :: lKT, lKB
 ! terms of bm expression
       real(c_real) :: pSource

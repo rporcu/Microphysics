@@ -504,7 +504,7 @@ contains
 ! shear indicator:
       incr=1
       call calc_xsi (discretize(3), slo, shi, lo, hi, &
-         u_g, u, v, ww, xsi_e, xsi_n, xsi_t, incr, &
+         u_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
          dt, dx, dy, dz)
 
       do K = lo(3),hi(3)

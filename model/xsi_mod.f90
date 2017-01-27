@@ -17,7 +17,7 @@
 
       CONTAINS
 
-      SUBROUTINE CALC_XSI(DISCR, slo, shi, lo, hi, PHI, U, V, W, xsi_e, xsi_n, xsi_t, incr, &
+      SUBROUTINE CALC_XSI(DISCR, slo, shi, lo, hi, PHI, U, V, W, xsi_e, xsi_n, xsi_t, &
                           dt, dx, dy, dz)
 
 ! Modules
@@ -36,6 +36,8 @@
       USE functions, only: ieast, jsouth, jnorth, kbot, ktop
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
+
+      USE geometry , only: domlo, domhi
 
       USE param1, only: zero
 
@@ -70,7 +72,6 @@
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! shear indicator
-      INTEGER, INTENT(IN) :: incr
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 ! Local variables
 !---------------------------------------------------------------------//
@@ -95,9 +96,9 @@
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)
 
-       do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-           do i = slo(1),shi(1)
+       do k = slo(3),hi(3)
+         do j = slo(2),hi(2)
+           do i = slo(1),hi(1)
              XSI_E(i,j,k) = XSI_func(U(i,j,k),ZERO)
              XSI_N(i,j,k) = XSI_func(V(i,j,k),ZERO)
              XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
@@ -107,18 +108,19 @@
 
        CASE (2)                               !Superbee
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = i
-                ID = i-1
-                IU = i-1
+                ID = max(i-1,domlo(1)-1)
+                IU = max(i-1,domlo(1)-1)
              ELSE
                 IC = i+1
                 ID = I
                 IU = ieast(i,j,k)+1
+                IU = min(i+1,domhi(1)+1)
              ENDIF
 
              PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
@@ -158,9 +160,9 @@
 
        CASE (3)                               !SMART
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -206,9 +208,9 @@
 
        CASE (4)                               !ULTRA-QUICK
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = i
@@ -259,9 +261,9 @@
 
        CASE (5)                               !QUICKEST
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = i
@@ -323,9 +325,9 @@
 
        CASE (6)                               !MUSCL
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -372,9 +374,9 @@
 
        CASE (7)                               !Van Leer
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = i
@@ -421,9 +423,9 @@
 
        CASE (8)                               !Minmod
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
@@ -469,9 +471,9 @@
 
        CASE (9)                               ! Central
 
-          do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-              do i = slo(1),shi(1)
+          do k = slo(3),hi(3)
+            do j = slo(2),hi(2)
+              do i = slo(1),hi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I

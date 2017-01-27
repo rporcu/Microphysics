@@ -146,8 +146,6 @@
          ieast = iplus(i,j,k)
       end if
 
-      ieast = i+1
-
       end function ieast
 
       ! ************************************************
@@ -294,6 +292,14 @@
 
 ! Misc
 !---------------------------------------------------------------------//
+
+! Function that returns the maximum of zero or input
+      DOUBLE PRECISION FUNCTION ZMAX(XXX)
+      USE param1, only: zero
+      implicit none
+      DOUBLE PRECISION XXX
+      ZMAX       = MAX(XXX, ZERO)
+      END FUNCTION ZMAX
 
 ! Arithmetic average
       DOUBLE PRECISION FUNCTION AVG(XXXm, XXXp)

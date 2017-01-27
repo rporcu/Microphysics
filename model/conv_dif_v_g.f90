@@ -485,7 +485,7 @@ module v_g_conv_dif
 ! shear indicator: y-momentum
       incr=2
       CALL CALC_XSI (DISCRETIZE(4), slo, shi, lo, hi, &
-                     V_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
+                     V_G, U, V, WW, XSI_E, XSI_N, XSI_T, &
                      dt, dx, dy, dz)
 
       DO K = lo(3),hi(3)
