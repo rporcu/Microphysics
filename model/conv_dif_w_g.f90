@@ -330,9 +330,9 @@ module w_g_conv_dif
 
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = slo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = lo(1),hi(1)
 
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) THEN
@@ -503,9 +503,9 @@ module w_g_conv_dif
       CALL CALC_XSI (DISCRETIZE(5), slo, shi, lo, hi, W_G, U, V, WW, XSI_E, XSI_N,&
          XSI_T, incr,dt, dx, dy, dz)
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = slo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = lo(1),hi(1)
 
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) THEN

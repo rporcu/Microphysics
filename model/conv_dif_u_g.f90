@@ -330,9 +330,9 @@ contains
 
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = lo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = slo(1),hi(1)
 
                IF(flag(i,j,k,2) >= 2000 .and. &
                   flag(i,j,k,2) <= 2011) THEN
@@ -507,9 +507,9 @@ contains
          u_g, u, v, ww, xsi_e, xsi_n, xsi_t, incr, &
          dt, dx, dy, dz)
 
-      do K = slo(3),shi(3)
-         do J = slo(2),shi(2)
-            do I = slo(1),shi(1)
+      do K = lo(3),hi(3)
+         do J = lo(2),hi(2)
+            do I = slo(1),hi(1)
 
                IF(flag(i,j,k,2) >= 2000 .and. &
                   flag(i,j,k,2) <= 2011) THEN

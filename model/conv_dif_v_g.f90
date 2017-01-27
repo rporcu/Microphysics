@@ -317,9 +317,9 @@ module v_g_conv_dif
 
 !---------------------------------------------------------------------//
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = lo(3),hi(3)
+        DO J = slo(2),hi(2)
+          DO I = lo(1),hi(1)
 
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) THEN
@@ -488,9 +488,9 @@ module v_g_conv_dif
                      V_G, U, V, WW, XSI_E, XSI_N, XSI_T, incr, &
                      dt, dx, dy, dz)
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = lo(3),hi(3)
+        DO J = slo(2),hi(2)
+          DO I = lo(1),hi(1)
 
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) THEN
