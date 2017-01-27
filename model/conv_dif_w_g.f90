@@ -3,6 +3,7 @@ module w_g_conv_dif
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
    use geometry      , only: domlo, domhi 
+   use param1        , only: half, one, zero
 
    implicit none
 
@@ -22,7 +23,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_M, MU_G, u_g, v_g, w_g, &
+      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_m, MU_G, u_g, v_g, w_g, &
                               flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
@@ -59,10 +60,10 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_M, MU_G, flux_ge, flux_gn, flux_gt, flag, &
+         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, MU_G, flux_ge, flux_gn, flux_gt, flag, &
                             dx, dy, dz)
       ELSE
-         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_M, MU_G, u_g, v_g, w_g, &
+         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, MU_G, u_g, v_g, w_g, &
                             flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
       ENDIF
 
@@ -113,63 +114,6 @@ module w_g_conv_dif
 
       RETURN
       END SUBROUTINE GET_WCELL_GVTERMS
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Purpose: Calculate the convective fluxes through the faces of a     C
-!  w-momentum cell. Note the fluxes are calculated at all faces.       C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GCFLUX_TERMS(&
-         slo, shi, lo, hi, & 
-         FLUX_E, FLUX_W, FLUX_N, &
-         FLUX_S, FLUX_T, FLUX_B, &
-         flux_ge, flux_gn, flux_gt, i, j, k)
-
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-
-      USE param1, only: half
-
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Dummy arguments
-!---------------------------------------------------------------------//
-! fluxes through faces of given u-momentum cell
-      real(c_real), intent(OUT) :: flux_e, flux_w
-      real(c_real), intent(OUT) :: flux_n, flux_s
-      real(c_real), intent(OUT) :: flux_t, flux_b
-
-      INTEGER, intent(IN) :: i, j, k
-
-! Local variables
-!---------------------------------------------------------------------//
-! indices
-      INTEGER :: itmp, jtmp
-
-!---------------------------------------------------------------------//
-
-      itmp  = iminus(i,j,k)
-
-      jtmp  = jminus(i,j,k)
-
-      Flux_e = HALF * (Flux_gE(i,j,k) + Flux_gE(i,j,kplus(i,j,k)))
-      Flux_w = HALF * (Flux_gE(itmp,j,k) + Flux_gE(itmp,j,kplus(itmp,j,k)))
-      Flux_n = HALF * (Flux_gN(i,j,k) + Flux_gN(i,j,kplus(i,j,k)))
-      Flux_s = HALF * (Flux_gN(i,jtmp,k) + Flux_gN(i,jtmp,kplus(i,jtmp,k)))
-      Flux_t = HALF * (Flux_gT(i,j,k) + Flux_gT(i,j,kplus(i,j,k)))
-      Flux_b = HALF * (Flux_gT(i,j,kminus(i,j,k)) + Flux_gT(i,j,k))
-
-      RETURN
-      END SUBROUTINE GET_WCELL_GCFLUX_TERMS
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -293,7 +237,6 @@ module w_g_conv_dif
 
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
-      USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
@@ -333,12 +276,17 @@ module w_g_conv_dif
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) THEN
 
-! Calculate convection-diffusion fluxes through each of the faces
-                  CALL GET_WCELL_GCFLUX_TERMS(&
-                     slo, shi, lo, hi, &
-                     flux_e, flux_w, flux_n, &
-                     flux_s, flux_t, flux_b, &
-                     flux_ge, flux_gn, flux_gt, i, j, k)
+               ! Calculate convection-diffusion fluxes through each of the faces
+               flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i  ,j,k+1))
+               flux_w = HALF * (flux_gE(i-1,j,k) + flux_gE(i-1,j,k+1))
+               flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i,j  ,k+1))
+               flux_s = HALF * (flux_gN(i,j-1,k) + flux_gN(i,j-1,k+1))
+               flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i ,j ,k+1))
+               if (k.eq.domlo(3)-1) then
+                  flux_b = flux_gT(i ,j ,k  )
+               else
+                  flux_b = HALF * (flux_gT(i,j,k-1) + flux_gT(i ,j ,k  ))
+               end if
 
                   CALL GET_WCELL_GDIFF_TERMS(&
                      slo, shi, lo, hi, &
@@ -346,55 +294,55 @@ module w_g_conv_dif
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
 ! East face (i+1/2, j, k+1/2)
-                  IF (Flux_e >= ZERO) THEN
+                  IF (flux_e >= ZERO) THEN
                      A_W_G(I,J,K,E) = D_Fe
-                     A_W_G(iplus(i,j,k),j,k,W) = D_Fe + Flux_e
+                     A_W_G(iplus(i,j,k),j,k,W) = D_Fe + flux_e
                   ELSE
-                     A_W_G(I,J,K,E) = D_Fe - Flux_e
+                     A_W_G(I,J,K,E) = D_Fe - flux_e
                      A_W_G(iplus(i,j,k),j,k,W) = D_Fe
                   ENDIF
 ! West face (i-1/2, j, k+1/2)
                   IF(flag(iminus(i,j,k),j,k,4) < 2000 .or. &
                      flag(iminus(i,j,k),j,k,4) > 2011) THEN
-                     IF (Flux_w >= ZERO) THEN
-                        A_W_G(I,J,K,W) = D_Fw + Flux_w
+                     IF (flux_w >= ZERO) THEN
+                        A_W_G(I,J,K,W) = D_Fw + flux_w
                      ELSE
                         A_W_G(I,J,K,W) = D_Fw
                      ENDIF
                   ENDIF
 
 ! North face (i, j+1/2, k+1/2)
-                  IF (Flux_n >= ZERO) THEN
+                  IF (flux_n >= ZERO) THEN
                      A_W_G(I,J,K,N) = D_Fn
-                     A_W_G(i,jplus(i,j,k),k,S) = D_Fn + Flux_n
+                     A_W_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n
                   ELSE
-                     A_W_G(I,J,K,N) = D_Fn - Flux_n
+                     A_W_G(I,J,K,N) = D_Fn - flux_n
                      A_W_G(i,jplus(i,j,k),k,S) = D_Fn
                   ENDIF
 
 ! South face (i, j-1/2, k+1/2)
                   IF(flag(i,jminus(i,j,k),k,4) < 2000 .or. &
                      flag(i,jminus(i,j,k),k,4) > 2011) THEN
-                     IF (Flux_s >= ZERO) THEN
-                        A_W_G(I,J,K,S) = D_Fs + Flux_s
+                     IF (flux_s >= ZERO) THEN
+                        A_W_G(I,J,K,S) = D_Fs + flux_s
                      ELSE
                         A_W_G(I,J,K,S) = D_Fs
                      ENDIF
                   ENDIF
 
 ! Top face (i, j, k+1)
-                  IF (Flux_T >= ZERO) THEN
+                  IF (flux_T >= ZERO) THEN
                      A_W_G(I,J,K,T) = D_Ft
-                     A_W_G(i,j,kplus(i,j,k),B) = D_Ft + Flux_t
+                     A_W_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t
                   ELSE
-                     A_W_G(I,J,K,T) = D_Ft - Flux_t
+                     A_W_G(I,J,K,T) = D_Ft - flux_t
                      A_W_G(i,j,kplus(i,j,k),B) = D_Ft
                   ENDIF
 ! Bottom face (i, j, k)
                   IF(flag(i,j,kminus(i,j,k),4) < 2000 .or. &
                      flag(i,j,kminus(i,j,k),4) > 2011) THEN
-                     IF (Flux_b >= ZERO) THEN
-                        A_W_G(I,J,K,B) = D_Fb + Flux_b
+                     IF (flux_b >= ZERO) THEN
+                        A_W_G(I,J,K,B) = D_Fb + flux_b
                      ELSE
                         A_W_G(I,J,K,B) = D_Fb
                      ENDIF
@@ -430,8 +378,6 @@ module w_g_conv_dif
                               dt, dx, dy, dz)
 
       USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-
-      USE param1, only: one
 
       use matrix, only: e, w, n, s, t, b
 
@@ -474,7 +420,7 @@ module w_g_conv_dif
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
-      real(c_real) :: Flux_e, flux_w, flux_n, flux_s
+      real(c_real) :: flux_e, flux_w, flux_n, flux_s
       real(c_real) :: flux_t, flux_b
 
 ! x, y, z directional velocity
@@ -506,18 +452,29 @@ module w_g_conv_dif
                   flag(i,j,k,4) <= 2011) THEN
 
 ! Calculate convection-diffusion fluxes through each of the faces
-                  CALL GET_WCELL_GCFLUX_TERMS(&
-                     slo, shi, lo, hi, &
-                     flux_e, flux_w, flux_n, &
-                     flux_s, flux_t, flux_b, &
-                     flux_ge, flux_gn, flux_gt, i, j, k)
+!                 CALL GET_WCELL_GCFLUX_TERMS(&
+!                    slo, shi, lo, hi, &
+!                    flux_e, flux_w, flux_n, &
+!                    flux_s, flux_t, flux_b, &
+!                    flux_ge, flux_gn, flux_gt, i, j, k)
+                  flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i  ,j,k+1))
+                  flux_w = HALF * (flux_gE(i-1,j,k) + flux_gE(i-1,j,k+1))
+                  flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i,j  ,k+1))
+                  flux_s = HALF * (flux_gN(i,j-1,k) + flux_gN(i,j-1,k+1))
+                  flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i ,j ,k+1))
+                  if (k.eq.domlo(3)-1) then
+                     flux_b = flux_gT(i ,j ,k  )
+                  else
+                     flux_b = HALF * (flux_gT(i,j,k-1) + flux_gT(i ,j ,k  ))
+                  end if
+
                   CALL GET_WCELL_GDIFF_TERMS(&
                      slo, shi, lo, hi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
 ! East face (i+1/2, j, k+1/2)
-                  A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*Flux_e
+                  A_W_G(I,J,K,E) = D_Fe - XSI_E(i,j,k)*flux_e
                   A_W_G(iplus(i,j,k),j,k,W) = D_Fe + flux_e*&
                      (ONE - XSI_E(i,j,k))
 
@@ -529,7 +486,7 @@ module w_g_conv_dif
                   ENDIF
 
 ! North face (i, j+1/2, k+1/2)
-                  A_W_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*Flux_n
+                  A_W_G(I,J,K,N) = D_Fn - XSI_N(i,j,k)*flux_n
                   A_W_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n*&
                      (ONE - XSI_N(i,j,k))
 ! South face (i, j-1/2, k+1/2)
@@ -540,7 +497,7 @@ module w_g_conv_dif
                   ENDIF
 
 ! Top face (i, j, k+1)
-                  A_W_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*Flux_t
+                  A_W_G(I,J,K,T) = D_Ft - XSI_T(i,j,k)*flux_t
                   A_W_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t*&
                      (ONE - XSI_T(i,j,k))
 ! Bottom face (i, j, k)
