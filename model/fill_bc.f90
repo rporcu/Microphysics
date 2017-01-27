@@ -154,9 +154,10 @@
          jhi = domhi(2)
 
 	 if (bc(2,2) .eq. FOEXTRAP) then
-	    do j = 1, ntop
-               s(:,jhi+j,:) = s(:,jhi,:)
-	    end do
+!	    THIS IS A HACK SO WE DONT OVERWRITE OUTFLOW BC'S IN DEM06
+!	    do j = 1, ntop
+!              s(:,jhi+j,:) = s(:,jhi,:)
+!	    end do
          else if (bc(2,2) .eq. HOEXTRAP) then
             do j = 2, ntop
                s(:,jhi+j,:) = s(:,jhi,:)
