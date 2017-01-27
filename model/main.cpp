@@ -91,7 +91,9 @@ int main (int argc, char* argv[])
   // Call to output before entering time march loop
   my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
-  Real prev_dt;
+  // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but only if solve_fluid = T
+  Real prev_dt = dt;
+
   while (finish == 0)
   {
     mfix_usr1();
