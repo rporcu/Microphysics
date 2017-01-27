@@ -12,6 +12,7 @@
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
+      use geometry      , only: domlo, domhi
 
       IMPLICIT NONE
 
@@ -33,7 +34,7 @@
       USE discretization, only: minmod
       USE discretization, only: central_scheme
 
-      USE functions, only: jsouth, jnorth, kbot, ktop
+      USE functions, only: jsouth, jnorth
 
       USE geometry , only: domlo, domhi
 
@@ -141,12 +142,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
 
              PHI_C = PHI_C_OF(PHI(i,j,KU),PHI(i,j,KC),PHI(i,j,KD))
@@ -190,12 +191,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              DWF = SMART(PHI_C)
@@ -241,12 +242,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              CF = ABS(W(i,j,k))*DT*ODZ
@@ -301,14 +302,14 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
                 ODZC = ODZ
                 ODZUC = ODZ
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
                 ODZC = ODZ
                 ODZUC = ODZ
              ENDIF
@@ -355,12 +356,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KU = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              DWF = MUSCL(PHI_C)
@@ -404,12 +405,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              DWF = VANLEER(PHI_C)
@@ -453,12 +454,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              DWF = MINMOD(PHI_C)
@@ -501,12 +502,12 @@
 
              IF (W(i,j,k) >= ZERO) THEN
                 KC = K
-                KD = ktop(i,j,k)
-                KU = kbot(i,j,k)
+                KD = min(k+1,domhi(3)+1)
+                KU = max(k-1,domlo(3)-1)
              ELSE
-                KC = ktop(i,j,k)
+                KC = min(k+1,domhi(3)+1)
                 KD = K
-                KU = ktop(i,j,ktop(i,j,k))
+                KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
              DWF = CENTRAL_SCHEME(PHI_C)

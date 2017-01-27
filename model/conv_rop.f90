@@ -48,14 +48,14 @@ MODULE CONV_ROP_MODULE
 !---------------------------------------------------------------------//
 
 
-      IF (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
+      if (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
          CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
-      ELSE
+      else
          CALL CONV_ROP1 (DISCRETIZE(1), &
                          slo, shi, lo, hi, &
                          flag, rop_g, u_g, v_g, w_g, &
                          rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
-      ENDIF
+      end if
 
       RETURN
    CONTAINS
@@ -112,63 +112,50 @@ MODULE CONV_ROP_MODULE
       INTEGER :: I, J, K
 !---------------------------------------------------------------------//
 
+      DO K = lo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = slo(1),hi(1)
+
+            ! East face (i+1/2, j, k)
+            if (U(i,j,k) >= ZERO) THEN
+               ROP_E(i,j,k) = ROP(i,j,k)
+            else
+               ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
+            end if
+
+          end do
+        end do
+      end do
+
       DO K = slo(3),shi(3)
         DO J = slo(2),shi(2)
           DO I = slo(1),shi(1)
 
-         IF (1.eq.flag(i,j,k,1)) THEN
-
-! East face (i+1/2, j, k)
-            IF (U(i,j,k) >= ZERO) THEN
-               ROP_E(i,j,k) = ROP(i,j,k)
-            ELSE
-               ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
-            ENDIF
-! West face (i-1/2, j, k)
-            IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
-               IF (U(iminus(i,j,k),j,k) >= ZERO) THEN
-                  ROP_E(iminus(i,j,k),j,k) = ROP(i-1,j,k)
-               ELSE
-                  ROP_E(iminus(i,j,k),j,k) = ROP(i,j,k)
-               ENDIF
-            ENDIF
-
-
-! North face (i, j+1/2, k)
-            IF (V(i,j,k) >= ZERO) THEN
+            ! North face (i, j+1/2, k)
+            if (V(i,j,k) >= ZERO) THEN
                ROP_N(i,j,k) = ROP(i,j,k)
-            ELSE
+            else
                ROP_N(i,j,k) = ROP(i,jnorth(i,j,k),k)
-            ENDIF
-! South face (i, j-1/2, k)
-            IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
-               IF (V(i,jminus(i,j,k),k) >= ZERO) THEN
-                 ROP_N(i,jminus(i,j,k),k) = ROP(i,jsouth(i,j,k),k)
-               ELSE
-                 ROP_N(i,jminus(i,j,k),k) = ROP(i,j,k)
-               ENDIF
-            ENDIF
+            end if
 
+          end do
+        end do
+      end do
 
-! Top face (i, j, k+1/2)
-            IF (W(i,j,k) >= ZERO) THEN
+      DO K = slo(3),shi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
+
+            ! Top face (i, j, k+1/2)
+            if (W(i,j,k) >= ZERO) THEN
                ROP_T(i,j,k) = ROP(i,j,k)
-            ELSE
+            else
                ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
-            ENDIF
-! Bottom face (i, j, k-1/2)
-            IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
-               IF (W(i,j,kminus(i,j,k)) >= ZERO) THEN
-                  ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,kbot(i,j,k))
-               ELSE
-                  ROP_T(i,j,kminus(i,j,k)) = ROP(i,j,k)
-               ENDIF
-            ENDIF
+            end if
 
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
+          end do
+        end do
+      end do
 
       RETURN
       END SUBROUTINE CONV_ROP0
@@ -252,40 +239,40 @@ MODULE CONV_ROP_MODULE
         DO J = slo(2),shi(2)
           DO I = slo(1),shi(1)
 
-         IF (1.eq.flag(i,j,k,1)) THEN
+         if (1.eq.flag(i,j,k,1)) THEN
 
 ! East face (i+1/2, j, k)
             ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
                XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
 ! West face (i-1/2, j, k)
-            IF (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
+            if (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
                ROP_E(iminus(i,j,k),j,k) = &
                   ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(i-1,j,k) + &
                   XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
-            ENDIF
+            end if
 
 
 ! North face (i, j+1/2, k)
             ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
                XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
 ! South face (i, j-1/2, k)
-            IF (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
+            if (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
                ROP_N(i,jminus(i,j,k),k) = &
                   ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
                   XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
-            ENDIF
+            end if
 
 ! Top face (i, j, k+1/2)
             ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
                XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
 ! Bottom face (i, j, k-1/2)
-            IF (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
+            if (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
                ROP_T(i,j,kminus(i,j,k)) = &
                   ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
                   XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
-            ENDIF
+            end if
 
-         ENDIF
+         end if
       ENDDO
       ENDDO
       ENDDO
