@@ -33,7 +33,7 @@
       USE discretization, only: minmod
       USE discretization, only: central_scheme
 
-      USE functions, only: ieast, iwest, jsouth, jnorth, kbot, ktop
+      USE functions, only: ieast, jsouth, jnorth, kbot, ktop
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
@@ -112,13 +112,13 @@
               do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
-                IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                IC = i
+                ID = i-1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
+                IC = i+1
                 ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = ieast(i,j,k)+1
              ENDIF
 
              PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
@@ -164,12 +164,12 @@
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                ID = i
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
+                IC = i+1
                 ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = ieast(i,j,k) + 1
              ENDIF
              PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
              DWF = SMART(PHI_C)
@@ -211,13 +211,13 @@
               do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
-                IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                IC = i
+                ID = i+1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
+                IC = i+1
                 ID = i
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = ieast(i,j,k)+1
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              CF = ABS(U(i,j,k))*DT*ODX
@@ -264,9 +264,9 @@
               do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
-                IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                IC = i
+                ID = i+1
+                IU = i-1
                 ODXC = ODX
                 ODXUC = ODX
              ELSE
@@ -329,12 +329,12 @@
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                ID = i+1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
-                ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IC = i+1
+                ID = i
+                IU = ieast(i,j,k)+1
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MUSCL(PHI_C)
@@ -377,13 +377,13 @@
               do i = slo(1),shi(1)
 
              IF (U(i,j,k) >= ZERO) THEN
-                IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                IC = i
+                ID = i+1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
-                ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IC = i+1
+                ID = i
+                IU = ieast(i,j,k)+1
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = VANLEER(PHI_C)
@@ -427,12 +427,12 @@
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                ID = i+1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
+                IC = i+1
                 ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = ieast(i,j,k)+1
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MINMOD(PHI_C)
@@ -475,12 +475,12 @@
 
              IF (U(i,j,k) >= ZERO) THEN
                 IC = I
-                ID = ieast(i,j,k)
-                IU = iwest(i,j,k)
+                ID = i+1
+                IU = i-1
              ELSE
-                IC = ieast(i,j,k)
+                IC = i+1
                 ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = ieast(i,j,k)+1
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = CENTRAL_SCHEME(PHI_C)
