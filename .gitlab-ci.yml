@@ -13,36 +13,22 @@ stages:
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
-  INTEL_LICENSE_FILE: "/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/licenses/COM_L___9CX2-WF9RXD5G.lic"
-  LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64:/nfs/apps/Compilers/Intel/ParallelStudio/2016.2.062/lib/intel64"
+  LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64"
   BOXLIB_HOME: "/nfs/home/0/users/jenkins/amrex"
   GCC_BIN_DIR: "/nfs/apps/Compilers/GNU/6.1.0/bin/"
-  GCC_DBG_FCFLAGS: "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface -Wuse-without-only"
-  GCC_REL_FCFLAGS: "-g -std=f2008 -fcheck=all -Wall -O2"
 
 build:
   stage: build
   script:
     - mkdir build
     - cd build
-    # - FC="mpifort -g -std=f2008 -fcheck=all -Wall" cmake -DMPI=1 -DSMP=1 ..
-    - FC="${GCC_BIN_DIR}/gfortran ${GCC_DBG_FCFLAGS}" CC="${GCC_BIN_DIR}/gcc -g -Wall" CXX="${GCC_BIN_DIR}/g++ -g -Wall" cmake ..
+    - FC="${GCC_BIN_DIR}/gfortran" CC="${GCC_BIN_DIR}/gcc" CXX="${GCC_BIN_DIR}/g++" cmake ..
     - make
     - make build_test
   artifacts:
     expire_in: 1 week
     paths:
     - build
-
-# build_intel:
-#   stage: build
-#   script:
-#     - mkdir build_intel
-#     - cd build_intel
-#     # - FC="mpifort -g -std=f2008 -fcheck=all -Wall" cmake -DMPI=1 -DSMP=1 ..
-#     - env FC="/nfs/apps/Compilers/Intel/ParallelStudio/2016.3.067/bin/ifort -g -stand f08 -check all -warn all" cmake ..
-#     - make
-#     - ctest -R build_
 
 test:
   stage: test
@@ -55,5 +41,5 @@ benchmarks:
   script:
     - mkdir build-benchmarks
     - cd build-benchmarks
-    - FC="${GCC_BIN_DIR}/gfortran ${GCC_REL_FCFLAGS}" CC="${GCC_BIN_DIR}/gcc -g -Wall" CXX="${GCC_BIN_DIR}/g++ -g -Wall" cmake -DCMAKE_BUILD_TYPE=Release ..
+    - FC="${GCC_BIN_DIR}/gfortran" CC="${GCC_BIN_DIR}/gcc" CXX="${GCC_BIN_DIR}/g++" cmake -DCMAKE_BUILD_TYPE=Release ..
     - ctest -R benchmarks

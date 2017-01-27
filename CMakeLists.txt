@@ -1,8 +1,22 @@
 cmake_minimum_required(VERSION 2.8)
 
 enable_language(CXX)
-enable_language(C)
 enable_language(Fortran)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
+      "Choose the type of build, options are: Debug Release
+RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
+if (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -Wall -O2" CACHE STRING "" FORCE)
+  set (CMAKE_CXX_FLAGS_DEBUG   "-g -Wall -Wextra -O0" CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_RELEASE "-g -std=f2008 -fcheck=all -Wall -O2" CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface -Wuse-without-only" CACHE STRING "" FORCE)
+
+endif (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
