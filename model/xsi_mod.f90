@@ -33,7 +33,7 @@
       USE discretization, only: minmod
       USE discretization, only: central_scheme
 
-      USE functions, only: ieast, jsouth, jnorth, kbot, ktop
+      USE functions, only: jsouth, jnorth, kbot, ktop
 
       USE functions, only: im1, ip1, jm1, jp1, km1, kp1
 
@@ -119,7 +119,7 @@
              ELSE
                 IC = i+1
                 ID = I
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
                 IU = min(i+1,domhi(1)+1)
              ENDIF
 
@@ -171,7 +171,7 @@
              ELSE
                 IC = i+1
                 ID = I
-                IU = ieast(i,j,k) + 1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(IU,j,k),PHI(IC,j,k),PHI(ID,j,k))
              DWF = SMART(PHI_C)
@@ -219,7 +219,7 @@
              ELSE
                 IC = i+1
                 ID = i
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              CF = ABS(U(i,j,k))*DT*ODX
@@ -272,9 +272,9 @@
                 ODXC = ODX
                 ODXUC = ODX
              ELSE
-                IC = ieast(i,j,k)
+                IU = min(i+1,domhi(1)+1)
                 ID = I
-                IU = ieast(ieast(i,j,k),j,k)
+                IU = min(i+2,domhi(1)+1)
                 ODXC = ODX
                 ODXUC = ODX
              ENDIF
@@ -336,7 +336,7 @@
              ELSE
                 IC = i+1
                 ID = i
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MUSCL(PHI_C)
@@ -385,7 +385,7 @@
              ELSE
                 IC = i+1
                 ID = i
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = VANLEER(PHI_C)
@@ -434,7 +434,7 @@
              ELSE
                 IC = i+1
                 ID = I
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = MINMOD(PHI_C)
@@ -482,7 +482,7 @@
              ELSE
                 IC = i+1
                 ID = I
-                IU = ieast(i,j,k)+1
+                IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
              DWF = CENTRAL_SCHEME(PHI_C)
