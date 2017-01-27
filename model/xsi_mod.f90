@@ -34,8 +34,6 @@
       USE discretization, only: minmod
       USE discretization, only: central_scheme
 
-      USE functions, only: jsouth, jnorth
-
       USE geometry , only: domlo, domhi
 
       USE param1, only: zero
@@ -128,12 +126,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
 
              PHI_C = PHI_C_OF(PHI(i,JU,k),PHI(i,JC,k),PHI(i,JD,k))
@@ -178,12 +176,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = j
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = SMART(PHI_C)
@@ -227,12 +225,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              CF = ABS(V(i,j,k))*DT*ODY
@@ -284,14 +282,14 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
                 ODYC = ODY
                 ODYUC = ODY
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
                 ODYC = ODY
                 ODYUC = ODY
              ENDIF
@@ -343,12 +341,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = MUSCL(PHI_C)
@@ -392,12 +390,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = j
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = j
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = VANLEER(PHI_C)
@@ -441,12 +439,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = MINMOD(PHI_C)
@@ -489,12 +487,12 @@
 
              IF (V(i,j,k) >= ZERO) THEN
                 JC = J
-                JD = jnorth(i,j,k)
-                JU = jsouth(i,j,k)
+                JD = min(j+1,domhi(2)+1)
+                JU = max(j-1,domlo(2)-1)
              ELSE
-                JC = jnorth(i,j,k)
+                JC = min(j+1,domhi(2)+1)
                 JD = J
-                JU = jnorth(i,jnorth(i,j,k),k)
+                JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
              DWF = CENTRAL_SCHEME(PHI_C)
