@@ -2,8 +2,9 @@ module source_v_g_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
+   use param1        , only: zero, half, one, undefined, is_undefined, small_number
 
-   use param1, only: zero, half, one, undefined, is_undefined, small_number
+   implicit none
 
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -31,8 +32,6 @@ contains
       use matrix, only: e, w, s, n, t, b
 
       use scales, only: p_scale
-
-      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -148,8 +147,6 @@ contains
 
       use matrix, only: e, w, s, n, t, b
       use param1, only: is_defined
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -454,8 +451,6 @@ contains
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 

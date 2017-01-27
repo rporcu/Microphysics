@@ -3,6 +3,8 @@ module w_g_conv_dif
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
+   implicit none
+
    private
    public :: conv_dif_w_g
 
@@ -76,8 +78,6 @@ module w_g_conv_dif
       USE functions, only: avg
       USE functions, only: kplus
 
-      IMPLICIT NONE
-
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), intent(OUT) :: U&
@@ -129,7 +129,6 @@ module w_g_conv_dif
       USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       USE param1, only: half
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -183,8 +182,6 @@ module w_g_conv_dif
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, &
          dx, dy, dz)
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -297,8 +294,6 @@ module w_g_conv_dif
 
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -442,8 +437,6 @@ module w_g_conv_dif
       USE run, only: discretize
 
       USE xsi, only: calc_xsi
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 

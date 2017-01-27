@@ -15,10 +15,10 @@
 
    contains
 
-      subroutine adjust_a_g(axis, slo, shi, lo, hi, A_M, B_M, ROP_G, dx, dy, dz)
+      subroutine adjust_a_g(axis, slo, shi, lo, hi, A_m, B_M, rop_g, dx, dy, dz)
 
          USE functions, only: avg
-         USE functions, only: ip1
+         USE geometry , only: domlo, domhi
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
 
@@ -38,13 +38,13 @@
       real(c_real), intent(inout) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: ROP_G&
+      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
      
-      integer      :: ip, i, j, k, ie, je, ke
+      integer      :: ip, i, j, k, is, js, ks
       real(c_real) :: denominator, xxxm, xxxp
       real(c_real) :: axy, ayz, axz
 
@@ -52,72 +52,72 @@
       axz = dx*dz
       ayz = dy*dz
 
-      ie = hi(1)
-      je = hi(2)
-      ke = hi(3)
+      is = lo(1)
+      js = lo(2)
+      ks = lo(3)
  
       if (axis.eq.'x') then
-          ie = hi(1)+1
+          is = lo(1)-1
       else if (axis.eq.'y') then
-          je = hi(2)+1
+          js = lo(2)-1
       else if (axis.eq.'z') then
-          ke = hi(3)+1
+          ks = lo(3)-1
       endif
 
-      DO K = lo(3),ke
-        DO J = lo(2),je
-          DO I = lo(1),ie
+      DO K = ks, hi(3)
+        DO J = js, hi(2)
+          DO I = is, hi(1)
 
-         IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
+         IF (ABS(A_m(I,J,K,0)) < SMALL_NUMBER) THEN
 
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
+            A_m(I,J,K,E) = ZERO
+            A_m(I,J,K,W) = ZERO
+            A_m(I,J,K,N) = ZERO
+            A_m(I,J,K,S) = ZERO
+            A_m(I,J,K,T) = ZERO
+            A_m(I,J,K,B) = ZERO
+            A_m(I,J,K,0) = -ONE
 
             IF (B_M(I,J,K) < ZERO) THEN
-               IP = IP1(I)
+               IP = min(domhi(1)+1, i+1)
 
                if (axis .eq. 'U') then
-                  denominator = ROP_G(ieast(i,j,k),j,k)*AYZ
+                  denominator = rop_g(ieast(i,j,k),j,k)*AYZ
                else if (axis .eq. 'V') then
-                  denominator = ROP_G(i,jnorth(i,j,k),k)*AXZ
+                  denominator = rop_g(i,jnorth(i,j,k),k)*AXZ
                else if (axis .eq. 'W') then
-                  denominator = ROP_G(i,j,ktop(i,j,k))*AXY
+                  denominator = rop_g(i,j,ktop(i,j,k))*AXY
                end if
 
                xxxm = ONE
                xxxp = ZERO
 
-            ELSE IF (B_M(I,J,K) > ZERO) THEN
+            else IF (B_M(I,J,K) > ZERO) THEN
 
                if (axis .eq. 'U') then
-                  denominator = ROP_G(i,j,k)*AYZ
+                  denominator = rop_g(i,j,k)*AYZ
                else if (axis .eq. 'V') then
-                  denominator = ROP_G(i,j,k)*AXZ
+                  denominator = rop_g(i,j,k)*AXZ
                else if (axis .eq. 'W') then
-                  denominator = ROP_G(i,j,k)*AXY
+                  denominator = rop_g(i,j,k)*AXY
                end if
 
                xxxm = ZERO
                xxxp = ONE
 
-            ELSE
+            else
                denominator = ZERO
-            ENDIF
+            end if
 
             IF (denominator > SMALL_NUMBER) THEN
                B_M(I,J,K) = SQRT(ABS(B_M(I,J,K))/(denominator*AVG(xxxm,xxxp)))
-            ELSE
+            else
                B_M(I,J,K) = ZERO
-            ENDIF
-         ENDIF
-      END DO
-      END DO
-      END DO
+            end if
+         end if
+      end do
+      end do
+      end do
 
       end subroutine adjust_a_g
 

@@ -1,6 +1,9 @@
 module u_g_conv_dif
 
-   use bl_fort_module, only : c_real
+   use bl_fort_module, only: c_real
+   use geometry      , only: domlo, domhi
+
+   implicit none
 
    private
    public :: conv_dif_u_g
@@ -85,9 +88,6 @@ contains
 
       use functions, only: avg
       use functions, only: iplus
-      use functions, only:  ip1
-
-      IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -186,8 +186,6 @@ contains
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
 
-      IMPLICIT NONE
-
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! diffusion through faces of given ijk u-momentum cell
@@ -223,9 +221,9 @@ contains
       axz = dx*dz
       ayz = dy*dz
 
-      IP = IP1(I)
-      JM = JM1(J)
-      KM = KM1(K)
+      IP = min(domhi(1)+1, i+1)
+      JM = max(domlo(2)-1, j-1)
+      KM = max(domlo(3)-1, k-1)
 
       IF (flag(i,j,k,1)>=100)  THEN
          IC = ieast(i,j,k)
@@ -439,8 +437,6 @@ contains
       use run      , only: discretize
 
       use xsi, only: calc_xsi
-
-      IMPLICIT NONE
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
