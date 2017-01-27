@@ -7,11 +7,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
-   p_g, ep_g, ro_g, rop_g, &
-   d_e, d_n, d_t, &
-   flux_ge, flux_gn, flux_gt, &
-   trD_g, lambda_g, mu_g, flag, &
-   dx, dy, dz) &
+   p_g, ep_g, flag, dx, dy, dz) &
    bind(C, name="mfix_main1")
 
 !-----------------------------------------------
@@ -48,37 +44,12 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(inout) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(inout) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: d_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(inout) :: mu_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: lambda_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: trD_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      real(c_real), intent(inout) :: flux_gE&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_gN&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: flux_gT&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 !---------------------------------------------------------------------//

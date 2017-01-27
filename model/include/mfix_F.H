@@ -22,11 +22,7 @@ extern "C"
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* p_g,     Real* ep_g,
-                 Real* ro_g,    Real* rop_g,
-                 Real* d_e,     Real* d_n,      Real* d_t,
-                 Real* flux_gE, Real* flux_gN,  Real* flux_gT,
-                 Real* trD_g,   Real* lambda_g, Real* mu_g,
+                 Real* p_g,     Real* ep_g,     
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
 

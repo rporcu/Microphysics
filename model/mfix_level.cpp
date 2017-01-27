@@ -556,10 +556,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-               (*ro_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-               (*d_e[lev])[mfi].dataPtr(),     (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-               (*flux_gE[lev])[mfi].dataPtr(), (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-               (*trD_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
 
