@@ -35,8 +35,6 @@
 
       USE functions, only: jsouth, jnorth, kbot, ktop
 
-      USE functions, only: im1, ip1, jm1, jp1, km1, kp1
-
       USE geometry , only: domlo, domhi
 
       USE param1, only: zero

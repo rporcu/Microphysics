@@ -2,6 +2,7 @@ module w_g_conv_dif
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
+   use geometry      , only: domlo, domhi 
 
    implicit none
 
@@ -218,9 +219,9 @@ module w_g_conv_dif
       axz = dx*dz
       ayz = dy*dz
 
-      KP = KP1(K)
-      IM = IM1(I)
-      JM = JM1(J)
+      im = min(domlo(1)-1,i-1)
+      jm = min(domlo(2)-1,j-1)
+      kp = max(domhi(3)+1,k+1)
 
       ktmp = ktop(i,j,k)
       itmp = i-1

@@ -62,9 +62,9 @@ MODULE CALC_MFLUX_MODULE
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               im1 = iminus(i,j,k)
-               jm1 = jminus(i,j,k)
-               km1 = kminus(i,j,k)
+               im1 = i-1
+               jm1 = j-1
+               km1 = k-1
 
                ! East face (i+1/2, j, k)
                flux_e(i,j,k) = rop_e(i,j,k)*ayz*u(i,j,k)

@@ -2,6 +2,7 @@ MODULE CALC_TAU_U_G_MODULE
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
+   use geometry      , only: domlo, domhi
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -104,9 +105,9 @@ MODULE CALC_TAU_U_G_MODULE
 
             IF (flag(i,j,k,2) > 1000 .AND. EPGA>DIL_EP_S) THEN
 
-               IP = IP1(I)
-               JM = JM1(J)
-               KM = KM1(K)
+               IP = min(domhi(1)+1, i+1)
+               JM = max(domlo(2)-1, j-1)
+               KM = max(domlo(3)-1, k-1)
 
 ! Surface forces at i+1/2, j, k
 ! bulk viscosity term

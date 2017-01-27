@@ -179,7 +179,6 @@ module set_bc0_module
 
       use scales, only: scale_pressure
 
-      use functions, only: im1, jm1, km1
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3)
@@ -219,9 +218,9 @@ module set_bc0_module
 ! (fluid cell is located w, s, b), set the component of velocity normal
 ! to the boundary plane of the adjacent fluid cell
          SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W'); U_G(im1(i),j,k) = BC_U_G(BCV)
-            CASE ('S'); V_G(i,jm1(j),k) = BC_V_G(BCV)
-            CASE ('B'); W_G(i,j,km1(k)) = BC_W_G(BCV)
+            CASE ('W'); U_G(i-1,j,k) = BC_U_G(BCV)
+            CASE ('S'); V_G(i,j-1,k) = BC_V_G(BCV)
+            CASE ('B'); W_G(i,j,k-1) = BC_W_G(BCV)
          END SELECT
 
       end do

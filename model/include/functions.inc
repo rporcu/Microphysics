@@ -218,88 +218,8 @@
 
       end function kbot
 
-! ************************************************
-
-      integer function im1(i)
-
-      use geometry, only  : domlo
-      implicit none
-      integer, intent(in) :: i
-
-      im1 = max(domlo(1)-1, i-1)
-
-      end function im1
-
-! ************************************************
-
-      integer function ip1(i)
-
-      use geometry, only  : domhi
-      implicit none
-      integer, intent(in) :: i
-
-      ip1 = min(domhi(1)+1, i+1)
-
-      end function ip1
-
-! ************************************************
-
-      integer function jm1(j)
-
-      use geometry, only  : domlo
-      implicit none
-      integer, intent(in) :: j
-
-      jm1 = max(domlo(2)-1, j-1)
-
-      end function jm1
-
-! ************************************************
-
-      integer function jp1(j)
-
-      use geometry, only  : domhi
-      implicit none
-      integer, intent(in) :: j
-
-      jp1 = min(domhi(2)+1, j+1)
-
-      end function jp1
-
-! ************************************************
-
-      integer function km1(k)
-
-      use geometry, only: domlo
-      implicit none
-      integer, intent(in) :: k
-
-      km1 = max(domlo(3)-1, k-1)
-
-      end function km1
-
-! ************************************************
-
-      integer function kp1(k)
-
-      use geometry, only: domhi
-      implicit none
-      integer, intent(in) :: k
-
-      kp1 = min(domhi(3)+1, k+1)
-
-      end function kp1
-
 ! Misc
 !---------------------------------------------------------------------//
-
-! Function that returns the maximum of zero or input
-      DOUBLE PRECISION FUNCTION ZMAX(XXX)
-      USE param1, only: zero
-      implicit none
-      DOUBLE PRECISION XXX
-      ZMAX       = MAX(XXX, ZERO)
-      END FUNCTION ZMAX
 
 ! Arithmetic average
       DOUBLE PRECISION FUNCTION AVG(XXXm, XXXp)
