@@ -28,7 +28,7 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use usr
+      ! use usr
 
       IMPLICIT NONE
 

@@ -27,7 +27,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff_all(slo, shi, lo, hi, max_pip, &
+      subroutine calc_coeff_all(slo, shi, max_pip, &
         ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
@@ -41,7 +41,7 @@ module calc_coeff_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) ::  p_g&
@@ -83,13 +83,13 @@ module calc_coeff_module
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(slo, shi, lo, hi, max_pip, flag, 2, ro_g, p_g, ep_g, &
+      CALL CALC_COEFF(slo, shi, max_pip, flag, 2, ro_g, p_g, ep_g, &
          rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
 
       if (des_explicitly_coupled) call calc_drag_des_explicit(&
-         slo, shi, lo, hi, max_pip, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
+         slo, shi, max_pip, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
          drag_bm, particle_phase,  particle_state, pvol, &
          des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
@@ -102,7 +102,7 @@ module calc_coeff_module
 !           transport properties, and exchange rates.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff(slo, shi, lo, hi, max_pip, flag, plevel, &
+      subroutine calc_coeff(slo, shi, max_pip, flag, plevel, &
          ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,&
          particle_phase, particle_state, pvol, des_pos_new, des_vel_new,&
          des_radius, dx, dy, dz)&
@@ -119,7 +119,7 @@ module calc_coeff_module
 ! 0) Only density
 ! 1) Everything but density
 ! 2) All physical properties
-      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       integer(c_int), intent(in   ) :: plevel
@@ -163,7 +163,7 @@ module calc_coeff_module
 
 ! Calculate interphase coeffs: (momentum and energy)
       if (des_continuum_coupled .and. .not.des_explicitly_coupled)   &
-         call calc_drag_des_2fluid(slo, shi, lo, hi, max_pip, ep_g,  &
+         call calc_drag_des_2fluid(slo, shi, max_pip, ep_g,  &
          u_g, v_g, w_g, ro_g, mu_g, f_gds, drag_bm, particle_state,  &
          particle_phase, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
@@ -214,7 +214,7 @@ module calc_coeff_module
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      call calc_trd_g(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
+      call calc_trd_g(slo,shi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
       call calc_tau_u_g (slo,shi,lo,hi,tau_u_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)

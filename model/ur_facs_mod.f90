@@ -23,7 +23,7 @@ MODULE ur_facs
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    SUBROUTINE UNDER_RELAX(slo, shi, VAR, A_M, B_M, AXIS, flag, EQ)
 
-   use param1, only: one
+   use param1, only: one, equal
 
    implicit none
 
@@ -66,7 +66,7 @@ MODULE ur_facs
                do i = slo(1),shi(1)
                   IF(flag(i,j,k,1) == 1) THEN
                      AP = A_M(I,J,K,0)
-                     IF (AP /= (-ONE)) THEN
+                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
                         A_M(I,J,K,0) = AP*F1
                         B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                      ENDIF
@@ -82,7 +82,7 @@ MODULE ur_facs
                   IF(flag(i,j,k,2) >= 2000 .and. &
                      flag(i,j,k,2) <= 2011) THEN
                      AP = A_M(I,J,K,0)
-                     IF (AP /= (-ONE)) THEN
+                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
                         A_M(I,J,K,0) = AP*F1
                         B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                      ENDIF
@@ -98,7 +98,7 @@ MODULE ur_facs
                   IF(flag(i,j,k,3) >= 2000 .and. &
                      flag(i,j,k,3) <= 2011) THEN
                      AP = A_M(I,J,K,0)
-                     IF (AP /= (-ONE)) THEN
+                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
                         A_M(I,J,K,0) = AP*F1
                         B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                      ENDIF
@@ -114,7 +114,7 @@ MODULE ur_facs
                   IF(flag(i,j,k,4) >= 2000 .and. &
                      flag(i,j,k,4) <= 2011) THEN
                      AP = A_M(I,J,K,0)
-                     IF (AP /= (-ONE)) THEN
+                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
                         A_M(I,J,K,0) = AP*F1
                         B_M(I,J,K) = B_M(I,J,K) + AP*VAR(i,j,k)*F2
                      ENDIF

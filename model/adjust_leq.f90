@@ -23,14 +23,13 @@ MODULE ADJUST_LEQ_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE ADJUST_LEQ(RESID, LEQ_ITL, LEQ_METHODL, LEQI, LEQM)
+      SUBROUTINE ADJUST_LEQ(LEQ_ITL, LEQ_METHODL, LEQI, LEQM)
 
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
       INTEGER LEQ_ITL, LEQ_METHODL, LEQI, LEQM
-      real(c_real) RESID
 !
 !  The adjustment is disabled, because it was adversely affecting species
 !  conservation

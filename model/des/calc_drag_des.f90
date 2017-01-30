@@ -20,13 +20,13 @@ module calc_drag_des_module
 !  field variables are updated.                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE CALC_DRAG_DES(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g, ro_g, &
+     SUBROUTINE CALC_DRAG_DES(slo, shi, max_pip, ep_g, u_g, v_g, w_g, ro_g, &
         mu_g, gradPg, particle_state, fc, drag_fc, pvol, des_pos_new, &
          des_vel_new, des_radius, particle_phase, flag, dx, dy, dz)
 
         IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) :: ep_g&
@@ -74,7 +74,7 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force on particle
          if(des_continuum_coupled) then
-            call drag_gs_des(slo, shi, lo, hi, max_pip, ep_g, u_g, &
+            call drag_gs_des(slo, shi, max_pip, ep_g, u_g, &
                v_g, w_g, ro_g, mu_g, gradpg, flag, particle_state, &
                pvol, des_pos_new, des_vel_new, fc, des_radius, &
                particle_phase, dx, dy, dz)
@@ -94,14 +94,14 @@ module calc_drag_des_module
 !  calls the correct routine for calculating the gas drag force.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_2FLUID(slo, shi, lo, hi, max_pip, &
+      SUBROUTINE CALC_DRAG_DES_2FLUID(slo, shi, max_pip, &
          ep_g, u_g, v_g, w_g, &
          ro_g, mu_g, f_gds, drag_bm,  particle_state, particle_phase,&
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
          IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) :: ep_g&
@@ -132,7 +132,7 @@ module calc_drag_des_module
 
 ! Calculate gas-solids drag force.
       IF(DES_CONTINUUM_COUPLED) THEN
-         CALL DRAG_GS_GAS(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g,&
+         CALL DRAG_GS_GAS(slo, shi, max_pip, ep_g, u_g, v_g, w_g,&
             ro_g, mu_g, f_gds, drag_bm, particle_phase, particle_state, &
             pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
       ENDIF
@@ -152,7 +152,7 @@ module calc_drag_des_module
 !  computational overhead.                                             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_DRAG_DES_EXPLICIT(slo, shi, lo, hi, max_pip, &
+      SUBROUTINE CALC_DRAG_DES_EXPLICIT(slo, shi, max_pip, &
          flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, drag_bm,  &
          particle_phase, particle_state, pvol, des_pos_new, des_vel_new, &
          des_radius, dx, dy, dz)
@@ -161,7 +161,7 @@ module calc_drag_des_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(inout) :: ep_g&
@@ -196,13 +196,13 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Calculate mean fields (EPg).
-      call comp_mean_fields(slo, shi, lo, hi, max_pip, &
+      call comp_mean_fields(slo, shi, max_pip, &
          ep_g, particle_state, des_pos_new, &
          pvol, flag, dx, dy, dz)
 
 ! Calculate gas-solids drag force on particle
       IF(DES_CONTINUUM_COUPLED) &
-         CALL DRAG_GS_GAS(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+         CALL DRAG_GS_GAS(slo, shi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
             f_gds, drag_bm, particle_phase, particle_state, pvol, &
             des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 

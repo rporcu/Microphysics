@@ -63,25 +63,20 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE0(slo, shi, B_m, A_M, Var, sweep_type) &
+  SUBROUTINE LEQ_MSOLVE0(slo, shi, B_m, Var) &
      bind(C, name = "leq_msolve0")
 
     IMPLICIT NONE
 
-  integer, intent(in) :: slo(3),shi(3)
+  integer(c_int), intent(in) :: slo(3),shi(3)
 
 ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-! Septadiagonal matrix A_m
-    real(c_real), INTENT(IN) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 ! Variable
     real(c_real), INTENT(OUT) :: Var&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-    ! sweep direction
-    integer         , intent(in) :: sweep_type
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -107,13 +102,13 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(slo, shi, B_m, A_M, Var, sweep_type) &
+  SUBROUTINE LEQ_MSOLVE1(slo, shi, B_m, A_M, Var) &
      bind(C, name = "leq_msolve1")
    use param1, only: small_number
 
     IMPLICIT NONE
 
-    integer, intent(in) :: slo(3),shi(3)
+    integer(c_int), intent(in) :: slo(3),shi(3)
 
     ! Vector b_m
     real(c_real), INTENT(IN) :: B_m&
@@ -125,9 +120,6 @@ CONTAINS
 
     real(c_real), INTENT(OUT) :: Var&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-    ! sweep direction
-    integer         , intent(in) :: sweep_type
 
     integer :: i,j,k
 
@@ -141,42 +133,6 @@ CONTAINS
     enddo
 
   end subroutine leq_msolve1
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: LEQ_MSOLVE                                              C
-!  Purpose: Invoked with LEQ_PC = 'LINE'                               C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-  SUBROUTINE LEQ_MSOLVE(slo, shi, B_m, A_M, Var, sweep_type)&
-     bind(C, name = "leq_msolve")
-
-    IMPLICIT NONE
-
-    INTEGER, INTENT(IN) :: slo(3),shi(3)
-
-! Vector b_m
-    real(c_real), INTENT(IN) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-! Septadiagonal matrix A_m
-    real(c_real), INTENT(IN) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-! Variable
-    real(c_real), INTENT(INOUT) :: Var&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Sweep direction of leq solver (leq_sweep)
-!     e.g., options = 'isis', 'rsrs' (default), 'asas'
-    integer         , intent(in) :: sweep_type
-
-!-----------------------------------------------
-
-    write(6,*) 'No LINE PC support.. How did you get here?'
-    stop  23456
-
-
-  END SUBROUTINE LEQ_MSOLVE
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

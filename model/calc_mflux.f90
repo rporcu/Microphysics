@@ -20,7 +20,7 @@ MODULE CALC_MFLUX_MODULE
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int)     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(in) :: dx, dy, dz
 
       real(c_real), intent(in   ) :: u&

@@ -113,7 +113,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       // Compute r = rhs - A_m*sol
       leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                   r[mfi].dataPtr(), slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+                   r[mfi].dataPtr(), slo.dataPtr(),shi.dataPtr());
     }
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
@@ -191,7 +191,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           shi[2] = sshi[2];
 
           leq_msolve1(slo.dataPtr(),shi.dataPtr(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                      ph[mfi].dataPtr(), &sweep_type);
+                      ph[mfi].dataPtr());
         }
       }
       else // pc_type ==None
@@ -215,7 +215,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         shi[2] = sshi[2];
 
         leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
-                   slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+                   slo.dataPtr(),shi.dataPtr());
       }
 
       Real rhTv = dotxy(rh,v,true);
@@ -260,7 +260,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           shi[2] = sshi[2];
 
           leq_msolve1(slo.dataPtr(),shi.dataPtr(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                      sh[mfi].dataPtr(), &sweep_type);
+                      sh[mfi].dataPtr());
         }
       }
       else // pc_type ==None
@@ -283,7 +283,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         shi[2] = sshi[2];
 
         leq_matvec(sh[mfi].dataPtr(), A_m[mfi].dataPtr(), t[mfi].dataPtr(),
-                   slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+                   slo.dataPtr(),shi.dataPtr());
       }
 
       // This is a little funky.  I want to elide one of the reductions

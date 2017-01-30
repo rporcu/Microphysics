@@ -12,7 +12,7 @@ MODULE CFNEWVALUES_MODULE
 !           position, angular velocity etc
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(max_pip, particle_state, des_radius, pmass,&
+      SUBROUTINE CFNEWVALUES(max_pip, particle_state, pmass,&
          omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
@@ -28,7 +28,6 @@ MODULE CFNEWVALUES_MODULE
 
       integer     , intent(in   ) :: max_pip
       integer     , intent(in   ) :: particle_state(max_pip)
-      real(c_real), intent(in   ) :: des_radius(max_pip)
       real(c_real), intent(in   ) :: omoi(max_pip)
       real(c_real), intent(in   ) :: pmass(max_pip)
       real(c_real), intent(inout) :: des_pos_new(max_pip,3)

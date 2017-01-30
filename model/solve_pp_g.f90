@@ -36,7 +36,7 @@ module solve_pp_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -106,10 +106,10 @@ module solve_pp_module
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
-      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(slo, shi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
-      if(point_source) call point_source_pp_g (slo, shi, lo, hi, b_m, b_mmax, flag, dx, dy, dz)
+      if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, flag, dx, dy, dz)
 
 ! Find average residual, maximum residual and location
       normgloc = normg
@@ -119,14 +119,14 @@ module solve_pp_module
         call calc_resid_pp (slo, shi, lo, hi, &
          b_mmax, one, num_resid(resid_p), &
          den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
          normgloc = resid(resid_p)/den
       endif
 
       call calc_resid_pp (slo, shi, lo, hi, &
          b_m, normgloc, num_resid(resid_p),  &
          den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p), flag)
+         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
       resg = resid(resid_p)
 
 
@@ -147,7 +147,7 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, lo, hi, b_m, B_mmax,flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, b_m, B_mmax,flag, dx, dy, dz)
 
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
@@ -155,7 +155,7 @@ module solve_pp_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&

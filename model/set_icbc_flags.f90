@@ -10,7 +10,7 @@ MODULE set_icbc_flags_module
       use ic, only: CYCP_, CYCL_, FSW_, UNDEF_CELL, NSW_, FLUID_
       use ic, only: MINF_, MOUT_, POUT_, OUTF_, PINF_, PSW_
       use mod_bc, only: mod_bc_i, mod_bc_j, mod_bc_k
-      use param1, only: zero, is_defined
+      use param1, only: zero, is_defined, equal
       use run, only: run_type
 
    CONTAINS
@@ -377,9 +377,9 @@ MODULE set_icbc_flags_module
             BC_TYPE(BCV)=='P_OUTFLOW'    .OR. &
             BC_TYPE(BCV)=='OUTFLOW') THEN
 
-            X_CONSTANT = (BC_X_W(BCV) == BC_X_E(BCV))
-            Y_CONSTANT = (BC_Y_S(BCV) == BC_Y_N(BCV))
-            Z_CONSTANT = (BC_Z_B(BCV) == BC_Z_T(BCV))
+            X_CONSTANT = EQUAL(BC_X_W(BCV), BC_X_E(BCV))
+            Y_CONSTANT = EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))
+            Z_CONSTANT = EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))
 
             IF(X_CONSTANT .AND. IS_DEFINED(BC_X_W(BCV)))                &
                CALL MOD_BC_I(BCV,flag,slo,shi)

@@ -38,13 +38,13 @@ module drag_gs_des1_module
 !    D_FORCE = beta*VOL_P/EP_s*(Ug - Us) = F_GP *(Ug - Us)             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-     SUBROUTINE DRAG_GS_DES(slo, shi, lo, hi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
+     SUBROUTINE DRAG_GS_DES(slo, shi, max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
         gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
         fc, des_radius, particle_phase, dx, dy, dz)
 
         IMPLICIT NONE
 
-      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3)
       integer(c_int), intent(in ) :: max_pip
 
       real(c_real), intent(in   ) :: ep_g&
@@ -150,14 +150,14 @@ module drag_gs_des1_module
 !  by the current process will have non-zero weights.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DRAG_GS_GAS(slo, shi, lo, hi, max_pip, &
+      SUBROUTINE DRAG_GS_GAS(slo, shi, max_pip, &
          ep_g, u_g, v_g, w_g, ro_g, mu_g, &
          f_gds, drag_bm, particle_phase, particle_state, &
          pvol, des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3), max_pip
+      integer(c_int), intent(in   ) :: slo(3),shi(3),max_pip
 
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

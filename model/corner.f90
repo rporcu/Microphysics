@@ -16,7 +16,7 @@ MODULE CORNER_MODULE
 !           is allowed to such cells to avoid ambiguity.               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine get_corner_cells(slo,shi,lo,hi,flag)
+      subroutine get_corner_cells(slo,shi,flag)
 
       use functions    , only: iminus, iplus, jminus, jplus, kminus, kplus
       use funits       , only: dmp_log, unit_log
@@ -25,7 +25,7 @@ MODULE CORNER_MODULE
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: slo(3), shi(3)
       integer(c_int), intent(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 

@@ -8,7 +8,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C, IS_UNDEFINED, IS_DEFINED, ZERO
+      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C, IS_UNDEFINED, IS_DEFINED, ZERO, EQUAL
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -232,7 +232,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          I_W = I_W + 1
          I_E = CALC_CELL (BC_X_E(BCV), DX)
 ! BC along zy plane, checking if far west or far east of domain
-         IF(BC_X_W(BCV) == BC_X_E(BCV)) THEN
+         IF(EQUAL(BC_X_W(BCV), BC_X_E(BCV))) THEN
             IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
                I_W = domlo(1)-1
                I_E = domlo(1)-1
@@ -260,7 +260,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          J_S = J_S + 1
          J_N = CALC_CELL (BC_Y_N(BCV), DY)
 ! BC along xz plane, checking if far south or far north of domain
-         IF(BC_Y_S(BCV) == BC_Y_N(BCV)) THEN
+         IF(EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))) THEN
             IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
                J_S = domlo(2)-1
                J_N = domlo(2)-1
@@ -286,7 +286,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          K_B = K_B + 1
          K_T = CALC_CELL (BC_Z_T(BCV), DZ)
 ! BC along xy plane, checking if far bottom or far top of domain
-         IF(BC_Z_B(BCV) == BC_Z_T(BCV)) THEN
+         IF(EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))) THEN
             IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
                K_B = domlo(3)-1
                K_T = domlo(3)-1
@@ -398,7 +398,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       IF (IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
          I_W = CALC_CELL (BC_X_W(BCV), DX)
          I_E = CALC_CELL (BC_X_E(BCV), DX)
-         IF (BC_X_W(BCV) /= BC_X_E(BCV)) THEN
+         IF (.NOT.EQUAL(BC_X_W(BCV), BC_X_E(BCV))) THEN
             X_CONSTANT = .FALSE.
             I_W = I_W + 1
             IF(BC_I_W(BCV)/=UNDEFINED_I.OR.BC_I_E(BCV)/=UNDEFINED_I)THEN
@@ -413,13 +413,13 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             CALL CALC_LOC (DX,BC_I_W(BCV),BC_X_W(BCV))
          IF(BC_I_E(BCV) /= UNDEFINED_I) &
             CALL CALC_LOC (DX,BC_I_E(BCV),BC_X_E(BCV))
-         IF(BC_X_W(BCV) /= BC_X_E(BCV)) X_CONSTANT = .FALSE.
+         IF(.NOT.EQUAL(BC_X_W(BCV), BC_X_E(BCV))) X_CONSTANT = .FALSE.
       ENDIF
 
       IF (IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
          J_S = CALC_CELL (BC_Y_S(BCV), DY)
          J_N = CALC_CELL (BC_Y_N(BCV), DY)
-         IF(BC_Y_S(BCV) /= BC_Y_N(BCV)) THEN
+         IF(.NOT.EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))) THEN
             Y_CONSTANT = .FALSE.
             J_S = J_S + 1
             IF(BC_J_S(BCV)/=UNDEFINED_I.OR.BC_J_N(BCV)/=UNDEFINED_I)THEN
@@ -434,13 +434,13 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             CALL CALC_LOC (DY,BC_J_S(BCV),BC_Y_S(BCV))
          IF(BC_J_N(BCV) /= UNDEFINED_I) &
             CALL CALC_LOC (DY,BC_J_N(BCV),BC_Y_N(BCV))
-         IF (BC_Y_S(BCV) /= BC_Y_N(BCV)) Y_CONSTANT = .FALSE.
+         IF (.NOT.EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))) Y_CONSTANT = .FALSE.
       ENDIF
 
       IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
          K_B = CALC_CELL (BC_Z_B(BCV), DZ)
          K_T = CALC_CELL (BC_Z_T(BCV), DZ)
-         IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) THEN
+         IF(.NOT.EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))) THEN
             Z_CONSTANT = .FALSE.
             K_B = K_B + 1
             IF(BC_K_B(BCV)/=UNDEFINED_I.OR.BC_K_T(BCV)/=UNDEFINED_I)THEN
@@ -455,7 +455,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             CALL CALC_LOC (DZ,BC_K_B(BCV),BC_Z_B(BCV))
          IF(BC_K_T(BCV) /= UNDEFINED_I) &
             CALL CALC_LOC (DZ,BC_K_T(BCV),BC_Z_T(BCV))
-         IF(BC_Z_B(BCV) /= BC_Z_T(BCV)) Z_CONSTANT = .FALSE.
+         IF(.NOT.EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))) Z_CONSTANT = .FALSE.
       ENDIF
 
 ! Check whether the boundary is a plane parallel to one of the three

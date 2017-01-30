@@ -57,7 +57,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      real(c_real) FUNCTION MAX_VEL_INLET(slo,shi,lo,hi,u_g,v_g,w_g)
+      real(c_real) FUNCTION MAX_VEL_INLET(slo,shi,u_g,v_g,w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -72,7 +72,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), INTENT(IN   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -146,7 +146,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,lo,hi,u_g,v_g,w_g,ep_g,flag)
+      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,u_g,v_g,w_g,ep_g,flag)
 
 !-----------------------------------------------
 ! Modules
@@ -155,7 +155,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), INTENT(IN   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

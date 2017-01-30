@@ -13,7 +13,7 @@ module comp_mean_fields_module
 !  from particle data.                                                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      subroutine comp_mean_fields(slo, shi, lo, hi, max_pip, ep_g, &
+      subroutine comp_mean_fields(slo, shi, max_pip, ep_g, &
          particle_state, des_pos_new, pvol, flag, dx, dy, dz) &
          bind(C, name="comp_mean_fields")
 
@@ -24,7 +24,7 @@ module comp_mean_fields_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       integer(c_int), intent(in   ) :: particle_state(max_pip)

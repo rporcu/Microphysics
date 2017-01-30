@@ -84,7 +84,7 @@ module set_domain_module
       flag_mod = flag
 
       ! Find corner cells and set their face areas to zero
-      call get_corner_cells(slo,shi,lo,hi,flag)
+      call get_corner_cells(slo,shi,flag)
       flag_mod = flag
 
       end subroutine set_domain

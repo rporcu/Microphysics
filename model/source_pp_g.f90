@@ -16,7 +16,7 @@ module source_pp_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
+subroutine source_pp_g(slo, shi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
                        rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
 
       USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
@@ -30,7 +30,7 @@ subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&

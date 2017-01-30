@@ -232,7 +232,7 @@ MODULE CONV_ROP_MODULE
 
 ! Calculate factors
       incr=0
-      CALL CALC_XSI (DISC, slo, shi, lo, hi, &
+      CALL CALC_XSI (DISC, slo, shi, hi, &
                      ROP, U, V, W, XSI_E, XSI_N, XSI_T, dt, dx, dy, dz)
 
       DO K = slo(3),shi(3)

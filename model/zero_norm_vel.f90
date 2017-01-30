@@ -20,7 +20,7 @@ module zero_norm_vel_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine zero_norm_vel(slo,shi,lo,hi,u_g,v_g,w_g,flag)
+      subroutine zero_norm_vel(slo,shi,u_g,v_g,w_g,flag)
 
 !-----------------------------------------------
 ! Modules
@@ -31,7 +31,7 @@ module zero_norm_vel_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in) :: slo(3), shi(3)
 
       real(c_real), intent(inout) ::  u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

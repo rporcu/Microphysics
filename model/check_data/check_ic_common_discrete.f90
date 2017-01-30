@@ -24,7 +24,7 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
 
       USE ic, only: IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t
 
-      USE param1, only: UNDEFINED_I, ZERO, ONE
+      USE param1, only: UNDEFINED_I, ZERO, ONE, EQUAL
 
 ! direction wise spans of the domain and grid spacing in each direction
       Use geometry, only: xlength, ylength, zlength
@@ -79,7 +79,7 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
 ! that the entire domain has valid ICs defined.
          ICV = FIRST_DEF_IC
          FIRST_IC_OK = .FALSE.
-         IF(IC_EP_G(ICV).EQ.ONE &
+         IF(EQUAL(IC_EP_G(ICV), ONE) &
            .AND.IC_X_W(ICV).LE.ZERO.AND.IC_X_E(ICV).GE.XLENGTH         &
            .AND.IC_Y_S(ICV).LE.ZERO.AND.IC_Y_N(ICV).GE.YLENGTH)        &
             FIRST_IC_OK = .TRUE.
@@ -103,7 +103,7 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
       ICVLOOP : DO ICV = 1, DIMENSION_IC
 
          IF(.NOT.IC_DEFINED(ICV)) CYCLE ICVLOOP
-         IF(IC_EP_G(ICV) == 1.d0) CYCLE ICVLOOP
+         IF(EQUAL(IC_EP_G(ICV), 1.d0)) CYCLE ICVLOOP
          IC_ORIG(1) = IC_X_W(ICV)
          IC_ORIG(2) = IC_Y_S(ICV)
          IC_ORIG(3) = IC_Z_B(ICV)
@@ -113,7 +113,7 @@ MODULE CHECK_IC_COMMON_DISCRETE_MODULE
          ICVTWOLOOP : DO ICV2 = ICV+1, DIMENSION_IC
 
             IF(.NOT.IC_DEFINED(ICV2)) CYCLE ICVTWOLOOP
-            IF(IC_EP_G(ICV2) == 1.0d0) CYCLE ICVTWOLOOP
+            IF(EQUAL(IC_EP_G(ICV2), 1.0d0)) CYCLE ICVTWOLOOP
 
             IC2_ORIG(1) = IC_X_W(ICV2)
             IC2_ORIG(2) = IC_Y_S(ICV2)

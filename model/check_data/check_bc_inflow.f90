@@ -6,30 +6,30 @@ MODULE CHECK_BC_INFLOW_MODULE
    use param1   , only: undefined, one, zero, is_undefined, is_defined
 
    CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_INFLOW                                          !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Provided a detailed error message on common inflow BC       !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_INFLOW(M_TOT, SKIP, BCV)
+! !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+! !                                                                      !
+! ! Subroutine: CHECK_BC_INFLOW                                          !
+! ! Author: J.Musser                                    Date: 01-Mar-14  !
+! !                                                                      !
+! ! Purpose: Provided a detailed error message on common inflow BC       !
+! !                                                                      !
+! !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+!       SUBROUTINE CHECK_BC_INFLOW(M_TOT, SKIP, BCV)
 
-! Modules
-!---------------------------------------------------------------------//
-      use param, only: dim_m
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      IMPLICIT NONE
+! ! Modules
+! !---------------------------------------------------------------------//
+!       use param, only: dim_m
+!       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
+!       IMPLICIT NONE
 
-! Dummy arguments
-!---------------------------------------------------------------------//
-      INTEGER, INTENT(in) :: BCV
-      INTEGER, INTENT(in) :: M_TOT
-      LOGICAL, INTENT(in) :: SKIP(DIM_M)
+! ! Dummy arguments
+! !---------------------------------------------------------------------//
+!       INTEGER, INTENT(in) :: BCV
+!       INTEGER, INTENT(in) :: M_TOT
+!       LOGICAL, INTENT(in) :: SKIP(DIM_M)
 
-      RETURN
-      END SUBROUTINE CHECK_BC_INFLOW
+!       RETURN
+!       END SUBROUTINE CHECK_BC_INFLOW
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

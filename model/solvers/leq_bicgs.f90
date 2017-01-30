@@ -6,7 +6,7 @@
          use exit_mod, only: mfix_exit
          use matvec_module, only: leq_matvec, leq_residual, leq_scale
          use leqsol, only: icheck_bicgs, minimize_dotproducts
-         use leqsol, only: leq_msolve, leq_msolve0, leq_msolve1, dot_product_par
+         use leqsol, only: leq_msolve0, leq_msolve1, dot_product_par
          use param1, only: zero, one, small_number
 
          use solver_params, only: pc_line, pc_none, pc_diag
@@ -16,8 +16,8 @@
 
          IMPLICIT NONE
 
-        INTEGER, INTENT(IN) :: slo(3),shi(3),lo(3),hi(3)
-        INTEGER, INTENT(IN) :: vno
+        INTEGER(c_int), INTENT(IN) :: slo(3),shi(3),lo(3),hi(3)
+        INTEGER(c_int), INTENT(IN) :: vno
 
         ! variable
         real(c_real), intent(inout) :: Var&
@@ -33,19 +33,19 @@
 
         ! Sweep direction of leq solver
         !     e.g., options = 'isis', 'rsrs' (default), 'asas'
-        integer         , intent(in) :: sweep_type
+        integer(c_int), intent(in) :: sweep_type
 
         ! Type of preconditioner
-        integer         , intent(in) :: pc_type
+        integer(c_int), intent(in) :: pc_type
 
 ! convergence tolerance (generally leq_tol)
       real(c_real), INTENT(IN) :: TOL
 
 ! maximum number of iterations (generally leq_it)
-      INTEGER, INTENT(IN) :: ITMAX
+      INTEGER(c_int), INTENT(IN) :: ITMAX
 
 ! error indicator
-      INTEGER, INTENT(INOUT) :: IER
+      INTEGER(c_int), INTENT(INOUT) :: IER
 
 ! dummy arguments/procedures set as indicated
 !     matvec->leq_matvec
@@ -117,7 +117,7 @@
 !    assume initial guess in Var
 !    rtilde = r
 ! ---------------------------------------------------------------->>>
-      call leq_residual(b_m, Var, A_M, R, slo, shi, lo, hi)   ! returns R=A*Var
+      call leq_residual(b_m, Var, A_M, R, slo, shi)   ! returns R=A*Var
 
       Rnorm0 = sqrt( dot_product_par( R,R,slo,shi) )
 
@@ -175,14 +175,15 @@
 ! V(:,:,:) = A*Phat(:,:,:)
 ! --------------------------------
          if (pc_type.eq.pc_line) then   ! default
-            call LEQ_MSOLVE(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
+            write(6,*) 'No LINE PC support.. How did you get here?'
+            stop  23456
          else if (pc_type .eq. pc_none) then
-            call LEQ_MSOLVE0(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
+            call LEQ_MSOLVE0(slo, shi, P, Phat) ! returns Phat
          else if (pc_type .eq. pc_diag) then
-            call LEQ_MSOLVE1(slo, shi, P, A_m, Phat, sweep_type) ! returns Phat
+            call LEQ_MSOLVE1(slo, shi, P, A_m, Phat) ! returns Phat
          end if
 
-         call LEQ_MATVEC(Phat, A_m, V, slo, shi, lo, hi)   ! returns V=A*Phat
+         call LEQ_MATVEC(Phat, A_m, V, slo, shi)   ! returns V=A*Phat
 
          RtildexV = dot_product_par(Rtilde,V,slo,shi)
 
@@ -199,15 +200,16 @@
 ! Tvec(:) = A*Shat(:)
 ! --------------------------------
          if (pc_type.eq.pc_line) then   ! default
-            call LEQ_MSOLVE(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
+            write(6,*) 'No LINE PC support.. How did you get here?'
+            stop  23456
          else if (pc_type .eq. pc_none) then
-            call LEQ_MSOLVE0(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
+            call LEQ_MSOLVE0(slo, shi, Svec, Shat)  ! returns Shat
          else if (pc_type .eq. pc_diag) then
-            call LEQ_MSOLVE1(slo, shi, Svec, A_m, Shat, sweep_type)  ! returns Shat
+            call LEQ_MSOLVE1(slo, shi, Svec, A_m, Shat)  ! returns Shat
          end if
 
 
-         call LEQ_MATVEC(Shat, A_m, Tvec, slo, shi, lo, hi )   ! returns Tvec=A*Shat
+         call LEQ_MATVEC(Shat, A_m, Tvec, slo, shi)   ! returns Tvec=A*Shat
 
          TxS = dot_product_par(Tvec,Svec,slo,shi)
          TxT = dot_product_par(Tvec,Tvec,slo,shi)
@@ -258,7 +260,7 @@
 
 
       if (idebugl >= 1) then
-         call LEQ_MATVEC(Var, A_m, R, slo, shi, lo, hi)   ! returns R=A*Var
+         call LEQ_MATVEC(Var, A_m, R, slo, shi)   ! returns R=A*Var
          do kk = slo(3),shi(3)
             do jj = slo(2),shi(2)
                do ii = slo(1),shi(1)

@@ -143,7 +143,7 @@ contains
   subroutine mfix_usr3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz) &
        bind(C, name="mfix_usr3")
 
-    integer     , intent(in   ) :: slo(3),shi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
 
     real(c_real), intent(inout) :: u_g&
         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -204,9 +204,9 @@ contains
        stop
     end if
 
-    max_it = leq_it(eq_id); 
-    tol    = leq_tol(eq_id); 
- 
+    max_it = leq_it(eq_id);
+    tol    = leq_tol(eq_id);
+
   end subroutine get_solver_params
 
 end module boxlib_to_mfix_module

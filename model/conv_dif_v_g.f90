@@ -72,7 +72,7 @@ module v_g_conv_dif
 !  and top face of a v-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_VCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
+      SUBROUTINE GET_VCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -82,7 +82,7 @@ module v_g_conv_dif
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), INTENT(OUT) :: U&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -126,7 +126,7 @@ module v_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GCFLUX_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          FLUX_E, FLUX_W, FLUX_N, &
          FLUX_S, FLUX_T, FLUX_B, &
          flux_ge, flux_gn, flux_gt, i, j, k)
@@ -138,7 +138,7 @@ module v_g_conv_dif
       USE param1, only: half
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! fluxes through faces of given u-momentum cell
       real(c_real), INTENT(OUT) :: flux_e, flux_w
@@ -179,7 +179,7 @@ module v_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K,flag, &
          dx, dy, dz)
@@ -189,7 +189,7 @@ module v_g_conv_dif
       USE param1, only: zero
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! diffusion through faces of given v-momentum cell
       real(c_real), INTENT(  OUT) :: d_fe, d_fw
@@ -326,12 +326,12 @@ module v_g_conv_dif
 
 ! Calculate convection-diffusion fluxes through each of the faces
                   CALL GET_VCELL_GCFLUX_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      flux_e, flux_w, flux_n, &
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_VCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
@@ -480,11 +480,11 @@ module v_g_conv_dif
       allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      CALL GET_VCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
+      CALL GET_VCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
 
 ! shear indicator: y-momentum
       incr=2
-      CALL CALC_XSI (DISCRETIZE(4), slo, shi, lo, hi, &
+      CALL CALC_XSI (DISCRETIZE(4), slo, shi, hi, &
                      V_G, U, V, WW, XSI_E, XSI_N, XSI_T, &
                      dt, dx, dy, dz)
 
@@ -497,12 +497,12 @@ module v_g_conv_dif
 
 ! Calculate convection-diffusion fluxes through each of the faces
                   CALL GET_VCELL_GCFLUX_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      flux_e, flux_w, flux_n, &
                      flux_s, flux_t, flux_b, &
                      flux_ge, flux_gn, flux_gt, i, j, k)
                   CALL GET_VCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 

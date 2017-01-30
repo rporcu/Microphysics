@@ -49,11 +49,11 @@ module solve_vel_star_module
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
-      integer     , intent(in   ) :: vlo(3),vhi(3)
-      integer     , intent(in   ) :: wlo(3),whi(3)
+      integer(c_int)     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
+      integer(c_int)     , intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -115,13 +115,13 @@ module solve_vel_star_module
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         u_g, u_go, tau_u_g, flag, dx, dy, dz)
+         u_go, tau_u_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_u_g_bc (slo, shi, lo, hi, A_m, b_m, U_G, flag, dx, dy, dz)
+      call source_u_g_bc (slo, shi, A_m, b_m, flag, dy, dz)
 
 ! add in point sources
-      if(point_source) call point_source_u_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_u_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -131,14 +131,14 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_u(slo, shi, lo, hi, &
+         call gas_drag_u(slo, shi, &
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
          u_g, v_g, w_g, a_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
-         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), flag,'U')
+         i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), 'U')
 
       call under_relax (slo, shi, u_g, a_m, b_m, 'U', flag, 3)
 
@@ -186,11 +186,11 @@ module solve_vel_star_module
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
-      integer     , intent(in   ) :: vlo(3),vhi(3)
-      integer     , intent(in   ) :: wlo(3),whi(3)
+      integer(c_int)     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
+      integer(c_int)     , intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -250,13 +250,13 @@ module solve_vel_star_module
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         v_g, v_go, tau_v_g, flag, dx, dy, dz)
+         v_go, tau_v_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_v_g_bc(slo, shi, lo, hi, A_m, b_m, v_g, flag, dx, dy, dz)
+      call source_v_g_bc(slo, shi, A_m, b_m, flag, dx, dz)
 
 ! add in point sources
-      if(point_source) call point_source_v_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_v_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -266,14 +266,14 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_v(slo, shi, lo, hi, &
+         call gas_drag_v(slo, shi, &
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
          v_g, w_g, u_g, a_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
-         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), flag,'V')
+         i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), 'V')
 
       call under_relax (slo, shi, v_g, a_m, b_m, 'V', flag, 4)
 
@@ -318,11 +318,11 @@ module solve_vel_star_module
       IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
-      integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
-      integer     , intent(in   ) :: vlo(3),vhi(3)
-      integer     , intent(in   ) :: wlo(3),whi(3)
+      integer(c_int)     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
+      integer(c_int)     , intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -383,13 +383,13 @@ module solve_vel_star_module
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         w_g, w_go, tau_w_g, flag, dx, dy, dz)
+         w_go, tau_w_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_w_g_bc (slo, shi, lo, hi, A_m, b_m, w_g, flag, dx, dy, dz)
+      call source_w_g_bc (slo, shi, A_m, b_m, flag, dx, dy)
 
 ! add in point sources
-      if(point_source) call point_source_w_g (slo, shi, lo, hi, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_w_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d(slo, shi, lo, hi, d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
@@ -399,14 +399,14 @@ module solve_vel_star_module
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_w(slo, shi, lo, hi, &
+         call gas_drag_w(slo, shi, &
                          a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
          w_g, u_g, v_g, a_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
-         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),flag,'W')
+         i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),'W')
 
       call under_relax (slo, shi, w_g, a_m, b_m, 'W', flag, 5)
 

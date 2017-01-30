@@ -84,10 +84,9 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
          B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
-         i_resid, j_resid, k_resid, flag)
+         i_resid, j_resid, k_resid)
 
       use param1  , only: large_number, zero, one
-      use run     , only: debug_resid
 
       implicit none
 
@@ -108,8 +107,6 @@
 
       ! Maximum value of Residual
       real(c_real), INTENT(OUT) :: MAX_RESID
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       ! (i,j,k) of Maximum value of Residual
       INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
@@ -185,14 +182,13 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
          vel, vels1, vels2, A_M, B_M, NUM, DEN, &
-         RESID, MAX_RESID, i_resid, j_resid, k_resid, flag,axis)
+         RESID, MAX_RESID, i_resid, j_resid, k_resid, axis)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       use param1  , only: large_number, small_number, zero, one
       use matrix  , only: e, w, s, n, t, b
-      use run     , only: debug_resid
 
       IMPLICIT NONE
 
@@ -215,9 +211,6 @@
       ! Vector b_m
       real(c_real) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      INTEGER, INTENT(in) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       ! Numerator and denominator
       real(c_real), INTENT(OUT) :: NUM, DEN

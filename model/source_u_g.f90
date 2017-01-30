@@ -18,8 +18,8 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine source_u_g(slo, shi, lo, hi, A_m, b_m, &
-      dt, p_g, ep_g, ro_g, rop_g, rop_go, u_g, u_go, &
-      tau_u_g, flag, dx, dy, dz)
+      dt, p_g, ep_g, ro_g, rop_g, rop_go, u_go, &
+      tau_u_g, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -54,14 +54,10 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: tau_u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer, intent(in   ) :: flag &
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -139,21 +135,21 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g_bc(slo, shi, lo, hi, A_m, b_m, &
-      u_g, flag, dx, dy, dz)
+   subroutine source_u_g_bc(slo, shi, A_m, b_m, &
+      flag, dy, dz)
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
 
-      use bc, only: dimension_bc, bc_type, bc_defined
+      use bc, only: dimension_bc, bc_defined
       use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 
-      use matrix, only: e, w, s, n, t, b
+      use matrix, only: e, s, n, t, b
       use param1, only: is_defined
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -163,21 +159,17 @@ contains
       real(c_real), INTENT(INOUT) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Velocity u_g
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
       INTEGER, INTENT(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dy, dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
 ! Boundary condition
       INTEGER :: L
 ! Indices
-      INTEGER ::  I,  J, K, IM, I1, I2, J1, J2, K1, K2
+      INTEGER ::  I,  J, K, I1, I2, J1, J2, K1, K2
 
       real(c_real) :: ody, odz
 !-----------------------------------------------
@@ -425,12 +417,12 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(slo, shi, lo, hi, b_m, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_U_G(slo, shi, b_m, flag, dx, dy, dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: b_m&

@@ -18,7 +18,7 @@
 
       CONTAINS
 
-      SUBROUTINE CALC_XSI(DISCR, slo, shi, lo, hi, PHI, U, V, W, xsi_e, xsi_n, xsi_t, &
+      SUBROUTINE CALC_XSI(DISCR, slo, shi, hi, PHI, U, V, W, xsi_e, xsi_n, xsi_t, &
                           dt, dx, dy, dz)
 
 ! Modules
@@ -43,7 +43,7 @@
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),hi(3)
 
       ! discretization method
       INTEGER, INTENT(IN) :: DISCR
@@ -482,7 +482,7 @@
                 IU = min(i+2,domhi(1)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(iu,j,k),PHI(ic,j,k),PHI(id,j,k))
-             DWF = CENTRAL_SCHEME(PHI_C)
+             DWF = CENTRAL_SCHEME()
              XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
 
              IF (V(i,j,k) >= ZERO) THEN
@@ -495,7 +495,7 @@
                 JU = min(j+2,domhi(2)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,ju,k),PHI(i,jc,k),PHI(i,jd,k))
-             DWF = CENTRAL_SCHEME(PHI_C)
+             DWF = CENTRAL_SCHEME()
              XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
 
              IF (W(i,j,k) >= ZERO) THEN
@@ -508,7 +508,7 @@
                 KU = min(k+2,domhi(3)+1)
              ENDIF
              PHI_C = PHI_C_OF(PHI(i,j,ku),PHI(i,j,kc),PHI(i,j,kd))
-             DWF = CENTRAL_SCHEME(PHI_C)
+             DWF = CENTRAL_SCHEME()
              XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
               end do
             end do

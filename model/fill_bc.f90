@@ -3,16 +3,16 @@
 ! ::: for cell centered data.  It knows how to exrapolate,
 ! ::: and reflect data and can be used to suppliment problem
 ! ::: specific fill functions (ie. EXT_DIR).
-! ::: 
+! :::
 ! ::: INPUTS/OUTPUTS:
 ! ::: q        <=  array to fill
 ! ::: DIMS(q)   => index extent of q array
 ! ::: domlo,hi  => index extent of problem domain
 ! ::: dx        => cell spacing
 ! ::: xlo       => physical location of lower left hand
-! :::	           corner of q array
+! :::            corner of q array
 ! ::: bc	=> array of boundary flags bc(SPACEDIM,lo:hi)
-! ::: 
+! :::
 ! ::: NOTE: corner data not used in computing soln but must have
 ! :::       reasonable values for arithmetic to live
 ! ::: -----------------------------------------------------------
@@ -32,17 +32,17 @@
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      
+
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer    ilo, ihi, jlo, jhi, klo, khi
       integer    is,  ie,  js,  je,  ks,  ke
       integer    i, j, k
 
       integer, parameter:: REFLECT_ODD  = -1
-      integer, parameter:: INT_DIR      =  0
+      ! integer, parameter:: INT_DIR      =  0
       integer, parameter:: REFLECT_EVEN =  1
       integer, parameter:: FOEXTRAP     =  2
-      integer, parameter:: EXT_DIR      =  3
+      ! integer, parameter:: EXT_DIR      =  3
       integer, parameter:: HOEXTRAP     =  4
 
       real(c_real), parameter:: half         = 0.5d0
@@ -79,7 +79,7 @@
             if (ilo+2 .le. ie) then
                   s(ilo-1,:,:) = (15*s(ilo,:,:) - 10*s(ilo+1,:,:) + &
                        3*s(ilo+2,:,:)) * 0.125d0
-            else  
+            else
                   s(ilo-1,:,:) = half*(3*s(ilo,:,:) - s(ilo+1,:,:))
             end if
          else if (bc(1,1) .eq. REFLECT_EVEN) then
@@ -123,10 +123,10 @@
 
       if (nbot .gt. 0) then
          jlo = domlo(2)
-         
+
          if (bc(2,1) .eq. FOEXTRAP) then
-!	    THIS IS A HACK SO WE DONT OVERWRITE INFLOW BC'S IN DEM06
-!	    do j = 1, nbot
+!     THIS IS A HACK SO WE DONT OVERWRITE INFLOW BC'S IN DEM06
+!     do j = 1, nbot
 !               s(:,jlo-j,:) = s(:,jlo,:)
 !           end do
          else if (bc(2,1) .eq. HOEXTRAP) then
@@ -140,7 +140,7 @@
                s(:,jlo-1,:) = half*(3*s(:,jlo,:) - s(:,jlo+1,:))
             end if
          else if (bc(2,1) .eq. REFLECT_EVEN) then
-            do j = 1, nbot 
+            do j = 1, nbot
                s(:,jlo-j,:) = s(:,jlo+j-1,:)
             end do
          else if (bc(2,1) .eq. REFLECT_ODD) then
@@ -154,8 +154,8 @@
          jhi = domhi(2)
 
          if (bc(2,2) .eq. FOEXTRAP) then
-!	    THIS IS A HACK SO WE DONT OVERWRITE OUTFLOW BC'S IN DEM06
-!	    do j = 1, ntop
+!     THIS IS A HACK SO WE DONT OVERWRITE OUTFLOW BC'S IN DEM06
+!     do j = 1, ntop
 !              s(:,jhi+j,:) = s(:,jhi,:)
 !           end do
          else if (bc(2,2) .eq. HOEXTRAP) then
@@ -293,7 +293,7 @@
 !
       if ((nlft .gt. 0 .and. bc(1,1) .eq. HOEXTRAP) .and. &
           (ntop .gt. 0 .and. bc(2,2) .eq. HOEXTRAP) ) then
-         if (jhi-2 .ge. js) then 
+         if (jhi-2 .ge. js) then
             do k = slo(3), shi(3)
                s(ilo-1,jhi+1,k) = half * 0.125d0 * &
                     (15*s(ilo-1,jhi,k) - 10*s(ilo-1,jhi-1,k) + &
@@ -306,7 +306,7 @@
             end do
          end if
 
-         if (ilo+2 .le. ie) then 
+         if (ilo+2 .le. ie) then
             do k = slo(3), shi(3)
                s(ilo-1,jhi+1,k) = s(ilo-1,jhi+1,k) + half * 0.125d0 * &
                     (15*s(ilo,jhi+1,k) - 10*s(ilo+1,jhi+1,k) + &
@@ -347,7 +347,7 @@
 !
       if ((nrgt .gt. 0 .and. bc(1,2) .eq. HOEXTRAP) .and. &
           (nbot .gt. 0 .and. bc(2,1) .eq. HOEXTRAP) ) then
-         if (jlo+2 .le. je) then 
+         if (jlo+2 .le. je) then
             do k = slo(3), shi(3)
                s(ihi+1,jlo-1,k) = half * 0.125d0 * &
                     (15*s(ihi+1,jlo,k) - 10*s(ihi+1,jlo+1,k) + &
@@ -360,7 +360,7 @@
             end do
          end if
 
-         if (ihi-2 .ge. is) then 
+         if (ihi-2 .ge. is) then
             do k = slo(3), shi(3)
                s(ihi+1,jlo-1,k) = s(ihi+1,jlo-1,k) + half * 0.125d0 * &
                     (15*s(ihi,jlo-1,k) - 10*s(ihi-1,jlo-1,k) + &
@@ -476,7 +476,7 @@
             end do
          else
             do j = slo(2), shi(2)
-               s(ilo-1,j,klo-1) = s(ilo-1,j,klo-1) + half * half * & 
+               s(ilo-1,j,klo-1) = s(ilo-1,j,klo-1) + half * half * &
                     (3*s(ilo,j,klo-1) - s(ilo+1,j,klo-1))
             end do
          end if
@@ -665,7 +665,7 @@
          end if
       end if
 
-! 
+!
 ! ****************************************************************************
 !
       if ((ntop .gt. 0 .and. bc(2,2) .eq. HOEXTRAP) .and. &
@@ -698,7 +698,7 @@
 
     end subroutine fill_bc
 
-! 
+!
 ! ****************************************************************************
 ! ****************************************************************************
 ! ****************************************************************************
@@ -739,7 +739,7 @@
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
-! 
+!
 !     First fill sides.
 !
       if (nlft .gt. 0) then
@@ -759,7 +759,7 @@
                                  s(ilo+2,j,k)
                end do
             end do
-         else  
+         else
             do k = slo(3), shi(3)
                do j = slo(2), shi(2)
                   s(ilo-1,j,k) = 2*s(ilo,j,k) - s(ilo+1,j,k)
@@ -796,7 +796,7 @@
 
       if (nbot .gt. 0) then
          jlo = domlo(2)
-         
+
          do j = 2, nbot
             do k = slo(3), shi(3)
                do i = slo(1), shi(1)
@@ -954,7 +954,7 @@
 ! ****************************************************************************
 !
       if ((nlft .gt. 0) .and. (ntop .gt. 0)) then
-         if (jhi-2 .ge. js) then 
+         if (jhi-2 .ge. js) then
             do k = slo(3), shi(3)
                s(ilo-1,jhi+1,k) = half * &
                     (3*s(ilo-1,jhi,k) - 3*s(ilo-1,jhi-1,k) +  &
@@ -967,7 +967,7 @@
             end do
          end if
 
-         if (ilo+2 .le. ie) then 
+         if (ilo+2 .le. ie) then
             do k = slo(3), shi(3)
                s(ilo-1,jhi+1,k) = s(ilo-1,jhi+1,k) + half * &
                     (3*s(ilo,jhi+1,k) - 3*s(ilo+1,jhi+1,k) +  &
@@ -1007,7 +1007,7 @@
 ! ****************************************************************************
 !
       if ((nrgt .gt. 0) .and. (nbot .gt. 0)) then
-         if (jlo+2 .le. je) then 
+         if (jlo+2 .le. je) then
             do k = slo(3), shi(3)
                s(ihi+1,jlo-1,k) = half * &
                     (3*s(ihi+1,jlo,k) - 3*s(ihi+1,jlo+1,k) +  &
@@ -1020,7 +1020,7 @@
             end do
          end if
 
-         if (ihi-2 .ge. is) then 
+         if (ihi-2 .ge. is) then
             do k = slo(3), shi(3)
                s(ihi+1,jlo-1,k) = s(ihi+1,jlo-1,k) + half * &
                     (3*s(ihi,jlo-1,k) - 3*s(ihi-1,jlo-1,k) +  &

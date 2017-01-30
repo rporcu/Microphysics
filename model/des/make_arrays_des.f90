@@ -149,7 +149,7 @@
       use run                  , only: run_type
       use write_des_data_module, only: write_des_data
 
-      integer     , intent(in   ) :: particle_state(max_pip)
+      integer(c_int), intent(in   ) :: particle_state(max_pip), max_pip
       real(c_real), intent(in   ) :: des_radius (max_pip)
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)

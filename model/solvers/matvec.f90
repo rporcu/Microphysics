@@ -35,12 +35,11 @@ contains
       enddo
    enddo
 
-   1000 format(a1,8(2x,es12.4))
 end subroutine leq_scale
 
 
   ! returns Am*Var
-  subroutine leq_matvec(var, A_m, res, slo, shi, lo, hi)&
+  subroutine leq_matvec(var, A_m, res, slo, shi)&
     bind(C, name = "leq_matvec")
 
     use bl_fort_module, only : c_real
@@ -49,7 +48,7 @@ end subroutine leq_scale
 
     IMPLICIT NONE
 
-    integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
 
     real(c_real)  , intent(in   ) :: var&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -88,7 +87,7 @@ end subroutine leq_scale
 
 
 ! returns (Rhs - Am*Var)
-  subroutine leq_residual(rhs, var, A_m, res, slo, shi, lo, hi) &
+  subroutine leq_residual(rhs, var, A_m, res, slo, shi) &
     bind(C, name = "leq_residual")
 
     use bl_fort_module, only : c_real
@@ -97,7 +96,7 @@ end subroutine leq_scale
 
     IMPLICIT NONE
 
-    integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+    integer(c_int), intent(in   ) :: slo(3),shi(3)
 
     real(c_real)  , intent(in   ) :: rhs&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

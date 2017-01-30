@@ -130,9 +130,9 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep,ep_g, p_g, &
-            ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol,&
-            des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
+         CALL OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+            particle_state, des_radius, &
+            des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
 
@@ -151,12 +151,12 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
-            call drag_gs_des(slo, shi, lo, hi, max_pip, &
+            call drag_gs_des(slo, shi, max_pip, &
                ep_g, u_g, v_g, w_g, ro_g, mu_g, &
                gradPg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
-         call calc_pg_grad(slo, shi, lo, hi, max_pip, &
+         call calc_pg_grad(slo, shi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
                            pvol, drag_fc, flag, dx, dy, dz)
       ENDIF
@@ -192,14 +192,14 @@ module des_time_march_module
             des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
-         CALL calc_drag_des(slo,shi,lo,hi,max_pip,ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
+         CALL calc_drag_des(slo,shi,max_pip,ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, &
             particle_state, fc,drag_fc,pvol, des_pos_new,des_vel_new,&
             des_radius,particle_phase,flag, dx, dy, dz)
 
 ! Call user functions.
          IF(CALL_USR) CALL USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(max_pip, particle_state, des_radius, pmass, omoi, &
+         CALL CFNEWVALUES(max_pip, particle_state, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
@@ -211,7 +211,7 @@ module des_time_march_module
 !         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
 
 ! Calculate mean fields (EPg).
-         CALL comp_mean_fields(slo, shi, lo, hi, max_pip, &
+         CALL comp_mean_fields(slo, shi, max_pip, &
             ep_g, particle_state, des_pos_new, pvol, flag, &
             dx, dy, dz)
 
@@ -228,9 +228,9 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep,ep_g, p_g,&
-               ro_g, rop_g, u_g, v_g, w_g, particle_state, des_radius, ro_sol, &
-               des_pos_new, des_vel_new, des_usr_var, omega_new, 0, 0)
+            CALL OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+               particle_state, des_radius, &
+               des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
          IF(CALL_USR) CALL USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)

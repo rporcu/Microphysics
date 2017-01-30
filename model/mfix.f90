@@ -68,12 +68,12 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call init_err_msg('MFIX')
 
       ! Set point sources.
-      call set_ps(slo,shi,lo,hi,flag,dx,dy,dz)
+      call set_ps(slo,shi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
-      call zero_norm_vel(slo,shi,lo,hi,u_g,v_g,w_g,flag)
+      call zero_norm_vel(slo,shi,u_g,v_g,w_g,flag)
 
       ! Set boundary conditions
-      call set_bc0(slo,shi,lo,hi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
+      call set_bc0(slo,shi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
 
       end subroutine mfix1

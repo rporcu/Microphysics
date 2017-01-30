@@ -12,12 +12,7 @@ MODULE CHECK_BC_WALLS_MODULE
 ! Purpose: Driver routine to call checks for WALL BCs.                 !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_WALLS(M_TOT, SKIP, BCV)
-
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Maximum number of solids phases
-      use param, only: DIM_M
+      SUBROUTINE CHECK_BC_WALLS(BCV)
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -29,10 +24,6 @@ MODULE CHECK_BC_WALLS_MODULE
 !---------------------------------------------------------------------//
 ! Index of BC being checked.
       INTEGER, INTENT(in) :: BCV
-! Total number of solids phases.
-      INTEGER, INTENT(in) :: M_TOT
-! Flag. Solids not present at this BC (used for flow BCs).
-      LOGICAL, INTENT(in) :: SKIP(DIM_M)
 
 !......................................................................!
 

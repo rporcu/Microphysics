@@ -15,10 +15,10 @@ module output_manager_module
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     SUBROUTINE OUTPUT_MANAGER(slo, shi, max_pip, time, dt, nstep, &
-        ep_g, p_g, ro_g, rop_g, u_g, v_g, w_g, particle_state, &
-        des_radius, ro_sol, des_pos_new, des_vel_new, des_usr_var,&
-        omega_new, exit_signal, finished) &
+     SUBROUTINE OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+        particle_state, &
+        des_radius, des_pos_new, des_vel_new, des_usr_var,&
+        omega_new, finished) &
         bind(C, name="mfix_output_manager")
 
 ! Global Variables:
@@ -38,29 +38,12 @@ module output_manager_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), INTENT(IN   ) :: time, dt
       integer(c_int), intent(in   ) :: nstep
 
-      real(c_real), INTENT(IN   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
       real(c_real), intent(in) :: des_radius(max_pip)
-      real(c_real), intent(in) :: ro_sol(max_pip)
 
       real(c_real), intent(in) :: des_pos_new(max_pip,3)
       real(c_real), intent(in) :: des_vel_new(max_pip,3)
@@ -72,8 +55,6 @@ module output_manager_module
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-! Flag that the the user specified batch time (plus buffer) is met.
-      integer(c_int), intent(in) :: exit_signal
 ! Flag that a steady state case is completed.
       integer(c_int), intent(in) :: finished
 

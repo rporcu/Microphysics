@@ -3,7 +3,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   use param1, only: one, undefined, zero, is_undefined, is_defined
+   use param1, only: one, undefined, zero, is_undefined, is_defined, equal
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -62,7 +62,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 
             IF(IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
 
-               IF(BC_EP_G(BCV) == ONE) THEN
+               IF(EQUAL(BC_EP_G(BCV), ONE)) THEN
 ! what does it mean to force the bulk density to zero at the
 ! boundary? (does this value matter anyway?)
                   BC_ROP_S(BCV,M) = ZERO
@@ -143,7 +143,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 ! Purpose: Provided a detailed error message on bc                     !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_P_OUTFLOW(M_TOT, BCV)
+      SUBROUTINE CHECK_BC_P_OUTFLOW(BCV)
 
 ! Modules
 ! --------------------------------------------------------------------//
@@ -156,7 +156,6 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 ! --------------------------------------------------------------------//
 ! loop/variable indices
       INTEGER, INTENT(in) :: BCV
-      INTEGER, INTENT(in) :: M_TOT
 ! --------------------------------------------------------------------//
 
       CALL INIT_ERR_MSG("CHECK_BC_P_OUTFLOW")
@@ -267,7 +266,7 @@ MODULE CHECK_BC_OUTFLOW_MODULE
 
 ! This check probably needs changed.
       IF(IS_UNDEFINED(RO_G0) .AND. (IS_UNDEFINED(BC_P_G(BCV)) .OR.       &
-         BC_T_G(BCV) == UNDEFINED) .AND.ABS(BC_MASSFLOW_G(BCV)) > ZERO) THEN
+         IS_UNDEFINED(BC_T_G(BCV))) .AND.ABS(BC_MASSFLOW_G(BCV)) > ZERO) THEN
 
          IF(BC_PLANE(BCV)=='W' .OR. BC_PLANE(BCV)=='E') THEN
             IF(ABS(BC_U_G(BCV)) > ZERO) THEN

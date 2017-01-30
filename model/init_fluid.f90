@@ -1,3 +1,5 @@
+module init_fluid_module
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: init_fluid                                              !
@@ -47,7 +49,7 @@
 !-----------------------------------------------------------------------!
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, p_g, u_g, v_g, w_g, flag)
 
       ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
@@ -81,7 +83,7 @@
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, lo, hi, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, p_g, u_g, v_g, w_g, flag)
 
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
@@ -94,7 +96,7 @@
 
       IMPLICIT NONE
 
-      integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer, intent(in) :: slo(3), shi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -356,3 +358,4 @@
          'condition need to be specified',/1X,70('*')/)
 
    end subroutine set_p_g
+end module init_fluid_module

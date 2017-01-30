@@ -17,7 +17,7 @@ module set_bc0_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0(slo, shi, lo, hi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
+      subroutine set_bc0(slo, shi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
@@ -26,7 +26,7 @@ module set_bc0_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

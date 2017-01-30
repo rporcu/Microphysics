@@ -187,10 +187,9 @@ MODULE discretization
 ! Central scheme.                                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      real(c_real) FUNCTION CENTRAL_SCHEME (PHI_C)
+      real(c_real) FUNCTION CENTRAL_SCHEME ()
       USE param1, only: half
       IMPLICIT NONE
-      real(c_real), INTENT(IN) :: PHI_C
 
       CENTRAL_SCHEME = HALF
       RETURN

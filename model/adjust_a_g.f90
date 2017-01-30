@@ -18,7 +18,7 @@
       subroutine adjust_a_g(axis, slo, shi, lo, hi, A_m, B_M, rop_g, dx, dy, dz)
 
          USE functions, only: avg
-         USE geometry , only: domlo, domhi
+         USE geometry , only: domhi
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
 
@@ -43,7 +43,7 @@
 
       real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
-     
+
       integer      :: ip, i, j, k, is, js, ks
       real(c_real) :: denominator, xxxm, xxxp
       real(c_real) :: axy, ayz, axz
@@ -55,7 +55,7 @@
       is = lo(1)
       js = lo(2)
       ks = lo(3)
- 
+
       if (axis.eq.'x') then
           is = lo(1)-1
       else if (axis.eq.'y') then

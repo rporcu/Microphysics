@@ -22,7 +22,7 @@ extern "C"
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* p_g,     Real* ep_g,     
+                 Real* p_g,     Real* ep_g,
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
 
@@ -74,21 +74,17 @@ extern "C"
          Real* dx,       Real* dy,       Real* dz);
 
   void mfix_output_manager(
-         const int* slo, const int* shi, const int* max_pip,
+         const int* max_pip,
          Real* time, Real* dt, int* nstep,
-         Real* ep_g,    Real* p_g,
-         Real* ro_g,    Real* rop_g,
-         Real* u_g,     Real* v_g,
-         Real* w_g,
          int* particle_state,    Real* des_radius,
-         Real* ro_sol,           Real* des_pos_new,
+         Real* des_pos_new,
          Real* des_vel_new,      Real* des_usr_var,
          Real* omega_new,
-         int* estatus, int* finsh);
+         int* finsh);
 
   void calc_coeff_all(
          const int* slo, const int* shi,
-         const int* lo, const int* hi, const int* max_pip,
+         const int* max_pip,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
          Real* u_g,  Real* v_g,   Real* w_g,
@@ -101,7 +97,7 @@ extern "C"
 
   void calc_coeff(
          const int* slo, const int* shi,
-         const int* lo,  const int* hi, const int* max_pip,
+         const int* max_pip,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
@@ -292,16 +288,15 @@ extern "C"
                          int* slo, int* shi, const int* lo, const int* hi);
 
   void leq_residual(const Real*, const Real*, const Real*, Real*,
-                    const int* slo, const int* shi, const int* lo, const int* hi);
+                    const int* slo, const int* shi);
 
   void leq_matvec(const Real*, const Real*, Real*,
-                  const int* slo, const int* shi, const int* lo, const int* hi);
+                  const int* slo, const int* shi);
 
   void leq_scale(const Real*,    const Real*,
                  const int* slo, const int* shi, const int* lo, const int* hi);
 
-  void leq_msolve1(const int* slo, const int* shi, const Real*, const Real*, Real*,
-                   const int* sweep_type);
+  void leq_msolve1(const int* slo, const int* shi, const Real*, const Real*, Real*);
 
   void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, Real* tol);
 }

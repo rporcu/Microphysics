@@ -201,7 +201,7 @@ MODULE CHECK_DATA_20_MODULE
  1000 FORMAT('Error 1000: The following field variables are undefined')
 
 
-      WRITE(ERR_MSG, 1010) I, J, K, trim(VAR_FULL)
+      WRITE(ERR_MSG, 1010) pI, pJ, pK, trim(VAR_FULL)
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
  1010 FORMAT(1X,'I = ',I6,' J = ',I6,' K = ',I6,5X,A)
@@ -226,7 +226,7 @@ MODULE CHECK_DATA_20_MODULE
  1100 FORMAT('Error 1100: The following field variables are ',&
          'out of range')
 
-      WRITE(ERR_MSG, 1110) I, J, K, trim(VAR), VALUE
+      WRITE(ERR_MSG, 1110) pI, pJ, pK, trim(VAR), VALUE
       CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
  1110 FORMAT(1X,'I = ',I6,' J = ',I6,' K = ',I6,2X,A,'Value:',g11.4)

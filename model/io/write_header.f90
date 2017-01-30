@@ -16,7 +16,6 @@ MODULE WRITE_HEADER_MODULE
       USE machine, only: id_hour, id_minute, id_day, id_month, id_year
       USE output, only: full_log
       USE run, only: run_name
-      use bl_fort_module, only : c_real
 
       IMPLICIT NONE
 

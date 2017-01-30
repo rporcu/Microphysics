@@ -106,7 +106,7 @@ module set_outflow_module
                   RVEL_G = U_G(im,j,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,im,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,im,j,k,RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
 ! Set the boundary cell value of the normal component of velocity
 ! according to the value in the adjacent fluid cell. Note the value
@@ -142,7 +142,7 @@ module set_outflow_module
                   RVEL_G = -U_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,ip,j,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, ip,j,k, RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
 ! provide an initial value for the velocity component through the domain
 ! otherwise its present value (from solution of the corresponding
@@ -172,7 +172,7 @@ module set_outflow_module
                   RVEL_G = V_G(i,jm,k)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,jm,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jm,k, RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      V_G(I,J,K) = ROP_G(i,jm,k)*V_G(i,jm,k)/ROP_G(I,J,K)
@@ -194,7 +194,7 @@ module set_outflow_module
                   RVEL_G = -V_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,jp,k,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,jp,k, RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
                   IF (IS_UNDEFINED(V_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -218,7 +218,7 @@ module set_outflow_module
                   RVEL_G = W_G(i,j,km)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,j,km,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,i,j,km,RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
                   IF (ROP_G(I,J,K) > ZERO) THEN
                      W_G(I,J,K) = ROP_G(i,j,km)*W_G(i,j,km)/ROP_G(I,J,K)
@@ -241,7 +241,7 @@ module set_outflow_module
                   RVEL_G = -W_G(I,J,K)
 
                   CALL SET_OUTFLOW_MISC(BCV,slo,shi,I,J,K,i,j,kp,p_g,ro_g)
-                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K, i,j,kp,RVEL_G)
+                  CALL SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
                   IF (IS_UNDEFINED(W_G(I,J,K))) THEN
                      IF (ROP_G(I,J,K) > ZERO) THEN
@@ -325,7 +325,7 @@ module set_outflow_module
 !  cell.                                                               C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K,FI,FJ,FK,RVEL_G)
+      SUBROUTINE SET_OUTFLOW_EP(BCV,slo,shi,ro_g,rop_g,ep_g,I,J,K)
 
 ! Global variables
 !---------------------------------------------------------------------//
@@ -352,8 +352,6 @@ module set_outflow_module
       INTEGER, INTENT(IN) :: BCV
 ! i,j,k index for boundary cell
       INTEGER, INTENT(IN) :: I,J,K
-! i,j,k index for adjacent fluid cell
-      INTEGER, INTENT(IN) :: FI,FJ,FK
 ! the gas or solids velocity in the fluid cell adjacent to the boundary
 ! cell dot with the outward normal of that bc plane; defines the gas or
 ! solids velocity component normal to the bc plane as positive when it
@@ -361,7 +359,6 @@ module set_outflow_module
 ! an outflow on the eastern boundary this is the u component of velocity
 ! while for an outflow on the western boundary this is the -u component,
 ! etc.
-      real(c_real), INTENT(IN) :: RVEL_G
 
 ! Local variables
 !---------------------------------------------------------------------//

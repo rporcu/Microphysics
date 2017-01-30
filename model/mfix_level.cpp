@@ -526,16 +526,12 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& sbx = (*flag[lev])[mfi].box();
-     mfix_output_manager(sbx.loVect(), sbx.hiVect(), &max_pip,
+     mfix_output_manager(&max_pip,
       &time, &dt, &nstep,
-      (*ep_g[lev])[mfi].dataPtr(),   (*p_g[lev])[mfi].dataPtr(),
-      (*ro_g[lev])[mfi].dataPtr(),   (*rop_g[lev])[mfi].dataPtr(),
-      (*u_g[lev])[mfi].dataPtr(),    (*v_g[lev])[mfi].dataPtr(),
-      (*w_g[lev])[mfi].dataPtr(),
       particle_state.dataPtr(), des_radius.dataPtr(),
-      ro_sol.dataPtr(), des_pos_new.dataPtr(),
+      des_pos_new.dataPtr(),
       des_vel_new.dataPtr(), des_usr_var.dataPtr(),
-      omega_new.dataPtr(), &estatus, &finish);
+      omega_new.dataPtr(), &finish);
   }
 }
 
@@ -622,7 +618,7 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      const int max_pip = particle_state.size();
 
      calc_coeff(sbx.loVect(), sbx.hiVect(),
-                 bx.loVect(), bx.hiVect(), &max_pip,
+                 &max_pip,
       (*flag[lev])[mfi].dataPtr(),    &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
       (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
@@ -657,7 +653,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     calc_coeff_all(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(), &max_pip,
+     calc_coeff_all(sbx.loVect(), sbx.hiVect(), &max_pip,
        (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),

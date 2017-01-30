@@ -15,7 +15,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(slo, shi, lo, hi, &
+      SUBROUTINE GAS_DRAG_U(slo, shi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
@@ -34,7 +34,7 @@ MODULE GAS_DRAG_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -96,7 +96,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(slo, shi, lo, hi, &
+      SUBROUTINE GAS_DRAG_V(slo, shi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 
@@ -117,7 +117,7 @@ MODULE GAS_DRAG_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -170,7 +170,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(slo, shi, lo, hi, &
+      SUBROUTINE GAS_DRAG_W(slo, shi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
@@ -190,7 +190,7 @@ MODULE GAS_DRAG_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
 
       real(c_real), INTENT(INOUT) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)

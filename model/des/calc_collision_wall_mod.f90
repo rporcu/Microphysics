@@ -42,7 +42,6 @@
             particle_state,  des_radius, des_pos_new, &
             des_vel_new, omega_new, fc, tow)
 
-      use geometry, only: domlo,domhi
       use geometry, only: xlength, ylength, zlength
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param1, only: zero, one

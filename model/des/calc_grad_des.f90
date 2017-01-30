@@ -4,7 +4,7 @@ MODULE CALC_GRAD_DES_MODULE
    use iso_c_binding , only: c_int
 
    CONTAINS
-      SUBROUTINE CALC_GRAD_DES(slo, shi, lo, hi, PHI, DEL_PHI, flag, dx, dy, dz)
+      SUBROUTINE CALC_GRAD_DES(slo, shi, PHI, DEL_PHI, flag, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
@@ -18,7 +18,7 @@ MODULE CALC_GRAD_DES_MODULE
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(in   ) :: PHI&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

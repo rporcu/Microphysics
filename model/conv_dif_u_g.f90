@@ -85,12 +85,12 @@ contains
 !  and top face of a u-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_UCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
+      SUBROUTINE GET_UCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
 
       use functions, only: avg
       use functions, only: iplus
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(OUT) :: U&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -131,11 +131,11 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! diffusion through faces of given ijk u-momentum cell
       real(c_real), intent(OUT) :: d_fe, d_fw
@@ -295,7 +295,7 @@ contains
                   flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
                   flux_b = HALF * (flux_gT(i,j,k-1) + flux_gT(i+1,j,k-1))
                   CALL GET_UCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, &
                      dx, dy, dz)
@@ -447,11 +447,11 @@ contains
       allocate(xsi_n(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
       allocate(xsi_t(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
 
-      CALL GET_UCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
+      CALL GET_UCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
 
 ! shear indicator:
       incr=1
-      call calc_xsi (discretize(3), slo, shi, lo, hi, &
+      call calc_xsi (discretize(3), slo, shi, hi, &
          u_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
          dt, dx, dy, dz)
 
@@ -474,7 +474,7 @@ contains
                      flux_w = HALF * (flux_gE(i-1,j,k) + flux_gE(i  ,j,k))
                   end if
                   CALL GET_UCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, &
                      dx, dy, dz)

@@ -2,7 +2,7 @@ module w_g_conv_dif
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
-   use geometry      , only: domlo, domhi 
+   use geometry      , only: domlo, domhi
    use param1        , only: half, one, zero
 
    implicit none
@@ -75,12 +75,12 @@ module w_g_conv_dif
 !  and top face of a w-momentum cell                                   C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g)
+      SUBROUTINE GET_WCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
 
       USE functions, only: avg
       USE functions, only: kplus
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       real(c_real), intent(OUT) :: U&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -123,12 +123,12 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, & 
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, &
          dx, dy, dz)
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       ! diffusion through faces of given w-momentum cell
       real(c_real), intent(OUT) :: d_fe, d_fw
@@ -289,7 +289,7 @@ module w_g_conv_dif
                end if
 
                   CALL GET_WCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
@@ -436,11 +436,11 @@ module w_g_conv_dif
       allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      CALL GET_WCELL_GVTERMS(slo, shi, lo, hi, U, V, WW, u_g, v_g, w_g )
+      CALL GET_WCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g )
 
 ! shear indicator:
       incr=0
-      CALL CALC_XSI (DISCRETIZE(5), slo, shi, lo, hi, &
+      CALL CALC_XSI (DISCRETIZE(5), slo, shi, hi, &
                      W_G, U, V, WW, XSI_E, XSI_N, XSI_T, &
                      dt, dx, dy, dz)
 
@@ -469,7 +469,7 @@ module w_g_conv_dif
                   end if
 
                   CALL GET_WCELL_GDIFF_TERMS(&
-                     slo, shi, lo, hi, &
+                     slo, shi, &
                      d_fe, d_fw, d_fn, d_fs, &
                      d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 

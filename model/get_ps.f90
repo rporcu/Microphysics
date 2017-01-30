@@ -18,7 +18,7 @@ MODULE GET_PS_MODULE
       USE calc_cell_module, only: calc_loc, calc_cell
       USE geometry, only: domlo, domhi
       USE location_check_module, only: location_check
-      USE param1, only: undefined_i, is_undefined, is_defined
+      USE param1, only: undefined_i, is_undefined, is_defined, equal
       USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
       USE ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
       USE ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t
@@ -54,7 +54,7 @@ MODULE GET_PS_MODULE
       IF(IS_DEFINED(PS_X_W(PSV)) .AND. IS_DEFINED(PS_X_E(PSV))) THEN
          I_W = CALC_CELL(PS_X_W(PSV), DX)
          I_E = CALC_CELL(PS_X_E(PSV), DX)
-         IF (PS_X_W(PSV) /= PS_X_E(PSV)) THEN
+         IF (.NOT.EQUAL(PS_X_W(PSV), PS_X_E(PSV))) THEN
             X_CONSTANT = .FALSE.
             I_W = I_W + 1
             IF(PS_I_W(PSV)/=UNDEFINED_I .OR.                           &
@@ -70,14 +70,14 @@ MODULE GET_PS_MODULE
             CALL CALC_LOC(DX, PS_I_W(PSV), PS_X_W(PSV))
          IF(PS_I_E(PSV) /= UNDEFINED_I)                                &
             CALL CALC_LOC(DX, PS_I_E(PSV), PS_X_E(PSV))
-         IF (PS_X_W(PSV) /= PS_X_E(PSV)) X_CONSTANT = .FALSE.
+         IF (.NOT.EQUAL(PS_X_W(PSV), PS_X_E(PSV))) X_CONSTANT = .FALSE.
       ENDIF
 
 !  If there is no variation in the I direction set indices to 1
       IF (IS_DEFINED(PS_Y_S(PSV)).AND. IS_DEFINED(PS_Y_N(PSV))) THEN
          J_S = CALC_CELL(PS_Y_S(PSV), DY)
          J_N = CALC_CELL(PS_Y_N(PSV), DY)
-         IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) THEN
+         IF (.NOT.EQUAL(PS_Y_S(PSV), PS_Y_N(PSV))) THEN
             Y_CONSTANT = .FALSE.
             J_S = J_S + 1
             IF(PS_J_S(PSV)/=UNDEFINED_I .OR.                           &
@@ -93,13 +93,13 @@ MODULE GET_PS_MODULE
             CALL CALC_LOC(DY, PS_J_S(PSV), PS_Y_S(PSV))
          IF(PS_J_N(PSV) /= UNDEFINED_I)                                &
             CALL CALC_LOC(DY, PS_J_N(PSV), PS_Y_N(PSV))
-         IF (PS_Y_S(PSV) /= PS_Y_N(PSV)) Y_CONSTANT = .FALSE.
+         IF (.NOT.EQUAL(PS_Y_S(PSV), PS_Y_N(PSV))) Y_CONSTANT = .FALSE.
       ENDIF
 
       IF (IS_DEFINED(PS_Z_B(PSV)) .AND. IS_DEFINED(PS_Z_T(PSV))) THEN
         K_B = CALC_CELL(PS_Z_B(PSV), DZ)
         K_T = CALC_CELL(PS_Z_T(PSV), DZ)
-         IF (PS_Z_B(PSV) /= PS_Z_T(PSV)) THEN
+         IF (.NOT.EQUAL(PS_Z_B(PSV), PS_Z_T(PSV))) THEN
             Z_CONSTANT = .FALSE.
             K_B = K_B + 1
             IF (PS_K_B(PSV)/=UNDEFINED_I .OR.                          &
@@ -115,7 +115,7 @@ MODULE GET_PS_MODULE
             CALL CALC_LOC(DZ, PS_K_B(PSV), PS_Z_B(PSV))
          IF(PS_K_T(PSV) /= UNDEFINED_I)                                &
             CALL CALC_LOC(DZ, PS_K_T(PSV), PS_Z_T(PSV))
-         IF (PS_Z_B(PSV) /= PS_Z_T(PSV)) Z_CONSTANT = .FALSE.
+         IF (.NOT.EQUAL(PS_Z_B(PSV), PS_Z_T(PSV))) Z_CONSTANT = .FALSE.
       ENDIF
 
 ! CHECK FOR VALID VALUES

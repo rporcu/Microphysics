@@ -38,34 +38,6 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!     Module name: DEPRECATED                                          !
-!     Author: J.Musser                                Date:  5-SEPT-14 !
-!                                                                      !
-!     Purpose: Write the error message for deprecated keywords.        !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DEPRECATED(LINE_NO, INPUT, RELEASE)
-
-      INTEGER, INTENT(IN) :: LINE_NO
-      CHARACTER(len=*), INTENT(IN) :: INPUT
-      CHARACTER(len=*), INTENT(IN) :: RELEASE
-
-      IF(myPE == 0) &
-         WRITE(*,1000) trim(iVAL(LINE_NO)), RELEASE, trim(INPUT)
-
-      CALL MFIX_EXIT(myPE)
-
- 1000 FORMAT(//1X,70('*')/' From DEPRECATED',/' Error 1000:',          &
-         ' A keyword pair on line ',A,' of the mfix.dat file was',/    &
-         ' identified as being deprecated as of the ',A,' Release.',// &
-         3x,A,//' Please see the user documentation and update the ',  &
-         'mfix.dat file.',/1X,70('*')//)
-
-      END SUBROUTINE DEPRECATED
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
 !     Module name: UNKNOWN_KEYWORD                                     !
 !     Author: J.Musser                                Date:  5-SEPT-14 !
 !                                                                      !
