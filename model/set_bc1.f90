@@ -13,7 +13,7 @@ module set_bc1_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
      SUBROUTINE SET_BC1(time, dt, slo, shi, p_g, ep_g, ro_g, rop_g, u_g, v_g, w_g, &
-                        flux_ge, flux_gn, flux_gt, flag, dx, dy, dz) &
+                        flux_ge, flux_gn, flux_gt, dx, dy, dz) &
        bind(C, name="set_bc1")
 
 ! Modules
@@ -27,9 +27,6 @@ module set_bc1_module
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       real(c_real),   intent(in   ) :: dt, time, dx, dy, dz
-
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -65,21 +62,21 @@ module set_bc1_module
             SELECT CASE(TRIM(BC_TYPE(L)))
             CASE ('P_OUTFLOW')
                CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                  flux_ge,flux_gn,flux_gt,flag)
+                  flux_ge,flux_gn,flux_gt)
                CALL SET_BC1_REPORT_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_OUTFLOW')
                CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                  flux_ge,flux_gn,flux_gt,flag)
+                  flux_ge,flux_gn,flux_gt)
                CALL SET_BC1_ADJUST_OUTFLOW(L, time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             CASE ('MASS_INFLOW')
             CASE ('P_INFLOW')
                CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                  flux_ge,flux_gn,flux_gt,flag)
+                  flux_ge,flux_gn,flux_gt)
             CASE ('OUTFLOW')
                CALL set_outflow(L,slo,shi,p_g,ep_g,ro_g,rop_g,u_g,v_g,w_g,&
-                  flux_ge,flux_gn,flux_gt,flag)
+                  flux_ge,flux_gn,flux_gt)
                CALL SET_BC1_REPORT_OUTFLOW(L,time, dt, slo, shi, &
                   u_g,v_g,w_g,rop_g,ep_g,dx,dy,dz)
             END SELECT

@@ -13,6 +13,7 @@ module set_outflow_module
   !>>> TODO: move definition like the following to a module
   character(16), parameter :: POUTFLOW = 'P_OUTFLOW'
 
+
 contains
 
 
@@ -49,22 +50,20 @@ contains
   !                                                                      C
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   subroutine set_outflow ( bcv, slo, shi, p_g, ep_g, ro_g, rop_g, &
-       & u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, flag )
+       & u_g, v_g, w_g, flux_ge, flux_gn, flux_gt) 
 
     use bc,        only: bc_k_b, bc_k_t
     use bc,        only: bc_j_s, bc_j_n
     use bc,        only: bc_i_w, bc_i_e
-    use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
-    use param1,    only: is_undefined, zero
+    use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
+    use param1,    only: is_undefined
+    use geometry,  only: domlo, domhi
 
     integer, intent(in) :: slo(3),shi(3)
     integer, intent(in) :: bcv
-    integer, intent(in) :: flag( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3), 4 )
 
     real(c_real), intent(inout) :: &
-         &     p_g( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) )
-
-    real(c_real), intent(inout) :: &
+         &     p_g( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) ), &
          &    ep_g( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) ), &
          &    ro_g( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) ), &
          &   rop_g( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) ), &
@@ -75,62 +74,42 @@ contains
          & flux_gn( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) ), &
          & flux_gt( slo(1):shi(1), slo(2):shi(2), slo(3):shi(3) )
 
+    integer      :: i, j, k
 
-    integer      :: i, j, k, ip, im, jp, jm, kp, km
 
     ! loop over the range of boundary cells
     do k = bc_k_b(bcv), bc_k_t(bcv)
        do j = bc_j_s(bcv), bc_j_n(bcv)
           do i = bc_i_w(bcv), bc_i_e(bcv)
 
-             im = iminus(i,j,k)
-             ip = iplus(i,j,k)
-             jm = jminus(i,j,k)
-             jp = jplus(i,j,k)
-             km = kminus(i,j,k)
-             kp = kplus(i,j,k)
-
-
-             west: if (flag(im,j,k,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, im, j, k, &
+             west: if ( i == domlo(1) ) then
+                call set_outflow_face ( bcv, slo, shi, i, j, k, iminus(i,j,k), j, k, &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if west
 
-             east: if (flag(ip,j,k,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, ip, j, k, &
+             east: if ( i == domhi(1) ) then
+                call set_outflow_face ( bcv, slo, shi, i, j, k, iplus(i,j,k), j, k, &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if east
 
-             south: if (flag(i,jm,k,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, i, jm, k, &
+             south: if ( j == domlo(2) ) then
+                call set_outflow_face ( bcv, slo, shi, i, j, k, i, jminus(i,j,k), k, &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if south
 
-             north: if (flag(i,jp,k,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, i, jp, k, &
+             north:  if ( j == domhi(2) ) then
+                call set_outflow_face ( bcv, slo, shi, i, j, k, i, jplus(i,j,k), k, &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if north
 
-             bottom: if (flag(i,j,km,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, i, j, km, &
+             bottom: if ( k == domlo(3) ) then 
+                call set_outflow_face ( bcv, slo, shi, i, j, k, i, j, kminus(i,j,k), &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if bottom
 
-             top: if (flag(i,j,kp,1)==1) then
-
-                call set_outflow_face ( bcv, slo, shi, i, j, k, i, j, kp, &
+             top:  if ( k == domhi(3) ) then
+                call set_outflow_face ( bcv, slo, shi, i, j, k, i, j, kplus(i,j,k), &
                      & p_g, ro_g, rop_g, ep_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt)
-
              end if top
 
           end do   
