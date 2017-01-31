@@ -1,0 +1,140 @@
+########################################################################
+#                                                                      #
+# Author:  Sreekanth Pannala                            Date: 01-2010  #
+# Modified: J. Musser                                   Date: 05-2014  #
+#                                                                      #
+#  Description:                                                        #
+#  Freely falling particles under gravity that collide with a wall.    #
+#  This is an extension of the regular freely-falling particle test    #
+#  case to run parallel.                                               #
+#                                                                      #
+#  References:                                                         #
+#  R. Garg, J. Galvin, T. Li, and S. Pannala, Documentation of open-   #
+#     source MFIX-DEM software for gas-solids flows, from URL:         #
+#     https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,      #
+#                                                                      #
+########################################################################
+
+  RUN_NAME = 'DEM02'
+  DESCRIPTION = 'DEM02: Bouncing particle height'
+
+#_______________________________________________________________________
+# RUN CONTROL SECTION
+
+  RUN_TYPE = 'NEW'
+  UNITS = 'SI'
+
+  TIME =   0.0
+  TSTOP = 10.0
+
+  DT =     1.0d-4
+  DT_MAX = 2.0d-4
+
+  CALL_USR = .T.
+
+#_______________________________________________________________________
+# GEOMETRY SECTION
+
+  COORDINATES = 'CARTESIAN'
+
+  XLENGTH  = 1.0   IMAX = 1
+  YLENGTH  = 1.0   JMAX = 1
+  ZLENGTH  = 1.0   KMAX = 1
+
+  GRAVITY(1) =  0.d0
+  GRAVITY(2) =  0.d0
+  GRAVITY(3) = -9.80665d0
+
+#_______________________________________________________________________
+# MATERIAL SECTION
+
+! Gas Section
+!---------------------------------------------------------------------//
+
+  RO_g0 = 0.0
+  MU_g0 = 0.2
+
+
+! PARTICLE SECTION
+!---------------------------------------------------------------------//
+
+
+  PARTICLES = 1                ! Number of partiles
+
+! Friction coefficients. (1)
+  MEW =   0.0                  ! particle-particle
+  MEW_W = 0.0                  ! particle-wall
+
+!......................................................................!
+! The following keywords are required inputs for the simulation. They  !
+! are not specified here because they are passed as run time arguments.!
+!                                                                      !
+! Normal collision spring constant. (N/m)                              !
+! KN =   xxxxx                 ! particle-particle                     !
+! KN_W = xxxxx                 ! particle-wall                         !
+!                                                                      !
+! Restitution coefficient. (1)                                         !
+! DES_EN_INPUT =      xxxxx    ! particle-particle                     !
+! DES_EN_WALL_INPUT = xxxxx    ! particle-wall                         !
+!......................................................................!
+
+
+! Solids phase 1
+!---------------------------------------------------------------------//
+  SOLIDS_MODEL(1) = 'DEM'
+
+  D_p0(1) =       0.20   ! (m)
+  RO_s0(1) =   2600.00   ! (kg/m)
+
+
+#_______________________________________________________________________
+# INITIAL CONDITIONS SECTION
+
+  IC_X_w(1) =     0.00   ! (m)
+  IC_X_e(1) =     1.00   ! (m)
+  IC_Y_s(1) =     0.00   ! (m)
+  IC_Y_n(1) =     1.00   ! (m)
+  IC_Z_b(1) =     0.00   ! (m)
+  IC_Z_t(1) =     1.00   ! (m)
+
+  IC_EP_g(1) =    1.00   ! (1)
+
+  IC_P_g(1) =     0.00   ! (Pa)
+
+  IC_U_g(1) =     0.00   ! (m/sec)
+  IC_V_g(1) =     0.00   ! (m/sec)
+  IC_W_g(1) =     0.00   ! (m/sec)
+
+#_______________________________________________________________________
+# BOUNDARY CONDITIONS SECTION
+
+  BC_X_w(1:6) =  0.00  1.00  0.00  0.00  0.00  0.00  ! (m)
+  BC_X_e(1:6) =  0.00  1.00  1.00  1.00  1.00  1.00  ! (m)
+  BC_Y_s(1:6) =  0.00  0.00  0.00  1.00  0.00  0.00  ! (m)
+  BC_Y_n(1:6) =  1.00  1.00  0.00  1.00  1.00  1.00  ! (m)
+  BC_Z_b(1:6) =  0.00  0.00  0.00  0.00  0.00  1.00  ! (m)
+  BC_Z_t(1:6) =  1.00  1.00  1.00  1.00  0.00  1.00  ! (m)
+
+  BC_TYPE(1:6) = 6*'NSW'
+#_______________________________________________________________________
+# USER OUTPUT CONTROL
+
+  USR_DT(1) = 1.0
+  USR_TYPE(1) = 'ASCII'
+  USR_VAR(1) =  'Max bounce height'
+
+#_______________________________________________________________________
+# OUTPUT CONROL SECTION
+
+  RES_DT = 1.0d3  ! interval to update restart (.RES) file
+
+  FULL_LOG = .F.  ! display residuals on screen
+  NLOG = 250      ! time steps between updates to (.LOG) file
+
+  GROUP_RESID = .T.
+
+  PRINT_DES_DATA = .F.
+#_______________________________________________________________________
+# DMP SETUP
+
+  ENABLE_DMP_LOG = .F.
