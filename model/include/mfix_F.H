@@ -70,7 +70,6 @@ extern "C"
          Real* ro_g,     Real* rop_g,
          Real* u_g,      Real* v_g,      Real* w_g,
          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
-         int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
   void mfix_output_manager(

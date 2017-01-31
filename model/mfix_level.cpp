@@ -796,7 +796,7 @@ mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
         (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-        (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+        &dx, &dy, &dz);
     }
 
     fill_mf_bc(lev,*p_g[lev]);
