@@ -99,7 +99,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-      const Box& bx = mfi.validbox();
+      // const Box& bx = mfi.validbox();
 
       const int* sslo = rhs[mfi].loVect();
       const int* sshi = rhs[mfi].hiVect();
@@ -178,7 +178,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
-          const Box& bx = mfi.validbox();
+          // const Box& bx = mfi.validbox();
 
           const int* sslo = rhs[mfi].loVect();
           const int* sshi = rhs[mfi].hiVect();
@@ -202,7 +202,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
-        const Box& bx = mfi.validbox();
+        // const Box& bx = mfi.validbox();
 
         const int* sslo = rhs[mfi].loVect();
         const int* sshi = rhs[mfi].hiVect();
@@ -247,7 +247,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
-          const Box& bx = mfi.validbox();
+          // const Box& bx = mfi.validbox();
 
           const int* sslo = rhs[mfi].loVect();
           const int* sshi = rhs[mfi].hiVect();
@@ -270,7 +270,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
-        const Box& bx = mfi.validbox();
+        // const Box& bx = mfi.validbox();
 
         const int* sslo = rhs[mfi].loVect();
         const int* sshi = rhs[mfi].hiVect();

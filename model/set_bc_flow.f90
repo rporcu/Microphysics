@@ -21,7 +21,7 @@ MODULE set_bc_flow_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Parameter constants
-      use param1, only: ZERO, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
+      use param1, only: ZERO, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED, EQUAL
 ! Maximum number of BCs
       use param, only: DIMENSION_BC
 ! Maximum number of disperse phases
@@ -55,8 +55,8 @@ MODULE set_bc_flow_module
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Loop counter for BCs
-      INTEGER :: BCV
+! Loop counters
+      INTEGER :: BCV, I
 ! Total number of solids phases (continuum + discrete)
       INTEGER :: MMAX_TOT
 ! Flag to skip checks on indexed solid phase.
@@ -76,10 +76,15 @@ MODULE set_bc_flow_module
          IF(.NOT.BC_DEFINED(BCV)) CYCLE
 
 ! Determine which solids phases are present.
-         SKIP=(BC_ROP_S(BCV,:)==UNDEFINED.OR.BC_ROP_S(BCV,:)==ZERO) &
-            .AND.(BC_EP_S(BCV,:)==UNDEFINED.OR.BC_EP_S(BCV,:)==ZERO)
+         SKIP = .FALSE.
+         DO I = 1, DIM_M
+            IF ((EQUAL(BC_ROP_S(BCV,I), UNDEFINED).OR.EQUAL(BC_ROP_S(BCV,I), ZERO)) &
+               .AND.(EQUAL(BC_EP_S(BCV,I), UNDEFINED).OR.EQUAL(BC_EP_S(BCV,I), ZERO))) THEN
+               SKIP = .TRUE.
+            ENDIF
+         END DO
 
-         IF(MMAX_TOT == 1 .AND. BC_EP_g(BCV)/=ONE) SKIP(1) = .FALSE.
+         IF(MMAX_TOT == 1 .AND. .NOT.EQUAL(BC_EP_g(BCV), ONE)) SKIP(1) = .FALSE.
 
          SELECT CASE (TRIM(BC_TYPE(BCV)))
 

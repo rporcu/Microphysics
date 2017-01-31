@@ -9,7 +9,7 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
    use check_bc_walls_module, only: check_bc_walls
 
 ! Parameter constants
-   use param1, only: ZERO, ONE, UNDEFINED, IS_DEFINED, IS_UNDEFINED
+   use param1, only: ZERO, ONE, UNDEFINED, IS_DEFINED, IS_UNDEFINED, EQUAL
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -63,8 +63,8 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 
 ! Local Variables:
 !---------------------------------------------------------------------//
-! Loop counter for BCs
-      INTEGER :: BCV
+! Loop counters
+      INTEGER :: BCV, I
 ! Flag to skip checks on indexed solid phase.
       LOGICAL :: SKIP(1:DIM_M)
 !......................................................................!
@@ -82,8 +82,13 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
          IF (BC_DEFINED(BCV)) THEN
 
 ! Determine which solids phases are present.
-            SKIP=(BC_ROP_S(BCV,:)==UNDEFINED.OR.BC_ROP_S(BCV,:)==ZERO) &
-               .AND.(BC_EP_S(BCV,:)==UNDEFINED.OR.BC_EP_S(BCV,:)==ZERO)
+         SKIP = .FALSE.
+         DO I = 1, DIM_M
+            IF ((EQUAL(BC_ROP_S(BCV,I), UNDEFINED).OR.EQUAL(BC_ROP_S(BCV,I), ZERO)) &
+               .AND.(EQUAL(BC_EP_S(BCV,I), UNDEFINED).OR.EQUAL(BC_EP_S(BCV,I), ZERO))) THEN
+               SKIP = .TRUE.
+            ENDIF
+         ENDDO
 
             IF(MMAX == 1 .AND. ABS(BC_EP_g(BCV)+ONE) < EPSILON(ZERO)) SKIP(1) = .FALSE.
 

@@ -2,6 +2,7 @@ MODULE CFSLIDE_MODULE
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
+   use param1, only: zero, equal
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -47,7 +48,7 @@ MODULE CFSLIDE_MODULE
       IF (FTMD.GT.(MU*MU*FNMD)) THEN
 ! tangential force based on sliding friction
          PARTICLE_SLIDE = .TRUE.
-         IF(ALL(V_TANG.EQ.0)) THEN
+         IF(EQUAL(MINVAL(ABS(V_TANG)), ZERO)) THEN
             FT_tmp(:) =  MU * FT_tmp(:) * SQRT(FNMD/FTMD)
          ELSE
             FT_tmp(:) = -MU * V_TANG(:) * &

@@ -216,7 +216,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       const Box&  bx = mfi.validbox();
+       // const Box&  bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
        set_domain(sbx.loVect(),sbx.hiVect(),
@@ -403,7 +403,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         Real lMFlux=0.0L;   // actual GSMF mass flux
         Real resg=0.0L;     // fluid pressure residual
 
-        int lset_normg=1-set_normg;
+        // int lset_normg=1-set_normg;
         Real lnormg=normg;
 
         ///////////////// ---- call to iterate -------- /////////////////
@@ -494,7 +494,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = mfi.validbox();
+       // const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
        mfix_des_time_march(sbx.loVect(), sbx.hiVect(), &max_pip,
@@ -525,7 +525,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& sbx = (*flag[lev])[mfi].box();
+     // const Box& sbx = (*flag[lev])[mfi].box();
      mfix_output_manager(&max_pip,
       &time, &dt, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
@@ -650,7 +650,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = mfi.validbox();
+     // const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
      calc_coeff_all(sbx.loVect(), sbx.hiVect(), &max_pip,
@@ -1020,7 +1020,7 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = mfi.validbox();
+     // const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
      physical_prop(sbx.loVect(), sbx.hiVect(), &calc_flag,
@@ -1053,7 +1053,7 @@ mfix_level::usr3(int lev)
 void
 mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs)
 {
-    int ier, sweep_type, precond_type, max_it;
+    int sweep_type, precond_type, max_it;
     Real tol;
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
