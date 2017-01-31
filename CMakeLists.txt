@@ -14,7 +14,7 @@ if (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
   set (CMAKE_CXX_FLAGS_RELEASE "-g -Wall -O2" CACHE STRING "" FORCE)
   set (CMAKE_CXX_FLAGS_DEBUG   "-g -Wall -Wextra -O0" CACHE STRING "" FORCE)
   set (CMAKE_Fortran_FLAGS_RELEASE "-g -std=f2008 -fcheck=all -Wall -O2" CACHE STRING "" FORCE)
-  set (CMAKE_Fortran_FLAGS_DEBUG   "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface -Wuse-without-only" CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface" CACHE STRING "" FORCE)
 
 endif (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
 
@@ -78,7 +78,6 @@ set(F90_sources
   model/check_data/check_bc_outflow.f90
   model/check_data/check_bc_walls.f90
   model/check_data/check_boundary_conditions.f90
-  model/check_data/check_dmp_prereqs.f90
   model/check_data/check_gas_phase.f90
   model/check_data/check_geometry_prereqs.f90
   model/check_data/check_ic_common_discrete.f90

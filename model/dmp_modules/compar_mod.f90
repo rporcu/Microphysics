@@ -22,11 +22,4 @@
 ! specify the rank of the PE to be used for I/O
       INTEGER :: PE_IO = 0
 
-! nodesi, nodesj and nodesk represent the number of nodes
-! in i, j, k directions respectively.
-! nodesj = 1 (No decomposition along j-direction)
-! For 1-D decomposition, nodesk = nproc for a 3d problem and
-! nodesi = nproc for a 2D problem.
-      integer :: nodesi, nodesj, nodesk
-
       end module compar

@@ -1,5 +1,4 @@
 f90EXE_sources += compar_mod.f90
-f90EXE_sources += gridmap_mod.f90
 
 INCLUDE_LOCATIONS += $(MFIX_HOME)/model/dmp_modules
 VPATH_LOCATIONS   += $(MFIX_HOME)/model/dmp_modules

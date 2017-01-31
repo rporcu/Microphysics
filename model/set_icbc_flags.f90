@@ -334,7 +334,6 @@ MODULE set_icbc_flags_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_FLOW(slo,shi,flag)
 
-      use compar       , only: nodesi, nodesj, nodesk
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: domhi
@@ -391,20 +390,23 @@ MODULE set_icbc_flags_module
                CALL MOD_BC_K(BCV,flag,slo,shi)
 
             ! Extend the boundaries for cyclic implementation
-            IF(BC_I_W(BCV) == domlo(1) .AND. BC_I_E(BCV) == DOMHI(1) .AND. &
-               CYCLIC_X .AND. NODESI > 1) THEN
+            IF (BC_I_W(BCV) == domlo(1) .and. &
+                BC_I_E(BCV) == DOMHI(1) .and. &
+                CYCLIC_X) then
                    BC_I_W(BCV) = 1
-                   BC_I_E(BCV) = DOMHI(1)+1
+                   BC_I_E(BCV) = DOMHI(1)
             ENDIF
-            IF(BC_J_S(BCV) == domlo(2) .AND. BC_J_N(BCV) == DOMHI(2) .AND. &
-               CYCLIC_Y .AND. NODESJ > 1) THEN
+            IF(BC_J_S(BCV) == domlo(2) .and. &
+               BC_J_N(BCV) == DOMHI(2) .and. &
+               CYCLIC_Y) then
                BC_J_S(BCV) = 1
-               BC_J_N(BCV) = DOMHI(2)+1
+               BC_J_N(BCV) = DOMHI(2)
             ENDIF
-            IF(BC_K_B(BCV) == domlo(3) .AND. BC_K_T(BCV) == DOMHI(3) .AND. &
-               CYCLIC_Z .AND. NODESK > 1) THEN
+            IF(BC_K_B(BCV) == domlo(3) .and. &
+               BC_K_T(BCV) == DOMHI(3) .and. &
+               CYCLIC_Z) then
                BC_K_B(BCV) = 1
-               BC_K_T(BCV) = DOMHI(3)+1
+               BC_K_T(BCV) = DOMHI(3)
             ENDIF
 
             ! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag

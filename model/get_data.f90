@@ -15,7 +15,6 @@ MODULE GET_DATA_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_DATA(time, dt)
 
-      USE check_dmp_prereqs_module, only: check_dmp_prereqs
       USE check_gas_phase_module, only: check_gas_phase
       USE check_geometry_prereqs_module, only: check_geometry_prereqs
       USE check_numerics_module, only: check_numerics
@@ -62,7 +61,6 @@ MODULE GET_DATA_MODULE
 ! These checks verify that sufficient information was provided
 ! to setup the domain indices and DMP gridmap.
       CALL CHECK_GEOMETRY_PREREQS
-      CALL CHECK_DMP_PREREQS
 
       domlo(1) = 0
       domlo(2) = 0

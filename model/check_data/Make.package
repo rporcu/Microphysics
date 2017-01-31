@@ -5,7 +5,6 @@ f90EXE_sources +=   check_bc_inflow.f90
 f90EXE_sources +=   check_bc_outflow.f90
 f90EXE_sources +=   check_bc_walls.f90
 f90EXE_sources +=   check_boundary_conditions.f90
-f90EXE_sources +=   check_dmp_prereqs.f90
 f90EXE_sources +=   check_gas_phase.f90
 f90EXE_sources +=   check_geometry_prereqs.f90
 f90EXE_sources +=   check_ic_common_discrete.f90

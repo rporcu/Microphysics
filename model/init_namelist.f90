@@ -24,7 +24,6 @@ MODULE INIT_NAMELIST_MODULE
       SUBROUTINE INIT_NAMELIST
 
       USE bc
-      USE compar, only: nodesi, nodesj, nodesk
       USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
       USE deprecated_or_unknown_module, only: deprecated_or_unknown
       USE des_init_namelist_module, only: des_init_namelist
@@ -42,7 +41,7 @@ MODULE INIT_NAMELIST_MODULE
       USE ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
       USE ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       USE ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      USE leqsol, only: do_transpose, icheck_bicgs, is_serial, leq_it, leq_method, opt_parallel, use_doloop
+      USE leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
       USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
       USE output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
       USE output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
@@ -58,7 +57,7 @@ MODULE INIT_NAMELIST_MODULE
       USE remove_comment_module, only: remove_par_blanks
       USE residual, only: group_resid, resid_string
       USE run, only: automatic_restart, iter_restart, undefined_i, bdist_io
-      USE run, only: batch_wallclock, call_usr, chk_batchq_end, debug_resid, description, detect_stall, discretize, tstop, units
+      USE run, only: call_usr, description, detect_stall, discretize, tstop, units
       USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
       USE scales, only: p_ref, p_scale
       USE toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
@@ -220,9 +219,9 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Physical Parameters" required="false">
 !  <description>Gravity vector. [0.0, 9.80, 0.0] m/s^2 </description>
-      GRAVITY(1) =  0.00000d0
-      GRAVITY(2) = -9.80665d0
-      GRAVITY(3) =  0.00000d0
+      gravity(1) =  0.00000d0
+      gravity(2) = -9.80665d0
+      gravity(3) =  0.00000d0
 !</keyword>
 
 
@@ -428,14 +427,6 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
       USE_DOLOOP = .FALSE.
 !</keyword>
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    Calculate dot-products more efficiently (Serial runs only.)
-!  </description>
-      IS_SERIAL = .TRUE.
-!</keyword>
-
 
 !#####################################################################!
 !                      Geometry and Discretization                    !
@@ -1704,28 +1695,8 @@ MODULE INIT_NAMELIST_MODULE
 
 
 !<keyword category="Parallelization Control" required="false">
-!  <description>Number of grid blocks in x-direction.</description>
-      NODESI = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>Number of grid blocks in y-direction.</description>
-      NODESJ = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>Number of grid blocks in z-direction.</description>
-      NODESK = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
 !  <description>Print out additional statistics for parallel runs</description>
       solver_statistics = .FALSE.
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>Group residuals to reduce global collectives.</description>
-      DEBUG_RESID = .TRUE.
 !</keyword>
 
 !<keyword category="Parallelization Control" required="false">
@@ -1743,28 +1714,6 @@ MODULE INIT_NAMELIST_MODULE
 !                       Batch Queue Environment                       !
 !#####################################################################!
 
-
-!<keyword category="Batch Queue Environment" required="false">
-!  <description>
-!    Enables controlled termination feature when running under batch
-!    queue system to force MFIX to cleanly terminate before the end
-!    of wall clock allocated in the batch session.
-!  </description>
-      CHK_BATCHQ_END = .FALSE.
-!</keyword>
-
-!<keyword category="Batch Queue Environment" required="false">
-!  <description>Total wall-clock duration of the job, in seconds.</description>
-      BATCH_WALLCLOCK = 9000.0    ! set to 2.5 hrs for jaguarcnl w/ nproc<=512
-!</keyword>
-
-!<keyword category="Batch Queue Environment" required="false">
-!  <description>
-!    Buffer time specified to allow MFIX to write out the files and
-!    cleanly terminate before queue wall clock time limit is reached
-!    such that (BATCH_WALLCLOCK-TERM_BUFFER) is less than then batch
-!    queue wall clock time limit, in seconds.
-!  </description>
       TERM_BUFFER = 180.0         ! set to 3 minutes prior to end of job
 !</keyword>
 

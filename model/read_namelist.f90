@@ -17,7 +17,7 @@ MODULE read_namelist_module
       SUBROUTINE READ_NAMELIST(time, dt)
 
       USE bc
-      USE compar, only: mype, pe_io, nodesi, nodesj, nodesk
+      USE compar, only: mype, pe_io
       USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
       USE deprecated_or_unknown_module, only: deprecated_or_unknown
       USE discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
@@ -38,7 +38,7 @@ MODULE read_namelist_module
       USE ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
       USE ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       USE ic, only: ic_x_e, ic_x_g, ic_x_s, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      USE leqsol, only: do_transpose, icheck_bicgs, is_serial, leq_it, leq_method, opt_parallel, use_doloop
+      USE leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
       USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, minimize_dotproducts, solver_statistics, ival
       USE output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
       USE output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
@@ -49,7 +49,7 @@ MODULE read_namelist_module
       USE remove_comment_module, only: remove_comment
       USE remove_comment_module, only: remove_par_blanks
       USE residual, only: group_resid, resid_string
-      USE run, only: batch_wallclock, call_usr, chk_batchq_end, debug_resid, description, detect_stall, discretize, tstop, units
+      USE run, only: call_usr, description, detect_stall, discretize, tstop, units
       USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
       USE scales, only: p_ref, p_scale
       USE toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
@@ -199,7 +199,6 @@ MODULE read_namelist_module
       INCLUDE 'point_sources.inc'
       INCLUDE 'output_control.inc'
       INCLUDE 'usr_hooks.inc'
-      INCLUDE 'dmp_batch_control.inc'
       INCLUDE 'desnamelist.inc'
       INCLUDE 'usrnlst.inc'
 
@@ -342,25 +341,8 @@ MODULE read_namelist_module
       READ(STRING, NML=USER_HOOKS_UNLOCKED, IOSTAT=IOS)
       IF(IOS == 0)  RETURN
 
-
-
-! DMP and Batch Queue control keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&DMP_BATCH_CONTROL_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=DMP_BATCH_CONTROL_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
-      STRING=''; STRING = '&DMP_BATCH_CONTROL_UNLOCKED '//&
-         trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-      READ(STRING, NML=DMP_BATCH_CONTROL_UNLOCKED, IOSTAT=IOS)
-      IF(IOS == 0)  RETURN
-
-
 ! Stop processing keyword inputs if runing POST_MFIX
        IF(.NOT.READ_FULL) RETURN
-
 
       IF(READ_LOCKED) THEN
 
