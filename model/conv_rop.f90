@@ -49,10 +49,10 @@ MODULE CONV_ROP_MODULE
 
 
       if (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT)
+         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
       else
          CALL CONV_ROP1 (DISCRETIZE(1), &
-                         slo, shi, &
+                         slo, shi, lo, hi, &
                          flag, rop_g, u_g, v_g, w_g, &
                          rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
       end if
@@ -70,7 +70,7 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T)
+      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -102,6 +102,9 @@ MODULE CONV_ROP_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer, intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -170,7 +173,7 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP1(DISC, &
-                           slo, shi, flag, &
+                           slo, shi, lo, hi, flag, &
                            rop, u, v, w, &
                            rop_e, rop_n, rop_t, &
                            dt, dx, dy, dz)
@@ -184,7 +187,7 @@ MODULE CONV_ROP_MODULE
       USE xsi, only: calc_xsi
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
 ! Discretization scheme
       INTEGER, INTENT(IN) :: DISC
