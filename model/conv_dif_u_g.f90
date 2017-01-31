@@ -131,11 +131,12 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
-         slo, shi, &
+         slo, shi, lo, hi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
 
       integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
 
       ! diffusion through faces of given ijk u-momentum cell
       real(c_real), intent(OUT) :: d_fe, d_fw
@@ -269,95 +270,63 @@ contains
 ! Indices
       INTEGER :: I, J, K
 ! Face mass flux
-      real(c_real) :: flux_e, flux_w, flux_n, flux_s
-      real(c_real) :: flux_t, flux_b
+      real(c_real) :: flux_e, flux_n, flux_t
 ! Diffusion parameter
       real(c_real) :: D_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 
 !---------------------------------------------------------------------//
 
-      DO K = lo(3),hi(3)
-        DO J = lo(2),hi(2)
-          DO I = slo(1),hi(1)
-
-               IF(flag(i,j,k,2) >= 2000 .and. &
-                  flag(i,j,k,2) <= 2011) THEN
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = slo(1),hi(1)
 
 ! Calculate convection-diffusion fluxes through each of the faces
-                  flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
-                  if (i.eq.domlo(1)-1) then
-                     flux_w = flux_gE(i  ,j,k)
-                  else
-                     flux_w = HALF * (flux_gE(i-1,j,k) + flux_gE(i  ,j,k))
-                  end if
-                  flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i+1,j  ,k))
-                  flux_s = HALF * (flux_gN(i,j-1,k) + flux_gN(i+1,j-1,k))
-                  flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
-                  flux_b = HALF * (flux_gT(i,j,k-1) + flux_gT(i+1,j,k-1))
-                  CALL GET_UCELL_GDIFF_TERMS(&
-                     slo, shi, &
-                     d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag, &
-                     dx, dy, dz)
+               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
+               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
+               flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i+1,j,k))
+
+               CALL GET_UCELL_GDIFF_TERMS(&
+                  slo, shi, lo, hi, &
+                  d_fe, d_fw, d_fn, d_fs, &
+                  d_ft, d_fb, mu_g, i, j, k, flag, &
+                  dx, dy, dz)
 
 ! East face (i+1, j, k)
-                  IF (flux_e >= ZERO) THEN
-                     A_U_G(I,J,K,E) = D_Fe
-                     A_U_G(iplus(i,j,k),j,k,W) = D_Fe + flux_e
-                  ELSE
-                     A_U_G(I,J,K,E) = D_Fe - flux_e
-                     A_U_G(iplus(i,j,k),j,k,W) = D_Fe
-                  ENDIF
-! West face (i, j, k)
-                  IF(flag(iminus(i,j,k),j,k,2) < 2000 .or. &
-                     flag(iminus(i,j,k),j,k,2) > 2011) THEN
-                     IF (flux_w >= ZERO) THEN
-                        A_U_G(I,J,K,W) = D_Fw + flux_w
-                     ELSE
-                        A_U_G(I,J,K,W) = D_Fw
-                     ENDIF
-                  ENDIF
+               if (flux_e >= zero) then
+                  a_u_g(i,  j,k,e) = d_fe
+                  a_u_g(i+1,j,k,w) = d_fe + flux_e
+               else
+                  a_u_g(i,  j,k,e) = d_fe - flux_e
+                  a_u_g(i+1,j,k,w) = d_fe
+               endif
 
 ! North face (i+1/2, j+1/2, k)
-                  IF (flux_n >= ZERO) THEN
-                     A_U_G(I,J,K,N) = D_Fn
-                     A_U_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n
-                  ELSE
-                     A_U_G(I,J,K,N) = D_Fn - flux_n
-                     A_U_G(i,jplus(i,j,k),k,S) = D_Fn
-                  ENDIF
-
-! South face (i+1/2, j-1/2, k)
-                  IF(flag(i,jminus(i,j,k),k,2) < 2000 .or. &
-                     flag(i,jminus(i,j,k),k,2) > 2011) THEN
-                     IF (flux_s >= ZERO) THEN
-                        A_U_G(I,J,K,S) = D_Fs + flux_s
-                     ELSE
-                        A_U_G(I,J,K,S) = D_Fs
-                     ENDIF
-                  ENDIF
+               if (flux_n >= zero) then
+                  a_u_g(i,j,  k,n) = d_fn
+                  a_u_g(i,j+1,k,s) = d_fn + flux_n
+               else
+                  a_u_g(i,j,  k,n) = d_fn - flux_n
+                  a_u_g(i,j+1,k,s) = d_fn
+               endif
 
 ! Top face (i+1/2, j, k+1/2)
-                  IF (flux_t >= ZERO) THEN
-                     A_U_G(I,J,K,T) = D_Ft
-                     A_U_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t
-                  ELSE
-                     A_U_G(I,J,K,T) = D_Ft - flux_t
-                     A_U_G(i,j,kplus(i,j,k),B) = D_Ft
-                  ENDIF
+               if (flux_t >= zero) then
+                  a_u_g(i,j,k,  t) = d_ft
+                  a_u_g(i,j,k+1,b) = d_ft + flux_t
+               else
+                  a_u_g(i,j,k,  t) = d_ft - flux_t
+                  a_u_g(i,j,k+1,b) = d_ft
+               endif
+
+! South face (i+1/2, j-1/2, k)
+               if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
+
 ! Bottom face (i+1/2, j, k-1/2)
-                  IF(flag(i,j,kminus(i,j,k),2) < 2000 .or. &
-                     flag(i,j,kminus(i,j,k),2) > 2011) THEN
-                     IF (flux_b >= ZERO) THEN
-                        A_U_G(I,J,K,B) = D_Fb + flux_b
-                     ELSE
-                        A_U_G(I,J,K,B) = D_Fb
-                     ENDIF
-                  ENDIF
-               ENDIF
-            ENDDO
-         ENDDO
-      ENDDO
+               if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
+
+            enddo
+         enddo
+      enddo
 
       return
    end subroutine store_a_u_g0
@@ -384,7 +353,6 @@ contains
          A_U_g, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
          flag, dt, dx, dy, dz)
 
-      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       use matrix   , only: e, w, n, s, t, b
       use run      , only: discretize
 
@@ -432,8 +400,7 @@ contains
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
-      real(c_real) :: flux_e, flux_w, flux_n, flux_s
-      real(c_real) :: flux_t, flux_b
+      real(c_real) :: flux_e, flux_n, flux_t
 
 ! x, y, z directional velocity
       real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
@@ -455,65 +422,40 @@ contains
          u_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
          dt, dx, dy, dz)
 
-      do K = lo(3),hi(3)
-         do J = lo(2),hi(2)
-            do I = slo(1),hi(1)
 
-               IF(flag(i,j,k,2) >= 2000 .and. &
-                  flag(i,j,k,2) <= 2011) THEN
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = slo(1),hi(1)
 
 ! Calculate convection-diffusion fluxes through each of the faces
-                  flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
-                  flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i+1,j  ,k))
-                  flux_s = HALF * (flux_gN(i,j-1,k) + flux_gN(i+1,j-1,k))
-                  flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
-                  flux_b = HALF * (flux_gT(i,j,k-1) + flux_gT(i+1,j,k-1))
-                  if (i.eq.domlo(1)-1) then
-                     flux_w = flux_gE(i  ,j,k)
-                  else
-                     flux_w = HALF * (flux_gE(i-1,j,k) + flux_gE(i  ,j,k))
-                  end if
-                  CALL GET_UCELL_GDIFF_TERMS(&
-                     slo, shi, &
-                     d_fe, d_fw, d_fn, d_fs, &
-                     d_ft, d_fb, mu_g, i, j, k, flag, &
-                     dx, dy, dz)
+               flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
+               flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i+1,j  ,k))
+               flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
+
+               CALL GET_UCELL_GDIFF_TERMS(&
+                  slo, shi, lo, hi, &
+                  d_fe, d_fw, d_fn, d_fs, &
+                  d_ft, d_fb, mu_g, i, j, k, flag, &
+                  dx, dy, dz)
 
 ! East face (i+1, j, k)
-                  A_U_G(I,J,K,E) = D_Fe - XSI_E(i,j,k) * flux_e
-                  A_U_G(iplus(i,j,k),j,k,W) = D_Fe + flux_e*&
-                     (ONE - XSI_E(i,j,k))
-! West face (i, j, k)
-                  IF(flag(iminus(i,j,k),j,k,2) < 2000 .or. &
-                     flag(iminus(i,j,k),j,k,2) > 2011) THEN
-                     A_U_G(I,J,K,W) = D_Fw + flux_w*&
-                        (ONE - XSI_E(iminus(i,j,k),j,k))
-                  ENDIF
-
+               a_u_g(i,  j,k,e) = d_fe - flux_e*(xsi_e(i,j,k))
+               a_u_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
 
 ! North face (i+1/2, j+1/2, k)
-                  A_U_G(I,J,K,N) = D_Fn - XSI_N(i,j,k) * flux_n
-                  A_U_G(i,jplus(i,j,k),k,S) = D_Fn + flux_n*&
-                     (ONE - XSI_N(i,j,k))
-! South face (i+1/2, j-1/2, k)
-                  IF(flag(i,jminus(i,j,k),k,2) < 2000 .or. &
-                     flag(i,jminus(i,j,k),k,2) > 2011) THEN
-                     A_U_G(I,J,K,S) = D_Fs + flux_s*&
-                        (ONE - XSI_N(i,jminus(i,j,k),k))
-                  ENDIF
+               a_u_g(i,j,  k,n) = d_fn - flux_n*(xsi_n(i,j,k))
+               a_u_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
 ! Top face (i+1/2, j, k+1/2)
-                  A_U_G(I,J,K,T) = D_Ft - XSI_T(i,j,k) * flux_t
-                  A_U_G(i,j,kplus(i,j,k),B) = D_Ft + flux_t*&
-                     (ONE - XSI_T(i,j,k))
-! Bottom face (i+1/2, j, k-1/2)
-                  IF(flag(i,j,kminus(i,j,k),2) < 2000 .or. &
-                     flag(i,j,kminus(i,j,k),2) > 2011) THEN
-                     A_U_G(I,J,K,B) = D_Fb + flux_b*&
-                        (ONE - XSI_T(i,j,kminus(i,j,k)))
-                  endif
+               a_u_g(i,j,k,  t) = d_ft - flux_t*(xsi_t(i,j,k))
+               a_u_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
-               endif
+! South face (i+1/2, j-1/2, k)
+               if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
+
+! Bottom face (i+1/2, j, k-1/2)
+               if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
+
             enddo
          enddo
       enddo
@@ -521,7 +463,6 @@ contains
       deallocate( u, v, ww )
       deallocate( xsi_e, xsi_n, xsi_t)
 
-
-      RETURN
-      END SUBROUTINE STORE_A_U_G1
+      return
+   end subroutine store_a_u_g1
 end module u_g_conv_dif
