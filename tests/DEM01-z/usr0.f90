@@ -31,7 +31,7 @@
       lRad   = 0.1d0
       h0     = 0.5d0
 
-      lGrav  = -gravity(1)
+      lGrav  = -gravity(3)
 
       lMass = (4.0D0/3.0D0)*PI*(lRad**3)*2600.0d0
 
