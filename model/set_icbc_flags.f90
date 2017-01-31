@@ -23,14 +23,14 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE SET_ICBC_FLAG(slo,shi,lo,hi,flag)
+      SUBROUTINE SET_ICBC_FLAG(slo,shi,flag)
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      CALL INIT_ICBC_FLAG(slo,shi,lo,hi,flag)
+      CALL INIT_ICBC_FLAG(slo,shi,flag)
 
       CALL SET_IC_FLAGS(slo,shi,flag)
 
@@ -48,11 +48,11 @@ MODULE set_icbc_flags_module
 ! Purpose: Provided a detailed error message when the sum of volume    !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE INIT_ICBC_FLAG(slo,shi,lo,hi,flag)
+      SUBROUTINE INIT_ICBC_FLAG(slo,shi,flag)
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

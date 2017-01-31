@@ -478,32 +478,4 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 
       END SUBROUTINE SOLIDS_VOLFLOW_TO_VELOCITY
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: FLOW_TO_VEL                                             C
-!  Purpose: Convert volumetric and mass flow rates to velocities       C
-!     A specified mass flow rate is first converted to volumetric      C
-!     flow rate. The volumetric flow rate is then converted to a       C
-!     velocity.                                                        C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 28-JUL-92  C
-!  Reviewer: W. Rogers                                Date: 11-DEC-92  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      SUBROUTINE FLOW_TO_VEL(DO_VEL_CHECK)
-
-      LOGICAL :: DO_VEL_CHECK
-
-      END SUBROUTINE FLOW_TO_VEL
 END MODULE FLOW_TO_VEL_NEW_MODULE

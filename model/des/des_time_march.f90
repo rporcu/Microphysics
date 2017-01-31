@@ -11,9 +11,9 @@ module des_time_march_module
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, max_pip, ep_g, p_g, &
-         u_g, v_g, w_g, ro_g, rop_g, mu_g, particle_state, particle_phase, &
-         des_radius,  ro_sol, pvol, pmass, omoi, des_usr_var, &
+      SUBROUTINE DES_TIME_MARCH(slo, shi, max_pip, ep_g, p_g, &
+         u_g, v_g, w_g, ro_g, mu_g, particle_state, particle_phase, &
+         des_radius,  pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          drag_fc, fc, tow, pairs, pair_count, flag, &
          time, dt, dx, dy, dz, nstep) &
@@ -39,7 +39,7 @@ module des_time_march_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(inout) :: ep_g&
@@ -54,8 +54,6 @@ module des_time_march_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
@@ -68,7 +66,6 @@ module des_time_march_module
       real(c_real), intent(inout) :: pvol(max_pip)
       real(c_real), intent(inout) :: pmass(max_pip)
       real(c_real), intent(inout) :: des_radius(max_pip)
-      real(c_real), intent(inout) :: ro_sol(max_pip)
       real(c_real), intent(inout) :: omoi(max_pip)
 
       real(c_real), intent(inout) :: des_pos_new(max_pip,3)

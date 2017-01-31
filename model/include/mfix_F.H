@@ -12,7 +12,7 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void set_domain(const int* slo, const int* shi, const int* lo, const int* hi,
+  void set_domain(const int* slo, const int* shi,
                   int* flag, Real* dx, Real* dy, Real* dz);
 
   void fill_bc(Real* s, const int* slo, const int* shi,
@@ -252,12 +252,12 @@ extern "C"
 
   void  mfix_des_time_march(
           const int* slo,       const int* shi,
-          const int*  lo,       const int* hi,        const int* max_pip,
+          const int* max_pip,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,
-          Real* ro_g,           Real* rop_g,          Real* mu_g,
+          Real* ro_g,           Real* mu_g,
           int* particle_state,  int* particle_phase,
-          Real* des_radius,     Real* ro_sol,
+          Real* des_radius,
           Real* pvol,           Real* pmass,
           Real* omoi,           Real* des_usr_var,
           Real* des_pos_new,    Real* des_vel_new,    Real* omega_new,

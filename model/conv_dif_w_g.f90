@@ -123,13 +123,12 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, &
          dx, dy, dz)
 
       integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
 
       ! diffusion through faces of given w-momentum cell
       real(c_real), intent(OUT) :: d_fe, d_fw
@@ -279,7 +278,7 @@ module w_g_conv_dif
                flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i,j,k+1))
 
                CALL GET_WCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
@@ -386,8 +385,8 @@ module w_g_conv_dif
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
-      real(c_real) :: flux_e, flux_w, flux_n, flux_s
-      real(c_real) :: flux_t, flux_b
+      real(c_real) :: flux_e, flux_n
+      real(c_real) :: flux_t
 
 ! x, y, z directional velocity
       real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
@@ -418,7 +417,7 @@ module w_g_conv_dif
                flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j,k+1))
 
                CALL GET_WCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 

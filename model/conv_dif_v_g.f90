@@ -128,7 +128,7 @@ module v_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K,flag, &
          dx, dy, dz)
@@ -139,7 +139,6 @@ module v_g_conv_dif
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
 
       ! diffusion through faces of given v-momentum cell
       real(c_real), INTENT(  OUT) :: d_fe, d_fw
@@ -260,8 +259,8 @@ module v_g_conv_dif
 ! Indices
       INTEGER :: I, J, K
 ! Face mass flux
-      real(c_real) :: flux_e, flux_w, flux_n, flux_s
-      real(c_real) :: flux_t, flux_b
+      real(c_real) :: flux_e, flux_n
+      real(c_real) :: flux_t
 ! Diffusion parameter
       real(c_real) :: D_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 
@@ -277,7 +276,7 @@ module v_g_conv_dif
                flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j+1,k))
 
                CALL GET_VCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 
@@ -385,8 +384,8 @@ module v_g_conv_dif
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
-      real(c_real) :: Flux_e, flux_w, flux_n, flux_s
-      real(c_real) :: flux_t, flux_b
+      real(c_real) :: Flux_e, flux_n
+      real(c_real) :: flux_t
 
 ! x, y, z directional velocity
       real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
@@ -419,7 +418,7 @@ module v_g_conv_dif
                flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j+1,k))
 
                CALL GET_VCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
 

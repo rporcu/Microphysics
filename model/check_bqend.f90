@@ -13,8 +13,6 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use run, only: TERM_BUFFER
-
       use time_cpu, only: WALL_START
 
       use machine, only: WALL_TIME
@@ -30,9 +28,7 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 ! Logical flags for hault cases.
       LOGICAL :: USER_HAULT
 ! Elapsed wall time, and fancy formatted buffer/batch queue times.
-      real(c_real) :: WALL_STOP, FANCY_BUFF, FANCY_BATCH
-! Time units for formatted output.
-      CHARACTER(LEN=4) :: WT_UNIT, BF_UNIT, BC_UNIT
+      real(c_real) :: WALL_STOP
 
 ! Calculate the current elapsed wall time.
       WALL_STOP = WALL_TIME()
@@ -40,11 +36,6 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 
 ! Set flags for wall time exceeded or user specified hault.
       INQUIRE(file="MFIX.STOP", exist=USER_HAULT)
-
- 1100 FORMAT(2/,15('='),' REQUESTED CPU TIME LIMIT REACHED ',('='),/   &
-         'Batch Wall Time:',3X,F9.2,1X,A,/'Elapsed Wall Time: ',F9.2,  &
-         1X,A,/'Term Buffer:',7X,F9.2,A,/15('='),' REQUESTED CPU ',    &
-         'TIME LIMIT REACHED ',('='))
 
 ! Report that the hault signal was detected.
       IF(USER_HAULT) THEN

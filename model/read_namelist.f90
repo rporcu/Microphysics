@@ -38,8 +38,8 @@ MODULE read_namelist_module
       USE ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
       USE ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       USE ic, only: ic_x_e, ic_x_g, ic_x_s, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      USE leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
-      USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, minimize_dotproducts, solver_statistics, ival
+      USE leqsol, only: do_transpose, leq_it, leq_method
+      USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       USE output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
       USE output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
       USE output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
@@ -50,7 +50,7 @@ MODULE read_namelist_module
       USE remove_comment_module, only: remove_par_blanks
       USE residual, only: group_resid, resid_string
       USE run, only: call_usr, description, detect_stall, discretize, tstop, units
-      USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
+      USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
       USE scales, only: p_ref, p_scale
       USE toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
       USE ur_facs, only: ur_fac

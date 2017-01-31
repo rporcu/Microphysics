@@ -131,12 +131,11 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
-         slo, shi, lo, hi, &
+         slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
 
       integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
 
       ! diffusion through faces of given ijk u-momentum cell
       real(c_real), intent(OUT) :: d_fe, d_fw
@@ -286,7 +285,7 @@ contains
                flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i+1,j,k))
 
                CALL GET_UCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, &
                   dx, dy, dz)
@@ -433,7 +432,7 @@ contains
                flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
 
                CALL GET_UCELL_GDIFF_TERMS(&
-                  slo, shi, lo, hi, &
+                  slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
                   d_ft, d_fb, mu_g, i, j, k, flag, &
                   dx, dy, dz)

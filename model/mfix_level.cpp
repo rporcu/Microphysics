@@ -219,7 +219,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
        const Box&  bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
-       set_domain(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
+       set_domain(sbx.loVect(),sbx.hiVect(),
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
     fill_mf_bc(lev,*flag[lev]);
@@ -497,13 +497,13 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
        const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
-       mfix_des_time_march(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(), &max_pip,
+       mfix_des_time_march(sbx.loVect(), sbx.hiVect(), &max_pip,
         (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-        (*ro_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+        (*ro_g[lev])[mfi].dataPtr(),
         (*mu_g[lev])[mfi].dataPtr(),
         particle_state.dataPtr(), particle_phase.dataPtr(),
-        des_radius.dataPtr(),     ro_sol.dataPtr(),
+        des_radius.dataPtr(),
         pvol.dataPtr(),           pmass.dataPtr(),
         omoi.dataPtr(),           des_usr_var.dataPtr(),
         des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),

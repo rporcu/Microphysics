@@ -17,7 +17,7 @@ module set_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_domain(slo,shi,lo,hi,flag,dx,dy,dz) &
+      subroutine set_domain(slo,shi,flag,dx,dy,dz) &
           bind(C, name="set_domain")
 
       ! Cyclic domain flags.
@@ -42,7 +42,7 @@ module set_domain_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real)  , intent(in   ) :: dx,dy,dz
 
@@ -66,7 +66,7 @@ module set_domain_module
       call check_point_sources(dx,dy,dz)
 
       ! This call needs to occur before any of the IC/BC checks.
-      call set_icbc_flag(slo,shi,lo,hi,flag)
+      call set_icbc_flag(slo,shi,flag)
 
       ! Compute area of boundary surfaces.
       call get_bc_area(dx,dy,dz)
