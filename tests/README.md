@@ -21,7 +21,7 @@ A particle free-falls in a vacuum and collides with a wall. The position and vel
 A particle free-falls in a vacuum and collies with a wall several times. The resulting height the particle reaches post-collision is reported. This case provides a comparison between the linear spring-dashpot model and the hard-sphere model where collisions are instantaneous.
 
 
-* **_DEM03:_ Two stached, compresseed particles** [1]
+* **_DEM03:_ Two stacked, compressed particles** [1]
 
 Two particles are compressed between two walls, and their center positions are reported. This case serves to verify the linear spring-dashpot collision model through analysis of a multi-particle, enduring collision.
 
@@ -31,7 +31,7 @@ Two particles are compressed between two walls, and their center positions are r
 A spherical particle is rolled on a rough surface. The angular and translational velocities are reported. This case serves to verify the soft-spring collision model through the analysis of the rolling friction model.
 
 
-* **_DEM05:_ Oblique particle collsion** [1]
+* **_DEM05:_ Oblique particle collision** [1]
 
 A single particle strikes an angled anvil. The post-collision angle and angular velocity are reported. This case serves to verify the normal and tangential components of both the linear spring-dashpot model and Hertzian model.
 
