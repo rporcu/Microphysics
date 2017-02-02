@@ -63,14 +63,6 @@ extern "C"
          Real* pvol, int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
-  void set_bc1(
-         Real* time,     Real* dt,
-         const int* slo, const int* shi,
-         Real* p_g,      Real* ep_g,
-         Real* ro_g,     Real* rop_g,
-         Real* u_g,      Real* v_g,      Real* w_g,
-         Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
-         Real* dx,       Real* dy,       Real* dz);
 
   void mfix_output_manager(
          const int* max_pip,

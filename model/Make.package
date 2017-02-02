@@ -1,26 +1,26 @@
-CEXE_headers 	+= mfix_level.H
-CEXE_headers 	+= ParticleContainer.H
-FEXE_headers 	+= include/mfix_F.H
+CEXE_headers  += mfix_level.H
+CEXE_headers  += ParticleContainer.H
+FEXE_headers  += include/mfix_F.H
 
 CEXE_sources += main.cpp
 CEXE_sources += mfix_level.cpp
 CEXE_sources += ParticleContainer.cpp
 
-f90EXE_sources += adjust_a_g.f90 	
-f90EXE_sources += adjust_dt_mod.f90 	
+f90EXE_sources += adjust_a_g.f90
+f90EXE_sources += adjust_dt_mod.f90
 f90EXE_sources += adjust_leq.f90
-f90EXE_sources += bc_mod.f90 		
+f90EXE_sources += bc_mod.f90
 F90EXE_sources += boxlib_to_mfix.F90
-f90EXE_sources += calc_cell.f90 		
+f90EXE_sources += calc_cell.f90
 f90EXE_sources += calc_coeff.f90
-f90EXE_sources += calc_d.f90 		
-f90EXE_sources += calc_mflux.f90 		
+f90EXE_sources += calc_d.f90
+f90EXE_sources += calc_mflux.f90
 f90EXE_sources += calc_mu_g.f90
-f90EXE_sources += calc_outflow.f90 	
+f90EXE_sources += calc_outflow.f90
 f90EXE_sources += calc_ro_g.f90
-f90EXE_sources += calc_trd_g.f90 	
+f90EXE_sources += calc_trd_g.f90
 f90EXE_sources += check_bqend.f90
-f90EXE_sources += check_convergence.f90 
+f90EXE_sources += check_convergence.f90
 f90EXE_sources += check_data_20.f90
 f90EXE_sources += check_data_30.f90
 f90EXE_sources += check_plane.f90
@@ -69,7 +69,6 @@ f90EXE_sources += residual_mod.f90
 f90EXE_sources += run_mod.f90
 f90EXE_sources += scales_mod.f90
 f90EXE_sources += set_bc0.f90
-f90EXE_sources += set_bc1.f90
 f90EXE_sources += set_bc_flow.f90
 f90EXE_sources += set_domain.f90
 f90EXE_sources += set_flags.f90
@@ -98,4 +97,3 @@ f90EXE_sources += zero_norm_vel.f90
 
 INCLUDE_LOCATIONS += $(MFIX_HOME)/model
 VPATH_LOCATIONS   += $(MFIX_HOME)/model
-

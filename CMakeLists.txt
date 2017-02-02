@@ -177,7 +177,6 @@ set(F90_sources
   model/run_mod.f90
   model/scales_mod.f90
   model/set_bc0.f90
-  model/set_bc1.f90
   model/set_bc_flow.f90
   model/set_domain.f90
   model/set_flags.f90

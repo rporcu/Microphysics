@@ -363,9 +363,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
-      // Update boundary conditions
-      mfix_set_bc1(lev,time,dt);
-
       // Calculate transport coefficients
       mfix_calc_all_coeffs(lev);
 
@@ -392,9 +389,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
         // Calculate face mass fluxes
         mfix_calc_mflux(lev);
-
-        // Update boundary conditions
-        mfix_set_bc1(lev,time,dt);
 
         int converged=0;
         int nit=0;          // number of iterations
@@ -439,9 +433,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Calculate face mass fluxes
           mfix_calc_mflux(lev);
-
-          // Update boundary conditions
-          mfix_set_bc1(lev,time,dt);
 
           // Display current iteration residuals
           display_resid(&nit);
@@ -778,40 +769,6 @@ mfix_level::mfix_calc_mflux(int lev)
   fill_mf_bc(lev,*flux_gT[lev]);
 }
 
-void
-mfix_level::mfix_set_bc1(int lev, Real time, Real dt)
-{
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-    {
-       const Box& sbx = (*flag[lev])[mfi].box();
-
-       set_bc1(
-        &time,                   &dt,
-         sbx.loVect(),           sbx.hiVect(),
-        (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
-        (*ro_g[lev])[mfi].dataPtr(),     (*rop_g[lev])[mfi].dataPtr(),
-        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-        &dx, &dy, &dz);
-    }
-
-    fill_mf_bc(lev,*p_g[lev]);
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-
-    fill_mf_bc(lev,*u_g[lev]);
-    fill_mf_bc(lev,*v_g[lev]);
-    fill_mf_bc(lev,*w_g[lev]);
-
-    fill_mf_bc(lev,*flux_gE[lev]);
-    fill_mf_bc(lev,*flux_gN[lev]);
-    fill_mf_bc(lev,*flux_gT[lev]);
-}
 
 void
 mfix_level::mfix_set_wall_bc(int lev)

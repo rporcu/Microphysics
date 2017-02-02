@@ -61,8 +61,6 @@ protected:
 
     void mfix_set_wall_bc (int lev);
 
-    void mfix_set_bc1 (int lev, Real time, Real dt);
-
     void mfix_solve_for_vels (int lev, Real dt);
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
