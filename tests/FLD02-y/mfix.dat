@@ -38,10 +38,10 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 1.00     IMAX =  3
-  ZLENGTH = 1.00     KMAX =  1
+  YLENGTH = 1.00     JMAX =  3
+  XLENGTH = 1.00     IMAX =  1
 
-  YLENGTH = 0.01   ! JMAX passed as argument
+  ZLENGTH = 0.01   ! KMAX passed as argument
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
@@ -52,17 +52,15 @@
 #_______________________________________________________________________
 # SOLIDS-PHASE SECTION
 
-
-
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
 
+  IC_Y_s(1) =   0.00  ! (m)
+  IC_Y_n(1) =   1.00  ! (m)
+  IC_Z_b(1) =   0.00  ! (m)
+  IC_Z_t(1) =   0.01  ! (m)
   IC_X_w(1) =   0.00  ! (m)
   IC_X_e(1) =   1.00  ! (m)
-  IC_Y_s(1) =   0.00  ! (m)
-  IC_Y_n(1) =   0.01  ! (m)
-  IC_Z_b(1) =   0.00  ! (m)
-  IC_Z_t(1) =   1.00  ! (m)
 
   IC_EP_g(1) =  1.00
 
@@ -75,49 +73,49 @@
 #_______________________________________________________________________
 # BOUNDARY CONDITIONS SECTION
 
-! The east and west boundaries are set a runtime as cyclic with a
-! specified pressure drop (DELP_X)
+! The north and south boundaries are set a runtime as cyclic with a
+! specified pressure drop (DELP_Y)
 !---------------------------------------------------------------------//
-  CYCLIC_X_PD = .TRUE.
-! DELP_X = [-3.0, 3.0]  -passed as argument-
+  CYCLIC_Y_PD = .TRUE.
+! DELP_Y = [-3.0, 3.0]  -passed as argument-
 
-! The north was has a constant velocity of 10.0 m/s, and is set using
-! a partial slip wall (PSW):  dU/dn + hw(U-Uw) = 0 where Uw = 10.0 m/s
+! The top wall has a constant velocity of 10.0 m/s, and is set using
+! a partial slip wall (PSW):  dV/dn + hw(V-Vw) = 0 where Vw = 10.0 m/s
 ! and hw=unsepcified (i.e., no-slip moving wall).
 !---------------------------------------------------------------------//
+  BC_Y_s(1) =   0.00  ! (m)
+  BC_Y_n(1) =   1.00  ! (m)
+  BC_Z_b(1) =   0.01  ! (m)
+  BC_Z_t(1) =   0.01  ! (m)
   BC_X_w(1) =   0.00  ! (m)
   BC_X_e(1) =   1.00  ! (m)
-  BC_Y_s(1) =   0.01  ! (m)
-  BC_Y_n(1) =   0.01  ! (m)
-  BC_Z_b(1) =   0.00  ! (m)
-  BC_Z_t(1) =   1.00  ! (m)
 
   BC_TYPE(1)  = 'PSW'
 
-  BC_Uw_g(1) = 10.00   ! (m/sec)
-  BC_Vw_g(1) =  0.00   ! (m/sec)
+  BC_Uw_g(1) =  0.00   ! (m/sec)
+  BC_Vw_g(1) = 10.00   ! (m/sec)
   BC_Ww_g(1) =  0.00   ! (m/sec)
 
 
-! The south wall is no-slip.
+! The bottom wall is no-slip.
 !---------------------------------------------------------------------//
+  BC_Y_s(2) =   0.00  ! (m)
+  BC_Y_n(2) =   1.00  ! (m)
+  BC_Z_b(2) =   0.00  ! (m)
+  BC_Z_t(2) =   0.00  ! (m)
   BC_X_w(2) =   0.00  ! (m)
   BC_X_e(2) =   1.00  ! (m)
-  BC_Y_s(2) =   0.00  ! (m)
-  BC_Y_n(2) =   0.00  ! (m)
-  BC_Z_b(2) =   0.00  ! (m)
-  BC_Z_t(2) =   1.00  ! (m)
 
   BC_TYPE(2) =  'NSW'
 
 ! Front and back walls are free-slip
 !---------------------------------------------------------------------//
-  BC_X_w(3:4) =   0.00    0.00  ! (m)
-  BC_X_e(3:4) =   1.00    1.00  ! (m)
   BC_Y_s(3:4) =   0.00    0.00  ! (m)
-  BC_Y_n(3:4) =   0.01    0.01  ! (m)
-  BC_Z_b(3:4) =   0.00    1.00  ! (m)
-  BC_Z_t(3:4) =   0.00    1.00  ! (m)
+  BC_Y_n(3:4) =   1.00    1.00  ! (m)
+  BC_Z_b(3:4) =   0.00    0.00  ! (m)
+  BC_Z_t(3:4) =   0.01    0.01  ! (m)
+  BC_X_w(3:4) =   0.00    1.00  ! (m)
+  BC_X_e(3:4) =   0.00    1.00  ! (m)
 
   BC_Type(3:4) = 'FSW'    'FSW'
 
