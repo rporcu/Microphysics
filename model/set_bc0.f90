@@ -21,11 +21,10 @@ module set_bc0_module
 
 ! Modules
 !--------------------------------------------------------------------//
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use bc, only: bc_p_g
-      use bc, only: bc_ep_g
-      use ic, only: PINF_, POUT_, MINF_, MOUT_
-      use geometry      , only: domlo, domhi
+      use set_bc_type_module, only: set_bc_type
+      use bc                , only: bc_u_g, bc_v_g, bc_w_g, bc_p_g, bc_ep_g
+      use ic                , only: PINF_, POUT_, MINF_, MOUT_
+      use geometry          , only: domlo, domhi
 
       use scales, only: scale_pressure
 
@@ -594,121 +593,5 @@ module set_bc0_module
       IERR = 0
 
    end subroutine IJK_Pg_SEARCH
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc_type                                             C
-!  Purpose: This subroutine does the initial setting of all boundary   C
-!  conditions. The user specifications of the boundary conditions are  C
-!  checked for veracity in various check_data/ routines:               C
-!  (e.g., check_boundary_conditions).                                  C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 29-JAN-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   subroutine set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
-         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
-
-      use bc, only: bc_type, bc_defined
-      use bc, only: bc_k_b, bc_k_t
-      use bc, only: bc_j_s, bc_j_n
-      use bc, only: bc_i_w, bc_i_e
-
-      use param, only: dimension_bc
-
-      implicit none
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      integer(c_int), intent(  out) :: bc_i_type&
-         (2,slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(  out) :: bc_j_type&
-         (2,slo(1):shi(1),slo(3):shi(3))
-      integer(c_int), intent(  out) :: bc_k_type&
-         (2,slo(1):shi(1),slo(2):shi(2))
-
-      integer(c_int), intent(  out) :: bc_i_ptr&
-         (2,slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(  out) :: bc_j_ptr&
-         (2,slo(1):shi(1),slo(3):shi(3))
-      integer(c_int), intent(  out) :: bc_k_ptr&
-         (2,slo(1):shi(1),slo(2):shi(2))
-
-! local index for boundary condition
-      integer :: lc, bcv, i, j, k
-
-      bc_i_type(1,:,:) = flag(slo(1),:,:,1)
-      bc_i_type(2,:,:) = flag(shi(1),:,:,1)
-      bc_j_type(1,:,:) = flag(:,slo(2),:,1)
-      bc_j_type(2,:,:) = flag(:,shi(2),:,1)
-      bc_k_type(1,:,:) = flag(:,:,slo(3),1)
-      bc_k_type(2,:,:) = flag(:,:,shi(3),1)
-
-      bc_i_ptr = -1
-      bc_j_ptr = -1
-      bc_k_ptr = -1
-
-      do bcv = 1, dimension_bc
-         if (bc_defined(bcv)) then
-
-            if (bc_i_w(bcv) == bc_i_e(bcv)) then
-               if(bc_i_w(bcv) == slo(1)) then
-                  i  = slo(1)
-                  lc = 1
-               elseif(bc_i_w(bcv) == shi(1)) then
-                  i  = shi(1)
-                  lc = 2
-               else
-                  lc = 0
-               endif
-               if(lc /= 0) then
-                  bc_i_ptr(lc,bc_j_s(bcv):bc_j_n(bcv),&
-                              bc_k_b(bcv):bc_k_t(bcv)) = bcv
-               endif
-            endif
-
-            if (bc_j_s(bcv) == bc_j_n(bcv)) then
-               if(bc_j_s(bcv) == slo(2)) then
-                  j = slo(2)
-                  lc = 1
-               elseif(bc_j_s(bcv) == shi(2)) then
-                  j = shi(2)
-                  lc = 2
-               else
-                  lc = 0
-               endif
-               if(lc /= 0) then
-                  bc_j_ptr(lc,bc_i_w(bcv):bc_i_e(bcv),&
-                              bc_k_b(bcv):bc_k_t(bcv)) = bcv
-               endif
-            endif
-
-            if (bc_k_b(bcv) == bc_k_t(bcv)) then
-               if(bc_k_b(bcv) == slo(3)) then
-                  k = slo(3)
-                  lc = 1
-               elseif(bc_k_b(bcv) == shi(3)) then
-                  k = shi(3)
-                  lc = 2
-               else
-                  lc = 0
-               endif
-               if(lc /= 0) then
-                  bc_k_ptr(lc,bc_i_w(bcv):bc_i_e(bcv),&
-                              bc_j_s(bcv):bc_j_n(bcv)) = bcv
-               endif
-            endif
-
-         endif
-      enddo
-
-   end subroutine set_bc_type
-
-
 
    end module set_bc0_module

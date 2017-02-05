@@ -23,7 +23,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
 ! Global modules
 !--------------------------------------------------------------------//
       use geometry      , only: domlo, domhi
-      use set_bc0_module, only: set_bc_type
+      use set_bc_type_module, only: set_bc_type
       use iso_c_binding , only: c_int
       use bl_fort_module, only: c_real
 
@@ -68,7 +68,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
       nup  = max(0,shi(3)-domhi(3))
 
       call set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
-         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
+                                 bc_i_ptr , bc_j_ptr , bc_k_ptr, flag)
 
       if (nlft .gt. 0) then
          ilo = domlo(1)

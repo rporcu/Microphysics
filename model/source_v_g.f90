@@ -133,7 +133,7 @@ contains
       subroutine source_v_g_bc(slo, shi, A_m, b_m, &
          flag, dx, dz)
 
-      use set_bc0_module, only: set_bc_type
+      use set_bc_type_module, only: set_bc_type
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
