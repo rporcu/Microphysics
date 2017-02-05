@@ -497,7 +497,7 @@ module set_bc0_module
 ! Initialize the global IJK array to zero. Resetting this array inside
 ! this do-loop is most likely overkill. This loop should only cycle
 ! if gIJK is zero.
-         gIJK = 0
+         gIJK = undefined_i
 
 ! Report debugging information for the search region.
          if(ldFlag) then
@@ -521,7 +521,7 @@ module set_bc0_module
             END SELECT
 
 ! If there is fluid at this location, store the IJK and exit loops.
-            if(1.eq.flag(i,j,k,1)) then
+            if(flag(i,j,k,1)==1) then
                gIJK(myPE,1) = I
                gIJK(myPE,2) = J
                gIJK(myPE,3) = K
@@ -535,7 +535,7 @@ module set_bc0_module
 ! It just needs to be consistent.
          ! CALL global_all_sum(gIJK)
          proc_lp: do proc=0, numPEs-1
-            if(gIJK(proc,1) /= 0) then
+            if(gIJK(proc,1) /= undefined_i) then
                IJK_P_g(1) = gIJK(proc,1)
                IJK_P_g(2) = gIJK(proc,2)
                IJK_P_g(3) = gIJK(proc,3)
