@@ -21,8 +21,13 @@ module set_bc0_module
 
 ! Modules
 !--------------------------------------------------------------------//
-      use bc           , only: bc_type, bc_defined
-      use param        , only: dimension_bc
+      use bc, only: bc_u_g, bc_v_g, bc_w_g
+      use bc, only: bc_p_g
+      use bc, only: bc_ep_g
+      use ic, only: PINF_, POUT_, MINF_, MOUT_
+      use geometry      , only: domlo, domhi
+
+      use scales, only: scale_pressure
 
       implicit none
 
@@ -46,189 +51,189 @@ module set_bc0_module
 
 ! Local variables
 !--------------------------------------------------------------------//
-! Local index for boundary condition
-      INTEGER ::  L
+! local index for boundary condition
+      integer :: bcv, i,j,k
+
+      integer    nlft, nrgt, nbot, ntop, nup, ndwn
+      integer    ilo, ihi, jlo, jhi, klo, khi
+
+      integer :: bc_i_type(2,slo(2):shi(2),slo(3):shi(3))
+      integer :: bc_j_type(2,slo(1):shi(1),slo(3):shi(3))
+      integer :: bc_k_type(2,slo(1):shi(1),slo(2):shi(2))
+
+      integer :: bc_i_ptr(2,slo(2):shi(2),slo(3):shi(3))
+      integer :: bc_j_ptr(2,slo(1):shi(1),slo(3):shi(3))
+      integer :: bc_k_ptr(2,slo(1):shi(1),slo(2):shi(2))
+
 !--------------------------------------------------------------------//
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
       CALL SET_IJK_P_G(slo,shi,ro_g0,flag)
 
-      DO L = 1, DIMENSION_BC
-         IF (BC_DEFINED(L)) THEN
-
-            SELECT CASE (TRIM(BC_TYPE(L)))
-
-            CASE ('FREE_SLIP_WALL')
-            CASE ('NO_SLIP_WALL')
-            CASE ('PAR_SLIP_WALL')
-            CASE ('P_OUTFLOW')
-               write(6,*) 'po',l; flush(6)
-               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
-            CASE ('MASS_OUTFLOW')
-               write(6,*) 'mo',l; flush(6)
-               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
-            CASE ('OUTFLOW')
-               write(6,*) 'of',l; flush(6)
-               CALL set_bc0_outflow(L,slo,shi,p_g,ep_g)
-            CASE ('MASS_INFLOW')
-               write(6,*) 'mi',l; flush(6)
-               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
-            CASE ('P_INFLOW')
-               write(6,*) 'pi',l; flush(6)
-               CALL set_bc0_inflow(L,slo,shi,p_g,ep_g,u_g,v_g,w_g)
-            END SELECT
-         ENDIF
-      ENDDO
-
-! Make T_g nonzero in k=0,1 ghost layers when k-decomposition employed
-      ! call send_recv(P_G,2)
-
-      end subroutine set_bc0
+      call set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
+         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc0_outflow                                         C
-!  Purpose: Set the initial settings of the boundary conditions (if    C
-!  they are defined) for pressure outflow (PO) or outflow (O)          C
-!  boundary types.                                                     C
-!                                                                      C
-!  Comments: For a new run the field variables are undefined in the    C
-!  boundary cell locations, while for a restart run the field variable C
-!  may have an existing value based on the preceding simulation.       C
-!  Regardless, a user defined BC value will supercede any existing     C
-!  value.                                                              C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0_outflow(BCV,slo,shi,p_g,ep_g)
+      nlft = max(0,domlo(1)-slo(1))
+      nbot = max(0,domlo(2)-slo(2))
+      ndwn = max(0,domlo(3)-slo(3))
 
-! Modules
-!--------------------------------------------------------------------//
-      use bc, only: bc_k_b, bc_k_t
-      use bc, only: bc_j_s, bc_j_n
-      use bc, only: bc_i_w, bc_i_e
-      use bc, only: bc_p_g
-      use bc, only: bc_ep_g
+      nrgt = max(0,shi(1)-domhi(1))
+      ntop = max(0,shi(2)-domhi(2))
+      nup  = max(0,shi(3)-domhi(3))
 
-      use scales, only: scale_pressure
+      if (nlft .gt. 0) then
+         ilo = domlo(1)
+         do i = 1, nlft
+            do k=slo(3),shi(3)
+               do j=slo(2),shi(2)
+                  bcv = bc_i_ptr(1,j,k)
+                  if(bc_i_type(1,j,k) == PINF_ .or. &
+                     bc_i_type(1,j,k) == MINF_ .or. &
+                     bc_i_type(1,j,k) == MOUT_) then
 
-      implicit none
+                     p_g(ilo-i,j,k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(ilo-i,j,k) = bc_ep_g(bcv)
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+                     u_g(ilo-i,j,k) = bc_u_g(bcv)
+                     v_g(ilo-i,j,k) = 0.0d0
+                     w_g(ilo-i,j,k) = 0.0d0
 
-      real(c_real), intent(inout) ::  p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+                  elseif(bc_i_type(1,j,k) == POUT_) then
+                     p_g(ilo-i,j,k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
-! Dummy arguments
-!--------------------------------------------------------------------//
-! index of boundary condition
-      INTEGER, INTENT(IN) :: BCV
+      if (nrgt .gt. 0) then
+         ihi = domhi(1)
+         do i = 1, nrgt
+            do k=slo(3),shi(3)
+               do j=slo(2),shi(2)
+                  bcv = bc_i_ptr(1,j,k)
+                  if(bc_i_type(1,j,k) == PINF_ .or. &
+                     bc_i_type(1,j,k) == MINF_ .or. &
+                     bc_i_type(1,j,k) == MOUT_) then
 
-! Local variables
-!--------------------------------------------------------------------//
-! indices
-      INTEGER :: I, J, K
-!--------------------------------------------------------------------//
+                     p_g(ihi+i,j,k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(ihi+i,j,k) = bc_ep_g(bcv)
 
+                     u_g(ihi+i-1,j,k) = bc_u_g(bcv)
+                     v_g(ihi+i-1,j,k) = 0.0d0
+                     w_g(ihi+i-1,j,k) = 0.0d0
 
-      DO K = BC_K_B(BCV), BC_K_T(BCV)
-      DO J = BC_J_S(BCV), BC_J_N(BCV)
-      DO I = BC_I_W(BCV), BC_I_E(BCV)
+                  elseif(bc_i_type(2,j,k) == POUT_) then
+                     p_g(ihi+i,j,k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
-         P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
-         IF (IS_DEFINED(BC_EP_G(BCV))) EP_G(I,J,K) = BC_EP_G(BCV)
+      if (nbot .gt. 0) then
+         jlo = domlo(2)
+         do j = 1, nbot
+            do k=slo(3),shi(3)
+               do i=slo(1),shi(1)
+                  bcv = bc_j_ptr(1,i,k)
+                  if(bc_j_type(1,i,k) == PINF_ .or. &
+                     bc_j_type(1,i,k) == MINF_ .or. &
+                     bc_j_type(1,i,k) == MOUT_) then
 
-      end do
-      end do
-      end do
+                     p_g(i,jlo-j,k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(i,jlo-j,k) = bc_ep_g(bcv)
 
-      end subroutine set_bc0_outflow
+                     u_g(i,jlo-j,k) = 0.0d0
+                     v_g(i,jlo-j,k) = bc_v_g(bcv)
+                     w_g(i,jlo-j,k) = 0.0d0
 
+                  elseif(bc_j_type(1,i,k) == POUT_) then
+                     p_g(i,jlo-j,k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
+      if (ntop .gt. 0) then
+         jhi = domhi(2)
+         do j = 1, ntop
+            do k=slo(3),shi(3)
+               do i=slo(1),shi(1)
+                  bcv = bc_j_ptr(2,i,k)
+                  if(bc_j_type(2,i,k) == PINF_ .or. &
+                     bc_j_type(2,i,k) == MINF_ .or. &
+                     bc_j_type(2,i,k) == MOUT_) then
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: set_bc0_inflow                                          C
-!  Purpose: Set the initial settings of the boundary conditions        C
-!  pressure inflow (PI) and. mass inflow (MI) boundary types. Also do  C
-!  mass outflow (MO) boundary types... due to velocity...              C
-!                                                                      C
-!  Comments: Unlike the treament of PO or O boundary types no checks   C
-!  are made for these boundary types to determine whether the given    C
-!  BC value is defined before it is assigned to the field variable.    C
-!  However, the corresponding check routines generally ensure such BC  C
-!  quantities are defined for MI or PI boundaries if they are needed   C
-!  for the simulation.                                                 C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE set_bc0_inflow(BCV,slo,shi,p_g,ep_g,u_g,v_g,w_g)
+                     p_g(i,jhi+j,k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(i,jhi+j,k) = bc_ep_g(bcv)
 
-! Modules
-!--------------------------------------------------------------------//
-      use bc, only: bc_plane
-      use bc, only: bc_k_b, bc_k_t
-      use bc, only: bc_j_s, bc_j_n
-      use bc, only: bc_i_w, bc_i_e
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use bc, only: bc_p_g
-      use bc, only: bc_ep_g
+                     u_g(i,jhi+j-1,k) = 0.0d0
+                     v_g(i,jhi+j-1,k) = bc_v_g(bcv)
+                     w_g(i,jhi+j-1,k) = 0.0d0
 
-      use scales, only: scale_pressure
+                  elseif(bc_j_type(2,i,k) == POUT_) then
+                     p_g(i,jhi+j,k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
-      IMPLICIT NONE
+      if (ndwn .gt. 0) then
+         klo = domlo(3)
+         do k = 1, ndwn
+            do j=slo(2),shi(2)
+               do i=slo(1),shi(1)
+                  bcv = bc_k_ptr(1,i,j)
+                  if(bc_k_type(1,i,j) == PINF_ .or. &
+                     bc_k_type(1,i,j) == MINF_ .or. &
+                     bc_k_type(1,i,j) == MOUT_) then
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+                     p_g(i,j,klo-k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(i,j,klo-k) = bc_ep_g(bcv)
 
-      ! index for boundary condition
-      INTEGER, INTENT(IN) :: BCV
+                     u_g(i,j,klo-k) = 0.0d0
+                     v_g(i,j,klo-k) = 0.0d0
+                     w_g(i,j,klo-k) = bc_w_g(bcv)
 
-      real(c_real), intent(inout) ::  p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+                  elseif(bc_k_type(1,i,j) == POUT_) then
+                     p_g(i,j,klo-k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
-! Local variables
-!--------------------------------------------------------------------//
-! indices
-      INTEGER :: I, J, K
-!--------------------------------------------------------------------//
+      if (nup .gt. 0) then
+         khi = domhi(3)
+         do k = 1, nup
+            do j=slo(2),shi(2)
+               do i=slo(1),shi(1)
+                  bcv = bc_k_ptr(2,i,j)
+                  if(bc_k_type(2,i,j) == PINF_ .or. &
+                     bc_k_type(2,i,j) == MINF_ .or. &
+                     bc_k_type(2,i,j) == MOUT_) then
 
-      DO K = BC_K_B(BCV), BC_K_T(BCV)
-      DO J = BC_J_S(BCV), BC_J_N(BCV)
-      DO I = BC_I_W(BCV), BC_I_E(BCV)
+                     p_g(i,j,khi+k) = scale_pressure(bc_p_g(bcv))
+                     ep_g(i,j,khi+k) = bc_ep_g(bcv)
 
-         P_G(I,J,K) = SCALE_PRESSURE(BC_P_G(BCV))
-         EP_G(I,J,K) = BC_EP_G(BCV)
+                     u_g(i,j,khi+k-1) = 0.0d0
+                     v_g(i,j,khi+k-1) = 0.0d0
+                     w_g(i,j,khi+k-1) = bc_w_g(bcv)
 
-         U_G(I,J,K) = BC_U_G(BCV)
-         V_G(I,J,K) = BC_V_G(BCV)
-         W_G(I,J,K) = BC_W_G(BCV)
+                  elseif(bc_k_type(2,i,j) == POUT_) then
+                     p_g(i,j,khi+k) = scale_pressure(bc_p_g(bcv))
+                  endif
+               end do
+            end do
+         end do
+      endif
 
-! When the boundary plane is located on the E, N, T side of the domain
-! (fluid cell is located w, s, b), set the component of velocity normal
-! to the boundary plane of the adjacent fluid cell
-         SELECT CASE (TRIM(BC_PLANE(BCV)))
-            CASE ('W'); U_G(i-1,j,k) = BC_U_G(BCV)
-            CASE ('S'); V_G(i,j-1,k) = BC_V_G(BCV)
-            CASE ('B'); W_G(i,j,k-1) = BC_W_G(BCV)
-         END SELECT
-
-      end do
-      end do
-      end do
-
-      END SUBROUTINE set_bc0_inflow
-
+   end subroutine set_bc0
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -588,5 +593,122 @@ module set_bc0_module
 
       IERR = 0
 
-      end subroutine IJK_Pg_SEARCH
-end module set_bc0_module
+   end subroutine IJK_Pg_SEARCH
+
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Subroutine: set_bc_type                                             C
+!  Purpose: This subroutine does the initial setting of all boundary   C
+!  conditions. The user specifications of the boundary conditions are  C
+!  checked for veracity in various check_data/ routines:               C
+!  (e.g., check_boundary_conditions).                                  C
+!                                                                      C
+!  Author: M. Syamlal                                 Date: 29-JAN-92  C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+   subroutine set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
+         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
+
+      use bc, only: bc_type, bc_defined
+      use bc, only: bc_k_b, bc_k_t
+      use bc, only: bc_j_s, bc_j_n
+      use bc, only: bc_i_w, bc_i_e
+
+      use param, only: dimension_bc
+
+      implicit none
+
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+
+      integer(c_int), intent(in   ) :: flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      integer(c_int), intent(  out) :: bc_i_type&
+         (2,slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(  out) :: bc_j_type&
+         (2,slo(1):shi(1),slo(3):shi(3))
+      integer(c_int), intent(  out) :: bc_k_type&
+         (2,slo(1):shi(1),slo(2):shi(2))
+
+      integer(c_int), intent(  out) :: bc_i_ptr&
+         (2,slo(2):shi(2),slo(3):shi(3))
+      integer(c_int), intent(  out) :: bc_j_ptr&
+         (2,slo(1):shi(1),slo(3):shi(3))
+      integer(c_int), intent(  out) :: bc_k_ptr&
+         (2,slo(1):shi(1),slo(2):shi(2))
+
+! local index for boundary condition
+      integer :: lc, bcv, i, j, k
+
+      bc_i_type(1,:,:) = flag(slo(1),:,:,1)
+      bc_i_type(2,:,:) = flag(shi(1),:,:,1)
+      bc_j_type(1,:,:) = flag(:,slo(2),:,1)
+      bc_j_type(2,:,:) = flag(:,shi(2),:,1)
+      bc_k_type(1,:,:) = flag(:,:,slo(3),1)
+      bc_k_type(2,:,:) = flag(:,:,shi(3),1)
+
+      bc_i_ptr = -1
+      bc_j_ptr = -1
+      bc_k_ptr = -1
+
+      do bcv = 1, dimension_bc
+         if (bc_defined(bcv)) then
+
+            if (bc_i_w(bcv) == bc_i_e(bcv)) then
+               if(bc_i_w(bcv) == slo(1)) then
+                  i  = slo(1)
+                  lc = 1
+               elseif(bc_i_w(bcv) == shi(1)) then
+                  i  = shi(1)
+                  lc = 2
+               else
+                  lc = 0
+               endif
+               if(lc /= 0) then
+                  bc_i_ptr(lc,bc_j_s(bcv):bc_j_n(bcv),&
+                              bc_k_b(bcv):bc_k_t(bcv)) = bcv
+               endif
+            endif
+
+            if (bc_j_s(bcv) == bc_j_n(bcv)) then
+               if(bc_j_s(bcv) == slo(2)) then
+                  j = slo(2)
+                  lc = 1
+               elseif(bc_j_s(bcv) == shi(2)) then
+                  j = shi(2)
+                  lc = 2
+               else
+                  lc = 0
+               endif
+               if(lc /= 0) then
+                  bc_j_ptr(lc,bc_i_w(bcv):bc_i_e(bcv),&
+                              bc_k_b(bcv):bc_k_t(bcv)) = bcv
+               endif
+            endif
+
+            if (bc_k_b(bcv) == bc_k_t(bcv)) then
+               if(bc_k_b(bcv) == slo(3)) then
+                  k = slo(3)
+                  lc = 1
+               elseif(bc_k_b(bcv) == shi(3)) then
+                  k = shi(3)
+                  lc = 2
+               else
+                  lc = 0
+               endif
+               if(lc /= 0) then
+                  bc_k_ptr(lc,bc_i_w(bcv):bc_i_e(bcv),&
+                              bc_j_s(bcv):bc_j_n(bcv)) = bcv
+               endif
+            endif
+
+         endif
+      enddo
+
+   end subroutine set_bc_type
+
+
+
+   end module set_bc0_module

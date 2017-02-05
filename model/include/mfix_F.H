@@ -16,7 +16,10 @@ extern "C"
                   int* flag, Real* dx, Real* dy, Real* dz);
 
   void fill_bc(Real* s, const int* slo, const int* shi,
-               int* bc);
+               int* flag, const int* vtype);
+
+  void fill_bc0(Real* s, const int* slo, const int* shi,
+               int* flag, const int* vtype);
 
   void mfix_main1(const int* slo, const int* shi,
                   const int* lo, const int* hi,

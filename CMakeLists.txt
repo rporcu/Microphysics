@@ -136,6 +136,7 @@ set(F90_sources
   model/error_manager_mod.f90
   model/exit.f90
   model/fill_bc.f90
+  model/fill_bc0.f90
   model/fld_constants_mod.f90
   model/flow_to_vel.f90
   model/functions_mod.f90

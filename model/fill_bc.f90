@@ -17,7 +17,7 @@
 ! :::       reasonable values for arithmetic to live
 ! ::: -----------------------------------------------------------
 
-      subroutine fill_bc(s,slo,shi,bc) &
+      subroutine fill_bc(s,slo,shi,flag,vtype) &
          bind(C, name="fill_bc")
 
       use iso_c_binding , only: c_int
@@ -28,10 +28,13 @@
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: bc(3,2)
+      integer(c_int), intent(in   ) :: vtype
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      real(c_real), intent(in   ) ::  flag&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer    ilo, ihi, jlo, jhi, klo, khi
@@ -47,6 +50,9 @@
 
       real(c_real), parameter:: half         = 0.5d0
 
+
+      integer, parameter :: bc(3,2) = FOEXTRAP
+
       is = max(slo(1),domlo(1))
       ie = min(shi(1),domhi(1))
       js = max(slo(2),domlo(2))
@@ -61,6 +67,10 @@
       nrgt = max(0,shi(1)-domhi(1))
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
+
+
+
+      if(vtype /= 0) return
 
 !
 !     ::::: first fill sides
@@ -126,9 +136,9 @@
 
          if (bc(2,1) .eq. FOEXTRAP) then
 !     THIS IS A HACK SO WE DONT OVERWRITE INFLOW BC'S IN DEM06
-!     do j = 1, nbot
-!               s(:,jlo-j,:) = s(:,jlo,:)
-!           end do
+            ! do j = 1, nbot
+            !    s(:,jlo-j,:) = s(:,jlo,:)
+            ! end do
          else if (bc(2,1) .eq. HOEXTRAP) then
             do j = 2, nbot
                s(:,jlo-j,:) = s(:,jlo,:)
@@ -155,9 +165,9 @@
 
          if (bc(2,2) .eq. FOEXTRAP) then
 !     THIS IS A HACK SO WE DONT OVERWRITE OUTFLOW BC'S IN DEM06
-!     do j = 1, ntop
-!              s(:,jhi+j,:) = s(:,jhi,:)
-!           end do
+            ! do j = 1, ntop
+            !    s(:,jhi+j,:) = s(:,jhi,:)
+            ! end do
          else if (bc(2,2) .eq. HOEXTRAP) then
             do j = 2, ntop
                s(:,jhi+j,:) = s(:,jhi,:)
@@ -234,11 +244,13 @@
             end do
          end if
       end if
+
+
 !
 !    First correct the i-j edges and all corners
 !
-      if ((nlft .gt. 0 .and. bc(1,1) .eq. HOEXTRAP) .and. &
-          (nbot .gt. 0 .and. bc(2,1) .eq. HOEXTRAP) ) then
+      if((nlft .gt. 0 .and. bc(1,1) .eq. HOEXTRAP) .and. &
+         (nbot .gt. 0 .and. bc(2,1) .eq. HOEXTRAP) ) then
          if (jlo+2 .le. je) then
             do k = slo(3), shi(3)
                s(ilo-1,jlo-1,k) = half * 0.125d0 * &

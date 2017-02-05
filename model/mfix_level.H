@@ -86,9 +86,8 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
-    void fill_mf_bc(int lev,  MultiFab& mf);
-    void fill_mf_bc(int lev, iMultiFab& mf);
-
+  void fill_mf_bc(int lev,  MultiFab& mf, const int vtype);
+  void fill_mf_bc(int lev, iMultiFab& mf, const int vtype);
 #if 0
     void WritePlotFile () const;
 
