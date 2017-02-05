@@ -12,19 +12,18 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine usr0
 
-      use discretelement, only: particles
-      use usr, only: f1b, f2b, gx1, gx2, gy1, gy2
+      use constant, only: gravity
+      use usr, only: f1b, f2b, gx1, gy1, gy2
 
       IMPLICIT NONE
 
       gY1 = 0.00045d0
       gY2 = 0.00135d0
-
       gX1 = 0.0d0
-      gX2 = 0.0d0
+      gX1 = 0.0d0
 
-      ! Body forces -- zero in this case.
-      F1b = 0.d0
-      F2b = 0.d0
+      ! Body forces. (Gravity)
+      F1b = gravity(2)
+      F2b = gravity(2)
 
       end subroutine usr0

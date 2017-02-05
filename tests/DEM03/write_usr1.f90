@@ -88,18 +88,10 @@
          RK4_TIME = RK4_TIME + RK4_DT
       ENDDO
 
-
       IF(IS_DEFINED(RK4_DT_LAST)) THEN
          CALL RK4_V4(RK4_DT_LAST, gY1, gX1, gY2, gX2)
          RK4_TIME = RK4_TIME + RK4_DT_LAST
       ENDIF
-
-
-      if(gY1/=gY1 .OR. gY2/=gY2 .OR. gX1/=gX1 .OR. gX2/=gX2) then
-         write(*,*)' NAN found... exiting'
-         stop
-      endif
-
 
 ! Write the results to a file.
       WRITE(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gY1,   &

@@ -23,8 +23,8 @@
       gy1 = 0.0d0
       gy2 = 0.0d0
 
-      ! Body forces -- zero in this case.
-      F1b = 0.d0
-      F2b = 0.d0
+      ! Body forces. (Gravity)
+      F1b = gravity(3)
+      F2b = gravity(3)
 
       end subroutine usr0
