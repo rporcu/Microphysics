@@ -133,300 +133,251 @@ contains
       subroutine source_v_g_bc(slo, shi, A_m, b_m, &
          flag, dx, dz)
 
+      use set_bc0_module, only: set_bc_type
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
 
-      use bc, only: dimension_bc, bc_defined, bc_type
-      use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
+      use geometry, only: domlo, domhi
 
       use matrix, only: e, w, n, t, b
       use param1, only: is_defined
 
       integer     , intent(in   ) :: slo(3),shi(3)
+      real(c_real), intent(in   ) :: dx, dz
 
-      ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-
-      ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(in   ) :: dx, dz
-
-!-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-! Boundary condition
-      INTEGER :: L
-! Indices
-      INTEGER :: I, J, K, I1, I2, J1, J2, K1, K2
-
       real(c_real) :: odx, odz
+
+      integer :: bc_i_type(2,slo(2):shi(2),slo(3):shi(3))
+      integer :: bc_j_type(2,slo(1):shi(1),slo(3):shi(3))
+      integer :: bc_k_type(2,slo(1):shi(1),slo(2):shi(2))
+
+      integer :: bc_i_ptr(2,slo(2):shi(2),slo(3):shi(3))
+      integer :: bc_j_ptr(2,slo(1):shi(1),slo(3):shi(3))
+      integer :: bc_k_ptr(2,slo(1):shi(1),slo(2):shi(2))
+
+      integer :: bcv, i,j,k
+
+      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
 !-----------------------------------------------
-     odx = 1.d0 / dx
-     odz = 1.d0 / dz
+
+      call set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
+         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
+
+      odx = 1.d0 / dx
+      odz = 1.d0 / dz
+
+      nlft = max(0,domlo(1)-slo(1))
+      nbot = max(0,domlo(2)-slo(2))
+      ndwn = max(0,domlo(3)-slo(3))
+
+      nrgt = max(0,shi(1)-domhi(1))
+      ntop = max(0,shi(2)-domhi(2))
+      nup  = max(0,shi(3)-domhi(3))
+
+! --- EAST FLUID ---------------------------------------------------------->
+
+      if (nlft .gt. 0) then
+         i = domlo(1)
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               bcv = bc_i_ptr(1,j,k)
+
+               if(bc_i_type(1,j,k) == NSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
+                  A_m(i,j,k,w) = zero
+
+               else if(bc_i_type(1,j,k) == FSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
+                  A_m(i,j,k,w) = zero
+
+               else if(bc_i_type(1,j,k) == PSW_) then
+                  if (is_undefined(bc_hw_g(bcv))) then
+                     A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
+                     b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,w)*bc_vw_g(bcv)
+                  else
+                     A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,w)*&
+                        (half*bc_hw_g(bcv)-odx)/(half*bc_hw_g(bcv)+odx)
+                     b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,w)*&
+                        bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
+                  endif
+                  A_m(i,j,k,w) = zero
+               endif
+
+               b_m(i-1,j,k) = zero
+               A_m(i-1,j,k,:) = zero
+               A_m(i-1,j,k,0) = -one
+            end do
+         end do
+      endif
+
+! --- WEST FLUID ---------------------------------------------------------->
+
+      if (nrgt .gt. 0) then
+         i = domhi(1)
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               bcv = bc_i_ptr(1,j,k)
+
+               if(bc_i_type(1,j,k) == NSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
+                  A_m(i,j,k,e) = zero
+
+               else if(bc_i_type(1,j,k) == FSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
+                  A_m(i,j,k,e) = zero
+
+               else if(bc_i_type(1,j,k) == PSW_) then
+                  if (is_undefined(bc_hw_g(bcv))) then
+                     A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
+                     b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,e)*bc_vw_g(bcv)
+                  else
+                     A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,e)*&
+                        (half*bc_hw_g(bcv)-odx)/(half*bc_hw_g(bcv)+odx)
+                     b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,e)*&
+                        bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
+                  endif
+                  A_m(i,j,k,e) = zero
+               endif
+               b_m(i+1,j,k) = zero
+               A_m(i+1,j,k,:) = zero
+               A_m(i+1,j,k,0) = -one
+            end do
+         end do
+      endif
 
 
-     do l = 1, dimension_bc
-        if (bc_defined(l)) then
 
-            i1 = bc_i_w(l)
-            i2 = bc_i_e(l)
-            j1 = bc_j_s(l)
-            j2 = bc_j_n(l)
-            k1 = bc_k_b(l)
-            k2 = bc_k_t(l)
+! --- NORTH FLUID --------------------------------------------------------->
 
-            if(i1 == i2) then
-               if(i1 == slo(1) ) i1=i1+1
-               if(i1 == shi(1) ) i1=i1-1
-               i2=i1
-            endif
+      if (nbot .gt. 0) then
+         j = domlo(2)
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               bcv = bc_j_ptr(1,i,k)
+               if(bc_j_type(1,i,k) == MINF_ .or. &
+                  bc_j_type(1,i,k) == MOUT_) then
 
-            if(j1 == j2) then
-               if(j1 == slo(2) ) j1=j1+1
-               if(j1 == shi(2) ) j1=j1-1
-               j2=j1
-            endif
-
-            if(k1 == k2)then
-               if(k1 == slo(3) ) k1=k1+1
-               if(k1 == shi(3) ) k1=k1-1
-               k2=k1
-            endif
-
-            if (bc_type(l) == 'NO_SLIP_WALL') then
-
-               do k = k1, k2
-                  do j = j1, j2
-                     do i = i1, i2
-
-! East Fluid
-                        if (flag(i-1,j,k,1) == NSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
-                           A_m(i,j,k,w) = zero
-
-                           b_m(i-1,j,k) = zero
-                           A_m(i-1,j,k,:) = zero
-                           A_m(i-1,j,k,0) = -one
-                        endif
-! West Fluid
-                        if (flag(i+1,j,k,1) == NSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
-                           A_m(i,j,k,e) = zero
-
-                           b_m(i+1,j,k) = zero
-                           A_m(i+1,j,k,:) = zero
-                           A_m(i+1,j,k,0) = -one
-                        endif
-
-
-! Top fluid
-                        if (flag(i,j,k-1,1) == NSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
-                           A_m(i,j,k,b) = zero
-
-                           b_m(i,j,k-1) = zero
-                           A_m(i,j,k-1,:) = zero
-                           A_m(i,j,k-1,0) = -one
-                        endif
-! Bottom fluid
-                        if (flag(i,j,k+1,1) == NSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
-                           A_m(i,j,k,t) = zero
-
-                           b_m(i,j,k+1) = zero
-                           A_m(i,j,k+1,:) = zero
-                           A_m(i,j,k+1,0) = -one
-                        endif
-                     enddo
-                  enddo
-               enddo
+                  A_m(i,j-1,k,:) =  zero
+                  A_m(i,j-1,k,0) = -one
+                  b_m(i,j-1,k) = -bc_v_g(bcv)
+               endif
+            end do
+         end do
+      endif
 
 
 
-            else if (bc_type(l) == 'FREE_SLIP_WALL') then
 
-               do k = k1, k2
-                  do j = j1, j2
-                     do i = i1, i2
+! --- SOUTH FLUID --------------------------------------------------------->
 
-! East fluid
-                        if (flag(i-1,j,k,1) == FSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
-                           A_m(i,j,k,w) = zero
+      if (ntop .gt. 0) then
+         j = domhi(2)
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               bcv = bc_j_ptr(2,i,k)
 
-                           b_m(i-1,j,k) = zero
-                           A_m(i-1,j,k,:) = zero
-                           A_m(i-1,j,k,0) = -one
-                        endif
-! West fluid
-                        if (flag(i+1,j,k,1) == FSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
-                           A_m(i,j,k,e) = zero
+               if(bc_j_type(2,i,k) == PINF_ .or. &
+                  bc_j_type(2,i,k) == POUT_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
+                  A_m(i,j,k,n) = zero
 
-                           b_m(i+1,j,k) = zero
-                           A_m(i+1,j,k,:) = zero
-                           A_m(i+1,j,k,0) = -one
-                        endif
-! Top fluid
-                        if (flag(i,j,k-1,1) == FSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
-                           A_m(i,j,k,b) = zero
+               else if(bc_j_type(2,i,k) == MINF_ .or. &
+                  bc_j_type(2,i,k) == MOUT_) then
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = -bc_v_g(bcv)
 
-                           b_m(i,j,k-1) = zero
-                           A_m(i,j,k-1,:) = zero
-                           A_m(i,j,k-1,0) = -one
-                        endif
-! Bottom fluid
-                        if (flag(i,j,k+1,1) == FSW_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
-                           A_m(i,j,k,t) = zero
+               endif
+               b_m(i,j+1,k) = zero
+               A_m(i,j+1,k,:) = zero
+               A_m(i,j+1,k,0) = -one
 
-                           b_m(i,j,k+1) = zero
-                           A_m(i,j,k+1,:) = zero
-                           A_m(i,j,k+1,0) = -one
-                        endif
+            end do
+         end do
+      endif
 
-                     enddo
-                  enddo
-               enddo
 
-            elseif (bc_type(l) == 'PAR_SLIP_WALL') then
+! --- TOP FLUID ----------------------------------------------------------->
 
-               do k = k1, k2
-                  do j = j1, j2
-                     do i = i1, i2
-! East fluid
-                        if (flag(i-1,j,k,1) == PSW_) then
-                           if (is_undefined(bc_hw_g(l))) then
-                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
-                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,w)*bc_vw_g(l)
-                           else
-                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,w)*&
-                                 (half*bc_hw_g(l)-odx)/(half*bc_hw_g(l)+odx)
-                              b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,w)*&
-                                 bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odx)
-                           endif
-                           A_m(i,j,k,w) = zero
+      if (ndwn .gt. 0) then
+         k = domlo(3)
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               bcv = bc_k_ptr(1,i,j)
+               if(bc_k_type(1,i,j) == NSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                  A_m(i,j,k,b) = zero
 
-                           A_m(i,j,k-1,:) = zero
-                           A_m(i,j,k-1,0) = -one
-                           b_m(i,j,k-1) = zero
-                        endif
+               else if(bc_k_type(1,i,j) == FSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
+                  A_m(i,j,k,b) = zero
 
-! West fluid
-                        if (flag(i+1,j,k,1) == PSW_) then
-                           if (is_undefined(bc_hw_g(l))) then
-                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
-                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,e)*bc_vw_g(l)
-                           else
-                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,e)*&
-                                 (half*bc_hw_g(l)-odx)/(half*bc_hw_g(l)+odx)
-                              b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,e)*&
-                                 bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odx)
-                           endif
-                           A_m(i,j,k,e) = zero
+               else if(bc_k_type(1,i,j) == PSW_) then
+                  if (is_undefined(bc_hw_g(bcv))) then
+                     A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
+                     b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,b)*bc_vw_g(bcv)
+                  else
+                     A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,b)*&
+                        (half*bc_hw_g(bcv)-odz)/(half*bc_hw_g(bcv)+odz)
+                     b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,b)*&
+                        bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odz)
+                  endif
+                  A_m(i,j,k,b) = zero
+               endif
+               b_m(i,j,k-1) = zero
+               A_m(i,j,k-1,:) = zero
+               A_m(i,j,k-1,0) = -one
+            end do
+         end do
+      endif
 
-                           A_m(i,j,k-1,:) = zero
-                           A_m(i,j,k-1,0) = -one
-                           b_m(i,j,k-1) = zero
-                        endif
-! Top fluid
-                        if (flag(i,j,k-1,1) == PSW_) then
-                           if (is_undefined(bc_hw_g(l))) then
-                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
-                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,b)*bc_vw_g(l)
-                           else
-                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,b)*&
-                                 (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
-                              b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,b)*&
-                              bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odz)
-                           endif
-                           A_m(i,j,k,b) = zero
 
-                           A_m(i,j,k-1,:) = zero
-                           A_m(i,j,k-1,0) = -one
-                           b_m(i,j,k-1) = zero
-                        endif
-! Bottom fluid
-                        if (flag(i,j,k+1,1) == PSW_) then
-                           if (is_undefined(bc_hw_g(l))) then
-                              A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
-                              b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,t)*bc_vw_g(l)
-                           else
-                              A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,t)*&
-                                 (half*bc_hw_g(l)-odz)/(half*bc_hw_g(l)+odz)
-                              b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,t)*&
-                                 bc_hw_g(l)*bc_vw_g(l)/(half*bc_hw_g(l)+odz)
-                           endif
-                           A_m(i,j,k,t) = zero
+! --- BOTTOM FLUID -------------------------------------------------------->
 
-                           A_m(i,j,k+1,:) = zero
-                           A_m(i,j,k+1,0) = -one
-                           b_m(i,j,k+1) = zero
-                        endif
+      if (nup .gt. 0) then
+         k = domhi(3)
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               bcv = bc_k_ptr(2,i,j)
+               if(bc_k_type(2,i,j) == NSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                  A_m(i,j,k,t) = zero
 
-                     enddo
-                  enddo
-               enddo
+               else if(bc_k_type(2,i,j) == FSW_) then
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
+                  A_m(i,j,k,t) = zero
 
-            elseif (bc_type(l) == 'P_INFLOW' .or. &
-                    bc_type(l) == 'P_OUTFLOW') then
+               else if(bc_k_type(2,i,j) == PSW_) then
+                  if (is_undefined(bc_hw_g(bcv))) then
+                     A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
+                     b_m(i,j,k) = b_m(i,j,k)-2.0*A_m(i,j,k,t)*bc_vw_g(bcv)
+                  else
+                     A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,t)*&
+                        (half*bc_hw_g(bcv)-odz)/(half*bc_hw_g(bcv)+odz)
+                     b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,t)*&
+                        bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odz)
+                  endif
+                  A_m(i,j,k,t) = zero
 
-               do k = k1, k2
-                  do j = j1, j2
-                     do i = i1, i2
-
-                        if(flag(i,j+1,k,1) == PINF_ .or. &
-                           flag(i,j+1,k,1) == POUT_) then
-                           A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
-                           A_m(i,j,k,n) = zero
-
-                           b_m(i,j+1,k) = zero
-                           A_m(i,j+1,k,:) = zero
-                           A_m(i,j+1,k,0) = -one
-                        endif
-
-                     enddo
-                  enddo
-               enddo
-
-            else ! Mass inflow and Mass Outflow
-
-               do k = k1, k2
-                  do j = j1, j2
-                     do i = i1, i2
-
-                        if(flag(i,j-1,k,1) == MINF_ .or. &
-                           flag(i,j-1,k,1) == MOUT_) then
-                           A_m(i,j-1,k,:) =  zero
-                           A_m(i,j-1,k,0) = -one
-                           b_m(i,j-1,k) = -bc_v_g(l)
-                        endif
-
-                        if(flag(i,j+1,k,1) == MINF_ .or. &
-                           flag(i,j+1,k,1) == MOUT_) then
-                           A_m(i,j,k,:) =  zero
-                           A_m(i,j,k,0) = -one
-                           b_m(i,j,k) = -bc_v_g(l)
-
-                           b_m(i,j+1,k) = zero
-                           A_m(i,j+1,k,:) = zero
-                           A_m(i,j+1,k,0) = -one
-                        endif
-                     enddo
-                  enddo
-               enddo
-            endif
-         endif
-      enddo
+               endif
+               b_m(i,j,k+1) = zero
+               A_m(i,j,k+1,:) = zero
+               A_m(i,j,k+1,0) = -one
+            end do
+         end do
+      endif
 
       return
       end subroutine source_v_g_bc
