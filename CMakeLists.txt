@@ -243,15 +243,17 @@ set(TESTS
   tests/FLD01
   tests/FLD02
   tests/DEM01
-  tests/DEM01-x
-  tests/DEM01-z
   tests/DEM02
-  tests/DEM02-x
-  tests/DEM02-z
   tests/DEM03
   tests/DEM04
   tests/DEM05
   tests/DEM06
+  tests/FLD01-y
+  tests/FLD01-z
+  tests/DEM01-x
+  tests/DEM01-z
+  tests/DEM02-x
+  tests/DEM02-z
   #tests/DEM07
   #benchmarks/DEM01
   #benchmarks/DEM02

@@ -34,8 +34,8 @@
 
       use run, only: DESCRIPTION
 
-      use geometry, only: KMAX
-      use bc, only: DELP_Y
+      use geometry, only: IMAX
+      use bc, only: DELP_Z
       use toleranc, only: tol_resid
       use leqsol, only: max_nit
 
@@ -58,10 +58,10 @@
       ENDIF
 
       WRITE(fUnit,"('#')")
-      WRITE(fUnit,"('#',10x,'Mesh:          ',I13)") KMAX
+      WRITE(fUnit,"('#',10x,'Mesh:          ',I13)") IMAX
       WRITE(fUnit,"('#',10x,'Max Nit:       ',I13)") MAX_NIT
       WRITE(fUnit,"('#',10x,'Tol Residual:  ',es13.6)") TOL_RESID
-      WRITE(fUnit,"('#',10x,'Pressure Grad: ',es13.6)") DELP_Y
+      WRITE(fUnit,"('#',10x,'Pressure Grad: ',es13.6)") DELP_Z
 
       WRITE(fUNIT, 1200) VAR, VAR
 

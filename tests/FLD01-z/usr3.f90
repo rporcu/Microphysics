@@ -16,7 +16,7 @@
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-      use geometry, only: jmax,kmax,domlo,domhi
+      use geometry, only: imax,kmax,domlo,domhi
 
       IMPLICIT NONE
 
@@ -36,10 +36,10 @@
       integer :: i, j, k
 
       ! Calculated height of cell
-      double precision  :: yt, zt
+      double precision  :: zt, xt
 
       ! Exact and Numerical solutions
-      double precision :: lvg, vg_MFIX
+      double precision :: lwg, wg_MFIX
       double precision :: lPg, Pg_MFIX
 
       ! Absolute and absolute relative errors
@@ -59,39 +59,39 @@
       L2 = 0.0d0
       LI = 0.0d0
 
-! Calculate the initial height
-      zt = -0.5d0*dz
+      ! Calculate the initial height
+      xt = -0.5d0*dx
 
-! Calculate the U velocity solution at center of domain
-      i = domlo(1) + (domhi(1)-domlo(1))/2
+      ! Calculate the w velocity solution at center of domain
       j = domlo(2) + (domhi(2)-domlo(2))/2
-      do k = domlo(3), domhi(3)
-         zt = zt + dz
+      k = domlo(3) + (domhi(3)-domlo(3))/2
+      do i = domlo(1), domhi(1)
+         xt = xt + dx
 
          ! Calculate the exact solution
-         lvg = vg(zt)
-         vg_MFIX = v_g(i,j,k)
+         lwg = wg(xt)
+         wg_MFIX = w_g(i,j,k)
 
-         absErr = abs(lvg - vg_MFIX)
-         relErr = abs(absErr/max(abs(lvg), 1.0d-15))
+         absErr = abs(lwg - wg_MFIX)
+         relErr = abs(absErr/max(abs(lwg), 1.0d-15))
 
          L1 = L1 + absErr
          L2 = L2 + absErr*absErr
          LI = max(LI, absErr)
 
-         write(fUnit,1100) zt, lvg, vg_MFIX, absErr, relErr
+         write(fUnit,1100) xt, lwg, wg_MFIX, absErr, relErr
       end do
 
       close(fUnit)
 
-      ! Store Norms for U velocity
+      ! Store Norms for w velocity
       open(unit=fUnit, file='POST_UG_NORMS.dat', &
          position='append', status='old')
 
-      L1 = L1/dble(domhi(3)-domlo(3)+1)
-      L2 = L2/dble(domhi(3)-domlo(3)+1)
+      L1 = L1/dble(domhi(1)-domlo(1)+1)
+      L2 = L2/dble(domhi(1)-domlo(1)+1)
 
-      write(fUnit,1200) kmax, L1, L2, LI
+      write(fUnit,1200) imax, L1, L2, LI
       close(fUnit)
 
       open(unit=fUnit, file='POST_PG.dat', &
@@ -101,20 +101,21 @@
       L2 = 0.0d0
       LI = 0.0d0
 
-! Calculate the initial height
-      yt = -0.5d0*dy
+      ! Calculate the initial height
+      zt = -0.5d0*dz
 
-! Calculate the U velocity solution at center of domain
-      k = domlo(3) + (domhi(3)-domlo(3))/2
+      ! Calculate the w velocity solution at center of domain
       i = domlo(1) + (domhi(1)-domlo(1))/2
+      j = domlo(2) + (domhi(2)-domlo(2))/2
 
-      do j = domlo(2), domhi(2)
-         yt = yt + dy
-! Calculate the exact solution
-         lPg = Pg(yt)
+      do k = domlo(3), domhi(3)
+         zt = zt + dz
+
+         ! Calculate the exact solution
+         lPg = Pg(zt)
          Pg_MFIX = P_G(i,j,k)
 
-         write(6,*)yt,lPg,pg_mfix
+         write(6,*)zt,lPg,pg_mfix
 
          absErr = abs(lPg - Pg_MFIX)
          relErr = abs(absErr/max(abs(lPg), 1.0d-15))
@@ -123,17 +124,17 @@
          L2 = L2 + absErr*absErr
          LI = max(LI, absErr)
 
-         write(fUnit,1100) yt, lPg, Pg_MFIX, absErr, relErr
+         write(fUnit,1100) zt, lPg, Pg_MFIX, absErr, relErr
       end do
       close(fUnit)
 
       open(unit=fUnit, file='POST_PG_NORMS.dat', &
          position='append', status='old')
 
-      L1 = L1/dble(domhi(2)-domlo(2)+1)
-      L2 = L2/dble(domhi(2)-domlo(2)+1)
+      L1 = L1/dble(domhi(3)-domlo(3)+1)
+      L2 = L2/dble(domhi(3)-domlo(3)+1)
 
-      write(fUnit,1200) jmax, L1, L2, LI
+      write(fUnit,1200) kmax, L1, L2, LI
       close(fUnit)
 
       RETURN
@@ -145,39 +146,39 @@
 !----------------------------------------------------------------------!
 ! Function: Calculate the exact solution for pressure.                 !
 !----------------------------------------------------------------------!
-      double precision function Pg(y)
+      double precision function Pg(z)
 
       use ic, only: Pg0 => IC_P_g
-      use bc, only: delP_y
-      use geometry, only: yLength
+      use bc, only: delP_z
+      use geometry, only: zLength
 
-      double precision, intent(in) :: y
-      double precision :: dPdy
+      double precision, intent(in) :: z
+      double precision :: dPdz
 
-      dPdy = -delP_y/yLength
+      dPdz = -delP_z/zLength
 
-      Pg = Pg0(1) + dPdY*(y - yLength)
+      Pg = Pg0(1) + dPdz*(z - zLength)
 
       end function Pg
 
 !----------------------------------------------------------------------!
 ! Function: Calculate the exact solution for pressure.                 !
 !----------------------------------------------------------------------!
-      double precision function vg(z)
+      double precision function wg(x)
 
-      use bc, only: delP_y
-      use geometry, only: yLength
+      use bc, only: delP_z
+      use geometry, only: xLength
       use geometry, only: zLength
 
       use fld_const, only: Mu_g0
 
-      double precision, intent(in) :: z
-      double precision :: dPdY
+      double precision, intent(in) :: x
+      double precision :: dPdz
 
-      dPdy = -delP_y/yLength
+      dPdz = -delP_z/zLength
 
-      vg = (1.0d0/(2.0d0*mu_g0))*dPdY*(z**2 -zLength*z)
+      wg = (1.0d0/(2.0d0*mu_g0))*dPdz*(x**2 -xLength*x)
 
-      end function vg
+      end function wg
 
       end subroutine usr3
