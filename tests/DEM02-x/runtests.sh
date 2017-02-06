@@ -19,7 +19,7 @@ for DES_KN in 50000 500000 5000000; do
   done
 done
 
-post_dats=../DEM02/AUTOTEST/POST*.dat
+post_dats=../DEM02-y/AUTOTEST/POST*.dat
 
 for test_post_file in ${post_dats}; do
     numdiff -a 0.000001 -r 0.05 ${test_post_file} $(basename ${test_post_file})
