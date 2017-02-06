@@ -30,7 +30,6 @@ MODULE CALC_D_MOD
 
       use functions, only: AVG
       use param1, only: ZERO, SMALL_NUMBER
-      use functions, only: ieast, jnorth, ktop
 
       IMPLICIT NONE
 
@@ -94,9 +93,9 @@ MODULE CALC_D_MOD
          if (axis.eq.'X') then
             if(flag(i,j,k,2) >= 2000 .and. &
                flag(i,j,k,2) <= 2011) then
-               EPGA = AYZ*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
+               EPGA = AYZ*AVG(EP_G(I,J,K),EP_G(i+1,j,k))
                IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                  (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
+                  (F_GDS(i,j,k) + F_GDS(i+1,j,k))
             ELSE
                EPGA = ZERO
             ENDIF
@@ -104,9 +103,9 @@ MODULE CALC_D_MOD
          else if (axis.eq.'Y') then
             if(flag(i,j,k,3) >= 2000 .and. &
                flag(i,j,k,3) <= 2011) then
-               EPGA = AXZ*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
+               EPGA = AXZ*AVG(EP_G(I,J,K),EP_G(i,j+1,k))
                IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                  (F_GDS(i,j,k) + F_GDS(i,jnorth(i,j,k),k))
+                  (F_GDS(i,j,k) + F_GDS(i,j+1,k))
             ELSE
                EPGA = ZERO
             ENDIF
@@ -114,9 +113,9 @@ MODULE CALC_D_MOD
          else if (axis.eq.'Z') then
             if(flag(i,j,k,4) >= 2000 .and. &
                flag(i,j,k,4) <= 2011) then
-               EPGA = AXY*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
+               EPGA = AXY*AVG(EP_G(I,J,K),EP_G(i,j,k+1))
                IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                  (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
+                  (F_GDS(I,J,K) + F_GDS(i,j,k+1))
             ELSE
                EPGA = ZERO
             ENDIF
