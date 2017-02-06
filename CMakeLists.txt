@@ -11,8 +11,8 @@ RelWithDebInfo MinSizeRel."
 endif(NOT CMAKE_BUILD_TYPE)
 
 if (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
-  set (CMAKE_CXX_FLAGS_RELEASE "-g -Wall -O2" CACHE STRING "" FORCE)
-  set (CMAKE_CXX_FLAGS_DEBUG   "-g -Wall -Wextra -O0" CACHE STRING "" FORCE)
+  set (CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -g -Wall -O2" CACHE STRING "" FORCE)
+  set (CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -g -Wall -Wextra -O0" CACHE STRING "" FORCE)
   set (CMAKE_Fortran_FLAGS_RELEASE "-g -std=f2008 -fcheck=all -Wall -O2" CACHE STRING "" FORCE)
   set (CMAKE_Fortran_FLAGS_DEBUG   "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface" CACHE STRING "" FORCE)
 
