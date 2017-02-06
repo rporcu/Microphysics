@@ -4,46 +4,43 @@ module calc_tau_w_g_module
    use iso_c_binding , only: c_int
    use geometry      , only: domlo, domhi
 
-   contains
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CALC_Tau_W_g                                            C
-!  Purpose: Cross terms in the gradient of stress in W_g momentum      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 18-DEC-96  C
-!                                                                      C
-!                                                                      C
-!  Comments: This routine calculates the components of the gas phase   C
-!  viscous stress tensor of the w-momentum equation that cannot be     C
-!  cast in the form: mu.grad(w). These components are stored in the    C
-!  passed variable, which is then used as a source of the w-momentum   C
-!  equation.                                                           C
-!                                                                      C
-!  The following w component viscous stress tensor terms are           C
-!  calculated here:                                                    C
-!  > part of 1/x d/dz (tau_zz) xdxdydz =>                              C
-!            1/x d/dz (lambda.trcD) xdxdydz=>                          C
-!    delta (lambda.trcD)Ap |T-B                                        C
-!  > part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently        C
-!    part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>              C
-!            1/x d/dx(mu.du/dz) xdxdydz =>                             C
-!    delta (mu/x du/dz)Ayz |E-W                                        C
-!  > part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently        C
-!    part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>              C
-!            1/x d/dx(mu.du/dz) xdxdydz =>                             C
-!    delta (mu/x du/dz)Ayz |E-W                                        C
-!  > part of 1/x d/dz (tau_zz) xdxdydz =>                              C
-!            1/x d/dz (mu/x dw/dz) xdxdydz =>                          C
-!    delta (mu/x dw/dz)Axy |T-B                                        C
-!                                                                      C
-!  To reconstitute the complete w-momentum gas phase viscous stress    C
-!  tensor requires including the terms calculated in source_w_g        C
-!  and the 'diffusional' components (i.e., those of the form           C
-!  mu.grad(w)                                                          C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-    subroutine calc_tau_w_g(slo,shi,lo,hi,&
-                            ltau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: CALC_Tau_W_g                                            !
+!  Purpose: Cross terms in the gradient of stress in W_g momentum      !
+!                                                                      !
+!  Comments: This routine calculates the components of the gas phase   !
+!  viscous stress tensor of the w-momentum equation that cannot be     !
+!  cast in the form: mu.grad(w). These components are stored in the    !
+!  passed variable, which is then used as a source of the w-momentum   !
+!  equation.                                                           !
+!                                                                      !
+!  The following w component viscous stress tensor terms are           !
+!  calculated here:                                                    !
+!  > part of 1/x d/dz (tau_zz) xdxdydz =>                              !
+!            1/x d/dz (lambda.trcD) xdxdydz=>                          !
+!    delta (lambda.trcD)Ap |T-B                                        !
+!  > part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently        !
+!    part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>              !
+!            1/x d/dx(mu.du/dz) xdxdydz =>                             !
+!    delta (mu/x du/dz)Ayz |E-W                                        !
+!  > part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently        !
+!    part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>              !
+!            1/x d/dx(mu.du/dz) xdxdydz =>                             !
+!    delta (mu/x du/dz)Ayz |E-W                                        !
+!  > part of 1/x d/dz (tau_zz) xdxdydz =>                              !
+!            1/x d/dz (mu/x dw/dz) xdxdydz =>                          !
+!    delta (mu/x dw/dz)Axy |T-B                                        !
+!                                                                      !
+!  To reconstitute the complete w-momentum gas phase viscous stress    !
+!  tensor requires including the terms calculated in source_w_g        !
+!  and the 'diffusional' components (i.e., those of the form           !
+!  mu.grad(w)                                                          !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_tau_w_g(slo,shi,lo,hi,&
+       ltau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -54,39 +51,34 @@ module calc_tau_w_g_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in ) :: slo(3),shi(3)
+      integer(c_int), intent(in ) ::  lo(3), hi(3)
+      real(c_real), intent(in   ) :: dx,dy,dz
 
-      ! tau_w_g
-      real(c_real), INTENT(INOUT) :: trd_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: ltau_w_g&
+      real(c_real), intent(inout) :: ltau_w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: ep_g&
+      real(c_real), intent(in   ) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
+      real(c_real), intent(in   ) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: lambda_g&
+      real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
+      real(c_real), intent(in   ) :: mu_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K, IM, JM, KP
-! Average volume fraction
-      real(c_real) :: EPGA
+      integer :: i, j, k
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
-
       real(c_real) :: odz, axy, ayz, axz
 
       odz = 1.d0/dz
@@ -94,22 +86,10 @@ module calc_tau_w_g_module
       axz = dx*dz
       ayz = dy*dz
 
-!---------------------------------------------------------------------//
-!     NOTE -- triply nested functions seem to break things -- hence the
-!             use of the *tmp variables below
-!---------------------------------------------------------------------//
 
-        DO K = lo(3),hi(3)-1
-         DO J = lo(2),hi(2)
-          DO I = lo(1),hi(1)
-
-            EPGA = AVG(EP_G(I,J,K),EP_G(i,j,k+1))
-
-            IF (flag(i,j,k,4) > 1000 .AND. EPGA>DIL_EP_S) THEN
-
-               IM = max(domlo(1)-1, i-1)
-               JM = max(domlo(2)-1, j-1)
-               KP = min(domhi(3)+1, k+1)
+      do k = lo(3),hi(3)-1
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
 ! Surface forces
 ! Bulk viscosity term
@@ -152,17 +132,11 @@ module calc_tau_w_g_module
                SSZ = mu_g(i,j,k+1)*(w_g(i,j,k+1)-w_g(i,j,k  ))*ODZ*AXY - &
                      mu_g(i,j,k  )*(w_g(i,j,k  )-w_g(i,j,k-1))*ODZ*AXY
 
-               ! Add the terms
                ltau_w_g(i,j,k) =  SBV + SSX + SSY + SSZ
 
-            ELSE
-
-               ltau_w_g(i,j,k) = ZERO
-
-            ENDIF
-         ENDDO
-         ENDDO
-         ENDDO
+            enddo
+         enddo
+      enddo
 
     end subroutine calc_tau_w_g
 

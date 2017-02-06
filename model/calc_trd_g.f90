@@ -1,41 +1,28 @@
-MODULE CALC_TRD_G_MODULE
+module calc_trd_g_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: CALC_trD_g                                             C
-!  Purpose: Calculate the trace of gas phase rate of strain tensor     C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 19-DEC-96  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!                                                                      C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TRD_G(slo,shi,trd_g,u_g,v_g,w_g,flag,dx,dy,dz)
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: CALC_trD_g                                             !
+!  Purpose: Calculate the trace of gas phase rate of strain tensor     !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_trd_g(slo, shi, lo, hi, trd_g, &
+      u_g, v_g, w_g, dx, dy, dz)
 
-      USE functions, only: iminus, jminus, kminus
+      implicit none
 
-      IMPLICIT NONE
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      real(c_real),   intent(in   ) :: dx, dy, dz
 
-      integer(c_int), intent(in ) :: slo(3),shi(3)
-
+! Dummy Arguments
 !-----------------------------------------------
-!   G l o b a l   P a r a m e t e r s
-!-----------------------------------------------
-      real(c_real), intent(inout) :: trd_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: trd_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -43,41 +30,26 @@ MODULE CALC_TRD_G_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), intent(in   ) :: dx, dy, dz
 
+! Local variables
 !-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
-! Indices
-      INTEGER :: I, J, K
-
+      integer :: i, j, k
       real(c_real) :: odx, ody, odz
 
       odx = 1.d0 / dx
       ody = 1.d0 / dy
       odz = 1.d0 / dz
-!
-!=======================================================================
-! JFD: START MODIFICATION FOR CARTESIAN GRID IMPLEMENTATION
-!=======================================================================
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            IF (flag(i,j,k,1)<100) THEN
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+               trd_g(i,j,k) = &
+                  (u_g(i,j,k)-u_g(i-1,j,k))*odx + &
+                  (v_g(i,j,k)-v_g(i,j-1,k))*ody + &
+                  (w_g(i,j,k)-w_g(i,j,k-1))*odz
+            end do
+         end do
+      end do
 
-              TRD_G(i,j,k) = &
-                 (U_G(I,J,K)-U_G(iminus(i,j,k),j,k))*ODX + &
-                 (V_G(I,J,K)-V_G(i,jminus(i,j,k),k))*ODY + &
-                 (W_G(I,J,K)-W_G(i,j,kminus(i,j,k)))*ODZ
-
-             ENDIF
-          END DO
-        END DO
-      END DO
-
-      END SUBROUTINE CALC_TRD_G
-END MODULE CALC_TRD_G_MODULE
+   end subroutine calc_trd_g
+end module calc_trd_g_module
