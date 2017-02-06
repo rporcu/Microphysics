@@ -279,12 +279,12 @@
 
                num1 = b_m(i,j,k) - (&
                   a_m(i,j,k,0)*vel(i,j,k)+&
-                  a_m(i,j,k,e)*vel(iplus(i,j,k), j,k) + &
-                  a_m(i,j,k,w)*vel(iminus(i,j,k),j,k) + &
-                  a_m(i,j,k,n)*vel(i,jplus(i,j,k), k) + &
-                  a_m(i,j,k,s)*vel(i,jminus(i,j,k),k) + &
-                  a_m(i,j,k,t)*vel(i,j,kplus(i,j,k) ) + &
-                  a_m(i,j,k,b)*vel(i,j,kminus(i,j,k)) )
+                  a_m(i,j,k,e)*vel(i+1,j,k) + &
+                  a_m(i,j,k,w)*vel(i-1,j,k) + &
+                  a_m(i,j,k,n)*vel(i,j+1,k) + &
+                  a_m(i,j,k,s)*vel(i,j-1,k) + &
+                  a_m(i,j,k,t)*vel(i,j,k+1) + &
+                  a_m(i,j,k,b)*vel(i,j,k-1) )
 
 ! Ignore momentum residual in stagnant regions.  Need an alternative
 ! criteria for residual scaling for such cases.
@@ -342,10 +342,6 @@
       endif
 
       return
-
-    contains
-
-      include 'functions.inc'
 
    end subroutine calc_resid_vel
 end module residual
