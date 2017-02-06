@@ -71,7 +71,6 @@ f90EXE_sources += set_domain.f90
 f90EXE_sources += set_flags.f90
 f90EXE_sources += set_icbc_flags.f90
 f90EXE_sources += set_max2.f90
-f90EXE_sources += set_outflow.f90
 f90EXE_sources += set_param.f90
 f90EXE_sources += set_ps.f90
 f90EXE_sources += solve_pp_g.f90

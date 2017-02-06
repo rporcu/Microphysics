@@ -180,7 +180,6 @@ set(F90_sources
   model/set_domain.f90
   model/set_flags.f90
   model/set_icbc_flags.f90
-  model/set_outflow.f90
   model/set_param.f90
   model/set_ps.f90
   model/solve_pp_g.f90
