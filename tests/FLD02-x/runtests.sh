@@ -10,10 +10,8 @@ fi
 rm -f POST_* &> /dev/null
 
 for DELP_X in -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0; do
-  for JMAX in 8 16 32; do
-    rm -f ${RUN_NAME}* &> /dev/null
-    time -p ${MFIX} inputs JMAX=${JMAX} DELP_X=${DELP_X}
-  done
+  rm -f ${RUN_NAME}* &> /dev/null
+  time -p ${MFIX} inputs DELP_X=${DELP_X}
 done
 
 

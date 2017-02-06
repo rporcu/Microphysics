@@ -240,8 +240,12 @@ target_link_libraries(mfix model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
 enable_testing()
 
 set(TESTS
-  tests/FLD01
-  tests/FLD02
+  tests/FLD01-x
+  tests/FLD01-y
+  tests/FLD01-z
+  tests/FLD02-x
+  tests/FLD02-y
+  tests/FLD02-z
   tests/DEM01
   tests/DEM02
   tests/DEM03
@@ -252,10 +256,6 @@ set(TESTS
   tests/DEM01-z
   tests/DEM02-x
   tests/DEM02-z
-  tests/FLD01-y
-  tests/FLD01-z
-  tests/FLD02-y
-  tests/FLD02-z
   tests/DEM03-x
   tests/DEM03-z
   tests/DEM04-x

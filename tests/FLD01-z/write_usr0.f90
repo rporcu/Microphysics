@@ -17,9 +17,6 @@
       CALL WRITE_DAT_HEADER('POST_UG.dat','U_g')
       CALL WRITE_DAT_HEADER('POST_PG.dat','P_g')
 
-      CALL WRITE_NRM_HEADER('POST_UG_NORMS.dat','U_g')
-      CALL WRITE_NRM_HEADER('POST_PG_NORMS.dat','P_g')
-
 
       RETURN
 
@@ -73,37 +70,6 @@
       CLOSE(fUNIT)
       RETURN
       END SUBROUTINE WRITE_DAT_HEADER
-
-!----------------------------------------------------------------------!
-!                                                                      !
-!                                                                      !
-!                                                                      !
-!----------------------------------------------------------------------!
-      SUBROUTINE WRITE_NRM_HEADER(FNAME, VAR)
-
-      use run, only: DESCRIPTION
-
-      IMPLICIT NONE
-
-      CHARACTER(len=*) :: FNAME
-      CHARACTER(len=*) :: VAR
-
-! logical used for testing is the data file already exists
-      LOGICAL :: EXISTS
-! file unit for heat transfer data
-      INTEGER, PARAMETER :: fUNIT = 2030
-
-      INQUIRE(FILE=FNAME,EXIST=EXISTS)
-      IF (.NOT.EXISTS) THEN
-         OPEN(UNIT=fUNIT,FILE=FNAME,STATUS='NEW')
-         WRITE(fUNIT, 1000) trim(DESCRIPTION)
-      ENDIF
-
- 1000 FORMAT('#',/'#',/'#',25x,A)
-
-      CLOSE(fUNIT)
-      RETURN
-      END SUBROUTINE WRITE_NRM_HEADER
 
 
       END SUBROUTINE WRITE_USR0

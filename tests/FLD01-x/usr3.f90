@@ -79,16 +79,6 @@
 
       close(fUnit)
 
-! Store Norms for U velocity
-      open(unit=fUnit, file='POST_UG_NORMS.dat', &
-         position='append', status='old')
-
-      L1 = L1/dble(domhi(2)-domlo(2)+1)
-      L2 = L2/dble(domhi(2)-domlo(2)+1)
-
-      write(fUnit,1200) jmax, L1, L2, LI
-      close(fUnit)
-
       open(unit=fUnit, file='POST_PG.dat', &
          position='append', status='old')
 
@@ -122,14 +112,6 @@
       end do
       close(fUnit)
 
-      open(unit=fUnit, file='POST_PG_NORMS.dat', &
-         position='append', status='old')
-
-      L1 = L1/dble(domhi(1)-domlo(1)+1)
-      L2 = L2/dble(domhi(1)-domlo(1)+1)
-
-      write(fUnit,1200) imax, L1, L2, LI
-      close(fUnit)
 
       RETURN
  1100 Format(5(3x,es13.6))

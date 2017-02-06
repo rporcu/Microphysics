@@ -38,9 +38,9 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 0.01  ! IMAX passed as argument
+  XLENGTH = 0.01    IMAX = 8
   YLENGTH = 1.00    JMAX = 1
-  ZLENGTH = 0.20  ! KMAX passed as argument
+  ZLENGTH = 0.20    KMAX = 8
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
@@ -110,4 +110,4 @@
 
   FULL_LOG = .T.
 
-  RESID_STRING  = 'P0', 'U0', 'V0'
+  RESID_STRING  = 'P0', 'W0'
