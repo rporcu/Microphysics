@@ -34,7 +34,7 @@ module v_g_conv_dif
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3) 
+      integer     , intent(in   ) :: ulo(3),uhi(3)
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
 
@@ -166,7 +166,6 @@ module v_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
       USE param1, only: zero
       use matrix, only: e, w, n, s, t, b
 

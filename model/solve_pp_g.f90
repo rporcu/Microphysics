@@ -15,12 +15,15 @@ module solve_pp_module
    subroutine solve_pp_g(slo, shi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
+      bc_ilo_type, bc_ihi_type, bc_jlo_type, &
+      bc_jhi_type, bc_klo_type, bc_khi_type, &
       flag, dt, normg, resg, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
       use conv_pp_g_module, only: conv_pp_g
       use source_pp_module, only: source_pp_g
+      use source_pp_module, only: source_pp_g_bc
       use residual, only: calc_resid_pp
 
 ! Global data .........................................................//
@@ -67,6 +70,20 @@ module solve_pp_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -106,8 +123,11 @@ module solve_pp_module
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
 
-      call source_pp_g(slo, shi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
-         rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
+      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
+         rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
+
+      call source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &
+      bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
       if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, flag, dx, dy, dz)
 

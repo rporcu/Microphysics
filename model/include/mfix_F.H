@@ -212,6 +212,9 @@ extern "C"
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,
+          int* bc_ilo,    int* bc_ihi,
+          int* bc_jlo,    int* bc_jhi,
+          int* bc_klo,    int* bc_khi,
           int*  flag,     Real* dt,
           Real* lnormg,   Real* resg,
           Real* dx,       Real* dy,       Real* dz);

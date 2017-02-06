@@ -3,75 +3,68 @@ module source_pp_module
   use bl_fort_module, only : c_real
   use iso_c_binding , only: c_int
 
-  contains
+contains
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: SOURCE_Pp_g                                             C
-!  Purpose: Determine source terms for Pressure correction equation.   C
-!                                                                      C
-!  Notes: The off-diagonal coefficients are positive. The center       C
-!         coefficient and the source vector are negative. See          C
-!         conv_Pp_g                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_Pp_g                                             !
+!  Purpose: Determine source terms for Pressure correction equation.   !
+!                                                                      !
+!  Notes: The off-diagonal coefficients are positive. The center       !
+!         coefficient and the source vector are negative. See          !
+!         conv_Pp_g                                                    !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine source_pp_g(slo, shi, lo, hi, A_M, B_M, B_MMAX, dt, &
+      u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, d_e, d_n, d_t,&
+      dx, dy, dz)
 
-subroutine source_pp_g(slo, shi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,&
-                       rop_g, rop_go, ro_g, d_e, d_n, d_t, flag, dx, dy, dz)
+      use bc, only: small_number, one, zero, ijk_p_g
+      use eos, only: droodp_g
+      use fld_const, only: ro_g0
+      use matrix, only: e, w, n, s, t, b
+      use param1, only: is_defined, is_undefined
+      use run, only: undefined_i
+      use ur_facs, only: ur_fac
+      use write_error_module, only: write_error
 
-      USE bc, ONLY: SMALL_NUMBER, ONE, ZERO, IJK_P_G
-      USE eos, ONLY: DROODP_G
-      USE fld_const, ONLY: RO_G0
-      USE matrix, ONLY: E, W, N, S, T, B
-      USE param1, ONLY: IS_DEFINED, IS_UNDEFINED
-      USE run, ONLY: UNDEFINED_I
-      USE ur_facs, ONLY: UR_FAC
-      USE write_error_module, only: write_error
-
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) ::  lo(3), hi(3)
 
-      ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(in   ) :: dx, dy, dz, dt
+
+      real(c_real), intent(inout) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-
-      ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(inout) :: b_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: b_mmax&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! maximum term in b_m expression
-      real(c_real), INTENT(INOUT) :: B_mmax&
+      real(c_real), intent(in   ) :: u_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: v_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: w_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: p_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: ep_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: rop_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: rop_go&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: ro_g&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: d_e&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: d_n&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: d_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: dt
-
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: rop_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: d_e&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: d_n&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: d_t&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
-!-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
 ! Indices
@@ -81,9 +74,7 @@ subroutine source_pp_g(slo, shi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,
 ! terms of bm expression
       real(c_real) bma, bme, bmw, bmn, bms, bmt, bmb
 ! error message
-      CHARACTER(LEN=80) :: LINE(1)
-      real(c_real) :: oDT
-      real(c_real) :: vol
+      real(c_real) :: oDT, vol
 !-----------------------------------------------
 
       odt = 1.0d0/dt
@@ -91,126 +82,203 @@ subroutine source_pp_g(slo, shi, A_M, B_M, B_MMAX, dt, u_g, v_g, w_g, p_g, ep_g,
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
-        do k = slo(3),shi(3)
-           do j = slo(2),shi(2)
-             do i = slo(1),shi(1)
+        do k = lo(3),hi(3)
+           do j = lo(2),hi(2)
+             do i = lo(1),hi(1)
 
-            IF (1.eq.flag(i,j,k,1)) THEN
+                bma = (rop_g(i,j,k)-rop_go(i,j,k))*vol*odt
+                bme = A_m(i,j,k,e)*u_g(i,j,k)
+                bmw = A_m(i,j,k,w)*u_g(i-1,j,k)
+                bmn = A_m(i,j,k,n)*v_g(i,j,k)
+                bms = A_m(i,j,k,s)*v_g(i,j-1,k)
+                bmt = A_m(i,j,k,t)*w_g(i,j,k)
+                bmb = A_m(i,j,k,b)*w_g(i,j,k-1)
+                b_m(i,j,k) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
+                b_mmax(i,j,k) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
+                   abs(bms), abs(bmt), abs(bmb))
 
-            bma = (ROP_G(I,J,K)-ROP_GO(I,J,K))*VOL*ODT
-            bme = A_M(I,J,K,E)*U_G(I,J,K)
-            bmw = A_M(I,J,K,W)*U_G(iminus(i,j,k),j,k)
-            bmn = A_M(I,J,K,N)*V_G(I,J,K)
-            bms = A_M(I,J,K,S)*V_G(i,jminus(i,j,k),k)
-            bmt = A_M(I,J,K,T)*W_G(I,J,K)
-            bmb = A_M(I,J,K,B)*W_G(i,j,kminus(i,j,k))
-            B_M(I,J,K) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
-            B_MMAX(I,J,K) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
-               abs(bms), abs(bmt), abs(bmb))
+                A_m(i,j,k,e) = A_m(i,j,k,e)*d_e(i,j,k)
+                A_m(i,j,k,w) = A_m(i,j,k,w)*d_e(i-1,j,k)
+                A_m(i,j,k,n) = A_m(i,j,k,n)*d_n(i,j,k)
+                A_m(i,j,k,s) = A_m(i,j,k,s)*d_n(i,j-1,k)
+                A_m(i,j,k,t) = A_m(i,j,k,t)*d_t(i,j,k)
+                A_m(i,j,k,b) = A_m(i,j,k,b)*d_t(i,j,k-1)
 
-            A_M(I,J,K,E) = A_M(I,J,K,E)*D_E(i,j,k)
-            A_M(I,J,K,W) = A_M(I,J,K,W)*D_E(iminus(i,j,k),j,k)
-            A_M(I,J,K,N) = A_M(I,J,K,N)*D_N(i,j,k)
-            A_M(I,J,K,S) = A_M(I,J,K,S)*D_N(i,jminus(i,j,k),k)
-            A_M(I,J,K,T) = A_M(I,J,K,T)*D_T(i,j,k)
-            A_M(I,J,K,B) = A_M(I,J,K,B)*D_T(i,j,kminus(i,j,k))
-
-            A_M(I,J,K,0) = -(A_M(I,J,K,E)+A_M(I,J,K,W)+A_M(I,J,K,N)+A_M(I,J,K,S) + &
-               A_M(I,J,K,T)+A_M(I,J,K,B))
-
-            IF (ABS(A_M(I,J,K,0)) < SMALL_NUMBER) THEN
-               IF (ABS(B_M(I,J,K)) < SMALL_NUMBER) THEN
-                  A_M(I,J,K,0) = -ONE
-                  B_M(I,J,K) = ZERO
-               ELSEIF (IS_DEFINED(RO_G0)) THEN !This is an error only in incompressible flow
-                  WRITE (LINE, '(A,I3,1x,I3,1x,I3,A,I1,A,G12.5)') 'Error: At IJK = ', i,j,k, &
-                     ' M = ', 0, ' A = 0 and b = ', B_M(I,J,K)
-                  CALL WRITE_ERROR ('SOURCE_Pp_g', LINE, 1)
-               ENDIF
-            ENDIF
-
-         ELSE   ! if/else branch .not.1.eq.flag(i,j,k)
-! set the value (correction) in all wall and flow boundary cells to zero
-! note the matrix coefficients and source vector should already be zero
-! from the initialization of A and B but the following ensures the zero
-! value.
-            A_M(I,J,K,E) = ZERO
-            A_M(I,J,K,W) = ZERO
-            A_M(I,J,K,N) = ZERO
-            A_M(I,J,K,S) = ZERO
-            A_M(I,J,K,T) = ZERO
-            A_M(I,J,K,B) = ZERO
-            A_M(I,J,K,0) = -ONE
-            B_M(I,J,K) = ZERO
-         ENDIF   ! end if/else branch 1.eq.flag(i,j,k)
-      ENDDO
-      ENDDO
-      ENDDO
+                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
+                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
+                                 A_m(i,j,k,t) + A_m(i,j,k,b))
+             enddo
+          enddo
+      enddo
 
 ! make correction for compressible flows
-      IF (IS_UNDEFINED(RO_G0)) THEN
-         fac = UR_FAC(1)  !since p_g = p_g* + ur_fac * pp_g
-
-        do k = slo(3),shi(3)
-           do j = slo(2),shi(2)
-             do i = slo(1),shi(1)
-
-               if (1.eq.flag(i,j,k,1)) THEN
-                  A_M(I,J,K,0) = A_M(I,J,K,0) - &
-                     fac*DROODP_G(RO_G(I,J,K),P_G(I,J,K))*&
-                     EP_G(I,J,K)*VOL*ODT
-               end if
-
-             end do
+      if (is_undefined(ro_g0)) then
+         fac = ur_fac(1)  !since p_g = p_g* + ur_fac * pp_g
+         do k = lo(3), hi(3)
+           do j = lo(2), hi(2)
+              do i = lo(1), hi(1)
+                 A_m(i,j,k,0) = A_m(i,j,k,0) - &
+                    fac*droodp_g(ro_g(i,j,k),p_g(i,j,k))*&
+                    ep_g(i,j,k)*vol*odt
+              end do
            end do
-         end do
-
-      ENDIF   ! end if (ro_g0 == undefined); i.e., compressible flow
-
-
-! Remove the asymmetry in matrix caused by the pressure outlet or inlet
-! boundaries.  Because the P' at such boundaries is zero we may set the
-! coefficient in the neighboring fluid cell to zero without affecting
-! the linear equation set.
-      do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-           do i = slo(1),shi(1)
-
-         IF (1.eq.flag(i,j,k,1)) THEN
-
-! Cut the neighbor link between fluid cell and adjacent pressure flow cell
-            if(flag(iminus(i,j,k),j,k,1) == 10 .OR. &
-               flag(iminus(i,j,k),j,k,1) == 11) A_m(I,J,K,W) = ZERO
-            if(flag(iplus(i,j,k),j,k ,1) == 10 .OR. &
-               flag(iplus(i,j,k),j,k ,1) == 11) A_m(I,J,K,E) = ZERO
-            if(flag(i,jminus(i,j,k),k,1) == 10 .OR. &
-               flag(i,jminus(i,j,k),k,1) == 11) A_m(I,J,K,S) = ZERO
-            if(flag(i,jplus(i,j,k),k ,1) == 10 .OR. &
-               flag(i,jplus(i,j,k),k ,1) == 11) A_m(I,J,K,N) = ZERO
-            if(flag(i,j,kminus(i,j,k),1) == 10 .OR. &
-               flag(i,j,kminus(i,j,k),1) == 11) A_m(I,J,K,B) = ZERO
-            if(flag(i,j,kplus(i,j,k) ,1) == 10 .OR. &
-               flag(i,j,kplus(i,j,k) ,1) == 11) A_m(I,J,K,T) = ZERO
-
-         ENDIF
-          end do
         end do
-      end do
+
+     endif   ! end if (ro_g0 == undefined); i.e., compressible flow
 
 ! Specify P' to zero for incompressible flows. Check set_bc0
 ! for details on selection of IJK_P_g.
-      IF (IJK_P_G(1) /= UNDEFINED_I) THEN
-         B_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = ZERO
-         A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = ZERO
-         A_M(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -ONE
-      ENDIF
+      if (ijk_p_g(1) /= undefined_i) then
+         b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
+         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
+         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
+      endif
 
-      RETURN
+      return
 
-CONTAINS
+   end subroutine source_pp_g
 
-      INCLUDE 'functions.inc'
 
-end subroutine source_pp_g
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: SOURCE_Pp_g_bc                                          !
+!  Purpose: Determine source terms for Pressure correction equation.   !
+!                                                                      !
+!  Notes: The off-diagonal coefficients are positive. The center       !
+!         coefficient and the source vector are negative. See          !
+!         conv_Pp_g                                                    !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &
+      bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
+
+      use ic, only: PINF_, POUT_
+      use geometry, only: domlo, domhi
+      use matrix, only: e, n, t, w, s, b
+      use param1, only: zero
+
+      IMPLICIT NONE
+
+      integer     , intent(in   ) :: slo(3),shi(3)
+
+      real(c_real), intent(inout) :: A_m&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+
+! Local Variables
+!-----------------------------------------------
+      integer :: i,j,k
+      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
+!-----------------------------------------------
+
+      nlft = max(0,domlo(1)-slo(1))
+      nbot = max(0,domlo(2)-slo(2))
+      ndwn = max(0,domlo(3)-slo(3))
+
+      nrgt = max(0,shi(1)-domhi(1))
+      ntop = max(0,shi(2)-domhi(2))
+      nup  = max(0,shi(3)-domhi(3))
+
+
+! --- EAST FLUID ---------------------------------------------------------->
+
+      if (nlft .gt. 0) then
+         i = domlo(1)
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               if(bc_ilo_type(j,k,1) == PINF_ .or. &
+                  bc_ilo_type(j,k,1) == POUT_) then
+                  A_m(i,j,k,w) =  zero
+               endif
+            end do
+         end do
+      endif
+
+! --- WEST FLUID ---------------------------------------------------------->
+
+      if (nrgt .gt. 0) then
+         i = domhi(1)
+         do k=slo(3),shi(3)
+            do j=slo(2),shi(2)
+               if(bc_ihi_type(j,k,1) == PINF_ .or. &
+                  bc_ihi_type(j,k,1) == POUT_) then
+                  A_m(i,j,k,e) = zero
+               endif
+            end do
+         end do
+      endif
+
+! --- NORTH FLUID --------------------------------------------------------->
+
+      if (nbot .gt. 0) then
+         j = domlo(2)
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               if(bc_jlo_type(i,k,1) == PINF_ .or. &
+                  bc_jlo_type(i,k,1) == POUT_) then
+                  A_m(i,j,k,s) = zero
+               endif
+            end do
+         end do
+      endif
+
+
+! --- SOUTH FLUID --------------------------------------------------------->
+
+      if (ntop .gt. 0) then
+         j = domhi(2)
+         do k=slo(3),shi(3)
+            do i=slo(1),shi(1)
+               if(bc_jhi_type(i,k,1) == PINF_ .or. &
+                  bc_jhi_type(i,k,1) == POUT_) then
+                  A_m(i,j,k,n) = zero
+               endif
+            end do
+         end do
+      endif
+
+! --- TOP FLUID ----------------------------------------------------------->
+
+      if (ndwn .gt. 0) then
+         k = domlo(3)
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               if(bc_klo_type(i,j,1) == PINF_ .or. &
+                  bc_klo_type(i,j,1) == POUT_) then
+                  A_m(i,j,k,b) = zero
+               endif
+            end do
+         end do
+      endif
+
+! --- BOTTOM FLUID -------------------------------------------------------->
+
+      if (nup .gt. 0) then
+         k = domhi(3)
+         do j=slo(2),shi(2)
+            do i=slo(1),shi(1)
+               if(bc_khi_type(i,j,1) == PINF_ .or. &
+                  bc_khi_type(i,j,1) == POUT_) then
+                  A_m(i,j,k,t) = zero
+               endif
+            end do
+         end do
+      endif
+
+      return
+
+   end subroutine source_pp_g_bc
 
 end module source_pp_module

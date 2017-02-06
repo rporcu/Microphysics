@@ -972,6 +972,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+        bc_klo.dataPtr(), bc_khi.dataPtr(),
         (*flag[lev])[mfi].dataPtr(),     &dt,
         &lnormg,                 &resg,     &dx, &dy, &dz);
     }

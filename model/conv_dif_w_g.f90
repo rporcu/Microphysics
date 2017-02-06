@@ -169,9 +169,6 @@ module w_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-
       use matrix, only: e, w, n, s, t, b
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)

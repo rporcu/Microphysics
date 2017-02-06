@@ -175,8 +175,6 @@ contains
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
       A_U_g, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
 
-      use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
-
       use matrix, only: e, w, n, s, t, b
 
       implicit none
@@ -349,7 +347,7 @@ contains
       allocate(xsi_n(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
       allocate(xsi_t(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
 
-      !  Calculate the components of velocity on the east, north, 
+      !  Calculate the components of velocity on the east, north,
       !  and top face of a u-momentum cell.
       DO k = slo(3),shi(3)
         DO j = slo(2),shi(2)
