@@ -217,7 +217,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
     bc_khi.resize(box_khi,2);
 
 #if 0
-    BoxList bl; 
+    BoxList bl;
     bl.push_back(box_ilo); bl.push_back(box_ihi);
     bl.push_back(box_jlo); bl.push_back(box_jhi);
     bl.push_back(box_klo); bl.push_back(box_khi);
@@ -651,8 +651,7 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      const int max_pip = particle_state.size();
 
      calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-                 &max_pip,
-      (*flag[lev])[mfi].dataPtr(),    &calc_flag,
+                &max_pip,   &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
       (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
@@ -1097,7 +1096,7 @@ mfix_level::mfix_set_bc_type(int lev)
                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                   bc_klo.dataPtr(), bc_khi.dataPtr(),
-                  (*flag[lev])[mfi].dataPtr()); 
+                  (*flag[lev])[mfi].dataPtr());
   }
 
 }
