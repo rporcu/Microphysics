@@ -223,8 +223,7 @@ extern "C"
           const int* lo,  const int* hi,
           Real* p_g,      Real* pp_g,
           Real* u_g,      Real* v_g,      Real* w_g,
-          Real* d_e,      Real* d_n,      Real* d_t,
-          int*  flag);
+          Real* d_e,      Real* d_n,      Real* d_t);
 
   void set_wall_bc(
           const int* slo, const int* shi,

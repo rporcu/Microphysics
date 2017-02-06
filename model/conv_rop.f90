@@ -124,9 +124,9 @@ MODULE CONV_ROP_MODULE
         end do
       end do
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = lo(3),hi(3)
+        DO J = slo(2),hi(2)
+          DO I = lo(1),hi(1)
 
             ! North face (i, j+1/2, k)
             if (V(i,j,k) >= ZERO) THEN
@@ -139,9 +139,9 @@ MODULE CONV_ROP_MODULE
         end do
       end do
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = slo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = lo(1),hi(1)
 
             ! Top face (i, j, k+1/2)
             if (W(i,j,k) >= ZERO) THEN
@@ -154,7 +154,6 @@ MODULE CONV_ROP_MODULE
         end do
       end do
 
-      RETURN
       END SUBROUTINE CONV_ROP0
 
 
@@ -229,15 +228,15 @@ MODULE CONV_ROP_MODULE
       CALL CALC_XSI (DISC, slo, shi, hi, &
                      ROP, U, V, W, XSI_E, XSI_N, XSI_T, dt, dx, dy, dz)
 
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
+      DO K = lo(3),hi(3)
+        DO J = lo(2),hi(2)
+          DO I = lo(1),hi(1)
 
          if (1.eq.flag(i,j,k,1)) THEN
 
             ! East face (i+1/2, j, k)
             ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
-               XSI_E(i,j,k) *ROP(i+1,j,k) )
+                                 XSI_E(i,j,k) *ROP(i+1,j,k) )
 
             ! West face (i-1/2, j, k)
             if (.NOT.1.eq.flag(i-1,j,k,1)) THEN

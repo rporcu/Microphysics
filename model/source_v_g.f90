@@ -26,7 +26,7 @@ contains
       use constant, only: gravity
       use bc, only: delp_y
 
-      use functions, only: avg, jnorth
+      use functions, only: avg
       use geometry,  only: domlo, domhi, cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
@@ -85,10 +85,10 @@ contains
          DO J = lo(2), hi(2)
             DO I = lo(1), hi(1)
 
-               epga = avg(ep_g(i,j,k),ep_g(i,jnorth(i,j,k),k))
+               epga = avg(ep_g(i,j,k),ep_g(i,j+1,k))
 
 ! Pressure term
-               pgn = p_g(i,jnorth(i,j,k),k)
+               pgn = p_g(i,j+1,k)
                if ( cyclic_y_pd) then
                   if((j==domlo(2)-1) .or. (j==domhi(2)) ) &
                      pgn = pgn - delp_y
@@ -96,10 +96,10 @@ contains
                sdp = -p_scale*epga*(pgn - p_g(i,j,k))*axz
 
 ! Volumetric forces
-               roga = avg(ro_g(i,j,k),ro_g(i,jnorth(i,j,k),k))
-               ropga = avg(rop_g(i,j,k),rop_g(i,jnorth(i,j,k),k))
+               roga = avg(ro_g(i,j,k),ro_g(i,j+1,k))
+               ropga = avg(rop_g(i,j,k),rop_g(i,j+1,k))
 ! Previous time step
-               v0 = avg(rop_go(i,j,k),rop_go(i,jnorth(i,j,k),k))*odt
+               v0 = avg(rop_go(i,j,k),rop_go(i,j+1,k))*odt
 
 ! Body force
                vbf = roga*gravity(2)

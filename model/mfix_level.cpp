@@ -1017,9 +1017,9 @@ mfix_level::mfix_correct0(int lev)
      correct0(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-      (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-      (*flag[lev])[mfi].dataPtr());
+      (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
   }
+
   fill_mf_bc(lev,*p_g[lev],0);
   fill_mf_bc(lev,*u_g[lev],1);
   fill_mf_bc(lev,*v_g[lev],2);

@@ -15,7 +15,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(slo, shi, &
+      SUBROUTINE GAS_DRAG_U(slo, shi, lo, hi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
@@ -27,14 +27,12 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      ! IJK of cell to east.
-      use functions, only: ieast
       ! Function for averaging to a scalar cell's east face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -68,16 +66,16 @@ MODULE GAS_DRAG_MODULE
 ! Average the interpoalted drag force from the cell corners to the cell face.
       DO K = slo(3),shi(3)
          DO J = slo(2),shi(2)
-            DO I = slo(1),shi(1)
+            DO I = slo(1),hi(1)
 
                IF(flag(i,j,k,2)>= 2000 .and. &
                   flag(i,j,k,2)<=2011) then
 
                   A_M(I,J,K,0) = A_M(I,J,K,0) - 0.5d0*VOL * &
-                     (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
+                     (F_GDS(i,j,k) + F_GDS(i+1,j,k))
 
                   B_M(I,J,K) = B_M(I,J,K) - 0.5d0* VOL *&
-                     (DRAG_BM(i,j,k,1) + DRAG_BM(ieast(i,j,k),j,k,1))
+                     (DRAG_BM(i,j,k,1) + DRAG_BM(i+1,j,k,1))
 
                ENDIF
             ENDDO
@@ -96,7 +94,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(slo, shi, &
+      SUBROUTINE GAS_DRAG_V(slo, shi, lo, hi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 
@@ -109,15 +107,12 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      ! IJK of cell to north.
-      use functions, only: jnorth
-
       ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -145,14 +140,14 @@ MODULE GAS_DRAG_MODULE
       IF(DES_ONEWAY_COUPLED) RETURN
 
       DO K = slo(3),shi(3)
-         DO J = slo(2),shi(2)
+         DO J = slo(2),hi(2)
             DO I = slo(1),shi(1)
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) then
                   A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
-                     (F_GDS(I,J,K) + F_GDS(i,jnorth(i,j,k),k))
+                     (F_GDS(I,J,K) + F_GDS(i,j+1,k))
                   B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
-                     (DRAG_BM(i,j,k,2)+DRAG_BM(i,jnorth(i,j,k),k,2))
+                     (DRAG_BM(i,j,k,2)+DRAG_BM(i,j+1,k,2))
                ENDIF
             ENDDO
          ENDDO
@@ -170,7 +165,7 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(slo, shi, &
+      SUBROUTINE GAS_DRAG_W(slo, shi, lo, hi, &
                             A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
@@ -182,15 +177,12 @@ MODULE GAS_DRAG_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      ! IJK of cell to top.
-      use functions, only: ktop
-
       ! Function for averaging to a scalar cell's north face.
       use functions, only: AVG
 
       IMPLICIT NONE
 
-      integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       real(c_real), INTENT(INOUT) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
@@ -215,15 +207,15 @@ MODULE GAS_DRAG_MODULE
 ! Skip this routine if the gas/solids are only one-way coupled.
       IF(DES_ONEWAY_COUPLED) RETURN
 
-      DO K = slo(3),shi(3)
+      DO K = slo(3),hi(3)
          DO J = slo(2),shi(2)
             DO I = slo(1),shi(1)
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) then
                   A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
-                     (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
+                     (F_GDS(I,J,K) + F_GDS(i,j,k+1))
                   B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
-                     (DRAG_BM(i,j,k,3) + DRAG_BM(i,j,ktop(i,j,k),3))
+                     (DRAG_BM(i,j,k,3) + DRAG_BM(i,j,k+1,3))
                ENDIF
             ENDDO
          ENDDO
