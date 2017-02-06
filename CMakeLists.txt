@@ -91,8 +91,6 @@ set(F90_sources
   model/check_data/check_solids_dem.f90
   model/check_data/check_solids_model_prereqs.f90
   model/check_data/check_solids_phases.f90
-  model/check_data_20.f90
-  model/check_data_30.f90
   model/check_plane.f90
   model/constant_mod.f90
   model/conv_dif_u_g.f90
