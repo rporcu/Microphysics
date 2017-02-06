@@ -26,7 +26,7 @@ contains
    subroutine conv_dif_u_g(&
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
       A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
-      flag, dt, dx, dy, dz)
+      dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -61,19 +61,17 @@ contains
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer    , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !---------------------------------------------------------------------//
 
       if (discretize(3) == 0) then
          call store_a_u_g0(&
             slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
-            A_m, mu_g, flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)
+            A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
       else
          call store_a_u_g1(&
             slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
             A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
-            flag, dt, dx, dy, dz)
+            dt, dx, dy, dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_U_G
@@ -88,7 +86,7 @@ contains
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, mu_g, I, J, K, flag, dx, dy, dz)
+         D_FT, D_FB, mu_g, I, J, K, dx, dy, dz)
 
       use functions, only: avg, avg_h
 
@@ -101,8 +99,6 @@ contains
 
       real(c_real), intent( IN) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, intent( IN) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in) :: dx, dy, dz
 
@@ -111,8 +107,6 @@ contains
 
 ! Local variables
 !---------------------------------------------------------------------//
-! indices
-      INTEGER :: ic
 ! length terms
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
       real(c_real) :: odx, ody, odz
@@ -127,14 +121,6 @@ contains
       axz = dx*dz
       ayz = dy*dz
 
-!     IF (flag(i,j,k,1)>=100)  THEN
-!        IC = ieast(i,j,k)
-!     ELSE
-!        IC = i
-!     ENDIF
-
-      ic = i
-
       C_AE = ODX
       C_AW = ODX
       C_AN = ODY
@@ -146,22 +132,22 @@ contains
       D_FE = mu_g(i+1,j,k)*C_AE*AYZ
 
       ! West face (i, j, k)
-      D_FW = mu_g(ic,j,k)*C_AW*AYZ
+      D_FW = mu_g(i,j,k)*C_AW*AYZ
 
       ! North face (i+1/2, j+1/2, k)
-      D_FN = avg_h(avg_h(mu_g(IC,J,K),mu_g(i,j+1,k)),&
+      D_FN = avg_h(avg_h(mu_g(i  ,J,K),mu_g(i  ,j+1,k)),&
                    avg_h(mu_g(i+1,j,k),mu_g(i+1,j+1,k)))*C_AN*AXZ
 
       ! South face (i+1/2, j-1/2, k)
-      D_FS = avg_h(avg_h(mu_g(i  ,j-1,k),mu_g(IC,J,K)),&
+      D_FS = avg_h(avg_h(mu_g(i  ,j-1,k),mu_g(i  ,j,k)),&
                    avg_h(mu_g(i+1,j-1,k),mu_g(i+1,j,k)))*C_AS*AXZ
 
       ! Top face (i+1/2, j, k+1/2)
-      D_FT = avg_h(avg_h(mu_g(IC,J,K),mu_g(i,j,k+1)),&
+      D_FT = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j,k+1)),&
                    avg_h(mu_g(i+1,j,k),mu_g(i+1,j,k+1)))*C_AT*AXY
 
       ! Bottom face (i+1/2, j, k-1/2)
-      D_FB = avg_h(avg_h(mu_g(i  ,j,k-1),mu_g(IC ,j,k)),&
+      D_FB = avg_h(avg_h(mu_g(i  ,j,k-1),mu_g(i  ,j,k)),&
                    avg_h(mu_g(i+1,j,k-1),mu_g(i+1,j,k)))*C_AB*AXY
 
     CONTAINS
@@ -187,7 +173,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine store_a_u_g0(&
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
-      A_U_g, mu_g, flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)
+      A_U_g, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
 
       use functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
@@ -214,8 +200,6 @@ contains
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -240,10 +224,10 @@ contains
                CALL GET_UCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, &
+                  d_ft, d_fb, mu_g, i, j, k, &
                   dx, dy, dz)
 
-! East face (i+1, j, k)
+               ! East face (i+1, j, k)
                if (flux_e >= zero) then
                   a_u_g(i,  j,k,e) = d_fe
                   a_u_g(i+1,j,k,w) = d_fe + flux_e
@@ -252,7 +236,7 @@ contains
                   a_u_g(i+1,j,k,w) = d_fe
                endif
 
-! North face (i+1/2, j+1/2, k)
+               ! North face (i+1/2, j+1/2, k)
                if (flux_n >= zero) then
                   a_u_g(i,j,  k,n) = d_fn
                   a_u_g(i,j+1,k,s) = d_fn + flux_n
@@ -261,7 +245,7 @@ contains
                   a_u_g(i,j+1,k,s) = d_fn
                endif
 
-! Top face (i+1/2, j, k+1/2)
+               ! Top face (i+1/2, j, k+1/2)
                if (flux_t >= zero) then
                   a_u_g(i,j,k,  t) = d_ft
                   a_u_g(i,j,k+1,b) = d_ft + flux_t
@@ -270,10 +254,10 @@ contains
                   a_u_g(i,j,k+1,b) = d_ft
                endif
 
-! South face (i+1/2, j-1/2, k)
+               ! South face (i+1/2, j-1/2, k)
                if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
 
-! Bottom face (i+1/2, j, k-1/2)
+               ! Bottom face (i+1/2, j, k-1/2)
                if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
 
             enddo
@@ -303,7 +287,7 @@ contains
       SUBROUTINE STORE_A_U_G1(&
          slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
          A_U_g, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
-         flag, dt, dx, dy, dz)
+         dt, dx, dy, dz)
 
       use functions, only: avg
       use matrix   , only: e, w, n, s, t, b
@@ -340,8 +324,6 @@ contains
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
 ! Local variables
 !---------------------------------------------------------------------//
@@ -398,7 +380,7 @@ contains
                CALL GET_UCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, &
+                  d_ft, d_fb, mu_g, i, j, k, &
                   dx, dy, dz)
 
                ! East face (i+1, j, k)

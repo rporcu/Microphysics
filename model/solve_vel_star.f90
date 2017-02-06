@@ -29,11 +29,11 @@ module solve_vel_star_module
          bind(C, name="solve_u_g_star")
 
 ! Module procedures ..................................................//
-      USE u_g_conv_dif, only: conv_dif_u_g
-      USE source_u_g_module, only: source_u_g, source_u_g_bc
-      USE source_u_g_module, only: point_source_u_g
-      USE calc_d_mod, only: calc_d
-      USE adjust_a, only: adjust_a_g
+      use u_g_conv_dif, only: conv_dif_u_g
+      use source_u_g_module, only: source_u_g, source_u_g_bc
+      use source_u_g_module, only: point_source_u_g
+      use calc_d_mod, only: calc_d
+      use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_u
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
@@ -125,8 +125,8 @@ module solve_vel_star_module
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
-         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
-         flag, dt, dx, dy, dz)
+                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
@@ -184,11 +184,11 @@ module solve_vel_star_module
 
 
 ! Module procedures ...................................................//
-      USE v_g_conv_dif, only: conv_dif_v_g
-      USE source_v_g_module, only: source_v_g, source_v_g_bc
-      USE source_v_g_module, only: point_source_v_g
-      USE calc_d_mod, only: calc_d
-      USE adjust_a, only: adjust_a_g
+      use v_g_conv_dif, only: conv_dif_v_g
+      use source_v_g_module, only: source_v_g, source_v_g_bc
+      use source_v_g_module, only: point_source_v_g
+      use calc_d_mod, only: calc_d
+      use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_v
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
@@ -279,8 +279,9 @@ module solve_vel_star_module
       b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_v_g (slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
+      call conv_dif_v_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
+                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
@@ -431,8 +432,9 @@ module solve_vel_star_module
       d_t(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
-      call conv_dif_w_g(slo, shi, lo, hi, a_m, mu_g, u_g, v_g, w_g, &
-                        flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
+      call conv_dif_w_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
+                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &

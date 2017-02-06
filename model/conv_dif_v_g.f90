@@ -21,8 +21,11 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_V_G(slo, shi, lo, hi, A_M, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
+   subroutine conv_dif_v_g(&
+      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
+      dt, dx, dy, dz)
+
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -31,6 +34,9 @@ module v_g_conv_dif
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3) 
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
@@ -40,11 +46,11 @@ module v_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), INTENT(IN   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -52,16 +58,16 @@ module v_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 ! DO NOT USE DEFERRED CORRECTION TO SOLVE V_G
       IF (DISCRETIZE(4) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_V_G0(slo,shi,lo,hi,A_M,mu_g,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
+         CALL STORE_A_V_G0(&
+              slo,shi,lo,hi,A_M,mu_g,flux_ge,flux_gn,flux_gt,dx,dy,dz)
       ELSE
-         CALL STORE_A_V_G1(slo,shi,lo,hi,A_M,mu_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,flag,dt,dx,dy,dz)
+         CALL STORE_A_V_G1(&
+              slo,shi,lo,hi,A_M,mu_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,dt,dx,dy,dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_V_G
@@ -76,7 +82,7 @@ module v_g_conv_dif
       SUBROUTINE GET_VCELL_GDIFF_TERMS(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, mu_g, I, J, K,flag, &
+         D_FT, D_FB, mu_g, I, J, K, &
          dx, dy, dz)
 
 ! Modules
@@ -94,14 +100,11 @@ module v_g_conv_dif
 
       real(c_real), INTENT(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx, dy, dz
 
       INTEGER, INTENT(IN) :: i, j, k
 
 ! Local variables
-      INTEGER :: jc, jn
       real(c_real) :: odx, ody, odz
       real(c_real) :: axy, axz, ayz
 !---------------------------------------------------------------------//
@@ -113,39 +116,30 @@ module v_g_conv_dif
       axz = dx*dz
       ayz = dy*dz
 
-      jn = j+1
-      jc = j
-
-!     IF (flag(i,j,k,1)>=100) THEN
-!        jc = jn
-!     ELSE
-!        jc = j
-!     ENDIF
-
       ! East face (i+1/2, j+1/2, k)
-      D_Fe = avg_h(avg_h(mu_g(i,jc,k),mu_g(i+1,j ,k)),&
-                   avg_h(mu_g(i,jn,k),mu_g(i+1,jn,k)))*ODX*AYZ
+      D_Fe = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
+                   avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k)))*ODX*AYZ
 
       ! West face (i-1/2, j+1/2, k)
-      D_Fw = avg_h(avg_h(mu_g(i-1,j  ,k),mu_g(i,jc,k)),&
-                   avg_h(mu_g(i-1,j+1,k),mu_g(i,jn,k)))*ODX*AYZ
+      D_Fw = avg_h(avg_h(mu_g(i-1,j  ,k),mu_g(i,j  ,k)),&
+                   avg_h(mu_g(i-1,j+1,k),mu_g(i,j+1,k)))*ODX*AYZ
 
       ! North face (i, j+1, k)
-      D_Fn = mu_g(i,jn,k)*ODY*AXZ
+      D_Fn = mu_g(i,j+1,k)*ODY*AXZ
 
       ! South face (i, j, k)
-      D_Fs = mu_g(i,jc,k)*ODY*AXZ
+      D_Fs = mu_g(i,j  ,k)*ODY*AXZ
 
       D_FT = ZERO
       D_FB = ZERO
 
       ! Top face (i, j+1/2, k+1/2)
-      D_Ft = avg_h(avg_h(mu_g(i,jc,k),mu_g(i,j  ,k+1)),&
-                   avg_h(mu_g(i,jn,k),mu_g(i,j+1,k+1)))*ODZ*AXY
+      D_Ft = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
+                   avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1)))*ODZ*AXY
 
       ! Bottom face (i, j+1/2, k-1/2)
-      D_Fb = avg_h(avg_h(mu_g(i,j  ,k+1),mu_g(i,jc,k)),&
-                   avg_h(mu_g(i,j+1,k-1),mu_g(i,jn,k)))*ODZ*AXY
+      D_Fb = avg_h(avg_h(mu_g(i,j  ,k+1),mu_g(i,j  ,k)),&
+                   avg_h(mu_g(i,j+1,k-1),mu_g(i,j+1,k)))*ODZ*AXY
 
     END SUBROUTINE GET_VCELL_GDIFF_TERMS
 
@@ -168,7 +162,7 @@ module v_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_V_G0(&
          slo, shi, lo, hi, &
-         A_V_G,mu_g,flux_ge,flux_gn,flux_gt,flag,dx,dy,dz)
+         A_V_G,mu_g,flux_ge,flux_gn,flux_gt,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -192,8 +186,6 @@ module v_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), INTENT(IN   ) :: dx,dy,dz
 
 ! Local variables
@@ -220,7 +212,7 @@ module v_g_conv_dif
                CALL GET_VCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
+                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
 ! East face (i+1/2, j+1/2, k)
                if (flux_e >= zero) then
@@ -282,7 +274,7 @@ module v_g_conv_dif
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_V_G1(&
          slo, shi, lo, hi, A_V_G, mu_g, u_g, v_g, w_g, &
-         flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
+         flux_ge, flux_gn, flux_gt,dt, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -314,8 +306,6 @@ module v_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), INTENT(IN   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
@@ -373,7 +363,7 @@ module v_g_conv_dif
                CALL GET_VCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
+                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
 ! East face (i+1/2, j+1/2, k)
                a_v_g(i,  j,k,e) = d_fe - flux_e*(xsi_e(i,j,k))

@@ -23,8 +23,11 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_m, mu_g, u_g, v_g, w_g, &
-                              flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
+   subroutine conv_dif_w_g(&
+      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
+      dt, dx, dy, dz)
+
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -33,6 +36,9 @@ module w_g_conv_dif
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
@@ -41,12 +47,12 @@ module w_g_conv_dif
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), INTENT(IN   ) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), INTENT(IN   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), INTENT(IN   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -54,17 +60,15 @@ module w_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, mu_g, flux_ge, flux_gn, flux_gt, flag, &
+         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, mu_g, flux_ge, flux_gn, flux_gt, &
                             dx, dy, dz)
       ELSE
          CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, mu_g, u_g, v_g, w_g, &
-                            flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
+                            flux_ge, flux_gn, flux_gt, dt, dx, dy, dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_W_G
@@ -79,7 +83,7 @@ module w_g_conv_dif
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, mu_g, I, J, K, flag, &
+         D_FT, D_FB, mu_g, I, J, K, &
          dx, dy, dz)
 
       use functions, only: avg_h
@@ -93,18 +97,13 @@ module w_g_conv_dif
 
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, intent(IN   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       INTEGER, intent(IN) :: i, j, k
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
-! indices
-      INTEGER :: kc
-      INTEGER :: itmp, jtmp, ktmp
-! length terms
+      ! length terms
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
 
       real(c_real) :: odx, ody, odz
@@ -119,25 +118,6 @@ module w_g_conv_dif
       axz = dx*dz
       ayz = dy*dz
 
-!     im = min(domlo(1)-1,i-1)
-!     jm = min(domlo(2)-1,j-1)
-!     kp = max(domhi(3)+1,k+1)
-
-      ktmp = k+1
-      itmp = i-1
-      jtmp = j-1
-
-!     ktmp = ktop(i,j,k)
-!     jtmp  = jsouth(i,j,k)
-
-!     IF (flag(i,j,k,1)>=100) THEN
-!        kc = ktop(i,j,k)
-!     ELSE
-!        kc = k
-!     ENDIF
-
-      kc = k
-
       C_AE = ODX
       C_AW = ODX
       C_AN = ODY
@@ -146,21 +126,21 @@ module w_g_conv_dif
       C_AB = ODZ
 
 ! East face (i+1/2, j, k+1/2)
-      D_Fe = avg_h(avg_h(mu_g(i,j,kc  ),mu_g(i+1,j,k   )),&
-                   avg_h(mu_g(i,j,ktmp),mu_g(i+1,j,ktmp)))*C_AE*AYZ
+      D_Fe = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k   )),&
+                   avg_h(mu_g(i,j,k+1),mu_g(i+1,j,k+1)))*C_AE*AYZ
 ! West face (i-1/2, j, k+1/2)
-      D_Fw = avg_h(avg_h(mu_g(itmp,j,k  ),mu_g(i,j,kc)),&
-                   avg_h(mu_g(itmp,j,k+1),mu_g(i,j,ktmp)))*C_AW*AYZ
+      D_Fw = avg_h(avg_h(mu_g(i-1,j,k  ),mu_g(i,j,k  )),&
+                   avg_h(mu_g(i-1,j,k+1),mu_g(i,j,k+1)))*C_AW*AYZ
 
 ! North face (i, j+1/2, k+1/2)
-      D_Fn = avg_h(avg_h(mu_g(i,j,kc  ),mu_g(i,j+1,k)),&
-                   avg_h(mu_g(i,j,ktmp),mu_g(i,j+1,ktmp)))*C_AN*AXZ
+      D_Fn = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i,j+1,k)),&
+                   avg_h(mu_g(i,j,k+1),mu_g(i,j+1,k+1)))*C_AN*AXZ
 ! South face (i, j-1/2, k+1/2)
-      D_Fs = avg_h(avg_h(mu_g(i,jtmp,k  ),mu_g(i,j,kc)),&
-                   avg_h(mu_g(i,jtmp,k+1),mu_g(i,j,ktmp)))*C_AS*AXZ
+      D_Fs = avg_h(avg_h(mu_g(i,j-1,k  ),mu_g(i,j,k  )),&
+                   avg_h(mu_g(i,j-1,k+1),mu_g(i,j,k+1)))*C_AS*AXZ
 
 ! Top face (i, j, k+1)
-      D_Ft = mu_g(i,j,ktmp)*C_AT*AXY
+      D_Ft = mu_g(i,j,k+1)*C_AT*AXY
 ! Bottom face (i, j, k)
       D_Fb = mu_g(i,j,k)*C_AB*AXY
 
@@ -184,7 +164,7 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_W_G0(slo, shi, lo, hi, &
-                              A_W_G, mu_g, flux_ge, flux_gn, flux_gt, flag, &
+                              A_W_G, mu_g, flux_ge, flux_gn, flux_gt, &
                               dx, dy, dz)
 
 ! Modules
@@ -209,8 +189,6 @@ module w_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 ! Local variables
 !---------------------------------------------------------------------//
@@ -235,7 +213,7 @@ module w_g_conv_dif
                CALL GET_WCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
+                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
 ! East face (i+1/2, j, k+1/2)
                if (flux_e >= zero) then
@@ -296,7 +274,7 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_W_G1(slo, shi, lo, hi, A_W_G, mu_g, u_g, v_g, w_g, &
-                              flux_ge, flux_gn, flux_gt, flag,  &
+                              flux_ge, flux_gn, flux_gt, &
                               dt, dx, dy, dz)
 
       use functions, only: avg
@@ -328,8 +306,6 @@ module w_g_conv_dif
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, intent(IN) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
@@ -382,23 +358,24 @@ module w_g_conv_dif
                CALL GET_WCELL_GDIFF_TERMS(&
                   slo, shi, &
                   d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, flag, dx, dy, dz)
+                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
-! East face (i+1/2, j, k+1/2)
+               ! East face (i+1/2, j, k+1/2)
                a_w_g(i,  j,k,e) = d_fe - flux_e*(xsi_e(i,j,k))
                a_w_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
 
-! North face (i, j+1/2, k+1/2)
+               ! North face (i, j+1/2, k+1/2)
                a_w_g(i,j,  k,n) = d_fn - flux_n*(xsi_n(i,j,k))
                a_w_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
-! Top face (i, j, k+1)
+               ! Top face (i, j, k+1)
                a_w_g(i,j,k,  t) = d_ft - flux_t*(xsi_t(i,j,k))
                a_w_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
-! West face (i-1/2, j, k+1/2)
+               ! West face (i-1/2, j, k+1/2)
                if(i==lo(1)) a_w_g(i,j,k,w) = d_fw
-! South face (i, j-1/2, k+1/2)
+
+               ! South face (i, j-1/2, k+1/2)
                if(j==lo(2)) a_w_g(i,j,k,s) = d_fs
 
             enddo
