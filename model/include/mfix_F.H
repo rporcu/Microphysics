@@ -132,7 +132,6 @@ extern "C"
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
-         int* flag,
          Real* dx,             Real* dy,             Real* dz);
 
   void physical_prop(const int* slo, const int* shi,

@@ -803,7 +803,7 @@ mfix_level::mfix_calc_mflux(int lev)
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-       (*flag[lev])[mfi].dataPtr(),     &dx, &dy, &dz);
+       &dx, &dy, &dz);
   }
   fill_mf_bc(lev,*flux_gE[lev],0);
   fill_mf_bc(lev,*flux_gN[lev],0);
