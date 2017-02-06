@@ -34,7 +34,6 @@ module set_domain_module
       use set_bc_flow_module, only: set_bc_flow
       use set_flags_module, only: set_flags
       use set_flags_module, only: set_flags1
-      use corner_module, only: get_corner_cells
 
       use param1, only: is_defined
 
@@ -81,10 +80,6 @@ module set_domain_module
       ! Set the flags for wall surfaces impermeable and identify flow
       ! boundaries using FLAG_E, FLAG_N, and FLAG_T
       call set_flags1(slo,shi,flag)
-      flag_mod = flag
-
-      ! Find corner cells and set their face areas to zero
-      call get_corner_cells(slo,shi,flag)
       flag_mod = flag
 
       end subroutine set_domain

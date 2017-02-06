@@ -100,7 +100,6 @@ set(F90_sources
   model/conv_dif_w_g.f90
   model/conv_pp_g.f90
   model/conv_rop.f90
-  model/corner.f90
   model/correct_0.f90
   model/deprecated.f90
   model/des/calc_collision_wall_mod.f90

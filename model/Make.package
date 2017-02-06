@@ -30,7 +30,6 @@ f90EXE_sources += conv_dif_v_g.f90
 f90EXE_sources += conv_dif_w_g.f90
 f90EXE_sources += conv_pp_g.f90
 f90EXE_sources += conv_rop.f90
-f90EXE_sources += corner.f90
 f90EXE_sources += correct_0.f90
 f90EXE_sources += deprecated.f90
 f90EXE_sources += discretization_mod.f90
