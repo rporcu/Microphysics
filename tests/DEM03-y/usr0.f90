@@ -13,14 +13,14 @@
       subroutine usr0
 
       use constant, only: gravity
-      use usr, only: f1b, f2b, gx1, gy1, gy2
+      use usr, only: f1b, f2b, gx1, gx2, gy1, gy2
 
       IMPLICIT NONE
 
-      gY1 = 0.00045d0
-      gY2 = 0.00135d0
-      gX1 = 0.0d0
-      gX2 = 0.0d0
+      gy1 = 0.00045d0
+      gy2 = 0.00135d0
+      gx1 = 0.0d0
+      gx2 = 0.0d0
 
       ! Body forces. (Gravity)
       F1b = gravity(2)
