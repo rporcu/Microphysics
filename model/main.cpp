@@ -11,7 +11,7 @@
 
 int main (int argc, char* argv[])
 {
-  // BoxLib will now read the inputs file and the command line arguments, but the 
+  // BoxLib will now read the inputs file and the command line arguments, but the
   //        command line arguments are in mfix-format so it will just ignore them.
   BoxLib::Initialize(argc,argv);
 
@@ -63,9 +63,9 @@ int main (int argc, char* argv[])
   is_per[1] = cyclic_y;
   is_per[2] = cyclic_z;
 
-  // This is equivalent to reading "geometry.is_per = ..." from the inputs file, but here we 
+  // This is equivalent to reading "geometry.is_per = ..." from the inputs file, but here we
   //      read cyclic_* from "mfix.dat" and initialize the ParmParse table here so when we call Geometry::Setup
-  //      from the AmrCore constructor it will see it. 
+  //      from the AmrCore constructor it will see it.
   ParmParse pp("geometry");
   pp.addarr("is_periodic",is_per);
 
@@ -89,7 +89,8 @@ int main (int argc, char* argv[])
   int estatus = 0;
 
   // Call to output before entering time march loop
-  my_mfix.output(lev,estatus,finish,nstep,dt,time);
+  if (solve_fluid)
+    my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
   // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but only if solve_fluid = T
   Real prev_dt = dt;

@@ -14,6 +14,7 @@
 
       use discretelement, only: particles
       use usr, only: f1b, f2b, gz1, gz2, gx1, gx2
+      use constant, only: gravity
 
       IMPLICIT NONE
 

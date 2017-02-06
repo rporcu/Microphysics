@@ -12,6 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine usr0
 
+      use constant, only: gravity
       use discretelement, only: particles
       use usr, only: f1b, f2b, gy1, gy2, gz1, gz2
 

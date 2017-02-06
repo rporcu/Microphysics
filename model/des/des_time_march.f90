@@ -120,7 +120,7 @@ module des_time_march_module
          ELSE
             FACTOR = 1
             DTSOLID_TMP = DTSOLID
-            DTSOLID = DT
+            DT = DTSOLID
          ENDIF
 
 ! Initialize time stepping variable for pure granular simulations.
