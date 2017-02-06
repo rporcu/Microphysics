@@ -72,7 +72,7 @@
       IF(ROLLFRIC_END) RETURN
 
 ! Calculate the slip velocity.
-      SLIP = DES_VEL_NEW(1,3) + OMEGA_NEW(1,2)*lRad
+      SLIP = DES_VEL_NEW(1,2) + OMEGA_NEW(1,1)*lRad
 
 ! Check for a sign flip or a small difference.
       IF(COMPARE(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
@@ -84,7 +84,7 @@
 
 ! Calculate the non-dimensional end slip times
          ANL_ND = 2.0d0/7.0d0
-         DEM_ND = abs(MEW*gravity(1)/u0) * lTime
+         DEM_ND = abs(MEW*gravity(3)/u0) * lTime
 
          Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
@@ -98,7 +98,7 @@
 
 ! Calculate the non-dimensional translational velocity.
          ANL_ND = 5.0d0/7.0d0
-         DEM_ND = abs(DES_VEL_NEW(1,3)/u0)
+         DEM_ND = abs(DES_VEL_NEW(1,2)/u0)
 
          Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
@@ -112,7 +112,7 @@
 
 ! Calculate the non-dimensional angular velocity.
          ANL_ND = 5.0d0/7.0d0
-         DEM_ND = abs(OMEGA_NEW(1,2)*lRad/u0)
+         DEM_ND = abs(OMEGA_NEW(1,1)*lRad/u0)
 
          Err = (abs(ANL_ND-DEM_ND)/abs(ANL_ND) )*100.
 
