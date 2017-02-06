@@ -249,8 +249,7 @@ MODULE CHECK_BC_INFLOW_MODULE
 
 ! Check that velocities are also specified. These are essentially used
 ! as initial conditions for the boundary region. If they are not
-! specified then a default value is set here otherwise check_data_20
-! will complain and cause MFIX to exit.
+! specified then a default value is set here.
       IF(IS_UNDEFINED(BC_U_G(BCV))) THEN
          BC_U_G(BCV) = ZERO
          WRITE(ERR_MSG, 1300) trim(iVar('BC_U_g',BCV))

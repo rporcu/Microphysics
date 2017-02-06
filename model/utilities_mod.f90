@@ -64,7 +64,6 @@ CONTAINS
       use bc, only: bc_defined, bc_type
       use bc, only: bc_plane
       use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
-      use functions, only: iminus, jminus, kminus
       use param    , only: dimension_bc
       use param1   , only: zero, small_number
       use run      , only: units
@@ -102,9 +101,9 @@ CONTAINS
             CASE ('E'); maxVEL = max(maxVEL,abs(U_G(I,J,K)))
             CASE ('N'); maxVEL = max(maxVEL,abs(V_G(I,J,K)))
             CASE ('T'); maxVEL = max(maxVEL,abs(W_G(I,J,K)))
-            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(iminus(i,j,k),j,k)))
-            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(i,jminus(i,j,k),k)))
-            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(i,j,kminus(i,j,k))))
+            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(i-1,j,k)))
+            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(i,j-1,k)))
+            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(i,j,k-1)))
             END SELECT
 
          ENDDO
