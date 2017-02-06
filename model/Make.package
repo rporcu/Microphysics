@@ -74,7 +74,6 @@ f90EXE_sources += set_max2.f90
 f90EXE_sources += set_outflow.f90
 f90EXE_sources += set_param.f90
 f90EXE_sources += set_ps.f90
-f90EXE_sources += set_wall_bc.f90
 f90EXE_sources += solve_pp_g.f90
 f90EXE_sources += solve_vel_star.f90
 f90EXE_sources += source_pp_g.f90

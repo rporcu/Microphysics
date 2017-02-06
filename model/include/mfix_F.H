@@ -223,12 +223,6 @@ extern "C"
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t);
 
-  void set_wall_bc(
-          const int* slo, const int* shi,
-          const int* lo,  const int* hi,
-          Real* u_g,      Real* v_g,      Real* w_g,
-          int*  flag);
-
   void mfix_iterate(
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* u_go,           Real* v_go,           Real* w_go,

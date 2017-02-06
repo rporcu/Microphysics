@@ -460,9 +460,6 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Update fluid density
           mfix_physical_prop(lev,0);
 
-          // Update wall velocities
-          mfix_set_wall_bc(lev);
-
           // Calculate face mass fluxes
           mfix_calc_mflux(lev);
 
@@ -810,23 +807,6 @@ mfix_level::mfix_calc_mflux(int lev)
   fill_mf_bc(lev,*flux_gT[lev],0);
 }
 
-
-void
-mfix_level::mfix_set_wall_bc(int lev)
-{
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-  {
-     const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
-
-     set_wall_bc(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-       (*flag[lev])[mfi].dataPtr());
-  }
-  fill_mf_bc(lev,*u_g[lev],1);
-  fill_mf_bc(lev,*v_g[lev],2);
-  fill_mf_bc(lev,*w_g[lev],3);
-}
 
 void
 mfix_level::mfix_conv_rop(int lev, Real dt)

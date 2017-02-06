@@ -183,7 +183,6 @@ set(F90_sources
   model/set_outflow.f90
   model/set_param.f90
   model/set_ps.f90
-  model/set_wall_bc.f90
   model/solve_pp_g.f90
   model/solve_vel_star.f90
   model/solver_params.f90
