@@ -215,9 +215,7 @@ extern "C"
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,
-          int*  flag,     Real* dt,
-          Real* lnormg,   Real* resg,
-          Real* dx,       Real* dy,       Real* dz);
+          Real* dt, Real* lnormg, Real* resg, Real* dx, Real* dy, Real* dz);
 
   void correct0(
           const int* slo, const int* shi,

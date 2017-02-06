@@ -17,7 +17,7 @@ module solve_pp_module
       ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, &
       bc_jhi_type, bc_klo_type, bc_khi_type, &
-      flag, dt, normg, resg, dx, dy, dz)&
+      dt, normg, resg, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
@@ -84,10 +84,7 @@ module solve_pp_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (slo(1):shi(1),slo(2):shi(2),2)
 
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(  out) :: a_m&
+      real(c_real), intent(  out) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -121,7 +118,7 @@ module solve_pp_module
       b_mmax(:,:,:) =  0.0d0
 
 ! Forming the sparse matrix equation.
-      call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, flag, dx, dy, dz)
+      call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
 
       call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
@@ -129,7 +126,7 @@ module solve_pp_module
       call source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &
       bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
-      if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, flag, dx, dy, dz)
+      if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, dx, dy, dz)
 
 ! Find average residual, maximum residual and location
       normgloc = normg
@@ -167,7 +164,7 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, b_m, B_mmax,flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, b_m, B_mmax, dx, dy, dz)
 
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
@@ -176,6 +173,7 @@ module solve_pp_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      real(c_real), INTENT(IN   ) :: dx,dy,dz
 
       ! Vector b_m
       real(c_real), INTENT(INOUT) :: B_m&
@@ -185,9 +183,6 @@ module solve_pp_module
       real(c_real), INTENT(INOUT) :: B_mmax&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
-
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
 
 !-----------------------------------------------
 ! Local Variables
@@ -206,22 +201,20 @@ module solve_pp_module
 !-----------------------------------------------
       PS_LP: do PSV = 1, DIMENSION_PS
 
-         if(.NOT.PS_DEFINED(PSV)) cycle PS_LP
-         if(PS_MASSFLOW_G(PSV) < small_number) cycle PS_LP
+         if(.not.ps_defined(psv)) cycle ps_lp
+         if(ps_massflow_g(psv) < small_number) cycle ps_lp
 
          do k = PS_K_B(PSV), PS_K_T(PSV)
-         do j = PS_J_S(PSV), PS_J_N(PSV)
-         do i = PS_I_W(PSV), PS_I_E(PSV)
+            do j = PS_J_S(PSV), PS_J_N(PSV)
+               do i = PS_I_W(PSV), PS_I_E(PSV)
 
-            if(1.eq.flag(i,j,k,1)) then
-               pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
+                  pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
-               b_m(I,J,K) = b_m(I,J,K) - pSource
-               B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(b_m(I,J,K)))
-            endif
+                  b_m(I,J,K) = b_m(I,J,K) - pSource
+                  B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(b_m(I,J,K)))
 
-         enddo
-         enddo
+               enddo
+            enddo
          enddo
 
       enddo PS_LP

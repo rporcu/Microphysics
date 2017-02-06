@@ -975,8 +975,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
         bc_klo.dataPtr(), bc_khi.dataPtr(),
-        (*flag[lev])[mfi].dataPtr(),     &dt,
-        &lnormg,                 &resg,     &dx, &dy, &dz);
+        &dt, &lnormg, &resg, &dx, &dy, &dz);
     }
     pp_g[lev]->setVal(0.);
     fill_mf_bc(lev,*A_m[lev],0);
