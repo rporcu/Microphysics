@@ -74,9 +74,6 @@ MODULE CONV_ROP_MODULE
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: ieast, jnorth, ktop
-      USE functions, only: jsouth, kbot
-      USE functions, only: iminus, jminus, kminus
       USE param1, only: zero
 
       IMPLICIT NONE
@@ -120,7 +117,7 @@ MODULE CONV_ROP_MODULE
             if (U(i,j,k) >= ZERO) THEN
                ROP_E(i,j,k) = ROP(i,j,k)
             else
-               ROP_E(i,j,k) = ROP(ieast(i,j,k),j,k)
+               ROP_E(i,j,k) = ROP(i+1,j,k)
             end if
 
           end do
@@ -135,7 +132,7 @@ MODULE CONV_ROP_MODULE
             if (V(i,j,k) >= ZERO) THEN
                ROP_N(i,j,k) = ROP(i,j,k)
             else
-               ROP_N(i,j,k) = ROP(i,jnorth(i,j,k),k)
+               ROP_N(i,j,k) = ROP(i,j+1,k)
             end if
 
           end do
@@ -150,7 +147,7 @@ MODULE CONV_ROP_MODULE
             if (W(i,j,k) >= ZERO) THEN
                ROP_T(i,j,k) = ROP(i,j,k)
             else
-               ROP_T(i,j,k) = ROP(i,j,ktop(i,j,k))
+               ROP_T(i,j,k) = ROP(i,j,k+1)
             end if
 
           end do
@@ -180,9 +177,6 @@ MODULE CONV_ROP_MODULE
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE functions, only: ieast, jnorth, ktop
-      USE functions, only: jsouth, kbot
-      USE functions, only: iminus, jminus, kminus
       USE param1, only: one
       USE xsi, only: calc_xsi
       IMPLICIT NONE
@@ -241,35 +235,38 @@ MODULE CONV_ROP_MODULE
 
          if (1.eq.flag(i,j,k,1)) THEN
 
-! East face (i+1/2, j, k)
+            ! East face (i+1/2, j, k)
             ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
-               XSI_E(i,j,k) *ROP(ieast(i,j,k),j,k) )
-! West face (i-1/2, j, k)
-            if (.NOT.1.eq.flag(iminus(i,j,k),j,k,1)) THEN
-               ROP_E(iminus(i,j,k),j,k) = &
-                  ((ONE - XSI_E(iminus(i,j,k),j,k))*ROP(i-1,j,k) + &
-                  XSI_E(iminus(i,j,k),j,k) *ROP(i,j,k) )
+               XSI_E(i,j,k) *ROP(i+1,j,k) )
+
+            ! West face (i-1/2, j, k)
+            if (.NOT.1.eq.flag(i-1,j,k,1)) THEN
+               ROP_E(i-1,j,k) = &
+                  ((ONE - XSI_E(i-1,j,k))*ROP(i-1,j,k) + &
+                          XSI_E(i-1,j,k) *ROP(i,j,k) )
             end if
 
 
-! North face (i, j+1/2, k)
+            ! North face (i, j+1/2, k)
             ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
-               XSI_N(i,j,k) *ROP(i,jnorth(i,j,k),k))
-! South face (i, j-1/2, k)
-            if (.NOT.1.eq.flag(i,jminus(i,j,k),k,1)) THEN
-               ROP_N(i,jminus(i,j,k),k) = &
-                  ((ONE - XSI_N(i,jminus(i,j,k),k))*ROP(i,jsouth(i,j,k),k) + &
-                  XSI_N(i,jminus(i,j,k),k) *ROP(i,j,k) )
+               XSI_N(i,j,k) *ROP(i,j+1,k))
+
+            ! South face (i, j-1/2, k)
+            if (.NOT.1.eq.flag(i,j-1,k,1)) THEN
+               ROP_N(i,j-1,k) = &
+                  ((ONE - XSI_N(i,j-1,k))*ROP(i,j-1,k) + &
+                  XSI_N(i,j-1,k) *ROP(i,j,k) )
             end if
 
-! Top face (i, j, k+1/2)
-            ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k) + &
-               XSI_T(i,j,k) *ROP(i,j,ktop(i,j,k)) )
-! Bottom face (i, j, k-1/2)
-            if (.NOT.1.eq.flag(i,j,kminus(i,j,k),1)) THEN
-               ROP_T(i,j,kminus(i,j,k)) = &
-                  ((ONE - XSI_T(i,j,kminus(i,j,k)))*ROP(i,j,kbot(i,j,k)) + &
-                  XSI_T(i,j,kminus(i,j,k)) *ROP(i,j,k) )
+            ! Top face (i, j, k+1/2)
+            ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k  ) + &
+                                   XSI_T(i,j,k) *ROP(i,j,k+1) )
+
+            ! Bottom face (i, j, k-1/2)
+            if (.NOT.1.eq.flag(i,j,k-1,1)) THEN
+               ROP_T(i,j,k-1) = &
+                  ((ONE - XSI_T(i,j,k-1))*ROP(i,j,k-1) + &
+                          XSI_T(i,j,k-1) *ROP(i,j,k) )
             end if
 
          end if
