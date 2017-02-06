@@ -88,12 +88,10 @@
          RK4_TIME = RK4_TIME + RK4_DT
       ENDDO
 
-
       IF(IS_DEFINED(RK4_DT_LAST)) THEN
          CALL RK4_V4(RK4_DT_LAST, gx1, gz1, gx2, gz2)
          RK4_TIME = RK4_TIME + RK4_DT_LAST
       ENDIF
-
 
       ! Write the results to a file.
       WRITE(uPos1,"(3x,F15.8,5X,F15.8,2(3x,F15.8))") lTime, gx1,   &

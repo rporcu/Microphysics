@@ -151,7 +151,7 @@
       double precision function F2kw(y2)
 
       use discretelement, only: KN_W
-      use geometry, only: YLENGTH
+      use geometry, only: ZLENGTH
       use constant, only: pi
 
       implicit none
@@ -162,7 +162,7 @@
 
       lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
 
-      F2kw = -(KN_W/lMass)*(lRad - (YLENGTH - y2))
+      F2kw = -(KN_W/lMass)*(lRad - (ZLENGTH - y2))
 
       return
       end function F2kw

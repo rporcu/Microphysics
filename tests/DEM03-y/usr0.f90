@@ -20,7 +20,7 @@
       gY1 = 0.00045d0
       gY2 = 0.00135d0
       gX1 = 0.0d0
-      gX1 = 0.0d0
+      gX2 = 0.0d0
 
       ! Body forces. (Gravity)
       F1b = gravity(2)
