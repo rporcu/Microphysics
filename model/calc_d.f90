@@ -14,7 +14,7 @@ MODULE CALC_D_MOD
 !           pressure correction -- North                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_D(slo, shi, lo, hi, D, AXIS, A_M, ep_g, f_gds, flag, dx, dy, dz)
+      SUBROUTINE CALC_D(slo, shi, lo, hi, D, axis, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -41,9 +41,9 @@ MODULE CALC_D_MOD
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! "X", "Y", or "Z"
-      CHARACTER, intent(in   ) :: axis
+      character, intent(in   ) :: axis
 
-      real(c_real), intent(in   ):: A_M&
+      real(c_real), intent(in   ):: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3), -3:3)
       real(c_real), intent(in   ):: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -54,18 +54,17 @@ MODULE CALC_D_MOD
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
+!---------------------------------------------------------------------//
 ! Local variables:
 !---------------------------------------------------------------------//
-! Usual Indices
-      INTEGER :: i,j,k
-      INTEGER :: ie,je,ke
+      integer      :: i,j,k,is,js,ks
       real(c_real) :: axy, axz, ayz, vol
 
       ! Temp variable 
-      real(c_real) :: AM0
+      real(c_real) :: Am0
       real(c_real) :: EPGA
       logical :: COUPLED
-!......................................................................!
+!---------------------------------------------------------------------//
 
       axy = dx*dy
       axz = dx*dz
@@ -74,29 +73,29 @@ MODULE CALC_D_MOD
 
       COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
 
-      ie = hi(1)
-      je = hi(2)
-      ke = hi(3)
+      is = lo(1)
+      js = lo(2)
+      ks = lo(3)
 
       if (axis.eq.'x') then
-          ie = hi(1)+1
+          is = lo(1)-1
       else if (axis.eq.'y') then
-          je = hi(2)+1
+          js = lo(2)-1
       else if (axis.eq.'z') then
-          ke = hi(3)+1
+          ks = lo(3)-1
       endif
+ 
+      DO K = ks, hi(3)
+        DO J = js, hi(2)
+          DO I = is, hi(1)
 
-      do K = lo(3),ke
-        do J = lo(2),je
-          do I = lo(1),ie
-
-         AM0 = -A_M(I,J,K,0)
+         Am0 = -A_m(I,J,K,0)
 
          if (axis.eq.'X') then
             if(flag(i,j,k,2) >= 2000 .and. &
                flag(i,j,k,2) <= 2011) then
                EPGA = AYZ*AVG(EP_G(I,J,K),EP_G(ieast(i,j,k),j,k))
-               IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
+               IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
                   (F_GDS(i,j,k) + F_GDS(ieast(i,j,k),j,k))
             ELSE
                EPGA = ZERO
@@ -106,7 +105,7 @@ MODULE CALC_D_MOD
             if(flag(i,j,k,3) >= 2000 .and. &
                flag(i,j,k,3) <= 2011) then
                EPGA = AXZ*AVG(EP_G(I,J,K),EP_G(i,jnorth(i,j,k),k))
-               IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
+               IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
                   (F_GDS(i,j,k) + F_GDS(i,jnorth(i,j,k),k))
             ELSE
                EPGA = ZERO
@@ -116,15 +115,15 @@ MODULE CALC_D_MOD
             if(flag(i,j,k,4) >= 2000 .and. &
                flag(i,j,k,4) <= 2011) then
                EPGA = AXY*AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
-               IF(COUPLED) AM0 = AM0 + 0.5d0*VOL* &
+               IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
                   (F_GDS(I,J,K) + F_GDS(i,j,ktop(i,j,k)))
             ELSE
                EPGA = ZERO
             ENDIF
          endif
 
-         IF(abs(AM0) > SMALL_NUMBER) THEN
-            D(I,J,K) = P_SCALE*EPGA/AM0
+         IF(abs(Am0) > SMALL_NUMBER) THEN
+            D(I,J,K) = P_SCALE*EPGA/Am0
 
          ELSE
             D(I,J,K) = ZERO

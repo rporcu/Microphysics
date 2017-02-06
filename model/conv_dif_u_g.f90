@@ -78,51 +78,6 @@ contains
 
       END SUBROUTINE CONV_DIF_U_G
 
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Purpose: Calculate the components of velocity on the east, north,   C
-!  and top face of a u-momentum cell                                   C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_UCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
-
-      use functions, only: avg
-      use functions, only: iplus
-
-      integer     , intent(in   ) :: slo(3),shi(3)
-
-      real(c_real), intent(OUT) :: U&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT) :: V&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT) :: WW&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Local variables
-!---------------------------------------------------------------------//
-! indices
-      INTEGER :: I,J,K
-!---------------------------------------------------------------------//
-
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            U(I,J,K) = AVG(U_G(I,J,K), U_G(iplus(i,j,k),j,k))
-            V(I,J,K) = AVG(V_G(I,J,K), V_G(iplus(i,j,k),j,k))
-            WW(I,J,K) = AVG(W_G(I,J,K), W_G(iplus(i,j,k),j,k))
-          ENDDO
-        ENDDO
-      ENDDO
-
-      END SUBROUTINE GET_UCELL_GVTERMS
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Purpose: Calculate the components of diffusive flux through the     C
@@ -133,7 +88,9 @@ contains
       SUBROUTINE GET_UCELL_GDIFF_TERMS(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K, flag, dx, dy, dz)
+         D_FT, D_FB, mu_g, I, J, K, flag, dx, dy, dz)
+
+      use functions, only: avg, avg_h
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
@@ -142,7 +99,7 @@ contains
       real(c_real), intent(OUT) :: d_fn, d_fs
       real(c_real), intent(OUT) :: d_ft, d_fb
 
-      real(c_real), intent( IN) :: MU_G&
+      real(c_real), intent( IN) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, intent( IN) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -155,7 +112,7 @@ contains
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: ip, jm, km, ic
+      INTEGER :: ic
 ! length terms
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
       real(c_real) :: odx, ody, odz
@@ -170,15 +127,13 @@ contains
       axz = dx*dz
       ayz = dy*dz
 
-      IP = min(domhi(1)+1, i+1)
-      JM = max(domlo(2)-1, j-1)
-      KM = max(domlo(3)-1, k-1)
+!     IF (flag(i,j,k,1)>=100)  THEN
+!        IC = ieast(i,j,k)
+!     ELSE
+!        IC = i
+!     ENDIF
 
-      IF (flag(i,j,k,1)>=100)  THEN
-         IC = ieast(i,j,k)
-      ELSE
-         IC = i
-      ENDIF
+      ic = i
 
       C_AE = ODX
       C_AW = ODX
@@ -187,33 +142,31 @@ contains
       C_AT = ODZ
       C_AB = ODZ
 
-! East face (i+1, j, k)
-      D_FE = MU_G(ieast(i,j,k),j,k)*C_AE*AYZ
-! West face (i, j, k)
-      D_FW = MU_G(ic,j,k)*C_AW*AYZ
+      ! East face (i+1, j, k)
+      D_FE = mu_g(i+1,j,k)*C_AE*AYZ
 
-! North face (i+1/2, j+1/2, k)
-      D_FN = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,jnorth(i,j,k),k)),&
-                   AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,jnorth(i,j,k),k),jnorth(i,j,k),k)))*C_AN*AXZ
-! South face (i+1/2, j-1/2, k)
-      D_FS = AVG_H(AVG_H(MU_G(i,jsouth(i,j,k),k),MU_G(IC,J,K)),&
-                   AVG_H(MU_G(ieast(i,jsouth(i,j,k),k),jsouth(i,j,k),k),MU_G(ieast(i,j,k),j,k)))*C_AS*AXZ
+      ! West face (i, j, k)
+      D_FW = mu_g(ic,j,k)*C_AW*AYZ
 
-! Top face (i+1/2, j, k+1/2)
-      D_FT = AVG_H(AVG_H(MU_G(IC,J,K),MU_G(i,j,ktop(i,j,k))),&
-         AVG_H(MU_G(ieast(i,j,k),j,k),MU_G(ieast(i,j,ktop(i,j,k)),j,ktop(i,j,k))))*C_AT*AXY
-! Bottom face (i+1/2, j, k-1/2)
-         D_FB = AVG_H(AVG_H(MU_G(i,j,kbot(i,j,k)),MU_G(IC,J,K)),&
-                      AVG_H(MU_G(ieast(i,j,kbot(i,j,k)),j,kbot(i,j,k)),MU_G(ieast(i,j,k),j,k)))*C_AB*AXY
+      ! North face (i+1/2, j+1/2, k)
+      D_FN = avg_h(avg_h(mu_g(IC,J,K),mu_g(i,j+1,k)),&
+                   avg_h(mu_g(i+1,j,k),mu_g(i+1,j+1,k)))*C_AN*AXZ
 
-      RETURN
+      ! South face (i+1/2, j-1/2, k)
+      D_FS = avg_h(avg_h(mu_g(i  ,j-1,k),mu_g(IC,J,K)),&
+                   avg_h(mu_g(i+1,j-1,k),mu_g(i+1,j,k)))*C_AS*AXZ
+
+      ! Top face (i+1/2, j, k+1/2)
+      D_FT = avg_h(avg_h(mu_g(IC,J,K),mu_g(i,j,k+1)),&
+                   avg_h(mu_g(i+1,j,k),mu_g(i+1,j,k+1)))*C_AT*AXY
+
+      ! Bottom face (i+1/2, j, k-1/2)
+      D_FB = avg_h(avg_h(mu_g(i  ,j,k-1),mu_g(IC ,j,k)),&
+                   avg_h(mu_g(i+1,j,k-1),mu_g(i+1,j,k)))*C_AB*AXY
 
     CONTAINS
 
-      INCLUDE 'functions.inc'
-
    END SUBROUTINE GET_UCELL_GDIFF_TERMS
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -352,6 +305,7 @@ contains
          A_U_g, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
          flag, dt, dx, dy, dz)
 
+      use functions, only: avg
       use matrix   , only: e, w, n, s, t, b
       use run      , only: discretize
 
@@ -389,33 +343,43 @@ contains
       integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-
 ! Local variables
 !---------------------------------------------------------------------//
-! Indices
       integer :: i,j,k
-! indicator for shear
+
+      ! indicator for shear
       integer :: incr
-! Diffusion parameter
+
+      ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
-! Face mass flux
+
+      ! Face mass flux
       real(c_real) :: flux_e, flux_n, flux_t
 
-! x, y, z directional velocity
-      real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
+      real(c_real), allocatable :: u(:,:,:), v(:,:,:), ww(:,:,:)
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 
-      allocate(  U(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)) )
-      allocate(  V(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
-      allocate( WW(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
+      allocate(  u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)) )
+      allocate(  v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
+      allocate( ww(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
 
       allocate(xsi_e(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)) )
       allocate(xsi_n(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
       allocate(xsi_t(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
 
-      CALL GET_UCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
+      !  Calculate the components of velocity on the east, north, 
+      !  and top face of a u-momentum cell.
+      DO k = slo(3),shi(3)
+        DO j = slo(2),shi(2)
+          DO i = slo(1),hi(1)
+             u(I,J,K) = avg(u_g(i,j,k), U_G(i+1,j,k))
+             v(I,J,K) = avg(v_g(i,j,k), V_G(i+1,j,k))
+            ww(I,J,K) = avg(w_g(i,j,k), W_G(i+1,j,k))
+          ENDDO
+        ENDDO
+      ENDDO
 
-! shear indicator:
+      ! shear indicator:
       incr=1
       call calc_xsi (discretize(3), slo, shi, hi, &
          u_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
@@ -437,22 +401,22 @@ contains
                   d_ft, d_fb, mu_g, i, j, k, flag, &
                   dx, dy, dz)
 
-! East face (i+1, j, k)
-               a_u_g(i,  j,k,e) = d_fe - flux_e*(xsi_e(i,j,k))
+               ! East face (i+1, j, k)
+               a_u_g(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
                a_u_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
 
-! North face (i+1/2, j+1/2, k)
-               a_u_g(i,j,  k,n) = d_fn - flux_n*(xsi_n(i,j,k))
+               ! North face (i+1/2, j+1/2, k)
+               a_u_g(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
                a_u_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
-! Top face (i+1/2, j, k+1/2)
-               a_u_g(i,j,k,  t) = d_ft - flux_t*(xsi_t(i,j,k))
+               ! Top face (i+1/2, j, k+1/2)
+               a_u_g(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
                a_u_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
-! South face (i+1/2, j-1/2, k)
+               ! South face (i+1/2, j-1/2, k)
                if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
 
-! Bottom face (i+1/2, j, k-1/2)
+               ! Bottom face (i+1/2, j, k-1/2)
                if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
 
             enddo

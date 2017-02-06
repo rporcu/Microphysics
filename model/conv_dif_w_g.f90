@@ -23,7 +23,7 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_m, MU_G, u_g, v_g, w_g, &
+      SUBROUTINE CONV_DIF_W_G(slo, shi, lo, hi, A_m, mu_g, u_g, v_g, w_g, &
                               flux_ge, flux_gn, flux_gt, flag, dt, dx, dy, dz)
 
 ! Modules
@@ -38,7 +38,7 @@ module w_g_conv_dif
       real(c_real) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), intent(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: u_g&
@@ -60,60 +60,14 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, MU_G, flux_ge, flux_gn, flux_gt, flag, &
+         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, mu_g, flux_ge, flux_gn, flux_gt, flag, &
                             dx, dy, dz)
       ELSE
-         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, MU_G, u_g, v_g, w_g, &
+         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, mu_g, u_g, v_g, w_g, &
                             flux_ge, flux_gn, flux_gt,flag, dt, dx, dy, dz)
       ENDIF
 
       END SUBROUTINE CONV_DIF_W_G
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Purpose: Calculate the components of velocity on the east, north,   C
-!  and top face of a w-momentum cell                                   C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g)
-
-      USE functions, only: avg
-      USE functions, only: kplus
-
-      integer     , intent(in   ) :: slo(3),shi(3)
-
-      real(c_real), intent(OUT) :: U&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT) :: V&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(OUT) :: WW&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent( in) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent( in) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent( in) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Local variables
-!---------------------------------------------------------------------//
-! indices
-      INTEGER :: I, J, K
-!---------------------------------------------------------------------//
-
-
-      DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            U(I,J,K)  = avg(u_g(I,J,K),U_G(i,j,kplus(i,j,k)))
-            V(I,J,K)  = avg(v_g(I,J,K),V_G(i,j,kplus(i,j,k)))
-            WW(I,J,K) = avg(w_g(I,J,K),W_G(i,j,kplus(i,j,k)))
-          ENDDO
-        ENDDO
-      ENDDO
-
-      RETURN
-      END SUBROUTINE GET_WCELL_GVTERMS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -125,8 +79,10 @@ module w_g_conv_dif
       SUBROUTINE GET_WCELL_GDIFF_TERMS(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, MU_G, I, J, K, flag, &
+         D_FT, D_FB, mu_g, I, J, K, flag, &
          dx, dy, dz)
+
+      use functions, only: avg_h
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
@@ -135,7 +91,7 @@ module w_g_conv_dif
       real(c_real), intent(OUT) :: d_fn, d_fs
       real(c_real), intent(OUT) :: d_ft, d_fb
 
-      real(c_real), intent(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       INTEGER, intent(IN   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -146,7 +102,7 @@ module w_g_conv_dif
 ! Local variables
 !---------------------------------------------------------------------//
 ! indices
-      INTEGER :: kp, im, jm, kc
+      INTEGER :: kc
       INTEGER :: itmp, jtmp, ktmp
 ! length terms
       real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
@@ -163,19 +119,24 @@ module w_g_conv_dif
       axz = dx*dz
       ayz = dy*dz
 
-      im = min(domlo(1)-1,i-1)
-      jm = min(domlo(2)-1,j-1)
-      kp = max(domhi(3)+1,k+1)
+!     im = min(domlo(1)-1,i-1)
+!     jm = min(domlo(2)-1,j-1)
+!     kp = max(domhi(3)+1,k+1)
 
-      ktmp = ktop(i,j,k)
+      ktmp = k+1
       itmp = i-1
-      jtmp  = jsouth(i,j,k)
+      jtmp = j-1
 
-      IF (flag(i,j,k,1)>=100) THEN
-         kc = ktop(i,j,k)
-      ELSE
-         kc = k
-      ENDIF
+!     ktmp = ktop(i,j,k)
+!     jtmp  = jsouth(i,j,k)
+
+!     IF (flag(i,j,k,1)>=100) THEN
+!        kc = ktop(i,j,k)
+!     ELSE
+!        kc = k
+!     ENDIF
+
+      kc = k
 
       C_AE = ODX
       C_AW = ODX
@@ -185,29 +146,23 @@ module w_g_conv_dif
       C_AB = ODZ
 
 ! East face (i+1/2, j, k+1/2)
-      D_Fe = AVG_H(AVG_H(MU_G(i,j,kc),MU_G(ieast(i,j,k),j,k)),&
-                   AVG_H(MU_G(i,j,ktmp),MU_G(ieast(i,j,ktmp),j,ktmp)))*C_AE*AYZ
+      D_Fe = avg_h(avg_h(mu_g(i,j,kc  ),mu_g(i+1,j,k   )),&
+                   avg_h(mu_g(i,j,ktmp),mu_g(i+1,j,ktmp)))*C_AE*AYZ
 ! West face (i-1/2, j, k+1/2)
-      D_Fw = AVG_H(AVG_H(MU_G(itmp,j,k),MU_G(i,j,kc)),&
-                   AVG_H(MU_G(itmp,j,ktop(itmp,j,k)),MU_G(i,j,ktmp)))*C_AW*AYZ
+      D_Fw = avg_h(avg_h(mu_g(itmp,j,k  ),mu_g(i,j,kc)),&
+                   avg_h(mu_g(itmp,j,k+1),mu_g(i,j,ktmp)))*C_AW*AYZ
 
 ! North face (i, j+1/2, k+1/2)
-      D_Fn = AVG_H(AVG_H(MU_G(i,j,kc),MU_G(i,jnorth(i,j,k),k)),&
-                   AVG_H(MU_G(i,j,ktmp),MU_G(i,jnorth(i,j,ktmp),ktmp)))*C_AN*AXZ
+      D_Fn = avg_h(avg_h(mu_g(i,j,kc  ),mu_g(i,j+1,k)),&
+                   avg_h(mu_g(i,j,ktmp),mu_g(i,j+1,ktmp)))*C_AN*AXZ
 ! South face (i, j-1/2, k+1/2)
-      D_Fs = AVG_H(AVG_H(MU_G(i,jtmp,k),MU_G(i,j,kc)),&
-                   AVG_H(MU_G(i,jtmp,ktop(i,jtmp,k)),MU_G(i,j,ktmp)))*C_AS*AXZ
+      D_Fs = avg_h(avg_h(mu_g(i,jtmp,k  ),mu_g(i,j,kc)),&
+                   avg_h(mu_g(i,jtmp,k+1),mu_g(i,j,ktmp)))*C_AS*AXZ
 
 ! Top face (i, j, k+1)
-      D_Ft = MU_G(i,j,ktmp)*C_AT*AXY
+      D_Ft = mu_g(i,j,ktmp)*C_AT*AXY
 ! Bottom face (i, j, k)
-      D_Fb = MU_G(i,j,k)*C_AB*AXY
-
-      RETURN
-
-    CONTAINS
-
-      INCLUDE 'functions.inc'
+      D_Fb = mu_g(i,j,k)*C_AB*AXY
 
     END SUBROUTINE GET_WCELL_GDIFF_TERMS
 
@@ -229,7 +184,7 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_W_G0(slo, shi, lo, hi, &
-                              A_W_G, MU_G, flux_ge, flux_gn, flux_gt, flag, &
+                              A_W_G, mu_g, flux_ge, flux_gn, flux_gt, flag, &
                               dx, dy, dz)
 
 ! Modules
@@ -245,7 +200,7 @@ module w_g_conv_dif
       real(c_real), intent(inout) :: A_W_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), intent(in   ) :: MU_G&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: flux_ge&
@@ -340,12 +295,11 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(slo, shi, lo, hi, A_W_G, MU_G, u_g, v_g, w_g, &
+      SUBROUTINE STORE_A_W_G1(slo, shi, lo, hi, A_W_G, mu_g, u_g, v_g, w_g, &
                               flux_ge, flux_gn, flux_gt, flag,  &
                               dt, dx, dy, dz)
 
-      USE functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-
+      use functions, only: avg
       use matrix, only: e, w, n, s, t, b
 
       USE run, only: discretize
@@ -358,7 +312,7 @@ module w_g_conv_dif
       real(c_real), intent(INOUT) :: A_W_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), intent(IN   ) :: MU_G&
+      real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(IN   ) :: u_g&
@@ -389,20 +343,29 @@ module w_g_conv_dif
       real(c_real) :: flux_t
 
 ! x, y, z directional velocity
-      real(c_real), allocatable :: U(:,:,:), V(:,:,:), WW(:,:,:)
+      real(c_real), allocatable :: u(:,:,:), v(:,:,:), ww(:,:,:)
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 !---------------------------------------------------------------------//
 
-      allocate(  U(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(  V(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate( WW(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(  u(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(  v(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( ww(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
       allocate(xsi_e(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      CALL GET_WCELL_GVTERMS(slo, shi, U, V, WW, u_g, v_g, w_g )
-
+      !  Calculate the components of velocity on the east, north,
+      !  and top face of a w-momentum cell
+      DO K = slo(3),hi(3)
+        DO J = slo(2),shi(2)
+          DO I = slo(1),shi(1)
+            u(I,J,K)  = avg(u_g(I,J,K),u_G(i,j,k+1))
+            v(I,J,K)  = avg(v_g(I,J,K),v_G(i,j,k+1))
+            ww(I,J,K) = avg(w_g(I,J,K),w_G(i,j,k+1))
+          ENDDO
+        ENDDO
+      ENDDO
 
       call calc_xsi (discretize(3), slo, shi, hi, &
          w_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
@@ -442,7 +405,7 @@ module w_g_conv_dif
          enddo
       enddo
 
-      deallocate( U, V, WW )
+      deallocate( U, V, ww )
       deallocate( xsi_e, xsi_n, xsi_t)
 
       return

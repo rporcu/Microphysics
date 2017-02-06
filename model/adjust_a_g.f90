@@ -18,11 +18,8 @@
       subroutine adjust_a_g(axis, slo, shi, lo, hi, A_m, B_M, rop_g, dx, dy, dz)
 
          USE functions, only: avg
-         USE geometry , only: domhi
          USE matrix, only: e, w, s, n, t, b
          USE param1, only: ONE, ZERO, small_number
-
-         USE functions, only: iminus, jminus, kminus, ieast, jnorth, ktop
 
          implicit none
 
@@ -44,7 +41,7 @@
       real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
 
-      integer      :: ip, i, j, k, is, js, ks
+      integer      :: i, j, k, is, js, ks
       real(c_real) :: denominator, xxxm, xxxp
       real(c_real) :: axy, ayz, axz
 
@@ -79,14 +76,13 @@
             A_m(I,J,K,0) = -ONE
 
             IF (B_M(I,J,K) < ZERO) THEN
-               IP = min(domhi(1)+1, i+1)
 
                if (axis .eq. 'U') then
-                  denominator = rop_g(ieast(i,j,k),j,k)*AYZ
+                  denominator = rop_g(i+1,j,k)*AYZ
                else if (axis .eq. 'V') then
-                  denominator = rop_g(i,jnorth(i,j,k),k)*AXZ
+                  denominator = rop_g(i,j+1,k)*AXZ
                else if (axis .eq. 'W') then
-                  denominator = rop_g(i,j,ktop(i,j,k))*AXY
+                  denominator = rop_g(i,j,k+1)*AXY
                end if
 
                xxxm = ONE
