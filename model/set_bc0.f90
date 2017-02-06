@@ -17,11 +17,12 @@ module set_bc0_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0(slo, shi, p_g, ep_g, u_g, v_g, w_g, ro_g0, flag)
+      subroutine set_bc0(slo, shi, p_g, ep_g, u_g, v_g, w_g, ro_g0, &
+                         bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                         bc_klo_type, bc_khi_type, flag)
 
 ! Modules
 !--------------------------------------------------------------------//
-      use set_bc_type_module, only: set_bc_type
       use bc                , only: bc_u_g, bc_v_g, bc_w_g, bc_p_g, bc_ep_g
       use ic                , only: PINF_, POUT_, MINF_, MOUT_
       use geometry          , only: domlo, domhi
@@ -45,6 +46,18 @@ module set_bc0_module
 
       real(c_real), intent(in   ) :: ro_g0
 
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -56,22 +69,11 @@ module set_bc0_module
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer    ilo, ihi, jlo, jhi, klo, khi
 
-      integer :: bc_i_type(2,slo(2):shi(2),slo(3):shi(3))
-      integer :: bc_j_type(2,slo(1):shi(1),slo(3):shi(3))
-      integer :: bc_k_type(2,slo(1):shi(1),slo(2):shi(2))
-
-      integer :: bc_i_ptr(2,slo(2):shi(2),slo(3):shi(3))
-      integer :: bc_j_ptr(2,slo(1):shi(1),slo(3):shi(3))
-      integer :: bc_k_ptr(2,slo(1):shi(1),slo(2):shi(2))
-
 !--------------------------------------------------------------------//
 
 ! Incompressible cases require that Ppg specified for one cell.
 ! The following attempts to pick an appropriate cell.
       CALL SET_IJK_P_G(slo,shi,ro_g0,flag)
-
-      call set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
-         bc_i_ptr, bc_j_ptr, bc_k_ptr, flag)
 
 
       nlft = max(0,domlo(1)-slo(1))
@@ -87,10 +89,10 @@ module set_bc0_module
          do i = 1, nlft
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  bcv = bc_i_ptr(1,j,k)
-                  if(bc_i_type(1,j,k) == PINF_ .or. &
-                     bc_i_type(1,j,k) == MINF_ .or. &
-                     bc_i_type(1,j,k) == MOUT_) then
+                  bcv = bc_ilo_type(j,k,2)
+                  if(bc_ilo_type(j,k,1) == PINF_ .or. &
+                     bc_ilo_type(j,k,1) == MINF_ .or. &
+                     bc_ilo_type(j,k,1) == MOUT_) then
 
                      p_g(ilo-i,j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(ilo-i,j,k) = bc_ep_g(bcv)
@@ -99,7 +101,7 @@ module set_bc0_module
                      v_g(ilo-i,j,k) = 0.0d0
                      w_g(ilo-i,j,k) = 0.0d0
 
-                  elseif(bc_i_type(1,j,k) == POUT_) then
+                  elseif(bc_ilo_type(j,k,1) == POUT_) then
                      p_g(ilo-i,j,k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do
@@ -112,10 +114,10 @@ module set_bc0_module
          do i = 1, nrgt
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  bcv = bc_i_ptr(1,j,k)
-                  if(bc_i_type(1,j,k) == PINF_ .or. &
-                     bc_i_type(1,j,k) == MINF_ .or. &
-                     bc_i_type(1,j,k) == MOUT_) then
+                  bcv = bc_ihi_type(j,k,2)
+                  if(bc_ihi_type(j,k,1) == PINF_ .or. &
+                     bc_ihi_type(j,k,1) == MINF_ .or. &
+                     bc_ihi_type(j,k,1) == MOUT_) then
 
                      p_g(ihi+i,j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(ihi+i,j,k) = bc_ep_g(bcv)
@@ -124,7 +126,7 @@ module set_bc0_module
                      v_g(ihi+i-1,j,k) = 0.0d0
                      w_g(ihi+i-1,j,k) = 0.0d0
 
-                  elseif(bc_i_type(2,j,k) == POUT_) then
+                  elseif(bc_ihi_type(j,k,1) == POUT_) then
                      p_g(ihi+i,j,k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do
@@ -137,10 +139,10 @@ module set_bc0_module
          do j = 1, nbot
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  bcv = bc_j_ptr(1,i,k)
-                  if(bc_j_type(1,i,k) == PINF_ .or. &
-                     bc_j_type(1,i,k) == MINF_ .or. &
-                     bc_j_type(1,i,k) == MOUT_) then
+                  bcv = bc_jlo_type(i,k,2)
+                  if(bc_jlo_type(i,k,1) == PINF_ .or. &
+                     bc_jlo_type(i,k,1) == MINF_ .or. &
+                     bc_jlo_type(i,k,1) == MOUT_) then
 
                      p_g(i,jlo-j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,jlo-j,k) = bc_ep_g(bcv)
@@ -149,7 +151,7 @@ module set_bc0_module
                      v_g(i,jlo-j,k) = bc_v_g(bcv)
                      w_g(i,jlo-j,k) = 0.0d0
 
-                  elseif(bc_j_type(1,i,k) == POUT_) then
+                  elseif(bc_jlo_type(i,k,1) == POUT_) then
                      p_g(i,jlo-j,k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do
@@ -162,10 +164,10 @@ module set_bc0_module
          do j = 1, ntop
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  bcv = bc_j_ptr(2,i,k)
-                  if(bc_j_type(2,i,k) == PINF_ .or. &
-                     bc_j_type(2,i,k) == MINF_ .or. &
-                     bc_j_type(2,i,k) == MOUT_) then
+                  bcv = bc_jhi_type(i,k,2)
+                  if(bc_jhi_type(i,k,1) == PINF_ .or. &
+                     bc_jhi_type(i,k,1) == MINF_ .or. &
+                     bc_jhi_type(i,k,1) == MOUT_) then
 
                      p_g(i,jhi+j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,jhi+j,k) = bc_ep_g(bcv)
@@ -174,7 +176,7 @@ module set_bc0_module
                      v_g(i,jhi+j-1,k) = bc_v_g(bcv)
                      w_g(i,jhi+j-1,k) = 0.0d0
 
-                  elseif(bc_j_type(2,i,k) == POUT_) then
+                  elseif(bc_jhi_type(i,k,1) == POUT_) then
                      p_g(i,jhi+j,k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do
@@ -187,10 +189,10 @@ module set_bc0_module
          do k = 1, ndwn
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  bcv = bc_k_ptr(1,i,j)
-                  if(bc_k_type(1,i,j) == PINF_ .or. &
-                     bc_k_type(1,i,j) == MINF_ .or. &
-                     bc_k_type(1,i,j) == MOUT_) then
+                  bcv = bc_klo_type(i,j,2)
+                  if(bc_klo_type(i,j,1) == PINF_ .or. &
+                     bc_klo_type(i,j,1) == MINF_ .or. &
+                     bc_klo_type(i,j,1) == MOUT_) then
 
                      p_g(i,j,klo-k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,j,klo-k) = bc_ep_g(bcv)
@@ -199,7 +201,7 @@ module set_bc0_module
                      v_g(i,j,klo-k) = 0.0d0
                      w_g(i,j,klo-k) = bc_w_g(bcv)
 
-                  elseif(bc_k_type(1,i,j) == POUT_) then
+                  elseif(bc_klo_type(i,j,1) == POUT_) then
                      p_g(i,j,klo-k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do
@@ -212,10 +214,10 @@ module set_bc0_module
          do k = 1, nup
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  bcv = bc_k_ptr(2,i,j)
-                  if(bc_k_type(2,i,j) == PINF_ .or. &
-                     bc_k_type(2,i,j) == MINF_ .or. &
-                     bc_k_type(2,i,j) == MOUT_) then
+                  bcv = bc_khi_type(i,j,2)
+                  if(bc_khi_type(i,j,1) == PINF_ .or. &
+                     bc_khi_type(i,j,1) == MINF_ .or. &
+                     bc_khi_type(i,j,1) == MOUT_) then
 
                      p_g(i,j,khi+k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,j,khi+k) = bc_ep_g(bcv)
@@ -224,7 +226,7 @@ module set_bc0_module
                      v_g(i,j,khi+k-1) = 0.0d0
                      w_g(i,j,khi+k-1) = bc_w_g(bcv)
 
-                  elseif(bc_k_type(2,i,j) == POUT_) then
+                  elseif(bc_khi_type(i,j,1) == POUT_) then
                      p_g(i,j,khi+k) = scale_pressure(bc_p_g(bcv))
                   endif
                end do

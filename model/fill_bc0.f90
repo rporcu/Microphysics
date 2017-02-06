@@ -16,14 +16,15 @@
 ! ::: NOTE: corner data not used in computing soln but must have
 ! :::       reasonable values for arithmetic to live
 ! ::: -----------------------------------------------------------
-subroutine fill_bc0(s, slo, shi, flag, vtype)&
+subroutine fill_bc0(s, slo, shi, &
+      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+      bc_klo_type, bc_khi_type, vtype) &
    bind(C, name="fill_bc0")
 
 
 ! Global modules
 !--------------------------------------------------------------------//
       use geometry      , only: domlo, domhi
-      use set_bc_type_module, only: set_bc_type
       use iso_c_binding , only: c_int
       use bl_fort_module, only: c_real
 
@@ -38,8 +39,18 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
 
 
 ! Local variables
@@ -47,14 +58,6 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer    ilo, ihi, jlo, jhi, klo, khi
       integer    i, j, k
-
-      integer :: bc_i_type(2,slo(2):shi(2),slo(3):shi(3))
-      integer :: bc_j_type(2,slo(1):shi(1),slo(3):shi(3))
-      integer :: bc_k_type(2,slo(1):shi(1),slo(2):shi(2))
-
-      integer :: bc_i_ptr(2,slo(2):shi(2),slo(3):shi(3))
-      integer :: bc_j_ptr(2,slo(1):shi(1),slo(3):shi(3))
-      integer :: bc_k_ptr(2,slo(1):shi(1),slo(2):shi(2))
 !......................................................................
 
       if(vtype /= 0) return
@@ -67,15 +70,12 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
-      call set_bc_type(slo, shi, bc_i_type, bc_j_type, bc_k_type, &
-                                 bc_i_ptr , bc_j_ptr , bc_k_ptr, flag)
-
       if (nlft .gt. 0) then
          ilo = domlo(1)
          do i = 1, nlft
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_i_type(1,j,k) >= 100) then
+                  if(bc_ilo_type(j,k,1) >= 100) then
                      s(ilo-i,j,k) = s(ilo,j,k)
                   endif
                end do
@@ -88,7 +88,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
          do i = 1, nrgt
             do k=slo(3),shi(3)
                do j=slo(2),shi(2)
-                  if(bc_i_type(2,j,k) >= 100) then
+                  if(bc_ihi_type(j,k,1) >= 100) then
                      s(ihi+i,j,k) = s(ihi,j,k)
                   endif
                end do
@@ -101,7 +101,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
          do j = 1, nbot
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_j_type(1,i,k) >= 100) then
+                  if(bc_jlo_type(i,k,1) >= 100) then
                      s(i,jlo-j,k) = s(i,jlo,k)
                   endif
                end do
@@ -114,7 +114,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
          do j = 1, ntop
             do k=slo(3),shi(3)
                do i=slo(1),shi(1)
-                  if(bc_j_type(2,i,k) >= 100) then
+                  if(bc_jhi_type(i,k,1) >= 100) then
                      s(i,jhi+j,k) = s(i,jhi,k)
                   endif
                end do
@@ -127,7 +127,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
          do k = 1, ndwn
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_k_type(1,i,j) >= 100) then
+                  if(bc_klo_type(i,j,1) >= 100) then
                      s(i,j,klo-k) = s(i,j,klo)
                   endif
                end do
@@ -140,7 +140,7 @@ subroutine fill_bc0(s, slo, shi, flag, vtype)&
          do k = 1, nup
             do j=slo(2),shi(2)
                do i=slo(1),shi(1)
-                  if(bc_k_type(1,i,j) >= 100) then
+                  if(bc_khi_type(i,j,1) >= 100) then
                      s(i,j,khi+k) = s(i,j,khi)
                   endif
                end do

@@ -3,6 +3,7 @@
 #include <mfix_F.H>
 #include <mfix_level.H>
 #include <BC_TYPES.H>
+#include <Box.H>
 
 mfix_level::~mfix_level ()
 {};
@@ -28,6 +29,9 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 
     // Particle Container
     mypc = std::unique_ptr<MyParticleContainer> (new MyParticleContainer(this));
+
+//  bc_type.resize(nlevs_max);
+//  bc_ptr.resize(nlevs_max);
 
     flag.resize(nlevs_max);
 
@@ -194,6 +198,33 @@ mfix_level::MakeNewLevel (int lev, Real time,
     t_old[lev] = time - 1.e200;
 #endif
 
+    // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
+    Box domain(geom[0].Domain());
+    domain.grow(1);
+
+    Box box_ilo = BoxLib::adjCellLo(domain,0,1);
+    Box box_ihi = BoxLib::adjCellHi(domain,0,1);
+    Box box_jlo = BoxLib::adjCellLo(domain,1,1);
+    Box box_jhi = BoxLib::adjCellHi(domain,1,1);
+    Box box_klo = BoxLib::adjCellLo(domain,2,1);
+    Box box_khi = BoxLib::adjCellHi(domain,2,1);
+
+    bc_ilo.resize(box_ilo,2);
+    bc_ihi.resize(box_ihi,2);
+    bc_jlo.resize(box_jlo,2);
+    bc_jhi.resize(box_jhi,2);
+    bc_klo.resize(box_klo,2);
+    bc_khi.resize(box_khi,2);
+
+#if 0
+    BoxList bl; 
+    bl.push_back(box_ilo); bl.push_back(box_ihi);
+    bl.push_back(box_jlo); bl.push_back(box_jhi);
+    bl.push_back(box_klo); bl.push_back(box_khi);
+    bc_type[lev].reset(new iMultiFab(bl,1,0);
+    bc_type[lev]->setVal(-1);
+#endif
+
     int nghost;
     if (ParallelDescriptor::NProcs() == 1) {
        nghost = 1;
@@ -201,7 +232,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
        nghost = 2;
     }
 
-    // Define and allocate the integer MultiFab on BoxArray ba with
+    // Define and allocate the integer MultiFab on BoxArray grids[lev] with
     // 4 components and nghost ghost cells.
     flag[lev].reset(new iMultiFab(grids[lev],4,nghost,dmap[lev],Fab_allocate));
     flag[lev]->setVal(0);
@@ -222,6 +253,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
        set_domain(sbx.loVect(),sbx.hiVect(),
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
+    mfix_set_bc_type(lev);
     //fill_mf_bc(lev,*flag[lev]);
 
     // Matrix and rhs vector
@@ -533,6 +565,13 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
+  std::cout << "BC_ILO " << bc_ilo.box() << std::endl;
+  std::cout << "BC_IHI " << bc_ihi.box() << std::endl;
+  std::cout << "BC_JLO " << bc_jlo.box() << std::endl;
+  std::cout << "BC_JHI " << bc_jhi.box() << std::endl;
+  std::cout << "BC_KLO " << bc_klo.box() << std::endl;
+  std::cout << "BC_KHI " << bc_khi.box() << std::endl;
+
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -543,6 +582,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+               bc_klo.dataPtr(), bc_khi.dataPtr(),
                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
   }
 
@@ -604,7 +646,6 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
      const int max_pip = particle_state.size();
 
@@ -838,7 +879,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
                 (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
+          (*flag[lev])[mfi].dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          &dt, &dx, &dy, &dz);
     }
 
     fill_mf_bc(lev,*A_m[lev],0);
@@ -868,7 +913,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
+          (*flag[lev])[mfi].dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          &dt, &dx, &dy, &dz);
     }
 
     fill_mf_bc(lev,*A_m[lev],0);
@@ -898,7 +947,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          (*flag[lev])[mfi].dataPtr(),     &dt, &dx, &dy, &dz);
+          (*flag[lev])[mfi].dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          &dt, &dx, &dy, &dz);
     }
 
     fill_mf_bc(lev,*A_m[lev],0);
@@ -1032,6 +1085,23 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 }
 
 void
+mfix_level::mfix_set_bc_type(int lev)
+{
+  Box domain(geom[lev].Domain());
+  for (MFIter mfi((*flag[lev])); mfi.isValid(); ++mfi)
+  {
+      const Box&  bx = mfi.validbox();
+      const Box& sbx = (*flag[lev])[mfi].box();
+      set_bc_type(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
+                  bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                  bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                  bc_klo.dataPtr(), bc_khi.dataPtr(),
+                  (*flag[lev])[mfi].dataPtr()); 
+  }
+
+}
+
+void
 mfix_level::fill_mf_bc(int lev, MultiFab& mf, const int vtype)
 {
 
@@ -1040,7 +1110,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf, const int vtype)
   {
       const Box& sbx = mf[mfi].box();
       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-              (*flag[lev])[mfi].dataPtr(), &vtype);
+               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+               bc_klo.dataPtr(), bc_khi.dataPtr(),
+               &vtype);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio

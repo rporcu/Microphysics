@@ -86,8 +86,10 @@ private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
 
-  void fill_mf_bc(int lev,  MultiFab& mf, const int vtype);
+  void mfix_set_bc_type(int lev);
+
   void fill_mf_bc(int lev, iMultiFab& mf, const int vtype);
+  void fill_mf_bc(int lev,  MultiFab& mf, const int vtype);
 #if 0
     void WritePlotFile () const;
 
@@ -97,6 +99,16 @@ private:
 
     // Particle container
     std::unique_ptr<MyParticleContainer> mypc;
+
+//  Array< std::unique_ptr<iMultiFab> > bc_type;
+//  Array< std::unique_ptr<iMultiFab> > bc_ptr;
+
+    IArrayBox bc_ilo;
+    IArrayBox bc_ihi;
+    IArrayBox bc_jlo;
+    IArrayBox bc_jhi;
+    IArrayBox bc_klo;
+    IArrayBox bc_khi;
 
     Array< std::unique_ptr<iMultiFab> > flag;
 

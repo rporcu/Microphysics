@@ -15,17 +15,21 @@ extern "C"
   void set_domain(const int* slo, const int* shi,
                   int* flag, Real* dx, Real* dy, Real* dz);
 
-  void fill_bc(Real* s, const int* slo, const int* shi,
-               int* flag, const int* vtype);
-
-  void fill_bc0(Real* s, const int* slo, const int* shi,
-               int* flag, const int* vtype);
+  void set_bc_type(const int* slo, const int* shi,
+                   const int*  lo, const int*  hi,
+                   int* bc_ilo, int* bc_ihi, 
+                   int* bc_jlo, int* bc_jhi, 
+                   int* bc_klo, int* bc_khi,
+                   int* flag);
 
   void mfix_main1(const int* slo, const int* shi,
                   const int* lo, const int* hi,
                  Real* time,    Real* dt,
                  Real* u_g,     Real* v_g,      Real* w_g,
                  Real* p_g,     Real* ep_g,
+                 int* bc_ilo, int* bc_ihi, 
+                 int* bc_jlo, int* bc_jhi, 
+                 int* bc_klo, int* bc_khi,
                  int* flag,
                  Real* dx,       Real* dy,       Real* dz);
 
@@ -134,6 +138,15 @@ extern "C"
          int* level, Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g, int* flag);
 
+  void fill_bc(Real* s, const int* slo, const int* shi,
+               int* flag, const int* vtype);
+
+  void fill_bc0(Real* s, const int* slo, const int* shi,
+                int* bc_ilo, int* bc_ihi, 
+                int* bc_jlo, int* bc_jhi, 
+                int* bc_klo, int* bc_khi,
+                const int* vtype);
+
   void solve_u_g_star(
           const int* slo, const int* shi,
           const int* lo,  const int* hi,
@@ -147,7 +160,9 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      Real* dt,
+          int* flag,      int* bc_ilo,    int* bc_ihi, 
+          int* bc_jlo,    int* bc_jhi, 
+          int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_v_g_star(
@@ -163,7 +178,9 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      Real* dt,
+          int* flag,      int* bc_ilo,    int* bc_ihi, 
+          int* bc_jlo,    int* bc_jhi, 
+          int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_w_g_star(
@@ -179,7 +196,9 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int*  flag,     Real* dt,
+          int* flag,      int* bc_ilo,    int* bc_ihi, 
+          int* bc_jlo,    int* bc_jhi, 
+          int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);
 
   void solve_pp_g(

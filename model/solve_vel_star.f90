@@ -2,6 +2,7 @@ module solve_vel_star_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
+   use geometry      , only: domlo, domhi
 
    private
 
@@ -22,8 +23,9 @@ module solve_vel_star_module
          slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
-         f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
-
+         f_gds, a_m, b_m, drag_bm, flag, &
+         bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+         bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
          bind(C, name="solve_u_g_star")
 
 ! Module procedures ..................................................//
@@ -100,6 +102,19 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
 
 ! Initialize a_m and b_m
@@ -118,7 +133,11 @@ module solve_vel_star_module
          u_go, tau_u_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_u_g_bc (slo, shi, A_m, b_m, flag, dy, dz)
+      call source_u_g_bc (slo, shi, A_m, b_m, &
+                          bc_ilo_type, bc_ihi_type, &
+                          bc_jlo_type, bc_jhi_type, &
+                          bc_klo_type, bc_khi_type, &
+                          dy, dz)
 
 ! add in point sources
       if(point_source) call point_source_u_g (slo, shi, b_m, flag, dx, dy, dz)
@@ -158,7 +177,9 @@ module solve_vel_star_module
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
+      f_gds, a_m, b_m, drag_bm, flag, &
+      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_v_g_star")
 
 
@@ -237,6 +258,19 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (domlo(2):domhi(2),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (domlo(2):domhi(2),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (domlo(1):domhi(1),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (domlo(1):domhi(1),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (domlo(1):domhi(1),domlo(2):domhi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
 
 ! Initialize a_m and b_m
@@ -253,7 +287,11 @@ module solve_vel_star_module
          v_go, tau_v_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_v_g_bc(slo, shi, A_m, b_m, flag, dx, dz)
+      call source_v_g_bc(slo, shi, A_m, b_m, &
+                         bc_ilo_type, bc_ihi_type, &
+                         bc_jlo_type, bc_jhi_type, &
+                         bc_klo_type, bc_khi_type, &
+                         dx, dz)
 
 ! add in point sources
       if(point_source) call point_source_v_g (slo, shi, b_m, flag, dx, dy, dz)
@@ -292,7 +330,9 @@ module solve_vel_star_module
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, dt, dx, dy, dz)&
+      f_gds, a_m, b_m, drag_bm, flag, &
+      bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -369,6 +409,19 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (domlo(2):domhi(2),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (domlo(2):domhi(2),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (domlo(1):domhi(1),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (domlo(1):domhi(1),domlo(3):domhi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (domlo(1):domhi(1),domlo(2):domhi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
 
 ! Initialize a_m and b_m
@@ -386,7 +439,11 @@ module solve_vel_star_module
          w_go, tau_w_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_w_g_bc (slo, shi, A_m, b_m, flag, dx, dy)
+      call source_w_g_bc (slo, shi, A_m, b_m, &
+                          bc_ilo_type, bc_ihi_type, &
+                          bc_jlo_type, bc_jhi_type, &
+                          bc_klo_type, bc_khi_type, &
+                          dx, dy)
 
 ! add in point sources
       if(point_source) call point_source_w_g (slo, shi, b_m, flag, dx, dy, dz)

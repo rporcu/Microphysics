@@ -7,7 +7,9 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
-   p_g, ep_g, flag, dx, dy, dz) &
+                 p_g, ep_g, &
+                 bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                 bc_klo_type, bc_khi_type, flag, dx, dy, dz) &
    bind(C, name="mfix_main1")
 
 !-----------------------------------------------
@@ -19,6 +21,7 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use calc_coeff_module, only: calc_coeff
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
+      use geometry, only: domlo, domhi
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined
@@ -52,8 +55,19 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       real(c_real), intent(inout) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
 !---------------------------------------------------------------------//
-
       call init_output_vars(time, dt)
 
       ! Parse residual strings
@@ -74,6 +88,9 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call zero_norm_vel(slo,shi,u_g,v_g,w_g,flag)
 
       ! Set boundary conditions
-      call set_bc0(slo,shi,p_g,ep_g,u_g,v_g,w_g,ro_g0,flag)
+      call set_bc0(slo,shi,p_g,ep_g,u_g,v_g,w_g,ro_g0, &
+                   bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
+                   bc_klo_type, bc_khi_type, flag)
+
 
       end subroutine mfix1
