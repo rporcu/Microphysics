@@ -27,7 +27,7 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff_all(slo, shi, max_pip, &
+      subroutine calc_coeff_all(slo, shi, lo, hi, max_pip, &
         ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
@@ -41,7 +41,7 @@ module calc_coeff_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) ::  p_g&
@@ -83,15 +83,16 @@ module calc_coeff_module
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      CALL CALC_COEFF(slo, shi, max_pip, flag, 2, ro_g, p_g, ep_g, &
+      call calc_coeff(slo, shi, lo, hi, max_pip, 2, ro_g, p_g, ep_g, &
          rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
 
-      if (des_explicitly_coupled) call calc_drag_des_explicit(&
-         slo, shi, max_pip, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
-         drag_bm, particle_phase,  particle_state, pvol, &
-         des_pos_new, des_vel_new, des_radius, dx, dy, dz)
+      if (des_explicitly_coupled) &
+         call calc_drag_des_explicit(&
+            slo, shi, max_pip, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
+            drag_bm, particle_phase,  particle_state, pvol, &
+            des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 
       end subroutine calc_coeff_all
 
@@ -102,7 +103,7 @@ module calc_coeff_module
 !           transport properties, and exchange rates.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff(slo, shi, max_pip, flag, plevel, &
+      subroutine calc_coeff(slo, shi, lo, hi, max_pip, plevel, &
          ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,&
          particle_phase, particle_state, pvol, des_pos_new, des_vel_new,&
          des_radius, dx, dy, dz)&
@@ -119,13 +120,11 @@ module calc_coeff_module
 ! 0) Only density
 ! 1) Everything but density
 ! 2) All physical properties
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       integer(c_int), intent(in   ) :: plevel
 
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
@@ -159,7 +158,7 @@ module calc_coeff_module
       real(c_real)  , intent(in   ) :: dx, dy, dz
 
 ! Calculate physical properties: (density, specific heat, diameter)
-      call physical_prop(slo, shi, plevel, ro_g, p_g, ep_g, rop_g, flag)
+      call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, ep_g, rop_g)
 
 ! Calculate interphase coeffs: (momentum and energy)
       if (des_continuum_coupled .and. .not.des_explicitly_coupled)   &

@@ -82,6 +82,7 @@ extern "C"
 
   void calc_coeff_all(
          const int* slo, const int* shi,
+         const int*  lo, const int*  hi,
          const int* max_pip,
          Real* ro_g, Real* p_g,
          Real* ep_g, Real* rop_g,
@@ -95,6 +96,7 @@ extern "C"
 
   void calc_coeff(
          const int* slo, const int* shi,
+         const int* lo,  const int* hi,
          const int* max_pip,
          int* flag, int* level,
          Real* ro_g, Real* p_g,
@@ -135,8 +137,9 @@ extern "C"
          Real* dx,             Real* dy,             Real* dz);
 
   void physical_prop(const int* slo, const int* shi,
-         int* level, Real* ro_g, Real* p_g,
-         Real* ep_g, Real* rop_g, int* flag);
+                     const int* lo, const int* hi,
+                     int* level, Real* ro_g, Real* p_g,
+                     Real* ep_g, Real* rop_g, int* flag);
 
   void fill_bc(Real* s, const int* slo, const int* shi,
                int* flag, const int* vtype);

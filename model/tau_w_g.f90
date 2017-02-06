@@ -1,4 +1,4 @@
-MODULE CALC_TAU_W_G_MODULE
+module calc_tau_w_g_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
@@ -42,22 +42,24 @@ MODULE CALC_TAU_W_G_MODULE
 !  mu.grad(w)                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_TAU_W_G(slo,shi,lo,hi,&
-                              lTAU_W_G,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
+    subroutine calc_tau_w_g(slo,shi,lo,hi,&
+                            ltau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param1, only: zero
-      USE toleranc, only: dil_ep_s
+
+      use functions, only: avg, avg_h
+      use param1   , only: zero
+      use toleranc , only: dil_ep_s
 
       IMPLICIT NONE
 
       integer(c_int), intent(in ) :: slo(3),shi(3),lo(3),hi(3)
 
-      ! TAU_W_g
+      ! tau_w_g
       real(c_real), INTENT(INOUT) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(OUT) :: lTAU_w_g&
+      real(c_real), INTENT(OUT) :: ltau_w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), INTENT(IN   ) :: ep_g&
@@ -101,7 +103,7 @@ MODULE CALC_TAU_W_G_MODULE
          DO J = lo(2),hi(2)
           DO I = lo(1),hi(1)
 
-            EPGA = AVG(EP_G(I,J,K),EP_G(i,j,ktop(i,j,k)))
+            EPGA = AVG(EP_G(I,J,K),EP_G(i,j,k+1))
 
             IF (flag(i,j,k,4) > 1000 .AND. EPGA>DIL_EP_S) THEN
 
@@ -114,64 +116,54 @@ MODULE CALC_TAU_W_G_MODULE
 ! part of 1/x d/dz (tau_zz) xdxdydz =>
 !         1/x d/dz (lambda.trcD) xdxdydz=>
 ! delta (lambda.trcD)Ap |T-B : at (i, j, k+1 - k-1)
-               SBV = (LAMBDA_G(i,j,ktop(i,j,k))*TRD_G(i,j,ktop(i,j,k))-&
-                      LAMBDA_G(i,j,k)*TRD_G(i,j,k))*AXY
+               SBV = (LAMBDA_G(i,j,k+1)*TRD_G(i,j,k+1)-&
+                      LAMBDA_G(i,j,k  )*TRD_G(i,j,k  ))*AXY
 
 ! shear stress terms
 ! part of 1/x^2 d/dx (x^2 tau_xz) xdxdydz => or equivalently
 ! part of (tau_xz/x + 1/x d/dx (x tau_xz) ) xdxdydz =>
 !         1/x d/dx(mu.du/dz) xdxdydz =>
 ! delta (mu/x du/dz)Ayz |E-W : at (i+1/2-i-1/2, j, k+1/2)
-               SSX = AVG_H(AVG_H(MU_G(i,j,k), &
-                                 MU_G(ieast(i,j,k),j,k)), &
-                           AVG_H(MU_G(i,j,ktop(i,j,k)), &
-                                 MU_G(ieast(i,j,ktop(i,j,k)),j,ktop(i,j,k)))) &
-                    *(U_G(I,J,KPlus(i,j,k))-U_G(I,J,K))*ODZ*AYZ &
-                   - AVG_H(AVG_H(MU_G(i-1,j,k), &
-                                 MU_G(i,j,k)), &
-                           AVG_H(MU_G(i-1,j,ktop(i,j,k)), &
-                                 MU_G(i  ,j,ktop(i,j,k)))) &
-                     *(U_G(IMinus(i,j,k),J,KPlus(i,j,k))-U_G(IMinus(i,j,k),J,K))*ODZ*AXZ
+               SSX = AVG_H(AVG_H(mu_g(i  ,j,k), &
+                                 mu_g(i+1,j,k)), &
+                           AVG_H(mu_g(i  ,j,k+1), &
+                                 mu_g(i+1,j,k+1))) &
+                    *(u_g(i,j,k+1)-u_g(i,j,k))*ODZ*AYZ &
+                   - AVG_H(AVG_H(mu_g(i-1,j,k), &
+                                 mu_g(i  ,j,k)), &
+                           AVG_H(mu_g(i-1,j,k+1), &
+                                 mu_g(i  ,j,k+1))) &
+                     *(u_g(i-1,j,k+1)-u_g(i-1,j,k))*ODZ*AXZ
 ! DY(J)*HALF(DZ(k)+DZ(kp)) = oX_E(IM)*AYZ_W(IMJK), but avoids singularity
 
 ! part of d/dy (tau_zy) xdxdydz =>
 !         d/dy (mu/x dv/dz) xdxdydz =>
 ! delta (mu/x dv/dz)Axz |N-S : at (i, j+1/2 - j-1/2, k+1/2)
-               SSY = AVG_H(AVG_H(MU_G(i,j,k),MU_G(i,jnorth(i,j,k),k)),&
-                           AVG_H(MU_G(i,j,ktop(i,j,k)), &
-                           MU_G(i,jnorth(i,j,k),ktop(i,jnorth(i,j,k),k)))) &
-                     *(V_G(I,J,KPlus(i,j,k))-V_G(I,J,K))*ODZ*AXZ &
-                       - AVG_H(AVG_H(MU_G(i,jsouth(i,j,k),k), &
-                                     MU_G(i,j,k)), &
-                               AVG_H(MU_G(i,jsouth(i,j,k),ktop(i,jsouth(i,j,k),k)), &
-                                     MU_G(i,j,ktop(i,j,k)))) &
-                         *(V_G(I,JMinus(i,j,k),KPlus(i,j,k))-V_G(I,JMinus(i,j,k),K))*ODZ*AXZ
+               SSY = AVG_H(AVG_H(mu_g(i,j,k  ),mu_g(i,j+1,k  )),&
+                           AVG_H(mu_g(i,j,k+1),mu_g(i,j+1,k+1))) &
+                     *(v_g(i,j,k+1)-v_g(i,j,k))*ODZ*AXZ &
+                       - AVG_H(AVG_H(mu_g(i,j-1,k  ),mu_g(i,j  ,k  )), &
+                               AVG_H(mu_g(i,j-1,k+1),mu_g(i,j  ,k+1))) &
+                         *(v_g(I,j-1,k+1)-v_g(i,j-1,k))*ODZ*AXZ
 
 ! part of 1/x d/dz (tau_zz) xdxdydz =>
 !         1/x d/dz (mu/x dw/dz) xdxdydz =>
 ! delta (mu/x dw/dz)Axy |T-B : at (i, j, k+1 - k-1)
-               SSZ = MU_G(i,j,ktop(i,j,k))*(W_G(I,J,KPlus(i,j,k))-W_G(I,J,K))*ODZ*AXY - &
-                     MU_G(i,j,k)*(W_G(I,J,K)-W_G(I,J,KMinus(i,j,k)))*ODZ*AXY
+               SSZ = mu_g(i,j,k+1)*(w_g(i,j,k+1)-w_g(i,j,k  ))*ODZ*AXY - &
+                     mu_g(i,j,k  )*(w_g(i,j,k  )-w_g(i,j,k-1))*ODZ*AXY
 
-! Add the terms
-               lTAU_W_G(i,j,k) =  SBV + SSX + SSY + SSZ
-
+               ! Add the terms
+               ltau_w_g(i,j,k) =  SBV + SSX + SSY + SSZ
 
             ELSE
-               lTAU_W_G(i,j,k) = ZERO
+
+               ltau_w_g(i,j,k) = ZERO
+
             ENDIF
          ENDDO
          ENDDO
          ENDDO
 
+    end subroutine calc_tau_w_g
 
-      ! call send_recv(ltau_w_g,2)
-
-      RETURN
-
-    CONTAINS
-
-      INCLUDE 'functions.inc'
-
-    END SUBROUTINE CALC_TAU_W_G
-END MODULE CALC_TAU_W_G_MODULE
+end module calc_tau_w_g_module
