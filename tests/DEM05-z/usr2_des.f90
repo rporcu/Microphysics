@@ -32,7 +32,7 @@
       DO LL=63,MAX_PIP
          DES_VEL_NEW(LL,:) = 0.0d0
          DES_POS_NEW(LL,1) = DES_POS_NEW(LL-31,1)
-         DES_POS_NEW(LL,2) = DES_POS_NEW(LL-31,3)
+         DES_POS_NEW(LL,2) = DES_POS_NEW(LL-31,2)
          DES_POS_NEW(LL,3) = 0.0475d0
          OMEGA_NEW(LL,:) = 0.0d0
       ENDDO
