@@ -120,7 +120,7 @@
 # BOUNDARY CONDITIONS SECTION
 
 
-! Gass Mass Inlet:
+! Gas Mass Inlet:
 !---------------------------------------------------------------------//
   BC_X_w(1) =     0.00   ! (m)
   BC_X_e(1) =     0.01   ! (m)
