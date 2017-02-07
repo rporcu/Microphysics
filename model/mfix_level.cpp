@@ -875,10 +875,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           &dt, &dx, &dy, &dz);
     }
 
-    fill_mf_bc(lev,*A_m[lev],0);
-    fill_mf_bc(lev,*b_m[lev],0);
-    fill_mf_bc(lev,*d_e[lev],0);
-
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
@@ -909,10 +905,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           &dt, &dx, &dy, &dz);
     }
 
-    fill_mf_bc(lev,*A_m[lev],0);
-    fill_mf_bc(lev,*b_m[lev],0);
-    fill_mf_bc(lev,*d_n[lev],0);
-
     eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
@@ -942,10 +934,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
-
-    fill_mf_bc(lev,*A_m[lev],0);
-    fill_mf_bc(lev,*b_m[lev],0);
-    fill_mf_bc(lev,*d_t[lev],0);
 
     eq_id=5;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
@@ -987,8 +975,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         &dt, &lnormg, &resg, &dx, &dy, &dz);
     }
     pp_g[lev]->setVal(0.);
-    fill_mf_bc(lev,*A_m[lev],0);
-    fill_mf_bc(lev,*b_m[lev],0);
 
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
