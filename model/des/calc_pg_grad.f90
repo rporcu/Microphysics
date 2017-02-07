@@ -18,7 +18,7 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(slo, shi, max_pip, &
+      SUBROUTINE CALC_PG_GRAD(slo, shi, lo, hi, max_pip, &
                               p_g, gradPg,  particle_state, des_pos_new,&
                               pvol, drag_fc, flag, dx, dy, dz)
 
@@ -46,6 +46,7 @@ MODULE CALC_PG_GRAD_MODULE
       implicit none
 
       integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) ::  lo(3), hi(3)
       integer, intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) :: p_g&
@@ -72,21 +73,19 @@ MODULE CALC_PG_GRAD_MODULE
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(slo, shi, P_G, gradPg, flag, dx, dy, dz)
+      CALL CALC_GRAD_DES(slo, shi, lo, hi, P_G, gradPg, flag, dx, dy, dz)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
       cPG(2) = merge(DELP_Y/YLENGTH, ZERO, CYCLIC_Y_PD)
       cPG(3) = merge(DELP_Z/ZLENGTH, ZERO, CYCLIC_Z_PD)
 
-      DO K = slo(3),shi(3)
-      DO J = slo(2),shi(2)
-      DO I = slo(1),shi(1)
-
-         gradPg(I,J,K,:) = cPG - gradPg(I,J,K,:)
-
-      ENDDO
-      ENDDO
+      DO K = lo(3),hi(3)
+         DO J = lo(2),hi(2)
+            DO I = lo(1),hi(1)
+               gradPg(I,J,K,:) = cPG - gradPg(I,J,K,:)
+            ENDDO
+         ENDDO
       ENDDO
 
       IF(DES_EXPLICITLY_COUPLED) THEN

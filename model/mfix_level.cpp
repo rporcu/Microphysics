@@ -524,8 +524,9 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     {
        // const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
+       const Box& bx = mfi.validbox();
 
-       mfix_des_time_march(sbx.loVect(), sbx.hiVect(), &max_pip,
+       mfix_des_time_march(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(), &max_pip,
         (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
         (*ro_g[lev])[mfi].dataPtr(),

@@ -6,7 +6,6 @@ module drag_gs_des1_module
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Function to deterine if a cell contains fluid.
-      use functions, only: iminus, jminus, kminus
 
       use des_drag_gp_module, only: des_drag_gp
 
@@ -110,9 +109,9 @@ module drag_gs_des1_module
 ! Calculate the gas volume fraction, velocity, and pressure force at
 ! the particle's position.
          lEPG = EP_G(I,J,K)
-         VELFP(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(I,J,K))
-         VELFP(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(I,J,K))
-         VELFP(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(I,J,K))
+         VELFP(1) = 0.5d0*(u_g(i-1,j,k) + u_g(I,J,K))
+         VELFP(2) = 0.5d0*(v_g(i,j-1,k) + v_g(I,J,K))
+         VELFP(3) = 0.5d0*(w_g(i,j,k-1) + w_g(I,J,K))
 
 ! For explicit coupling, use the drag coefficient calculated for the
 ! gas phase drag calculations.
@@ -233,9 +232,9 @@ module drag_gs_des1_module
 ! Calculate the gas volume fraction, velocity, and at the
 ! particle's position.
          lepg = ep_g(i,j,k)
-         velfp(1) = 0.5d0*(u_g(iminus(i,j,k),j,k) + u_g(i,j,k))
-         velfp(2) = 0.5d0*(v_g(i,jminus(i,j,k),k) + v_g(i,j,k))
-         velfp(3) = 0.5d0*(w_g(i,j,kminus(i,j,k)) + w_g(i,j,k))
+         velfp(1) = 0.5d0*(u_g(i-1,j,k) + u_g(i,j,k))
+         velfp(2) = 0.5d0*(v_g(i,j-1,k) + v_g(i,j,k))
+         velfp(3) = 0.5d0*(w_g(i,j,k-1) + w_g(i,j,k))
 
          if(lepg < epsilon(lepg)) lepg = ep_g(i,j,k)
 

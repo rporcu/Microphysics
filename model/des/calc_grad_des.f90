@@ -4,21 +4,19 @@ MODULE CALC_GRAD_DES_MODULE
    use iso_c_binding , only: c_int
 
    CONTAINS
-      SUBROUTINE CALC_GRAD_DES(slo, shi, PHI, DEL_PHI, flag, dx, dy, dz)
+      SUBROUTINE CALC_GRAD_DES(slo, shi, lo, hi, PHI, DEL_PHI, flag, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
 
       USE geometry, only: domlo,domhi
-
-      use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-      use functions, only: AVG
-
-      USE param1, only: ZERO
+      use functions, only: avg
+      use param1, only: zero
 
       IMPLICIT NONE
 
       integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) ::  lo(3), hi(3)
 
       real(c_real), intent(in   ) :: PHI&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -35,60 +33,59 @@ MODULE CALC_GRAD_DES_MODULE
       real(c_real) :: odx, ody, odz
 !......................................................................!
 
-        odx = 1.d0 / dx
-        ody = 1.d0 / dy
-        odz = 1.d0 / dz
+      odx = 1.d0 / dx
+      ody = 1.d0 / dy
+      odz = 1.d0 / dz
 
-        DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-        DO I = slo(1),shi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
 
-         DEL_PHI(I,J,K,:) = ZERO
-         IF(.NOT.1.eq.flag(i,j,k,1)) CYCLE
+               del_phi(i,j,k,:) = zero
 
-         IF((I > domlo(1)).AND.(I < domhi(1))) THEN
-            DEL_PHI(I,J,K,1) = oDX*(AVG(PHI(I,J,K),PHI(iplus(i,j,k),j,k)) -     &
-               AVG(PHI(iminus(i,j,k),j,k),PHI(I,J,K)))
-         ELSEIF(I == domlo(1)) THEN
-            DEL_PHI(I,J,K,1) = 2.0d0*oDX *                            &
-               (AVG(PHI(I,J,K),PHI(iplus(i,j,k),j,k)) -  PHI(I,J,K))
-         ELSEIF(I == domhi(1)) THEN
-            DEL_PHI(I,J,K,1) = 2.0d0*oDX *                            &
-               (PHI(I,J,K) - AVG(PHI(iminus(i,j,k),j,k), PHI(I,J,K)))
-         ELSE
-            DEL_PHI(I,J,K,1) = ZERO
-         ENDIF
-
-
-         IF((J > domlo(2)) .AND. (J < domhi(2))) THEN
-            DEL_PHI(I,J,K,2) = oDY*(AVG(PHI(I,J,K),PHI(i,jplus(i,j,k),k)) -     &
-               AVG(PHI(i,jminus(i,j,k),k),PHI(I,J,K)))
-         ELSEIF(J == domlo(2)) THEN
-            DEL_PHI(I,J,K,2) = 2.0d0*oDY *                            &
-               (AVG(PHI(I,J,K),PHI(i,jplus(i,j,k),k)) - PHI(I,J,K))
-         ELSEIF(J == domhi(2)) THEN
-            DEL_PHI(I,J,K,2) = 2.0d0*oDY *                            &
-               (PHI(I,J,K)- AVG(PHI(i,jminus(i,j,k),k),PHI(I,J,K)))
-         ELSE
-            DEL_PHI(I,J,K,2) = ZERO
-         ENDIF
+               if((i > domlo(1)).and.(i < domhi(1))) then
+                  del_phi(i,j,k,1) = odx*(avg(phi(i,j,k),phi(i+1,j,k)) -    &
+                     avg(phi(i-1,j,k),phi(i,j,k)))
+               elseif(i == domlo(1)) then
+                  del_phi(i,j,k,1) = 2.0d0*odx *                            &
+                     (avg(phi(i,j,k),phi(i+1,j,k)) -  phi(i,j,k))
+               elseif(i == domhi(1)) then
+                  del_phi(i,j,k,1) = 2.0d0*odx *                            &
+                     (phi(i,j,k) - avg(phi(i-1,j,k), phi(i,j,k)))
+               else
+                  del_phi(i,j,k,1) = zero
+               endif
 
 
-         IF((K > domlo(3)) .AND. (K < domhi(3))) THEN
-            DEL_PHI(I,J,K,3) = oDZ*(AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) -  &
-               AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
-         ELSEIF(K == domlo(3)) THEN
-            DEL_PHI(I,J,K,3) = 2.0d0*oDZ *                         &
-               (AVG(PHI(I,J,K),PHI(i,j,kplus(i,j,k))) - PHI(I,J,K))
-         ELSEIF(K == domhi(3)) THEN
-            DEL_PHI(I,J,K,3) = 2.0d0*oDZ *                         &
-               (PHI(I,J,K) - AVG(PHI(i,j,kminus(i,j,k)),PHI(I,J,K)))
-         ELSE
-            DEL_PHI(I,J,K,3) = ZERO
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
+               if((j > domlo(2)) .and. (j < domhi(2))) then
+                  del_phi(i,j,k,2) = ody*(avg(phi(i,j,k),phi(i,j+1,k)) -    &
+                     avg(phi(i,j-1,k),phi(i,j,k)))
+               elseif(j == domlo(2)) then
+                  del_phi(i,j,k,2) = 2.0d0*ody *                            &
+                     (avg(phi(i,j,k),phi(i,j+1,k)) - phi(i,j,k))
+               elseif(j == domhi(2)) then
+                  del_phi(i,j,k,2) = 2.0d0*ody *                            &
+                     (phi(i,j,k)- avg(phi(i,j-1,k),phi(i,j,k)))
+               else
+                  del_phi(i,j,k,2) = zero
+               endif
+
+
+               if((k > domlo(3)) .and. (k < domhi(3))) then
+                  del_phi(i,j,k,3) = odz*(avg(phi(i,j,k),phi(i,j,k+1)) -    &
+                     avg(phi(i,j,k-1),phi(i,j,k)))
+               elseif(k == domlo(3)) then
+                  del_phi(i,j,k,3) = 2.0d0*odz *                            &
+                     (avg(phi(i,j,k),phi(i,j,k+1)) - phi(i,j,k))
+               elseif(k == domhi(3)) then
+                  del_phi(i,j,k,3) = 2.0d0*odz *                            &
+                     (phi(i,j,k) - avg(phi(i,j,k-1),phi(i,j,k)))
+               else
+                  del_phi(i,j,k,3) = zero
+               endif
+            enddo
+         enddo
+      enddo
 
       RETURN
       END SUBROUTINE CALC_GRAD_DES

@@ -11,7 +11,7 @@ module des_time_march_module
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(slo, shi, max_pip, ep_g, p_g, &
+      SUBROUTINE DES_TIME_MARCH(slo, shi, lo, hi, max_pip, ep_g, p_g, &
          u_g, v_g, w_g, ro_g, mu_g, particle_state, particle_phase, &
          des_radius,  pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
@@ -40,6 +40,7 @@ module des_time_march_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) ::  lo(3),  hi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(inout) :: ep_g&
@@ -153,7 +154,7 @@ module des_time_march_module
                gradPg, flag, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
-         call calc_pg_grad(slo, shi, max_pip, &
+         call calc_pg_grad(slo, shi, lo, hi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
                            pvol, drag_fc, flag, dx, dy, dz)
       ENDIF

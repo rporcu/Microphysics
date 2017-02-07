@@ -58,28 +58,29 @@ MODULE CORRECT_0_MODULE
         ENDDO
       ENDDO
 
-      do K = slo(3),shi(3)
-        do J = slo(2),shi(2)
+      do K = lo(3),hi(3)
+        do J = lo(2),hi(2)
           do I = slo(1),hi(1)
-            U_G(I,J,K) = U_G(I,J,K) - D_E(I,J,K)*(PP_G(i+1,j,k)-PP_G(I,J,K))
-          ENDDO
-        ENDDO
-      ENDDO
-      do K = slo(3),shi(3)
+            u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i+1,j,k)-pp_g(i,j,k))
+          enddo
+        enddo
+     enddo
+
+      do K = lo(3),hi(3)
         do J = slo(2),hi(2)
-          do I = slo(1),shi(1)
-            V_G(I,J,K) = V_G(I,J,K) - D_N(I,J,K)*(PP_G(i,j+1,k)-PP_G(I,J,K))
-          ENDDO
-        ENDDO
-      ENDDO
+          do I = lo(1),hi(1)
+            v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j+1,k)-pp_g(i,j,k))
+          enddo
+        enddo
+      enddo
 
       do K = slo(3),hi(3)
-        do J = slo(2),shi(2)
-          do I = slo(1),shi(1)
-            W_G(I,J,K) = W_G(I,J,K) - D_T(I,J,K)*(PP_G(i,j,k+1) - PP_G(I,J,K))
-          ENDDO
-        ENDDO
-      ENDDO
+        do J = lo(2),hi(2)
+          do I = lo(1),hi(1)
+            w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
+          enddo
+        enddo
+      enddo
 
       END SUBROUTINE CORRECT_0
 
