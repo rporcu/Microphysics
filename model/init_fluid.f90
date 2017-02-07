@@ -342,6 +342,37 @@ module init_fluid_module
             enddo
          enddo
 
+      else if(abs(gravity(3)) > epsilon(0.0d0)) then
+         do k = hi(3), lo(3), -1
+
+! Find the average weight per unit area over an x-z slice
+            bed_weight = 0.0
+            area = 0.0
+            darea = dx*dy
+            do j = lo(2), hi(2)
+               do i = lo(1), hi(1)
+                  area = area + darea
+                  if (is_undefined(ro_g0)) then
+                     bed_weight = bed_weight - dz*gravity(3)*&
+                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
+                  else
+                     bed_weight = bed_weight - dz*gravity(3)*&
+                        ep_g(i,j,k)*ro_g0*darea
+                  endif
+               enddo
+            enddo
+
+! Global Sum
+            if (0.0 < abs(area)) bed_weight = bed_weight/area
+
+            pj = pj + bed_weight
+            do j = lo(2),hi(2)
+               do i = lo(1),hi(1)
+                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+               enddo
+            enddo
+         enddo
+
       else
          do j = hi(2), lo(2), -1
 
