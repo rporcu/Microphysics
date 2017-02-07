@@ -726,10 +726,10 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 
      calc_trd_and_tau(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
        (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
-       (*trD_g[lev])[mfi].dataPtr(),    (*ep_g[lev])[mfi].dataPtr(),
+       (*trD_g[lev])[mfi].dataPtr(),    
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
        (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
-       (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+       &dx, &dy, &dz);
   }
 
   fill_mf_bc(lev,*tau_u_g[lev],0);

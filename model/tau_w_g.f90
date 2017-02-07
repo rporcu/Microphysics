@@ -40,16 +40,14 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_tau_w_g(slo,shi,lo,hi,&
-       ltau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+       ltau_w_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
 
       use functions, only: avg, avg_h
-      use param1   , only: zero
-      use toleranc , only: dil_ep_s
 
-      IMPLICIT NONE
+      implicit none
 
       integer(c_int), intent(in ) :: slo(3),shi(3)
       integer(c_int), intent(in ) ::  lo(3), hi(3)
@@ -59,8 +57,6 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: trd_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

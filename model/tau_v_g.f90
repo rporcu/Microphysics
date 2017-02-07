@@ -38,11 +38,10 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_tau_v_g(slo,shi,lo,hi,&
-         lTAU_v_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+         lTAU_v_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
       use functions, only: avg, avg_h
-      use toleranc , only: dil_ep_s
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) ::  lo(3), hi(3)
@@ -53,8 +52,6 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: trd_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

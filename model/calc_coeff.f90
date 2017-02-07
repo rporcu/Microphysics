@@ -178,7 +178,7 @@ module calc_coeff_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_trd_and_tau(slo,shi,lo,hi,&
          tau_u_g,tau_v_g,tau_w_g,trd_g,&
-         ep_g,u_g,v_g,w_g,lambda_g,mu_g,flag,dx,dy,dz) &
+         u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz) &
         bind(C, name="calc_trd_and_tau")
 
       implicit none
@@ -196,8 +196,6 @@ module calc_coeff_module
       real(c_real), intent(inout) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_g&
@@ -208,8 +206,6 @@ module calc_coeff_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx,dy,dz
 
@@ -217,9 +213,9 @@ module calc_coeff_module
       call calc_trd_g(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      call calc_tau_u_g (slo,shi,lo,hi,tau_u_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
-      call calc_tau_v_g (slo,shi,lo,hi,tau_v_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
-      call calc_tau_w_g (slo,shi,lo,hi,tau_w_g,trd_g,ep_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_u_g (slo,shi,lo,hi,tau_u_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_v_g (slo,shi,lo,hi,tau_v_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_w_g (slo,shi,lo,hi,tau_w_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
       end subroutine calc_trd_and_tau
 
