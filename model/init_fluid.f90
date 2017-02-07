@@ -243,7 +243,7 @@ module init_fluid_module
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
-                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -256,7 +256,7 @@ module init_fluid_module
             pj = pj + dpody*dy
             do k = lo(3), hi(3)
                do i = lo(1), hi(1)
-                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -269,7 +269,7 @@ module init_fluid_module
             pj = pj + dpodz*dz
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
-                  if (flag(i,j,k)==1) p_g(i,j,k) = scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
@@ -302,49 +302,80 @@ module init_fluid_module
 ! if a case is compressible and pressure in any of the initial
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
-            IF(DMP_LOG)WRITE (UNIT_LOG, 1000)
-            CALL MFIX_EXIT(myPE)
-         ENDIF
-      ENDIF
-
+            if(dmp_log)write (unit_log, 1000)
+            call mfix_exit(mype)
+         endif
+      endif
 
 ! Set an approximate pressure field assuming that the pressure drop
 ! balances the weight of the bed, if the initial pressure-field is not
 ! specified
-      do j = hi(2)+1, lo(2), -1
+
+      if(abs(gravity(1)) > epsilon(0.0d0)) then
+         do i = hi(1), lo(1), -1
 
 ! Find the average weight per unit area over an x-z slice
-         bed_weight = 0.0
-         area = 0.0
-         do k = lo(3), hi(3)
-            do i = lo(1), hi(1)
-               if (flag(i,j,k)==1) then
-                  darea = dx*dz
+            bed_weight = 0.0
+            area = 0.0
+            darea = dy*dz
+            do k = lo(3), hi(3)
+               do j = lo(2), hi(2)
                   area = area + darea
                   if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*eosg(&
-                        mw_avg,pj,295.15d0)*darea
+                     bed_weight = bed_weight - dx*gravity(1)*&
+                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
                   else
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*ro_g0&
-                        *darea
+                     bed_weight = bed_weight - dx*gravity(1)*&
+                        ep_g(i,j,k)*ro_g0*darea
                   endif
-               endif
+               enddo
+            enddo
+
+! Global Sum
+            if (0.0 < abs(area)) bed_weight = bed_weight/area
+
+            pj = pj + bed_weight
+            do k = lo(3),hi(3)
+               do j = lo(2),hi(2)
+                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+               enddo
             enddo
          enddo
+
+      else
+         do j = hi(2), lo(2), -1
+
+! Find the average weight per unit area over an x-z slice
+            bed_weight = 0.0
+            area = 0.0
+            darea = dx*dz
+            do k = lo(3), hi(3)
+               do i = lo(1), hi(1)
+                  area = area + darea
+                  if (is_undefined(ro_g0)) then
+                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
+                        eosg(mw_avg,pj,295.15d0)*darea
+                  else
+                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
+                        ro_g0*darea
+                  endif
+               enddo
+            enddo
 
 ! Global Sum
          ! call global_all_sum(bed_weight)
          ! call global_all_sum(area)
-         IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
+            IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
 
-         PJ = PJ + BED_WEIGHT
-         DO K = lo(3),hi(3)
-            DO I = lo(1),hi(1)
-               IF(flag(i,j,k) ==1 .AND. IS_UNDEFINED(P_G(I,J,K)))&
-                  P_G(I,J,K)=SCALE_PRESSURE(PJ)
-            ENDDO
-         ENDDO
-      ENDDO
+            pj = pj + bed_weight
+            do k = lo(3),hi(3)
+               do i = lo(1),hi(1)
+                  if(flag(i,j,k) ==1 .and. is_undefined(p_g(i,j,k)))&
+                     p_g(i,j,k)=scale_pressure(pj)
+               enddo
+            enddo
+         enddo
+      endif
 ! end setting an undefined pressure in an initial condition region
 ! ----------------------------------------------------------------<<<
 
