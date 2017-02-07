@@ -20,14 +20,17 @@ module zero_norm_vel_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine zero_norm_vel(slo,shi,u_g,v_g,w_g,flag)
+      subroutine zero_norm_vel(slo,shi,u_g,v_g,w_g,&
+                               bc_ilo_type, bc_ihi_type, &
+                               bc_jlo_type, bc_jhi_type, &
+                               bc_klo_type, bc_khi_type)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE param1   , only: zero
-      use geometry, only: domhi
-      USE functions, only: iminus, jminus, kminus
+      USE param1  , only: zero
+      use geometry, only: domlo,domhi
+      use ic      , only: NSW_, FSW_, PSW_
 
       IMPLICIT NONE
 
@@ -39,8 +42,19 @@ module zero_norm_vel_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+
+      integer(c_int), intent(in   ) :: bc_ilo_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_ihi_type&
+         (slo(2):shi(2),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jlo_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_jhi_type&
+         (slo(1):shi(1),slo(3):shi(3),2)
+      integer(c_int), intent(in   ) :: bc_klo_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
+      integer(c_int), intent(in   ) :: bc_khi_type&
+         (slo(1):shi(1),slo(2):shi(2),2)
 
 !-----------------------------------------------
 ! Local variables
@@ -48,37 +62,90 @@ module zero_norm_vel_module
 ! Indices
       integer :: i,j,k
 
-                    print *,"SLO ",slo(:)
-                    print *,"SHI ",shi(:)
-
-      do k = slo(3),shi(3)
+      ! Lo i side
+      if (slo(1) .lt. domlo(1)) then
+        i = domlo(1)
+        do k = slo(3),shi(3)
         do j = slo(2),shi(2)
-          do i = slo(1),shi(1)
-
-            if (flag(i,j,k,1)<100) then
-
-               if (flag(i,j,k,2) < 1000) u_g(i,j,k) = zero
-               if (flag(i,j,k,3) < 1000) v_g(i,j,k) = zero
-               if (flag(i,j,k,4) < 1000) w_g(i,j,k) = zero
-            else
-
-               U_G(I,J,K) = ZERO
-               V_G(I,J,K) = ZERO
-               W_G(I,J,K) = ZERO
-
-               if (flag(i,j,k,1) /= 106 .and. flag(i,j,k,1) /= 107) then
-                  if(i < domhi(1)+1) u_g(iminus(i,j,k),j,k) = zero
-                  if(j < domhi(2)+1) then
-                    if (jminus(i,j,k) .lt. slo(2)) print *,"SETTING TO ZERO OUTSIDE THE GRID AT ", i,jminus(i,j,k),k
-                    v_g(i,jminus(i,j,k),k) = zero
-                  end if
-                  if(k < domhi(3)+1) w_g(i,j,kminus(i,j,k)) = zero
-               endif
-            endif
-
-          end do
+           if (bc_ilo_type(j,k,1) == NSW_ .or. &
+               bc_ilo_type(j,k,1) == FSW_ .or. &
+               bc_ilo_type(j,k,1) == PSW_) then
+               u_g(i-1,j,k) = zero
+           end if
         end do
-      end do
+        end do
+      end if
 
+      ! Hi i side
+      if (shi(1) .gt. domhi(1)) then
+        i = domhi(1)
+        do k = slo(3),shi(3)
+        do j = slo(2),shi(2)
+           if (bc_ihi_type(j,k,1) == NSW_ .or. &
+               bc_ihi_type(j,k,1) == FSW_ .or. &
+               bc_ihi_type(j,k,1) == PSW_) then
+               u_g(i,j,k) = zero
+           end if
+        end do
+        end do
+      end if
+
+      ! Lo j side
+      if (slo(2) .lt. domlo(2)) then
+        j = domlo(2)
+        do k = slo(3),shi(3)
+        do i = slo(1),shi(1)
+           if (bc_jlo_type(i,k,1) == NSW_ .or. &
+               bc_jlo_type(i,k,1) == FSW_ .or. &
+               bc_jlo_type(i,k,1) == PSW_) then
+               v_g(i,j-1,k) = zero
+           end if
+        end do
+        end do
+      end if
+
+      ! Hi j side
+      if (shi(2) .gt. domhi(2)) then
+        j = domhi(2)
+        do k = slo(3),shi(3)
+        do i = slo(1),shi(1)
+           if (bc_jhi_type(i,k,1) == NSW_ .or. &
+               bc_jhi_type(i,k,1) == FSW_ .or. &
+               bc_jhi_type(i,k,1) == PSW_) then
+               v_g(i,j,k) = zero
+           end if
+        end do
+        end do
+      end if
+
+      ! Lo k side
+      if (slo(3) .lt. domlo(3)) then
+        k = domlo(3)
+        do j = slo(2),shi(2)
+        do i = slo(1),shi(1)
+           if (bc_klo_type(i,j,1) == NSW_ .or. &
+               bc_klo_type(i,j,1) == FSW_ .or. &
+               bc_klo_type(i,j,1) == PSW_) then
+               w_g(i,j,k-1) = zero
+           end if
+        end do
+        end do
+      end if
+
+      ! Hi k side
+      if (shi(3) .gt. domhi(3)) then
+        k = domhi(3)
+        do j = slo(2),shi(2)
+        do i = slo(1),shi(1)
+           if (bc_khi_type(i,j,1) == NSW_ .or. &
+               bc_khi_type(i,j,1) == FSW_ .or. &
+               bc_khi_type(i,j,1) == PSW_) then
+               w_g(i,j,k) = zero
+           end if
+        end do
+        end do
+      end if
+ 
       end subroutine zero_norm_vel
-END module zero_norm_vel_module
+
+end module zero_norm_vel_module

@@ -25,8 +25,6 @@ MODULE CALC_OUTFLOW_MODULE
       use bc, only: bc_out_n
       use bc, only: bc_mout_g, bc_vout_g
 
-      use functions, only: iplus, iminus, jplus, jminus, kplus, kminus
-
       implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3)
@@ -56,38 +54,39 @@ MODULE CALC_OUTFLOW_MODULE
       DO K = BC_K_B(L), BC_K_T(L)
          DO J = BC_J_S(L), BC_J_N(L)
             DO I = BC_I_W(L), BC_I_E(L)
-! Check if current i,j,k resides on this PE
+
+               ! Check if current i,j,k resides on this PE
                SELECT CASE (TRIM(BC_PLANE(L)))
                CASE ('W')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
-                     U_G(iminus(i,j,k),j,k)*ROP_G(iminus(i,j,k),j,k)
+                     U_G(i-1,j,k)*ROP_G(i-1,j,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
-                     U_G(iminus(i,j,k),j,k)*EP_G(iminus(i,j,k),j,k)
+                     U_G(i-1,j,k)*EP_G(i-1,j,k)
                CASE ('E')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DY*DZ*&
-                     U_G(I,J,K)*ROP_G(iplus(i,j,k),j,k)
+                     U_G(I,J,K)*ROP_G(i+1,j,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DY*DZ*&
-                     U_G(I,J,K)*EP_G(iplus(i,j,k),j,k)
+                     U_G(I,J,K)*EP_G(i+1,j,k)
                CASE ('S')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
-                     V_G(i,jminus(i,j,k),k)*ROP_G(i,jminus(i,j,k),k)
+                     V_G(i,j-1,k)*ROP_G(i,j-1,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
-                     V_G(i,jminus(i,j,k),k)*EP_G(i,jminus(i,j,k),k)
+                     V_G(i,j-1,k)*EP_G(i,j-1,k)
                CASE ('N')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DZ*&
-                     V_G(I,J,K)*ROP_G(i,jplus(i,j,k),k)
+                     V_G(I,J,K)*ROP_G(i,j+1,k)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DZ*&
-                     V_G(I,J,K)*EP_G(i,jplus(i,j,k),k)
+                     V_G(I,J,K)*EP_G(i,j+1,k)
                CASE ('B')
                   BC_MOUT_G(L) = BC_MOUT_G(L) + DX*DY*&
-                     W_G(i,j,kminus(i,j,k))*ROP_G(i,j,kminus(i,j,k))
+                     W_G(i,j,k-1)*ROP_G(i,j,k-1)
                   BC_VOUT_G(L)=BC_VOUT_G(L)+DX*DY*&
-                     W_G(i,j,kminus(i,j,k))*EP_G(i,j,kminus(i,j,k))
+                     W_G(i,j,k-1)*EP_G(i,j,k-1)
                CASE ('T')
                   BC_MOUT_G(L)=BC_MOUT_G(L)+DX*DY*&
-                     W_G(I,J,K)*ROP_G(i,j,kplus(i,j,k))
+                     W_G(I,J,K)*ROP_G(i,j,k+1)
                   BC_VOUT_G(L) = BC_VOUT_G(L) + DX*DY*&
-                     W_G(I,J,K)*EP_G(i,j,kplus(i,j,k))
+                     W_G(I,J,K)*EP_G(i,j,k+1)
                END SELECT
 
             ENDDO   ! end do loop (i=bc_i_w(l), bc_i_e(l))

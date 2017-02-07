@@ -21,7 +21,6 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       use calc_coeff_module, only: calc_coeff
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
-      use geometry, only: domlo, domhi
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined
@@ -85,7 +84,10 @@ subroutine mfix1(slo, shi, lo, hi, time, dt, u_g, v_g, w_g, &
       call set_ps(slo,shi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
-      call zero_norm_vel(slo,shi,u_g,v_g,w_g,flag)
+      call zero_norm_vel(slo,shi,u_g,v_g,w_g,&
+                         bc_ilo_type, bc_ihi_type, &
+                         bc_jlo_type, bc_jhi_type, &
+                         bc_klo_type, bc_khi_type)
 
       ! Set boundary conditions
       call set_bc0(slo,shi,p_g,ep_g,u_g,v_g,w_g,ro_g0, &
