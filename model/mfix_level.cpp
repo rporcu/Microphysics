@@ -199,15 +199,23 @@ mfix_level::MakeNewLevel (int lev, Real time,
 #endif
 
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
-    Box domain(geom[0].Domain());
-    domain.grow(1);
+    Box domainx(geom[0].Domain());
+    domainx.grow(1,1);
+    domainx.grow(2,1);
+    Box box_ilo = BoxLib::adjCellLo(domainx,0,1);
+    Box box_ihi = BoxLib::adjCellHi(domainx,0,1);
 
-    Box box_ilo = BoxLib::adjCellLo(domain,0,1);
-    Box box_ihi = BoxLib::adjCellHi(domain,0,1);
-    Box box_jlo = BoxLib::adjCellLo(domain,1,1);
-    Box box_jhi = BoxLib::adjCellHi(domain,1,1);
-    Box box_klo = BoxLib::adjCellLo(domain,2,1);
-    Box box_khi = BoxLib::adjCellHi(domain,2,1);
+    Box domainy(geom[0].Domain());
+    domainy.grow(0,1);
+    domainy.grow(2,1);
+    Box box_jlo = BoxLib::adjCellLo(domainy,1,1);
+    Box box_jhi = BoxLib::adjCellHi(domainy,1,1);
+
+    Box domainz(geom[0].Domain());
+    domainz.grow(0,1);
+    domainz.grow(1,1);
+    Box box_klo = BoxLib::adjCellLo(domainz,2,1);
+    Box box_khi = BoxLib::adjCellHi(domainz,2,1);
 
     bc_ilo.resize(box_ilo,2);
     bc_ihi.resize(box_ihi,2);
