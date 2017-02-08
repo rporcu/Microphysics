@@ -46,26 +46,26 @@
       integer     , intent(in   ) :: slo(3),shi(3),hi(3)
 
       ! discretization method
-      INTEGER, INTENT(IN) :: DISCR
+      INTEGER, intent(IN) :: DISCR
 
       ! convected quantity
-      real(c_real), INTENT(IN) :: phi&
+      real(c_real), intent(IN) :: phi&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Velocity components
-      real(c_real), INTENT(IN) :: U&
+      real(c_real), intent(IN) :: U&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: V&
+      real(c_real), intent(IN) :: V&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: W&
+      real(c_real), intent(IN) :: W&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Convection weighting factors
-      real(c_real), INTENT(out) :: xsi_e&
+      real(c_real), intent(out) :: xsi_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(out) :: xsi_n&
+      real(c_real), intent(out) :: xsi_n&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(out) :: xsi_t&
+      real(c_real), intent(out) :: xsi_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! shear indicator
@@ -547,7 +547,7 @@
       real(c_real) FUNCTION XSI_func(XXXv,XXXdwf)
 
       IMPLICIT NONE
-      real(c_real), INTENT(IN) :: XXXv, XXXdwf
+      real(c_real), intent(IN) :: XXXv, XXXdwf
       XSI_func = (sign(1d0,(-XXXv))+1d0)/(2d0) + &
          sign(1d0,XXXv)*XXXdwf
       END FUNCTION XSI_func

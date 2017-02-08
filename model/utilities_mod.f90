@@ -141,9 +141,9 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Input data line
-      CHARACTER(len=*), INTENT(IN) :: LINE
+      CHARACTER(len=*), intent(IN) :: LINE
 ! Maximum column of input data line to search
-      INTEGER, INTENT(IN) :: MAXCOL
+      INTEGER, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -185,9 +185,9 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! input data line
-      CHARACTER, INTENT(IN) :: LINE*(*)
+      CHARACTER, intent(IN) :: LINE*(*)
 ! maximum column of input data line to search
-      INTEGER, INTENT(IN) :: MAXCOL
+      INTEGER, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -218,11 +218,11 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! input data line
-      CHARACTER(LEN=*), INTENT(IN) :: LINE
+      CHARACTER(LEN=*), intent(IN) :: LINE
 ! length of input data line
-      INTEGER, INTENT(IN) :: LINE_LEN
+      INTEGER, intent(IN) :: LINE_LEN
 ! maximum column that non-blank charcater are in the input data line
-      INTEGER, INTENT(IN) :: MAXCOL
+      INTEGER, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -253,7 +253,7 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 
 ! Dummy Arguments
 !---------------------------------------------------------------------//
-      CHARACTER, INTENT(IN) :: LINE*(*)
+      CHARACTER, intent(IN) :: LINE*(*)
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -285,9 +285,9 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Input line to change to uppercase
-      CHARACTER(len=*), INTENT(INOUT) :: LINE_STRING
+      CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, INTENT(IN) :: MAXCOL
+      INTEGER, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -329,9 +329,9 @@ LOOP_FLUID: DO K = slo(3),shi(3)
 ! Dummy Arguments
 !---------------------------------------------------------------------//
 ! Input line to change to uppercase
-      CHARACTER(len=*), INTENT(INOUT) :: LINE_STRING
+      CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, INTENT(IN) :: MAXCOL
+      INTEGER, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//

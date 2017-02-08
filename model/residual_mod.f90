@@ -97,19 +97,19 @@
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Normalization factor
-      real(c_real), INTENT(IN) :: NORM
+      real(c_real), intent(IN) :: NORM
 
       ! Numerator and denominator
-      real(c_real), INTENT(OUT) :: NUM, DEN
+      real(c_real), intent(OUT) :: NUM, DEN
 
       ! Average value of Residual
-      real(c_real), INTENT(OUT) :: RESID
+      real(c_real), intent(OUT) :: RESID
 
       ! Maximum value of Residual
-      real(c_real), INTENT(OUT) :: MAX_RESID
+      real(c_real), intent(OUT) :: MAX_RESID
 
       ! (i,j,k) of Maximum value of Residual
-      INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
+      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -195,13 +195,13 @@
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! primary velocity component
-      real(c_real), INTENT(IN) :: vel&
+      real(c_real), intent(IN) :: vel&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! other components used here only for scaling
-      real(c_real), INTENT(IN) :: vels1&
+      real(c_real), intent(IN) :: vels1&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: vels2&
+      real(c_real), intent(IN) :: vels2&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Septadiagonal matrix A_m
@@ -213,16 +213,16 @@
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Numerator and denominator
-      real(c_real), INTENT(OUT) :: NUM, DEN
+      real(c_real), intent(OUT) :: NUM, DEN
 
       ! Average value of Residual
-      real(c_real), INTENT(OUT) :: RESID
+      real(c_real), intent(OUT) :: RESID
 
       ! Maximum value of Residual
-      real(c_real), INTENT(OUT) :: MAX_RESID
+      real(c_real), intent(OUT) :: MAX_RESID
 
       ! (i,j,k) of Maximum value of Residual
-      INTEGER, INTENT(OUT) :: i_resid, j_resid, k_resid
+      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
 
       character, intent(in) :: axis
 

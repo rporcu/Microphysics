@@ -23,14 +23,14 @@ MODULE parse_line_module
 !-----------------------------------------------
 
 ! Line to be parsed.
-      CHARACTER(len=*), INTENT(IN) :: LINE
+      CHARACTER(len=*), intent(IN) :: LINE
 
 ! Length of of LINE.
-      INTEGER, INTENT(IN) :: LMAX
+      INTEGER, intent(IN) :: LMAX
 
 ! Indicate whether to do a namelist read on the line. A namelist read
 ! is still preformed when an arithmetic operation is found.
-      LOGICAL, INTENT(OUT) :: READ_FLAG
+      LOGICAL, intent(OUT) :: READ_FLAG
 
 ! Start and end locations for the search parameters.
       INTEGER LSTART, LEND

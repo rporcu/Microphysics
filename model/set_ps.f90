@@ -188,7 +188,7 @@ MODULE SET_PS_MODULE
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
 
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
+      INTEGER, DIMENSION(:,:,:,:), intent(IN) :: FLAG
 
       INTEGER :: IJK, I, J, K
 

@@ -12,9 +12,9 @@ contains
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   integer(c_int) function goal_seek_mFlux(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+   integer(c_int) function goal_seek_mFlux(ulo, uhi, vlo, vhi, wlo, whi, &
       NIT, gsmf, delp_n, mdot_n, &
-      flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)&
+      flux_ge, flux_gn, flux_gt, dx, dy, dz)&
       bind(C, name="goal_seek_mFlux")
 
 !-----------------------------------------------
@@ -31,7 +31,6 @@ contains
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       integer(c_int), intent(inout) :: nit
@@ -45,8 +44,6 @@ contains
       real(c_real), intent(in   ) :: flux_gt&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 !-----------------------------------------------
 ! Local Variables
@@ -70,13 +67,13 @@ contains
 ! Calculate the average gas mass flux and error
       IF(CYCLIC_X_MF)THEN
          delp_n = delp_x
-         mdot_n = vavg_flux_g(slo, shi, flux_ge, ayz, flag)
+         mdot_n = vavg_flux_g(ulo, uhi, flux_ge, ayz)
       ELSEIF(CYCLIC_Y_MF)THEN
          delp_n = delp_y
-         mdot_n = vavg_flux_g(slo, shi, flux_gn, axz, flag)
+         mdot_n = vavg_flux_g(vlo, vhi, flux_gn, axz)
       ELSEIF(CYCLIC_Z_MF)THEN
          delp_n = delp_z
-         mdot_n = vavg_flux_g(slo, shi, flux_gt, axy, flag)
+         mdot_n = vavg_flux_g(wlo, whi, flux_gt, axy)
       ELSE
          RETURN
       ENDIF

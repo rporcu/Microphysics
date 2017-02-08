@@ -1,9 +1,9 @@
-MODULE VAVG_MOD
+module vavg_mod
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Module name: VAVG_g                                                 C
@@ -26,22 +26,19 @@ MODULE VAVG_MOD
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      real(c_real) function vavg_flux_g (slo, shi, FLUX_G, A_FACE, flag)
+      real(c_real) function vavg_flux_g (dimlo, dimhi, flux_g, A_FACE)
 
       USE param1, only: zero
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: dimlo(3),dimhi(3)
 
       ! face area - scalar cell
-      real(c_real), INTENT(IN) :: A_FACE
+      real(c_real), intent(IN) :: A_FACE
 
       ! gas mass flux
-      real(c_real), intent(in) ::  Flux_g(:,:,:)
-
-      integer    , intent(in   ) :: flag &
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      real(c_real), intent(in) ::  flux_g(dimlo(1):dimhi(1),dimlo(2):dimhi(2),dimlo(3):dimhi(3))
 
       INTEGER :: I,J,K
 
@@ -53,21 +50,20 @@ MODULE VAVG_MOD
 
       !  Integrate the velocity values for the whole domain,
 
-      SUM_G = ZERO
-      SUM_AREA = ZERO
+      sum_g = zero
+      sum_area = zero
 
-        DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-        DO I = slo(1),shi(1)
-         IF (1.eq.flag(i,j,k,1)) THEN
-            SUM_G = SUM_G + Flux_g(I,J,K)
-            SUM_AREA = SUM_AREA + A_FACE
-         ENDIF
+      DO K = dimlo(3),dimhi(3)
+      DO J = dimlo(2),dimhi(2)
+      DO I = dimlo(1),dimhi(1)
+            sum_g = sum_g + flux_g(I,J,K)
+            sum_area = sum_area + A_FACE
       END DO
       END DO
       END DO
 
-      vavg_flux_g = SUM_G/SUM_AREA
+      vavg_flux_g = sum_g/sum_area
 
       end function vavg_flux_g
-END MODULE VAVG_MOD
+
+end module vavg_mod

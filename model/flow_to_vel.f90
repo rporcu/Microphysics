@@ -124,7 +124,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(in) :: BCV
+      INTEGER, intent(in) :: BCV
 
 ! Volumetric flow rate computed from mass flow rate
       real(c_real) :: VOLFLOW
@@ -204,8 +204,8 @@ MODULE FLOW_TO_VEL_NEW_MODULE
       IMPLICIT NONE
 
 ! loop/variable indices
-      INTEGER, INTENT(in) :: BCV, M
-      LOGICAL, INTENT(in) :: SKIP_M
+      INTEGER, intent(in) :: BCV, M
+      LOGICAL, intent(in) :: SKIP_M
 
 ! Volumetric flow rate computed from mass flow rate
       real(c_real) :: VOLFLOW
@@ -270,10 +270,10 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 ! Local variables
 !-----------------------------------------------
 ! loop/variable indices
-      INTEGER, INTENT(in) :: BCV
+      INTEGER, intent(in) :: BCV
 
 ! Whether any volumetric flow conversion was done
-      LOGICAL, INTENT(in) :: DO_VEL_CHECK
+      LOGICAL, intent(in) :: DO_VEL_CHECK
 
 
       real(c_real) :: SGN, OFF
@@ -379,9 +379,9 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 ! Local variables
 !-----------------------------------------------
 ! loop/variable indices
-      INTEGER, INTENT(in) :: BCV, M
+      INTEGER, intent(in) :: BCV, M
 ! Logical to preform velocity check.
-      LOGICAL, INTENT(in) :: DO_VEL_CHECK, SKIP_M
+      LOGICAL, intent(in) :: DO_VEL_CHECK, SKIP_M
 
 ! Velocity computed from volumetric flow rate
       real(c_real) :: VEL

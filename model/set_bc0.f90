@@ -447,15 +447,15 @@ module set_bc0_module
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
-      INTEGER, INTENT(IN   )  :: ll3
-      INTEGER, INTENT(IN   )  :: ll2, lu2
-      INTEGER, INTENT(IN   )  :: ll1, lu1
-      LOGICAL, INTENT(IN   ) :: ldFlag
-      INTEGER, INTENT(  OUT)  :: iErr
+      INTEGER, intent(IN   )  :: ll3
+      INTEGER, intent(IN   )  :: ll2, lu2
+      INTEGER, intent(IN   )  :: ll1, lu1
+      LOGICAL, intent(IN   ) :: ldFlag
+      INTEGER, intent(  OUT)  :: iErr
       integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      CHARACTER(len=*), INTENT(IN) :: lMAP
+      CHARACTER(len=*), intent(IN) :: lMAP
 
 ! Local variables
 !--------------------------------------------------------------------//

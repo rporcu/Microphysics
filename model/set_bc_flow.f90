@@ -130,10 +130,10 @@ MODULE set_bc_flow_module
       IMPLICIT NONE
 
 
-      INTEGER, INTENT(in) :: BCV
-      INTEGER, INTENT(in) :: M_TOT
+      INTEGER, intent(in) :: BCV
+      INTEGER, intent(in) :: M_TOT
 
-      LOGICAL, INTENT(in) :: SKIP(DIM_M)
+      LOGICAL, intent(in) :: SKIP(DIM_M)
 
 ! loop/variable indices
       INTEGER :: M

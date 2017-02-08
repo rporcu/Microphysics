@@ -147,9 +147,9 @@ contains
       integer     , intent(in   ) :: slo(3),shi(3)
       real(c_real), intent(in   ) :: dx, dz
 
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(INOUT) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(INOUT) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
@@ -394,13 +394,13 @@ contains
       integer     , intent(in   ) :: slo(3),shi(3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(INOUT) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
+      real(c_real), intent(IN   ) :: dx,dy,dz
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------

@@ -192,7 +192,7 @@ MODULE MOD_BC
       integer     , intent(in   ) :: slo(3),shi(3)
 
       ! boundary condition index
-      INTEGER, INTENT(in) :: BCV
+      INTEGER, intent(in) :: BCV
 
       integer, intent(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -349,7 +349,7 @@ MODULE MOD_BC
       integer     , intent(in   ) :: slo(3),shi(3)
 
 ! boundary condition index
-      INTEGER, INTENT(in) :: BCV
+      INTEGER, intent(in) :: BCV
       integer, intent(in) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 

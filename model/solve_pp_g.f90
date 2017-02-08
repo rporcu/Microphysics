@@ -175,14 +175,14 @@ module solve_pp_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
+      real(c_real), intent(IN   ) :: dx,dy,dz
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(INOUT) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! maximum term in b_m expression
-      real(c_real), INTENT(INOUT) :: B_mmax&
+      real(c_real), intent(INOUT) :: B_mmax&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 

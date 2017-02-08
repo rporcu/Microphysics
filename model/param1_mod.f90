@@ -36,22 +36,22 @@
    CONTAINS
 
       PURE LOGICAL FUNCTION IS_DEFINED_DB(x)
-         real(c_real), INTENT(IN) :: x
+         real(c_real), intent(IN) :: x
          IS_DEFINED_DB = .NOT.EQUAL(x, UNDEFINED)
       END FUNCTION IS_DEFINED_DB
 
       PURE LOGICAL FUNCTION IS_DEFINED_I(x)
-         INTEGER, INTENT(IN) :: x
+         INTEGER, intent(IN) :: x
          IS_DEFINED_I = (x /= UNDEFINED_I)
       END FUNCTION IS_DEFINED_I
 
       PURE LOGICAL FUNCTION IS_UNDEFINED_DB(x)
-         real(c_real), INTENT(IN) :: x
+         real(c_real), intent(IN) :: x
          IS_UNDEFINED_DB = EQUAL(x, UNDEFINED)
       END FUNCTION IS_UNDEFINED_DB
 
       PURE LOGICAL FUNCTION IS_UNDEFINED_I(x)
-         INTEGER, INTENT(IN) :: x
+         INTEGER, intent(IN) :: x
          IS_UNDEFINED_I = (x == UNDEFINED_I)
       END FUNCTION IS_UNDEFINED_I
 
