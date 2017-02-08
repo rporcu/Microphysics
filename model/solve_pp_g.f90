@@ -12,9 +12,9 @@ module solve_pp_module
 !  Author: M. Syamlal                                 Date: 19-JUN-96  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_pp_g(slo, shi, lo, hi, &
+   subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, a_m, b_m, &
+      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, &
       bc_jhi_type, bc_klo_type, bc_khi_type, &
       dt, normg, resg, dx, dy, dz)&
@@ -40,14 +40,15 @@ module solve_pp_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ep_g&
@@ -111,16 +112,17 @@ module solve_pp_module
 
       ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-! Initialize a_m and b_m
-      a_m(:,:,:,:)  =  0.0d0
-      a_m(:,:,:,0)  = -1.0d0
+! Initialize A_m and b_m
+      A_m(:,:,:,:)  =  0.0d0
+      A_m(:,:,:,0)  = -1.0d0
       b_m(:,:,:)    =  0.0d0
       b_mmax(:,:,:) =  0.0d0
 
 ! Forming the sparse matrix equation.
-      call conv_pp_g (slo, shi, lo, hi, a_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
+      call conv_pp_g (slo, shi, lo, hi, A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
 
-      call source_pp_g(slo, shi, lo, hi, a_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
+      call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
       call source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &

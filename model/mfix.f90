@@ -86,7 +86,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       call set_ps(slo,shi,flag,dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
-      call zero_norm_vel(slo,shi,u_g,v_g,w_g,&
+      call zero_norm_vel(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,&
                          bc_ilo_type, bc_ihi_type, &
                          bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type)

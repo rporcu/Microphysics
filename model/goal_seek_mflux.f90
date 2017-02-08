@@ -12,7 +12,8 @@ contains
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   integer(c_int) function goal_seek_mFlux(slo, shi, NIT, gsmf, delp_n, mdot_n, &
+   integer(c_int) function goal_seek_mFlux(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+      NIT, gsmf, delp_n, mdot_n, &
       flux_ge, flux_gn, flux_gt, flag, dx, dy, dz)&
       bind(C, name="goal_seek_mFlux")
 
@@ -31,17 +32,19 @@ contains
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       integer(c_int), intent(inout) :: nit
       integer(c_int), intent(inout) :: gsmf
       real(c_real), intent(inout) :: delp_n, mdot_n
 
       real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz

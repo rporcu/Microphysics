@@ -43,92 +43,6 @@ CONTAINS
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  function: MAX_VEL_INLET                                             C
-!  Purpose: Find maximum velocity at inlets.                           C
-!                                                                      C
-!  Author: S. Benyahia                                Date: 26-AUG-05  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      real(c_real) FUNCTION MAX_VEL_INLET(slo,shi,u_g,v_g,w_g)
-
-! Modules
-!---------------------------------------------------------------------//
-      use bc, only: bc_defined, bc_type
-      use bc, only: bc_plane
-      use bc, only: bc_k_b, bc_k_t, bc_j_s, bc_j_n, bc_i_w, bc_i_e
-      use param    , only: dimension_bc
-      use param1   , only: zero, small_number
-      use run      , only: units
-      use toleranc , only: max_allowed_vel, max_inlet_vel, max_inlet_vel_fac
-
-      IMPLICIT NONE
-
-      integer     , intent(in   ) :: slo(3),shi(3)
-
-      real(c_real), INTENT(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Local variables
-!---------------------------------------------------------------------//
-      INTEGER :: L, I, J, K
-      real(c_real) :: maxVEL
-!---------------------------------------------------------------------//
-
-      maxVEL = ZERO
-
-      DO L = 1, DIMENSION_BC
-
-         IF(.NOT.(BC_DEFINED(L).AND.(BC_TYPE(L)=='MASS_INFLOW' .OR. &
-            BC_TYPE(L) == 'P_INFLOW'))) CYCLE
-
-         DO K = BC_K_B(L), BC_K_T(L)
-         DO J = BC_J_S(L), BC_J_N(L)
-         DO I = BC_I_W(L), BC_I_E(L)
-
-            SELECT CASE (BC_PLANE(L))
-            CASE ('E'); maxVEL = max(maxVEL,abs(U_G(I,J,K)))
-            CASE ('N'); maxVEL = max(maxVEL,abs(V_G(I,J,K)))
-            CASE ('T'); maxVEL = max(maxVEL,abs(W_G(I,J,K)))
-            CASE ('W'); maxVEL = max(maxVEL,abs(U_G(i-1,j,k)))
-            CASE ('S'); maxVEL = max(maxVEL,abs(V_G(i,j-1,k)))
-            CASE ('B'); maxVEL = max(maxVEL,abs(W_G(i,j,k-1)))
-            END SELECT
-
-         ENDDO
-         ENDDO
-         ENDDO
-      ENDDO
-
-      ! CALL GLOBAL_ALL_MAX(maxVEL, MAX_VEL_INLET)
-
-! If no inlet velocity is specified, use an upper limit defined in
-! toleranc_mod.f
-      IF(MAX_VEL_INLET <= SMALL_NUMBER) THEN
-         MAX_VEL_INLET = MAX_ALLOWED_VEL
-         IF(UNITS == 'SI') MAX_INLET_VEL = 1D-2*MAX_ALLOWED_VEL
-      ELSE
-! Scale the value using a user defined scale factor
-         MAX_VEL_INLET = 100.0d0*MAX_INLET_VEL_FAC*MAX_VEL_INLET
-      ENDIF
-
-      RETURN
-      END FUNCTION MAX_VEL_INLET
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
 !  Function: CHECK_VEL_BOUND()                                         C
 !  Purpose: Check velocities upper bound to be less than speed of      C
 !           sound                                                      C
@@ -145,7 +59,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,u_g,v_g,w_g,ep_g,flag)
+      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g,flag)
 
 !-----------------------------------------------
 ! Modules
@@ -154,17 +68,18 @@ CONTAINS
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real)  , intent(in   ) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real)  , intent(in   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real)  , intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real)  , intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      INTEGER, INTENT(IN) :: FLAG&
+      integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 !-----------------------------------------------
 ! Local variables

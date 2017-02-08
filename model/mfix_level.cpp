@@ -998,7 +998,13 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
-      solve_pp_g(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+      const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
+      solve_pp_g(sbx.loVect(), sbx.hiVect(), 
+        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+         bx.loVect(),  bx.hiVect(), 
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),

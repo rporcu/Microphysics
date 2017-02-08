@@ -222,6 +222,9 @@ extern "C"
 
   void solve_pp_g(
           const int* slo, const int* shi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,

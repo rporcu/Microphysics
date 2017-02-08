@@ -20,7 +20,9 @@ module zero_norm_vel_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine zero_norm_vel(slo,shi,u_g,v_g,w_g,&
+      subroutine zero_norm_vel(slo,shi, &
+                               ulo,uhi,vlo,vhi,wlo,whi,&
+                               u_g,v_g,w_g, &
                                bc_ilo_type, bc_ihi_type, &
                                bc_jlo_type, bc_jhi_type, &
                                bc_klo_type, bc_khi_type)
@@ -34,14 +36,15 @@ module zero_norm_vel_module
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
-      real(c_real), intent(inout) ::  u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(inout) ::  w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)

@@ -29,9 +29,9 @@ module v_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: discretize
+      use run, only: discretize
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer     , intent(in   ) :: ulo(3),uhi(3)
@@ -39,38 +39,38 @@ module v_g_conv_dif
       integer     , intent(in   ) :: wlo(3),whi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
+      real(c_real), intent(inout) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
+      real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
+      real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), INTENT(IN   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
-! DO NOT USE DEFERRED CORRECTION TO SOLVE V_G
+! DO NOT use DEFERRED CORRECTION TO SOLVE V_G
       IF (DISCRETIZE(4) == 0) THEN               ! 0 & 1 => FOUP
          CALL STORE_A_V_G0(&
               slo,shi,lo,hi,A_M,mu_g,flux_ge,flux_gn,flux_gt,dx,dy,dz)
       ELSE
          CALL STORE_A_V_G1(&
               slo,shi,lo,hi,A_M,mu_g,u_g,v_g,w_g,flux_ge,flux_gn,flux_gt,dt,dx,dy,dz)
-      ENDIF
+      endIF
 
-      END SUBROUTINE CONV_DIF_V_G
+      end subroutine conv_dif_v_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -79,7 +79,7 @@ module v_g_conv_dif
 !  all faces.                                                          C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_VCELL_GDIFF_TERMS(&
+      subroutine get_vcell_gdiff_terms(&
          slo, shi, &
          D_FE, D_FW, D_FN, D_FS, &
          D_FT, D_FB, mu_g, I, J, K, &
@@ -89,20 +89,20 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
       use functions, only: avg, avg_h
       use param1, only: zero
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3)
 
       ! diffusion through faces of given v-momentum cell
-      real(c_real), INTENT(  OUT) :: d_fe, d_fw
-      real(c_real), INTENT(  OUT) :: d_fn, d_fs
-      real(c_real), INTENT(  OUT) :: d_ft, d_fb
+      real(c_real), intent(  out) :: d_fe, d_fw
+      real(c_real), intent(  out) :: d_fn, d_fs
+      real(c_real), intent(  out) :: d_ft, d_fb
 
-      real(c_real), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
-      INTEGER, INTENT(IN) :: i, j, k
+      integer, intent(in) :: i, j, k
 
 ! Local variables
       real(c_real) :: odx, ody, odz
@@ -141,7 +141,7 @@ module v_g_conv_dif
       D_Fb = avg_h(avg_h(mu_g(i,j  ,k+1),mu_g(i,j  ,k)),&
                    avg_h(mu_g(i,j+1,k-1),mu_g(i,j+1,k)))*ODZ*AXY
 
-    END SUBROUTINE GET_VCELL_GDIFF_TERMS
+    end subroutine get_vcell_gdiff_terms
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -160,37 +160,37 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G0(&
+      subroutine store_A_V_G0(&
          slo, shi, lo, hi, &
          A_V_G,mu_g,flux_ge,flux_gn,flux_gt,dx,dy,dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE param1, only: zero
+      use param1, only: zero
       use matrix, only: e, w, n, s, t, b
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_V_g
-      real(c_real), INTENT(INOUT) :: A_V_g&
+      real(c_real), intent(inout) :: A_V_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: dx,dy,dz
+      real(c_real), intent(in   ) :: dx,dy,dz
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Face mass flux
       real(c_real) :: flux_e, flux_n
       real(c_real) :: flux_t
@@ -250,8 +250,7 @@ module v_g_conv_dif
          enddo
       enddo
 
-      RETURN
-      END SUBROUTINE STORE_A_V_G0
+      end subroutine store_A_V_G0
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -271,7 +270,7 @@ module v_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_V_G1(&
+      subroutine store_A_V_G1(&
          slo, shi, lo, hi, A_V_G, mu_g, u_g, v_g, w_g, &
          flux_ge, flux_gn, flux_gt,dt, dx, dy, dz)
 
@@ -280,39 +279,39 @@ module v_g_conv_dif
 
       use functions, only: avg, avg_h
       use matrix, only: e, w, n, s, t, b
-      USE run, only: discretize
-      USE xsi, only: calc_xsi
+      use run, only: discretize
+      use xsi, only: calc_xsi
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_V_g
-      real(c_real), INTENT(INOUT) :: A_V_g&
+      real(c_real), intent(inout) :: A_V_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
-      real(c_real), INTENT(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: u_g&
+      real(c_real), intent( in) :: u_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: v_g&
+      real(c_real), intent( in) :: v_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT( in) :: w_g&
+      real(c_real), intent( in) :: w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_ge&
+      real(c_real), intent(in   ) :: flux_ge&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gn&
+      real(c_real), intent(in   ) :: flux_gn&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: flux_gt&
+      real(c_real), intent(in   ) :: flux_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! indicator for shear
-      INTEGER :: incr
+      integer :: incr
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
@@ -390,6 +389,5 @@ module v_g_conv_dif
       deallocate( U, V, WW )
       deallocate( xsi_e, xsi_n, xsi_t)
 
-      RETURN
-      END SUBROUTINE STORE_A_V_G1
+      end subroutine store_A_V_G1
 end module v_g_conv_dif
