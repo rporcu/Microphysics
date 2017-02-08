@@ -583,9 +583,13 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
+     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
      mfix_main1(sbx.loVect(), sbx.hiVect(),
-                 bx.loVect(),  bx.hiVect(),
-               &time, &dt,
+                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                 bx.loVect(),  bx.hiVect(), &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
@@ -768,7 +772,13 @@ mfix_level::mfix_init_fluid(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     init_fluid(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
+     init_fluid(sbx.loVect(), sbx.hiVect(), 
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
+        bx.loVect(),  bx.hiVect(), 
        (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),

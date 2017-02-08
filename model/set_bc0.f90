@@ -17,7 +17,8 @@ module set_bc0_module
 !  Author: M. Syamlal                                 Date: 29-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_bc0(slo, shi, p_g, ep_g, u_g, v_g, w_g, ro_g0, &
+      subroutine set_bc0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+                         p_g, ep_g, u_g, v_g, w_g, ro_g0, &
                          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, flag)
 
@@ -32,17 +33,18 @@ module set_bc0_module
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) ::  w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: ro_g0
 

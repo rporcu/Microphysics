@@ -5,7 +5,8 @@ module init_fluid_module
 !  Subroutine: init_fluid                                              !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine init_fluid(slo, shi, lo, hi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+   subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                         ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
                          mu_g, lambda_g, flag, dx, dy, dz) &
       bind(C, name="init_fluid")
 
@@ -21,7 +22,8 @@ module init_fluid_module
       implicit none
 
 ! Dummy arguments .....................................................//
-      integer(c_int), intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -31,12 +33,14 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(inout) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: lambda_g&

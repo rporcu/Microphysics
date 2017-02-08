@@ -23,23 +23,30 @@ extern "C"
                    int* flag);
 
   void mfix_main1(const int* slo, const int* shi,
+                  const int* ulo, const int* uhi,
+                  const int* vlo, const int* vhi,
+                  const int* wlo, const int* whi,
                   const int* lo, const int* hi,
-                 Real* time,    Real* dt,
-                 Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* p_g,     Real* ep_g,
-                 int* bc_ilo, int* bc_ihi,
-                 int* bc_jlo, int* bc_jhi,
-                 int* bc_klo, int* bc_khi,
-                 int* flag,
-                 Real* dx,       Real* dy,       Real* dz);
+                  Real* time,    Real* dt,
+                  Real* u_g,     Real* v_g,      Real* w_g,
+                  Real* p_g,     Real* ep_g,
+                  int* bc_ilo, int* bc_ihi,
+                  int* bc_jlo, int* bc_jhi,
+                  int* bc_klo, int* bc_khi,
+                  int* flag,
+                  Real* dx,       Real* dy,       Real* dz);
 
-  void init_fluid(const int* slo, const int* shi, const int* lo, const int* hi,
-                 Real* ep_g,    Real* ro_g,
-                 Real* rop_g,   Real* p_g,
-                 Real* u_g,     Real* v_g,      Real* w_g,
-                 Real* mu_g,    Real* lambda_g,
-                 int* flag,
-                 Real* dx,       Real* dy,       Real* dz);
+  void init_fluid(const int* slo, const int* shi, 
+                  const int* ulo, const int* uhi,
+                  const int* vlo, const int* vhi,
+                  const int* wlo, const int* whi,
+                  const int*  lo, const int*  hi,
+                  Real* ep_g,    Real* ro_g,
+                  Real* rop_g,   Real* p_g,
+                  Real* u_g,     Real* v_g,      Real* w_g,
+                  Real* mu_g,    Real* lambda_g,
+                  int* flag,
+                  Real* dx,       Real* dy,       Real* dz);
 
   void mfix_make_arrays_des(const int* max_pip,
                  int* particle_state,
