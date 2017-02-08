@@ -463,7 +463,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Solve the pressure correction equation
           mfix_solve_for_pp(lev,dt,lnormg,resg);
 
-          mfix_correct0(lev);
+          mfix_correct_0(lev);
 
           // Update fluid density
           mfix_physical_prop(lev,0);
@@ -883,8 +883,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
-      solve_u_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+      solve_u_g_star(sbx.loVect(), sbx.hiVect(), 
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -913,8 +914,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
-      solve_v_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+      solve_v_g_star(sbx.loVect(), sbx.hiVect(), 
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -943,8 +945,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
-      solve_w_g_star(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+      solve_w_g_star(sbx.loVect(), sbx.hiVect(), 
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1007,14 +1010,20 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 }
 
 void
-mfix_level::mfix_correct0(int lev)
+mfix_level::mfix_correct_0(int lev)
 {
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     correct0(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+
+     correct_0(sbx.loVect(), sbx.hiVect(),
+               ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                bx.loVect(),  bx.hiVect(), 
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());

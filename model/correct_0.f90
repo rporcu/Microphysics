@@ -12,15 +12,16 @@ MODULE CORRECT_0_MODULE
 !  Purpose: Correct the fluid pressure and gas velocities              C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CORRECT_0(slo,shi,lo,hi,&
+      SUBROUTINE CORRECT_0(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
            p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)&
-           bind(C, name="correct0")
+           bind(C, name="correct_0")
 
       USE ur_facs  , only: ur_fac
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(in   ) :: pp_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -34,11 +35,11 @@ MODULE CORRECT_0_MODULE
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 !-----------------------------------------------
 ! Local variables

@@ -67,7 +67,7 @@ protected:
 
     void mfix_physical_prop (int lev, int calc_flag);
 
-    void mfix_correct0 (int lev);
+    void mfix_correct_0 (int lev);
 
     int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
                         int sweep_type, int precond_type, int maxiter, Real eps_rel);

@@ -20,7 +20,7 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine solve_u_g_star(&
-         slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+         slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
          f_gds, a_m, b_m, drag_bm, flag, &
@@ -174,7 +174,7 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_v_g_star(&
-      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, &
@@ -328,7 +328,7 @@ module solve_vel_star_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_w_g_star(&
-      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, a_m, b_m, drag_bm, flag, &

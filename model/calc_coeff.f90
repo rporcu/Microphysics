@@ -217,7 +217,7 @@ module calc_coeff_module
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      call calc_trd_g(slo,shi,lo,hi,trd_g,u_g,v_g,w_g,dx,dy,dz)
+      call calc_trd_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,trd_g,u_g,v_g,w_g,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
       call calc_tau_u_g (slo,shi,lo,hi,tau_u_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)

@@ -161,10 +161,10 @@ extern "C"
 
   void solve_u_g_star(
           const int* slo, const int* shi,
-          const int* lo,  const int* hi,
-          const int* ulo,  const int* uhi,
-          const int* vlo,  const int* vhi,
-          const int* wlo,  const int* whi,
+          const int* ulo, const int* uhi,
+          const int* vlo, const int* vhi,
+          const int* wlo, const int* whi,
+          const int*  lo, const int*  hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* u_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -179,10 +179,10 @@ extern "C"
 
   void solve_v_g_star(
           const int* slo, const int* shi,
+          const int* ulo, const int* uhi,
+          const int* vlo, const int* vhi,
+          const int* wlo, const int* whi,
           const int* lo,  const int* hi,
-          const int* ulo,  const int* uhi,
-          const int* vlo,  const int* vhi,
-          const int* wlo,  const int* whi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* v_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -197,10 +197,10 @@ extern "C"
 
   void solve_w_g_star(
           const int* slo, const int* shi,
-          const int* lo,  const int* hi,
           const int* ulo,  const int* uhi,
           const int* vlo,  const int* vhi,
           const int* wlo,  const int* whi,
+          const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* w_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
@@ -228,8 +228,11 @@ extern "C"
           int* bc_klo,    int* bc_khi,
           Real* dt, Real* lnormg, Real* resg, Real* dx, Real* dy, Real* dz);
 
-  void correct0(
+  void correct_0(
           const int* slo, const int* shi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
           const int* lo,  const int* hi,
           Real* p_g,      Real* pp_g,
           Real* u_g,      Real* v_g,      Real* w_g,
