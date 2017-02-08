@@ -1,4 +1,4 @@
-MODULE CONV_ROP_MODULE
+module conv_rop_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
@@ -14,9 +14,9 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP(slo, shi, lo, hi, u_g, v_g, w_g, rop_g, &
-         rop_ge, rop_gn, rop_gt, &
-         flag, dt, dx, dy, dz) bind(C, name="conv_rop")
+      subroutine conv_rop(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, &
+         dt, dx, dy, dz) bind(C, name="conv_rop")
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -25,13 +25,14 @@ MODULE CONV_ROP_MODULE
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: rop_ge&
@@ -41,24 +42,22 @@ MODULE CONV_ROP_MODULE
       real(c_real), intent(  out) :: rop_gt&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 
-      if (DISCRETIZE(1) == 0) THEN       ! 0 & 1 => first order upwinding
-         CALL CONV_ROP0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT, flag)
+      if (discretize(1) == 0) then       ! 0 & 1 => first order upwinding
+         call conv_rop0 (slo, shi, lo, hi, ROP_g, U_g, V_g, W_g, ROP_gE, ROP_gN, ROP_gT)
       else
-         CALL CONV_ROP1 (DISCRETIZE(1), &
+         call conv_rop1 (discretize(1), &
                          slo, shi, lo, hi, &
-                         flag, rop_g, u_g, v_g, w_g, &
+                         rop_g, u_g, v_g, w_g, &
                          rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
       end if
 
-      RETURN
-   CONTAINS
+!  contains
+
+   end subroutine conv_rop 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -70,21 +69,21 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CONV_ROP0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T, flag)
+      subroutine conv_rop0(slo, shi, lo, hi, ROP, U, V, W, ROP_E, ROP_N, ROP_T)
 
 ! Modules
 !---------------------------------------------------------------------//
       USE param1, only: zero
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
-! macroscopic density (rho_prime)
+      ! macroscopic density (rho_prime)
       real(c_real), intent(in   ) :: rop&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! Velocity components
+      ! Velocity components
       real(c_real), intent(in   ) :: u&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v&
@@ -92,7 +91,7 @@ MODULE CONV_ROP_MODULE
       real(c_real), intent(in   ) :: w&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! Face value of density (for calculating convective fluxes)
+      ! Face value of density (for calculating convective fluxes)
       real(c_real), intent(  out) :: rop_e&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: rop_n&
@@ -100,18 +99,11 @@ MODULE CONV_ROP_MODULE
       real(c_real), intent(  out) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      integer :: I, J, K
 
-! Local variables
-!---------------------------------------------------------------------//
-! Indices
-      INTEGER :: I, J, K
-!---------------------------------------------------------------------//
-
-      DO K = lo(3),hi(3)
-        DO J = lo(2),hi(2)
-          DO I = slo(1),hi(1)
+      do K = lo(3),hi(3)
+        do J = lo(2),hi(2)
+          do I = slo(1),hi(1)
 
             ! East face (i+1/2, j, k)
             if (U(i,j,k) >= ZERO) THEN
@@ -124,9 +116,9 @@ MODULE CONV_ROP_MODULE
         end do
       end do
 
-      DO K = lo(3),hi(3)
-        DO J = slo(2),hi(2)
-          DO I = lo(1),hi(1)
+      do K = lo(3),hi(3)
+        do J = slo(2),hi(2)
+          do I = lo(1),hi(1)
 
             ! North face (i, j+1/2, k)
             if (V(i,j,k) >= ZERO) THEN
@@ -139,9 +131,9 @@ MODULE CONV_ROP_MODULE
         end do
       end do
 
-      DO K = slo(3),hi(3)
-        DO J = lo(2),hi(2)
-          DO I = lo(1),hi(1)
+      do K = slo(3),hi(3)
+        do J = lo(2),hi(2)
+          do I = lo(1),hi(1)
 
             ! Top face (i, j, k+1/2)
             if (W(i,j,k) >= ZERO) THEN
@@ -169,7 +161,7 @@ MODULE CONV_ROP_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CONV_ROP1(DISC, &
-                           slo, shi, lo, hi, flag, &
+                           slo, shi, lo, hi, &
                            rop, u, v, w, &
                            rop_e, rop_n, rop_t, &
                            dt, dx, dy, dz)
@@ -205,9 +197,6 @@ MODULE CONV_ROP_MODULE
       real(c_real), intent(  out) :: rop_t&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
       real(c_real), intent(in) :: dt, dx, dy, dz
 !
 ! Local variables
@@ -228,56 +217,40 @@ MODULE CONV_ROP_MODULE
       CALL CALC_XSI (DISC, slo, shi, hi, &
                      ROP, U, V, W, XSI_E, XSI_N, XSI_T, dt, dx, dy, dz)
 
-      DO K = lo(3),hi(3)
-        DO J = lo(2),hi(2)
-          DO I = lo(1),hi(1)
-
-         if (1.eq.flag(i,j,k,1)) THEN
+      do K = lo(3),hi(3)
+        do J = lo(2),hi(2)
+          do I = lo(1),hi(1)
 
             ! East face (i+1/2, j, k)
-            ROP_E(i,j,k) = ((ONE-XSI_E(i,j,k))*ROP(i,j,k) + &
-                                 XSI_E(i,j,k) *ROP(i+1,j,k) )
+            ROP_E(i,j,k) = ((ONE - XSI_E(i,j,k))*ROP(i,j,k) + &
+                                   XSI_E(i,j,k) *ROP(i+1,j,k) )
 
             ! West face (i-1/2, j, k)
-            if (.NOT.1.eq.flag(i-1,j,k,1)) THEN
-               ROP_E(i-1,j,k) = &
-                  ((ONE - XSI_E(i-1,j,k))*ROP(i-1,j,k) + &
-                          XSI_E(i-1,j,k) *ROP(i,j,k) )
-            end if
-
+            ROP_E(i-1,j,k) = ((ONE - XSI_E(i-1,j,k))*ROP(i-1,j,k) + &
+                                     XSI_E(i-1,j,k) *ROP(i,j,k) )
 
             ! North face (i, j+1/2, k)
-            ROP_N(i,j,k) = ((ONE-XSI_N(i,j,k))*ROP(i,j,k)+&
-               XSI_N(i,j,k) *ROP(i,j+1,k))
+            ROP_N(i,j,k) = ((ONE - XSI_N(i,j,k))*ROP(i,j,k)+&
+                                   XSI_N(i,j,k) *ROP(i,j+1,k))
 
             ! South face (i, j-1/2, k)
-            if (.NOT.1.eq.flag(i,j-1,k,1)) THEN
-               ROP_N(i,j-1,k) = &
-                  ((ONE - XSI_N(i,j-1,k))*ROP(i,j-1,k) + &
-                  XSI_N(i,j-1,k) *ROP(i,j,k) )
-            end if
+            ROP_N(i,j-1,k) = ((ONE - XSI_N(i,j-1,k))*ROP(i,j-1,k) + &
+                                     XSI_N(i,j-1,k) *ROP(i,j,k) )
 
             ! Top face (i, j, k+1/2)
             ROP_T(i,j,k) = ((ONE - XSI_T(i,j,k))*ROP(i,j,k  ) + &
                                    XSI_T(i,j,k) *ROP(i,j,k+1) )
 
             ! Bottom face (i, j, k-1/2)
-            if (.NOT.1.eq.flag(i,j,k-1,1)) THEN
-               ROP_T(i,j,k-1) = &
-                  ((ONE - XSI_T(i,j,k-1))*ROP(i,j,k-1) + &
-                          XSI_T(i,j,k-1) *ROP(i,j,k) )
-            end if
+            ROP_T(i,j,k-1) = ((ONE - XSI_T(i,j,k-1))*ROP(i,j,k-1) + &
+                                     XSI_T(i,j,k-1) *ROP(i,j,k) )
 
-         end if
-      ENDDO
-      ENDDO
-      ENDDO
+      end do
+      end do
+      end do
 
       deallocate( xsi_e, xsi_n, xsi_t)
 
-      RETURN
-      END SUBROUTINE CONV_ROP1
+      end subroutine conv_rop1
 
-   END SUBROUTINE CONV_ROP
-
-END MODULE CONV_ROP_MODULE
+end module conv_rop_module

@@ -18,7 +18,7 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_w_g(slo, shi, lo, hi, A_m, b_m, &
+   subroutine source_w_g(slo, shi, wlo, whi, lo, hi, A_m, b_m, &
         dt, p_g, ep_g, ro_g, rop_g, rop_go, w_go, &
         tau_w_g, dx, dy, dz)
 
@@ -33,7 +33,7 @@ contains
       use matrix, only: e, w, s, n, t, b
       USE scales, only: p_scale
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -53,7 +53,7 @@ contains
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: w_go&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: tau_w_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: dt, dx, dy, dz

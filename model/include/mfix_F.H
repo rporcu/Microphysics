@@ -82,6 +82,9 @@ extern "C"
 
   void calc_coeff_all(
          const int* slo, const int* shi,
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
          const int*  lo, const int*  hi,
          const int* max_pip,
          Real* ro_g, Real* p_g,
@@ -96,6 +99,9 @@ extern "C"
 
   void calc_coeff(
          const int* slo, const int* shi,
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
          const int* lo,  const int* hi,
          const int* max_pip, int* level,
          Real* ro_g, Real* p_g,
@@ -109,6 +115,9 @@ extern "C"
 
   void calc_trd_and_tau(
          const int* slo, const int* shi,
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
          const int* lo,  const int* hi,
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
          Real* trd_g,    
@@ -118,11 +127,14 @@ extern "C"
 
   void conv_rop(
          const int* slo,       const int* shi,
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
          const int*  lo,       const int*  hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
-         int* flag,            Real* dt,
+         Real* dt,
          Real* dx,             Real* dy,             Real* dz);
 
   void calc_mflux(

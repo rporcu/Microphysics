@@ -27,7 +27,9 @@ module calc_coeff_module
 !  Local variables:                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff_all(slo, shi, lo, hi, max_pip, &
+      subroutine calc_coeff_all(slo, shi, &
+        ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+        max_pip, &
         ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
@@ -42,16 +44,17 @@ module calc_coeff_module
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) ::  p_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: mu_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
@@ -83,7 +86,8 @@ module calc_coeff_module
 
       ! Calculate all physical properties, transport properties,
       ! and exchange rates.
-      call calc_coeff(slo, shi, lo, hi, max_pip, 2, ro_g, p_g, ep_g, &
+      call calc_coeff(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         max_pip, 2, ro_g, p_g, ep_g, &
          rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,  particle_phase, &
          particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
          dx, dy, dz)
@@ -103,7 +107,8 @@ module calc_coeff_module
 !           transport properties, and exchange rates.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_coeff(slo, shi, lo, hi, max_pip, plevel, &
+      subroutine calc_coeff(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         max_pip, plevel, &
          ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, mu_g, f_gds, drag_bm,&
          particle_phase, particle_state, pvol, des_pos_new, des_vel_new,&
          des_radius, dx, dy, dz)&
@@ -121,6 +126,7 @@ module calc_coeff_module
 ! 1) Everything but density
 ! 2) All physical properties
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: max_pip
 
       integer(c_int), intent(in   ) :: plevel
@@ -130,11 +136,11 @@ module calc_coeff_module
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
@@ -176,7 +182,7 @@ module calc_coeff_module
 !           transport properties, and exchange rates.                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_trd_and_tau(slo,shi,lo,hi,&
+      subroutine calc_trd_and_tau(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
          tau_u_g,tau_v_g,tau_w_g,trd_g,&
          u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz) &
         bind(C, name="calc_trd_and_tau")
@@ -184,6 +190,7 @@ module calc_coeff_module
       implicit none
 
       integer(c_int), intent(in ) :: slo(3),shi(3)
+      integer(c_int), intent(in ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in ) ::  lo(3), hi(3)
 
       ! Stress tensor cross terms.
@@ -197,11 +204,11 @@ module calc_coeff_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+            (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&

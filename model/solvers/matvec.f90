@@ -82,10 +82,6 @@ end subroutine leq_scale
 
   end subroutine leq_matvec
 
-
-
-
-
 ! returns (Rhs - Am*Var)
   subroutine leq_residual(rhs, var, A_m, res, slo, shi) &
     bind(C, name = "leq_residual")
