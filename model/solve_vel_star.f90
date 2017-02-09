@@ -123,16 +123,16 @@ module solve_vel_star_module
       b_m(:,:,:)   =  0.0d0
       d_e(:,:,:)   =  0.0d0
 
-! calculate the convection-diffusion terms
+      ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
                          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
-! calculate the source terms for the gas phase u-momentum eqs
+      ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                       u_go, tau_u_g, dx, dy, dz)
 
-! modifications for bc
+      ! modifications for bc
       call source_u_g_bc (slo, shi, ulo, uhi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
@@ -159,11 +159,10 @@ module solve_vel_star_module
          resid(resid_u), max_resid(resid_u), &
          i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), 'U')
 
-      call under_relax (slo, shi, ulo, uhi, u_g, A_m, b_m, 'U', flag, 3)
+!     call under_relax (slo, shi, ulo, uhi, u_g, A_m, b_m, 'U', flag, 3)
 
       return
    end subroutine solve_u_g_star
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

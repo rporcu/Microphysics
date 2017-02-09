@@ -83,7 +83,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
+         b_m, norm, tot, den, resid, max_resid, &
          i_resid, j_resid, k_resid)
 
       use param1  , only: large_number, zero, one
@@ -109,20 +109,18 @@
       real(c_real), intent(OUT) :: MAX_RESID
 
       ! (i,j,k) of Maximum value of Residual
-      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: i, j, k
-! Number of fluid cells
-      INTEGER :: NCELLS
-! Numerators and denominators
-      real(c_real) :: NUM1, DEN1
-!-----------------------------------------------
+      integer, intent(out) :: i_resid, j_resid, k_resid
 
-! initializing values
-      num = zero
+      integer :: i, j, k
+
+      ! Number of fluid cells
+      integer :: ncells
+
+      ! Numerators and denominators
+      real(c_real) :: NUM1, DEN1
+
+      I initializing values
+      tot = zero
       den = zero
       max_resid = -one
       ncells = 0
@@ -134,6 +132,7 @@
 
 ! evaluating the residual at cell (i,j,k):
                num1 = abs(b_m(i,j,k))
+
                if (num1 > max_resid) then
                   max_resid = num1
                   i_resid = i
@@ -141,20 +140,22 @@
                   k_resid = k
                endif
 
-! adding to terms that are accumulated
-               ncells = ncells + 1
-               num = num + num1
-               den = den + den1
+               tot = tot + num1
 
             enddo
          enddo
       enddo
+    
+      ncells = (ahi(3)-alo(3)+1)*(ahi(2)-alo(2)+1)*(ahi(1)-alo(1)+1)
 
-! Normalizing the residual
-      if (abs(den*norm) > epsilon(den*norm)) then
-         resid = num/(den*norm)
+      ! Normalizing the residual
+      if (abs(norm) > epsilon(norm)) then
+
+         resid = tot/(den*norm)
          max_resid = ncells*max_resid/(den*norm)
-      elseif (abs(num) < epsilon(num)) then
+
+      else if (abs(tot) < epsilon(tot)) then
+
          resid = zero
          max_resid = zero
          i_resid = 0
@@ -180,7 +181,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
+      subroutine calc_resid_vel(slo, shi, lo, hi, &
          vel, vels1, vels2, A_M, B_M, NUM, DEN, &
          RESID, MAX_RESID, i_resid, j_resid, k_resid, axis)
 

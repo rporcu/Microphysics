@@ -113,7 +113,7 @@ module solve_pp_module
       real(c_real), allocatable :: B_MMAX(:,:,:)
 !.....................................................................//
 
-      ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( b_mmax(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
@@ -134,16 +134,19 @@ module solve_pp_module
 
       if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, dx, dy, dz)
 
-! Find average residual, maximum residual and location
+      ! Find average residual, maximum residual and location
       normgloc = normg
       if(abs(normg) < epsilon(zero)) then
-! calculating the residual based on dominate term in correction equation
-! and use this to form normalization factor
+
+        ! calculating the residual based on dominate term in correction equation
+        ! and use this to form normalization factor
+
         call calc_resid_pp (slo, shi, lo, hi, &
          b_mmax, one, num_resid(resid_p), &
          den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
          normgloc = resid(resid_p)/den
+
       endif
 
       call calc_resid_pp (slo, shi, lo, hi, &
@@ -152,10 +155,7 @@ module solve_pp_module
          i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
       resg = resid(resid_p)
 
-
-      RETURN
-      END SUBROUTINE SOLVE_PP_G
-
+      end subroutine solve_pp_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

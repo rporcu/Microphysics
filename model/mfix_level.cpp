@@ -933,6 +933,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
+    exit(0);
 
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
