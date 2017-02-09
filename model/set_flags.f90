@@ -11,7 +11,7 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine set_flags(slo,shi,flag)
+      subroutine set_flags(slo,shi,lo,hi,flag)
 
       use ic, only: PINF_, POUT_, MINF_, MOUT_, OUTF_, NSW_, FSW_
       use ic, only: NSW_
@@ -19,7 +19,7 @@ contains
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
@@ -52,9 +52,9 @@ contains
 ! avoid unphysical strain rates in fluid cells adjacent to the flow
 ! boundary
 ! ---------------------------------------------------------------->>>
-      do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-            do i = slo(1),shi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),shi(1)
 
               select case (flag(i,j,k,1))
                 case (PINF_, POUT_, MINF_, MOUT_, OUTF_)
@@ -132,24 +132,23 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine set_flags1(slo,shi,flag)
+      subroutine set_flags1(slo,shi,lo,hi,flag)
 
       USE param1   , only: is_undefined
       USE geometry , only: domlo,domhi
-      USE functions, only: iminus, iplus, jminus, jplus, kminus, kplus
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       integer :: i,j,k
 
-      do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-           do i = slo(1),shi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+           do i = lo(1),hi(1)
 
          ! If the flag is greater than or equal to 2000, there is no
          ! internal surface.
@@ -160,9 +159,9 @@ contains
             flag(i,j,k,2) = 0
             flag(i,j,k,3) = 0
             flag(i,j,k,4) = 0
-            flag(iminus(i,j,k),j,k,2) = 0
-            flag(i,jminus(i,j,k),k,3) = 0
-            flag(i,j,kminus(i,j,k),4) = 0
+            flag(i-1,j,k,2) = 0
+            flag(i,j-1,k,3) = 0
+            flag(i,j,k-1,4) = 0
 
             if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
 
@@ -170,24 +169,24 @@ contains
                if (I == domhi(1)+1) then
                   if ( (J>=(domlo(2)-1)) .and. (J<=(domhi(2)+1)) .and. &
                        (K>=(domlo(3)-1)) .and. (K<=(domhi(3)+1)) .and. &
-                       (flag(iminus(i,j,k),j,k,1) < 100) ) then
-                           flag(iminus(i,j,k),j,k,2) = 2000
+                       (flag(i-1,j,k,1) < 100) ) then
+                           flag(i-1,j,k,2) = 2000
                    end if
                end if
 
                if (J == domhi(2)+1) then
                   if ( (I>=(domlo(1)-1)) .and. (I<=(domhi(1)+1)) .and. &
                        (K>=(domlo(3)-1)) .and. (K<=(domhi(3)+1)) .and. &
-                       (flag(i,jminus(i,j,k),k,1) < 100) ) then
-                           flag(i,jminus(i,j,k),k,3) = 2000
+                       (flag(i,j-1,k,1) < 100) ) then
+                           flag(i,j-1,k,3) = 2000
                   end if
                end if
 
                if (K == domhi(3)+1) then
                   if ( (J>=(domlo(2)-1)) .and. (J<=(domhi(2)+1)) .and. &
                        (I>=(domlo(1)-1)) .and. (I<=(domhi(1)+1)) .and. &
-                       (flag(i,j,kminus(i,j,k),1) < 100) ) then
-                        flag(i,j,kminus(i,j,k),4) = 2000
+                       (flag(i,j,k-1,1) < 100) ) then
+                        flag(i,j,k-1,4) = 2000
                   end if
                end if
 
@@ -199,37 +198,37 @@ contains
         end do
      end do
 
-      do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-           do i = slo(1),shi(1)
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+           do i = lo(1),hi(1)
 
 ! ----------------------------------------------------------------<<<
          IF (flag(i,j,k,1)==1) then
 ! ---------------------------------------------------------------->>>
 
-            IF ( flag(iminus(i,j,k),j,k,1) < 100 .and. &
-               IS_UNDEFINED(flag(iminus(i,j,k),j,k,2))) &
-                 flag(iminus(i,j,k),j,k,2) = 2000 + flag(iminus(i,j,k),j,k,1)
+            IF ( flag(i-1,j,k,1) < 100 .and. &
+               IS_UNDEFINED(flag(i-1,j,k,2))) &
+                 flag(i-1,j,k,2) = 2000 + flag(i-1,j,k,1)
 
-            IF ( flag(iplus(i,j,k),j,k,1) < 100 .and. &
+            IF ( flag(i+1,j,k,1) < 100 .and. &
                IS_UNDEFINED(flag(i,j,k,2))) &
-                  flag(i,j,k,2) = 2000 + flag(iplus(i,j,k),j,k,1)
+                  flag(i,j,k,2) = 2000 + flag(i+1,j,k,1)
 
-            IF ( flag(i,jminus(i,j,k),k,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,jminus(i,j,k),k,3))) &
-               flag(i,jminus(i,j,k),k,3) = 2000 + flag(i,jminus(i,j,k),k,1)
+            IF ( flag(i,j-1,k,1) < 100 .and. &
+               IS_UNDEFINED(flag(i,j-1,k,3))) &
+               flag(i,j-1,k,3) = 2000 + flag(i,j-1,k,1)
 
-            IF ( flag(i,jplus(i,j,k),k,1) < 100 .and. &
+            IF ( flag(i,j+1,k,1) < 100 .and. &
                IS_UNDEFINED(flag(i,j,k,3))) &
-               flag(i,j,k,3) = 2000 + flag(i,jplus(i,j,k),k,1)
+               flag(i,j,k,3) = 2000 + flag(i,j+1,k,1)
 
-            IF ( flag(i,j,kminus(i,j,k),1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j,kminus(i,j,k),4))) &
-               flag(i,j,kminus(i,j,k),4) = 2000 + flag(i,j,kminus(i,j,k),1)
+            IF ( flag(i,j,k-1,1) < 100 .and. &
+               IS_UNDEFINED(flag(i,j,k-1,4))) &
+               flag(i,j,k-1,4) = 2000 + flag(i,j,k-1,1)
 
-            IF ( flag(i,j,kplus(i,j,k),1) < 100 .and. &
+            IF ( flag(i,j,k+1,1) < 100 .and. &
                IS_UNDEFINED(flag(i,j,k,4))) &
-               flag(i,j,k,4) = 2000 + flag(i,j,kplus(i,j,k),1)
+               flag(i,j,k,4) = 2000 + flag(i,j,k+1,1)
 
          ENDIF
 

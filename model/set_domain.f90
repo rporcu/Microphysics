@@ -17,7 +17,7 @@ module set_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_domain(slo,shi,flag,dx,dy,dz) &
+      subroutine set_domain(slo,shi,lo,hi,flag,dx,dy,dz) &
           bind(C, name="set_domain")
 
       ! Cyclic domain flags.
@@ -41,7 +41,7 @@ module set_domain_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real)  , intent(in   ) :: dx,dy,dz
 
@@ -74,12 +74,12 @@ module set_domain_module
       call set_bc_flow
 
       ! Set the flags for identifying computational cells
-      call set_flags(slo,shi,flag)
+      call set_flags(slo,shi,lo,hi,flag)
       flag_mod = flag
 
       ! Set the flags for wall surfaces impermeable and identify flow
       ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      call set_flags1(slo,shi,flag)
+      call set_flags1(slo,shi,lo,hi,flag)
       flag_mod = flag
 
       end subroutine set_domain

@@ -32,7 +32,7 @@ module solve_vel_star_module
       use u_g_conv_dif, only: conv_dif_u_g
       use source_u_g_module, only: source_u_g, source_u_g_bc
       use source_u_g_module, only: point_source_u_g
-      use calc_d_mod, only: calc_d
+      use calc_d_mod, only: calc_d_e
       use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_u
       use residual, only: calc_resid_vel
@@ -97,9 +97,9 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(  out) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
@@ -133,22 +133,22 @@ module solve_vel_star_module
                       u_go, tau_u_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_u_g_bc (slo, shi, A_m, b_m, &
+      call source_u_g_bc (slo, shi, ulo, uhi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
                           dy, dz)
 
-! add in point sources
-      if(point_source) call point_source_u_g (slo, shi, b_m, flag, dx, dy, dz)
+      ! Add in point sources
+      if(point_source) call point_source_u_g (slo, shi, ulo, uhi, b_m, flag, dx, dy, dz)
 
-! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_e, "X", A_m, ep_g, f_gds, flag, dx, dy, dz)
+      ! Calculate coefficients for the pressure correction equation
+      call calc_d_e(slo, shi, ulo, uhi, lo, hi, d_e, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
-! handle special case where center coefficient is zero
+      ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
-! add in source terms for DEM drag coupling.
+      ! Add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
          call gas_drag_u(slo, shi, lo, hi, &
                          A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
@@ -187,7 +187,7 @@ module solve_vel_star_module
       use v_g_conv_dif, only: conv_dif_v_g
       use source_v_g_module, only: source_v_g, source_v_g_bc
       use source_v_g_module, only: point_source_v_g
-      use calc_d_mod, only: calc_d
+      use calc_d_mod, only: calc_d_n
       use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_v
       use residual, only: calc_resid_vel
@@ -255,9 +255,9 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: d_n&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(  out) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2):domhi(2),domlo(3):domhi(3),2)
@@ -288,17 +288,17 @@ module solve_vel_star_module
          v_go, tau_v_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_v_g_bc(slo, shi, A_m, b_m, &
+      call source_v_g_bc(slo, shi, vlo, vhi, A_m, b_m, &
                          bc_ilo_type, bc_ihi_type, &
                          bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, &
                          dx, dz)
 
 ! add in point sources
-      if(point_source) call point_source_v_g (slo, shi, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_v_g (slo, shi, vlo, vhi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_n, "Y", A_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d_n(slo, shi, vlo, vhi, lo, hi, d_n, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -340,7 +340,7 @@ module solve_vel_star_module
       use w_g_conv_dif, only: conv_dif_w_g
       use source_w_g_module, only: source_w_g, source_w_g_bc
       use source_w_g_module, only: point_source_w_g
-      use calc_d_mod, only: calc_d
+      use calc_d_mod, only: calc_d_t
       use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_w
       use residual, only: calc_resid_vel
@@ -407,9 +407,9 @@ module solve_vel_star_module
       real(c_real), intent(  out) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(  out) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2):domhi(2),domlo(3):domhi(3),2)
@@ -441,17 +441,17 @@ module solve_vel_star_module
          w_go, tau_w_g, dx, dy, dz)
 
 ! modifications for bc
-      call source_w_g_bc (slo, shi, A_m, b_m, &
+      call source_w_g_bc (slo, shi, wlo, whi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
                           dx, dy)
 
 ! add in point sources
-      if(point_source) call point_source_w_g (slo, shi, b_m, flag, dx, dy, dz)
+      if(point_source) call point_source_w_g (slo, shi, wlo, whi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_t, "Z", A_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d_t(slo, shi, wlo, whi, lo, hi, d_t, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)

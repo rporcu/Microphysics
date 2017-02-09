@@ -42,7 +42,7 @@ module w_g_conv_dif
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -64,10 +64,12 @@ module w_g_conv_dif
 !---------------------------------------------------------------------//
 
       IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, lo, hi, A_m, mu_g, flux_ge, flux_gn, flux_gt, &
+         CALL STORE_A_W_G0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                            A_m, mu_g, flux_ge, flux_gn, flux_gt, &
                             dx, dy, dz)
       ELSE
-         CALL STORE_A_W_G1 (slo, shi, lo, hi, A_m, mu_g, u_g, v_g, w_g, &
+         CALL STORE_A_W_G1 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                            A_m, mu_g, u_g, v_g, w_g, &
                             flux_ge, flux_gn, flux_gt, dt, dx, dy, dz)
       ENDIF
 
@@ -163,8 +165,8 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(slo, shi, lo, hi, &
-                              A_W_G, mu_g, flux_ge, flux_gn, flux_gt, &
+      SUBROUTINE STORE_A_W_G0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                              A_m, mu_g, flux_ge, flux_gn, flux_gt, &
                               dx, dy, dz)
 
 ! Modules
@@ -172,25 +174,25 @@ module w_g_conv_dif
       use matrix, only: e, w, n, s, t, b
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
-      ! Septadiagonal matrix A_U_g
-      real(c_real), intent(inout) :: A_W_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      ! Septadiagonal matrix A_m
+      real(c_real), intent(inout) :: A_m&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: dx, dy, dz
-! Local variables
-!---------------------------------------------------------------------//
-! Indices
-      INTEGER :: I, J, K
+
+      integer :: I, J, K
 ! Face mass flux
       real(c_real) :: flux_e, flux_n, flux_t
 ! Diffusion parameter
@@ -214,44 +216,42 @@ module w_g_conv_dif
 
 ! East face (i+1/2, j, k+1/2)
                if (flux_e >= zero) then
-                  a_w_g(i,  j,k,e) = d_fe
-                  a_w_g(i+1,j,k,w) = d_fe + flux_e
+                  A_m(i,  j,k,e) = d_fe
+                  A_m(i+1,j,k,w) = d_fe + flux_e
                else
-                  a_w_g(i,  j,k,e) = d_fe - flux_e
-                  a_w_g(i+1,j,k,w) = d_fe
+                  A_m(i,  j,k,e) = d_fe - flux_e
+                  A_m(i+1,j,k,w) = d_fe
                endif
 
 ! North face (i, j+1/2, k+1/2)
                if (flux_n >= zero) then
-                  a_w_g(i,j,  k,n) = d_fn
-                  a_w_g(i,j+1,k,s) = d_fn + flux_n
+                  A_m(i,j,  k,n) = d_fn
+                  A_m(i,j+1,k,s) = d_fn + flux_n
                else
-                  a_w_g(i,j,  k,n) = d_fn - flux_n
-                  a_w_g(i,j+1,k,s) = d_fn
+                  A_m(i,j,  k,n) = d_fn - flux_n
+                  A_m(i,j+1,k,s) = d_fn
                endif
 
 ! Top face (i, j, k+1)
                if (flux_t >= zero) then
-                  a_w_g(i,j,k,  t) = d_ft
-                  a_w_g(i,j,k+1,b) = d_ft + flux_t
+                  A_m(i,j,k,  t) = d_ft
+                  A_m(i,j,k+1,b) = d_ft + flux_t
                else
-                  a_w_g(i,j,k,  t) = d_ft - flux_t
-                  a_w_g(i,j,k+1,b) = d_ft
+                  A_m(i,j,k,  t) = d_ft - flux_t
+                  A_m(i,j,k+1,b) = d_ft
                endif
 
 ! West face (i-1/2, j, k+1/2)
-               if(i==lo(1)) a_w_g(i,j,k,w) = d_fw
+               if(i==lo(1)) A_m(i,j,k,w) = d_fw
 
 ! South face (i, j-1/2, k+1/2)
-               if(j==lo(2)) a_w_g(i,j,k,s) = d_fs
+               if(j==lo(2)) A_m(i,j,k,s) = d_fs
 
             enddo
          enddo
       enddo
 
-      return
    end subroutine store_a_w_g0
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -270,7 +270,8 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(slo, shi, lo, hi, A_W_G, mu_g, u_g, v_g, w_g, &
+      SUBROUTINE STORE_A_W_G1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                              A_m, mu_g, u_g, v_g, w_g, &
                               flux_ge, flux_gn, flux_gt, &
                               dt, dx, dy, dz)
 
@@ -282,40 +283,42 @@ module w_g_conv_dif
       use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       ! Septadiagonal matrix A_W_g
-      real(c_real), intent(INOUT) :: A_W_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      real(c_real), intent(INOUT) :: A_m&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
 
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(IN   ) :: u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(IN   ) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(IN   ) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
-! Local variables
-!---------------------------------------------------------------------//
       integer :: xlo(3)
       integer :: I,J,K
-! Diffusion parameter
+
+      ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
-! Face mass flux
+
+      ! Face mass flux
       real(c_real) :: flux_e, flux_n
       real(c_real) :: flux_t
 
-! x, y, z directional velocity
+      ! x, y, z directional velocity
       real(c_real), allocatable :: u(:,:,:), v(:,:,:), ww(:,:,:)
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 !---------------------------------------------------------------------//
@@ -366,22 +369,22 @@ module w_g_conv_dif
                   d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
                ! East face (i+1/2, j, k+1/2)
-               a_w_g(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
-               a_w_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
+               A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
+               A_m(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
 
                ! North face (i, j+1/2, k+1/2)
-               a_w_g(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
-               a_w_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
+               A_m(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
+               A_m(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
                ! Top face (i, j, k+1)
-               a_w_g(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
-               a_w_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
+               A_m(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
+               A_m(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
                ! West face (i-1/2, j, k+1/2)
-               if(i==lo(1)) a_w_g(i,j,k,w) = d_fw
+               if(i==lo(1)) A_m(i,j,k,w) = d_fw
 
                ! South face (i, j-1/2, k+1/2)
-               if(j==lo(2)) a_w_g(i,j,k,s) = d_fs
+               if(j==lo(2)) A_m(i,j,k,s) = d_fs
 
             enddo
          enddo
@@ -390,6 +393,5 @@ module w_g_conv_dif
       deallocate( U, V, ww )
       deallocate( xsi_e, xsi_n, xsi_t)
 
-      return
    end subroutine store_a_w_g1
 end module w_g_conv_dif

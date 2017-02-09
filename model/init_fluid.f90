@@ -145,10 +145,6 @@ module init_fluid_module
             jend   = min(shi(2), ic_j_n(icv))
             kend   = min(shi(3), ic_k_t(icv))
 
-            print *,'IC W/E ', ic_i_w(icv), ic_i_e(icv)
-            print *,'IC S/N ', ic_j_s(icv), ic_j_n(icv)
-            print *,'IC B/T ', ic_k_b(icv), ic_k_t(icv)
-
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend

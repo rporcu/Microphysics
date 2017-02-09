@@ -44,7 +44,6 @@ end subroutine leq_scale
 
     use bl_fort_module, only : c_real
     use iso_c_binding , only: c_int
-    use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
 
     IMPLICIT NONE
 
@@ -69,13 +68,13 @@ end subroutine leq_scale
        do j = slo(2),shi(2)
           do i = slo(1),shi(1)
              res(i,j,k) = &
-                          ( A_m(i,j,k,-3) * Var(i,j,kminus(i,j,k))   &
-                          + A_m(i,j,k,-2) * Var(i,jminus(i,j,k),k)   &
-                          + A_m(i,j,k,-1) * Var(iminus(i,j,k),j,k)   &
+                          ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
+                          + A_m(i,j,k,-2) * Var(i,j-1,k)   &
+                          + A_m(i,j,k,-1) * Var(i-1,j,k)   &
                           + A_m(i,j,k, 0) * Var(i,j,k)               &
-                          + A_m(i,j,k, 1) * Var(iplus(i,j,k),j,k)    &
-                          + A_m(i,j,k, 2) * Var(i,jplus(i,j,k),k)    &
-                          + A_m(i,j,k, 3) * Var(i,j,kplus(i,j,k))  )
+                          + A_m(i,j,k, 1) * Var(i+1,j,k)    &
+                          + A_m(i,j,k, 2) * Var(i,j+1,k)    &
+                          + A_m(i,j,k, 3) * Var(i,j,k+1)  )
                enddo
             enddo
          enddo
@@ -88,9 +87,8 @@ end subroutine leq_scale
 
     use bl_fort_module, only : c_real
     use iso_c_binding , only: c_int
-    use functions, only: iminus,iplus,jminus,jplus,kminus,kplus
 
-    IMPLICIT NONE
+    implicit none
 
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
@@ -112,17 +110,17 @@ end subroutine leq_scale
     INTEGER :: I, J, K
 !-----------------------------------------------
 
-    do k = slo(3),shi(3)
-       do i = slo(1),shi(1)
-          do j = slo(2),shi(2)
+    do k = slo(3)+1,shi(3)-1
+       do i = slo(1),shi(1)-1
+          do j = slo(2)+1,shi(2)-1
              res(i,j,k) = rhs(i,j,k) -  &
-                ( A_m(i,j,k,-3) * Var(i,j,kminus(i,j,k))   &
-                + A_m(i,j,k,-2) * Var(i,jminus(i,j,k),k)   &
-                + A_m(i,j,k,-1) * Var(iminus(i,j,k),j,k)   &
+                ( A_m(i,j,k,-3) * Var(i,j,k-1)   &
+                + A_m(i,j,k,-2) * Var(i,j-1,k)   &
+                + A_m(i,j,k,-1) * Var(i-1,j,k)   &
                 + A_m(i,j,k, 0) * Var(i,j,k)               &
-                + A_m(i,j,k, 1) * Var(iplus(i,j,k),j,k)    &
-                + A_m(i,j,k, 2) * Var(i,jplus(i,j,k),k)    &
-                + A_m(i,j,k, 3) * Var(i,j,kplus(i,j,k))  )
+                + A_m(i,j,k, 1) * Var(i+1,j,k)    &
+                + A_m(i,j,k, 2) * Var(i,j+1,k)    &
+                + A_m(i,j,k, 3) * Var(i,j,k+1)  )
           enddo
        enddo
     enddo

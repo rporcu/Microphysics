@@ -255,18 +255,14 @@ mfix_level::MakeNewLevel (int lev, Real time,
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       // const Box&  bx = mfi.validbox();
+       const Box&  bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
-       set_domain(sbx.loVect(),sbx.hiVect(),
+       set_domain(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
     mfix_set_bc_type(lev);
     //fill_mf_bc(lev,*flag[lev]);
-
-    // Matrix and rhs vector
-    A_m[lev].reset(new MultiFab(grids[lev],7,nghost,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
 
     // ********************************************************************************
     // Cell-based arrays
@@ -902,6 +898,14 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    int nghost = u_g[lev]->nGrow();
+
+    // Matrix and rhs vector
+    BoxArray x_edge_ba = grids[lev];
+    x_edge_ba.surroundingNodes(0);
+    A_m[lev].reset(new MultiFab(x_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
@@ -934,6 +938,13 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve V-Momentum equation
+
+    // Matrix and rhs vector
+    BoxArray y_edge_ba = grids[lev];
+    y_edge_ba.surroundingNodes(1);
+    A_m[lev].reset(new MultiFab(y_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
@@ -965,6 +976,13 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve W-Momentum equation
+
+    // Matrix and rhs vector
+    BoxArray z_edge_ba = grids[lev];
+    z_edge_ba.surroundingNodes(2);
+    A_m[lev].reset(new MultiFab(z_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
@@ -995,10 +1013,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     eq_id=5;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
-    int nghost = u_g[lev]->nGrow();
-    MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, nghost);
-    MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, nghost);
-    MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, nghost);
+    MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
+    MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
+    MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, w_g[lev]->nGrow());
 
     u_g[lev]->FillBoundary(geom[lev].periodicity());
     v_g[lev]->FillBoundary(geom[lev].periodicity());

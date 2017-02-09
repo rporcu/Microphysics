@@ -42,7 +42,7 @@ contains
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -63,15 +63,13 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !---------------------------------------------------------------------//
 
-      print *,'FLUX  INTO CONV_DIF',flux_gE(-1,0,0)
-
       if (discretize(3) == 0) then
          call store_a_u_g0(&
-            slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+            slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi,  &
             A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
       else
          call store_a_u_g1(&
-            slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+            slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
             A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
             dt, dx, dy, dz)
       ENDIF
@@ -174,7 +172,7 @@ contains
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine store_a_u_g0(&
-      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
 
       use matrix, only: e, w, n, s, t, b
@@ -189,7 +187,7 @@ contains
       real(c_real), intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: flux_ge&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -306,7 +304,7 @@ contains
 
 
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3),-3:3)
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -357,9 +355,9 @@ contains
       DO k = slo(3),shi(3)
         DO j = slo(2),shi(2)
           DO i = slo(1),hi(1)
-             u(I,J,K) = avg(u_g(i,j,k), U_G(i+1,j,k))
-             v(I,J,K) = avg(v_g(i,j,k), V_G(i+1,j,k))
-            ww(I,J,K) = avg(w_g(i,j,k), W_G(i+1,j,k))
+             u(I,J,K) = avg(u_g(i,j,k), u_g(i+1,j,k))
+             v(I,J,K) = avg(v_g(i,j,k), v_g(i+1,j,k))
+            ww(I,J,K) = avg(w_g(i,j,k), w_g(i+1,j,k))
           ENDDO
         ENDDO
       ENDDO
@@ -373,7 +371,7 @@ contains
 
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
-            do i = slo(1),hi(1)
+            do i = lo(1)-1,hi(1)
 
 ! Calculate convection-diffusion fluxes through each of the faces
                flux_e = HALF * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
@@ -389,8 +387,6 @@ contains
                ! East face (i+1, j, k)
                A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
                A_m(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
-               if (i.eq.-1 .and. j.eq.0 .and. k.eq.0) print *,'FLUX  ',flux_gE(i,j,k), flux_gE(i+1,j,k)
-               if (i.eq.-1 .and. j.eq.0 .and. k.eq.0) print *,'AWEST ',A_m(i+1,j,k,w), d_fe, flux_e, xsi_e(i,j,k)
 
                ! North face (i+1/2, j+1/2, k)
                A_m(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))

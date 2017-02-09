@@ -13,6 +13,7 @@ extern "C"
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
   void set_domain(const int* slo, const int* shi,
+                  const int*  lo, const int*  hi,
                   int* flag, Real* dx, Real* dy, Real* dz);
 
   void set_bc_type(const int* slo, const int* shi,

@@ -37,10 +37,11 @@ contains
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
+
       ! Vector b_m
       real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -132,7 +133,7 @@ contains
 !     The drag terms are excluded from the source at this stage        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine source_w_g_bc(slo, shi, A_m, b_m, &
+      subroutine source_w_g_bc(slo,shi,wlo,whi,A_m,b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dx, dy)
 
@@ -147,13 +148,13 @@ contains
       use matrix, only: e, w, s, n, t, b
       use param1, only: is_defined
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3)
       real(c_real), intent(in   ) :: dx, dy
 
       real(c_real), intent(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -388,7 +389,7 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_W_G(slo, shi, B_M, flag, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_W_G(slo,shi,wlo,whi,B_M,flag,dx,dy,dz)
 
 !-----------------------------------------------
 ! Modules
@@ -397,11 +398,11 @@ contains
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3)
 
       ! Vector b_m
       real(c_real), intent(INOUT) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

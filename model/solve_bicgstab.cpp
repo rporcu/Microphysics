@@ -69,8 +69,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab t    (ba, ncomp, nghost, dm);
 
 //  Lp.residual(r, rhs, sol, bc_mode);
-    Array<int> slo(3);
-    Array<int> shi(3);
 
     const Real eps_abs=1.0E-12;
 
@@ -78,20 +76,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-      const Box& bx = mfi.validbox();
-
-      const int* sslo = rhs[mfi].loVect();
-      const int* sshi = rhs[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
+      const Box&  bx = mfi.validbox();
+      const Box& sbx = rhs[mfi].box();
 
       leq_scale(rhs[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                slo.dataPtr(),shi.dataPtr(),bx.loVect(),bx.hiVect());
+                sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect());
     }
 
 
@@ -100,20 +89,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
       // const Box& bx = mfi.validbox();
-
-      const int* sslo = rhs[mfi].loVect();
-      const int* sshi = rhs[mfi].hiVect();
-
-      slo[0] = sslo[0];
-      slo[1] = sslo[1];
-      slo[2] = sslo[2];
-      shi[0] = sshi[0];
-      shi[1] = sshi[1];
-      shi[2] = sshi[2];
+      const Box& sbx = rhs[mfi].box();
 
       // Compute r = rhs - A_m*sol
       leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                   r[mfi].dataPtr(), slo.dataPtr(),shi.dataPtr());
+                   r[mfi].dataPtr(), sbx.loVect(),sbx.hiVect());
     }
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
@@ -179,18 +159,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
           // const Box& bx = mfi.validbox();
+          const Box& sbx = rhs[mfi].box();
 
-          const int* sslo = rhs[mfi].loVect();
-          const int* sshi = rhs[mfi].hiVect();
-
-          slo[0] = sslo[0];
-          slo[1] = sslo[1];
-          slo[2] = sslo[2];
-          shi[0] = sshi[0];
-          shi[1] = sshi[1];
-          shi[2] = sshi[2];
-
-          leq_msolve1(slo.dataPtr(),shi.dataPtr(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
+          leq_msolve1(sbx.loVect(),sbx.hiVect(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       ph[mfi].dataPtr());
         }
       }
@@ -203,19 +174,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
         // const Box& bx = mfi.validbox();
-
-        const int* sslo = rhs[mfi].loVect();
-        const int* sshi = rhs[mfi].hiVect();
-
-        slo[0] = sslo[0];
-        slo[1] = sslo[1];
-        slo[2] = sslo[2];
-        shi[0] = sshi[0];
-        shi[1] = sshi[1];
-        shi[2] = sshi[2];
-
+        const Box& sbx = rhs[mfi].box();
         leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
-                   slo.dataPtr(),shi.dataPtr());
+                   sbx.loVect(),sbx.hiVect());
       }
 
       Real rhTv = dotxy(rh,v,true);
@@ -248,18 +209,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
           // const Box& bx = mfi.validbox();
+          const Box& sbx = rhs[mfi].box();
 
-          const int* sslo = rhs[mfi].loVect();
-          const int* sshi = rhs[mfi].hiVect();
-
-          slo[0] = sslo[0];
-          slo[1] = sslo[1];
-          slo[2] = sslo[2];
-          shi[0] = sshi[0];
-          shi[1] = sshi[1];
-          shi[2] = sshi[2];
-
-          leq_msolve1(slo.dataPtr(),shi.dataPtr(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
+          leq_msolve1(sbx.loVect(),sbx.hiVect(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
                       sh[mfi].dataPtr());
         }
       }
@@ -271,19 +223,10 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
         // const Box& bx = mfi.validbox();
-
-        const int* sslo = rhs[mfi].loVect();
-        const int* sshi = rhs[mfi].hiVect();
-
-        slo[0] = sslo[0];
-        slo[1] = sslo[1];
-        slo[2] = sslo[2];
-        shi[0] = sshi[0];
-        shi[1] = sshi[1];
-        shi[2] = sshi[2];
+        const Box& sbx = rhs[mfi].box();
 
         leq_matvec(sh[mfi].dataPtr(), A_m[mfi].dataPtr(), t[mfi].dataPtr(),
-                   slo.dataPtr(),shi.dataPtr());
+                   sbx.loVect(),sbx.hiVect());
       }
 
       // This is a little funky.  I want to elide one of the reductions

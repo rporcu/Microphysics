@@ -56,14 +56,12 @@ module calc_mflux_module
       axy = dx*dy
       axz = dx*dz
       ayz = dy*dz
-      print *,"ULO IN CMF ",ulo(:), uhi(:) 
 
 ! East face (i+1/2, j, k)
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = slo(1), hi(1)
                flux_e(i,j,k) = rop_e(i,j,k)*ayz*u_g(i,j,k)
-              if (j.eq.0 .and. k.eq.0) print *,'FLUX COMP ', i, flux_e(i,j,k), rop_e(i,j,k), u_g(i,j,k)
             enddo
          enddo
       enddo

@@ -3,7 +3,6 @@ module leqsol
    use compar, only: mype
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
-   use functions, only: iplus, jplus, kplus, iminus, jminus, kminus
    use funits, only: dmp_log, unit_log
    use param, only: DIM_EQS
    use param1, only: zero

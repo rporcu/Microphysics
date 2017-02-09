@@ -36,11 +36,12 @@ contains
       integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), intent(inout) :: a_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      real(c_real), intent(inout) :: A_m&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
+
       ! vector b_m
       real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -130,7 +131,7 @@ contains
 !     The drag terms are excluded from the source at this stage        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine source_v_g_bc(slo, shi, A_m, b_m, &
+      subroutine source_v_g_bc(slo, shi, vlo, vhi, A_m, b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dx, dz)
 
@@ -144,13 +145,14 @@ contains
       use matrix, only: e, w, n, t, b
       use param1, only: is_defined
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3)
       real(c_real), intent(in   ) :: dx, dz
 
       real(c_real), intent(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), intent(INOUT) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
+
+      real(c_real), intent(INOUT) :: b_m&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -385,17 +387,16 @@ contains
 !  Purpose: Adds point sources to the gas phase V-Momentum equation.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine point_source_v_g(slo, shi, b_m, &
-         flag, dx, dy, dz)
+      subroutine point_source_v_g(slo,shi,vlo,vhi,b_m,flag,dx,dy,dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3)
 
       ! Vector b_m
-      real(c_real), intent(INOUT) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(INOUT) :: b_m&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
