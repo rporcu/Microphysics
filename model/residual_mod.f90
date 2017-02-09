@@ -306,10 +306,9 @@
          enddo
       enddo
 
-
-      i_resid = 1
-      j_resid = 1
-      k_resid = 1
+      i_resid = llo(1)
+      j_resid = llo(2)
+      k_resid = llo(3)
 
       max_resid = resid_ijk( i_resid, j_resid, k_resid)
 

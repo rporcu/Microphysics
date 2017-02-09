@@ -55,10 +55,11 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), intent(in   ) :: u_go&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: tau_u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -121,9 +122,7 @@ contains
          enddo
       enddo
 
-      return
    end subroutine source_u_g
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -212,7 +211,6 @@ contains
             end do
          end do
       endif
-
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
@@ -351,7 +349,6 @@ contains
             end do
          end do
       endif
-
 
 ! --- BOTTOM FLUID -------------------------------------------------------->
 

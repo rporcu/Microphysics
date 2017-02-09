@@ -23,7 +23,7 @@ module solve_vel_star_module
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
-         f_gds, a_m, b_m, drag_bm, flag, &
+         f_gds, A_m, b_m, drag_bm, flag, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
          bind(C, name="solve_u_g_star")
@@ -96,7 +96,7 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
-      real(c_real), intent(  out) :: a_m&
+      real(c_real), intent(  out) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -117,19 +117,19 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
 
-! Initialize a_m and b_m
-      a_m(:,:,:,:) =  0.0d0
-      a_m(:,:,:,0) = -1.0d0
+! Initialize A_m and b_m
+      A_m(:,:,:,:) =  0.0d0
+      A_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
       d_e(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
-                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_u_g(slo, shi, ulo, uhi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_u_g(slo, shi, ulo, uhi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                       u_go, tau_u_g, dx, dy, dz)
 
 ! modifications for bc
@@ -143,23 +143,23 @@ module solve_vel_star_module
       if(point_source) call point_source_u_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_e, "X", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, lo, hi, d_e, "X", A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g ('U', slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g ('U', slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
          call gas_drag_u(slo, shi, lo, hi, &
-                         a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         u_g, v_g, w_g, a_m, b_m, &
+         u_g, v_g, w_g, A_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), max_resid(resid_u), &
          i_resid(resid_u),j_resid(resid_u),k_resid(resid_u), 'U')
 
-      call under_relax (slo, shi, u_g, a_m, b_m, 'U', flag, 3)
+      call under_relax (slo, shi, ulo, uhi, u_g, A_m, b_m, 'U', flag, 3)
 
       return
    end subroutine solve_u_g_star
@@ -177,7 +177,7 @@ module solve_vel_star_module
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, &
+      f_gds, A_m, b_m, drag_bm, flag, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_v_g_star")
@@ -273,18 +273,18 @@ module solve_vel_star_module
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
 
-! Initialize a_m and b_m
-      a_m(:,:,:,:) =  0.0d0
-      a_m(:,:,:,0) = -1.0d0
+! Initialize A_m and b_m
+      A_m(:,:,:,:) =  0.0d0
+      A_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
-                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_v_g(slo, shi, vlo, vhi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_v_g(slo, shi, vlo, vhi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          v_go, tau_v_g, dx, dy, dz)
 
 ! modifications for bc
@@ -298,23 +298,23 @@ module solve_vel_star_module
       if(point_source) call point_source_v_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_n, "Y", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, lo, hi, d_n, "Y", A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g('V',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g('V',slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
          call gas_drag_v(slo, shi, lo, hi, &
-                         a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         v_g, w_g, u_g, a_m, b_m, &
+         v_g, w_g, u_g, A_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), max_resid(resid_v), &
          i_resid(resid_v),j_resid(resid_v),k_resid(resid_v), 'V')
 
-      call under_relax (slo, shi, v_g, a_m, b_m, 'V', flag, 4)
+      call under_relax (slo, shi, vlo, vhi, v_g, A_m, b_m, 'V', flag, 4)
 
    END SUBROUTINE SOLVE_V_G_STAR
 
@@ -331,7 +331,7 @@ module solve_vel_star_module
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, a_m, b_m, drag_bm, flag, &
+      f_gds, A_m, b_m, drag_bm, flag, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_w_g_star")
@@ -425,19 +425,19 @@ module solve_vel_star_module
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
 
-! Initialize a_m and b_m
-      a_m(:,:,:,:) =  0.0d0
-      a_m(:,:,:,0) = -1.0d0
+! Initialize A_m and b_m
+      A_m(:,:,:,:) =  0.0d0
+      A_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
       d_t(:,:,:)   =  0.0d0
 
 ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi,&
-                         a_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_w_g(slo, shi, wlo, whi, lo, hi, a_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      call source_w_g(slo, shi, wlo, whi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          w_go, tau_w_g, dx, dy, dz)
 
 ! modifications for bc
@@ -451,23 +451,23 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (slo, shi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d(slo, shi, lo, hi, d_t, "Z", a_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d(slo, shi, lo, hi, d_t, "Z", A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
-      call adjust_a_g('W',slo, shi, lo, hi, a_m, b_m, rop_g, dx, dy, dz)
+      call adjust_a_g('W',slo, shi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
 ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
          call gas_drag_w(slo, shi, lo, hi, &
-                         a_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
       call calc_resid_vel (slo, shi, lo, hi, &
-         w_g, u_g, v_g, a_m, b_m, &
+         w_g, u_g, v_g, A_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), max_resid(resid_w), &
          i_resid(resid_w),j_resid(resid_w),k_resid(resid_w),'W')
 
-      call under_relax (slo, shi, w_g, a_m, b_m, 'W', flag, 5)
+      call under_relax (slo, shi, wlo, whi, w_g, A_m, b_m, 'W', flag, 5)
 
    END SUBROUTINE SOLVE_W_G_STAR
 

@@ -280,7 +280,8 @@ module v_g_conv_dif
       use functions, only: avg, avg_h
       use matrix, only: e, w, n, s, t, b
       use run, only: discretize
-      use xsi, only: calc_xsi
+
+      use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 
       implicit none
 
@@ -309,9 +310,8 @@ module v_g_conv_dif
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
+      integer :: xlo(3)
       integer :: I, J, K
-! indicator for shear
-      integer :: incr
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
@@ -327,9 +327,14 @@ module v_g_conv_dif
       allocate(  V(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate( WW(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      allocate(xsi_e(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      ! We need xsi_e, xsi_n, xsi_t defined on the y-faces
+      xlo(1) = lo(1)
+      xlo(2) = lo(2)-1
+      xlo(3) = lo(3)
+
+      allocate( xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate( xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate( xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
 
       !  Calculate the components of velocity on the east, north,
       !  and top face of a v-momentum cell
@@ -343,11 +348,12 @@ module v_g_conv_dif
         end do
       end do
 
-      ! shear indicator: y-momentum
-      incr=2
-      call calc_xsi (discretize(4), slo, shi, hi, &
-                     v_g, u, v, ww, XSI_E, XSI_N, XSI_T, &
-                     dt, dx, dy, dz)
+      call calc_xsi_e (discretize(4), slo, shi, slo, shi, xlo,  hi, &
+                       v_g, u , XSI_E, dt, dx, dy, dz)
+      call calc_xsi_n (discretize(4), slo, shi, slo, shi, xlo,  hi, &
+                       v_g, v , XSI_N, dt, dx, dy, dz)
+      call calc_xsi_t (discretize(4), slo, shi, slo, shi, xlo,  hi, &
+                       v_g, ww, XSI_T, dt, dx, dy, dz)
 
       do k = lo(3),hi(3)
          do j = slo(2),hi(2)

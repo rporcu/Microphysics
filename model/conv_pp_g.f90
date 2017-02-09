@@ -24,8 +24,8 @@ module conv_pp_g_module
 !         boundaries are set to zero.                                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine conv_pp_g(slo, shi, lo, hi, &
-         a_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
+      subroutine conv_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
@@ -33,8 +33,9 @@ module conv_pp_g_module
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3)
-      integer     , intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Septadiagonal matrix A_m
@@ -42,11 +43,11 @@ module conv_pp_g_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), intent(in   ) :: rop_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: rop_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: rop_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Local variables
 !-----------------------------------------------

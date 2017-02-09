@@ -324,69 +324,81 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // X-face-based arrays
     // ********************************************************************************
 
+    // Create a BoxArray on x-faces.
+    BoxArray x_edge_ba = grids[lev];
+    x_edge_ba.surroundingNodes(0);
+
     // X-axis gas velocity
-    u_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    u_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    u_gt[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    u_g[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    u_go[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    u_gt[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
 
-    d_e[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    d_e[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     d_e[lev]->setVal(0.);
 
-    tau_u_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    tau_u_g[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     tau_u_g[lev]->setVal(0.);
 
-    flux_gE[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    flux_gE[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     flux_gE[lev]->setVal(0.);
 
-    rop_gE[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    rop_gE[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     rop_gE[lev]->setVal(0.);
 
     // ********************************************************************************
     // Y-face-based arrays
     // ********************************************************************************
 
+    // Create a BoxArray on y-faces.
+    BoxArray y_edge_ba = grids[lev];
+    y_edge_ba.surroundingNodes(1);
+
     // Y-axis gas velocity
-    v_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    v_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    v_gt[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    v_g[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    v_go[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    v_gt[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
 
-    d_n[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    d_n[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     d_n[lev]->setVal(0.);
 
-    tau_v_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    tau_v_g[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     tau_v_g[lev]->setVal(0.);
 
-    flux_gN[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    flux_gN[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     flux_gN[lev]->setVal(0.);
 
-    rop_gN[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    rop_gN[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     rop_gN[lev]->setVal(0.);
 
     // ********************************************************************************
     // Z-face-based arrays
     // ********************************************************************************
 
+    // Create a BoxArray on y-faces.
+    BoxArray z_edge_ba = grids[lev];
+    z_edge_ba.surroundingNodes(2);
+
     // Z-axis gas velocity
-    w_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    w_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    w_gt[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    w_g[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    w_go[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    w_gt[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
 
-    d_t[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    d_t[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     d_t[lev]->setVal(0.);
 
-    tau_w_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    tau_w_g[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     tau_w_g[lev]->setVal(0.);
 
-    flux_gT[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    flux_gT[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
     flux_gT[lev]->setVal(0.);
 
     rop_gT[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
@@ -583,9 +595,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      mfix_main1(sbx.loVect(), sbx.hiVect(),
                 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -603,9 +615,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   fill_mf_bc(lev,*ro_g[lev],0);
   fill_mf_bc(lev,*rop_g[lev],0);
 
-  fill_mf_bc(lev,*u_g[lev],1);
-  fill_mf_bc(lev,*v_g[lev],2);
-  fill_mf_bc(lev,*w_g[lev],3);
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 
   // Allocate the particle arrays
   if (solve_dem)
@@ -659,9 +671,9 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      const Box&  bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      const int max_pip = particle_state.size();
 
@@ -701,9 +713,9 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      calc_coeff_all(sbx.loVect(), sbx.hiVect(), 
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
@@ -740,9 +752,9 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      calc_trd_and_tau(sbx.loVect(), sbx.hiVect(), 
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
@@ -754,9 +766,10 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
        &dx, &dy, &dz);
   }
 
-  fill_mf_bc(lev,*tau_u_g[lev],0);
-  fill_mf_bc(lev,*tau_v_g[lev],0);
-  fill_mf_bc(lev,*tau_w_g[lev],0);
+  tau_u_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_v_g[lev]->FillBoundary(geom[lev].periodicity());
+  tau_w_g[lev]->FillBoundary(geom[lev].periodicity());
+
   fill_mf_bc(lev,*trD_g[lev],0);
 }
 
@@ -772,9 +785,9 @@ mfix_level::mfix_init_fluid(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      init_fluid(sbx.loVect(), sbx.hiVect(), 
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
@@ -791,9 +804,9 @@ mfix_level::mfix_init_fluid(int lev)
   fill_mf_bc(lev,*ro_g[lev],0);
   fill_mf_bc(lev,*rop_g[lev],0);
 
-  fill_mf_bc(lev,*u_g[lev],1);
-  fill_mf_bc(lev,*v_g[lev],2);
-  fill_mf_bc(lev,*w_g[lev],3);
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 
   fill_mf_bc(lev,*mu_g[lev],0);
   fill_mf_bc(lev,*lambda_g[lev],0);
@@ -833,17 +846,24 @@ mfix_level::mfix_calc_mflux(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     calc_mflux(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+
+     calc_mflux(sbx.loVect(), sbx.hiVect(), 
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+        bx.loVect(),  bx.hiVect(), 
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
        &dx, &dy, &dz);
   }
-  fill_mf_bc(lev,*flux_gE[lev],0);
-  fill_mf_bc(lev,*flux_gN[lev],0);
-  fill_mf_bc(lev,*flux_gT[lev],0);
-}
 
+  // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
+  flux_gE[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gN[lev]->FillBoundary(geom[lev].periodicity());
+  flux_gT[lev]->FillBoundary(geom[lev].periodicity());
+}
 
 void
 mfix_level::mfix_conv_rop(int lev, Real dt)
@@ -857,9 +877,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
        const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
-       Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
        conv_rop(sbx.loVect(), sbx.hiVect(), 
          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -870,9 +890,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
          &dt, &dx, &dy, &dz);
     }
 
-    fill_mf_bc(lev,*rop_gE[lev],0);
-    fill_mf_bc(lev,*rop_gN[lev],0);
-    fill_mf_bc(lev,*rop_gT[lev],0);
+    rop_gE[lev]->FillBoundary(geom[lev].periodicity());
+    rop_gN[lev]->FillBoundary(geom[lev].periodicity());
+    rop_gT[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -889,9 +909,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
-      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
       solve_u_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
@@ -902,7 +922,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
-                (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
+          (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           (*flag[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(),
           bc_jlo.dataPtr(), bc_jhi.dataPtr(),
@@ -920,9 +940,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
-      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
       solve_v_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
@@ -951,9 +971,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
-      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
       solve_w_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
@@ -980,9 +1000,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, nghost);
     MultiFab::Copy(*w_g[lev], *w_gt[lev], 0, 0, 1, nghost);
 
-    fill_mf_bc(lev,*u_g[lev],1);
-    fill_mf_bc(lev,*v_g[lev],2);
-    fill_mf_bc(lev,*w_g[lev],3);
+    u_g[lev]->FillBoundary(geom[lev].periodicity());
+    v_g[lev]->FillBoundary(geom[lev].periodicity());
+    w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -998,9 +1018,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
 
-      const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-      const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-      const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
       solve_pp_g(sbx.loVect(), sbx.hiVect(), 
         ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -1033,9 +1053,9 @@ mfix_level::mfix_correct_0(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
-     const Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
-     const Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
-     const Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
      correct_0(sbx.loVect(), sbx.hiVect(),
                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -1046,9 +1066,10 @@ mfix_level::mfix_correct_0(int lev)
   }
 
   fill_mf_bc(lev,*p_g[lev],0);
-  fill_mf_bc(lev,*u_g[lev],1);
-  fill_mf_bc(lev,*v_g[lev],2);
-  fill_mf_bc(lev,*w_g[lev],3);
+
+  u_g[lev]->FillBoundary(geom[lev].periodicity());
+  v_g[lev]->FillBoundary(geom[lev].periodicity());
+  w_g[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -1093,6 +1114,8 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     Real tol;
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
+    std::cout << "AM " << matrix[0] << std::endl;
+    std::cout << "BM " << rhs[0] << std::endl;
 
 #if(0)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
@@ -1108,6 +1131,8 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 #else
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol);
 #endif
+    std::cout << "SOL " << sol[0] << std::endl;
+    exit(0);
 }
 
 void

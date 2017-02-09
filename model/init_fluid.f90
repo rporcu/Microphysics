@@ -53,7 +53,7 @@ module init_fluid_module
 !-----------------------------------------------------------------------!
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g, flag)
 
       ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
@@ -87,7 +87,7 @@ module init_fluid_module
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g, flag)
 
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
@@ -100,16 +100,17 @@ module init_fluid_module
 
       IMPLICIT NONE
 
-      integer, intent(in) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) ::  u_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(inout) ::  v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) ::  w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       integer, intent(in) ::  flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
@@ -144,6 +145,10 @@ module init_fluid_module
             jend   = min(shi(2), ic_j_n(icv))
             kend   = min(shi(3), ic_k_t(icv))
 
+            print *,'IC W/E ', ic_i_w(icv), ic_i_e(icv)
+            print *,'IC S/N ', ic_j_s(icv), ic_j_n(icv)
+            print *,'IC B/T ', ic_k_b(icv), ic_k_t(icv)
+
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
@@ -161,8 +166,32 @@ module init_fluid_module
                   enddo
                enddo
             enddo
+
+            if (ic_i_w(icv) .eq. 0) then
+               do k = kstart, kend
+               do j = jstart, jend
+                  if (is_defined(ugx)) u_g(-1,j,k) = ugx
+               end do
+               end do
+            end if
+            if (ic_j_s(icv) .eq. 0) then
+               do k = kstart, kend
+               do i = istart, iend
+                  if (is_defined(vgx)) v_g(i,-1,k) = vgx
+               end do
+               end do
+            end if
+            if (ic_k_b(icv) .eq. 0) then
+               do j = jstart, jend
+               do i = istart, iend
+                  if (is_defined(wgx)) w_g(i,j,-1) = wgx
+               end do
+               end do
+            end if
+
          endif
       enddo
+
 
       return
    end subroutine set_ic

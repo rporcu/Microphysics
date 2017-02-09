@@ -55,7 +55,8 @@ contains
       real(c_real), intent(in   ) :: w_go&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: tau_w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
 ! Local variables

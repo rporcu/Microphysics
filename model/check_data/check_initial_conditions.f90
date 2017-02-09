@@ -203,7 +203,7 @@ MODULE CHECK_INITIAL_CONDITIONS_MODULE
 
       DO ICV = 1, DIMENSION_IC
 
-! Skip this check if the IC region is not specified.
+         ! Skip this check if the IC region is not specified.
          IF(.NOT.IC_DEFINED(ICV)) CYCLE
 
          IF (IS_DEFINED(IC_X_W(ICV)).AND. IS_DEFINED(IC_X_E(ICV))) THEN

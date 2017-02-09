@@ -55,7 +55,7 @@ contains
       real(c_real), intent(in   ) :: v_go&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: tau_v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 

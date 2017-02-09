@@ -279,7 +279,7 @@ module w_g_conv_dif
 
       USE run, only: discretize
 
-      USE xsi, only: calc_xsi
+      use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
@@ -307,8 +307,8 @@ module w_g_conv_dif
 
 ! Local variables
 !---------------------------------------------------------------------//
-! Indices
-      INTEGER :: I,J,K
+      integer :: xlo(3)
+      integer :: I,J,K
 ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
 ! Face mass flux
@@ -324,9 +324,14 @@ module w_g_conv_dif
       allocate(  v(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
       allocate( ww(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      allocate(xsi_e(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(xsi_n(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(xsi_t(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      ! We need xsi_e, xsi_n, xsi_t defined on the z-faces
+      xlo(1) = lo(1)
+      xlo(2) = lo(2)
+      xlo(3) = lo(3)-1
+
+      allocate( xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate( xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate( xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
 
       !  Calculate the components of velocity on the east, north,
       !  and top face of a w-momentum cell
@@ -340,9 +345,12 @@ module w_g_conv_dif
         ENDDO
       ENDDO
 
-      call calc_xsi (discretize(3), slo, shi, hi, &
-         w_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
-         dt, dx, dy, dz)
+      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       w_g, u,  xsi_e, dt, dx, dy, dz)
+      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       w_g, v , xsi_n, dt, dx, dy, dz)
+      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       w_g, ww, xsi_t, dt, dx, dy, dz)
 
       do k = slo(3),hi(3)
          do j = lo(2),hi(2)
@@ -358,15 +366,15 @@ module w_g_conv_dif
                   d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
 
                ! East face (i+1/2, j, k+1/2)
-               a_w_g(i,  j,k,e) = d_fe - flux_e*(xsi_e(i,j,k))
+               a_w_g(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
                a_w_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
 
                ! North face (i, j+1/2, k+1/2)
-               a_w_g(i,j,  k,n) = d_fn - flux_n*(xsi_n(i,j,k))
+               a_w_g(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
                a_w_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
                ! Top face (i, j, k+1)
-               a_w_g(i,j,k,  t) = d_ft - flux_t*(xsi_t(i,j,k))
+               a_w_g(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
                a_w_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
                ! West face (i-1/2, j, k+1/2)

@@ -25,7 +25,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine conv_dif_u_g(&
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
-      A_M, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
+      A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
       dt, dx, dy, dz)
 
 ! Modules
@@ -62,6 +62,8 @@ contains
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 !---------------------------------------------------------------------//
+
+      print *,'FLUX  INTO CONV_DIF',flux_gE(-1,0,0)
 
       if (discretize(3) == 0) then
          call store_a_u_g0(&
@@ -173,7 +175,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine store_a_u_g0(&
       slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
-      A_U_g, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
+      A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
 
       use matrix, only: e, w, n, s, t, b
 
@@ -186,7 +188,7 @@ contains
       integer     , intent(in   ) :: wlo(3),whi(3)
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      real(c_real), intent(inout) :: A_U_g&
+      real(c_real), intent(inout) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), intent(in   ) :: flux_ge&
@@ -227,36 +229,36 @@ contains
 
                ! East face (i+1, j, k)
                if (flux_e >= zero) then
-                  a_u_g(i,  j,k,e) = d_fe
-                  a_u_g(i+1,j,k,w) = d_fe + flux_e
+                  A_m(i,  j,k,e) = d_fe
+                  A_m(i+1,j,k,w) = d_fe + flux_e
                else
-                  a_u_g(i,  j,k,e) = d_fe - flux_e
-                  a_u_g(i+1,j,k,w) = d_fe
+                  A_m(i,  j,k,e) = d_fe - flux_e
+                  A_m(i+1,j,k,w) = d_fe
                endif
 
                ! North face (i+1/2, j+1/2, k)
                if (flux_n >= zero) then
-                  a_u_g(i,j,  k,n) = d_fn
-                  a_u_g(i,j+1,k,s) = d_fn + flux_n
+                  A_m(i,j,  k,n) = d_fn
+                  A_m(i,j+1,k,s) = d_fn + flux_n
                else
-                  a_u_g(i,j,  k,n) = d_fn - flux_n
-                  a_u_g(i,j+1,k,s) = d_fn
+                  A_m(i,j,  k,n) = d_fn - flux_n
+                  A_m(i,j+1,k,s) = d_fn
                endif
 
                ! Top face (i+1/2, j, k+1/2)
                if (flux_t >= zero) then
-                  a_u_g(i,j,k,  t) = d_ft
-                  a_u_g(i,j,k+1,b) = d_ft + flux_t
+                  A_m(i,j,k,  t) = d_ft
+                  A_m(i,j,k+1,b) = d_ft + flux_t
                else
-                  a_u_g(i,j,k,  t) = d_ft - flux_t
-                  a_u_g(i,j,k+1,b) = d_ft
+                  A_m(i,j,k,  t) = d_ft - flux_t
+                  A_m(i,j,k+1,b) = d_ft
                endif
 
                ! South face (i+1/2, j-1/2, k)
-               if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
+               if(j==lo(2)) A_m(i,j,k,s) = d_fs
 
                ! Bottom face (i+1/2, j, k-1/2)
-               if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
+               if(k==lo(3)) A_m(i,j,k,b) = d_fb
 
             enddo
          enddo
@@ -284,14 +286,14 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE STORE_A_U_G1(&
          slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
-         A_U_g, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
          dt, dx, dy, dz)
 
       use functions, only: avg
       use matrix   , only: e, w, n, s, t, b
       use run      , only: discretize
 
-      use xsi, only: calc_xsi
+      use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 
 ! Dummy arguments
 !---------------------------------------------------------------------//
@@ -303,7 +305,7 @@ contains
       real(c_real), intent(in   ) :: dx, dy, dz, dt
 
 
-      real(c_real), intent(inout) :: A_U_g&
+      real(c_real), intent(inout) :: A_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
 
       real(c_real), intent(in   ) :: u_g&
@@ -325,10 +327,8 @@ contains
 
 ! Local variables
 !---------------------------------------------------------------------//
+      integer :: xlo(3)
       integer :: i,j,k
-
-      ! indicator for shear
-      integer :: incr
 
       ! Diffusion parameter
       real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
@@ -339,13 +339,18 @@ contains
       real(c_real), allocatable :: u(:,:,:), v(:,:,:), ww(:,:,:)
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
 
-      allocate(  u(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)) )
-      allocate(  v(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
-      allocate( ww(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
+      allocate(  u(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate(  v(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      allocate( ww(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
-      allocate(xsi_e(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)) )
-      allocate(xsi_n(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)) )
-      allocate(xsi_t(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)) )
+      ! We need xsi_e, xsi_n, xsi_t defined on the x-edges
+      xlo(1) = lo(1)-1
+      xlo(2) = lo(2)
+      xlo(3) = lo(3)
+
+      allocate(xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate(xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      allocate(xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
 
       !  Calculate the components of velocity on the east, north,
       !  and top face of a u-momentum cell.
@@ -359,12 +364,12 @@ contains
         ENDDO
       ENDDO
 
-      ! shear indicator:
-      incr=1
-      call calc_xsi (discretize(3), slo, shi, hi, &
-         u_g, u, v, ww, xsi_e, xsi_n, xsi_t, &
-         dt, dx, dy, dz)
-
+      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       u_g, u , xsi_e, dt, dx, dy, dz)
+      call calc_xsi_n (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       u_g, v , xsi_n, dt, dx, dy, dz)
+      call calc_xsi_t (discretize(3), slo, shi, slo, shi, xlo,  hi, &
+                       u_g, ww, xsi_t, dt, dx, dy, dz)
 
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
@@ -382,22 +387,24 @@ contains
                   dx, dy, dz)
 
                ! East face (i+1, j, k)
-               a_u_g(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
-               a_u_g(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
+               A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
+               A_m(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
+               if (i.eq.-1 .and. j.eq.0 .and. k.eq.0) print *,'FLUX  ',flux_gE(i,j,k), flux_gE(i+1,j,k)
+               if (i.eq.-1 .and. j.eq.0 .and. k.eq.0) print *,'AWEST ',A_m(i+1,j,k,w), d_fe, flux_e, xsi_e(i,j,k)
 
                ! North face (i+1/2, j+1/2, k)
-               a_u_g(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
-               a_u_g(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
+               A_m(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
+               A_m(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
 
                ! Top face (i+1/2, j, k+1/2)
-               a_u_g(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
-               a_u_g(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
+               A_m(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
+               A_m(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
 
                ! South face (i+1/2, j-1/2, k)
-               if(j==lo(2)) a_u_g(i,j,k,s) = d_fs
+               if(j==lo(2)) A_m(i,j,k,s) = d_fs
 
                ! Bottom face (i+1/2, j, k-1/2)
-               if(k==lo(3)) a_u_g(i,j,k,b) = d_fb
+               if(k==lo(3)) A_m(i,j,k,b) = d_fb
 
             enddo
          enddo

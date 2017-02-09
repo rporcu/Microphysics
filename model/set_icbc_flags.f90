@@ -263,7 +263,6 @@ MODULE set_icbc_flags_module
 
       END SUBROUTINE SET_IC_FLAGS
 
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: SET_BC_FLAGS_WALL                                       !

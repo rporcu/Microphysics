@@ -50,16 +50,18 @@ contains
 
       ! TAU_V_g
       real(c_real), intent(  out) :: ltau_v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: trd_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
       real(c_real), intent(in   ) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
@@ -79,7 +81,7 @@ contains
       ayz = dy*dz
 
       do k = lo(3),hi(3)
-         do j = lo(2),hi(2)-1
+         do j = lo(2)-1,hi(2)
             do i = lo(1),hi(1)
 
 ! Surface forces at i, j+1/2, k

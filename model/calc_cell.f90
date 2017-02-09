@@ -19,9 +19,10 @@ CONTAINS
 
       implicit none
 
-! the x, y or z location
+      ! the x, y or z location
       real(c_real), intent(in) :: location
-! the cell lengths along the corresponding axis (dx, dy or dz)
+
+      ! the cell lengths along the corresponding axis (dx, dy or dz)
       real(c_real), intent(in) :: dx
 
       calc_cell = floor(location/dx + half) - 1

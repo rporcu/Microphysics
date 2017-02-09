@@ -146,6 +146,9 @@ extern "C"
 
   void calc_mflux(
          const int* slo, const int* shi,
+         const int* ulo, const int* uhi,
+         const int* vlo, const int* vhi,
+         const int* wlo, const int* whi,
          const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
