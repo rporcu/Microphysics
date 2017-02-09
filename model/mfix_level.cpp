@@ -903,7 +903,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
-    A_m[lev].reset(new MultiFab(x_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(x_edge_ba,7,     0,dmap[lev],Fab_allocate));
     b_m[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
 
     // Solve U-Momentum equation
@@ -942,7 +942,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
-    A_m[lev].reset(new MultiFab(y_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(y_edge_ba,7,     0,dmap[lev],Fab_allocate));
     b_m[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
@@ -980,7 +980,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
-    A_m[lev].reset(new MultiFab(z_edge_ba,7,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(z_edge_ba,7,     0,dmap[lev],Fab_allocate));
     b_m[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
@@ -1028,6 +1028,11 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
+
+    // Matrix and rhs vector
+    int nghost = p_g[lev]->nGrow();
+    A_m[lev].reset(new MultiFab(grids[lev],7,     0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)

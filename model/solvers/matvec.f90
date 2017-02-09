@@ -1,30 +1,29 @@
 module matvec_module
 
-contains
-
-
-
-   subroutine leq_scale(rhs, A_m, slo, shi, lo, hi)&
-      bind(C, name = "leq_scale")
-
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
-   use param1, only: small_number, one
 
    implicit none
-   integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+
+contains
+
+   subroutine leq_scale(rhs, rlo, rhi, A_m, alo, ahi) &
+      bind(C, name = "leq_scale")
+   use param1, only: small_number, one
+
+   integer(c_int), intent(in   ) :: rlo(3),rhi(3),alo(3),ahi(3)
 
    real(c_real)  , intent(inout) :: rhs&
-      (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
    real(c_real)  , intent(inout) :: A_m&
-      (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
    integer :: i,j,k
    real(c_real) :: aijmax, oam
 
-   do k = lo(3)-1, hi(3)+1
-      do i = lo(1)-1, hi(1)+1
-         do j = lo(2)-1, hi(2)+1
+   do k = alo(3),ahi(3)
+      do i = alo(2),ahi(2)
+         do j = alo(1),ahi(1)
             aijmax = maxval(abs(a_m(i,j,k,:)) )
             if(aijmax > small_number) then
                oam = one/aijmax
@@ -35,28 +34,25 @@ contains
       enddo
    enddo
 
-end subroutine leq_scale
+   end subroutine leq_scale
 
 
   ! returns Am*Var
-  subroutine leq_matvec(var, A_m, res, slo, shi)&
+  subroutine leq_matvec(var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi)&
     bind(C, name = "leq_matvec")
 
-    use bl_fort_module, only : c_real
-    use iso_c_binding , only: c_int
-
-    IMPLICIT NONE
-
-    integer(c_int), intent(in   ) :: slo(3),shi(3)
+    integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+    integer(c_int), intent(in   ) :: alo(3),ahi(3)
+    integer(c_int), intent(in   ) :: rlo(3),rhi(3)
 
     real(c_real)  , intent(in   ) :: var&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
     real(c_real)  , intent(in   ) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
     real(c_real)  , intent(  out) :: res&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -64,9 +60,9 @@ end subroutine leq_scale
     INTEGER :: I, J, K
 !-----------------------------------------------
 
-    do k = slo(3),shi(3)
-       do j = slo(2),shi(2)
-          do i = slo(1),shi(1)
+    do k = alo(3),ahi(3)
+       do j = alo(2),ahi(2)
+          do i = alo(1),ahi(1)
              res(i,j,k) = &
                           ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
                           + A_m(i,j,k,-2) * Var(i,j-1,k)   &
@@ -82,37 +78,28 @@ end subroutine leq_scale
   end subroutine leq_matvec
 
 ! returns (Rhs - Am*Var)
-  subroutine leq_residual(rhs, var, A_m, res, slo, shi) &
+  subroutine leq_residual(rhs, hlo, hhi, var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi) &
     bind(C, name = "leq_residual")
 
-    use bl_fort_module, only : c_real
-    use iso_c_binding , only: c_int
-
-    implicit none
-
-    integer(c_int), intent(in   ) :: slo(3),shi(3)
+    integer(c_int), intent(in   ) :: hlo(3),hhi(3),vlo(3),vhi(3),alo(3),ahi(3),rlo(3),rhi(3)
 
     real(c_real)  , intent(in   ) :: rhs&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (hlo(1):hhi(1),hlo(2):hhi(2),hlo(3):hhi(3))
 
     real(c_real)  , intent(in   ) :: var&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
     real(c_real)  , intent(in   ) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
     real(c_real)  , intent(  out) :: res&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Variable
-    INTEGER :: I, J, K
-!-----------------------------------------------
+         (rlo(1):rhi(1),rlo(2):rhi(2),rlo(3):rhi(3))
 
-    do k = slo(3)+1,shi(3)-1
-       do i = slo(1),shi(1)-1
-          do j = slo(2)+1,shi(2)-1
+    integer :: I, J, K
+
+    do k = alo(3),ahi(3)
+       do j = alo(2),ahi(2)
+          do i = alo(1),ahi(1)
              res(i,j,k) = rhs(i,j,k) -  &
                 ( A_m(i,j,k,-3) * Var(i,j,k-1)   &
                 + A_m(i,j,k,-2) * Var(i,j-1,k)   &

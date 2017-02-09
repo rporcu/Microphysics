@@ -322,16 +322,21 @@ extern "C"
                          int* max_it, int* ier,
                          int* slo, int* shi, const int* lo, const int* hi);
 
-  void leq_residual(const Real*, const Real*, const Real*, Real*,
-                    const int* slo, const int* shi);
+  void leq_residual(const Real*, const int*, const int*,
+                    const Real*, const int*, const int*,
+                    const Real*, const int*, const int*,
+                    const Real*, const int*, const int*);
 
-  void leq_matvec(const Real*, const Real*, Real*,
-                  const int* slo, const int* shi);
+  void leq_matvec(const Real*, const int*, const int*,
+                  const Real*, const int*, const int*,
+                  const Real*, const int*, const int*);
 
-  void leq_scale(const Real*,    const Real*,
-                 const int* slo, const int* shi, const int* lo, const int* hi);
+  void leq_scale(const Real*, const int*, const int*,
+                 const Real*, const int*, const int*);
 
-  void leq_msolve1(const int* slo, const int* shi, const Real*, const Real*, Real*);
+  void leq_msolve1(const Real*, const int*, const int*,
+                   const Real*, const int*, const int*,
+                   const Real*, const int*, const int*);
 
   void get_solver_params (int* eq_id, int* sweep, int* pc, int* maxiter, Real* tol);
 }

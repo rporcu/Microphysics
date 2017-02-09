@@ -76,11 +76,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-      const Box&  bx = mfi.validbox();
-      const Box& sbx = rhs[mfi].box();
+        const Box& rbx = rhs[mfi].box();
+        const Box& abx = A_m[mfi].box();
 
-      leq_scale(rhs[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect());
+        leq_scale(rhs[mfi].dataPtr(), rbx.loVect(), rbx.hiVect(),
+                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
     }
 
 
@@ -88,12 +88,16 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
     {
-      // const Box& bx = mfi.validbox();
-      const Box& sbx = rhs[mfi].box();
+      const Box& hbx = rhs[mfi].box();
+      const Box& rbx =   r[mfi].box();
+      const Box& abx = A_m[mfi].box();
+      const Box& sbx = sol[mfi].box();
 
       // Compute r = rhs - A_m*sol
-      leq_residual(rhs[mfi].dataPtr(), sol[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                   r[mfi].dataPtr(), sbx.loVect(),sbx.hiVect());
+      leq_residual(rhs[mfi].dataPtr(), hbx.loVect(), hbx.hiVect(),
+                   sol[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                     r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
     }
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
@@ -158,11 +162,13 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       {
         for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
         {
-          // const Box& bx = mfi.validbox();
-          const Box& sbx = rhs[mfi].box();
+          const Box& pbx =   p[mfi].box();
+          const Box& abx = A_m[mfi].box();
+          const Box& hbx =  ph[mfi].box();
 
-          leq_msolve1(sbx.loVect(),sbx.hiVect(),p[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                      ph[mfi].dataPtr());
+          leq_msolve1(  p[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+                      A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                       ph[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
         }
       }
       else // pc_type ==None
@@ -173,10 +179,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
-        // const Box& bx = mfi.validbox();
-        const Box& sbx = rhs[mfi].box();
-        leq_matvec(ph[mfi].dataPtr(), A_m[mfi].dataPtr(), v[mfi].dataPtr(),
-                   sbx.loVect(),sbx.hiVect());
+        const Box& pbx =  ph[mfi].box();
+        const Box& abx = A_m[mfi].box();
+        const Box& vbx =   v[mfi].box();
+        leq_matvec(ph[mfi].dataPtr(), pbx.loVect(), pbx.hiVect(),
+                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                    v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
       }
 
       Real rhTv = dotxy(rh,v,true);
@@ -206,13 +214,16 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else if ( precond_type == 1 ) // pc_type == diag
       {
-        for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+        for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
         {
-          // const Box& bx = mfi.validbox();
-          const Box& sbx = rhs[mfi].box();
+          const Box& sbx =   s[mfi].box();
+          const Box& abx = A_m[mfi].box();
+          const Box& hbx =  sh[mfi].box();
 
-          leq_msolve1(sbx.loVect(),sbx.hiVect(),s[mfi].dataPtr(), A_m[mfi].dataPtr(),
-                      sh[mfi].dataPtr());
+         leq_msolve1(  s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                     A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                      sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+
         }
       }
       else // pc_type ==None
@@ -220,13 +231,15 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(sh,s,0,0,1,nghost);
       }
 
-      for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+      for (MFIter mfi(A_m); mfi.isValid(); ++mfi)
       {
-        // const Box& bx = mfi.validbox();
-        const Box& sbx = rhs[mfi].box();
+        const Box& sbx =  sh[mfi].box();
+        const Box& abx = A_m[mfi].box();
+        const Box& tbx =   t[mfi].box();
 
-        leq_matvec(sh[mfi].dataPtr(), A_m[mfi].dataPtr(), t[mfi].dataPtr(),
-                   sbx.loVect(),sbx.hiVect());
+        leq_matvec(sh[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                  A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                    t[mfi].dataPtr(), tbx.loVect(), tbx.hiVect());
       }
 
       // This is a little funky.  I want to elide one of the reductions

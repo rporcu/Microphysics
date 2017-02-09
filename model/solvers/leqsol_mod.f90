@@ -100,32 +100,34 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-  SUBROUTINE LEQ_MSOLVE1(slo, shi, B_m, A_M, Var) &
+  subroutine leq_msolve1(b_m, blo, bhi, A_m, alo, ahi, var, vlo, vhi) &
      bind(C, name = "leq_msolve1")
    use param1, only: small_number
 
     IMPLICIT NONE
 
-    integer(c_int), intent(in) :: slo(3),shi(3)
+    integer(c_int), intent(in) :: blo(3),bhi(3),alo(3),ahi(3),vlo(3),vhi(3)
 
     ! Vector b_m
-    real(c_real), INTENT(IN) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+    real(c_real), INTENT(IN) :: b_m&
+         (blo(1):bhi(1),blo(2):bhi(2),blo(3):bhi(3))
 
     ! Septadiagonal matrix A_m
     real(c_real), INTENT(IN) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-    real(c_real), INTENT(OUT) :: Var&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+    real(c_real), INTENT(OUT) :: var&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
     integer :: i,j,k
 
-    do k = slo(3),shi(3)
-       do j = slo(2),shi(2)
-          do i = slo(1),shi(1)
-             if(abs(A_M(i,j,k,0))>small_number) &
+    do k = alo(3),ahi(3)
+       do j = alo(2),ahi(2)
+          do i = alo(1),ahi(1)
+
+             if(abs(A_m(i,j,k,0))>small_number) &
                 var(i,j,k) = b_m(i,j,k)/A_m(i,j,k,0)
+
           enddo
        enddo
     enddo
