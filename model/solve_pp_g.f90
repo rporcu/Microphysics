@@ -14,29 +14,24 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, &
+      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, b_mmax, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, &
       bc_jhi_type, bc_klo_type, bc_khi_type, &
-      dt, normg, resg, dx, dy, dz)&
+      dt, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
       use conv_pp_g_module, only: conv_pp_g
       use source_pp_module, only: source_pp_g
       use source_pp_module, only: source_pp_g_bc
-      use residual, only: calc_resid_pp
 
 ! Global data .........................................................//
 ! Fluid array bounds
-! Flag for existence of point sources
-      use ps, only: point_source
-! Global data arrays for residuals
-      use residual, only: resid_p, resid
-      use residual, only: num_resid, den_resid
-! parameters, 0.0 and 1.0
-      use param1, only: zero
 
-      IMPLICIT NONE
+      ! Flag for existence of point sources
+      use ps, only: point_source
+
+      implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
@@ -88,39 +83,13 @@ module solve_pp_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-! Normalization factor for gas pressure correction residual.
-! At start of the iterate loop normg will either be 1 (i.e. not
-! normalized) or a user defined value given by norm_g.  If norm_g
-! was set to zero then the normalization is based on dominate
-! term in the equation
-      real(c_real), intent(in) :: normg
-! gas pressure correction residual
-      real(c_real), intent(out) :: resg
-
-! Local parameters ...................................................//
-! Parameter to make tolerance for residual scaled with max value
-! compatible with residual scaled with first iteration residual.
-
-      ! Increase it to tighten convergence.
-      real(c_real), PARAMETER :: den_param = 1.0D1   !5.0D2
-
-      ! Normalization factor for gas pressure correction residual
-      real(c_real) :: NORMGloc
-
-     ! dominate term in correction equation max(am,bm)
-      real(c_real), allocatable :: B_MMAX(:,:,:)
-
-     integer(c_int) :: numpts
-!.....................................................................//
-
-      ALLOCATE( b_mmax(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      real(c_real), intent(  out) :: b_mmax&
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
       A_m(:,:,:,0)  = -1.0d0
       b_m(:,:,:)    =  0.0d0
-      b_mmax(:,:,:) =  0.0d0
 
 ! Forming the sparse matrix equation.
       call conv_pp_g (slo, shi, lo, hi, A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
@@ -133,34 +102,6 @@ module solve_pp_module
       bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
       if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, dx, dy, dz)
-
-      numpts = (lo(3)-hi(3)+1)*(lo(2)-hi(2)+1)*(lo(1)-hi(1)+1) 
-
-      normgloc = normg
-
-      ! Find average residual
-      if(abs(normg) < epsilon(zero)) then
-
-        ! Calculating the residual based on dominant term in correction equation
-        ! and use this to form normalization factor
-
-        call calc_resid_pp (slo, shi, lo, hi, &
-                            b_mmax, num_resid(resid_p))
-
-        resid(resid_p) = num_resid(resid_p)/(numpts)
-
-        normgloc = resid(resid_p)/den_param
-
-      endif
-
-      call calc_resid_pp (slo, shi, lo, hi, &
-                          b_m, num_resid(resid_p))
-
-      ! Normalizing the residual
-       resid(resid_p) = num_resid(resid_p)/(numpts*normgloc)
-
-      resg = resid(resid_p)
-      den_resid(resid_p) = numpts
 
       end subroutine solve_pp_g
 

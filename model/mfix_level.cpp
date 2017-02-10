@@ -1,5 +1,6 @@
 #include <ParmParse.H>
 
+#include <cmath>
 #include <mfix_F.H>
 #include <mfix_level.H>
 #include <BC_TYPES.H>
@@ -993,6 +994,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dz = geom[lev].CellSize(2);
 
     // Solve the pressure correction equation
+    MultiFab b_mmax(grids[lev],1,b_m[lev]->nGrow());
+    b_mmax.setVal(0.);
+
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
@@ -1011,13 +1015,54 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         (*ro_g[lev])[mfi].dataPtr(),
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
         bc_klo.dataPtr(), bc_khi.dataPtr(),
-        &dt, &lnormg, &resg, &dx, &dy, &dz);
+        &dt, &dx, &dy, &dz);
     }
     pp_g[lev]->setVal(0.);
+
+    // normg:  Normalization factor for gas pressure correction residual.
+    // At start of the iterate loop normg will either be 1 (i.e. not
+    // normalized) or a user defined value given by norm_g.  If norm_g
+    // was set to zero then the normalization is based on dominate
+    // term in the equation
+
+    // resg:  Gas pressure correction residual
+
+    Real normgloc = lnormg;
+
+    // Parameter to make tolerance for residual scaled with max value
+    // compatible with residual scaled with first iteration residual.
+    // Increase it to tighten convergence.
+    Real den_param = 10.;  // 5.0D2
+
+    Box domain(geom[lev].Domain());
+    Real numPts = domain.numPts();
+
+    // For correction equations the convergence for the corrections must go to zero,
+    // therefore the vector b must go to zero. this value cannot be normalized as the other 
+    // equations are since the denominator here will vanish.  thus the residual is normalized  
+    // based on its value in the first iteration 
+
+    if (std::abs(lnormg) < std::numeric_limits<double>::epsilon())
+    {
+       Real sum = b_mmax.norm1();
+
+       Real tmp_norm = (sum/numPts);
+       set_resid_p(tmp_norm);
+
+       normgloc = tmp_norm / den_param;
+    }
+
+    Real sum = b_m[lev]->norm1();
+
+    // Normalizing the residual
+    Real tmp_norm = (sum/numPts) / normgloc;
+    set_resid_p( tmp_norm);
+
+    resg = tmp_norm;
 
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));

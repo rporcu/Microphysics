@@ -4,6 +4,8 @@ extern "C"
 {
   void mfix_add_argument(char* fname, int* nlen);
 
+  void set_resid_p(Real& val);
+
   void mfix_get_data(int* imax, int* jmax, int* kmax,
                      int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
@@ -232,11 +234,11 @@ extern "C"
           Real* ro_g,
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
-          Real* A_m,      Real* b_m,
+          Real* A_m,      Real* b_m,      Real* b_mmax,
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,
-          Real* dt, Real* lnormg, Real* resg, Real* dx, Real* dy, Real* dz);
+          Real* dt,       Real* dx, Real* dy, Real* dz);
 
   void correct_0(
           const int* slo, const int* shi,

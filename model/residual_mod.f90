@@ -77,33 +77,15 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_resid_PP(slo,shi,lo,hi,b_m,num)
 
-      implicit none
+      subroutine set_resid_p(val) & 
+          bind(C, name="set_resid_p")
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      real(c_real)  , intent(in) :: val
 
-      !   Vector b_m
-      real(c_real) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      resid(resid_p) = val
 
-      ! Numerator 
-      real(c_real), intent(OUT) :: num
-
-      integer :: i, j, k
-
-      ! Initializing values
-      num = 0.d0
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-               num = num + abs(b_m(i,j,k))
-            enddo
-         enddo
-      enddo
-
-      end subroutine calc_resid_pp
+      end subroutine set_resid_p
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
