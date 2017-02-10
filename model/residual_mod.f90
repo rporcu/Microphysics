@@ -32,19 +32,14 @@
       CHARACTER, parameter, DIMENSION(NPREFIX) :: RESID_PREFIX = &
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
-! Average residual
+      ! Average residual
       real(c_real) :: RESID(NRESID)
-! Maximum residual
-      real(c_real) :: MAX_RESID(NRESID)
-! Residual Numerator
-      real(c_real) :: NUM_RESID(NRESID)
-! Residual Denominator
-      real(c_real) :: DEN_RESID(NRESID)
 
-! (i,j,k) location of maximum residual
-      integer :: i_resid(nresid)
-      integer :: j_resid(nresid)
-      integer :: k_resid(nresid)
+      ! Residual Numerator
+      real(c_real) :: NUM_RESID(NRESID)
+
+      ! Residual Denominator
+      real(c_real) :: DEN_RESID(NRESID)
 
 ! sum of residuals every 5 iterations
       real(c_real) :: SUM5_RESID
@@ -83,8 +78,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         B_M, NORM, NUM, DEN, RESID, MAX_RESID, &
-         i_resid, j_resid, k_resid)
+         B_M, NORM, NUM, DEN, RESID)
 
       use param1  , only: large_number, zero, one
 
@@ -105,11 +99,6 @@
       ! Average value of Residual
       real(c_real), intent(OUT) :: RESID
 
-      ! Maximum value of Residual
-      real(c_real), intent(OUT) :: MAX_RESID
-
-      ! (i,j,k) of Maximum value of Residual
-      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -124,7 +113,6 @@
 ! initializing values
       num = zero
       den = zero
-      max_resid = -one
       ncells = 0
       den1 = one
 
@@ -132,16 +120,7 @@
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
 
-! evaluating the residual at cell (i,j,k):
                num1 = abs(b_m(i,j,k))
-               if (num1 > max_resid) then
-                  max_resid = num1
-                  i_resid = i
-                  j_resid = j
-                  k_resid = k
-               endif
-
-! adding to terms that are accumulated
                ncells = ncells + 1
                num = num + num1
                den = den + den1
@@ -153,19 +132,11 @@
 ! Normalizing the residual
       if (abs(den*norm) > epsilon(den*norm)) then
          resid = num/(den*norm)
-         max_resid = ncells*max_resid/(den*norm)
       elseif (abs(num) < epsilon(num)) then
          resid = zero
-         max_resid = zero
-         i_resid = 0
-         j_resid = 0
-         k_resid = 0
       else
          resid = large_number
-         max_resid = large_number
       endif
-
-      return
 
       end subroutine calc_resid_pp
 
@@ -182,12 +153,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
          vel, vels1, vels2, A_M, B_M, NUM, DEN, &
-         RESID, MAX_RESID, i_resid, j_resid, k_resid, axis)
+         RESID, axis)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: large_number, small_number, zero, one
+      use param1  , only: large_number, small_number, zero
       use matrix  , only: e, w, s, n, t, b
 
       IMPLICIT NONE
@@ -217,12 +188,6 @@
 
       ! Average value of Residual
       real(c_real), intent(OUT) :: RESID
-
-      ! Maximum value of Residual
-      real(c_real), intent(OUT) :: MAX_RESID
-
-      ! (i,j,k) of Maximum value of Residual
-      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
 
       character, intent(in) :: axis
 
@@ -265,7 +230,6 @@
 ! initializing
       num = zero
       den = zero
-      max_resid = -one
       ncells = 0
 
       do k = llo(3),lhi(3)
@@ -306,42 +270,14 @@
          enddo
       enddo
 
-
-      i_resid = 1
-      j_resid = 1
-      k_resid = 1
-
-      max_resid = resid_ijk( i_resid, j_resid, k_resid)
-
-      do k = llo(3),lhi(3)
-         do j = llo(2),lhi(2)
-            do i = llo(1),lhi(1)
-               if (resid_ijk( i,j,k ) > max_resid) then
-                  i_resid = i
-                  j_resid = j
-                  k_resid = k
-                  max_resid = resid_ijk(i,j,k)
-               endif
-            enddo
-         enddo
-      enddo
-
       ! Normalizing the residual
       if (den > zero) then
          resid = num/den
-         max_resid = ncells * max_resid / den
       elseif (abs(num) < epsilon(num)) then
          resid = zero
-         max_resid = zero
-         i_resid = 0
-         j_resid = 0
-         k_resid = 0
       else
          resid = large_number
-         max_resid = large_number
       endif
-
-      return
 
    end subroutine calc_resid_vel
 end module residual

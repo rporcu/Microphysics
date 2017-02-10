@@ -31,9 +31,8 @@ module solve_pp_module
 ! Flag for existence of point sources
       use ps, only: point_source
 ! Global data arrays for residuals
-      use residual, only: resid_p, resid, max_resid
+      use residual, only: resid_p, resid
       use residual, only: num_resid, den_resid
-      use residual, only: i_resid, j_resid, k_resid
 ! parameters, 0.0 and 1.0
       use param1, only: zero, one
 
@@ -137,21 +136,16 @@ module solve_pp_module
 ! and use this to form normalization factor
         call calc_resid_pp (slo, shi, lo, hi, &
          b_mmax, one, num_resid(resid_p), &
-         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
+         den_resid(resid_p), resid(resid_p))
          normgloc = resid(resid_p)/den
       endif
 
       call calc_resid_pp (slo, shi, lo, hi, &
          b_m, normgloc, num_resid(resid_p),  &
-         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
+         den_resid(resid_p), resid(resid_p))
       resg = resid(resid_p)
 
-
-      RETURN
       END SUBROUTINE SOLVE_PP_G
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
