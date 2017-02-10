@@ -5,20 +5,20 @@
 
       Use param, only: DIM_n
 
-      integer, parameter :: MAX_RESID_INDEX = 8
+      integer, parameter :: MAX_resid_INDEX = 8
 !
-      integer, parameter :: NRESID = 8 + DIM_N
+      integer, parameter :: Nresid = 8 + DIM_N
 
-      integer, parameter :: RESID_p  =  1 ! Pressure
-      integer, parameter :: RESID_ro =  2 ! Density, volume fraction
-      integer, parameter :: RESID_u  =  3 ! U-velocity
-      integer, parameter :: RESID_v  =  4 ! V-velocity
-      integer, parameter :: RESID_w  =  5 ! W-velocity
-      integer, parameter :: RESID_t  =  6 ! Temperature
-      integer, parameter :: RESID_th =  7 ! Granular temperature
-      integer, parameter :: RESID_sc =  8 ! User-defined scalar
-      integer, parameter :: RESID_ke =  9 ! K-epsilon equations
-      integer, parameter :: RESID_x  = 10 ! Mass fraction
+      integer, parameter :: resid_p  =  1 ! Pressure
+      integer, parameter :: resid_ro =  2 ! Density, volume fraction
+      integer, parameter :: resid_u  =  3 ! U-velocity
+      integer, parameter :: resid_v  =  4 ! V-velocity
+      integer, parameter :: resid_w  =  5 ! W-velocity
+      integer, parameter :: resid_t  =  6 ! Temperature
+      integer, parameter :: resid_th =  7 ! Granular temperature
+      integer, parameter :: resid_sc =  8 ! User-defined scalar
+      integer, parameter :: resid_ke =  9 ! K-epsilon equations
+      integer, parameter :: resid_x  = 10 ! Mass fraction
 
 ! Group residuals by equation
       integer, parameter :: HYDRO_GRP   = 1     !hydrodynamics
@@ -29,31 +29,31 @@
 
 ! Prefix of Residuals string
       integer, parameter :: NPREFIX  = 10
-      CHARACTER, parameter, DIMENSION(NPREFIX) :: RESID_PREFIX = &
+      CHARACTER, parameter, DIMENSION(NPREFIX) :: resid_PREFIX = &
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
       ! Average residual
-      real(c_real) :: RESID(NRESID)
+      real(c_real) :: resid(Nresid)
 
       ! Residual Numerator
-      real(c_real) :: NUM_RESID(NRESID)
+      real(c_real) :: num_resid(Nresid)
 
       ! Residual Denominator
-      real(c_real) :: DEN_RESID(NRESID)
+      real(c_real) :: den_resid(Nresid)
 
 ! sum of residuals every 5 iterations
-      real(c_real) :: SUM5_RESID
+      real(c_real) :: SUM5_resid
 
 ! Residual sum within a group of equations
-      LOGICAL          :: GROUP_RESID
-      real(c_real) :: RESID_GRP(6)
+      LOGICAL          :: GROUP_resid
+      real(c_real) :: resid_GRP(6)
 
 ! Residuals to be printed out
-      CHARACTER(LEN=4) :: RESID_STRING(MAX_RESID_INDEX)
-      CHARACTER(LEN=8) :: RESID_GRP_STRING(6)
+      CHARACTER(LEN=4) :: resid_STRING(MAX_resid_INDEX)
+      CHARACTER(LEN=8) :: resid_GRP_STRING(6)
 
 ! Indices of residuals to be printed out
-      integer :: RESID_INDEX(MAX_RESID_INDEX, 2)
+      integer :: resid_INDEX(MAX_resid_INDEX, 2)
 
 ! For checking the over-all fluid mass balance
       real(c_real) :: accum_resid_g
@@ -62,7 +62,7 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CALC_RESID_pp                                           C
+!  Subroutine: CALC_resid_pp                                           C
 !  Purpose: Calculate residuals for pressure correction equation       C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 21-JUN-96  C
@@ -77,10 +77,7 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         B_M, NORM, NUM, DEN, RESID)
-
-      use param1  , only: large_number, zero, one
+      SUBROUTINE CALC_resid_PP(slo,shi,lo,hi,b_m,num)
 
       implicit none
 
@@ -90,60 +87,28 @@
       real(c_real) :: B_m&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      ! Normalization factor
-      real(c_real), intent(IN) :: NORM
+      ! Numerator 
+      real(c_real), intent(OUT) :: num
 
-      ! Numerator and denominator
-      real(c_real), intent(OUT) :: NUM, DEN
+      integer :: i, j, k
 
-      ! Average value of Residual
-      real(c_real), intent(OUT) :: RESID
-
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: i, j, k
-! Number of fluid cells
-      INTEGER :: NCELLS
-! Numerators and denominators
-      real(c_real) :: NUM1, DEN1
-!-----------------------------------------------
-
-! initializing values
-      num = zero
-      den = zero
-      ncells = 0
-      den1 = one
+      ! Initializing values
+      num = 0.d0
 
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
-
-               num1 = abs(b_m(i,j,k))
-               ncells = ncells + 1
-               num = num + num1
-               den = den + den1
-
+               num = num + abs(b_m(i,j,k))
             enddo
          enddo
       enddo
-
-! Normalizing the residual
-      if (abs(den*norm) > epsilon(den*norm)) then
-         resid = num/(den*norm)
-      elseif (abs(num) < epsilon(num)) then
-         resid = zero
-      else
-         resid = large_number
-      endif
 
       end subroutine calc_resid_pp
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CALC_RESID_VEL                                          C
+!  Subroutine: CALC_resid_VEL                                          C
 !  Purpose: Calculate residuals for momentum equations                 C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 21-MAY-96  C
@@ -151,9 +116,9 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_RESID_VEL(slo, shi, lo, hi, &
-         vel, vels1, vels2, A_M, B_M, NUM, DEN, &
-         RESID, axis)
+      SUBROUTINE CALC_resid_VEL(slo, shi, lo, hi, &
+         vel, vels1, vels2, A_M, B_M, num, den, &
+         resid, axis)
 
 !-----------------------------------------------
 ! Modules
@@ -184,10 +149,10 @@
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       ! Numerator and denominator
-      real(c_real), intent(OUT) :: NUM, DEN
+      real(c_real), intent(OUT) :: num, den
 
       ! Average value of Residual
-      real(c_real), intent(OUT) :: RESID
+      real(c_real), intent(OUT) :: resid
 
       character, intent(in) :: axis
 
@@ -201,7 +166,7 @@
       INTEGER :: i, j, k
 
       ! Numerators and denominators
-      real(c_real) :: NUM1, DEN1
+      real(c_real) :: num1, den1
 
       ! Number of fluid cells
       INTEGER :: NCELLS

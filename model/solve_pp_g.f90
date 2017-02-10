@@ -34,7 +34,7 @@ module solve_pp_module
       use residual, only: resid_p, resid
       use residual, only: num_resid, den_resid
 ! parameters, 0.0 and 1.0
-      use param1, only: zero, one
+      use param1, only: zero
 
       IMPLICIT NONE
 
@@ -101,15 +101,20 @@ module solve_pp_module
 ! Local parameters ...................................................//
 ! Parameter to make tolerance for residual scaled with max value
 ! compatible with residual scaled with first iteration residual.
-! Increase it to tighten convergence.
-      real(c_real), PARAMETER :: DEN = 1.0D1   !5.0D2
-! Normalization factor for gas pressure correction residual
+
+      ! Increase it to tighten convergence.
+      real(c_real), PARAMETER :: den_param = 1.0D1   !5.0D2
+
+      ! Normalization factor for gas pressure correction residual
       real(c_real) :: NORMGloc
-! dominate term in correction equation max(am,bm)
+
+     ! dominate term in correction equation max(am,bm)
       real(c_real), allocatable :: B_MMAX(:,:,:)
+
+     integer(c_int) :: numpts
 !.....................................................................//
 
-      ALLOCATE( B_MMAX(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
+      ALLOCATE( b_mmax(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
@@ -129,23 +134,35 @@ module solve_pp_module
 
       if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, dx, dy, dz)
 
-! Find average residual, maximum residual and location
+      numpts = (lo(3)-hi(3)+1)*(lo(2)-hi(2)+1)*(lo(1)-hi(1)+1) 
+
       normgloc = normg
+
+      ! Find average residual
       if(abs(normg) < epsilon(zero)) then
-! calculating the residual based on dominate term in correction equation
-! and use this to form normalization factor
+
+        ! Calculating the residual based on dominant term in correction equation
+        ! and use this to form normalization factor
+
         call calc_resid_pp (slo, shi, lo, hi, &
-         b_mmax, one, num_resid(resid_p), &
-         den_resid(resid_p), resid(resid_p))
-         normgloc = resid(resid_p)/den
+                            b_mmax, num_resid(resid_p))
+
+        resid(resid_p) = num_resid(resid_p)/(numpts)
+
+        normgloc = resid(resid_p)/den_param
+
       endif
 
       call calc_resid_pp (slo, shi, lo, hi, &
-         b_m, normgloc, num_resid(resid_p),  &
-         den_resid(resid_p), resid(resid_p))
-      resg = resid(resid_p)
+                          b_m, num_resid(resid_p))
 
-      END SUBROUTINE SOLVE_PP_G
+      ! Normalizing the residual
+       resid(resid_p) = num_resid(resid_p)/(numpts*normgloc)
+
+      resg = resid(resid_p)
+      den_resid(resid_p) = numpts
+
+      end subroutine solve_pp_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
