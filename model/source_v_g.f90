@@ -17,7 +17,7 @@ contains
 !  The drag terms are excluded from the source at this stage.          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_v_g(slo, shi, vlo, vhi, lo, hi, &
+   subroutine source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, &
       A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
       v_go, tau_v_g, dx, dy, dz)
 
@@ -33,15 +33,15 @@ contains
 
       use scales, only: p_scale
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),alo(3),ahi(3),lo(3),hi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! vector b_m
       real(c_real), intent(inout) :: b_m&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       real(c_real), intent(in   ) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -131,7 +131,7 @@ contains
 !     The drag terms are excluded from the source at this stage        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine source_v_g_bc(slo, shi, vlo, vhi, A_m, b_m, &
+      subroutine source_v_g_bc(slo, shi, alo, ahi, A_m, b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dx, dz)
 
@@ -142,17 +142,17 @@ contains
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
       use geometry, only: domlo, domhi
 
-      use matrix, only: e, w, n, t, b
+      use matrix, only: e, w, n, s, t, b
       use param1, only: is_defined
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
       real(c_real), intent(in   ) :: dx, dz
 
       real(c_real), intent(INOUT) :: A_m&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       real(c_real), intent(INOUT) :: b_m&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -190,9 +190,9 @@ contains
 ! --- EAST FLUID ---------------------------------------------------------->
 
       if (nlft .gt. 0) then
-         i = domlo(1)
-         do k=slo(3),shi(3)
-            do j=slo(2),shi(2)
+         i = alo(1)
+         do k=alo(3),ahi(3)
+            do j=alo(2),ahi(2)
                bcv = bc_ilo_type(j,k,2)
 
                if(bc_ilo_type(j,k,1) == NSW_) then
@@ -216,9 +216,6 @@ contains
                   A_m(i,j,k,w) = zero
                endif
 
-               b_m(i-1,j,k) = zero
-               A_m(i-1,j,k,:) = zero
-               A_m(i-1,j,k,0) = -one
             end do
          end do
       endif
@@ -226,9 +223,9 @@ contains
 ! --- WEST FLUID ---------------------------------------------------------->
 
       if (nrgt .gt. 0) then
-         i = domhi(1)
-         do k=slo(3),shi(3)
-            do j=slo(2),shi(2)
+         i = ahi(1)
+         do k=alo(3),ahi(3)
+            do j=alo(2),ahi(2)
                bcv = bc_ihi_type(j,k,2)
 
                if(bc_ihi_type(j,k,1) == NSW_) then
@@ -251,9 +248,7 @@ contains
                   endif
                   A_m(i,j,k,e) = zero
                endif
-               b_m(i+1,j,k) = zero
-               A_m(i+1,j,k,:) = zero
-               A_m(i+1,j,k,0) = -one
+
             end do
          end do
       endif
@@ -263,16 +258,24 @@ contains
 ! --- NORTH FLUID --------------------------------------------------------->
 
       if (nbot .gt. 0) then
-         j = domlo(2)
-         do k=slo(3),shi(3)
-            do i=slo(1),shi(1)
+         j = alo(2)
+         do k=alo(3),ahi(3)
+            do i=alo(1),ahi(1)
                bcv = bc_jlo_type(i,k,2)
-               if(bc_jlo_type(i,k,1) == MINF_ .or. &
-                  bc_jlo_type(i,k,1) == MOUT_) then
 
-                  A_m(i,j-1,k,:) =  zero
-                  A_m(i,j-1,k,0) = -one
-                  b_m(i,j-1,k) = -bc_v_g(bcv)
+               if (bc_jlo_type(i,k,1) == PINF_ .or. &
+                   bc_jlo_type(i,k,1) == POUT_) then
+
+                  A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
+                  A_m(i,j,k,s) = zero
+
+               else if (bc_jlo_type(i,k,1) == MINF_ .or. &
+                        bc_jlo_type(i,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k  ) = bc_v_g(bcv)
+
                endif
             end do
          end do
@@ -281,9 +284,9 @@ contains
 ! --- SOUTH FLUID --------------------------------------------------------->
 
       if (ntop .gt. 0) then
-         j = domhi(2)
-         do k=slo(3),shi(3)
-            do i=slo(1),shi(1)
+         j = ahi(2)
+         do k=alo(3),ahi(3)
+            do i=alo(1),ahi(1)
                bcv = bc_jhi_type(i,k,2)
 
                if(bc_jhi_type(i,k,1) == PINF_ .or. &
@@ -298,9 +301,6 @@ contains
                   b_m(i,j,k) = -bc_v_g(bcv)
 
                endif
-               b_m(i,j+1,k) = zero
-               A_m(i,j+1,k,:) = zero
-               A_m(i,j+1,k,0) = -one
 
             end do
          end do
@@ -310,9 +310,9 @@ contains
 ! --- TOP FLUID ----------------------------------------------------------->
 
       if (ndwn .gt. 0) then
-         k = domlo(3)
-         do j=slo(2),shi(2)
-            do i=slo(1),shi(1)
+         k = alo(3)
+         do j=alo(2),ahi(2)
+            do i=alo(1),ahi(1)
                bcv = bc_klo_type(i,j,2)
                if(bc_klo_type(i,j,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
@@ -334,9 +334,7 @@ contains
                   endif
                   A_m(i,j,k,b) = zero
                endif
-               b_m(i,j,k-1) = zero
-               A_m(i,j,k-1,:) = zero
-               A_m(i,j,k-1,0) = -one
+
             end do
          end do
       endif
@@ -345,10 +343,11 @@ contains
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
       if (nup .gt. 0) then
-         k = domhi(3)
-         do j=slo(2),shi(2)
-            do i=slo(1),shi(1)
+         k = ahi(3)
+         do j=alo(2),ahi(2)
+            do i=alo(1),ahi(1)
                bcv = bc_khi_type(i,j,2)
+
                if(bc_khi_type(i,j,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
@@ -370,9 +369,7 @@ contains
                   A_m(i,j,k,t) = zero
 
                endif
-               b_m(i,j,k+1) = zero
-               A_m(i,j,k+1,:) = zero
-               A_m(i,j,k+1,0) = -one
+
             end do
          end do
       endif
@@ -387,16 +384,16 @@ contains
 !  Purpose: Adds point sources to the gas phase V-Momentum equation.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine point_source_v_g(slo,shi,vlo,vhi,b_m,flag,dx,dy,dz)
+      subroutine point_source_v_g(slo,shi,alo,ahi,b_m,flag,dx,dy,dz)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
 
       ! Vector b_m
       real(c_real), intent(INOUT) :: b_m&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       integer, intent(in   ) :: flag &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)

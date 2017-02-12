@@ -175,6 +175,7 @@ extern "C"
           const int* ulo, const int* uhi,
           const int* vlo, const int* vhi,
           const int* wlo, const int* whi,
+          const int* alo, const int* ahi,
           const int*  lo, const int*  hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* u_go,     Real* p_g,      Real* ro_g,
@@ -193,6 +194,7 @@ extern "C"
           const int* ulo, const int* uhi,
           const int* vlo, const int* vhi,
           const int* wlo, const int* whi,
+          const int* alo, const int* ahi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* v_go,     Real* p_g,      Real* ro_g,
@@ -211,6 +213,7 @@ extern "C"
           const int* ulo,  const int* uhi,
           const int* vlo,  const int* vhi,
           const int* wlo,  const int* whi,
+          const int* alo, const int* ahi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* w_go,     Real* p_g,      Real* ro_g,
@@ -229,6 +232,7 @@ extern "C"
           const int* ulo,  const int* uhi,
           const int* vlo,  const int* vhi,
           const int* wlo,  const int* whi,
+          const int* alo,  const int* ahi,
           const int* lo,  const int* hi,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* p_g,      Real* ep_g,
@@ -236,11 +240,13 @@ extern "C"
           Real* ro_g,
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
-          Real* A_m,      Real* b_m,
+          Real* A_m,      Real* b_m,      Real* b_mmax,
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,
-          Real* dt, Real* lnormg, Real* resg, Real* dx, Real* dy, Real* dz);
+          Real* dt,       Real* dx, Real* dy, Real* dz);
+
+  void set_resid_p(Real& val);
 
   void correct_0(
           const int* slo, const int* shi,

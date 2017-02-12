@@ -24,7 +24,7 @@ module conv_pp_g_module
 !         boundaries are set to zero.                                  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine conv_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      subroutine conv_pp_g(ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
 
 ! Modules
@@ -33,14 +33,13 @@ module conv_pp_g_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Septadiagonal matrix A_m
       real(c_real), INTENT(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       real(c_real), intent(in   ) :: rop_ge&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -53,7 +52,6 @@ module conv_pp_g_module
 !-----------------------------------------------
 ! Indices
       integer ::  i,j,k
-      real(c_real) :: am
       real(c_real) :: axy, axz, ayz
 !-----------------------------------------------
 
@@ -61,34 +59,20 @@ module conv_pp_g_module
       axz = dx*dz
       ayz = dy*dz
 
-! Calculate convection fluxes through each of the faces
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
+      ! Calculate convection fluxes through each of the faces
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
 
-! East face (i+1/2, j, k)
-               Am = rop_ge(i,j,k)*ayz
-               A_m(i,j,k,e)   = Am
-               A_m(i+1,j,k,w) = Am
+               A_m(i,j,k,e) = rop_ge(i  ,j,k)*ayz
+               A_m(i,j,k,w) = rop_ge(i-1,j,k)*ayz
 
-! North face (i, j+1/2, k)
-               Am = rop_gn(i,j,k)*axz
-               A_m(i,j,k,n)   = Am
-               A_m(i,j+1,k,s) = Am
+               A_m(i,j,k,n) = rop_gn(i,j  ,k)*axz
+               A_m(i,j,k,s) = rop_gn(i,j-1,k)*axz
 
-! Top face (i, j, k+1/2)
-               Am = rop_gt(i,j,k)*axy
-               A_m(i,j,k,t)   = Am
-               A_m(i,j,k+1,b) = Am
+               A_m(i,j,k,t) = rop_gt(i,j,k  )*axy
+               A_m(i,j,k,b) = rop_gt(i,j,k-1)*axy
 
-! West face (i-1/2, j, k)
-               if(i==lo(1)) A_m(i,j,k,w) = rop_ge(i-1,j,k)*ayz
-
-! South face (i, j-1/2, k)
-               if(j==lo(2)) A_m(i,j,k,s) = rop_gn(i,j-1,k)*axz
-
-! Bottom face (i, j, k-1/2)
-               if(k==lo(3)) A_m(i,j,k,b) = rop_gt(i,j,k-1)*axy
             enddo
          enddo
       enddo

@@ -22,20 +22,22 @@ contains
    real(c_real) :: aijmax, oam
 
    do k = alo(3),ahi(3)
-      do i = alo(2),ahi(2)
-         do j = alo(1),ahi(1)
+      do j = alo(2),ahi(2)
+         do i = alo(1),ahi(1)
             aijmax = maxval(abs(a_m(i,j,k,:)) )
             if(aijmax > small_number) then
                oam = one/aijmax
+              if (k.eq.0) print *,'COMPS ',i,j,A_m(i,j,k,-2),A_m(i,j,k,-1), &
+                                               A_m(i,j,k,0),A_m(i,j,k,1),A_m(i,j,k,2)
                a_m(i,j,k,:) = a_m(i,j,k,:)*oam
                rhs(i,j,k)   = rhs(i,j,k)*oam
             endif
          enddo
+         if (k.eq.0) print *,' '
       enddo
    enddo
 
-   end subroutine leq_scale
-
+  end subroutine leq_scale
 
   ! returns Am*Var
   subroutine leq_matvec(var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi)&
@@ -81,7 +83,8 @@ contains
   subroutine leq_residual(rhs, hlo, hhi, var, vlo, vhi, A_m, alo, ahi, res, rlo, rhi) &
     bind(C, name = "leq_residual")
 
-    integer(c_int), intent(in   ) :: hlo(3),hhi(3),vlo(3),vhi(3),alo(3),ahi(3),rlo(3),rhi(3)
+    integer(c_int), intent(in   ) :: hlo(3),hhi(3),vlo(3),vhi(3)
+    integer(c_int), intent(in   ) :: alo(3),ahi(3),rlo(3),rhi(3)
 
     real(c_real)  , intent(in   ) :: rhs&
          (hlo(1):hhi(1),hlo(2):hhi(2),hlo(3):hhi(3))
@@ -108,6 +111,9 @@ contains
                 + A_m(i,j,k, 1) * Var(i+1,j,k)    &
                 + A_m(i,j,k, 2) * Var(i,j+1,k)    &
                 + A_m(i,j,k, 3) * Var(i,j,k+1)  )
+!            if (j.eq.2.and.k.eq.0) print *,"RES ",i,res(i,j,k), rhs(i,j,k)
+             if (j.eq.2.and.k.eq.0) print *,'COMPS AT J=2: ',i, A_m(i,j,k,-1)
+             if (i.eq.0.and.k.eq.0) print *,'COMPS AT I=0: ',j, A_m(i,j,k,-1)
           enddo
        enddo
     enddo

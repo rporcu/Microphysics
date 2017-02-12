@@ -33,20 +33,20 @@
 
       CONTAINS
 
-      SUBROUTINE CALC_XSI_E(DISCR, slo, shi, ulo, uhi, xlo, xhi, phi, U, xsi_e, dt, dx, dy, dz)
+      subroutine calc_xsi_e(DISCR, phi, philo, phihi, U, vello, velhi, xsi_e, xlo, xhi, dt, dx, dy, dz)
 
-      integer     , intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),xlo(3),xhi(3)
+      integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
 
       ! discretization method
-      INTEGER, intent(IN) :: DISCR
+      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(IN) :: phi&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
       real(c_real), intent(IN) :: U&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+         (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
       real(c_real), intent(out) :: xsi_e&
@@ -56,8 +56,8 @@
 
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: IC, ID, IU
-      INTEGER :: i, j, k
+      integer :: IC, ID, IU
+      integer :: i, j, k
 !
       real(c_real) :: phi_C
 
@@ -75,6 +75,11 @@
        odx = 1.d0 / dx
        ody = 1.d0 / dy
        odz = 1.d0 / dz
+
+       print *,"XLO ",xlo(:)
+       print *,"XHI ",xhi(:)
+       print *,"ULO ",vello(:)
+       print *,"UHI ",velhi(:)
 
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)
@@ -282,22 +287,26 @@
 
        END SELECT
 
-      END SUBROUTINE CALC_XSI_E
+      end subroutine calc_xsi_e
 
-      SUBROUTINE CALC_XSI_N(DISCR, slo, shi, vlo, vhi, xlo, xhi, phi, V, xsi_n, dt, dx, dy, dz)
+!---------------------------------------------------------------------//
+!---------------------------------------------------------------------//
+!---------------------------------------------------------------------//
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),xlo(3),xhi(3)
+      subroutine calc_xsi_n(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz)
+
+      integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
 
       ! discretization method
-      INTEGER, intent(IN) :: DISCR
+      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(IN) :: phi&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
       real(c_real), intent(IN) :: V&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+         (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
       real(c_real), intent(out) :: xsi_n&
@@ -305,10 +314,9 @@
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
-!---------------------------------------------------------------------//
-      INTEGER :: JC, JD, JU
-      INTEGER :: i, j, k
-!
+      integer :: JC, JD, JU
+      integer :: i, j, k
+ 
       real(c_real) :: phi_C
 
       ! down wind factor
@@ -536,22 +544,24 @@
 
        END SELECT
 
-      END SUBROUTINE CALC_XSI_N
+      end subroutine calc_xsi_n
 
-      SUBROUTINE CALC_XSI_T(DISCR, slo, shi, wlo, whi, xlo, xhi, phi, W, xsi_t, dt, dx, dy, dz)
+!---------------------------------------------------------------------//
 
-      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),xlo(3),xhi(3)
+      subroutine calc_xsi_t(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz)
+
+      integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
 
       ! discretization method
-      INTEGER, intent(IN) :: DISCR
+      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(IN) :: phi&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
       real(c_real), intent(IN) :: W&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+         (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
       real(c_real), intent(out) :: xsi_t&
@@ -561,8 +571,8 @@
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: KC, KD, KU
-      INTEGER :: i, j, k
+      integer :: KC, KD, KU
+      integer :: i, j, k
 !
       real(c_real) :: phi_C
 ! down wind factor
@@ -782,7 +792,7 @@
 
        END SELECT
 
-      END SUBROUTINE CALC_XSI_T
+      END subroutine calc_xsi_t 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

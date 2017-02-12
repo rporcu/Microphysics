@@ -15,8 +15,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_U(slo, shi, lo, hi, &
-                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      subroutine gas_drag_u(slo, shi, alo, ahi, lo, hi, &
+                            A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -33,20 +33,21 @@ MODULE GAS_DRAG_MODULE
       IMPLICIT NONE
 
       integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: alo(3),ahi(3)
 
       ! Septadiagonal matrix A_m
-      real(c_real), INTENT(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+      real(c_real), intent(inout) :: A_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! Vector b_m
-      real(c_real), INTENT(INOUT) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(inout) :: B_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      real(c_real), INTENT(IN   ) :: f_gds&
+      real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -54,7 +55,7 @@ MODULE GAS_DRAG_MODULE
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
       real(c_real) :: vol
       vol = dx*dy*dz
 !......................................................................!
@@ -71,10 +72,10 @@ MODULE GAS_DRAG_MODULE
                IF(flag(i,j,k,2)>= 2000 .and. &
                   flag(i,j,k,2)<=2011) then
 
-                  A_M(I,J,K,0) = A_M(I,J,K,0) - 0.5d0*VOL * &
+                  A_m(I,J,K,0) = A_m(I,J,K,0) - 0.5d0*VOL * &
                      (F_GDS(i,j,k) + F_GDS(i+1,j,k))
 
-                  B_M(I,J,K) = B_M(I,J,K) - 0.5d0* VOL *&
+                  b_m(I,J,K) = b_m(I,J,K) - 0.5d0* VOL *&
                      (DRAG_BM(i,j,k,1) + DRAG_BM(i+1,j,k,1))
 
                ENDIF
@@ -94,8 +95,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_V(slo, shi, lo, hi, &
-                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      subroutine gas_drag_v(slo, shi, alo, ahi, lo, hi, &
+                            A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
 
 ! Global Variables:
@@ -113,25 +114,26 @@ MODULE GAS_DRAG_MODULE
       IMPLICIT NONE
 
       integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: alo(3),ahi(3)
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-      real(c_real), INTENT(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(inout) :: A_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
+      real(c_real), intent(inout) :: B_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
       real(c_real) :: vol
       vol = dx*dy*dz
 !......................................................................!
@@ -144,9 +146,9 @@ MODULE GAS_DRAG_MODULE
             DO I = slo(1),shi(1)
                IF(flag(i,j,k,3) >= 2000 .and. &
                   flag(i,j,k,3) <= 2011) then
-                  A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
+                  A_m(I,J,K,0) = A_m(I,J,K,0) - VOL * 0.5d0*&
                      (F_GDS(I,J,K) + F_GDS(i,j+1,k))
-                  B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
+                  b_m(I,J,K) = b_m(I,J,K) - VOL * 0.5d0*&
                      (DRAG_BM(i,j,k,2)+DRAG_BM(i,j+1,k,2))
                ENDIF
             ENDDO
@@ -165,8 +167,8 @@ MODULE GAS_DRAG_MODULE
 !           source term.  Face centered.                               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE GAS_DRAG_W(slo, shi, lo, hi, &
-                            A_M, B_M, f_gds, drag_bm, flag, dx, dy, dz)
+      subroutine gas_drag_w(slo, shi, alo, ahi, lo, hi, &
+                            A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -183,23 +185,24 @@ MODULE GAS_DRAG_MODULE
       IMPLICIT NONE
 
       integer, intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer, intent(in   ) :: alo(3),ahi(3)
 
-      real(c_real), INTENT(INOUT) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
-      real(c_real), INTENT(INOUT) :: B_m&
+      real(c_real), intent(inout) :: A_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
+      real(c_real), intent(inout) :: B_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: f_gds&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN   ) :: drag_bm&
+      real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      INTEGER, INTENT(IN   ) :: flag&
+      integer, intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Grid cell indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
       real(c_real) :: vol
       vol = dx*dy*dz
 !......................................................................!
@@ -212,9 +215,9 @@ MODULE GAS_DRAG_MODULE
             DO I = slo(1),shi(1)
                IF(flag(i,j,k,4) >= 2000 .and. &
                   flag(i,j,k,4) <= 2011) then
-                  A_M(I,J,K,0) = A_M(I,J,K,0) - VOL * 0.5d0*&
+                  A_m(I,J,K,0) = A_m(I,J,K,0) - VOL * 0.5d0*&
                      (F_GDS(I,J,K) + F_GDS(i,j,k+1))
-                  B_M(I,J,K) = B_M(I,J,K) - VOL * 0.5d0*&
+                  b_m(I,J,K) = b_m(I,J,K) - VOL * 0.5d0*&
                      (DRAG_BM(i,j,k,3) + DRAG_BM(i,j,k+1,3))
                ENDIF
             ENDDO

@@ -214,22 +214,22 @@ module conv_rop_module
       xlo(2) = lo(2)
       xlo(3) = lo(3)
       allocate( xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_e (DISC, slo, shi, ulo, uhi, xlo,  hi, &
-                       rop, u_g, XSI_E, dt, dx, dy, dz)
+      call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, xsi_e, xlo,  hi, &
+                       dt, dx, dy, dz)
 
       xlo(1) = lo(1)
       xlo(2) = lo(2)-1
       xlo(3) = lo(3)
       allocate( xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_n (DISC, slo, shi, vlo, vhi, xlo,  hi, &
-                       rop, v_g, XSI_N, dt, dx, dy, dz)
+      call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, xsi_n, xlo,  hi, &
+                       dt, dx, dy, dz)
 
       xlo(1) = lo(1)
       xlo(2) = lo(2)
       xlo(3) = lo(3)-1
       allocate( xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_t (DISC, slo, shi, wlo, whi, xlo,  hi, &
-                       rop, w_g, XSI_T, dt, dx, dy, dz)
+      call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, xsi_t, xlo,  hi, &
+                       dt, dx, dy, dz)
 
       ! East face (i+1/2, j, k)
       do K = lo(3),hi(3)

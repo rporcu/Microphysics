@@ -15,7 +15,7 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+   subroutine source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       A_m, b_m, b_mmax, dt, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, d_e, d_n, d_t,&
       dx, dy, dz)
@@ -33,16 +33,17 @@ contains
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
       integer       , intent(in   ) ::  lo(3), hi(3)
 
       real(c_real), intent(in   ) :: dx, dy, dz, dt
 
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(inout) :: b_mmax&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -82,11 +83,14 @@ contains
       odt = 1.0d0/dt
       vol = dx*dy*dz
 
+      print *,"ALO ",alo(:)
+      print *,"HIO ",ahi(:)
+
 ! Calculate convection-diffusion fluxes through each of the faces
 
-        do k = lo(3),hi(3)
-           do j = lo(2),hi(2)
-             do i = lo(1),hi(1)
+        do k = alo(3),ahi(3)
+           do j = alo(2),ahi(2)
+             do i = alo(1),ahi(1)
 
                 bma = (rop_g(i,j,k)-rop_go(i,j,k))*vol*odt
                 bme = A_m(i,j,k,e)*u_g(i,j,k)
@@ -128,8 +132,9 @@ contains
 
      endif   ! end if (ro_g0 == undefined); i.e., compressible flow
 
-! Specify P' to zero for incompressible flows. Check set_bc0
-! for details on selection of IJK_P_g.
+      ! Specify P' to zero for incompressible flows. Check set_bc0
+      ! for details on selection of IJK_P_g.
+
       if (ijk_p_g(1) /= undefined_i) then
          b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
          A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
@@ -151,7 +156,7 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &
+   subroutine source_pp_g_bc(slo, shi, alo, ahi, A_m, bc_ilo_type, bc_ihi_type, &
       bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
       use ic, only: PINF_, POUT_
@@ -161,10 +166,10 @@ contains
 
       IMPLICIT NONE
 
-      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
 
       real(c_real), intent(inout) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -198,8 +203,8 @@ contains
 
       if (nlft .gt. 0) then
          i = domlo(1)
-         do k=slo(3),shi(3)
-            do j=slo(2),shi(2)
+         do k=alo(3),ahi(3)
+            do j=alo(2),ahi(2)
                if(bc_ilo_type(j,k,1) == PINF_ .or. &
                   bc_ilo_type(j,k,1) == POUT_) then
                   A_m(i,j,k,w) =  zero
@@ -212,8 +217,8 @@ contains
 
       if (nrgt .gt. 0) then
          i = domhi(1)
-         do k=slo(3),shi(3)
-            do j=slo(2),shi(2)
+         do k=alo(3),ahi(3)
+            do j=alo(2),ahi(2)
                if(bc_ihi_type(j,k,1) == PINF_ .or. &
                   bc_ihi_type(j,k,1) == POUT_) then
                   A_m(i,j,k,e) = zero
@@ -226,8 +231,8 @@ contains
 
       if (nbot .gt. 0) then
          j = domlo(2)
-         do k=slo(3),shi(3)
-            do i=slo(1),shi(1)
+         do k=alo(3),ahi(3)
+            do i=alo(1),ahi(1)
                if(bc_jlo_type(i,k,1) == PINF_ .or. &
                   bc_jlo_type(i,k,1) == POUT_) then
                   A_m(i,j,k,s) = zero
@@ -241,8 +246,8 @@ contains
 
       if (ntop .gt. 0) then
          j = domhi(2)
-         do k=slo(3),shi(3)
-            do i=slo(1),shi(1)
+         do k=alo(3),ahi(3)
+            do i=alo(1),ahi(1)
                if(bc_jhi_type(i,k,1) == PINF_ .or. &
                   bc_jhi_type(i,k,1) == POUT_) then
                   A_m(i,j,k,n) = zero
@@ -255,8 +260,8 @@ contains
 
       if (ndwn .gt. 0) then
          k = domlo(3)
-         do j=slo(2),shi(2)
-            do i=slo(1),shi(1)
+         do j=alo(2),ahi(2)
+            do i=alo(1),ahi(1)
                if(bc_klo_type(i,j,1) == PINF_ .or. &
                   bc_klo_type(i,j,1) == POUT_) then
                   A_m(i,j,k,b) = zero
@@ -269,8 +274,8 @@ contains
 
       if (nup .gt. 0) then
          k = domhi(3)
-         do j=slo(2),shi(2)
-            do i=slo(1),shi(1)
+         do j=alo(2),ahi(2)
+            do i=alo(1),ahi(1)
                if(bc_khi_type(i,j,1) == PINF_ .or. &
                   bc_khi_type(i,j,1) == POUT_) then
                   A_m(i,j,k,t) = zero

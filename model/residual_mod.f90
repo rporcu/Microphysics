@@ -1,24 +1,24 @@
-      MODULE residual
+      module residual
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
       Use param, only: DIM_n
 
-      integer, parameter :: MAX_RESID_INDEX = 8
+      integer, parameter :: MAX_resid_INDEX = 8
 !
-      integer, parameter :: NRESID = 8 + DIM_N
+      integer, parameter :: Nresid = 8 + DIM_N
 
-      integer, parameter :: RESID_p  =  1 ! Pressure
-      integer, parameter :: RESID_ro =  2 ! Density, volume fraction
-      integer, parameter :: RESID_u  =  3 ! U-velocity
-      integer, parameter :: RESID_v  =  4 ! V-velocity
-      integer, parameter :: RESID_w  =  5 ! W-velocity
-      integer, parameter :: RESID_t  =  6 ! Temperature
-      integer, parameter :: RESID_th =  7 ! Granular temperature
-      integer, parameter :: RESID_sc =  8 ! User-defined scalar
-      integer, parameter :: RESID_ke =  9 ! K-epsilon equations
-      integer, parameter :: RESID_x  = 10 ! Mass fraction
+      integer, parameter :: resid_p  =  1 ! Pressure
+      integer, parameter :: resid_ro =  2 ! Density, volume fraction
+      integer, parameter :: resid_u  =  3 ! U-velocity
+      integer, parameter :: resid_v  =  4 ! V-velocity
+      integer, parameter :: resid_w  =  5 ! W-velocity
+      integer, parameter :: resid_t  =  6 ! Temperature
+      integer, parameter :: resid_th =  7 ! Granular temperature
+      integer, parameter :: resid_sc =  8 ! User-defined scalar
+      integer, parameter :: resid_ke =  9 ! K-epsilon equations
+      integer, parameter :: resid_x  = 10 ! Mass fraction
 
 ! Group residuals by equation
       integer, parameter :: HYDRO_GRP   = 1     !hydrodynamics
@@ -29,151 +29,52 @@
 
 ! Prefix of Residuals string
       integer, parameter :: NPREFIX  = 10
-      CHARACTER, parameter, DIMENSION(NPREFIX) :: RESID_PREFIX = &
+      CHARACTER, parameter, DIMENSION(NPREFIX) :: resid_PREFIX = &
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
-! Average residual
-      real(c_real) :: RESID(NRESID)
-! Maximum residual
-      real(c_real) :: MAX_RESID(NRESID)
-! Residual Numerator
-      real(c_real) :: NUM_RESID(NRESID)
-! Residual Denominator
-      real(c_real) :: DEN_RESID(NRESID)
+      ! Average residual
+      real(c_real) :: resid(Nresid)
 
-! (i,j,k) location of maximum residual
-      integer :: i_resid(nresid)
-      integer :: j_resid(nresid)
-      integer :: k_resid(nresid)
+      ! Residual Numerator
+      real(c_real) :: num_resid(Nresid)
+
+      ! Residual Denominator
+      real(c_real) :: den_resid(Nresid)
 
 ! sum of residuals every 5 iterations
-      real(c_real) :: SUM5_RESID
+      real(c_real) :: SUM5_resid
 
 ! Residual sum within a group of equations
-      LOGICAL          :: GROUP_RESID
-      real(c_real) :: RESID_GRP(6)
+      LOGICAL          :: GROUP_resid
+      real(c_real) :: resid_GRP(6)
 
 ! Residuals to be printed out
-      CHARACTER(LEN=4) :: RESID_STRING(MAX_RESID_INDEX)
-      CHARACTER(LEN=8) :: RESID_GRP_STRING(6)
+      CHARACTER(LEN=4) :: resid_STRING(MAX_resid_INDEX)
+      CHARACTER(LEN=8) :: resid_GRP_STRING(6)
 
 ! Indices of residuals to be printed out
-      integer :: RESID_INDEX(MAX_RESID_INDEX, 2)
+      integer :: resid_INDEX(MAX_resid_INDEX, 2)
 
 ! For checking the over-all fluid mass balance
       real(c_real) :: accum_resid_g
 
    contains
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CALC_RESID_pp                                           C
-!  Purpose: Calculate residuals for pressure correction equation       C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 21-JUN-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Comments:                                                           C
-!  for correction equations the convergence for the corrections must   C
-!  go to zero, therefore the vector b must go to zero. this value      C
-!  cannot be normalized as the other equations are since the           C
-!  denominator here will vanish.  thus the residual is normalized      C
-!  based on its value in the first iteration                           C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CALC_RESID_PP(slo,shi,lo,hi,&
-         b_m, norm, tot, den, resid, max_resid, &
-         i_resid, j_resid, k_resid)
+!---------------------------------------------------------------------
 
-      use param1  , only: large_number, zero, one
+      subroutine set_resid_p(val) & 
+          bind(C, name="set_resid_p")
 
-      implicit none
+      real(c_real)  , intent(in) :: val
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      resid(resid_p) = val
 
-      !   Vector b_m
-      real(c_real) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      ! Normalization factor
-      real(c_real), intent(IN) :: NORM
-
-      ! Numerator and denominator
-      real(c_real), intent(OUT) :: NUM, DEN
-
-      ! Average value of Residual
-      real(c_real), intent(OUT) :: RESID
-
-      ! Maximum value of Residual
-      real(c_real), intent(OUT) :: MAX_RESID
-
-      ! (i,j,k) of Maximum value of Residual
-      integer, intent(out) :: i_resid, j_resid, k_resid
-
-      integer :: i, j, k
-
-      ! Number of fluid cells
-      integer :: ncells
-
-      ! Numerators and denominators
-      real(c_real) :: NUM1, DEN1
-
-      I initializing values
-      tot = zero
-      den = zero
-      max_resid = -one
-      ncells = 0
-      den1 = one
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-
-! evaluating the residual at cell (i,j,k):
-               num1 = abs(b_m(i,j,k))
-
-               if (num1 > max_resid) then
-                  max_resid = num1
-                  i_resid = i
-                  j_resid = j
-                  k_resid = k
-               endif
-
-               tot = tot + num1
-
-            enddo
-         enddo
-      enddo
-    
-      ncells = (ahi(3)-alo(3)+1)*(ahi(2)-alo(2)+1)*(ahi(1)-alo(1)+1)
-
-      ! Normalizing the residual
-      if (abs(norm) > epsilon(norm)) then
-
-         resid = tot/(den*norm)
-         max_resid = ncells*max_resid/(den*norm)
-
-      else if (abs(tot) < epsilon(tot)) then
-
-         resid = zero
-         max_resid = zero
-         i_resid = 0
-         j_resid = 0
-         k_resid = 0
-      else
-         resid = large_number
-         max_resid = large_number
-      endif
-
-      return
-
-      end subroutine calc_resid_pp
+      end subroutine set_resid_p
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CALC_RESID_VEL                                          C
+!  Subroutine: CALC_resid_VEL                                          C
 !  Purpose: Calculate residuals for momentum equations                 C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 21-MAY-96  C
@@ -181,19 +82,20 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine calc_resid_vel(slo, shi, lo, hi, &
-         vel, vels1, vels2, A_M, B_M, NUM, DEN, &
-         RESID, MAX_RESID, i_resid, j_resid, k_resid, axis)
+      subroutine calc_resid_vel(slo, shi, alo, ahi, lo, hi, &
+         vel, vels1, vels2, A_m, b_m, num, den, &
+         resid, axis)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: large_number, small_number, zero, one
+      use param1  , only: large_number, small_number, zero
       use matrix  , only: e, w, s, n, t, b
 
       IMPLICIT NONE
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&
@@ -207,23 +109,17 @@
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! Vector b_m
       real(c_real) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! Numerator and denominator
-      real(c_real), intent(OUT) :: NUM, DEN
+      real(c_real), intent(OUT) :: num, den
 
       ! Average value of Residual
-      real(c_real), intent(OUT) :: RESID
-
-      ! Maximum value of Residual
-      real(c_real), intent(OUT) :: MAX_RESID
-
-      ! (i,j,k) of Maximum value of Residual
-      INTEGER, intent(OUT) :: i_resid, j_resid, k_resid
+      real(c_real), intent(OUT) :: resid
 
       character, intent(in) :: axis
 
@@ -237,7 +133,7 @@
       INTEGER :: i, j, k
 
       ! Numerators and denominators
-      real(c_real) :: NUM1, DEN1
+      real(c_real) :: num1, den1
 
       ! Number of fluid cells
       INTEGER :: NCELLS
@@ -266,7 +162,6 @@
 ! initializing
       num = zero
       den = zero
-      max_resid = -one
       ncells = 0
 
       do k = llo(3),lhi(3)
@@ -307,41 +202,15 @@
          enddo
       enddo
 
-      i_resid = llo(1)
-      j_resid = llo(2)
-      k_resid = llo(3)
-
-      max_resid = resid_ijk( i_resid, j_resid, k_resid)
-
-      do k = llo(3),lhi(3)
-         do j = llo(2),lhi(2)
-            do i = llo(1),lhi(1)
-               if (resid_ijk( i,j,k ) > max_resid) then
-                  i_resid = i
-                  j_resid = j
-                  k_resid = k
-                  max_resid = resid_ijk(i,j,k)
-               endif
-            enddo
-         enddo
-      enddo
-
       ! Normalizing the residual
       if (den > zero) then
          resid = num/den
-         max_resid = ncells * max_resid / den
       elseif (abs(num) < epsilon(num)) then
          resid = zero
-         max_resid = zero
-         i_resid = 0
-         j_resid = 0
-         k_resid = 0
       else
          resid = large_number
-         max_resid = large_number
       endif
 
-      return
-
    end subroutine calc_resid_vel
+
 end module residual

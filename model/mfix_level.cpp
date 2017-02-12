@@ -898,13 +898,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    int nghost = u_g[lev]->nGrow();
-
     // Matrix and rhs vector
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
-    A_m[lev].reset(new MultiFab(x_edge_ba,7,     0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(x_edge_ba,7,0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(x_edge_ba,1,0,dmap[lev],Fab_allocate));
 
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
@@ -912,6 +910,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
+      Box abx((*A_m[lev])[mfi].box()); abx.shift(0,-1);
+      std::cout << "ABX " << abx << std::endl;
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -919,7 +919,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
       solve_u_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
+           bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -933,7 +934,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
-    exit(0);
 
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
@@ -943,14 +943,15 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
-    A_m[lev].reset(new MultiFab(y_edge_ba,7,     0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(y_edge_ba,7,0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(y_edge_ba,1,0,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
+      Box abx((*A_m[lev])[mfi].box()); abx.shift(1,-1);
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -958,7 +959,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
       solve_v_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
+           bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -981,14 +983,15 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
-    A_m[lev].reset(new MultiFab(z_edge_ba,7,     0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(z_edge_ba,7,0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(z_edge_ba,1,0,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
+      Box abx((*A_m[lev])[mfi].box()); abx.shift(2,-1);
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -996,7 +999,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
       solve_w_g_star(sbx.loVect(), sbx.hiVect(), 
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(),  bx.loVect(),  bx.hiVect(), 
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
+           bx.loVect(),  bx.hiVect(), 
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1031,15 +1035,19 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dz = geom[lev].CellSize(2);
 
     // Matrix and rhs vector
-    int nghost = p_g[lev]->nGrow();
-    A_m[lev].reset(new MultiFab(grids[lev],7,     0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate));
+    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate));
+
+    // Solve the pressure correction equation
+    MultiFab b_mmax(b_m[lev]->boxArray(),1,b_m[lev]->nGrow());
+    b_mmax.setVal(0.);
 
     // Solve the pressure correction equation
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
+      Box abx((*A_m[lev])[mfi].box());
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -1047,20 +1055,61 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
       solve_pp_g(sbx.loVect(), sbx.hiVect(), 
         ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-         bx.loVect(),  bx.hiVect(), 
+        abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(), 
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
         (*ro_g[lev])[mfi].dataPtr(),
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
-        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),
+        (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
         bc_ilo.dataPtr(), bc_ihi.dataPtr(),
         bc_jlo.dataPtr(), bc_jhi.dataPtr(),
         bc_klo.dataPtr(), bc_khi.dataPtr(),
-        &dt, &lnormg, &resg, &dx, &dy, &dz);
+        &dt, &dx, &dy, &dz);
     }
     pp_g[lev]->setVal(0.);
+
+    // normg:  Normalization factor for gas pressure correction residual.
+    // At start of the iterate loop normg will either be 1 (i.e. not
+    // normalized) or a user defined value given by norm_g.  If norm_g
+    // was set to zero then the normalization is based on dominate
+    // term in the equation
+
+    // resg:  Gas pressure correction residual
+
+    Real normgloc = lnormg;
+
+    // Parameter to make tolerance for residual scaled with max value
+    // compatible with residual scaled with first iteration residual.
+    // Increase it to tighten convergence.
+    Real den_param = 10.;  // 5.0D2
+
+    Box domain(geom[lev].Domain());
+    Real numPts = domain.numPts();
+
+    // For correction equations the convergence for the corrections must go to zero,
+    // therefore the vector b must go to zero. this value cannot be normalized as the other
+    // equations are since the denominator here will vanish.  thus the residual is normalized
+    // based on its value in the first iteration
+
+    if (std::abs(lnormg) < std::numeric_limits<double>::epsilon())
+    {
+       Real sum = b_mmax.norm1();
+
+       Real tmp_norm = (sum/numPts);
+       set_resid_p(tmp_norm);
+
+       normgloc = tmp_norm / den_param;
+    }
+
+    Real sum = b_m[lev]->norm1();
+
+    // Normalizing the residual
+    Real tmp_norm = (sum/numPts) / normgloc;
+    set_resid_p( tmp_norm);
+
+    resg = tmp_norm;
 
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));

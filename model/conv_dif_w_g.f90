@@ -2,7 +2,6 @@ module w_g_conv_dif
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
-   use geometry      , only: domlo, domhi
    use param1        , only: half, one, zero
 
    implicit none
@@ -13,7 +12,7 @@ module w_g_conv_dif
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CONV_DIF_W_g                                            C
+!  Subroutine: conv_dif_w_g                                            C
 !  Purpose: Determine convection diffusion terms for w_g momentum eqs  C
 !  The off-diagonal coefficients calculated here must be positive. The C
 !  center coefficient and the source vector are negative;              C
@@ -24,7 +23,7 @@ module w_g_conv_dif
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine conv_dif_w_g(&
-      slo, shi, lo, hi, ulo, uhi, vlo, vhi, wlo, whi, &
+      slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
       dt, dx, dy, dz)
 
@@ -35,122 +34,50 @@ module w_g_conv_dif
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: ulo(3),uhi(3)
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-      real(c_real), intent(IN   ) :: mu_g&
+      real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), INTENT(IN   ) :: u_g&
+      real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), INTENT(IN   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), INTENT(IN   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
       real(c_real), intent(in   ) :: flux_ge&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      real(c_real), intent(in   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: flux_gn&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+
+      real(c_real), intent(in   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: flux_gt&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 !---------------------------------------------------------------------//
 
-      IF (DISCRETIZE(5) == 0) THEN               ! 0 & 1 => FOUP
-         CALL STORE_A_W_G0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                            A_m, mu_g, flux_ge, flux_gn, flux_gt, &
-                            dx, dy, dz)
-      ELSE
-         CALL STORE_A_W_G1 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                            A_m, mu_g, u_g, v_g, w_g, &
-                            flux_ge, flux_gn, flux_gt, dt, dx, dy, dz)
-      ENDIF
+      if (discretize(5) == 0) then               ! 0 & 1 => FOUR
+         call store_a_w_g0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
+                            A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
+      else
+         call store_a_w_g1 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
+                            A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                            dt, dx, dy, dz)
+      end if
 
-      END SUBROUTINE CONV_DIF_W_G
+      end subroutine conv_dif_w_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Purpose: Calculate the components of diffusive flux through the     C
-!  faces of a w-momentum cell. Note the fluxes are calculated at       C
-!  all faces.                                                          C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_WCELL_GDIFF_TERMS(&
-         slo, shi, &
-         D_FE, D_FW, D_FN, D_FS, &
-         D_FT, D_FB, mu_g, I, J, K, &
-         dx, dy, dz)
-
-      use functions, only: avg_h
-
-      integer     , intent(in   ) :: slo(3),shi(3)
-
-      ! diffusion through faces of given w-momentum cell
-      real(c_real), intent(OUT) :: d_fe, d_fw
-      real(c_real), intent(OUT) :: d_fn, d_fs
-      real(c_real), intent(OUT) :: d_ft, d_fb
-
-      real(c_real), intent(IN   ) :: mu_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      INTEGER, intent(IN) :: i, j, k
-      real(c_real), intent(in   ) :: dx, dy, dz
-
-! Local variables
-!---------------------------------------------------------------------//
-      ! length terms
-      real(c_real) :: C_AE, C_AW, C_AN, C_AS, C_AT, C_AB
-
-      real(c_real) :: odx, ody, odz
-      real(c_real) :: axy, axz, ayz
-!---------------------------------------------------------------------//
-
-      odx = 1.d0 / dx
-      ody = 1.d0 / dy
-      odz = 1.d0 / dz
-
-      axy = dx*dy
-      axz = dx*dz
-      ayz = dy*dz
-
-      C_AE = ODX
-      C_AW = ODX
-      C_AN = ODY
-      C_AS = ODY
-      C_AT = ODZ
-      C_AB = ODZ
-
-! East face (i+1/2, j, k+1/2)
-      D_Fe = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k   )),&
-                   avg_h(mu_g(i,j,k+1),mu_g(i+1,j,k+1)))*C_AE*AYZ
-! West face (i-1/2, j, k+1/2)
-      D_Fw = avg_h(avg_h(mu_g(i-1,j,k  ),mu_g(i,j,k  )),&
-                   avg_h(mu_g(i-1,j,k+1),mu_g(i,j,k+1)))*C_AW*AYZ
-
-! North face (i, j+1/2, k+1/2)
-      D_Fn = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i,j+1,k)),&
-                   avg_h(mu_g(i,j,k+1),mu_g(i,j+1,k+1)))*C_AN*AXZ
-! South face (i, j-1/2, k+1/2)
-      D_Fs = avg_h(avg_h(mu_g(i,j-1,k  ),mu_g(i,j,k  )),&
-                   avg_h(mu_g(i,j-1,k+1),mu_g(i,j,k+1)))*C_AS*AXZ
-
-! Top face (i, j, k+1)
-      D_Ft = mu_g(i,j,k+1)*C_AT*AXY
-! Bottom face (i, j, k)
-      D_Fb = mu_g(i,j,k)*C_AB*AXY
-
-    END SUBROUTINE GET_WCELL_GDIFF_TERMS
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: STORE_A_W_g0                                            C
+!  Subroutine: store_a_w_g0
 !  Purpose: Determine convection diffusion terms for W_g momentum eqs. C
 !  The off-diagonal coefficients calculated here must be positive.     C
 !  The center coefficient and the source vector are negative. See      C
@@ -165,20 +92,25 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      subroutine store_a_w_g0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                               A_m, mu_g, flux_ge, flux_gn, flux_gt, &
                               dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
-      use matrix, only: e, w, n, s, t, b
+      use functions, only: avg_h
+      use matrix   , only: e, w, n, s, t, b
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3)
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -190,62 +122,86 @@ module w_g_conv_dif
       real(c_real), intent(in   ) :: flux_gt&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: dx, dy, dz
+!     Local variables
+!---------------------------------------------------------------------//
+      integer :: i, j, k
 
-      integer :: I, J, K
-! Face mass flux
+      ! Face mass flux
       real(c_real) :: flux_e, flux_n, flux_t
-! Diffusion parameter
-      real(c_real) :: D_fe, d_fw, d_fn, d_fs, d_ft, d_fb
+
+      ! Diffusion parameter
+      real(c_real) :: d_fe, d_fn, d_ft
+
+      real(c_real) :: c_ae,c_aw,c_an,c_as,c_at,c_ab
+ 
+      c_ae = dy*dz / dx
+      c_aw = dy*dz / dx
+      c_an = dx*dz / dy
+      c_as = dx*dz / dy
+      c_at = dx*dy / dz
+      c_ab = dx*dy / dz
 
 !---------------------------------------------------------------------//
 
-      do k = slo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1)-1,ahi(1)
+ 
+               ! Calculate convection-diffusion fluxes through each of the faces
+               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
+ 
+               d_fe = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k  )),&
+                            avg_h(mu_g(i,j,k+1),mu_g(i+1,j,k+1))) * c_ae
+ 
+               ! East face (i+1, j, k)
+               if (flux_e >= zero) then
+                  if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe
+                  if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_fe + flux_e
+               else
+                  if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe - flux_e
+                  if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_fe
+               endif
+ 
+            enddo
+         enddo
+      enddo
 
-! Calculate convection-diffusion fluxes through each of the faces
-               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i,j,k+1))
-               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i,j,k+1))
+      do k = alo(3),ahi(3)
+         do j = alo(2)-1,ahi(2)
+            do i = alo(1),ahi(1)
+ 
+               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
+ 
+               d_fn = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
+                            avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * c_an
+ 
+               if (flux_n >= zero) then
+                  if (j.ge.alo(2)) A_m(i,j,  k,n) = d_fn
+                  if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_fn + flux_n
+               else
+                  if (j.ge.alo(2)) A_m(i,j,  k,n) = d_fn - flux_n
+                  if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_fn
+               endif
+ 
+            enddo
+         enddo
+      enddo
+
+      do k = alo(3)-1,ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
+
                flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i,j,k+1))
 
-               CALL GET_WCELL_GDIFF_TERMS(&
-                  slo, shi, &
-                  d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
+               d_ft = mu_g(i,j,k+1) * c_at
 
-! East face (i+1/2, j, k+1/2)
-               if (flux_e >= zero) then
-                  A_m(i,  j,k,e) = d_fe
-                  A_m(i+1,j,k,w) = d_fe + flux_e
-               else
-                  A_m(i,  j,k,e) = d_fe - flux_e
-                  A_m(i+1,j,k,w) = d_fe
-               endif
-
-! North face (i, j+1/2, k+1/2)
-               if (flux_n >= zero) then
-                  A_m(i,j,  k,n) = d_fn
-                  A_m(i,j+1,k,s) = d_fn + flux_n
-               else
-                  A_m(i,j,  k,n) = d_fn - flux_n
-                  A_m(i,j+1,k,s) = d_fn
-               endif
-
-! Top face (i, j, k+1)
                if (flux_t >= zero) then
-                  A_m(i,j,k,  t) = d_ft
-                  A_m(i,j,k+1,b) = d_ft + flux_t
+                  if (k.ge.alo(3)) A_m(i,j,k,  t) = d_ft
+                  if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_ft + flux_t
                else
-                  A_m(i,j,k,  t) = d_ft - flux_t
-                  A_m(i,j,k+1,b) = d_ft
+                  if (k.ge.alo(3)) A_m(i,j,k,  t) = d_ft - flux_t
+                  if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_ft
                endif
-
-! West face (i-1/2, j, k+1/2)
-               if(i==lo(1)) A_m(i,j,k,w) = d_fw
-
-! South face (i, j-1/2, k+1/2)
-               if(j==lo(2)) A_m(i,j,k,s) = d_fs
 
             enddo
          enddo
@@ -255,7 +211,7 @@ module w_g_conv_dif
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: STORE_A_W_g1                                            C
+!  Subroutine: store_a_w_g1                                            C
 !  Purpose: Determine convection diffusion terms for W_g momentum eqs  C
 !  The off-diagonal coefficients calculated here must be positive.     C
 !  The center coefficient and the source vector are negative.          C
@@ -270,128 +226,201 @@ module w_g_conv_dif
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE STORE_A_W_G1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      subroutine store_a_w_g1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                               A_m, mu_g, u_g, v_g, w_g, &
                               flux_ge, flux_gn, flux_gt, &
                               dt, dx, dy, dz)
 
-      use functions, only: avg
+      use functions, only: avg, avg_h
       use matrix, only: e, w, n, s, t, b
 
       USE run, only: discretize
 
       use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
+      integer     , intent(in   ) :: vlo(3),vhi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3)
+      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_W_g
       real(c_real), intent(INOUT) :: A_m&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       real(c_real), intent(IN   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(IN   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(IN   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(IN   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
       real(c_real), intent(in   ) :: flux_ge&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+
+      real(c_real), intent(IN   ) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: flux_gn&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+
+      real(c_real), intent(IN   ) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: flux_gt&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
-
-      integer :: xlo(3)
-      integer :: I,J,K
-
+! Local variables
+!---------------------------------------------------------------------//
+      integer :: xlo(3),xhi(3)
+      integer :: vello(3),velhi(3)
+      integer :: i,j,k
+ 
       ! Diffusion parameter
-      real(c_real) :: d_fe, d_fw, d_fn, d_fs, d_ft, d_fb
-
+      real(c_real) :: d_fe, d_fn, d_ft
+ 
       ! Face mass flux
-      real(c_real) :: flux_e, flux_n
-      real(c_real) :: flux_t
-
-      ! x, y, z directional velocity
+      real(c_real) :: flux_e, flux_n, flux_t
+ 
       real(c_real), allocatable :: u(:,:,:), v(:,:,:), ww(:,:,:)
       real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
+ 
+      real(c_real) :: c_ae,c_aw,c_an,c_as,c_at,c_ab
+ 
+      allocate(  u(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
+      allocate(  v(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
+      allocate( ww(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
+ 
+      c_ae = dy*dz / dx
+      c_aw = dy*dz / dx
+      c_an = dx*dz / dy
+      c_as = dx*dz / dy
+      c_at = dx*dy / dz
+      c_ab = dx*dy / dz
+ 
+      vello(1) = slo(1)-2
+      vello(2) = slo(2)-2
+      vello(3) = slo(3)-2
+      velhi(1) = shi(1)+2
+      velhi(2) = shi(2)+2
+      velhi(3) = shi(3)+2
+ 
+      xhi(1) = ahi(1)
+      xhi(2) = ahi(2)
+      xhi(3) = ahi(3)
+
 !---------------------------------------------------------------------//
+ 
+       u(:,:,:) = 0.d0
+       v(:,:,:) = 0.d0
+      ww(:,:,:) = 0.d0
+ 
+      do k = wlo(3)+1,whi(3)-1
+        do j = wlo(2),whi(2)
+          do i = wlo(1),whi(1)
+             u(i,j,k) = avg(u_g(i,j,k), u_g(i,j,k+1))
+          end do
+        end do
+      end do
+ 
+      xlo(1) = alo(1)-1
+      xlo(2) = alo(2)
+      xlo(3) = alo(3)
+      allocate(xsi_e(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
+      call calc_xsi_e (discretize(5), u_g, ulo, uhi, u, vello, velhi, xsi_e, xlo, xhi, &
+                       dt, dx, dy, dz)
+ 
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1)-1,ahi(1)
+ 
+               flux_e = half * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
+ 
+               d_fe = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
+                            avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k))) * c_ae
 
-      allocate(  u(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate(  v(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-      allocate( ww(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-
-      ! We need xsi_e, xsi_n, xsi_t defined on the z-faces
-      xlo(1) = lo(1)
-      xlo(2) = lo(2)
-      xlo(3) = lo(3)-1
-
-      allocate( xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      allocate( xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      allocate( xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-
-      !  Calculate the components of velocity on the east, north,
-      !  and top face of a w-momentum cell
-      DO K = slo(3),hi(3)
-        DO J = slo(2),shi(2)
-          DO I = slo(1),shi(1)
-            u(I,J,K)  = avg(u_g(I,J,K),u_G(i,j,k+1))
-            v(I,J,K)  = avg(v_g(I,J,K),v_G(i,j,k+1))
-            ww(I,J,K) = avg(w_g(I,J,K),w_G(i,j,k+1))
-          ENDDO
-        ENDDO
-      ENDDO
-
-      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
-                       w_g, u,  xsi_e, dt, dx, dy, dz)
-      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
-                       w_g, v , xsi_n, dt, dx, dy, dz)
-      call calc_xsi_e (discretize(3), slo, shi, slo, shi, xlo,  hi, &
-                       w_g, ww, xsi_t, dt, dx, dy, dz)
-
-      do k = slo(3),hi(3)
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
-
-               flux_e = half * (flux_ge(i,j,k) + flux_ge(i,j,k+1))
-               flux_n = half * (flux_gn(i,j,k) + flux_gn(i,j,k+1))
-               flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j,k+1))
-
-               CALL GET_WCELL_GDIFF_TERMS(&
-                  slo, shi, &
-                  d_fe, d_fw, d_fn, d_fs, &
-                  d_ft, d_fb, mu_g, i, j, k, dx, dy, dz)
-
-               ! East face (i+1/2, j, k+1/2)
-               A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
-               A_m(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
-
-               ! North face (i, j+1/2, k+1/2)
-               A_m(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
-               A_m(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
-
-               ! Top face (i, j, k+1)
-               A_m(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
-               A_m(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
-
-               ! West face (i-1/2, j, k+1/2)
-               if(i==lo(1)) A_m(i,j,k,w) = d_fw
-
-               ! South face (i, j-1/2, k+1/2)
-               if(j==lo(2)) A_m(i,j,k,s) = d_fs
-
+               if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
+               if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_fe + flux_e*(one - xsi_e(i,j,k))
+ 
             enddo
          enddo
       enddo
+ 
+!---------------------------------------------------------------------//
+ 
+       u(:,:,:) = 0.d0
+       v(:,:,:) = 0.d0
+      ww(:,:,:) = 0.d0
+ 
+      do k = wlo(3)+1,whi(3)-1
+        do j = wlo(2),whi(2)
+          do i = wlo(1),whi(1)
+             v(i,j,k) = avg(v_g(i,j,k), v_g(i,j,k+1))
+          end do
+        end do
+      end do
+
+      xlo(1) = alo(1)
+      xlo(2) = alo(2)-1
+      xlo(3) = alo(3)
+      allocate(xsi_n(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
+      call calc_xsi_n (discretize(5), v_g, vlo, vhi, v, vello, velhi, xsi_n, xlo, xhi, &
+                       dt, dx, dy, dz)
+ 
+      do k = alo(3),ahi(3)
+         do j = alo(2)-1,ahi(2)
+            do i = alo(1),ahi(1)
+ 
+               flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i+1,j  ,k))
+ 
+               d_fn = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j+1,k)),&
+                            avg_h(mu_g(i+1,j,k),mu_g(i+1,j+1,k))) * c_an
+ 
+               if (j.ge.alo(2)) A_m(i,j,  k,n) = d_fn - flux_n*(      xsi_n(i,j,k))
+               if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_fn + flux_n*(one - xsi_n(i,j,k))
+ 
+            enddo
+         enddo
+       enddo
+ 
+!---------------------------------------------------------------------//
+ 
+       u(:,:,:) = 0.d0
+       v(:,:,:) = 0.d0
+      ww(:,:,:) = 0.d0
+ 
+      do k = wlo(3)+1,whi(3)-1
+        do j = wlo(2),whi(2)
+          do i = wlo(1),whi(1)
+             ww(i,j,k) = avg(w_g(i,j,k), w_g(i,j,k+1))
+          end do
+        end do
+      end do
+
+      xlo(1) = alo(1)
+      xlo(2) = alo(2)
+      xlo(3) = alo(3)-1
+      allocate( xsi_t(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
+      call calc_xsi_t (discretize(5), w_g, wlo, whi, ww, vello, velhi, xsi_t, xlo, xhi, &
+                       dt, dx, dy, dz)
+ 
+      do k = alo(3)-1,ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
+ 
+               flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j,k+1))
+ 
+               d_ft = mu_g(i,j,k+1) * c_at
+ 
+               if (k.ge.alo(3)) A_m(i,j,k,  t) = d_ft - flux_t*(      xsi_t(i,j,k))
+               if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_ft + flux_t*(one - xsi_t(i,j,k))
+ 
+            enddo
+         enddo
+       enddo
+
+!---------------------------------------------------------------------//
 
       deallocate( U, V, ww )
       deallocate( xsi_e, xsi_n, xsi_t)
 
    end subroutine store_a_w_g1
+
 end module w_g_conv_dif

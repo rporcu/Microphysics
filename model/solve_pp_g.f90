@@ -3,44 +3,39 @@ module solve_pp_module
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
+   implicit none
+
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOLVE_Pp_g                                              !
+!  Subroutine: solve_pp_g                                              !
 !  Purpose: Solve fluid pressure correction equation                   !
 !                                                                      !
 !  Author: M. Syamlal                                 Date: 19-JUN-96  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+   subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, &
+      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, b_mmax, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, &
       bc_jhi_type, bc_klo_type, bc_khi_type, &
-      dt, normg, resg, dx, dy, dz)&
+      dt, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
 ! Module procedures ..................................................//
       use conv_pp_g_module, only: conv_pp_g
       use source_pp_module, only: source_pp_g
       use source_pp_module, only: source_pp_g_bc
-      use residual, only: calc_resid_pp
 
 ! Global data .........................................................//
 ! Fluid array bounds
-! Flag for existence of point sources
-      use ps, only: point_source
-! Global data arrays for residuals
-      use residual, only: resid_p, resid, max_resid
-      use residual, only: num_resid, den_resid
-      use residual, only: i_resid, j_resid, k_resid
-! parameters, 0.0 and 1.0
-      use param1, only: zero, one
 
-      IMPLICIT NONE
+      ! Flag for existence of point sources
+      use ps, only: point_source
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -89,71 +84,29 @@ module solve_pp_module
          (slo(1):shi(1),slo(2):shi(2),2)
 
       real(c_real), intent(  out) :: A_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),-3:3)
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(  out) :: b_mmax&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-! Normalization factor for gas pressure correction residual.
-! At start of the iterate loop normg will either be 1 (i.e. not
-! normalized) or a user defined value given by norm_g.  If norm_g
-! was set to zero then the normalization is based on dominate
-! term in the equation
-      real(c_real), intent(in) :: normg
-! gas pressure correction residual
-      real(c_real), intent(out) :: resg
-
-! Local parameters ...................................................//
-! Parameter to make tolerance for residual scaled with max value
-! compatible with residual scaled with first iteration residual.
-! Increase it to tighten convergence.
-      real(c_real), PARAMETER :: DEN = 1.0D1   !5.0D2
-! Normalization factor for gas pressure correction residual
-      real(c_real) :: NORMGloc
-! dominate term in correction equation max(am,bm)
-      real(c_real), allocatable :: B_MMAX(:,:,:)
-!.....................................................................//
-
-      allocate( b_mmax(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)) )
-
-! Initialize A_m and b_m
+      ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
       A_m(:,:,:,0)  = -1.0d0
       b_m(:,:,:)    =  0.0d0
-      b_mmax(:,:,:) =  0.0d0
 
-! Forming the sparse matrix equation.
-      call conv_pp_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      ! Forming the sparse matrix equation.
+      call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
 
-      call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
-      call source_pp_g_bc(slo, shi, A_m, bc_ilo_type, bc_ihi_type, &
-      bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
+      call source_pp_g_bc(slo, shi, alo, ahi, A_m, bc_ilo_type, bc_ihi_type, &
+         bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
-      if(point_source) call point_source_pp_g (slo, shi, b_m, b_mmax, dx, dy, dz)
-
-      ! Find average residual, maximum residual and location
-      normgloc = normg
-      if(abs(normg) < epsilon(zero)) then
-
-        ! calculating the residual based on dominate term in correction equation
-        ! and use this to form normalization factor
-
-        call calc_resid_pp (slo, shi, lo, hi, &
-         b_mmax, one, num_resid(resid_p), &
-         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
-         normgloc = resid(resid_p)/den
-
-      endif
-
-      call calc_resid_pp (slo, shi, lo, hi, &
-         b_m, normgloc, num_resid(resid_p),  &
-         den_resid(resid_p), resid(resid_p), max_resid(resid_p), &
-         i_resid(resid_p),j_resid(resid_p),k_resid(resid_p))
-      resg = resid(resid_p)
+      if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
 
       end subroutine solve_pp_g
 
@@ -170,25 +123,22 @@ module solve_pp_module
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_PP_G(slo, shi, b_m, B_mmax, dx, dy, dz)
+      SUBROUTINE POINT_SOURCE_PP_G(alo, ahi, b_m, B_mmax, dx, dy, dz)
 
       use param1  , only: small_number
       use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
          ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
 
-      IMPLICIT NONE
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      real(c_real), intent(IN   ) :: dx,dy,dz
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! Vector b_m
-      real(c_real), intent(INOUT) :: B_m&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(INOUT) :: b_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! maximum term in b_m expression
-      real(c_real), intent(INOUT) :: B_mmax&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
+      real(c_real), intent(INOUT) :: b_mmax&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
 !-----------------------------------------------
 ! Local Variables
