@@ -11,7 +11,7 @@ dotxy (const MultiFab& r,
        bool            local = false)
 {
     const int ncomp = 1;
-    const int nghost = 1;
+    const int nghost = 0;
     return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
 }
 
@@ -61,12 +61,22 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab sh(ba, ncomp, nghost, dm);
 
     MultiFab sorig(ba, ncomp, nghost, dm);
+    MultiFab rh   (ba, ncomp, nghost, dm);
     MultiFab p    (ba, ncomp, nghost, dm);
     MultiFab r    (ba, ncomp, nghost, dm);
     MultiFab s    (ba, ncomp, nghost, dm);
-    MultiFab rh   (ba, ncomp, nghost, dm);
     MultiFab v    (ba, ncomp, nghost, dm);
     MultiFab t    (ba, ncomp, nghost, dm);
+
+    // Initialize these to zero so valgrind doesn't complain -- in future we should look 
+    // at whether some of these can get away without ghost cells
+    sorig.setVal(0.0);
+       rh.setVal(0.0);
+        p.setVal(0.0);
+        r.setVal(0.0);
+        s.setVal(0.0);
+        t.setVal(0.0);
+        v.setVal(0.0);
 
 //  Lp.residual(r, rhs, sol, bc_mode);
 
@@ -103,7 +113,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
 
-    //Real rnorm = r.norm0(0,1);  HACK Below gives same value a MFIX
     Real rnorm = dotxy(r,r,true);
     ParallelDescriptor::ReduceRealSum(rnorm);
     const Real rnorm0   = sqrt(rnorm);
