@@ -76,11 +76,6 @@
        ody = 1.d0 / dy
        odz = 1.d0 / dz
 
-       print *,"XLO ",xlo(:)
-       print *,"XHI ",xhi(:)
-       print *,"ULO ",vello(:)
-       print *,"UHI ",velhi(:)
-
        SELECT CASE (DISCR)                    !first order upwinding
        CASE (:1)
 
@@ -316,7 +311,7 @@
 
       integer :: JC, JD, JU
       integer :: i, j, k
- 
+
       real(c_real) :: phi_C
 
       ! down wind factor
@@ -360,7 +355,7 @@
                    JD = J
                    JU = min(j+2,domhi(2)+1)
                 ENDIF
-   
+
                 phi_C = phi_C_OF(phi(i,JU,k),phi(i,JC,k),phi(i,JD,k))
                 DWF = SUPERBEE(phi_C)
                 XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
@@ -614,7 +609,7 @@
                    KD = K
                    KU = min(k+2,domhi(3)+1)
                 ENDIF
-   
+
                 phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))
                 DWF = SUPERBEE(phi_C)
                 XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
@@ -792,7 +787,7 @@
 
        END SELECT
 
-      END subroutine calc_xsi_t 
+      END subroutine calc_xsi_t
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

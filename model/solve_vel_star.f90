@@ -37,6 +37,11 @@ module solve_vel_star_module
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
 
+
+   use ur_facs, only: UR_FAC
+
+
+
       use discretelement, only: des_continuum_coupled
 
       ! Flag for existence of point souces
@@ -113,7 +118,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
       integer :: i,j,k
-
      ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
       A_m(:,:,:,0) = -1.0d0
@@ -125,34 +129,9 @@ module solve_vel_star_module
                          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
-
-      k = 0
-      write(3101,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(3101,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(3101,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
-
-
-
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
                       u_go, tau_u_g, dx, dy, dz)
-
-
-      k = 0
-      write(3201,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(3201,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(3201,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
-
 
       ! modifications for bc
       call source_u_g_bc (slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g,&
@@ -160,15 +139,6 @@ module solve_vel_star_module
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
                           dy, dz)
-      k = 0
-      write(3201,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(3201,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(3201,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
 
       ! Add in point sources
       if(point_source) call point_source_u_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
@@ -189,21 +159,7 @@ module solve_vel_star_module
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), 'U')
 
-      call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
-!      print *,'B_M (3,3,0) ',b_m(3,3,0)
-
-
-
-      k = 0
-      write(3001,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(3001,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(3001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
-
+     call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
 
       return
    end subroutine solve_u_g_star

@@ -11,7 +11,7 @@ module ur_facs
 ! (0,1) under-relaxed
    real(c_real) :: UR_FAC(DIM_EQS)
 
-   contains
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -21,7 +21,8 @@ module ur_facs
 !  Purpose: Under-relax equation.                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine under_relax(var, varlo, varhi, flag, slo, shi, A_m, b_m, alo, ahi, AXIS, EQ)
+   subroutine under_relax(var, varlo, varhi, flag, slo, shi, &
+      A_m, b_m, alo, ahi, AXIS, EQ)
 
     use param1, only: one, equal
 
@@ -62,76 +63,18 @@ module ur_facs
    F1 = ONE/UR_FAC(EQ)
    F2 = F1 - ONE
 
-      if (axis.eq.'S') then
-
-         do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-               do i = slo(1),shi(1)
-                  IF(flag(i,j,k,1) == 1) THEN
-                     AP = A_m(I,J,K,0)
-                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
-                        A_m(I,J,K,0) = AP*F1
-                        b_m(I,J,K) = b_m(I,J,K) + AP*VAR(i,j,k)*F2
-                     ENDIF
-                  ENDIF
-               end do
-            end do
+   do k = alo(3),ahi(3)
+      do j = alo(2),ahi(2)
+         do i = alo(1),ahi(1)
+            AP = A_m(I,J,K,0)
+            A_m(I,J,K,0) = AP*F1
+            b_m(I,J,K) = b_m(I,J,K) + AP*VAR(i,j,k)*F2
          end do
+      end do
+   end do
 
-      else if (axis.eq.'U') then
-         do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-               do i = slo(1),shi(1)
-                  IF(flag(i,j,k,2) >= 2000 .and. &
-                     flag(i,j,k,2) <= 2011) THEN
-                     AP = A_m(I,J,K,0)
-                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
-                        A_m(I,J,K,0) = AP*F1
-                        b_m(I,J,K) = b_m(I,J,K) + AP*VAR(i,j,k)*F2
-                     ENDIF
-                  ENDIF
-               end do
-            end do
-         end do
+   RETURN
 
-      else if (axis.eq.'V') then
-         do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-               do i = slo(1),shi(1)
-                  IF(flag(i,j,k,3) >= 2000 .and. &
-                     flag(i,j,k,3) <= 2011) THEN
-                     AP = A_m(I,J,K,0)
-                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
-                        A_m(I,J,K,0) = AP*F1
-                        b_m(I,J,K) = b_m(I,J,K) + AP*VAR(i,j,k)*F2
-                     ENDIF
-                  ENDIF
-               end do
-            end do
-         end do
-
-      else if (axis.eq.'W') then
-         do k = slo(3),shi(3)
-            do j = slo(2),shi(2)
-               do i = slo(1),shi(1)
-                  IF(flag(i,j,k,4) >= 2000 .and. &
-                     flag(i,j,k,4) <= 2011) THEN
-                     AP = A_m(I,J,K,0)
-                     IF (.NOT.EQUAL(AP, (-ONE))) THEN
-                        A_m(I,J,K,0) = AP*F1
-                        b_m(I,J,K) = b_m(I,J,K) + AP*VAR(i,j,k)*F2
-                     ENDIF
-                  ENDIF
-               end do
-            end do
-         end do
-      endif
-
-      RETURN
-
-   contains
-
-      include 'functions.inc'
 
    end subroutine under_relax
 

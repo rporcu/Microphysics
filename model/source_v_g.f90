@@ -83,7 +83,7 @@ contains
       vol = dx*dy*dz
 
       DO K = lo(3), hi(3)
-         DO J = lo(2), hi(2)
+         DO J = lo(2)-1, hi(2)
             DO I = lo(1), hi(1)
 
                epga = avg(ep_g(i,j,k),ep_g(i,j+1,k))

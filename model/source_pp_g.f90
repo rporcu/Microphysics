@@ -83,9 +83,6 @@ contains
       odt = 1.0d0/dt
       vol = dx*dy*dz
 
-      print *,"ALO ",alo(:)
-      print *,"HIO ",ahi(:)
-
 ! Calculate convection-diffusion fluxes through each of the faces
 
         do k = alo(3),ahi(3)

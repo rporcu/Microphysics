@@ -145,7 +145,6 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
-      use ic, only: CYCL_, CYCP_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
       use geometry, only: domlo, domhi
@@ -201,8 +200,6 @@ contains
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
-      write(6,*) 'ulo/uhi', ulo(1), uhi(1)
-
 ! --- EAST FLUID ---------------------------------------------------------->
 
       if (nlft .gt. 0) then
@@ -223,13 +220,6 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_u_g(bcv)
-
-               else if (bc_ilo_type(j,k,1) == CYCL_ .or. &
-                        bc_ilo_type(j,k,1) == CYCP_) then
-
-                  b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,w)*u_g(i-1,j,k)
-                  A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,w)
-                  A_m(i,j,k,w) = zero
 
                endif
             end do
@@ -257,18 +247,7 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_u_g(bcv)
 
-               else if (bc_ihi_type(j,k,1) == CYCL_ .or. &
-                        bc_ihi_type(j,k,1) == CYCP_) then
-
-                  b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,e)*u_g(i+1,j,k)
-                  A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,e)
-                  A_m(i,j,k,e) = zero
-
                endif
-
-!              b_m(i+1,j,k) = zero
-!              A_m(i+1,j,k,:) = zero
-!              A_m(i+1,j,k,0) = -one
 
             end do
          end do
