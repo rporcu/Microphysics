@@ -332,7 +332,6 @@ contains
             do i = alo(1)-1,ahi(1)
 
                flux_e = half * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
-
                d_fe = c_ae*mu_g(i+1,j,k)
 
                if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
@@ -356,7 +355,7 @@ contains
         end do
       end do
 
-      xlo(1) = alo(1) 
+      xlo(1) = alo(1)
       xlo(2) = alo(2)-1
       xlo(3) = alo(3)
       allocate(xsi_n(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )

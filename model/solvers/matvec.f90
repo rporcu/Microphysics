@@ -27,8 +27,8 @@ contains
             aijmax = maxval(abs(a_m(i,j,k,:)) )
             if(aijmax > small_number) then
                oam = one/aijmax
-              if (k.eq.0) print *,'COMPS ',i,j,A_m(i,j,k,-2),A_m(i,j,k,-1), &
-                                               A_m(i,j,k,0),A_m(i,j,k,1),A_m(i,j,k,2)
+!              if (k.eq.0) print *,'COMPS ',i,j,A_m(i,j,k,-2),A_m(i,j,k,-1), &
+!                                               A_m(i,j,k,0),A_m(i,j,k,1),A_m(i,j,k,2)
                a_m(i,j,k,:) = a_m(i,j,k,:)*oam
                rhs(i,j,k)   = rhs(i,j,k)*oam
             endif
@@ -112,8 +112,8 @@ contains
                 + A_m(i,j,k, 2) * Var(i,j+1,k)    &
                 + A_m(i,j,k, 3) * Var(i,j,k+1)  )
 !            if (j.eq.2.and.k.eq.0) print *,"RES ",i,res(i,j,k), rhs(i,j,k)
-             if (j.eq.2.and.k.eq.0) print *,'COMPS AT J=2: ',i, A_m(i,j,k,-1)
-             if (i.eq.0.and.k.eq.0) print *,'COMPS AT I=0: ',j, A_m(i,j,k,-1)
+!             if (j.eq.2.and.k.eq.0) print *,'COMPS AT J=2: ',i, A_m(i,j,k,-1)
+!             if (i.eq.0.and.k.eq.0) print *,'COMPS AT I=0: ',j, A_m(i,j,k,-1)
           enddo
        enddo
     enddo

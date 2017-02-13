@@ -87,7 +87,7 @@ contains
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+            do i = lo(1)-1, hi(1)
 
                epga = avg(ep_g(i,j,k),ep_g(i+1,j,k))
 
@@ -118,8 +118,8 @@ contains
                b_m(i,j,k) = b_m(i,j,k) -(sdp + tau_u_g(i,j,k) + &
                   ((v0)*u_go(i,j,k) + vbf)*vol)
 
-               if (i.eq. 3.and.j.eq.3.and.k.eq.0) print *,'B_M ', &
-               b_m(i,j,k), sdp , tau_u_g(i,j,k) , v0,u_go(i,j,k) , vbf, vol 
+               ! if (i.eq. 3.and.j.eq.3.and.k.eq.0) print *,'B_M ', &
+               ! b_m(i,j,k), sdp , tau_u_g(i,j,k) , v0,u_go(i,j,k) , vbf, vol
 
             enddo
          enddo
@@ -138,13 +138,14 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g_bc(slo, shi, alo, ahi, A_m, b_m, &
+   subroutine source_u_g_bc(slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dy, dz)
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
+      use ic, only: CYCL_, CYCP_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
       use geometry, only: domlo, domhi
@@ -152,13 +153,18 @@ contains
       use matrix, only: e, w, s, n, t, b
       use param1, only: is_defined
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: ulo(3),uhi(3)
       real(c_real), intent(in   ) :: dy, dz
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+      real(c_real), intent(in   ) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -195,6 +201,8 @@ contains
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
+      write(6,*) 'ulo/uhi', ulo(1), uhi(1)
+
 ! --- EAST FLUID ---------------------------------------------------------->
 
       if (nlft .gt. 0) then
@@ -212,9 +220,16 @@ contains
                else if (bc_ilo_type(j,k,1) == MINF_ .or. &
                         bc_ilo_type(j,k,1) == MOUT_) then
 
-                  A_m(i-1,j,k,:) =  zero
-                  A_m(i-1,j,k,0) = -one
-                  b_m(i-1,j,k) = -bc_u_g(bcv)
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = -bc_u_g(bcv)
+
+               else if (bc_ilo_type(j,k,1) == CYCL_ .or. &
+                        bc_ilo_type(j,k,1) == CYCP_) then
+
+                  b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,w)*u_g(i-1,j,k)
+                  A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,w)
+                  A_m(i,j,k,w) = zero
 
                endif
             end do
@@ -241,6 +256,13 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_u_g(bcv)
+
+               else if (bc_ihi_type(j,k,1) == CYCL_ .or. &
+                        bc_ihi_type(j,k,1) == CYCP_) then
+
+                  b_m(i,j,k) = b_m(i,j,k) - A_m(i,j,k,e)*u_g(i+1,j,k)
+                  A_m(i,j,k,0) = A_m(i,j,k,0) - A_m(i,j,k,e)
+                  A_m(i,j,k,e) = zero
 
                endif
 

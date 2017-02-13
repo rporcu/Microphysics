@@ -673,8 +673,8 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 
      const int max_pip = particle_state.size();
 
-     calc_coeff(sbx.loVect(), sbx.hiVect(), 
-      ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
+     calc_coeff(sbx.loVect(), sbx.hiVect(),
+      ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
       bx.loVect(), bx.hiVect(), &max_pip,   &calc_flag,
       (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
       (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
@@ -713,8 +713,8 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     calc_coeff_all(sbx.loVect(), sbx.hiVect(), 
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
+     calc_coeff_all(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
        bx.loVect(), bx.hiVect(), &max_pip,
        (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
@@ -752,11 +752,11 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     calc_trd_and_tau(sbx.loVect(), sbx.hiVect(), 
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
-        bx.loVect(),  bx.hiVect(), 
+     calc_trd_and_tau(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+        bx.loVect(),  bx.hiVect(),
        (*tau_u_g[lev])[mfi].dataPtr(),  (*tau_v_g[lev])[mfi].dataPtr(), (*tau_w_g[lev])[mfi].dataPtr(),
-       (*trD_g[lev])[mfi].dataPtr(),    
+       (*trD_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),     (*w_g[lev])[mfi].dataPtr(),
        (*lambda_g[lev])[mfi].dataPtr(), (*mu_g[lev])[mfi].dataPtr(),
        &dx, &dy, &dz);
@@ -785,9 +785,9 @@ mfix_level::mfix_init_fluid(int lev)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     init_fluid(sbx.loVect(), sbx.hiVect(), 
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(), 
-        bx.loVect(),  bx.hiVect(), 
+     init_fluid(sbx.loVect(), sbx.hiVect(),
+       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+        bx.loVect(),  bx.hiVect(),
        (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -846,9 +846,9 @@ mfix_level::mfix_calc_mflux(int lev)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     calc_mflux(sbx.loVect(), sbx.hiVect(), 
+     calc_mflux(sbx.loVect(), sbx.hiVect(),
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-        bx.loVect(),  bx.hiVect(), 
+        bx.loVect(),  bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
@@ -877,9 +877,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
        Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
        Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-       conv_rop(sbx.loVect(), sbx.hiVect(), 
+       conv_rop(sbx.loVect(), sbx.hiVect(),
          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-          bx.loVect(),  bx.hiVect(), 
+          bx.loVect(),  bx.hiVect(),
          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
          (*rop_g[lev])[mfi].dataPtr(),
          (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
@@ -911,16 +911,16 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       const Box& bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box()); abx.shift(0,-1);
-      std::cout << "ABX " << abx << std::endl;
+      //std::cout << "ABX " << abx << std::endl;
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-      solve_u_g_star(sbx.loVect(), sbx.hiVect(), 
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
-           bx.loVect(),  bx.hiVect(), 
+      solve_u_g_star(sbx.loVect(), sbx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -957,10 +957,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-      solve_v_g_star(sbx.loVect(), sbx.hiVect(), 
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
-           bx.loVect(),  bx.hiVect(), 
+      solve_v_g_star(sbx.loVect(), sbx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -997,10 +997,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-      solve_w_g_star(sbx.loVect(), sbx.hiVect(), 
-          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), 
-          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(), 
-           bx.loVect(),  bx.hiVect(), 
+      solve_w_g_star(sbx.loVect(), sbx.hiVect(),
+          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
+          wbx.loVect(), wbx.hiVect(), abx.loVect(), abx.hiVect(),
+           bx.loVect(),  bx.hiVect(),
           (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
@@ -1053,9 +1053,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-      solve_pp_g(sbx.loVect(), sbx.hiVect(), 
+      solve_pp_g(sbx.loVect(), sbx.hiVect(),
         ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-        abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(), 
+        abx.loVect(), abx.hiVect(), bx.loVect(),  bx.hiVect(),
         (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
@@ -1131,7 +1131,7 @@ mfix_level::mfix_correct_0(int lev)
 
      correct_0(sbx.loVect(), sbx.hiVect(),
                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                bx.loVect(),  bx.hiVect(), 
+                bx.loVect(),  bx.hiVect(),
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
@@ -1186,8 +1186,8 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
     Real tol;
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
-    std::cout << "AM " << matrix[0] << std::endl;
-    std::cout << "BM " << rhs[0] << std::endl;
+    //std::cout << "AM " << matrix[0] << std::endl;
+    //std::cout << "BM " << rhs[0] << std::endl;
 
 #if(0)
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
