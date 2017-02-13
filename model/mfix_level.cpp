@@ -936,7 +936,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     int eq_id=3;
-    std::cout << "Solving Ug " << std::endl;
+    //    std::cout << "Solving Ug " << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve V-Momentum equation
@@ -977,7 +977,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=4;
-    std::cout << "Solving Vg " << std::endl;
+    //    std::cout << "Solving Vg " << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve W-Momentum equation
@@ -1018,7 +1018,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=5;
-    std::cout << "Solving Wg " << std::endl;
+    //    std::cout << "Solving Wg " << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
@@ -1114,11 +1114,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
     resg = tmp_norm;
 
-    std::cout << "Solving Ppg " << std::endl;
+    //    std::cout << "Solving Ppg " << std::endl;
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
 
     fill_mf_bc(lev,*pp_g[lev],0);
+    //exit(0);
 }
 
 void
@@ -1207,7 +1208,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 #else
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol);
 #endif
-    std::cout << "SOL " << sol[0] << std::endl;
+    // std::cout << "SOL " << sol[0] << std::endl;
     // exit(0);
 }
 

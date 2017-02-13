@@ -90,10 +90,24 @@ module solve_pp_module
       real(c_real), intent(  out) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
+      integer :: i,j,k
+
       ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
       A_m(:,:,:,0)  = -1.0d0
       b_m(:,:,:)    =  0.0d0
+
+      k=0
+      write(2222,"(2/,'Pass=',i2)") k
+      do j = uhi(2),ulo(2),-1
+         do i = ulo(1),uhi(1)-1
+            write(2222,"(1x,es10.2)",advance='no') u_g(i,j,k)
+         end do
+         i=uhi(1)
+         write(2222,"(1x,es10.2)",advance='yes') u_g(i,j,k)
+      end do
+
+
 
       ! Forming the sparse matrix equation.
       call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
@@ -107,6 +121,17 @@ module solve_pp_module
          bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
 
       if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
+
+
+      k = 0
+      write(6001,"(2/,'K=',i2)") k
+      do i = alo(1),ahi(1)
+         write(6001,"('  ')")
+         do j = ahi(2),alo(2),-1
+            write(6001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
+               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
+         end do
+      end do
 
       end subroutine solve_pp_g
 

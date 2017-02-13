@@ -62,7 +62,7 @@
 
 !---------------------------------------------------------------------
 
-      subroutine set_resid_p(val) & 
+      subroutine set_resid_p(val) &
           bind(C, name="set_resid_p")
 
       real(c_real)  , intent(in) :: val
@@ -83,6 +83,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine calc_resid_vel(slo, shi, alo, ahi, lo, hi, &
+         v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, num, den, &
          resid, axis)
 
@@ -96,16 +97,19 @@
 
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: v0lo(3),v0hi(3)
+      integer     , intent(in   ) :: v1lo(3),v1hi(3)
+      integer     , intent(in   ) :: v2lo(3),v2hi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (v0lo(1):v0hi(1),v0lo(2):v0hi(2),v0lo(3):v0hi(3))
 
       ! other components used here only for scaling
       real(c_real), intent(IN) :: vels1&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (v1lo(1):v1hi(1),v1lo(2):v1hi(2),v1lo(3):v1hi(3))
       real(c_real), intent(IN) :: vels2&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (v2lo(1):v2hi(1),v2lo(2):v2hi(2),v2lo(3):v2hi(3))
 
       ! Septadiagonal matrix A_m
       real(c_real) :: A_m&
@@ -164,9 +168,9 @@
       den = zero
       ncells = 0
 
-      do k = llo(3),lhi(3)
-         do j = llo(2),lhi(2)
-            do i = llo(1),lhi(1)
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
                resid_ijk(i,j,k) = zero
 
 ! evaluating the residual at cell (i,j,k):

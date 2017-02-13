@@ -3,7 +3,6 @@ module calc_d_mod
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   use functions, only: AVG
    use param1, only: ZERO, SMALL_NUMBER
 
    ! Flag: Coupled DEM simulation
@@ -59,32 +58,21 @@ module calc_d_mod
       ayz = dy*dz
       vol = dx*dy*dz
 
-      DO K = lo(3), hi(3)
-        DO J = lo(2), hi(2)
-          DO I = lo(1)-1, hi(1)
-
-            Am0 = -A_m(I,J,K,0)
-
-            IF(abs(Am0) > SMALL_NUMBER) THEN
-
-               if(flag(i,j,k,2) >= 2000 .and. &
-                  flag(i,j,k,2) <= 2011) then
-                  epga = ayz*AVG(EP_G(I,J,K),EP_G(i+1,j,k))
-                  IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                     (F_GDS(i,j,k) + F_GDS(i+1,j,k))
-               ELSE
-                  epga = ZERO
-               ENDIF
-
-               d_e(I,J,K) = P_SCALE*epga/Am0
-
-            ELSE
-               d_e(I,J,K) = ZERO
-            ENDIF
-
-          ENDDO
-        ENDDO
-      ENDDO
+      do k = alo(3), ahi(3)
+         do j = alo(2), ahi(2)
+            do i = alo(1), ahi(1)
+               Am0 = -A_m(i,j,k,0)
+               if(abs(am0) > small_number) then
+                  epga = ayz*0.5d0*(ep_g(i,j,k)+ep_g(i+1,j,k))
+                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
+                     (f_gds(i,j,k) + f_gds(i+1,j,k))
+                  d_e(i,j,k) = p_scale*epga/am0
+               else
+                  d_e(i,j,k) = zero
+               endif
+            enddo
+         enddo
+      enddo
 
    end subroutine calc_d_e
 
@@ -120,33 +108,23 @@ module calc_d_mod
       axz = dx*dz
       ayz = dy*dz
       vol = dx*dy*dz
- 
-      DO K = lo(3), hi(3)
-        DO J = lo(2)-1, hi(2)
-          DO I = lo(1), hi(1)
 
-         Am0 = -A_m(I,J,K,0)
+      do k = alo(3), ahi(3)
+         do j = alo(2), ahi(2)
+            do i = alo(1), ahi(1)
+               Am0 = -A_m(i,j,k,0)
+               if(abs(Am0) > small_number) then
+                  epga = axz*0.5d0*(ep_g(i,j,k)+ep_g(i,j+1,k))
+                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
+                     (f_gds(i,j,k) + f_gds(i,j+1,k))
+                  d_n(i,j,k) = p_scale*epga/am0
+               else
+                  d_n(i,j,k) = zero
+               endif
 
-         IF(abs(Am0) > SMALL_NUMBER) THEN
-
-            if(flag(i,j,k,3) >= 2000 .and. &
-               flag(i,j,k,3) <= 2011) then
-               epga = AXZ*AVG(EP_G(I,J,K),EP_G(i,j+1,k))
-               IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                  (F_GDS(i,j,k) + F_GDS(i,j+1,k))
-            ELSE
-               epga = ZERO
-            ENDIF
-
-            d_n(I,J,K) = P_SCALE*epga/Am0
-
-         ELSE
-            d_n(I,J,K) = ZERO
-         ENDIF
-
-          ENDDO
-        ENDDO
-      ENDDO
+            enddo
+         enddo
+      enddo
 
    end subroutine calc_d_n
 
@@ -176,37 +154,26 @@ module calc_d_mod
       real(c_real) :: Am0, epga
       logical      :: coupled
 
-      COUPLED = (DES_CONTINUUM_COUPLED .AND. .NOT.DES_ONEWAY_COUPLED)
+      coupled = (des_continuum_coupled .and. .not.des_oneway_coupled)
 
       axy = dx*dy
       vol = dx*dy*dz
- 
-      DO K = lo(3)-1, hi(3)
-        DO J = lo(2), hi(2)
-          DO I = lo(1), hi(1)
 
-         Am0 = -A_m(I,J,K,0)
-
-         IF(abs(Am0) > SMALL_NUMBER) THEN
-
-            if(flag(i,j,k,4) >= 2000 .and. &
-               flag(i,j,k,4) <= 2011) then
-               epga = axy*AVG(EP_G(I,J,K),EP_G(i,j,k+1))
-               IF(COUPLED) Am0 = Am0 + 0.5d0*VOL* &
-                  (F_GDS(I,J,K) + F_GDS(i,j,k+1))
-            ELSE
-               epga = ZERO
-            ENDIF
-
-            d_t(I,J,K) = P_SCALE*epga/Am0
-
-         ELSE
-            d_t(I,J,K) = ZERO
-         ENDIF
-
-          ENDDO
-        ENDDO
-      ENDDO
+      do k = alo(3), ahi(3)
+        do j = alo(2), ahi(2)
+           do i = alo(1), ahi(1)
+              Am0 = -A_m(I,J,K,0)
+              IF(abs(Am0) > SMALL_NUMBER) THEN
+                 epga = axy*0.5d0*(ep_g(i,j,k)+ep_g(i,j,k+1))
+                 if(coupled) Am0 = Am0 + 0.5d0*vol* &
+                    (f_gds(i,j,k) + f_gds(i,j,k+1))
+                 d_t(i,j,k) = p_scale*epga/am0
+              else
+                 d_t(i,j,k) = zero
+              endif
+           enddo
+        enddo
+     enddo
 
    end subroutine calc_d_t
 

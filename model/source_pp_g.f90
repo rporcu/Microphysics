@@ -83,6 +83,7 @@ contains
       odt = 1.0d0/dt
       vol = dx*dy*dz
 
+
 ! Calculate convection-diffusion fluxes through each of the faces
 
         do k = alo(3),ahi(3)
@@ -97,6 +98,7 @@ contains
                 bmt = A_m(i,j,k,t)*w_g(i,j,k)
                 bmb = A_m(i,j,k,b)*w_g(i,j,k-1)
                 b_m(i,j,k) = -((-(bma + bme - bmw + bmn - bms + bmt - bmb )) )
+
                 b_mmax(i,j,k) = max(abs(bma), abs(bme), abs(bmw), abs(bmn), &
                    abs(bms), abs(bmt), abs(bmb))
 
@@ -132,11 +134,11 @@ contains
       ! Specify P' to zero for incompressible flows. Check set_bc0
       ! for details on selection of IJK_P_g.
 
-      if (ijk_p_g(1) /= undefined_i) then
-         b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
-         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
-         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
-      endif
+      ! if (ijk_p_g(1) /= undefined_i) then
+      !    b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
+      !    A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
+      !    A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
+      ! endif
 
       return
 
@@ -202,10 +204,10 @@ contains
          i = domlo(1)
          do k=alo(3),ahi(3)
             do j=alo(2),ahi(2)
-               if(bc_ilo_type(j,k,1) == PINF_ .or. &
-                  bc_ilo_type(j,k,1) == POUT_) then
+               ! if(bc_ilo_type(j,k,1) == PINF_ .or. &
+               !    bc_ilo_type(j,k,1) == POUT_) then
                   A_m(i,j,k,w) =  zero
-               endif
+               ! endif
             end do
          end do
       endif
@@ -216,10 +218,10 @@ contains
          i = domhi(1)
          do k=alo(3),ahi(3)
             do j=alo(2),ahi(2)
-               if(bc_ihi_type(j,k,1) == PINF_ .or. &
-                  bc_ihi_type(j,k,1) == POUT_) then
+               ! if(bc_ihi_type(j,k,1) == PINF_ .or. &
+               !    bc_ihi_type(j,k,1) == POUT_) then
                   A_m(i,j,k,e) = zero
-               endif
+               ! endif
             end do
          end do
       endif
@@ -230,10 +232,10 @@ contains
          j = domlo(2)
          do k=alo(3),ahi(3)
             do i=alo(1),ahi(1)
-               if(bc_jlo_type(i,k,1) == PINF_ .or. &
-                  bc_jlo_type(i,k,1) == POUT_) then
+               ! if(bc_jlo_type(i,k,1) == PINF_ .or. &
+               !    bc_jlo_type(i,k,1) == POUT_) then
                   A_m(i,j,k,s) = zero
-               endif
+               ! endif
             end do
          end do
       endif
@@ -245,10 +247,10 @@ contains
          j = domhi(2)
          do k=alo(3),ahi(3)
             do i=alo(1),ahi(1)
-               if(bc_jhi_type(i,k,1) == PINF_ .or. &
-                  bc_jhi_type(i,k,1) == POUT_) then
+               ! if(bc_jhi_type(i,k,1) == PINF_ .or. &
+               !    bc_jhi_type(i,k,1) == POUT_) then
                   A_m(i,j,k,n) = zero
-               endif
+               ! endif
             end do
          end do
       endif
@@ -259,10 +261,10 @@ contains
          k = domlo(3)
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
-               if(bc_klo_type(i,j,1) == PINF_ .or. &
-                  bc_klo_type(i,j,1) == POUT_) then
+               ! if(bc_klo_type(i,j,1) == PINF_ .or. &
+               !    bc_klo_type(i,j,1) == POUT_) then
                   A_m(i,j,k,b) = zero
-               endif
+               ! endif
             end do
          end do
       endif
@@ -273,10 +275,10 @@ contains
          k = domhi(3)
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
-               if(bc_khi_type(i,j,1) == PINF_ .or. &
-                  bc_khi_type(i,j,1) == POUT_) then
+               ! if(bc_khi_type(i,j,1) == PINF_ .or. &
+               !    bc_khi_type(i,j,1) == POUT_) then
                   A_m(i,j,k,t) = zero
-               endif
+               ! endif
             end do
          end do
       endif

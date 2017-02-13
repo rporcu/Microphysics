@@ -163,6 +163,50 @@ module calc_coeff_module
 
       real(c_real)  , intent(in   ) :: dx, dy, dz
 
+      integer :: i,j,k, funit
+      integer, save :: count=-1
+
+      count = count+1
+
+      funit = 1000! + count
+      k = 0
+      write(funit,"(2/,'Pass=',i2)") count
+      do j = uhi(2)-1,ulo(2)+1,-1
+         do i = ulo(1)+2,uhi(1)-2
+            write(funit,"(1x,es10.2)",advance='no') u_g(i,j,k)
+         end do
+         i=uhi(1)
+         write(funit,"(1x,es10.2)",advance='yes') u_g(i,j,k)
+      end do
+
+      funit = 2000! + count
+      k = 0
+      write(funit,"(2/,'Pass=',i2)") count
+      do j = vhi(2)-1,vlo(2)+1,-1
+         do i = vlo(1),vhi(1)-1
+            write(funit,"(1x,es10.2)",advance='no') v_g(i,j,k)
+         end do
+         i=vhi(1)
+         write(funit,"(1x,es10.2)",advance='yes') v_g(i,j,k)
+      end do
+
+
+      funit = 3000! + count
+      k = 0
+      write(funit,"(2/,'Pass=',i2)") count
+      do j = whi(2),wlo(2),-1
+         do i = wlo(1),whi(1)-1
+            write(funit,"(1x,es10.2)",advance='no') w_g(i,j,k)
+         end do
+         i=whi(1)
+         write(funit,"(1x,es10.2)",advance='yes') w_g(i,j,k)
+      end do
+
+
+
+
+
+
 ! Calculate physical properties: (density, specific heat, diameter)
       call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, ep_g, rop_g)
 

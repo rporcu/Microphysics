@@ -23,7 +23,7 @@ MODULE CORRECT_0_MODULE
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
-      real(c_real), intent(in   ) :: pp_g&
+      real(c_real), intent(inout   ) :: pp_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -46,43 +46,63 @@ MODULE CORRECT_0_MODULE
 !-----------------------------------------------
 ! Indices
       INTEGER :: I,J,K
+      integer :: funit
 !-----------------------------------------------
 
 ! Underrelax pressure correction.  Velocity corrections should not be
 ! underrelaxed, so that the continuity eq. is satisfied.
 
-      do K = lo(3),hi(3)
-        do J = lo(2),hi(2)
-          do I = lo(1),hi(1)
-              P_G(I,J,K) = P_G(I,J,K) + UR_FAC(1)*PP_G(I,J,K)
-          ENDDO
-        ENDDO
-      ENDDO
 
-      do K = lo(3),hi(3)
-        do J = lo(2),hi(2)
-          do I = slo(1),hi(1)
+      funit = 9000! + count
+      k = 0
+      write(funit,"(2/,'Pass=',i2)") k
+      do i = slo(1),shi(1)-1
+         write(funit,"(5x,i2,4x)",advance='no')i
+      enddo
+      write(funit,"(5x,i2,4x)",advance='yes')i
+      i=shi(1)
+      do j = shi(2),slo(2),-1
+         do i = slo(1),shi(1)-1
+            write(funit,"(1x,es10.2)",advance='no') pp_g(i,j,k)
+         end do
+         i=shi(1)
+         write(funit,"(1x,es10.2)",advance='yes') pp_g(i,j,k)
+      end do
+
+
+
+      do k = lo(3),hi(3)
+        do j = lo(2),hi(2)
+          do i = lo(1),hi(1)
+              p_g(i,j,k) = p_g(i,j,k) + ur_fac(1)*pp_g(i,j,k)
+          enddo
+        enddo
+      enddo
+
+      do k = ulo(3),uhi(3)
+        do j = ulo(2),uhi(2)
+          do i = ulo(1)+1,uhi(1)-1
             u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i+1,j,k)-pp_g(i,j,k))
           enddo
         enddo
      enddo
 
-      do K = lo(3),hi(3)
-        do J = slo(2),hi(2)
-          do I = lo(1),hi(1)
+      do k = vlo(3),  vhi(3)
+        do j = vlo(2)+1, vhi(2)-1
+          do i = vlo(1),  vhi(1)
             v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j+1,k)-pp_g(i,j,k))
           enddo
         enddo
       enddo
 
-      do K = slo(3),hi(3)
-        do J = lo(2),hi(2)
-          do I = lo(1),hi(1)
+      do k = wlo(3)+1,whi(3)-1
+        do j =wlo(2),  whi(2)
+          do i =wlo(1),  whi(1)
             w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
           enddo
         enddo
       enddo
 
-      END SUBROUTINE CORRECT_0
+      end subroutine correct_0
 
-END MODULE CORRECT_0_MODULE
+end module correct_0_module

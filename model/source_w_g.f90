@@ -343,7 +343,10 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = bc_w_g(bcv)
-
+               else
+                  b_m(i,j,k) = zero
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
                endif
             end do
          end do
@@ -369,7 +372,10 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = -bc_w_g(bcv)
-
+               else
+                  b_m(i,j,k) = zero
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
                endif
 
             end do

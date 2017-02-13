@@ -262,7 +262,8 @@ contains
             do i=alo(1),ahi(1)
 
                bcv = bc_jlo_type(i,k,2)
-               if(bc_jlo_type(i,k,1) == NSW_) then
+               if(bc_jlo_type(i,k,1) == NSW_ .or. &
+                  bc_jlo_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
@@ -299,7 +300,8 @@ contains
             do i=alo(1),ahi(1)
                bcv = bc_jhi_type(i,k,2)
 
-               if(bc_jhi_type(i,k,1) == NSW_) then
+               if(bc_jhi_type(i,k,1) == NSW_ .or. &
+                  bc_jhi_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
@@ -338,7 +340,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
-               else if(bc_klo_type(i,j,1) == FSW_) then
+               else if(bc_klo_type(i,j,1) == FSW_ .or. &
+                       bc_klo_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
@@ -361,6 +364,7 @@ contains
          end do
       endif
 
+
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
       if (nup .gt. 0) then
@@ -372,7 +376,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 
-               else if(bc_khi_type(i,j,1) == FSW_) then
+               else if(bc_khi_type(i,j,1) == FSW_ .or. &
+                       bc_khi_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 
@@ -395,6 +400,7 @@ contains
             end do
          end do
       endif
+
 
    end subroutine source_u_g_bc
 
