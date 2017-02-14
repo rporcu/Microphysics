@@ -1176,10 +1176,14 @@ mfix_level::usr3(int lev)
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
      const Box& sbx = (*flag[lev])[mfi].box();
+     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     mfix_usr3( sbx.loVect(),               sbx.hiVect(),
-               (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
-               (*w_g[lev])[mfi].dataPtr(),  (*p_g[lev])[mfi].dataPtr(),
+     mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
+               (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),
+               (*w_g[lev])[mfi].dataPtr(), wbx.loVect(), wbx.hiVect(),
+               (*p_g[lev])[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
                &dx, &dy, &dz);
    }
 }
@@ -1206,7 +1210,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
                          sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect());
     }
 #else
-    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol);
+    solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
 #endif
     // std::cout << "SOL " << sol[0] << std::endl;
     // exit(0);

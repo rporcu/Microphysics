@@ -53,7 +53,7 @@ MODULE CORRECT_0_MODULE
 ! underrelaxed, so that the continuity eq. is satisfied.
 
 
-      funit = 9000! + count
+      funit = 9100! + count
       k = 0
       write(funit,"(2/,'Pass=',i2)") k
       do i = slo(1),shi(1)-1
@@ -68,6 +68,74 @@ MODULE CORRECT_0_MODULE
          i=shi(1)
          write(funit,"(1x,es10.2)",advance='yes') pp_g(i,j,k)
       end do
+
+
+      k = 0
+      write(2330,"(2/,'Pass=',i4)") 2330
+      do j = uhi(2)-1,ulo(2)+1,-1
+         write(2330,"(i3,1x)",advance='no') j
+         do i = ulo(1),uhi(1)-1
+            write(2330,"(1x,es10.2)",advance='no') u_g(i,j,k)
+         end do
+         i=uhi(1)
+         write(2330,"(1x,es10.2)",advance='yes') u_g(i,j,k)
+      end do
+
+      k = 0
+      write(2331,"(2/,'Pass=',i4)") 2331
+      do j = uhi(2)-1,ulo(2)+1,-1
+         write(2331,"(i3,1x)",advance='no') j
+         do i = ulo(1),uhi(1)-1
+            write(2331,"(1x,es10.2)",advance='no') d_e(i,j,k)
+         end do
+         i=uhi(1)
+         write(2331,"(1x,es10.2)",advance='yes') d_e(i,j,k)
+      end do
+
+
+
+
+
+      k = 0
+      write(2333,"(2/,'Pass=',i2)") 0
+      do j = vhi(2)-1,vlo(2)+1,-1
+         write(2333,"(i3,1x)",advance='no') j
+         do i = vlo(1),vhi(1)-1
+            write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+         end do
+         i=vhi(1)
+         write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
+      end do
+
+
+
+      k = 0
+      write(2334,"(2/,'Pass=',i4)") 2334
+      do j = vhi(2)-1,vlo(2)+1,-1
+         write(2334,"(i3,1x)",advance='no') j
+         do i = vlo(1),vhi(1)-1
+            write(2334,"(1x,es10.2)",advance='no') d_n(i,j,k)
+         end do
+         i=vhi(1)
+         write(2334,"(1x,es10.2)",advance='yes') d_n(i,j,k)
+      end do
+
+      k = 0
+      write(2335,"(2/,'Pass=',i4)") 2335
+      do j = vhi(2)-1,vlo(2)+1,-1
+         write(2335,"(i3,1x)",advance='no') j
+         do i = vlo(1),vhi(1)-1
+            write(2335,"(1x,es10.2)",advance='no') (pp_g(i,j+1,k)-pp_g(i,j,k))
+         end do
+         i=vhi(1)
+         write(2335,"(1x,es10.2)",advance='yes') (pp_g(i,j+1,k)-pp_g(i,j,k))
+      end do
+
+
+
+
+
+
 
 
 
@@ -101,7 +169,20 @@ MODULE CORRECT_0_MODULE
             w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
           enddo
         enddo
-      enddo
+     enddo
+
+
+      k = 0
+      write(2333,"(2/,'Pass=',i2)") 1
+      do j = vhi(2)-1,vlo(2)+1,-1
+         write(2333,"(i3,1x)",advance='no') j
+         do i = vlo(1),vhi(1)-1
+            write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+         end do
+         i=vhi(1)
+         write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
+      end do
+
 
       end subroutine correct_0
 

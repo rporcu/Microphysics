@@ -140,22 +140,26 @@ contains
 !                                                                          !
 !                                                                          !
 !**************************************************************************!
-  subroutine mfix_usr3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz) &
-       bind(C, name="mfix_usr3")
+  subroutine mfix_usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+     p_g, slo, shi, dx, dy, dz) bind(C, name="mfix_usr3")
 
+    integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+    integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+    integer(c_int), intent(in   ) :: wlo(3),whi(3)
     integer(c_int), intent(in   ) :: slo(3),shi(3)
 
     real(c_real), intent(inout) :: u_g&
-        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+        (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
     real(c_real), intent(inout) :: v_g&
-        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+        (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
     real(c_real), intent(inout) :: w_g&
-        (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+        (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
     real(c_real), intent(inout) :: p_g&
         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
     real(c_real), intent(in   ) :: dx, dy, dz
 
-    call usr3(slo, shi, u_g, v_g, w_g, p_g, dx, dy, dz)
+    call usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, p_g, slo, shi,&
+       dx, dy, dz)
 
   end subroutine mfix_usr3
 

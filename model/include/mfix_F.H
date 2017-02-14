@@ -37,7 +37,7 @@ extern "C"
                   int* flag,
                   Real* dx,       Real* dy,       Real* dz);
 
-  void init_fluid(const int* slo, const int* shi, 
+  void init_fluid(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,
                   const int* vlo, const int* vhi,
                   const int* wlo, const int* whi,
@@ -128,7 +128,7 @@ extern "C"
          const int* wlo, const int* whi,
          const int* lo,  const int* hi,
          Real* tau_u_g,  Real* tau_v_g, Real* tau_w_g,
-         Real* trd_g,    
+         Real* trd_g,
          Real* u_g,      Real* v_g,     Real* w_g,
          Real* lambda_g, Real* mu_g,
          Real* dx,       Real* dy,       Real* dz);
@@ -316,9 +316,10 @@ extern "C"
 
   void mfix_usr2();
 
-  void mfix_usr3(const int* slo, const int* shi,
-                 Real* u_g,     Real* v_g,
-                 Real* w_g,     Real* p_g,
+  void mfix_usr3(Real* u_g, const int*, const int*,
+                 Real* v_g, const int*, const int*,
+                 Real* w_g, const int*, const int*,
+                 Real* p_g, const int*, const int*,
                  Real* dx ,     Real* dy,   Real* dz);
 
   void mfix_finl_err_msg();

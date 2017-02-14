@@ -46,7 +46,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             sweep_type,
                             int             precond_type,
                             int             maxiter,
-                            Real            eps_rel)
+                            Real            eps_rel, int lev)
 {
     // We're not quite ready to use this yet ... just want it all to compile
     int ret = 0, nit = 1;
@@ -68,7 +68,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab v    (ba, ncomp, nghost, dm);
     MultiFab t    (ba, ncomp, nghost, dm);
 
-    // Initialize these to zero so valgrind doesn't complain -- in future we should look 
+    // Initialize these to zero so valgrind doesn't complain -- in future we should look
     // at whether some of these can get away without ghost cells
     sorig.setVal(0.0);
        rh.setVal(0.0);
@@ -109,6 +109,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
     }
+      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      r.FillBoundary(geom[lev].periodicity());
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
@@ -185,6 +187,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         MultiFab::Copy(ph,p,0,0,1,nghost);
       }
 
+      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      ph.FillBoundary(geom[lev].periodicity());
 
       for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
       {
@@ -213,6 +217,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       //----------------------------------------------------------------
       sxay(s,     r, -alpha,  v);
 
+      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      s.FillBoundary(geom[lev].periodicity());
 
       // A*sh = s
       // t=A*sh
@@ -229,9 +235,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
           const Box& abx = A_m[mfi].box();
           const Box& hbx =  sh[mfi].box();
 
-         leq_msolve1(  s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
-                     A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
-                      sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
+          leq_msolve1(  s[mfi].dataPtr(), sbx.loVect(), sbx.hiVect(),
+                        A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
+                        sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
         }
       }
@@ -271,6 +277,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       sxay(sol, sol,  alpha, ph);
       sxay(sol, sol,  omega, sh);
+
+      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+      sol.FillBoundary(geom[lev].periodicity());
 
       sxay(r,     s, -omega,  t);
 

@@ -183,6 +183,7 @@ module calc_coeff_module
       k = 0
       write(funit,"(2/,'Pass=',i2)") count
       do j = vhi(2)-1,vlo(2)+1,-1
+         write(funit,"(i3,1x)",advance='no') j
          do i = vlo(1),vhi(1)-1
             write(funit,"(1x,es10.2)",advance='no') v_g(i,j,k)
          end do
@@ -203,6 +204,21 @@ module calc_coeff_module
       end do
 
 
+      funit = 9000! + count
+      k = 0
+      write(funit,"(2/,'Pass=',i2)") k
+      do i = slo(1),shi(1)-1
+         write(funit,"(5x,i2,4x)",advance='no')i
+      enddo
+      write(funit,"(5x,i2,4x)",advance='yes')i
+      i=shi(1)
+      do j = shi(2),slo(2),-1
+         do i = slo(1),shi(1)-1
+            write(funit,"(1x,f10.2)",advance='no') p_g(i,j,k)
+         end do
+         i=shi(1)
+         write(funit,"(1x,f10.2)",advance='yes') p_g(i,j,k)
+      end do
 
 
 

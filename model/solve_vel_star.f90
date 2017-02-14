@@ -173,7 +173,6 @@ module solve_vel_star_module
          end do
       end do
       end do
-!      stop  0088
 
 
       return
@@ -364,14 +363,15 @@ module solve_vel_star_module
 
       call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
 
-      k = 0
+      do k= alo(3),ahi(3)
       write(4001,"(2/,'K=',i2)") k
-      do j = alo(2),ahi(2)
+      do i = alo(1),ahi(1)
          write(4001,"('  ')")
-         do i = alo(1),ahi(1)
-            write(4001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
+         do j = ahi(2),alo(2),-1
+            write(4001,"(3(i4),7(1x,es10.2),10x,es10.2)")&
+               i,j,k, A_m(i,j,k,-3:3),b_m(i,j,k)
          end do
+      end do
       end do
 
    END SUBROUTINE SOLVE_V_G_STAR

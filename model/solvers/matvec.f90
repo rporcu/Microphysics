@@ -64,9 +64,9 @@ contains
           do i = alo(1),ahi(1)
              res(i,j,k) = &
                           ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
-                          + A_m(i,j,k,-2) * Var(i,j-1,k)   &
-                          + A_m(i,j,k,-1) * Var(i-1,j,k)   &
-                          + A_m(i,j,k, 0) * Var(i,j,k)               &
+                          + A_m(i,j,k,-2) * Var(i,j-1,k)    &
+                          + A_m(i,j,k,-1) * Var(i-1,j,k)    &
+                          + A_m(i,j,k, 0) * Var(i,j,k)      &
                           + A_m(i,j,k, 1) * Var(i+1,j,k)    &
                           + A_m(i,j,k, 2) * Var(i,j+1,k)    &
                           + A_m(i,j,k, 3) * Var(i,j,k+1)  )
@@ -101,10 +101,10 @@ contains
        do j = alo(2),ahi(2)
           do i = alo(1),ahi(1)
              res(i,j,k) = rhs(i,j,k) -  &
-                ( A_m(i,j,k,-3) * Var(i,j,k-1)   &
-                + A_m(i,j,k,-2) * Var(i,j-1,k)   &
-                + A_m(i,j,k,-1) * Var(i-1,j,k)   &
-                + A_m(i,j,k, 0) * Var(i,j,k)               &
+                ( A_m(i,j,k,-3) * Var(i,j,k-1)    &
+                + A_m(i,j,k,-2) * Var(i,j-1,k)    &
+                + A_m(i,j,k,-1) * Var(i-1,j,k)    &
+                + A_m(i,j,k, 0) * Var(i,j,k)      &
                 + A_m(i,j,k, 1) * Var(i+1,j,k)    &
                 + A_m(i,j,k, 2) * Var(i,j+1,k)    &
                 + A_m(i,j,k, 3) * Var(i,j,k+1)  )

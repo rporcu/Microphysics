@@ -138,6 +138,7 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
+      use ic, only: CYCL_, CYCP_
 
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
       use geometry, only: domlo, domhi
@@ -214,6 +215,8 @@ contains
                         bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,w) = zero
+               else if(bc_ilo_type(j,k,1) == CYCL_ .or. &
+                       bc_ilo_type(j,k,1) == CYCP_ ) then
                endif
 
             end do
@@ -276,10 +279,10 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = bc_v_g(bcv)
 
-               else
-                  b_m(i,j,k) = zero
+               else ! some kind of wall
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
             end do
          end do
@@ -304,10 +307,10 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_v_g(bcv)
 
-               else
-                  b_m(i,j,k) = zero
+               else ! some kind of wall
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do

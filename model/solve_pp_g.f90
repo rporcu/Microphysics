@@ -108,7 +108,6 @@ module solve_pp_module
       end do
 
 
-
       ! Forming the sparse matrix equation.
       call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
@@ -128,8 +127,8 @@ module solve_pp_module
       do i = alo(1),ahi(1)
          write(6001,"('  ')")
          do j = ahi(2),alo(2),-1
-            write(6001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
+            write(6001,"(3(i4),7(1x,es10.2),5x,es10.2)")&
+               i,j,k, A_m(i,j,k,-3:3),b_m(i,j,k)
          end do
       end do
 

@@ -134,11 +134,11 @@ contains
       ! Specify P' to zero for incompressible flows. Check set_bc0
       ! for details on selection of IJK_P_g.
 
-      ! if (ijk_p_g(1) /= undefined_i) then
-      !    b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
-      !    A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
-      !    A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
-      ! endif
+      if (ijk_p_g(1) /= undefined_i) then
+         b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
+         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
+         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
+      endif
 
       return
 
