@@ -221,6 +221,13 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_u_g(bcv)
 
+               else if(bc_ilo_type(j,k,1) == NSW_ .or. &
+                       bc_ilo_type(j,k,1) == FSW_ .or. &
+                       bc_ilo_type(j,k,1) == PSW_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
             end do
          end do
@@ -247,6 +254,13 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_u_g(bcv)
 
+               else if(bc_ihi_type(j,k,1) == NSW_ .or. &
+                       bc_ihi_type(j,k,1) == FSW_ .or. &
+                       bc_ihi_type(j,k,1) == PSW_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do

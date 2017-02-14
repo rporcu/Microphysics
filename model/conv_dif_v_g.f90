@@ -134,9 +134,9 @@ module v_g_conv_dif
 
       ! Diffusion parameter
       real(c_real) :: d_fe, d_fn, d_ft
- 
+
       real(c_real) :: c_ae,c_aw,c_an,c_as,c_at,c_ab
- 
+
       c_ae = dy*dz / dx
       c_aw = dy*dz / dx
       c_an = dx*dz / dy
@@ -149,13 +149,13 @@ module v_g_conv_dif
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1)-1,ahi(1)
- 
+
                ! Calculate convection-diffusion fluxes through each of the faces
                flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
- 
+
                d_fe = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k))) * c_ae
- 
+
                ! East face (i+1, j, k)
                if (flux_e >= zero) then
                   if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe
@@ -164,7 +164,7 @@ module v_g_conv_dif
                   if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe - flux_e
                   if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_fe
                endif
- 
+
             enddo
          enddo
       enddo
@@ -172,11 +172,11 @@ module v_g_conv_dif
       do k = alo(3),ahi(3)
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
- 
+
                flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
- 
+
                d_fn = mu_g(i,j+1,k) * c_an
- 
+
                ! North face (i+1/2, j+1/2, k)
                if (flux_n >= zero) then
                   if (j.ge.alo(2)) A_m(i,j,  k,n) = d_fn
@@ -185,20 +185,20 @@ module v_g_conv_dif
                   if (j.ge.alo(2)) A_m(i,j,  k,n) = d_fn - flux_n
                   if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_fn
                endif
- 
+
             enddo
          enddo
       enddo
- 
+
       do k = alo(3)-1,ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
- 
+
                flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i+1,j,k))
- 
+
                d_ft = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * c_at
- 
+
                if (flux_t >= zero) then
                   if (k.ge.alo(3)) A_m(i,j,k,  t) = d_ft
                   if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_ft + flux_t
@@ -206,11 +206,11 @@ module v_g_conv_dif
                   if (k.ge.alo(3)) A_m(i,j,k,  t) = d_ft - flux_t
                   if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_ft
                endif
- 
+
             enddo
          enddo
       enddo
- 
+
       end subroutine store_a_v_g0
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -294,14 +294,14 @@ module v_g_conv_dif
       allocate(  u(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
       allocate(  v(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
       allocate( ww(slo(1)-2:shi(1)+2,slo(2)-2:shi(2)+2,slo(3)-2:shi(3)+2) )
- 
+
       c_ae = dy*dz / dx
       c_aw = dy*dz / dx
       c_an = dx*dz / dy
       c_as = dx*dz / dy
       c_at = dx*dy / dz
       c_ab = dx*dy / dz
- 
+
       vello(1) = slo(1)-2
       vello(2) = slo(2)-2
       vello(3) = slo(3)-2
@@ -314,11 +314,11 @@ module v_g_conv_dif
       xhi(3) = ahi(3)
 
 !---------------------------------------------------------------------//
- 
+
        u(:,:,:) = 0.d0
        v(:,:,:) = 0.d0
       ww(:,:,:) = 0.d0
- 
+
       do k = vlo(3),vhi(3)
         do j = vlo(2)+1,vhi(2)-1
           do i = vlo(1),vhi(1)
@@ -338,6 +338,7 @@ module v_g_conv_dif
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1)-1,ahi(1)
+
                flux_e = half * (flux_ge(i,j,k) + flux_ge(i,j+1,k))
 
                d_fe = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
@@ -351,7 +352,7 @@ module v_g_conv_dif
       enddo
 
 !---------------------------------------------------------------------//
- 
+
        u(:,:,:) = 0.d0
        v(:,:,:) = 0.d0
       ww(:,:,:) = 0.d0
@@ -387,7 +388,7 @@ module v_g_conv_dif
       enddo
 
 !---------------------------------------------------------------------//
- 
+
        u(:,:,:) = 0.d0
        v(:,:,:) = 0.d0
       ww(:,:,:) = 0.d0
@@ -413,7 +414,7 @@ module v_g_conv_dif
             do i = alo(1),ahi(1)
 
                flux_t = half * (flux_gt(i,j,k) + flux_gt(i,j+1,k))
- 
+
                d_ft = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * c_at
 

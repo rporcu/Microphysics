@@ -129,9 +129,12 @@ module solve_vel_star_module
                          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
+
       ! calculate the source terms for the gas phase u-momentum eqs
-      call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-                      u_go, tau_u_g, dx, dy, dz)
+      call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, &
+         p_g, ep_g, ro_g, rop_g, rop_go, u_go, tau_u_g, dx, dy, dz)
+
+
 
       ! modifications for bc
       call source_u_g_bc (slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g,&
@@ -140,11 +143,14 @@ module solve_vel_star_module
                           bc_klo_type, bc_khi_type, &
                           dy, dz)
 
+
+
       ! Add in point sources
       if(point_source) call point_source_u_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
+         ep_g, f_gds, flag, dx, dy, dz)
 
 ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -160,7 +166,6 @@ module solve_vel_star_module
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), 'U')
 
-     call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
 
 
       do k= alo(3),ahi(3)
@@ -168,12 +173,13 @@ module solve_vel_star_module
       do i = alo(1),ahi(1)
          write(3001,"('  ')")
          do j = ahi(2),alo(2),-1
-            write(3001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
+            write(3001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
                i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
          end do
       end do
       end do
 
+     call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
 
       return
    end subroutine solve_u_g_star
@@ -297,30 +303,10 @@ module solve_vel_star_module
          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
          dt, dx, dy, dz)
 
-      k = 0
-      write(4101,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(4101,"('  ')")
-         do j = alo(2),ahi(2)
-            write(4101,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
-
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, A_m,&
          b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
          v_go, tau_v_g, dx, dy, dz)
-
-      k = 0
-      write(4201,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(4201,"('  ')")
-         do j = alo(2),ahi(2)
-            write(4201,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
 
 ! modifications for bc
       call source_v_g_bc(slo, shi, alo, ahi, A_m, b_m, &
@@ -328,16 +314,6 @@ module solve_vel_star_module
                          bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, &
                          dx, dz)
-
-      k = 0
-      write(4301,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(4301,"('  ')")
-         do j = alo(2),ahi(2)
-            write(4301,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
 
 ! add in point sources
       if(point_source) call point_source_v_g (slo, shi, alo, ahi,&
@@ -361,18 +337,40 @@ module solve_vel_star_module
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), 'V')
 
-      call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
 
-      do k= alo(3),ahi(3)
-      write(4001,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(4001,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(4001,"(3(i4),7(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-3:3),b_m(i,j,k)
+
+      if(ahi(3) == 0 ) then
+
+         ! write(*,*) 'fast Vg'
+         ! write(*,*) 'k', alo(3), ahi(3)
+         ! write(*,*) 'i', alo(1), ahi(1)
+         ! write(*,*) 'j', alo(2), ahi(2)
+
+         do k= alo(3),ahi(3)
+         write(4001,"(2/,'K=',i2)") k
+         do i = alo(1),ahi(1)
+            write(4001,"('  ')")
+            do j = ahi(2),alo(2),-1
+               write(4001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
+                  i,j,k, A_m(i,j,k,-2: 2),b_m(i,j,k)
+            end do
          end do
-      end do
-      end do
+         end do
+
+      else if(ahi(1) == 0) then
+         do i= alo(1),ahi(1)
+         write(4001,"(2/,'I=',i2)") i
+         do j = alo(2),ahi(2)
+            write(4001,"('  ')")
+            do k = ahi(3),alo(3),-1
+               write(4001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
+                  j,k,i, A_m(i,j,k,-3:-2),A_m(i,j,k,0),A_m(i,j,k,2:3),b_m(i,j,k)
+            end do
+         end do
+         end do
+      endif
+
+      call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
 
    END SUBROUTINE SOLVE_V_G_STAR
 
@@ -496,8 +494,8 @@ module solve_vel_star_module
                          dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
-      call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         w_go, tau_w_g, dx, dy, dz)
+      call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, &
+         p_g, ep_g, ro_g, rop_g, rop_go, w_go, tau_w_g, dx, dy, dz)
 
 ! modifications for bc
       call source_w_g_bc (slo, shi, alo, ahi, A_m, b_m, &
@@ -526,21 +524,39 @@ module solve_vel_star_module
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), 'W')
 
-      call under_relax (w_g, wlo, whi, flag, slo, shi, A_m, b_m, alo, ahi, 'W', 5)
 
-
-
-      do k = alo(3),ahi(3)
-      write(5001,"(2/,'K=',i2)") k
-      do j = alo(2),ahi(2)
-         write(5001,"('  ')")
-         do i = alo(1),ahi(1)
-            write(5001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
+      if(ahi(3) == 0) then
+         do k = alo(3),ahi(3)
+         write(5001,"(2/,'K=',i2)") k
+         do j = alo(2),ahi(2)
+            write(5001,"('  ')")
+            do i = alo(1),ahi(1)
+               write(5001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
+                  i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
+            end do
          end do
-      end do
-      end do
+         end do
 
+      else if(ahi(1) == 0) then
+
+         ! write(*,*) 'fast Wg'
+         ! write(*,*) 'i', alo(1), ahi(1)
+         ! write(*,*) 'j', alo(2), ahi(2)
+         ! write(*,*) 'k', alo(3), ahi(3)
+
+         do i= alo(1),ahi(1)
+         write(5001,"(2/,'I=',i2)") i
+         do j = alo(2),ahi(2)
+            write(5001,"('  ')")
+            do k = ahi(3),alo(3),-1
+               write(5001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
+                  j,k,i, A_m(i,j,k,-3:-2),A_m(i,j,k,0),A_m(i,j,k,2:3),b_m(i,j,k)
+            end do
+         end do
+         end do
+      endif
+
+      call under_relax (w_g, wlo, whi, flag, slo, shi, A_m, b_m, alo, ahi, 'W', 5)
 
    END SUBROUTINE SOLVE_W_G_STAR
 

@@ -53,83 +53,106 @@ MODULE CORRECT_0_MODULE
 ! underrelaxed, so that the continuity eq. is satisfied.
 
 
-      funit = 9100! + count
-      k = 0
-      write(funit,"(2/,'Pass=',i2)") k
-      do i = slo(1),shi(1)-1
-         write(funit,"(5x,i2,4x)",advance='no')i
-      enddo
-      write(funit,"(5x,i2,4x)",advance='yes')i
-      i=shi(1)
-      do j = shi(2),slo(2),-1
+
+
+      if(vhi(3) == 1) then ! FLD01-X
+         k = 0
+         write(2333,"(2/,'Pass=',i2)") 0
+         do j = vhi(2)-1,vlo(2)+1,-1
+            write(2333,"(i3,1x)",advance='no') j
+            do i = vlo(1),vhi(1)-1
+               write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+            end do
+            i=vhi(1)
+            write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
+         end do
+
+         k = 0
+         write(2334,"(2/,'Pass=',i4)") 2334
+         do j = vhi(2)-1,vlo(2)+1,-1
+            write(2334,"(i3,1x)",advance='no') j
+            do i = vlo(1),vhi(1)-1
+               write(2334,"(1x,es10.2)",advance='no') d_n(i,j,k)
+            end do
+            i=vhi(1)
+            write(2334,"(1x,es10.2)",advance='yes') d_n(i,j,k)
+         end do
+
+         k = 0
+         write(2335,"(2/,'Pass=',i4)") 2335
+         do j = vhi(2)-1,vlo(2)+1,-1
+            write(2335,"(i3,1x)",advance='no') j
+            do i = vlo(1),vhi(1)-1
+               write(2335,"(1x,es10.2)",advance='no') (pp_g(i,j+1,k)-pp_g(i,j,k))
+            end do
+            i=vhi(1)
+            write(2335,"(1x,es10.2)",advance='yes') (pp_g(i,j+1,k)-pp_g(i,j,k))
+         end do
+
+         funit = 9100! + count
+         k = 0
+         write(funit,"(2/,'Pass=',i2)") k
          do i = slo(1),shi(1)-1
-            write(funit,"(1x,es10.2)",advance='no') pp_g(i,j,k)
-         end do
+            write(funit,"(5x,i2,4x)",advance='no')i
+         enddo
+         write(funit,"(5x,i2,4x)",advance='yes')i
          i=shi(1)
-         write(funit,"(1x,es10.2)",advance='yes') pp_g(i,j,k)
-      end do
-
-
-      k = 0
-      write(2330,"(2/,'Pass=',i4)") 2330
-      do j = uhi(2)-1,ulo(2)+1,-1
-         write(2330,"(i3,1x)",advance='no') j
-         do i = ulo(1),uhi(1)-1
-            write(2330,"(1x,es10.2)",advance='no') u_g(i,j,k)
+         do j = shi(2),slo(2),-1
+            do i = slo(1),shi(1)-1
+               write(funit,"(1x,es10.2)",advance='no') pp_g(i,j,k)
+            end do
+            i=shi(1)
+            write(funit,"(1x,es10.2)",advance='yes') pp_g(i,j,k)
          end do
-         i=uhi(1)
-         write(2330,"(1x,es10.2)",advance='yes') u_g(i,j,k)
-      end do
 
-      k = 0
-      write(2331,"(2/,'Pass=',i4)") 2331
-      do j = uhi(2)-1,ulo(2)+1,-1
-         write(2331,"(i3,1x)",advance='no') j
-         do i = ulo(1),uhi(1)-1
-            write(2331,"(1x,es10.2)",advance='no') d_e(i,j,k)
+         k = 0
+         write(2330,"(2/,'Pass=',i4)") 2330
+         do j = uhi(2)-1,ulo(2)+1,-1
+            write(2330,"(i3,1x)",advance='no') j
+            do i = ulo(1),uhi(1)-1
+               write(2330,"(1x,es10.2)",advance='no') u_g(i,j,k)
+            end do
+            i=uhi(1)
+            write(2330,"(1x,es10.2)",advance='yes') u_g(i,j,k)
          end do
-         i=uhi(1)
-         write(2331,"(1x,es10.2)",advance='yes') d_e(i,j,k)
-      end do
 
-
-
-
-
-      k = 0
-      write(2333,"(2/,'Pass=',i2)") 0
-      do j = vhi(2)-1,vlo(2)+1,-1
-         write(2333,"(i3,1x)",advance='no') j
-         do i = vlo(1),vhi(1)-1
-            write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+         k = 0
+         write(2331,"(2/,'Pass=',i4)") 2331
+         do j = uhi(2)-1,ulo(2)+1,-1
+            write(2331,"(i3,1x)",advance='no') j
+            do i = ulo(1),uhi(1)-1
+               write(2331,"(1x,es10.2)",advance='no') d_e(i,j,k)
+            end do
+            i=uhi(1)
+            write(2331,"(1x,es10.2)",advance='yes') d_e(i,j,k)
          end do
-         i=vhi(1)
-         write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
-      end do
 
-
-
-      k = 0
-      write(2334,"(2/,'Pass=',i4)") 2334
-      do j = vhi(2)-1,vlo(2)+1,-1
-         write(2334,"(i3,1x)",advance='no') j
-         do i = vlo(1),vhi(1)-1
-            write(2334,"(1x,es10.2)",advance='no') d_n(i,j,k)
+      else if(vhi(1) == 1) then  ! FLD01-Y
+         i = 0
+         write(2333,"(2/,'Pass=',i2)") 0
+         do k = vhi(3)-1,vlo(3)+1,-1
+            write(2333,"(i3,1x)",advance='no') j
+            do j = vlo(2),vhi(2)-1
+               write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+            end do
+            j=vhi(2)
+            write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
          end do
-         i=vhi(1)
-         write(2334,"(1x,es10.2)",advance='yes') d_n(i,j,k)
-      end do
 
-      k = 0
-      write(2335,"(2/,'Pass=',i4)") 2335
-      do j = vhi(2)-1,vlo(2)+1,-1
-         write(2335,"(i3,1x)",advance='no') j
-         do i = vlo(1),vhi(1)-1
-            write(2335,"(1x,es10.2)",advance='no') (pp_g(i,j+1,k)-pp_g(i,j,k))
+         i = 0
+         write(2433,"(2/,'Pass=',i2)") 0
+         do k = whi(3)-1,wlo(3)+1,-1
+            write(2433,"(i3,1x)",advance='no') j
+            do j = wlo(2),whi(2)-1
+               write(2433,"(1x,es10.2)",advance='no') w_g(i,j,k)
+            end do
+            j=whi(2)
+            write(2433,"(1x,es10.2)",advance='yes') w_g(i,j,k)
          end do
-         i=vhi(1)
-         write(2335,"(1x,es10.2)",advance='yes') (pp_g(i,j+1,k)-pp_g(i,j,k))
-      end do
+
+      endif
+
+
 
 
 
@@ -172,16 +195,30 @@ MODULE CORRECT_0_MODULE
      enddo
 
 
-      k = 0
-      write(2333,"(2/,'Pass=',i2)") 1
-      do j = vhi(2)-1,vlo(2)+1,-1
-         write(2333,"(i3,1x)",advance='no') j
-         do i = vlo(1),vhi(1)-1
-            write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+      if(vhi(3) == 1) then
+         k = 0
+         write(2333,"(2/,'Pass=',i2)") 1
+         do j = vhi(2)-1,vlo(2)+1,-1
+            write(2333,"(i3,1x)",advance='no') j
+            do i = vlo(1),vhi(1)-1
+               write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+            end do
+            i=vhi(1)
+            write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
          end do
-         i=vhi(1)
-         write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
-      end do
+
+      else if(vhi(1) == 1) then
+         i = 0
+         write(2333,"(2/,'Pass=',i2)") 1
+         do k = vhi(3)-1,vlo(3)+1,-1
+            write(2333,"(i3,1x)",advance='no') j
+            do j = vlo(2),vhi(2)-1
+               write(2333,"(1x,es10.2)",advance='no') v_g(i,j,k)
+            end do
+            j=vhi(2)
+            write(2333,"(1x,es10.2)",advance='yes') v_g(i,j,k)
+         end do
+      endif
 
 
       end subroutine correct_0

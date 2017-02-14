@@ -197,7 +197,8 @@ contains
             do j=alo(2),ahi(2)
                bcv = bc_ilo_type(j,k,2)
 
-               if(bc_ilo_type(j,k,1) == NSW_) then
+               if(bc_ilo_type(j,k,1) == NSW_ .or. &
+                  bc_ilo_type(j,k,1) == 107) then! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
@@ -233,7 +234,8 @@ contains
             do j=alo(2),ahi(2)
                bcv = bc_ihi_type(j,k,2)
 
-               if(bc_ihi_type(j,k,1) == NSW_) then
+               if(bc_ihi_type(j,k,1) == NSW_ .or. &
+                  bc_ihi_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
@@ -269,7 +271,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
-               else if(bc_jlo_type(i,k,1) == FSW_) then
+               else if(bc_jlo_type(i,k,1) == FSW_ .or. &
+                       bc_jlo_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
@@ -302,7 +305,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
-               else if(bc_jhi_type(i,k,1) == FSW_) then
+               else if(bc_jhi_type(i,k,1) == FSW_ .or. &
+                       bc_jhi_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
@@ -343,10 +347,14 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = bc_w_g(bcv)
-               else
-                  b_m(i,j,k) = zero
+
+               else if(bc_klo_type(i,j,1) == NSW_ .or. &
+                       bc_klo_type(i,j,1) == FSW_ .or. &
+                       bc_klo_type(i,j,1) == PSW_) then
+
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
             end do
          end do
@@ -372,10 +380,14 @@ contains
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = -bc_w_g(bcv)
-               else
-                  b_m(i,j,k) = zero
+
+               else if(bc_khi_type(i,j,1) == NSW_ .or. &
+                       bc_khi_type(i,j,1) == FSW_ .or. &
+                       bc_khi_type(i,j,1) == PSW_) then
+
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do

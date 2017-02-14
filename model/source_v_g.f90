@@ -188,6 +188,7 @@ contains
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
+
 ! --- EAST FLUID ---------------------------------------------------------->
 
       if (nlft .gt. 0) then
@@ -200,7 +201,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
-               else if(bc_ilo_type(j,k,1) == FSW_) then
+               else if(bc_ilo_type(j,k,1) == FSW_ .or. &
+                       bc_ilo_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
@@ -235,7 +237,8 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
-               else if(bc_ihi_type(j,k,1) == FSW_) then
+               else if(bc_ihi_type(j,k,1) == FSW_ .or. &
+                       bc_ihi_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
@@ -255,7 +258,6 @@ contains
             end do
          end do
       endif
-
 
 
 ! --- NORTH FLUID --------------------------------------------------------->
@@ -279,7 +281,10 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k  ) = bc_v_g(bcv)
 
-               else ! some kind of wall
+               else if(bc_jlo_type(i,k,1) == NSW_ .or. &
+                       bc_jlo_type(i,k,1) == FSW_ .or. &
+                       bc_jlo_type(i,k,1) == PSW_) then
+
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = zero
@@ -307,7 +312,10 @@ contains
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = -bc_v_g(bcv)
 
-               else ! some kind of wall
+               else if(bc_jhi_type(i,k,1) == NSW_ .or. &
+                       bc_jhi_type(i,k,1) == FSW_ .or. &
+                       bc_jhi_type(i,k,1) == PSW_) then
+
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
                   b_m(i,j,k) = zero
@@ -317,7 +325,6 @@ contains
          end do
       endif
 
-
 ! --- TOP FLUID ----------------------------------------------------------->
 
       if (ndwn .gt. 0) then
@@ -325,7 +332,8 @@ contains
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_klo_type(i,j,2)
-               if(bc_klo_type(i,j,1) == NSW_) then
+               if(bc_klo_type(i,j,1) == NSW_ .or. &
+                       bc_klo_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
@@ -359,7 +367,8 @@ contains
             do i=alo(1),ahi(1)
                bcv = bc_khi_type(i,j,2)
 
-               if(bc_khi_type(i,j,1) == NSW_) then
+               if(bc_khi_type(i,j,1) == NSW_ .or. &
+                  bc_khi_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 
