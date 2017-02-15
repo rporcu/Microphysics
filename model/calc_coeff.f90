@@ -163,65 +163,6 @@ module calc_coeff_module
 
       real(c_real)  , intent(in   ) :: dx, dy, dz
 
-      integer :: i,j,k, funit
-      integer, save :: count=-1
-
-      count = count+1
-
-      funit = 1000! + count
-      k = 0
-      write(funit,"(2/,'Pass=',i2)") count
-      do j = uhi(2)-1,ulo(2)+1,-1
-         do i = ulo(1)+2,uhi(1)-2
-            write(funit,"(1x,es10.2)",advance='no') u_g(i,j,k)
-         end do
-         i=uhi(1)
-         write(funit,"(1x,es10.2)",advance='yes') u_g(i,j,k)
-      end do
-
-      funit = 2000! + count
-      k = 0
-      write(funit,"(2/,'Pass=',i2)") count
-      do j = vhi(2)-1,vlo(2)+1,-1
-         write(funit,"(i3,1x)",advance='no') j
-         do i = vlo(1),vhi(1)-1
-            write(funit,"(1x,es10.2)",advance='no') v_g(i,j,k)
-         end do
-         i=vhi(1)
-         write(funit,"(1x,es10.2)",advance='yes') v_g(i,j,k)
-      end do
-
-
-      funit = 3000! + count
-      k = 0
-      write(funit,"(2/,'Pass=',i2)") count
-      do j = whi(2),wlo(2),-1
-         do i = wlo(1),whi(1)-1
-            write(funit,"(1x,es10.2)",advance='no') w_g(i,j,k)
-         end do
-         i=whi(1)
-         write(funit,"(1x,es10.2)",advance='yes') w_g(i,j,k)
-      end do
-
-
-      funit = 9000! + count
-      k = 0
-      write(funit,"(2/,'Pass=',i2)") k
-      do i = slo(1),shi(1)-1
-         write(funit,"(5x,i2,4x)",advance='no')i
-      enddo
-      write(funit,"(5x,i2,4x)",advance='yes')i
-      i=shi(1)
-      do j = shi(2),slo(2),-1
-         do i = slo(1),shi(1)-1
-            write(funit,"(1x,f10.2)",advance='no') p_g(i,j,k)
-         end do
-         i=shi(1)
-         write(funit,"(1x,f10.2)",advance='yes') p_g(i,j,k)
-      end do
-
-
-
 
 ! Calculate physical properties: (density, specific heat, diameter)
       call physical_prop(slo, shi, lo, hi, plevel, ro_g, p_g, ep_g, rop_g)
@@ -278,12 +219,16 @@ module calc_coeff_module
       real(c_real), intent(in   ) :: dx,dy,dz
 
       ! Calculate the trace of the stress tensor (gas phase; m=0)
-      call calc_trd_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,trd_g,u_g,v_g,w_g,dx,dy,dz)
+      call calc_trd_g(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+         trd_g,u_g,v_g,w_g,dx,dy,dz)
 
       ! Calculate the cross terms of the stress tensor (gas phase; m=0)
-      call calc_tau_u_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,tau_u_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
-      call calc_tau_v_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,tau_v_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
-      call calc_tau_w_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,tau_w_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_u_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+         tau_u_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_v_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+         tau_v_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
+      call calc_tau_w_g (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+         tau_w_g,trd_g,u_g,v_g,w_g,lambda_g,mu_g,dx,dy,dz)
 
       end subroutine calc_trd_and_tau
 

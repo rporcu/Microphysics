@@ -141,6 +141,7 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
+      use ic, only: CYCL_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
       use geometry, only: domlo, domhi
@@ -197,8 +198,7 @@ contains
             do j=alo(2),ahi(2)
                bcv = bc_ilo_type(j,k,2)
 
-               if(bc_ilo_type(j,k,1) == NSW_ .or. &
-                  bc_ilo_type(j,k,1) == 107) then! HACK HACK HACK HACK HACK HACK
+               if(bc_ilo_type(j,k,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
@@ -218,10 +218,6 @@ contains
                   endif
                   A_m(i,j,k,w) = zero
                endif
-
-!              b_m(i-1,j,k) = zero
-!              A_m(i-1,j,k,:) = zero
-!              A_m(i-1,j,k,0) = -one
             end do
          end do
       endif
@@ -234,8 +230,7 @@ contains
             do j=alo(2),ahi(2)
                bcv = bc_ihi_type(j,k,2)
 
-               if(bc_ihi_type(j,k,1) == NSW_ .or. &
-                  bc_ihi_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+               if(bc_ihi_type(j,k,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
@@ -272,7 +267,7 @@ contains
                   A_m(i,j,k,s) = zero
 
                else if(bc_jlo_type(i,k,1) == FSW_ .or. &
-                       bc_jlo_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+                       bc_jlo_type(i,k,1) == CYCL_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
@@ -306,7 +301,7 @@ contains
                   A_m(i,j,k,n) = zero
 
                else if(bc_jhi_type(i,k,1) == FSW_ .or. &
-                       bc_jhi_type(i,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+                       bc_jhi_type(i,k,1) == CYCL_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 

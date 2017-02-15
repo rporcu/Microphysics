@@ -138,7 +138,7 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
-      use ic, only: CYCL_, CYCP_
+      use ic, only: CYCL_
 
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
       use geometry, only: domlo, domhi
@@ -202,7 +202,7 @@ contains
                   A_m(i,j,k,w) = zero
 
                else if(bc_ilo_type(j,k,1) == FSW_ .or. &
-                       bc_ilo_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+                       bc_ilo_type(j,k,1) == CYCL_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,w)
                   A_m(i,j,k,w) = zero
 
@@ -217,8 +217,6 @@ contains
                         bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,w) = zero
-               else if(bc_ilo_type(j,k,1) == CYCL_ .or. &
-                       bc_ilo_type(j,k,1) == CYCP_ ) then
                endif
 
             end do
@@ -238,7 +236,7 @@ contains
                   A_m(i,j,k,e) = zero
 
                else if(bc_ihi_type(j,k,1) == FSW_ .or. &
-                       bc_ihi_type(j,k,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+                       bc_ihi_type(j,k,1) == CYCL_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,e)
                   A_m(i,j,k,e) = zero
 
@@ -332,8 +330,7 @@ contains
          do j=alo(2),ahi(2)
             do i=alo(1),ahi(1)
                bcv = bc_klo_type(i,j,2)
-               if(bc_klo_type(i,j,1) == NSW_ .or. &
-                       bc_klo_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+               if(bc_klo_type(i,j,1) == NSW_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
@@ -367,8 +364,7 @@ contains
             do i=alo(1),ahi(1)
                bcv = bc_khi_type(i,j,2)
 
-               if(bc_khi_type(i,j,1) == NSW_ .or. &
-                  bc_khi_type(i,j,1) == 107) then ! HACK HACK HACK HACK HACK HACK
+               if(bc_khi_type(i,j,1) == NSW_)then
                   A_m(i,j,k,0) = A_m(i,j,k,0)-A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 

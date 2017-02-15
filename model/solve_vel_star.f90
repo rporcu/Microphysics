@@ -36,12 +36,6 @@ module solve_vel_star_module
       use gas_drag_module, only: gas_drag_u
       use residual, only: calc_resid_vel
       use ur_facs, only: under_relax
-
-
-   use ur_facs, only: UR_FAC
-
-
-
       use discretelement, only: des_continuum_coupled
 
       ! Flag for existence of point souces
@@ -117,7 +111,7 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
-      integer :: i,j,k
+
      ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
       A_m(:,:,:,0) = -1.0d0
@@ -129,12 +123,9 @@ module solve_vel_star_module
                          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
-
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, &
          p_g, ep_g, ro_g, rop_g, rop_go, u_go, tau_u_g, dx, dy, dz)
-
-
 
       ! modifications for bc
       call source_u_g_bc (slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g,&
@@ -142,8 +133,6 @@ module solve_vel_star_module
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
                           dy, dz)
-
-
 
       ! Add in point sources
       if(point_source) call point_source_u_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
@@ -165,19 +154,6 @@ module solve_vel_star_module
          u_g, v_g, w_g, A_m, b_m, &
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), 'U')
-
-
-
-      do k= alo(3),ahi(3)
-      write(3001,"(2/,'K=',i2)") k
-      do i = alo(1),ahi(1)
-         write(3001,"('  ')")
-         do j = ahi(2),alo(2),-1
-            write(3001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-               i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-         end do
-      end do
-      end do
 
      call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
 
@@ -292,7 +268,7 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
-      integer :: i,j,k
+
 ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
       A_m(:,:,:,0) = -1.0d0
@@ -336,39 +312,6 @@ module solve_vel_star_module
          v_g, w_g, u_g, A_m, b_m, &
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), 'V')
-
-
-
-      if(ahi(3) == 0 ) then
-
-         ! write(*,*) 'fast Vg'
-         ! write(*,*) 'k', alo(3), ahi(3)
-         ! write(*,*) 'i', alo(1), ahi(1)
-         ! write(*,*) 'j', alo(2), ahi(2)
-
-         do k= alo(3),ahi(3)
-         write(4001,"(2/,'K=',i2)") k
-         do i = alo(1),ahi(1)
-            write(4001,"('  ')")
-            do j = ahi(2),alo(2),-1
-               write(4001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-                  i,j,k, A_m(i,j,k,-2: 2),b_m(i,j,k)
-            end do
-         end do
-         end do
-
-      else if(ahi(1) == 0) then
-         do i= alo(1),ahi(1)
-         write(4001,"(2/,'I=',i2)") i
-         do j = alo(2),ahi(2)
-            write(4001,"('  ')")
-            do k = ahi(3),alo(3),-1
-               write(4001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-                  j,k,i, A_m(i,j,k,-3:-2),A_m(i,j,k,0),A_m(i,j,k,2:3),b_m(i,j,k)
-            end do
-         end do
-         end do
-      endif
 
       call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
 
@@ -480,7 +423,6 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
-      integer :: i,j,k
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
@@ -508,7 +450,8 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
 
 ! calculate coefficients for the pressure correction equation
-      call calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, d_t, A_m, ep_g, f_gds, flag, dx, dy, dz)
+      call calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, &
+         d_t, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
 ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -523,38 +466,6 @@ module solve_vel_star_module
          w_g, u_g, v_g, A_m, b_m, &
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), 'W')
-
-
-      if(ahi(3) == 0) then
-         do k = alo(3),ahi(3)
-         write(5001,"(2/,'K=',i2)") k
-         do j = alo(2),ahi(2)
-            write(5001,"('  ')")
-            do i = alo(1),ahi(1)
-               write(5001,"(3(i4),5(1x,es10.2),10x,es10.2)")&
-                  i,j,k, A_m(i,j,k,-2:2),b_m(i,j,k)
-            end do
-         end do
-         end do
-
-      else if(ahi(1) == 0) then
-
-         ! write(*,*) 'fast Wg'
-         ! write(*,*) 'i', alo(1), ahi(1)
-         ! write(*,*) 'j', alo(2), ahi(2)
-         ! write(*,*) 'k', alo(3), ahi(3)
-
-         do i= alo(1),ahi(1)
-         write(5001,"(2/,'I=',i2)") i
-         do j = alo(2),ahi(2)
-            write(5001,"('  ')")
-            do k = ahi(3),alo(3),-1
-               write(5001,"(3(i4),5(1x,es10.2),5x,es10.2)")&
-                  j,k,i, A_m(i,j,k,-3:-2),A_m(i,j,k,0),A_m(i,j,k,2:3),b_m(i,j,k)
-            end do
-         end do
-         end do
-      endif
 
       call under_relax (w_g, wlo, whi, flag, slo, shi, A_m, b_m, alo, ahi, 'W', 5)
 
