@@ -74,7 +74,7 @@ extern "C"
 
   void comp_mean_fields(
          const int* slo, const int* shi,
-         const int* lo, const int* hi, const int* max_pip,
+         const int* max_pip,
          Real* ep_g, int* particle_state, Real* des_pos_new,
          Real* pvol, int* flag,
          Real* dx,       Real* dy,       Real* dz);

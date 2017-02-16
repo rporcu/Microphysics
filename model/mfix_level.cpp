@@ -814,7 +814,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
        const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
-       comp_mean_fields(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+       comp_mean_fields(sbx.loVect(), sbx.hiVect(), 
             &max_pip, (*ep_g[lev])[mfi].dataPtr(),
             particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
             (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
