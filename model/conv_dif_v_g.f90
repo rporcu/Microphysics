@@ -10,18 +10,15 @@ module v_g_conv_dif
    public :: conv_dif_v_g
 
    contains
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: conv_div_v_g(A_m)                                 C
-!  Purpose: Determine convection diffusion terms for V_g momentum eqs  C
-!  The off-diagonal coefficients calculated here must be positive. The C
-!  center coefficient and the source vector are negative;              C
-!  See source_v_g                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 24-DEC-96  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: conv_div_v_g(A_m)                                      !
+!  Purpose: Determine convection diffusion terms for V_g momentum eqs  !
+!  The off-diagonal coefficients calculated here must be positive. The !
+!  center coefficient and the source vector are negative;              !
+!  See source_v_g                                                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine conv_dif_v_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
@@ -77,23 +74,17 @@ module v_g_conv_dif
 
       end subroutine conv_dif_v_g
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: store_a_v_g0                                            C
-!  Purpose: Determine convection diffusion terms for V_g momentum eqs. C
-!  The off-diagonal coefficients calculated here must be positive.     C
-!  The center coefficient and the source vector are negative. See      C
-!  source_v_g.                                                         C
-!  Implement FOUP discretization                                       C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 6-JUN-96   C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: store_a_v_g0                                            !
+!  Purpose: Determine convection diffusion terms for V_g momentum eqs. !
+!  The off-diagonal coefficients calculated here must be positive.     !
+!  The center coefficient and the source vector are negative. See      !
+!  source_v_g.                                                         !
+!                                                                      !
+!  Implement FOUP discretization                                       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine store_a_v_g0(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
@@ -146,12 +137,13 @@ module v_g_conv_dif
 
 !---------------------------------------------------------------------//
 
+
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1)-1,ahi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
-               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
+               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i,j+1,k))
 
                d_fe = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k))) * c_ae
@@ -173,8 +165,7 @@ module v_g_conv_dif
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
-
+               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i,j+1,k))
                d_fn = mu_g(i,j+1,k) * c_an
 
                ! North face (i+1/2, j+1/2, k)
@@ -194,7 +185,7 @@ module v_g_conv_dif
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i+1,j,k))
+               flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i,j+1,k))
 
                d_ft = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * c_at
@@ -213,23 +204,16 @@ module v_g_conv_dif
 
       end subroutine store_a_v_g0
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: store_a_v_g1                                            C
-!  Purpose: Determine convection diffusion terms for V_g momentum eqs  C
-!  The off-diagonal coefficients calculated here must be positive.     C
-!  The center coefficient and the source vector are negative.          C
-!  Implements higher order discretization.                             C
-!  See source_v_g                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 20-MAR-97  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: store_a_v_g1                                            !
+!  Purpose: Determine convection diffusion terms for V_g momentum eqs  !
+!  The off-diagonal coefficients calculated here must be positive.     !
+!  The center coefficient and the source vector are negative.          !
+!  Implements higher order discretization.                             !
+!  See source_v_g                                                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine store_a_v_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &

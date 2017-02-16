@@ -277,7 +277,7 @@ contains
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
-                  b_m(i,j,k  ) = bc_v_g(bcv)
+                  b_m(i,j,k  ) = -bc_v_g(bcv)
 
                else if(bc_jlo_type(i,k,1) == NSW_ .or. &
                        bc_jlo_type(i,k,1) == FSW_ .or. &
