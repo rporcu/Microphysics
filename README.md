@@ -125,6 +125,15 @@ Test project ~/mfixexa
 > ctest -R DEM01  # running all tests with "DEM01" in the test name
 ```
 
+### Running a generic case
+```shell
+> ./mfix inputs  mfix.input_file=<input_file_name>
+```
+_inputs_ is a text file containing the BoxLib input parameters.
+_<input_file_name>_ is a text file containing the MFIX input parameters.
+If _mfix.input_file=<input_file_name>_ is not given, MFIX will try to read the file
+_mfix.dat_. If both _inputs_ and _mfix.dat_ cannot be found, MFIX will stop execution
+with an error message.
 
 --------------------------------------------------------------------
 

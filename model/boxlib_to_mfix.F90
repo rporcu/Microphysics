@@ -2,11 +2,31 @@ module boxlib_to_mfix_module
 ! _________________________________________________________________
 
   use bl_fort_module, only : c_real
-  use iso_c_binding , only: c_int
+  use iso_c_binding , only: c_int, c_char
 
   implicit none
 
 contains
+
+
+  subroutine mfix_set_ifile( fname, len ) bind(C, name="mfix_set_ifile")
+
+    use run, only: IFILE_NAME, IFILE_NAME_DEFAULT
+
+    integer(c_int),         intent(in), value :: len        
+    character(kind=c_char), intent(in)        :: fname(len)
+    integer                                   :: nc
+
+    if ( len < 1 ) then
+       IFILE_NAME = IFILE_NAME_DEFAULT
+    else
+       do nc = 1, len
+          IFILE_NAME(nc:nc) = fname(nc)
+       end do
+    end if
+
+
+  end subroutine mfix_set_ifile
 
 
 !**************************************************************************!

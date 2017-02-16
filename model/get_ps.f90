@@ -26,6 +26,7 @@ MODULE GET_PS_MODULE
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      use run, only: IFILE_NAME
 
       IMPLICIT NONE
 
@@ -134,13 +135,14 @@ MODULE GET_PS_MODULE
          WRITE(ERR_MSG,1101) PSV,                                      &
             'X', PS_X_W(PSV), PS_X_E(PSV),'I',PS_I_W(PSV),PS_I_E(PSV), &
             'Y', PS_Y_S(PSV), PS_Y_N(PSV),'J',PS_J_S(PSV),PS_J_N(PSV), &
-            'Z', PS_Z_B(PSV), PS_Z_T(PSV),'K',PS_K_B(PSV),PS_K_T(PSV)
+            'Z', PS_Z_B(PSV), PS_Z_T(PSV),'K',PS_K_B(PSV),PS_K_T(PSV), &
+            trim(IFILE_NAME)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1101 FORMAT('Error 1101: Invalid location specified for PS ',I3,'.',  &
          3(/3x,A1,': ',g12.5,',',g12.5,8x,A1,': ',I8,',',I8),/         &
-         'Please correct the mfix.dat file.')
+         'Please correct the ',A,' file.')
 
       CALL FINL_ERR_MSG
 

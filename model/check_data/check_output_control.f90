@@ -1,71 +1,62 @@
-MODULE CHECK_OUTPUT_CONTROL_MODULE
+module check_output_control_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
+                          & ivar, ival, err_msg
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!  Subroutine: CHECK_OUTPUT_CONTROL                                    !
-!  Purpose: Check the output control namelist section                  !
-!                                                                      !
-!  Author: P. Nicoletti                               Date: 27-NOV-91  !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_OUTPUT_CONTROL
+  implicit none
+  private
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! Time intervalue between updating the RES file.
-      use output, only: RES_DT
-! Time-step intervalue between updating the .LOG file.
-      use output, only: NLOG
-
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Number aliases
-      use param1, only: ZERO, IS_UNDEFINED
-
-! Global Module procedures:
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
-
-      IMPLICIT NONE
-
-!......................................................................!
+  public check_output_control
 
 
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_OUTPUT_CONTROL")
+contains
 
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !  Subroutine: CHECK_OUTPUT_CONTROL                                    !
+  !  Purpose: Check the output control namelist section                  !
+  !                                                                      !
+  !  Author: P. Nicoletti                               Date: 27-NOV-91  !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine check_output_control
 
-! Check the values specified for the RES file.
-      IF (IS_UNDEFINED(RES_DT))THEN
-         WRITE(ERR_MSG,1000) 'RES_DT'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF(RES_DT <= ZERO) THEN
-         WRITE(ERR_MSG,1002) 'RES_DT', RES_DT
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
+    use output, only: RES_DT, NLOG
+    use param1, only: ZERO, IS_UNDEFINED
 
-! Verify that the LOG frequency is valid.
-      IF(NLOG <= 0) THEN
-         WRITE(ERR_MSG,1003) 'NLOG', NLOG
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_OUTPUT_CONTROL")
 
-! Finalize the error manager.
-      CALL FINL_ERR_MSG
+    ! Check the values specified for the RES file.
+    if (IS_UNDEFINED(RES_DT))then
+       write(ERR_MSG,1000) 'RES_DT', trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    elseif(RES_DT <= ZERO) then
+       write(ERR_MSG,1002) 'RES_DT', RES_DT, trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
+    
+    ! Verify that the LOG frequency is valid.
+    if(NLOG <= 0) then
+       write(ERR_MSG,1003) 'NLOG', NLOG, trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
+    
+    ! Finalize the error manager.
+    call finl_err_msg
 
-      RETURN
+    
+1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
+          'correct the ',A,' file.')
+    
+1002 format('Error 1002: Illegal or unknown input: ',A,' = ',E14.6,/  &
+          'Please correct the ',A,'  file.')
+    
+1003 format('Error 1003: Illegal or unknown input: ',A,' = ',I4,/     &
+          'Please correct the ',A,'  file.')
+    
+  end subroutine check_output_control
 
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
-
- 1002 FORMAT('Error 1002: Illegal or unknown input: ',A,' = ',E14.6,/  &
-         'Please correct the mfix.dat file.')
-
- 1003 FORMAT('Error 1003: Illegal or unknown input: ',A,' = ',I4,/     &
-         'Please correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_OUTPUT_CONTROL
-END MODULE CHECK_OUTPUT_CONTROL_MODULE
+end module check_output_control_module

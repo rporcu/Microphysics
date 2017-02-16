@@ -1,167 +1,157 @@
-MODULE CHECK_IC_COMMON_DISCRETE_MODULE
-
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
-
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_IC_COMMON_DISCRETE                                !
-!  Author:   R.Garg                                   Date: 11-Mar-14  !
-!                                                                      !
-!  Purpose: check the initial conditions input section for DEM.        !
-!     - ensure the first IC is defined over the entire domain with     !
-!        ep_g = 1 when more than one IC has solids                     !
-!     - ensure the ICs are non-overlapping                             !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_IC_COMMON_DISCRETE
-
-! Flag indicating that the IC region is defined.
-      USE ic, only: IC_DEFINED
-! IC Region gas volume fraction.
-      USE ic, only: IC_EP_G
-
-      USE ic, only: IC_X_w, IC_X_e, IC_Y_s, IC_Y_n, IC_Z_b, IC_Z_t
-
-      USE param1, only: UNDEFINED_I, ZERO, ONE, EQUAL
-
-! direction wise spans of the domain and grid spacing in each direction
-      Use geometry, only: xlength, ylength, zlength
+module check_ic_common_discrete_module
 
 
-! Maximum number of IC regions
-      USE param, only: DIMENSION_IC
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
+       & ivar, ival, err_msg
 
-      ! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+  implicit none
+  private
 
-      implicit none
+  public check_ic_common_discrete
 
-      INTEGER :: ICV, ICV2, IDIM
-      INTEGER :: COUNT_IC, COUNT_IC_WITH_SOLS
-      INTEGER :: FIRST_DEF_IC
+contains
 
-      real(c_real) :: IC_ORIG(3), IC_END(3), IC2_ORIG(3) , IC2_END(3)
-      real(c_real) :: IC_MIN, IC_MAX, IC2_MIN, IC2_MAX , TOL_IC_REG
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  !  Subroutine: CHECK_IC_COMMON_DISCRETE                                !
+  !  Author:   R.Garg                                   Date: 11-Mar-14  !
+  !                                                                      !
+  !  Purpose: check the initial conditions input section for DEM.        !
+  !     - ensure the first IC is defined over the entire domain with     !
+  !        ep_g = 1 when more than one IC has solids                     !
+  !     - ensure the ICs are non-overlapping                             !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine check_ic_common_discrete
 
-      LOGICAL :: SEP_AXIS, first_ic_ok
+ 
+    use param1,   only: undefined_i, zero, one, equal
+    use geometry, only: xlength, ylength, zlength
+    use param,    only: dimension_ic
+    use ic,       only: ic_defined, ic_ep_g, ic_x_w, ic_x_e, ic_y_s, &
+                      &  ic_y_n, ic_z_b, ic_z_t
 
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_IC_COMMON_DISCRETE")
-
-! First check if multiple IC regions are defined for non-zero solids volume
-! fraction, then check if the first IC is specified over the whole domain with IC_EP_g = 1
-
-      !total count of defined ICs
-      COUNT_IC           = 0
-      !total count of defined IC's with solids
-      COUNT_IC_WITH_SOLS = 0
-      FIRST_DEF_IC = UNDEFINED_I
-      DO ICV = 1, DIMENSION_IC
-
-         IF (IC_DEFINED(ICV)) THEN
-            COUNT_IC = COUNT_IC + 1
-            FIRST_DEF_IC = MIN(FIRST_DEF_IC, ICV)
-
-            IF(IC_EP_G(ICV).LT.ONE) COUNT_IC_WITH_SOLS &
-            = COUNT_IC_WITH_SOLS  + 1
-
-         ENDIF ! if(ic_defined(icv))
-      end DO
-
-      IF(COUNT_IC_WITH_SOLS >= 1 .AND. &
-         COUNT_IC > COUNT_IC_WITH_SOLS+1) THEN
-
-! If the number of IC's with solids is greater than one, make sure the
-! first IC spans the entire domain with voidage of one. This ensures
-! that the entire domain has valid ICs defined.
-         ICV = FIRST_DEF_IC
-         FIRST_IC_OK = .FALSE.
-         IF(EQUAL(IC_EP_G(ICV), ONE) &
-           .AND.IC_X_W(ICV).LE.ZERO.AND.IC_X_E(ICV).GE.XLENGTH         &
-           .AND.IC_Y_S(ICV).LE.ZERO.AND.IC_Y_N(ICV).GE.YLENGTH)        &
-            FIRST_IC_OK = .TRUE.
-
-         IF (FIRST_IC_OK .AND. IC_Z_B(ICV) <= ZERO .AND. &
-            IC_Z_T(ICV) >= ZLENGTH) FIRST_IC_OK = .TRUE.
-
-         IF(.NOT.FIRST_IC_OK) THEN
-            WRITE(ERR_MSG, 1003)
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
- 1003 FORMAT(' Error 1003: Particle seeding with more than one IC ',   &
-         'region requires',/'that IC 1 span the entire domain and ',   &
-         'have IC_EP_g(1) = 1.0.',/'Please correct the mfix.dat file.')
-
-      ENDIF
-
-! Check if the ICs are non-overlapping.
-      TOL_IC_REG  = 1E-04
-      ICVLOOP : DO ICV = 1, DIMENSION_IC
-
-         IF(.NOT.IC_DEFINED(ICV)) CYCLE ICVLOOP
-         IF(EQUAL(IC_EP_G(ICV), 1.d0)) CYCLE ICVLOOP
-         IC_ORIG(1) = IC_X_W(ICV)
-         IC_ORIG(2) = IC_Y_S(ICV)
-         IC_ORIG(3) = IC_Z_B(ICV)
-         IC_END(1)  = IC_X_E(ICV)
-         IC_END(2)  = IC_Y_N(ICV)
-         IC_END(3)  = IC_Z_T(ICV)
-         ICVTWOLOOP : DO ICV2 = ICV+1, DIMENSION_IC
-
-            IF(.NOT.IC_DEFINED(ICV2)) CYCLE ICVTWOLOOP
-            IF(EQUAL(IC_EP_G(ICV2), 1.0d0)) CYCLE ICVTWOLOOP
-
-            IC2_ORIG(1) = IC_X_W(ICV2)
-            IC2_ORIG(2) = IC_Y_S(ICV2)
-            IC2_ORIG(3) = IC_Z_B(ICV2)
-            IC2_END(1)  = IC_X_E(ICV2)
-            IC2_END(2)  = IC_Y_N(ICV2)
-            IC2_END(3)  = IC_Z_T(ICV2)
-
-            sep_axis  = .false.
-            DO idim = 1, 3
-
-               ic_min = IC_ORIG(idim)
-               ic_max = IC_END(idim)
-               ic2_min = IC2_ORIG(idim)
-               ic2_max = ic2_END(idim)
-
-! Check for separating axis. If the separating axis exists, then the IC
-! regions can't overlap generally equality implies lack of sep_axis,
-! and thus, overlapping. However, doing so will flag all IC's as
-! overlapping since IC's have to share common edges. So here the
-! equality is considered as existence of a separating axis, and hence,
-! no overlap equality is also considered as separating axis which is
-               if ((ic_min .ge. ic2_max)  .or. (ic_max .le. ic2_min) ) then
-                  sep_axis = .true.
-                  exit
-               endif
-            end DO
-
-! Implies the IC regions could not find a separating axis and are
-! therefore overlapping.
-            IF(.NOT.sep_axis) THEN
-               WRITE(ERR_MSG, 1004) ICV, ICV2
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-
- 1004 FORMAT('Error 1004: Overlapping IC regions with nonzero solids ',&
-         'volume',/'fraction detected. This is not supported for ',    &
-         'discrete solids.',2/'Overlapping ICs: ',2(2x,I4),2/,         &
-         'Please correct the mfix.dat file.')
-
-         end DO ICVTWOLOOP
-      end DO ICVLOOP
+    integer      :: icv, icv2, idim, count_ic, count_ic_with_sols, first_def_ic
+    real(c_real) :: ic_orig(3), ic_end(3), ic2_orig(3) , ic2_end(3)
+    real(c_real) :: ic_min, ic_max, ic2_min, ic2_max , tol_ic_reg
+    logical      :: sep_axis, first_ic_ok
 
 
 
-      CALL FINL_ERR_MSG
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_IC_COMMON_DISCRETE")
 
-      RETURN
+    ! First check if multiple IC regions are defined for non-zero solids volume
+    ! fraction, then check if the first IC is specified over the whole domain with IC_EP_g = 1
+    count_ic           = 0     !total count of defined ics
+    count_ic_with_sols = 0     !total count of defined ic's with solids
+    first_def_ic       = undefined_i
+    
+    do icv = 1, dimension_ic
+       
+       if (ic_defined(icv)) then
+          count_ic = count_ic + 1
+          first_def_ic = min(first_def_ic, icv)
+          
+          if(ic_ep_g(icv).lt.one) count_ic_with_sols &
+               = count_ic_with_sols  + 1
+          
+       endif
+    end do
+    
+    if(count_ic_with_sols >= 1 .and. &
+         count_ic > count_ic_with_sols+1) then
+       
+       ! if the number of ic's with solids is greater than one, make sure the
+       ! first ic spans the entire domain with voidage of one. this ensures
+       ! that the entire domain has valid ics defined.
+       icv = first_def_ic
+       first_ic_ok = .false.
+       if(equal(ic_ep_g(icv), one) &
+            .and.ic_x_w(icv).le.zero.and.ic_x_e(icv).ge.xlength         &
+            .and.ic_y_s(icv).le.zero.and.ic_y_n(icv).ge.ylength)        &
+            first_ic_ok = .true.
+       
+       if (first_ic_ok .and. ic_z_b(icv) <= zero .and. &
+            ic_z_t(icv) >= zlength) first_ic_ok = .true.
+       
+       if(.not.first_ic_ok) then
+          write(err_msg, 1003) trim(IFILE_NAME)
+          call flush_err_msg(abort=.true.)
+       endif
+       
+1003   format(' Error 1003: Particle seeding with more than one IC ',   &
+            'region requires',/'that IC 1 span the entire domain and ',   &
+            'have IC_EP_g(1) = 1.0.',/'Please correct the ',A,' file.')
+       
+    endif
+    
+    ! Check if the ICs are non-overlapping.
+    tol_ic_reg  = 1e-04
+    icvloop : do icv = 1, dimension_ic
+       
+       if(.not.ic_defined(icv)) cycle icvloop
+       if(equal(ic_ep_g(icv), 1.d0)) cycle icvloop
+       ic_orig(1) = ic_x_w(icv)
+       ic_orig(2) = ic_y_s(icv)
+       ic_orig(3) = ic_z_b(icv)
+       ic_end(1)  = ic_x_e(icv)
+       ic_end(2)  = ic_y_n(icv)
+       ic_end(3)  = ic_z_t(icv)
+       icvtwoloop : do icv2 = icv+1, dimension_ic
+          
+          if(.not.ic_defined(icv2)) cycle icvtwoloop
+          if(equal(ic_ep_g(icv2), 1.0d0)) cycle icvtwoloop
+          
+          ic2_orig(1) = ic_x_w(icv2)
+          ic2_orig(2) = ic_y_s(icv2)
+          ic2_orig(3) = ic_z_b(icv2)
+          ic2_end(1)  = ic_x_e(icv2)
+          ic2_end(2)  = ic_y_n(icv2)
+          ic2_end(3)  = ic_z_t(icv2)
+          
+          sep_axis  = .false.
+          do idim = 1, 3
+             
+             ic_min = ic_orig(idim)
+             ic_max = ic_end(idim)
+             ic2_min = ic2_orig(idim)
+             ic2_max = ic2_end(idim)
+             
+             ! Check for separating axis. If the separating axis exists, then the IC
+             ! regions can't overlap generally equality implies lack of sep_axis,
+             ! and thus, overlapping. However, doing so will flag all IC's as
+             ! overlapping since IC's have to share common edges. So here the
+             ! equality is considered as existence of a separating axis, and hence,
+             ! no overlap equality is also considered as separating axis which is
+             if ((ic_min .ge. ic2_max)  .or. (ic_max .le. ic2_min) ) then
+                sep_axis = .true.
+                exit
+             endif
+          end do
+          
+          ! Implies the IC regions could not find a separating axis and are
+          ! therefore overlapping.
+          if(.not.sep_axis) then
+             write(err_msg, 1004) icv, icv2, trim(ifile_name)
+             call flush_err_msg(abort=.true.)
+          endif
+          
+1004      format('Error 1004: Overlapping IC regions with nonzero solids ',&
+               'volume',/'fraction detected. This is not supported for ',    &
+               'discrete solids.',2/'Overlapping ICs: ',2(2x,I4),2/,         &
+               'Please correct the ',A,' file.')
+          
+       end do icvtwoloop
+    end do icvloop
+    
+    
+    
+    call finl_err_msg
+    
+  end subroutine check_ic_common_discrete
 
-      END SUBROUTINE CHECK_IC_COMMON_DISCRETE
-END MODULE CHECK_IC_COMMON_DISCRETE_MODULE
+end module check_ic_common_discrete_module

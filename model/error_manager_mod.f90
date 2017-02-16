@@ -56,7 +56,7 @@
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! Name given to current run.
-      use run, only: RUN_NAME
+      use run, only: RUN_NAME, IFILE_NAME
 ! Flag: All ranks report errors.
       use output, only: ENABLE_DMP_LOG
 ! Flag: My rank reports errors.
@@ -108,11 +108,11 @@
       NB = INDEX(RUN_NAME,' ')
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
-         IF(myPE  == PE_IO) WRITE (*, 1000) 'short'
+         IF(myPE  == PE_IO) WRITE (*, 1000) 'short', trim(IFILE_NAME)
          CALL MFIX_EXIT(myPE)
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
-         IF(myPE == PE_IO) WRITE (*, 1000) 'long'
+         if(myPE == PE_IO) write (*, 1000) 'long', trim(IFILE_NAME)
          CALL MFIX_EXIT(myPE)
 ! RUN_NAME legnth just right.
       ELSE
@@ -151,8 +151,8 @@
       RETURN
 
  1000 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
-         ' Error 1000: RUN_NAME too ',A,'. Please correct the',        &
-         ' mfix.dat file.',/1x,70('*'),2/)
+         ' Error 1000: RUN_NAME too ',A,'. Please correct the ',       &
+         A,' file.',/1x,70('*'),2/)
 
  1001 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
          ' Error 1001: Failed to open log file: ',A,/' Aborting run.'/,&

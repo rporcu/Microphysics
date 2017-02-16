@@ -189,7 +189,7 @@ MODULE OPEN_FILES_MOD
 !                                                                      !
 !  This routine only opens files when the following are met:           !
 !    (1) MFIX is run in DMP parallel (MPI)                             !
-!    (2) ENABLE_DMP_LOG is not set in the mfix.dat file.               !
+!    (2) ENABLE_DMP_LOG is not set in the mfix input file.             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE OPEN_PE_LOG(IER)
@@ -278,7 +278,7 @@ MODULE OPEN_FILES_MOD
 !                                                                      !
 !  This routine only opens files when the following are met:           !
 !    (1) MFIX is run in DMP parallel (MPI)                             !
-!    (2) ENABLE_DMP_LOG is not set in the mfix.dat file.               !
+!    (2) ENABLE_DMP_LOG is not set in the mfix input file.             !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CLOSE_PE_LOG
