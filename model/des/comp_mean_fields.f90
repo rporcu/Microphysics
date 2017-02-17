@@ -84,7 +84,7 @@ module comp_mean_fields_module
       DO K = slo(3),shi(3)
          DO J = slo(2),shi(2)
             DO I = slo(1),shi(1)
-               IF(flag(i,j,k,1) == 1) then
+               if (flag(i,j,k,1) == 1) then
                   ep_g(i,j,k) = 1.0d0 - solvolinc(i,j,k)*OoVol
                endif
             ENDDO

@@ -62,7 +62,7 @@ module calc_d_mod
          do j = alo(2), ahi(2)
             do i = alo(1), ahi(1)
                Am0 = -A_m(i,j,k,0)
-               if(abs(am0) > small_number) then
+               if (abs(am0) > small_number) then
                   epga = ayz*0.5d0*(ep_g(i,j,k)+ep_g(i+1,j,k))
                   if(coupled) Am0 = Am0 + 0.5d0*vol* &
                      (f_gds(i,j,k) + f_gds(i+1,j,k))

@@ -6,7 +6,7 @@ module des_drag_gp_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: DES_DRAG_GP                                             C
+!  Subroutine: des_drag_gp                                             C
 !  Purpose: Calculate the gas-particle drag coefficient using          C
 !           the gas velocity interpolated to the particle position     C
 !           and the particle velocity.                                 C
@@ -23,90 +23,104 @@ module des_drag_gp_module
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE DES_DRAG_GP(slo, shi, NP, PARTICLE_VEL, FLUID_VEL, EPg,&
-         ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
+      subroutine des_drag_gp(slo, shi, NP, particle_vel, fluid_vel, EPg,&
+                             ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
-      USE compar  , only: myPE
-      USE exit_mod, only: mfix_exit
-      USE drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
+      use compar  , only: myPE
+      use exit_mod, only: mfix_exit
+      use drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
          drag_wen_yu, drag_koch_hill, drag_bvk
-      USE run, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
+      use run, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
          drag_type_enum, drag_type
-      USE run, only: wen_yu, koch_hill, user_drag
-      USE run, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
-      USE funits  , only: dmp_log, unit_log
-      USE param1, only: one
-      USE constant, only: ro_s0
+      use run, only: wen_yu, koch_hill, user_drag
+      use run, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
+      use funits  , only: dmp_log, unit_log
+      use param1, only: one
+      use constant, only: ro_s0
       use constant, only: D_p0
 
       IMPLICIT NONE
 
-      INTERFACE
+      interface
 
-         SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
+         subroutine drag_usr(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
             ROs, lUg, lVg, lWg)
 
             use bl_fort_module, only : c_real
             use iso_c_binding , only: c_int
 
-! Index of fluid cell:
-            INTEGER, INTENT(IN) :: I,J,K
-! TFM SOLIDS --> Index of phase (M)
-! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
-            INTEGER, INTENT(IN) :: M_NP
+            ! Index of fluid cell:
+            integer, intent(in) :: I,J,K
 
-! drag coefficient
-            real(c_real), INTENT(OUT) :: lDgA
-! gas volume fraction
-            real(c_real), INTENT(IN) :: EPg
-! gas laminar viscosity
-            real(c_real), INTENT(IN) :: Mug
-! gas density
-            real(c_real), INTENT(IN) :: ROg
-! Magnitude of gas-solids relative velocity
-            real(c_real), INTENT(IN) :: VREL
-! particle diameter of solids phase M or
-! average particle diameter if PCF
-            real(c_real), INTENT(IN) :: DPM
-! particle density of solids phase M
-            real(c_real), INTENT(IN) :: ROs
-! fluid velocity components:
-! o TFM: Averaged from faces to cell center
-! o DES: Interpolated to the particle's position
-            real(c_real), INTENT(IN) :: lUg, lVg, lWg
-         END SUBROUTINE DRAG_USR
-      END INTERFACE
+            ! TFM SOLIDS --> Index of phase (M)
+            ! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
+            integer, intent(in) :: M_NP
 
-! indices, associated with current particle
-      INTEGER, intent(in   ) :: I, J, K
+            ! drag coefficient
+            real(c_real), intent(OUT) :: lDgA
 
-      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius, pvol
+            ! gas volume fraction
+            real(c_real), intent(in) :: EPg
+
+            ! gas laminar viscosity
+            real(c_real), intent(in) :: Mug
+
+            ! gas density
+            real(c_real), intent(in) :: ROg
+
+            ! Magnitude of gas-solids relative velocity
+            real(c_real), intent(in) :: VREL
+
+            ! particle diameter of solids phase M or
+            ! average particle diameter if PCF
+            real(c_real), intent(in) :: DPM
+
+            ! particle density of solids phase M
+            real(c_real), intent(in) :: ROs
+
+            ! fluid velocity components:
+            ! o TFM: Averaged from faces to cell center
+            ! o DES: Interpolated to the particle's position
+            real(c_real), intent(in) :: lUg, lVg, lWg
+         end subroutine drag_usr
+      end interface
+
+      ! indices, associated with current particle
+      integer, intent(in   ) :: I, J, K
+
+      real(c_real), intent(in) :: des_radius
+      real(c_real), intent(in) :: pvol
 
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
       integer(c_int), intent(in   ) :: slo(3), shi(3)
-! particle number id.
-      INTEGER , INTENT(IN) :: NP
-! particle velocity
-      real(c_real), INTENT(IN) :: PARTICLE_VEL(3)
-! fluid velocity interpolated to particle position
-      real(c_real), INTENT(IN) :: FLUID_VEL(3)
-! Gas phase volume fraction.
-      real(c_real), INTENT(IN) :: EPg
 
-      real(c_real), INTENT(IN) :: ro_g&
+      ! particle number id.
+      integer , intent(in) :: NP
+
+      ! particle velocity
+      real(c_real), intent(in) :: particle_vel(3)
+
+      ! fluid velocity interpolated to particle position
+      real(c_real), intent(in) :: fluid_vel(3)
+
+      ! Gas phase volume fraction.
+      real(c_real), intent(in) :: EPg
+
+      real(c_real), intent(in) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(IN) :: mu_g&
+      real(c_real), intent(in) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), INTENT(out) :: F_gp
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      real(c_real), intent(out) :: F_gp
+
+      integer, intent(in) :: particle_phase
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! solids phase index, associated with current particle
-      INTEGER :: M
+      integer :: M
 ! Slip velocity and its magnitude
       real(c_real) :: VSLP(3), VREL
 ! gas laminar viscosity redefined here to set viscosity at pressure
@@ -129,17 +143,19 @@ module des_drag_gp_module
 !-----------------------------------------------
 
 ! solids phase index of current particle
-      M = particle_phase(NP)
+      M = particle_phase
 ! Gas material and bulk densities
       ROg = RO_G(I,J,K)
       ROPg = RO_G(I,J,K) * EPg
 ! Laminar viscosity.
       Mu = MU_G(I,J,K)
 ! Slip velocity and its magnitude
-      VSLP = FLUID_VEL - PARTICLE_VEL
+      VSLP = fluid_vel - particle_vel
       VREL = SQRT(dot_product(VSLP, VSLP))
 ! assign variables for short dummy arguments
-      DPM = 2.0d0*DES_RADIUS(NP)
+
+      DPM = 2.0d0*des_radius
+
 ! Total solids volume fraction.
       PHIS = ONE - EPg
 
@@ -152,8 +168,8 @@ module des_drag_gp_module
       CASE (GIDASPOW)
          CALL DRAG_GIDASPOW(DgA,EPg,Mu,ROg,ROPg,VREL,DPM)
 
-      CASE (GIDASPOW_BLEND)
-         CALL DRAG_GIDASPOW_BLEND(DgA,EPg,Mu,ROg,ROPg,VREL,DPM)
+      CASE (GIDASPOW_BLend)
+         CALL DRAG_GIDASPOW_BLend(DgA,EPg,Mu,ROg,ROPg,VREL,DPM)
 
       CASE (WEN_YU)
          CALL DRAG_WEN_YU(DgA,EPg,Mu,ROPg,VREL,DPM)
@@ -163,7 +179,7 @@ module des_drag_gp_module
 
       CASE (USER_DRAG)
          CALL DRAG_USR(I,J,K,NP,DgA,EPg,Mu,ROg,VREL,DPM,RO_S0(M), &
-            FLUID_VEL(1), FLUID_VEL(2), FLUID_VEL(3))
+            fluid_vel(1), fluid_vel(2), fluid_vel(3))
 
       CASE DEFAULT
 
@@ -174,13 +190,13 @@ module des_drag_gp_module
          DPA = ONE / tSUM
          Y_i = DPM * tSUM
 
-         SELECT CASE(DRAG_TYPE_ENUM)
+         select CASE(DRAG_TYPE_ENUM)
 
 
          CASE (GIDASPOW_PCF)
             CALL DRAG_GIDASPOW(DgA,EPg,Mu,ROg,ROPg,VREL,DPA)
-         CASE (GIDASPOW_BLEND_PCF)
-            CALL DRAG_GIDASPOW_BLEND(DgA,EPg,Mu,ROg,ROPg,VREL,DPA)
+         CASE (GIDASPOW_BLend_PCF)
+            CALL DRAG_GIDASPOW_BLend(DgA,EPg,Mu,ROg,ROPg,VREL,DPA)
          CASE (WEN_YU_PCF)
             CALL DRAG_WEN_YU(DgA,EPg,Mu,ROPg,VREL,DPA)
          CASE (KOCH_HILL_PCF)
@@ -189,11 +205,11 @@ module des_drag_gp_module
             CALL DRAG_BVK(DgA,EPg,Mu,ROPg,VREL,DPM,DPA,phis)
 
          CASE DEFAULT
-            IF(DMP_LOG) WRITE (*, '(A,A)') &
+            IF(dmp_log) WRITE (*, '(A,A)') &
                'Unknown DRAG_TYPE: ', DRAG_TYPE
-            WRITE (UNIT_LOG, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
+            WRITE (unit_log, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
             CALL mfix_exit(myPE)
-         END SELECT   ! end selection of drag_type
+         end SELECT   ! end selection of drag_type
 
 
 ! Modify drag coefficient to account for possible corrections and for
@@ -201,11 +217,11 @@ module des_drag_gp_module
          F_cor = Y_i
          DgA = ONE/(Y_i*Y_i) * DgA * F_cor
 
-      END SELECT   ! end selection of drag_type
+      end select   ! end selection of drag_type
 
 ! Calculate the drag coefficient (Model B coeff = Model A coeff/EP_g)
-      F_gp = DgA * PVOL(NP)
+      F_gp = DgA * pvol
 
-      END SUBROUTINE DES_DRAG_GP
+      end subroutine des_drag_gp
 
 end module des_drag_gp_module
