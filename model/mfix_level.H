@@ -33,6 +33,10 @@ public:
 
     void WriteCheckPointFile ( int nstep, Real dt, Real time )  const;
 
+    int IsRestartEnabled () const;
+
+    void InitFromCheckpoint (); //( int nstep, Real dt, Real time )  const;
+
     void evolve_fluid (int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -214,7 +218,7 @@ private:
 
     Real cfl = 0.7;
 
-    std::string restart_chkfile;
+    std::string restart_chkfile {"no_restart"};
 
     std::string check_file {"chk"};
     std::string plot_file {"plt"};

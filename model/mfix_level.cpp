@@ -124,7 +124,7 @@ mfix_level::ReadParameters ()
 	pp.query("check_int", check_int);
 	pp.query("plot_file", plot_file);
 	pp.query("plot_int", plot_int);
-	pp.query("restart", restart_chkfile);
+	pp.query("restart_chkfile", restart_chkfile);
 	pp.query("verbose", verbose);
     }
 }

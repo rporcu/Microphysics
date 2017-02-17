@@ -109,6 +109,19 @@ int main (int argc, char* argv[])
 
     my_mfix.Init(lev,dt,time);
 
+    // Restart from checkpoint if needed
+    if ( my_mfix.IsRestartEnabled() ) {
+	if ( steady_state ) {
+	    BoxLib::Warning("Restart from checkpoint enabled for " 
+                            "steady state solve: ignoring");
+	} 
+	else {
+	    my_mfix.InitFromCheckpoint();
+	}
+    }
+
+    return 0;
+   
     int finish  = 0;
     int estatus = 0;
 
