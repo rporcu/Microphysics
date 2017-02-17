@@ -89,21 +89,48 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     
     WriteJobInfo(checkpointname);
 
-    for (int lev = 0; lev < nlevels; ++lev)
-    {
-    	VisMF::Write(*u_g[0], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "Ug"));
-    	// VisMF::Write(*Efield[lev][1],
-    	// 	     BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "Ey"));
-    	// VisMF::Write(*Efield[lev][2],
-    	// 	     BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "Ez"));
-    	// VisMF::Write(*Bfield[lev][0],
-    	// 	     BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "Bx"));
-    	// VisMF::Write(*Bfield[lev][1],
-    	// 	     BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "By"));
-    	// VisMF::Write(*Bfield[lev][2],
-    	// 	     BoxLib::MultiFabFileFullPrefix(lev, checkpointname, level_prefix, "Bz"));
-    }
+    for (int lev = 0; lev < nlevels; ++lev) {
 
+	// Velocities
+    	VisMF::Write(*u_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    							       level_prefix, "u_g"));
+    	VisMF::Write(*u_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "u_go"));
+    	VisMF::Write(*u_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "u_gt"));
+    	VisMF::Write(*v_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    							       level_prefix, "v_g"));
+    	VisMF::Write(*v_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "v_go"));
+    	VisMF::Write(*v_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "v_gt"));
+    	VisMF::Write(*w_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    							       level_prefix, "w_g"));
+    	VisMF::Write(*w_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "w_go"));
+    	VisMF::Write(*w_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "w_gt"));
+
+	// Material properties
+    	VisMF::Write(*ep_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    							       level_prefix, "ep_g"));
+    	VisMF::Write(*ep_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "ep_go"));
+    	VisMF::Write(*p_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "p_g"));
+    	VisMF::Write(*p_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "p_go"));
+    	VisMF::Write(*ro_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "ro_g"));
+    	VisMF::Write(*ro_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "ro_go"));
+    	VisMF::Write(*rop_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "rop_g"));
+    	VisMF::Write(*rop_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "rop_go"));
+    	VisMF::Write(*mu_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+    								level_prefix, "mu_g"));
+    }
 }
 
 
