@@ -203,6 +203,8 @@ module drag_gs_des1_module
 ! One over cell volume
       real(c_real) :: odx, ody, odz, vol
 !......................................................................!
+      real(c_real) :: particle_vel(3)
+!......................................................................!
 
 ! Initialize fluid cell values.
       f_gds = ZERO
@@ -242,7 +244,8 @@ module drag_gs_des1_module
          if(lepg < epsilon(lepg)) lepg = ep_g(i,j,k)
 
          ! Calculate drag coefficient
-         call des_drag_gp(slo, shi, np, des_vel_new(np,:), velfp, lepg, &
+         particle_vel(:) = des_vel_new(np,:)
+         call des_drag_gp(slo, shi, np, particle_vel, velfp, lepg, &
                           ro_g, mu_g, f_gp, i, j, k, &
                           des_radius(np),  pvol(np), particle_phase(np))
 
