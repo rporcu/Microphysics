@@ -217,6 +217,15 @@ contains
                         bc_hw_g(bcv)*bc_ww_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,w) = zero
+
+               else if(bc_ilo_type(j,k,1) == PINF_ .or. &
+                       bc_ilo_type(j,k,1) == POUT_ .or. &
+                       bc_ilo_type(j,k,1) == MINF_ .or. &
+                       bc_ilo_type(j,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
             end do
          end do
@@ -249,6 +258,15 @@ contains
                         bc_hw_g(bcv)*bc_ww_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,e) = zero
+
+               else if(bc_ihi_type(j,k,1) == PINF_ .or. &
+                       bc_ihi_type(j,k,1) == POUT_ .or. &
+                       bc_ihi_type(j,k,1) == MINF_ .or. &
+                       bc_ihi_type(j,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do
@@ -282,6 +300,15 @@ contains
                         bc_hw_g(bcv)*bc_ww_g(bcv)/(half*bc_hw_g(bcv)+ody)
                   endif
                   A_m(i,j,k,s) = zero
+
+               else if(bc_jlo_type(i,k,1) == PINF_ .or. &
+                       bc_jlo_type(i,k,1) == POUT_ .or. &
+                       bc_jlo_type(i,k,1) == MINF_ .or. &
+                       bc_jlo_type(i,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do
@@ -316,6 +343,15 @@ contains
                         bc_hw_g(bcv)*bc_ww_g(bcv)/(half*bc_hw_g(bcv)+ody)
                   endif
                   A_m(i,j,k,n) = zero
+
+               else if(bc_jhi_type(i,k,1) == PINF_ .or. &
+                       bc_jhi_type(i,k,1) == POUT_ .or. &
+                       bc_jhi_type(i,k,1) == MINF_ .or. &
+                       bc_jhi_type(i,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do

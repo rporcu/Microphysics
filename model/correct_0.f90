@@ -46,8 +46,25 @@ MODULE CORRECT_0_MODULE
 !-----------------------------------------------
 ! Indices
       INTEGER :: I,J,K
-      integer :: funit
+      integer :: llo(3), lhi(3)
 !-----------------------------------------------
+
+
+
+      do k =ulo(3)+1,uhi(3)-1
+         write(3100,"(2/,'K=',i2)") k
+         do j = uhi(2),ulo(2),-1
+            write(3100,"(2x,i3,2x)",advance='no') j
+            do i = ulo(1)+1,uhi(1)-1-1
+               write(3100,"(es10.2)",advance='no') u_g(i,j,k)
+            end do
+            i=uhi(1)-1
+            write(3100,"(es10.2)",advance='yes') u_g(i,j,k)
+         end do
+      end do
+
+
+
 
 ! Underrelax pressure correction.  Velocity corrections should not be
 ! underrelaxed, so that the continuity eq. is satisfied.
@@ -59,27 +76,36 @@ MODULE CORRECT_0_MODULE
         enddo
       enddo
 
-      do k = ulo(3),uhi(3)
-        do j = ulo(2),uhi(2)
-          do i = ulo(1)+1,uhi(1)-1
+     llo(1) = uhi(1)  ;  llo(2) = uhi(2)-1;  llo(3) = uhi(3)-1
+     lhi(1) = ulo(1)+1;  lhi(2) = ulo(2)+1;  lhi(3) = ulo(3)+1
+
+      do k = llo(3), lhi(3)
+        do j = llo(2), lhi(2)
+          do i = llo(1), lhi(1)
             u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i+1,j,k)-pp_g(i,j,k))
           enddo
         enddo
      enddo
 
-      do k = vlo(3),  vhi(3)
-        do j = vlo(2)+1, vhi(2)-1
-          do i = vlo(1),  vhi(1)
+     llo(1) = vhi(1)-1;  llo(2) = vhi(2)  ;  llo(3) = vhi(3)-1
+     lhi(1) = vlo(1)+1;  lhi(2) = vlo(2)+1;  lhi(3) = vlo(3)+1
+
+      do k = llo(3), lhi(3)
+        do j = llo(2), lhi(2)
+          do i = llo(1), lhi(1)
             v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j+1,k)-pp_g(i,j,k))
           enddo
         enddo
       enddo
 
-      do k = wlo(3)+1,whi(3)-1
-        do j =wlo(2),  whi(2)
-          do i =wlo(1),  whi(1)
-            w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
-          enddo
+     llo(1) = whi(1)-1;  llo(2) = whi(2)-1;  llo(3) = whi(3)
+     lhi(1) = wlo(1)+1;  lhi(2) = wlo(2)+1;  lhi(3) = wlo(3)+1
+
+     do k = llo(3), lhi(3)
+        do j = llo(2), lhi(2)
+           do i = llo(1), lhi(1)
+              w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
+           enddo
         enddo
      enddo
 
