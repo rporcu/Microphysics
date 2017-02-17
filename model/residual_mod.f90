@@ -146,22 +146,8 @@
       real(c_real) :: resid_ijk&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-
-      integer :: llo(3),lhi(3)
 !-----------------------------------------------
 
-      llo = lo
-      lhi = hi
-
-      if(axis == 'U') then
-         lhi(1) = hi(1) -1
-      elseif(axis == 'V') then
-         lhi(2) = hi(2) -1
-      elseif(axis == 'W') then
-         lhi(3) = hi(3) -1
-      else
-         stop
-      endif
 
 ! initializing
       num = zero

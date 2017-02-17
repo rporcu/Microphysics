@@ -148,7 +148,7 @@ module w_g_conv_dif
             do i = alo(1)-1,ahi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
-               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
+               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i,j,k+1))
 
                d_fe = avg_h(avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k  )),&
                             avg_h(mu_g(i,j,k+1),mu_g(i+1,j,k+1))) * c_ae
@@ -170,7 +170,7 @@ module w_g_conv_dif
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
+               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i,j,k+1))
 
                d_fn = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
                             avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * c_an

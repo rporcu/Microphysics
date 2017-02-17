@@ -462,6 +462,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           mfix_solve_for_vels(lev,dt);
 
+
           // Calculate transport coefficients
           mfix_physical_prop(lev,0);
 
@@ -1121,7 +1122,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
     resg = tmp_norm;
 
-    std::cout << "Solving Ppg " << std::endl;
+    // std::cout << "Solving Ppg " << std::endl;
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
 
