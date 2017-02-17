@@ -63,7 +63,8 @@ set(CXX_sources
   model/main.cpp
   model/mfix_level.cpp
   model/solve_bicgstab.cpp
-  model/ParticleContainer.cpp)
+  model/ParticleContainer.cpp
+  model/io/mfixIO.cpp )
 set(CXX_includes
   model/mfix_level.H
   model/ParticleContainer.H

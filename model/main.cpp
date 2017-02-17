@@ -40,7 +40,7 @@ int main (int argc, char* argv[])
     for(int i=2; i < argc; i++) {
 	int nlen = strlen(argv[i]);
 	// If-statement avoids passing the name of the mfix input file
-	// specified on the command line via the BoxLib interface
+	// specified on the command line.
 	if ( strstr(argv[i], "input_file") == NULL) {
 	    mfix_add_argument(argv[i], &nlen);
 	    printf("argv %d is %s\n", i, argv[i]);
@@ -117,7 +117,8 @@ int main (int argc, char* argv[])
     if (solve_fluid)
 	my_mfix.output(lev,estatus,finish,nstep,dt,time);
     
-    // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but only if solve_fluid = T
+    // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
+    // only if solve_fluid = T	
     Real prev_dt = dt;
 
     while (finish == 0)

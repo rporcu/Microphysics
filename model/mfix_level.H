@@ -31,6 +31,8 @@ public:
 
     void Restart();
 
+    void WriteCheckPointFile ( int nstep, Real dt, Real time )  const;
+
     void evolve_fluid (int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -80,6 +82,10 @@ private:
 
     void MakeNewLevel (int lev, Real time,
            const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
+    void WriteMfixHeader(const std::string& name) const;
+
+    void WriteJobInfo(const std::string& dir ) const;
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
