@@ -43,7 +43,6 @@ int main (int argc, char* argv[])
 	// specified on the command line.
 	if ( strstr(argv[i], "input_file") == NULL) {
 	    mfix_add_argument(argv[i], &nlen);
-	    printf("argv %d is %s\n", i, argv[i]);
 	 }	
     }
 
@@ -135,6 +134,8 @@ int main (int argc, char* argv[])
 	    time += prev_dt;
 	    nstep++;
 	}
+
+	my_mfix.WriteCheckPointFile( nstep, dt, time ); 
 
 	my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
