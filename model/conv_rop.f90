@@ -59,7 +59,7 @@ module conv_rop_module
 
 !  contains
 
-   end subroutine conv_rop 
+   end subroutine conv_rop
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -88,11 +88,11 @@ module conv_rop_module
 
       ! Velocity components
       real(c_real), intent(in   ) :: u&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: w&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       ! Face value of density (for calculating convective fluxes)
       real(c_real), intent(  out) :: rop_e&
