@@ -13,7 +13,7 @@ module solve_vel_star_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOLVE_VEL_STAR                                          !
+!  Subroutine: solve_u_g_star                                          !
 !  Author: M. Syamlal                                 Date: 25-APR-96  !
 !                                                                      !
 !  Purpose: Solve starred velocity components                          !
@@ -111,6 +111,7 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
+     real(c_real) :: vol
 
      ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
@@ -135,7 +136,8 @@ module solve_vel_star_module
                           dy, dz)
 
       ! Add in point sources
-      if(point_source) call point_source_u_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
+      vol = dx*dy*dz
+      if(point_source) call point_source_u_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
@@ -157,12 +159,11 @@ module solve_vel_star_module
 
      call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
 
-      return
    end subroutine solve_u_g_star
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOLVE_V_G_STAR                                          !
+!  Subroutine: solve_v_g_star                                          !
 !  Author: M. Syamlal                                 Date: 25-APR-96  !
 !                                                                      !
 !  Purpose: Solve starred velocity components                          !
@@ -268,6 +269,7 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
+     real(c_real) :: vol
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
@@ -291,9 +293,9 @@ module solve_vel_star_module
                          bc_klo_type, bc_khi_type, &
                          dx, dz)
 
-! add in point sources
-      if(point_source) call point_source_v_g (slo, shi, alo, ahi,&
-         b_m, flag, dx, dy, dz)
+      ! Add in point sources
+      vol = dx*dy*dz
+      if(point_source) call point_source_v_g (alo, ahi, b_m, vol)
 
 ! calculate coefficients for the pressure correction equation
       call calc_d_n(slo, shi, vlo, vhi, alo, ahi, lo, hi, d_n, A_m, &
@@ -315,12 +317,12 @@ module solve_vel_star_module
 
       call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
 
-   END SUBROUTINE SOLVE_V_G_STAR
+   end subroutine solve_v_g_star
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOLVE_W_G_STAR                                          !
+!  Subroutine: solve_w_g_star                                          !
 !  Author: M. Syamlal                                 Date: 25-APR-96  !
 !                                                                      !
 !  Purpose: Solve starred velocity components                          !
@@ -423,40 +425,42 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
+      real(c_real) :: vol 
 
-! Initialize A_m and b_m
+      ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
       A_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
       d_t(:,:,:)   =  0.0d0
 
-! calculate the convection-diffusion terms
+      ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                          A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
                          dt, dx, dy, dz)
 
-! calculate the source terms for the gas phase u-momentum eqs
+      ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, &
          p_g, ep_g, ro_g, rop_g, rop_go, w_go, tau_w_g, dx, dy, dz)
 
-! modifications for bc
+      ! modifications for bc
       call source_w_g_bc (slo, shi, alo, ahi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
                           dx, dy)
 
-! add in point sources
-      if(point_source) call point_source_w_g (slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
+      ! Add in point sources
+      vol = dx*dy*dz
+      if(point_source) call point_source_w_g (alo, ahi, b_m, vol)
 
-! calculate coefficients for the pressure correction equation
+      ! calculate coefficients for the pressure correction equation
       call calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, &
          d_t, A_m, ep_g, f_gds, flag, dx, dy, dz)
 
-! handle special case where center coefficient is zero
+      ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
-! add in source terms for DEM drag coupling.
+      ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
          call gas_drag_w(slo, shi, alo, ahi, lo, hi, &
                          A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
@@ -469,6 +473,6 @@ module solve_vel_star_module
 
       call under_relax (w_g, wlo, whi, flag, slo, shi, A_m, b_m, alo, ahi, 'W', 5)
 
-   END SUBROUTINE SOLVE_W_G_STAR
+   end subroutine solve_w_g_star
 
 end module solve_vel_star_module

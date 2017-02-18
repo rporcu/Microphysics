@@ -64,7 +64,7 @@ contains
 ! Local Variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: i,j,k
+      integer :: i,j,k
 ! Pressure at east cell
       real(c_real) :: PgE
 ! Average volume fraction
@@ -457,66 +457,50 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_U_G(slo, shi, alo, ahi, b_m, flag, dx, dy, dz)
+      subroutine point_source_u_g(alo, ahi, b_m, vol)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_u_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real)  , intent(in   ) :: vol
 
-      ! Vector b_m
-      real(c_real), intent(INOUT) :: b_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-
-      integer, intent(in   ) :: flag &
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(IN   ) :: dx,dy,dz
-
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: I, J, K
-      INTEGER :: PSV
-      INTEGER :: lIE, lIW
-! terms of bm expression
-      real(c_real) :: pSource
-      real(c_real) :: vol
+      integer(c_int) :: I, J, K
+      integer(c_int) :: psv
+      integer(c_int) :: lIE, lIW
+      real(c_real)  :: pSource
 !-----------------------------------------------
 
-      vol = dx*dy*dz
+      ! Calculate the mass going into each (i,j,k) cell. This is done for each
+      ! call in case the point source is time dependent.
 
-! Calculate the mass going into each (i,j,k) cell. This is done for each
-! call in case the point source is time dependent.
-      PS_LP: do PSV = 1, DIMENSION_PS
-         if(.NOT.PS_DEFINED(PSV)) cycle PS_LP
-         if(abs(PS_U_g(PSV)) < small_number) cycle PS_LP
+      ps_lp: do psv = 1, dimension_ps
+         if (.not.ps_defined(psv)) cycle PS_LP
+         if (abs(PS_U_g(psv)) < small_number) cycle PS_LP
 
-         if(PS_U_g(PSV) < 0.0d0) then
-            lIW = PS_I_W(PSV) - 1
-            lIE = PS_I_E(PSV) - 1
+         if(PS_U_g(psv) < 0.0d0) then
+            lIW = PS_I_W(psv) - 1
+            lIE = PS_I_E(psv) - 1
          else
-            lIW = PS_I_W(PSV)
-            lIE = PS_I_E(PSV)
+            lIW = PS_I_W(psv)
+            lIE = PS_I_E(psv)
          endif
 
-         do k = PS_K_B(PSV), PS_K_T(PSV)
-         do j = PS_J_S(PSV), PS_J_N(PSV)
+         do k = PS_K_B(psv), PS_K_T(psv)
+         do j = PS_J_S(psv), PS_J_N(psv)
          do i = lIW, lIE
 
-            if(.NOT. 1.eq.flag(i,j,k,1)) cycle
-
-            pSource =  PS_MASSFLOW_G(PSV) * (vol/PS_VOLUME(PSV))
+            pSource =  PS_MASSFLOW_G(psv) * (vol/PS_VOLUME(psv))
 
             b_m(I,J,K) = b_m(I,J,K) - pSource *                        &
-               PS_U_g(PSV) * PS_VEL_MAG_g(PSV)
+               PS_U_g(psv) * PS_VEL_MAG_g(psv)
 
          enddo
          enddo
          enddo
-      enddo PS_LP
 
-      RETURN
-      END SUBROUTINE POINT_SOURCE_U_G
+      enddo ps_lp
+
+      end subroutine point_source_u_g
 end module source_u_g_module

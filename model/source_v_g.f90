@@ -21,8 +21,6 @@ contains
       A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
       v_go, tau_v_g, dx, dy, dz)
 
-! Modules
-!---------------------------------------------------------------------//
       use constant, only: gravity
       use bc, only: delp_y
 
@@ -88,7 +86,7 @@ contains
 
                epga = avg(ep_g(i,j,k),ep_g(i,j+1,k))
 
-! Pressure term
+               ! Pressure term
                pgn = p_g(i,j+1,k)
                if ( cyclic_y_pd) then
                   if((j==domlo(2)-1) .or. (j==domhi(2)) ) &
@@ -96,16 +94,17 @@ contains
                end if
                sdp = -p_scale*epga*(pgn - p_g(i,j,k))*axz
 
-! Volumetric forces
+               ! Volumetric forces
                roga = avg(ro_g(i,j,k),ro_g(i,j+1,k))
                ropga = avg(rop_g(i,j,k),rop_g(i,j+1,k))
-! Previous time step
+
+               ! Previous time step
                v0 = avg(rop_go(i,j,k),rop_go(i,j+1,k))*odt
 
-! Body force
+               ! Body force
                vbf = roga*gravity(2)
 
-! Collect the terms
+               ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                 A_m(i,j,k,t) + A_m(i,j,k,b)+ v0*vol)
@@ -123,7 +122,7 @@ contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: SOURCE_V_g_BC                                           !
+!  Subroutine: source_v_g_bc
 !  Purpose: Determine source terms for V_g momentum eq. The terms      !
 !     appear in the center coefficient and RHS vector. The center      !
 !     coefficient and source vector are negative.  The off-diagonal    !
@@ -431,70 +430,55 @@ contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: POINT_SOURCE_V_G                                        !
+!  Subroutine: point_source_v_g                                        !
 !  Purpose: Adds point sources to the gas phase V-Momentum equation.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine point_source_v_g(slo,shi,alo,ahi,b_m,flag,dx,dy,dz)
+      subroutine point_source_v_g(alo,ahi,b_m,vol)
 
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_v_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real)  , intent(in   ) :: vol
 
-      ! Vector b_m
-      real(c_real), intent(INOUT) :: b_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      integer :: I, J, K
+      integer :: psv
+      integer :: lJN, lJS
 
-      integer, intent(in   ) :: flag &
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      real(c_real), intent(IN   ) :: dx,dy,dz
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: I, J, K
-      INTEGER :: PSV
-      INTEGER :: lJN, lJS
-! terms of bm expression
       real(c_real) :: pSource
-      real(c_real) :: vol
 !-----------------------------------------------
 
-      vol = dx*dy*dz
+      ! Calculate the mass going into each (i,j,k) cell. This is done for each
+      ! call in case the point source is time dependent.
+      ps_lp: do psv = 1, dimension_ps
 
-! Calculate the mass going into each (i,j,k) cell. This is done for each
-! call in case the point source is time dependent.
-      PS_LP: do PSV = 1, DIMENSION_PS
-         if(.NOT.PS_DEFINED(PSV)) cycle PS_LP
-         if(abs(PS_V_g(PSV)) < small_number) cycle PS_LP
+         if (.not.ps_defined(psv)) cycle ps_lp
+         if (abs(PS_V_g(psv)) < small_number) cycle ps_lp
 
-         if(PS_V_g(PSV) < 0.0d0) then
-            lJS = PS_J_S(PSV) - 1
-            lJN = PS_J_N(PSV) - 1
+         if(PS_V_g(psv) < 0.0d0) then
+            lJS = PS_J_S(psv) - 1
+            lJN = PS_J_N(psv) - 1
          else
-            lJS = PS_J_S(PSV)
-            lJN = PS_J_N(PSV)
+            lJS = PS_J_S(psv)
+            lJN = PS_J_N(psv)
          endif
 
-         do k = PS_K_B(PSV), PS_K_T(PSV)
+         do k = PS_K_B(psv), PS_K_T(psv)
          do j = lJS, lJN
-         do i = PS_I_W(PSV), PS_I_E(PSV)
+         do i = PS_I_W(psv), PS_I_E(psv)
 
-            if(.NOT.1.eq.flag(i,j,k,1)) cycle
+            pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
 
-            pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
-
-            B_M(I,J,K) = B_M(I,J,K) - pSource * &
-               PS_V_g(PSV) * PS_VEL_MAG_g(PSV)
+            b_m(I,J,K) = b_m(I,J,K) - pSource * &
+               ps_v_g(psv) * ps_vel_mag_g(psv)
 
          enddo
          enddo
          enddo
 
-      enddo PS_LP
+      enddo ps_lp
 
-      RETURN
-      END SUBROUTINE POINT_SOURCE_V_G
+      end subroutine point_source_v_g
 end module source_v_g_module

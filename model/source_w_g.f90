@@ -63,7 +63,7 @@ contains
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: i,j,k
+      integer :: i,j,k
 ! Pressure at top cell
       real(c_real) :: PgT
 ! Average volume fraction
@@ -437,7 +437,7 @@ contains
 !  Reviewer:                                          Date:            C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE POINT_SOURCE_W_G(slo,shi,alo,ahi,b_m,flag,dx,dy,dz)
+      subroutine point_source_w_g(alo,ahi,b_m,vol)
 
 !-----------------------------------------------
 ! Modules
@@ -446,61 +446,43 @@ contains
       use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
 
-      integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real)  , intent(in   ) :: vol
 
-      ! Vector b_m
-      real(c_real), intent(INOUT) :: B_m&
-         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      integer(c_int) :: I, J, K
+      integer(c_int) :: psv
+      integer(c_int) :: lKT, lKB
+      real(c_real)  :: pSource
 
-      integer, intent(in   ) :: flag &
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      ! Calculate the mass going into each (i,j,k) cell. This is done for each
+      ! call in case the point source is time dependent.
+      ps_lp: do psv = 1, dimension_ps
+         if (.not.ps_defined(psv)) cycle ps_lp
+         if (abs(PS_W_g(psv)) < small_number) cycle ps_lp
 
-      real(c_real), intent(IN   ) :: dx,dy,dz
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: I, J, K
-      INTEGER :: PSV
-      INTEGER :: lKT, lKB
-! terms of bm expression
-      real(c_real) :: pSource
-      real(c_real) :: vol
-!-----------------------------------------------
-
-      vol = dx*dy*dz
-
-! Calculate the mass going into each (i,j,k) cell. This is done for each
-! call in case the point source is time dependent.
-      PS_LP: do PSV = 1, DIMENSION_PS
-         if(.NOT.PS_DEFINED(PSV)) cycle PS_LP
-         if(abs(PS_W_g(PSV)) < small_number) cycle PS_LP
-
-         if(PS_W_g(PSV) < ZERO) then
-            lKB = PS_K_B(PSV)-1
-            lKT = PS_K_T(PSV)-1
+         if(PS_W_g(psv) < ZERO) then
+            lKB = PS_K_B(psv)-1
+            lKT = PS_K_T(psv)-1
          else
-            lKB = PS_K_B(PSV)
-            lKT = PS_K_T(PSV)
+            lKB = PS_K_B(psv)
+            lKT = PS_K_T(psv)
          endif
 
          do k = lKB, lKT
-         do j = PS_J_S(PSV), PS_J_N(PSV)
-         do i = PS_I_W(PSV), PS_I_E(PSV)
+         do j = PS_J_S(psv), PS_J_N(psv)
+         do i = PS_I_W(psv), PS_I_E(psv)
 
-            if(.NOT.1.eq.flag(i,j,k,1)) cycle
-
-            pSource =  PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
+            pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
 
             b_m(I,J,K) = b_m(I,J,K) - pSource * &
-               PS_W_g(PSV) * PS_VEL_MAG_g(PSV)
+               PS_W_g(psv) * PS_VEL_MAG_g(psv)
 
          enddo
          enddo
          enddo
 
-      enddo PS_LP
+      enddo ps_lp
 
-      RETURN
-      END SUBROUTINE POINT_SOURCE_W_G
+      end subroutine point_source_w_g
 end module source_w_g_module
