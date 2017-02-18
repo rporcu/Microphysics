@@ -16,7 +16,7 @@ namespace
 
 
 void
-mfix_level::WriteMfixHeader(const std::string& name) const
+mfix_level::WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -40,6 +40,10 @@ mfix_level::WriteMfixHeader(const std::string& name) const
     	const int nlevels = finestLevel()+1;
     	HeaderFile << nlevels << "\n";
 
+	// Time stepping controls
+    	HeaderFile << nstep << "\n";
+    	HeaderFile << dt << "\n";
+    	HeaderFile << time << "\n";
 
     	// Geometry
     	for (int i = 0; i < BL_SPACEDIM; ++i) 
@@ -76,13 +80,13 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     const std::string& checkpointname = BoxLib::Concatenate( check_file, nstep );
 
     if (ParallelDescriptor::IOProcessor()) {
-    	std::cout << "  Writing checkpoint " << checkpointname << std::endl;
+    	std::cout << "\n\t Writing checkpoint " << checkpointname << std::endl;
     }
 
     const int nlevels = finestLevel()+1;
     BoxLib::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
 
-    WriteMfixHeader(checkpointname);
+    WriteMfixHeader(checkpointname, nstep, dt, time);
     
     WriteJobInfo(checkpointname);
 
@@ -128,6 +132,8 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     	VisMF::Write(*mu_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
     								level_prefix, "mu_g"));
     }
+
+    mypc->Checkpoint(checkpointname, "particle", true);
 }
 
 
@@ -140,7 +146,7 @@ mfix_level::IsRestartEnabled () const
 
 
 void
-mfix_level::InitFromCheckpoint ()
+mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 {
     BL_PROFILE("mfix_level::InitFromCheckpoint()");
 
@@ -148,112 +154,197 @@ mfix_level::InitFromCheckpoint ()
 	std::cout << "  Restarting from checkpoint " << restart_chkfile << std::endl;
     }
 
-    // VisMF::SetNOutFiles(checkpoint_nfiles);
-    
-    // // Header
-    // {
-    // 	std::string File(restart_chkfile + "/MfixHeader");
 
-    // 	VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
+    // Header
+    {
+    	std::string File(restart_chkfile + "/MfixHeader");
 
-    // 	Array<char> fileCharPtr;
-    // 	ParallelDescriptor::ReadAndBcastFile(File, fileCharPtr);
-    // 	std::string fileCharPtrString(fileCharPtr.dataPtr());
-    // 	std::istringstream is(fileCharPtrString, std::istringstream::in);
+    	VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
 
-    // 	std::string line, word;
+    	Array<char> fileCharPtr;
+    	ParallelDescriptor::ReadAndBcastFile(File, fileCharPtr);
+    	std::string fileCharPtrString(fileCharPtr.dataPtr());
+    	std::istringstream is(fileCharPtrString, std::istringstream::in);
 
-    // 	std::getline(is, line);
+    	std::string line, word;
 
-    // 	int nlevs;
-    // 	is >> nlevs;
-    // 	GotoNextLine(is);
-    // 	finest_level = nlevs-1;
+    	std::getline(is, line);
 
-    // 	GotoNextLine(is);
+    	int  nlevs;
+	int  int_tmp;
+	Real real_tmp;
 
-    // 	Real prob_lo[BL_SPACEDIM];
-    // 	std::getline(is, line);
-    // 	{
-    // 	    std::istringstream lis(line);
-    // 	    int i = 0;
-    // 	    while (lis >> word) {
-    // 		prob_lo[i++] = std::stod(word);
-    // 	    }
-    // 	}
+    	is >> nlevs;
+    	GotoNextLine(is);
+    	// finest_level = nlevs-1;
+
+	// Time stepping controls
+	is >> int_tmp;
+	*nstep = int_tmp;
+    	GotoNextLine(is);
+
+	is >> real_tmp;
+	*dt = real_tmp;
+    	GotoNextLine(is);
+
+	is >> real_tmp;
+	*time = real_tmp;
+     	GotoNextLine(is);
+
+//     	Real prob_lo[BL_SPACEDIM];
+//     	std::getline(is, line);
+//     	{
+//     	    std::istringstream lis(line);
+//     	    int i = 0;
+//     	    while (lis >> word) {
+//     		prob_lo[i++] = std::stod(word);
+//     	    }
+//     	}
 	
-    // 	Real prob_hi[BL_SPACEDIM];
-    // 	std::getline(is, line);
-    // 	{
-    // 	    std::istringstream lis(line);
-    // 	    int i = 0;
-    // 	    while (lis >> word) {
-    // 		prob_hi[i++] = std::stod(word);
-    // 	    }
-    // 	}
+//     	Real prob_hi[BL_SPACEDIM];
+//     	std::getline(is, line);
+//     	{
+//     	    std::istringstream lis(line);
+//     	    int i = 0;
+//     	    while (lis >> word) {
+//     		prob_hi[i++] = std::stod(word);
+//     	    }
+//     	}
 
-    // 	Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
+//     	// Geometry::ProbDomain(RealBox(prob_lo,prob_hi));
 
-    // 	for (int lev = 0; lev < nlevs; ++lev) {
-    // 	    BoxArray ba;
-    // 	    ba.readFrom(is);
-    // 	    GotoNextLine(is);
-    // 	    DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
-    // 	    MakeNewLevel(lev, ba, dm);
-    // 	}
+//     	// for (int lev = 0; lev < nlevs; ++lev) {
+//     	//     BoxArray ba;
+//     	//     ba.readFrom(is);
+//     	//     GotoNextLine(is);
+//     	//     DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+//     	//     MakeNewLevel(lev, ba, dm);
+//     	// }
 
-	// mypc->ReadHeader(is);
-    // }
+// //	mypc->ReadHeader(is);
+    }
 
-    // // Initialize the field data
-    // for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
-    // {
-    // 	for (int i = 0; i < 3; ++i) {
-    // 	    Efield[lev][i]->setVal(0.0);
-    // 	    Bfield[lev][i]->setVal(0.0);
-    // 	    current[lev][i]->setVal(0.0);
-    // 	}
+    int nghost;
+    if (ParallelDescriptor::NProcs() == 1) {
+       nghost = 1;
+    } else {
+       nghost = 2;
+    }
 
-    // 	// xxxxx This will be done differently in amrex!
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "Ex"));
-    // 	    Efield[lev][0]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "Ey"));
-    // 	    Efield[lev][1]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "Ez"));
-    // 	    Efield[lev][2]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "Bx"));
-    // 	    Bfield[lev][0]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "By"));
-    // 	    Bfield[lev][1]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // 	{
-    // 	    MultiFab mf;
-    // 	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "Bz"));
-    // 	    Bfield[lev][2]->copy(mf, 0, 0, 1, 0, 0);
-    // 	}
-    // }
+    // Initialize the field data
+    for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
+    {
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>
+	// Velocities
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    // // Initilize particles
-    // mypc->AllocData();
-    // mypc->Restart(restart_chkfile, "particle");
+    	// xxxxx This will be done differently in amrex!
+    	{
+    	    MultiFab mf;
+	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_g"));
+	    u_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_go"));
+    	    u_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_gt"));
+	    // u_gt[lev]->setVal(0.0);
+    	    u_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_g"));
+    	    v_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_go"));
+    	    v_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_gt"));
+    	    v_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_g"));
+    	    w_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_go"));
+    	    w_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_gt"));
+    	    w_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ep_g"));
+    	    ep_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ep_go"));
+    	    ep_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "p_g"));
+    	    p_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "p_go"));
+    	    p_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ro_g"));
+    	    ro_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ro_go"));
+    	    ro_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "rop_g"));
+    	    rop_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "rop_go"));
+    	    rop_go[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+    	{
+    	    MultiFab mf;
+    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "mu_g"));
+    	    mu_g[lev]->copy(mf, 0, 0, 1, 0, 0);
+    	}
+
+    }
+
+    // Initilize particles
+    mypc->Restart(restart_chkfile, "particle");
 }
 
 
-
+void
+mfix_level::GotoNextLine (std::istream& is)
+{
+    constexpr std::streamsize bl_ignore_max { 100000 };
+    is.ignore(bl_ignore_max, '\n');
+}
 
 void
 mfix_level::WriteJobInfo (const std::string& dir) const

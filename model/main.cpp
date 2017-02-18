@@ -116,11 +116,15 @@ int main (int argc, char* argv[])
                             "steady state solve: ignoring");
 	} 
 	else {
-	    my_mfix.InitFromCheckpoint();
+	    my_mfix.InitFromCheckpoint( &nstep, &dt, &time);
+	    printf("After restart nstep=%d dt=%f time=%f\n", nstep, dt, time ); 
+	    // my_mfix.WriteCheckPointFile( nstep, dt, time );
+	    // return 0;
 	}
     }
 
-    return 0;
+
+    // return 0;
    
     int finish  = 0;
     int estatus = 0;
