@@ -77,6 +77,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
         s.setVal(0.0);
         t.setVal(0.0);
         v.setVal(0.0);
+       ph.setVal(0.0);
+       sh.setVal(0.0);
 
 //  Lp.residual(r, rhs, sol, bc_mode);
 
