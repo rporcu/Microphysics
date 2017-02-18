@@ -27,7 +27,7 @@ CONTAINS
 !-----------------------------------------------
 
       mfix_isnan = .False.
-      WRITE(notnumber,*) x
+      write(notnumber,*) x
 ! To check for NaN's in x, see if x (a real number) contain a letter "N"
 ! "n" or symbol "?", in which case it is a NaN (Not a Number)
 
@@ -59,7 +59,7 @@ CONTAINS
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      LOGICAL FUNCTION CHECK_VEL_BOUND (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g,flag)
+      logical function check_vel_bound (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g)
 
 !-----------------------------------------------
 ! Modules
@@ -79,50 +79,64 @@ CONTAINS
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real)  , intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-!-----------------------------------------------
-! Local variables
-!-----------------------------------------------
-! Indices
-      INTEGER :: I,J,K
-      LOGICAL :: ALL_IS_ERROR
-!-----------------------------------------------
 
-! initializing
-      CHECK_VEL_BOUND = .FALSE.
-      ALL_IS_ERROR    = .FALSE.
+      integer :: I,J,K
 
-LOOP_FLUID: DO K = slo(3),shi(3)
-        DO J = slo(2),shi(2)
-        DO I = slo(1),shi(1)
+      check_vel_bound = .FALSE.
 
-         IF (1.eq.flag(i,j,k,1)) THEN
-            IF(ABS(U_G(I,J,K)) > MAX_INLET_VEL .OR. &
-               ABS(V_G(I,J,K)) > MAX_INLET_VEL .OR. &
-               ABS(W_G(I,J,K)) > MAX_INLET_VEL) THEN
-               CHECK_VEL_BOUND = .TRUE.
-               WRITE(*,1000) MAX_INLET_VEL, I, J, K, &
-                             EP_g(I,J,K), U_G(I,J,K), V_G(I,J,K), W_G(I,J,K)
-               EXIT LOOP_FLUID
-            ENDIF
-         ENDIF
+      do k = wlo(3),whi(3)
+      do j = wlo(2),whi(2)
+      do i = wlo(1),whi(1)
+         if ( abs(w_g(I,J,K)) > max_inlet_vel) THEN
+            check_vel_bound = .true.
+            write(*,1000) max_inlet_vel, I, J, K, &
+                          ep_g(I,J,K), w_g(I,J,K)
+         end if
+      end do
+      end do
+      end do
 
-      ENDDO
-      ENDDO
-      ENDDO LOOP_FLUID
+      do k = vlo(3),vhi(3)
+      do j = vlo(2),vhi(2)
+      do i = vlo(1),vhi(1)
+         if (abs(v_g(I,J,K)) > max_inlet_vel) then
+            check_vel_bound = .true.
+            write(*,1000) max_inlet_vel, I, J, K, &
+                          ep_g(I,J,K), v_g(I,J,K)
+         end if
+      end do
+      end do
+      end do
 
-      ! CALL GLOBAL_ALL_OR(CHECK_VEL_BOUND, ALL_IS_ERROR)
-      IF(ALL_IS_ERROR) CHECK_VEL_BOUND = .TRUE.
+      do k = ulo(3),uhi(3)
+      do j = ulo(2),uhi(2)
+      do i = ulo(1),uhi(1)
+         if (abs(u_g(I,J,K)) > max_inlet_vel) then
+            check_vel_bound = .true.
+            write(*,1000) max_inlet_vel, I, J, K, &
+                          ep_g(I,J,K), u_g(I,J,K)
+         end if
+      end do
+      end do
+      end do
 
-      RETURN
  1000 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
-            'WARNING: velocity higher than maximum allowed velocity: ', &
-            G12.5, '(to change this adjust the scale factor MAX_INLET_VEL_FAC)'/&
+            'WARNING: w velocity higher than maximum allowed velocity: ', &
+            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
             'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
-            '  ','Epg = ', G12.5, 'Ug = ', G12.5, 'Vg = ', G12.5, 'Wg = ', G12.5)
+            '  ','Epg = ', G12.5, 'Wg = ', G12.5)
+ 1001 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
+            'WARNING: v velocity higher than maximum allowed velocity: ', &
+            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
+            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
+            '  ','Epg = ', G12.5, 'Vg = ', G12.5)
+ 1002 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
+            'WARNING: u velocity higher than maximum allowed velocity: ', &
+            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
+            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
+            '  ','Epg = ', G12.5, 'Ug = ', G12.5)
 
-      END FUNCTION CHECK_VEL_BOUND
+      end function check_vel_bound
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !

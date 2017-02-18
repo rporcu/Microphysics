@@ -15,19 +15,18 @@ MODULE CHECK_CONVERGENCE_MODULE
       integer(c_int) function check_convergence(nit) &
          bind(C, name="check_convergence")
 
-      USE param1, only: zero, undefined_i, is_undefined
-      USE residual, only: max_resid_index, nresid
+      use param1, only: zero, undefined_i, is_undefined
+      use residual, only: max_resid_index, nresid
       use residual, only: resid_p, resid_u, resid_v, resid_w
-      USE residual, only: resid, resid_index, resid_string, resid_x
+      use residual, only: resid, resid_index, resid_string, resid_x
       use residual, only: sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
-      USE run, only: detect_stall
-      USE toleranc, only: tol_resid, tol_diverge
-      USE utilities, ONLY: check_vel_bound
+      use run, only: detect_stall
+      use toleranc, only: tol_resid, tol_diverge
+      use utilities, only: check_vel_bound
 
-      IMPLICIT NONE
+      implicit none
 
-! Dummy arguments
-! Iteration number
+      ! Iteration number
       integer(c_int), intent(in) :: nit
 
 !-----------------------------------------------
@@ -38,7 +37,7 @@ MODULE CHECK_CONVERGENCE_MODULE
 ! max of residuals
       real(c_real) :: maxres
 ! index
-      INTEGER :: L, maxL, maxM, maxN
+      integer :: L, maxL, maxM, maxN
 !-----------------------------------------------
 
 ! sum the residuals from correction equation (pressure and/or
@@ -94,29 +93,28 @@ MODULE CHECK_CONVERGENCE_MODULE
 
 ! Require at least two iterations.
       IF(NIT == 1) THEN
-         CHECK_CONVERGENCE = 0
+         check_convergence = 0
          RETURN
       ENDIF
 
 ! total residual
       IF(SUM<=TOL_RESID) THEN
-         CHECK_CONVERGENCE = 1          ! converged
+         check_convergence = 1          ! converged
       ELSEIF (SUM>=TOL_DIVERGE ) THEN
          IF (NIT /= 1) THEN
-            CHECK_CONVERGENCE = 2       ! diverged
+            check_convergence = 2       ! diverged
          ELSE
-            CHECK_CONVERGENCE = 0       ! not converged
+            check_convergence = 0       ! not converged
          ENDIF
       ELSE
-         CHECK_CONVERGENCE = 0          ! not converged
+         check_convergence = 0          ! not converged
       ENDIF
 
 ! Check upper bound (speed of sound) limit for gas velocity components.
 !      IF(MOMENTUM_X_EQ(0) .OR. MOMENTUM_Y_EQ(0) .OR. &
 !          MOMENTUM_Z_EQ(0)) THEN
-!         IF(CHECK_VEL_BOUND(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g,flag)) CHECK_CONVERGENCE = 2     !divergence
+!         IF(CHECK_VEL_BOUND(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g)) check_convergence = 2     !divergence
 !      ENDIF
 
-      RETURN
-   END function check_convergence
-END MODULE CHECK_CONVERGENCE_MODULE
+   end function check_convergence
+end module check_convergence_module

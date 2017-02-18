@@ -28,8 +28,7 @@
       real(c_real) :: max_inlet_vel_fac
 
       ! Maximum allowed velocity of gas or solids in case no inlet velocities
-      ! (or zero velocities) are defined at inlet (see function
-      ! check_vel_bound)
+      ! (or zero velocities) are defined at inlet (see function check_vel_bound)
       real(c_real), parameter :: max_allowed_vel = 500.0d+2
 
       ! The following quantities can be specified through the input data
