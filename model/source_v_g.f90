@@ -217,6 +217,15 @@ contains
                         bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,w) = zero
+
+               else if(bc_ilo_type(j,k,1) == PINF_ .or. &
+                       bc_ilo_type(j,k,1) == POUT_ .or. &
+                       bc_ilo_type(j,k,1) == MINF_ .or. &
+                       bc_ilo_type(j,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do
@@ -251,6 +260,15 @@ contains
                         bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odx)
                   endif
                   A_m(i,j,k,e) = zero
+
+               else if(bc_ihi_type(j,k,1) == PINF_ .or. &
+                       bc_ihi_type(j,k,1) == POUT_ .or. &
+                       bc_ihi_type(j,k,1) == MINF_ .or. &
+                       bc_ihi_type(j,k,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do
@@ -349,6 +367,15 @@ contains
                         bc_hw_g(bcv)*bc_vw_g(bcv)/(half*bc_hw_g(bcv)+odz)
                   endif
                   A_m(i,j,k,b) = zero
+
+               else if(bc_klo_type(i,j,1) == PINF_ .or. &
+                       bc_klo_type(i,j,1) == POUT_ .or. &
+                       bc_klo_type(i,j,1) == MINF_ .or. &
+                       bc_klo_type(i,j,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do
@@ -384,6 +411,14 @@ contains
                   endif
                   A_m(i,j,k,t) = zero
 
+               else if(bc_khi_type(i,j,1) == PINF_ .or. &
+                       bc_khi_type(i,j,1) == POUT_ .or. &
+                       bc_khi_type(i,j,1) == MINF_ .or. &
+                       bc_khi_type(i,j,1) == MOUT_) then
+
+                  A_m(i,j,k,:) =  zero
+                  A_m(i,j,k,0) = -one
+                  b_m(i,j,k) = zero
                endif
 
             end do

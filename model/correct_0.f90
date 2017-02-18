@@ -49,23 +49,6 @@ MODULE CORRECT_0_MODULE
       integer :: llo(3), lhi(3)
 !-----------------------------------------------
 
-
-
-      do k =ulo(3)+1,uhi(3)-1
-         write(3100,"(2/,'K=',i2)") k
-         do j = uhi(2),ulo(2),-1
-            write(3100,"(2x,i3,2x)",advance='no') j
-            do i = ulo(1)+1,uhi(1)-1-1
-               write(3100,"(es10.2)",advance='no') u_g(i,j,k)
-            end do
-            i=uhi(1)-1
-            write(3100,"(es10.2)",advance='yes') u_g(i,j,k)
-         end do
-      end do
-
-
-
-
 ! Underrelax pressure correction.  Velocity corrections should not be
 ! underrelaxed, so that the continuity eq. is satisfied.
       do k = lo(3),hi(3)
