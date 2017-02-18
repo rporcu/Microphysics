@@ -292,8 +292,12 @@ extern "C"
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
-  void  mfix_des_time_march(
-          const int* slo, const int* shi, const int* lo,  const int* hi, const int* max_pip,
+  void  mfix_des_time_march( const int* max_pip,
+          const int* slo,  const int* shi,
+          const int* ulo,  const int* uhi,
+          const int* vlo,  const int* vhi,
+          const int* wlo,  const int* whi,
+          const int* lo,   const int* hi,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,
           Real* ro_g,           Real* mu_g,
