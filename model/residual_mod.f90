@@ -74,7 +74,7 @@
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Subroutine: CALC_resid_VEL                                          C
+!  Subroutine: calc_resid_vel                                          C
 !  Purpose: Calculate residuals for momentum equations                 C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 21-MAY-96  C
@@ -82,10 +82,9 @@
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine calc_resid_vel(slo, shi, alo, ahi, lo, hi, &
+      subroutine calc_resid_vel(slo, shi, alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
-         vel, vels1, vels2, A_m, b_m, num, den, &
-         resid, axis)
+         vel, vels1, vels2, A_m, b_m, num, den, resid)
 
 !-----------------------------------------------
 ! Modules
@@ -93,9 +92,9 @@
       use param1  , only: large_number, small_number, zero
       use matrix  , only: e, w, s, n, t, b
 
-      IMPLICIT NONE
+      implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
@@ -116,16 +115,14 @@
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
       ! Vector b_m
-      real(c_real) :: B_m&
+      real(c_real) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
       ! Numerator and denominator
-      real(c_real), intent(OUT) :: num, den
+      real(c_real), intent(out) :: num, den
 
       ! Average value of Residual
-      real(c_real), intent(OUT) :: resid
-
-      character, intent(in) :: axis
+      real(c_real), intent(out) :: resid
 
 !-----------------------------------------------
 !     Local variables
@@ -172,18 +169,18 @@
                   a_m(i,j,k,t)*vel(i,j,k+1) + &
                   a_m(i,j,k,b)*vel(i,j,k-1) )
 
-! Ignore momentum residual in stagnant regions.  Need an alternative
-! criteria for residual scaling for such cases.
+               ! Ignore momentum residual in stagnant regions.  Need an alternative
+               ! criteria for residual scaling for such cases.
                magvel = sqrt(vel(i,j,k)**2 + vels1(i,j,k)**2+ vels2(i,j,k)**2)
 
                if (magvel > small_number) then
                   num1 = abs(num1)
                   den1 = abs(a_m(i,j,k,0)*magvel)
 
-! Storing value of residual at each (i,j,k) location
+                  ! Storing value of residual at each (i,j,k) location
                   resid_ijk(i,j,k) = num1
 
-! Adding to terms that are accumulated
+                  ! Adding to terms that are accumulated
                   ncells = ncells + 1
                   num = num + num1
                   den = den + den1
@@ -200,7 +197,6 @@
       else
          resid = large_number
       endif
-
 
    end subroutine calc_resid_vel
 

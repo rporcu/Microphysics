@@ -138,7 +138,7 @@ contains
 !     The drag terms are excluded from the source at this stage.       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_u_g_bc(slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g, &
+   subroutine source_u_g_bc(slo, shi, alo, ahi, A_m, b_m, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dy, dz)
 
@@ -155,16 +155,12 @@ contains
 
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
-      integer     , intent(in   ) :: ulo(3),uhi(3)
       real(c_real), intent(in   ) :: dy, dz
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(inout) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
-
-      real(c_real), intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)
@@ -444,7 +440,6 @@ contains
             end do
          end do
       endif
-
 
    end subroutine source_u_g_bc
 

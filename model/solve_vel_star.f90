@@ -130,7 +130,7 @@ module solve_vel_star_module
          p_g, ep_g, ro_g, rop_g, rop_go, u_go, tau_u_g, dx, dy, dz)
 
       ! modifications for bc
-      call source_u_g_bc (slo, shi, alo, ahi, ulo, uhi, A_m, b_m, u_g,&
+      call source_u_g_bc (slo, shi, alo, ahi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
@@ -150,11 +150,10 @@ module solve_vel_star_module
       if (des_continuum_coupled) &
          call gas_drag_u(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
-      call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
+      call calc_resid_vel (slo, shi, alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, &
-         num_resid(resid_u), den_resid(resid_u), &
-         resid(resid_u), 'U')
+         num_resid(resid_u), den_resid(resid_u), resid(resid_u))
 
      call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, 3)
 
@@ -303,11 +302,10 @@ module solve_vel_star_module
       if(des_continuum_coupled) &
          call gas_drag_v(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
-      call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
+      call calc_resid_vel (slo, shi, alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, &
-         num_resid(resid_v), den_resid(resid_v), &
-         resid(resid_v), 'V')
+         num_resid(resid_v), den_resid(resid_v), resid(resid_v))
 
       call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, 4)
 
@@ -454,11 +452,10 @@ module solve_vel_star_module
       if(des_continuum_coupled) &
          call gas_drag_w(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
-      call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
+      call calc_resid_vel (slo, shi, alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, &
-         num_resid(resid_w), den_resid(resid_w), &
-         resid(resid_w), 'W')
+         num_resid(resid_w), den_resid(resid_w), resid(resid_w))
 
       call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, 5)
 
