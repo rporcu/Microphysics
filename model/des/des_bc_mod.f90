@@ -98,21 +98,5 @@
       INTEGER, ALLOCATABLE :: DEM_BCMI_IJK(:)
 
       CONTAINS
-!----------------------------------------------------------------------!
-!  Function to exclude cells from DEM mass inlet.                      !
-!----------------------------------------------------------------------!
-      LOGICAL FUNCTION EXCLUDE_DEM_MI_CELL(lI, lJ, lK, flag)
-
-! Indicies of cell to check
-      INTEGER, INTENT(IN) :: lI, lJ, lK
-      INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: FLAG
-
-      EXCLUDE_DEM_MI_CELL = .TRUE.
-
-      IF(.NOT.1.eq.flag(li,lj,lk,1)) RETURN
-
-      EXCLUDE_DEM_MI_CELL = .FALSE.
-      RETURN
-      END FUNCTION EXCLUDE_DEM_MI_CELL
 
       END MODULE DES_BC

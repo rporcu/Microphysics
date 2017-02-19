@@ -273,8 +273,7 @@ module set_bc0_module
 
       implicit none
 
-      integer     , intent(in   ) :: slo(3),shi(3)
-
+      integer     , intent(in   ) :: slo(3),shi(3) 
       ! Specified constant gas density.
       real(c_real), intent(in) :: ro_g0
       integer         , intent(in) :: flag&
@@ -426,7 +425,7 @@ module set_bc0_module
 
  9999 FORMAT(/' Fatal Error --> Invoking MFIX_EXIT',/1x,70('*'),2/)
 
-      END SUBROUTINE SET_IJK_P_G
+      END SUBROUTINE set_ijk_p_g
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -434,13 +433,14 @@ module set_bc0_module
 !  Reviewer:                                          Date:            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE IJK_Pg_SEARCH(ll3, ll2, lu2, ll1, lu1, lMAP,          &
+      SUBROUTINE ijk_pg_search(ll3, ll2, lu2, ll1, lu1, lMAP,          &
          ldFlag, iErr, flag, slo, shi)
 
 ! Modules
 !--------------------------------------------------------------------//
-! IJK location where Ppg is fixed.
+      ! ijk location where Ppg is fixed.
       use bc, only: IJK_P_g
+
       use param1, only: undefined_i, is_undefined
       use compar, only: numpes, mype
       implicit none
@@ -463,8 +463,8 @@ module set_bc0_module
       INTEGER :: lc1, lS1, lE1
       INTEGER :: I, J, K
       LOGICAL :: recheck
-      INTEGER :: IJK_Pg_Owner, proc
-      INTEGER :: gIJK(0:numPEs-1,3)
+      INTEGER :: ijk_pg_owner, proc
+      INTEGER :: gijk(0:numPEs-1,3)
       INTEGER :: lpCnt
 
       CHARACTER(len=32) :: cInt
@@ -475,7 +475,7 @@ module set_bc0_module
       iErr = 2000
 
 ! Initialize the Owner ID
-      IJK_Pg_Owner = UNDEFINED_I
+      ijk_pg_owner = UNDEFINED_I
 
 ! Set the initial search region, a single cell.
       if(ll1 == lu1) then
@@ -498,7 +498,7 @@ module set_bc0_module
       recheck = .TRUE.
       do while(recheck)
 
-! Initialize the global IJK array to zero. Resetting this array inside
+! Initialize the global ijk array to zero. Resetting this array inside
 ! this do-loop is most likely overkill. This loop should only cycle
 ! if gIJK is zero.
          gIJK = undefined_i

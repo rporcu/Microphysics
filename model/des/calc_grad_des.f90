@@ -1,10 +1,11 @@
-MODULE CALC_GRAD_DES_MODULE
+module calc_grad_des_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
-      SUBROUTINE CALC_GRAD_DES(slo, shi, lo, hi, PHI, DEL_PHI, flag, dx, dy, dz)
+   contains
+
+      subroutine calc_grad_des(slo, shi, lo, hi, PHI, DEL_PHI, dx, dy, dz)
 
 ! Modules
 !-----------------------------------------------
@@ -22,8 +23,6 @@ MODULE CALC_GRAD_DES_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(  out) :: DEL_PHI&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      integer     , intent(in   ) :: FLAG&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Local variables
@@ -87,6 +86,5 @@ MODULE CALC_GRAD_DES_MODULE
          enddo
       enddo
 
-      RETURN
-      END SUBROUTINE CALC_GRAD_DES
-   END MODULE CALC_GRAD_DES_MODULE
+      end subroutine calc_grad_des
+   end module calc_grad_des_module

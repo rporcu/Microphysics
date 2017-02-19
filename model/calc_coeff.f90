@@ -33,7 +33,7 @@ module calc_coeff_module
         ro_g, p_g, ep_g, rop_g, u_g, v_g, w_g, &
         mu_g, f_gds, drag_bm,  particle_phase,  &
         particle_state, pvol, des_pos_new, des_vel_new, des_radius,  &
-        flag, dx, dy, dz) bind(C, name="calc_coeff_all")
+        dx, dy, dz) bind(C, name="calc_coeff_all")
 
 ! Global variables:
 !-----------------------------------------------------------------------
@@ -57,8 +57,6 @@ module calc_coeff_module
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: mu_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-            (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: ro_g&
             (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -94,7 +92,7 @@ module calc_coeff_module
 
       if (des_explicitly_coupled) &
          call calc_drag_des_explicit(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,&
-            max_pip, flag, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
+            max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, &
             drag_bm, particle_phase,  particle_state, pvol, &
             des_pos_new, des_vel_new, des_radius, dx, dy, dz)
 

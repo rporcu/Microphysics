@@ -101,7 +101,7 @@ CONTAINS
       do i = vlo(1),vhi(1)
          if (abs(v_g(I,J,K)) > max_inlet_vel) then
             check_vel_bound = .true.
-            write(*,1000) max_inlet_vel, I, J, K, &
+            write(*,1001) max_inlet_vel, I, J, K, &
                           ep_g(I,J,K), v_g(I,J,K)
          end if
       end do
@@ -113,7 +113,7 @@ CONTAINS
       do i = ulo(1),uhi(1)
          if (abs(u_g(I,J,K)) > max_inlet_vel) then
             check_vel_bound = .true.
-            write(*,1000) max_inlet_vel, I, J, K, &
+            write(*,1002) max_inlet_vel, I, J, K, &
                           ep_g(I,J,K), u_g(I,J,K)
          end if
       end do

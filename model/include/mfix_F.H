@@ -74,8 +74,7 @@ extern "C"
          const int* slo, const int* shi,
          const int* max_pip,
          Real* ep_g, int* particle_state, Real* des_pos_new,
-         Real* pvol, int* flag,
-         Real* dx,       Real* dy,       Real* dz);
+         Real* pvol, Real* dx,       Real* dy,       Real* dz);
 
 
   void mfix_output_manager(
@@ -101,7 +100,6 @@ extern "C"
          int* particle_phase,  int* particle_state,
          Real* pvol, Real* des_pos_new,
          Real* des_vel_new, Real* des_radius,
-         int* flag,
          Real* dx,       Real* dy,       Real* dz);
 
   void calc_coeff(
@@ -308,7 +306,6 @@ extern "C"
           Real* des_acc_old,    Real* rot_acc_old,
           Real* drag_fc,        Real* fc,             Real* tow,
           int* pairs,           int* pair_count,
-          int* flag,
           Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
           int * nstep);

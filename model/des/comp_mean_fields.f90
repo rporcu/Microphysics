@@ -14,7 +14,7 @@ module comp_mean_fields_module
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       subroutine comp_mean_fields(slo, shi, max_pip, ep_g, &
-         particle_state, des_pos_new, pvol, flag, dx, dy, dz) &
+         particle_state, des_pos_new, pvol, dx, dy, dz) &
          bind(C, name="comp_mean_fields")
 
       use param1, only: zero
@@ -32,8 +32,6 @@ module comp_mean_fields_module
       real(c_real), intent(in   ) :: pvol(max_pip)
 
       real(c_real), intent(in   ) :: dx, dy, dz
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -50,6 +48,7 @@ module comp_mean_fields_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 ! One over cell volume
       real(c_real) :: OoVol, odx, ody, odz, vol
+
 
       SOLVOLINC(:,:,:) = ZERO
 
@@ -84,9 +83,7 @@ module comp_mean_fields_module
       DO K = slo(3),shi(3)
          DO J = slo(2),shi(2)
             DO I = slo(1),shi(1)
-               if (flag(i,j,k,1) == 1) then
-                  ep_g(i,j,k) = 1.0d0 - solvolinc(i,j,k)*OoVol
-               endif
+               ep_g(i,j,k) = 1.0d0 - solvolinc(i,j,k)*OoVol
             ENDDO
          ENDDO
       ENDDO

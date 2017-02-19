@@ -16,7 +16,7 @@ module des_time_march_module
          particle_state, particle_phase, &
          des_radius,  pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
-         drag_fc, fc, tow, pairs, pair_count, flag, &
+         drag_fc, fc, tow, pairs, pair_count, &
          time, dt, dx, dy, dz, nstep) &
          bind(C, name="mfix_des_time_march")
 
@@ -34,7 +34,7 @@ module des_time_march_module
       use machine, only:  wall_time
       use output_manager_module, only: output_manager
       use param1, only: zero
-      use run, only: CALL_USR
+      use run, only: call_USR
       use run, only: TSTOP
 
 
@@ -61,8 +61,6 @@ module des_time_march_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real)  , intent(inout) :: time, dt
       real(c_real)  , intent(in   ) :: dx, dy, dz
@@ -132,7 +130,7 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         CALL OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+         call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
             particle_state, des_radius, &
             des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
@@ -140,27 +138,27 @@ module des_time_march_module
 
       IF(DES_CONTINUUM_COUPLED) THEN
          WRITE(ERR_MSG, 1000) trim(iVal(factor))
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
+         call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
       ELSE
          WRITE(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(factor))
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
+         call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
       ENDIF
 
  1000 FORMAT(/'DEM NITs: ',A)
  1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
-      IF(CALL_USR) CALL USR0_DES
+      IF(call_USR) call USR0_DES
 
       IF(DES_CONTINUUM_COUPLED) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
             call drag_gs_des(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, max_pip, &
                ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-               gradPg, flag, particle_state, pvol, des_pos_new, &
+               gradPg, particle_state, pvol, des_pos_new, &
                des_vel_new, fc, des_radius,  particle_phase, dx, dy, dz)
          ENDIF
          call calc_pg_grad(slo, shi, lo, hi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
-                           pvol, drag_fc, flag, dx, dy, dz)
+                           pvol, drag_fc, dx, dy, dz)
       ENDIF
 
 
@@ -182,27 +180,27 @@ module des_time_march_module
          ENDIF
 
 ! Calculate forces from particle-wall collisions
-         CALL CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
+         call CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
             des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
 
 ! Calculate pairs of colliding particles
-         CALL CALC_COLLISIONS(max_pip, pairs, pair_count, particle_state, &
+         call CALC_COLLISIONS(max_pip, pairs, pair_count, particle_state, &
             des_radius, des_pos_new)
 
 ! Calculate forces from particle-particle collisions
-         CALL CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, &
+         call CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, &
             des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
 ! Calculate or distribute fluid-particle drag force.
-         CALL calc_drag_des(slo,shi, ulo, uhi, vlo, vhi, wlo, whi,max_pip,&
+         call calc_drag_des(slo,shi, ulo, uhi, vlo, vhi, wlo, whi,max_pip,&
             ep_g,u_g,v_g,w_g,ro_g,mu_g, gradPg, particle_state, fc,&
             drag_fc,pvol, des_pos_new,des_vel_new,&
-            des_radius,particle_phase,flag, dx, dy, dz)
+            des_radius,particle_phase,dx, dy, dz)
 
 ! Call user functions.
-         IF(CALL_USR) CALL USR1_DES
+         IF(call_USR) call USR1_DES
 ! Update position and velocities
-         CALL CFNEWVALUES(max_pip, particle_state, pmass, omoi, &
+         call CFNEWVALUES(max_pip, particle_state, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
@@ -210,15 +208,15 @@ module des_time_march_module
          DO_NSEARCH = .TRUE.
 
 ! Add/Remove particles to the system via flow BCs.
-!         IF(DEM_BCMI > 0) CALL MASS_INFLOW_DEM
-!         IF(DEM_BCMO > 0) CALL MASS_OUTFLOW_DEM
+!         IF(DEM_BCMI > 0) call MASS_INFLOW_DEM
+!         IF(DEM_BCMO > 0) call MASS_OUTFLOW_DEM
 
 ! Calculate mean fields (EPg).
-         CALL comp_mean_fields(slo, shi, max_pip, &
-            ep_g, particle_state, des_pos_new, pvol, flag, &
+         call comp_mean_fields(slo, shi, max_pip, &
+            ep_g, particle_state, des_pos_new, pvol, &
             dx, dy, dz)
 
-         ! IF(DO_NSEARCH) CALL NEIGHBOUR(  particle_state, des_radius,&
+         ! IF(DO_NSEARCH) call NEIGHBOUR(  particle_state, des_radius,&
          !    des_pos_new, neighbor_index, neighbor_index_old)
 
 
@@ -231,19 +229,19 @@ module des_time_march_module
             TIME = S_TIME
             NSTEP = NSTEP + 1
 ! Call the output manager to write RES data.
-            CALL OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+            call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
                particle_state, des_radius, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(CALL_USR) CALL USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+         IF(call_USR) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
 ! END DEM time loop
 !-----------------------------------------------------------------<<<
 
-      IF(CALL_USR) CALL USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+      IF(call_USR) call USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN
@@ -259,7 +257,7 @@ module des_time_march_module
 
       IF(.NOT.DES_CONTINUUM_COUPLED)THEN
          WRITE(ERR_MSG,"('<---------- END DES_TIME_MARCH ----------')")
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
+         call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ELSE
          ! call send_recv(ep_g,2)
          ! call send_recv(rop_g,2)
@@ -270,7 +268,7 @@ module des_time_march_module
          ELSE
             WRITE(ERR_MSG, 9000) '+Inf'
          ENDIF
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
+         call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
 
  9000 FORMAT('    NITs/SEC = ',A)
 

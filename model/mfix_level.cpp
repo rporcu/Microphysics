@@ -557,7 +557,6 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
         drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
         pairs.dataPtr(),          &pair_count,
-        (*flag[lev])[mfi].dataPtr(),
         &time, &dt, &dx, &dy, &dz, &nstep);
     }
 
@@ -731,8 +730,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
        (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
        particle_phase.dataPtr(),  particle_state.dataPtr(),
        pvol.dataPtr(), des_pos_new.dataPtr(),
-       des_vel_new.dataPtr(), des_radius.dataPtr(),
-       (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+       des_vel_new.dataPtr(), des_radius.dataPtr(), &dx, &dy, &dz);
   }
   fill_mf_bc(lev,*ro_g[lev],0);
   fill_mf_bc(lev,*rop_g[lev],0);
@@ -833,7 +831,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
        comp_mean_fields(sbx.loVect(), sbx.hiVect(),
             &max_pip, (*ep_g[lev])[mfi].dataPtr(),
             particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
-            (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+            &dx, &dy, &dz );
     }
     fill_mf_bc(lev,*ep_g[lev],0);
 }

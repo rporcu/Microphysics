@@ -38,8 +38,8 @@ module drag_gs_des1_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
      subroutine drag_gs_des(slo, shi,ulo, uhi, vlo, vhi, wlo, whi,&
-        max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, &
-        gradPg, flag, particle_state, pvol, des_pos_new, des_vel_new,  &
+        max_pip, ep_g, u_g, v_g, w_g, ro_g, mu_g, gradpg, &
+        particle_state, pvol, des_pos_new, des_vel_new,  &
         fc, des_radius, particle_phase, dx, dy, dz)
 
         IMPLICIT NONE
@@ -64,8 +64,6 @@ module drag_gs_des1_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: gradpg&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: pvol(max_pip)
       real(c_real), intent(in   ) :: des_radius(max_pip)
@@ -107,9 +105,6 @@ module drag_gs_des1_module
          i = floor(des_pos_new(np,1)*odx) - 1
          j = floor(des_pos_new(np,2)*ody) - 1
          k = floor(des_pos_new(np,3)*odz) - 1
-
-         ! Avoid drag calculations in cells without fluid (cut-cell)
-         if (flag(i,j,k,1)/=1) CYCLE
 
          ! Calculate the gas volume fraction, velocity, and pressure force at
          ! the particle's position.

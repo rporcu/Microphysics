@@ -1,4 +1,4 @@
-MODULE CALC_PG_GRAD_MODULE
+module calc_pg_grad_module
 
    use bl_fort_module, only : c_real
    use iso_c_binding , only: c_int
@@ -7,7 +7,7 @@ MODULE CALC_PG_GRAD_MODULE
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: CALC_PG_GRAD                                            !
+!  Subroutine: calc_pg_grad                                            !
 !  Purpose: Calculate cell centered pressure force exerted on the      !
 !           particles in the cell by the gas/fluid phase               !
 !           Note that gradPg is evaluated as -dp/dx                    !
@@ -18,9 +18,9 @@ MODULE CALC_PG_GRAD_MODULE
 !         updated during DEM loop                                      !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_PG_GRAD(slo, shi, lo, hi, max_pip, &
+      subroutine calc_pg_grad(slo, shi, lo, hi, max_pip, &
                               p_g, gradPg,  particle_state, des_pos_new,&
-                              pvol, drag_fc, flag, dx, dy, dz)
+                              pvol, drag_fc, dx, dy, dz)
 
       use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, entering_ghost
@@ -53,8 +53,6 @@ MODULE CALC_PG_GRAD_MODULE
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(out  ) :: gradpg&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
-      integer         , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3)
 
       integer     , intent(in   ) :: particle_state(max_pip)
       real(c_real), intent(in   ) :: pvol(max_pip)
@@ -73,7 +71,7 @@ MODULE CALC_PG_GRAD_MODULE
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(slo, shi, lo, hi, P_G, gradPg, flag, dx, dy, dz)
+      CALL CALC_GRAD_DES(slo, shi, lo, hi, P_G, gradPg, dx, dy, dz)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
@@ -94,7 +92,7 @@ MODULE CALC_PG_GRAD_MODULE
          ody = 1.0d0/dy
          odz = 1.0d0/dz
 
-! Calculate the gas phase forces acting on each particle.
+            ! Calculate the gas phase forces acting on each particle.
          DO NP=1,MAX_PIP
 
             if(nonexistent==particle_state(np) .or.        &
@@ -103,20 +101,17 @@ MODULE CALC_PG_GRAD_MODULE
                exiting_particle==particle_state(np)  .or.  &
                exiting_ghost==particle_state(np)) cycle
 
-! Fluid cell containing the particle
+            ! Fluid cell containing the particle
             i = floor(des_pos_new(np,1)*odx) - 1
             j = floor(des_pos_new(np,2)*ody) - 1
             k = floor(des_pos_new(np,3)*odz) - 1
 
-            if (.NOT.1.eq.flag(i,j,k,1)) CYCLE
-
-! Include gas pressure and gas-solids drag
-            DRAG_FC(NP,:) = DRAG_FC(NP,:) + gradPg(i,j,k,:)*PVOL(NP)
+            ! Include gas pressure and gas-solids drag
+            drag_fc(NP,:) = drag_fc(NP,:) + gradPg(i,j,k,:)*PVOL(NP)
 
          ENDDO
       ENDIF
 
-      RETURN
-      END SUBROUTINE CALC_PG_GRAD
+      end subroutine calc_pg_grad
 
-END MODULE CALC_PG_GRAD_MODULE
+end module calc_pg_grad_module
