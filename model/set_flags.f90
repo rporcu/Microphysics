@@ -22,7 +22,7 @@ contains
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 !-----------------------------------------------
 ! Local variables
@@ -104,149 +104,7 @@ contains
             ENDDO
           ENDDO
       ENDDO
-! ----------------------------------------------------------------<<<
-! Define the numerical value of the variable flag for all cells based
-! on the corresponding character value of flag0.  By this point the
-! flag0 has been defined in all cells
-! ---------------------------------------------------------------->>>
-      flag(:,:,:,2:4) = UNDEFINED_I
 
       end subroutine set_flags
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: SET_flagS1                                             C
-!  Purpose: Assign IP flag to the faces of wall cells                  C
-!                                                                      C
-!  Notes: This routine may still leave flag_e, flag_n and flag_t       C
-!         undefined in some boundary cells                             C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 15-MAY-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified: flag_E, flag_N, flag_T                          C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      subroutine set_flags1(slo,shi,lo,hi,flag)
-
-      USE param1   , only: is_undefined
-      USE geometry , only: domlo,domhi
-
-      implicit none
-
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      integer, intent(inout) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
-
-      integer :: i,j,k
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-           do i = lo(1),hi(1)
-
-         ! If the flag is greater than or equal to 2000, there is no
-         ! internal surface.
-         IF (flag(i,j,k,1)>=100) then
-
-         ! the default is equivalent to an impermeable surface and these cells
-         ! will be treated as such in the momentum routines
-            flag(i,j,k,2) = 0
-            flag(i,j,k,3) = 0
-            flag(i,j,k,4) = 0
-            flag(i-1,j,k,2) = 0
-            flag(i,j-1,k,3) = 0
-            flag(i,j,k-1,4) = 0
-
-            if(flag(i,j,k,1) == 106 .or. flag(i,j,k,1) == 107) then
-
-               ! make the upper (E, N, T) boundary permeable
-               if (I == domhi(1)+1) then
-                  if ( (J>=(domlo(2)-1)) .and. (J<=(domhi(2)+1)) .and. &
-                       (K>=(domlo(3)-1)) .and. (K<=(domhi(3)+1)) .and. &
-                       (flag(i-1,j,k,1) < 100) ) then
-                           flag(i-1,j,k,2) = 2000
-                   end if
-               end if
-
-               if (J == domhi(2)+1) then
-                  if ( (I>=(domlo(1)-1)) .and. (I<=(domhi(1)+1)) .and. &
-                       (K>=(domlo(3)-1)) .and. (K<=(domhi(3)+1)) .and. &
-                       (flag(i,j-1,k,1) < 100) ) then
-                           flag(i,j-1,k,3) = 2000
-                  end if
-               end if
-
-               if (K == domhi(3)+1) then
-                  if ( (J>=(domlo(2)-1)) .and. (J<=(domhi(2)+1)) .and. &
-                       (I>=(domlo(1)-1)) .and. (I<=(domhi(1)+1)) .and. &
-                       (flag(i,j,k-1,1) < 100) ) then
-                        flag(i,j,k-1,4) = 2000
-                  end if
-               end if
-
-            ENDIF
-
-            ENDIF
-
-          end do
-        end do
-     end do
-
-      do k = lo(3),hi(3)
-         do j = lo(2),hi(2)
-           do i = lo(1),hi(1)
-
-! ----------------------------------------------------------------<<<
-         IF (flag(i,j,k,1)==1) then
-! ---------------------------------------------------------------->>>
-
-            IF ( flag(i-1,j,k,1) < 100 .and. &
-               IS_UNDEFINED(flag(i-1,j,k,2))) &
-                 flag(i-1,j,k,2) = 2000 + flag(i-1,j,k,1)
-
-            IF ( flag(i+1,j,k,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j,k,2))) &
-                  flag(i,j,k,2) = 2000 + flag(i+1,j,k,1)
-
-            IF ( flag(i,j-1,k,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j-1,k,3))) &
-               flag(i,j-1,k,3) = 2000 + flag(i,j-1,k,1)
-
-            IF ( flag(i,j+1,k,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j,k,3))) &
-               flag(i,j,k,3) = 2000 + flag(i,j+1,k,1)
-
-            IF ( flag(i,j,k-1,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j,k-1,4))) &
-               flag(i,j,k-1,4) = 2000 + flag(i,j,k-1,1)
-
-            IF ( flag(i,j,k+1,1) < 100 .and. &
-               IS_UNDEFINED(flag(i,j,k,4))) &
-               flag(i,j,k,4) = 2000 + flag(i,j,k+1,1)
-
-         ENDIF
-
-          end do
-        end do
-     end do
-
-      ! Clean up edge cases
-      do k = slo(3),shi(3)
-         do j = slo(2),shi(2)
-            do i = slo(1),shi(1)
-               if(IS_UNDEFINED(flag(i,j,k,2))) flag(i,j,k,2) = 0
-               if(IS_UNDEFINED(flag(i,j,k,3))) flag(i,j,k,3) = 0
-               if(IS_UNDEFINED(flag(i,j,k,4))) flag(i,j,k,4) = 0
-            end do
-         end do
-      end do
-
-      end subroutine set_flags1
 
 end module set_flags_module

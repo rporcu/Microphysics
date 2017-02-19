@@ -28,7 +28,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       CALL INIT_ICBC_FLAG(slo,shi,flag)
 
@@ -55,7 +55,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       INTEGER :: I, J, K
 
@@ -141,7 +141,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       INTEGER :: I, J ,K, IER
 
@@ -235,7 +235,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 !-----------------------------------------------
 ! Local variables
@@ -280,7 +280,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 !-----------------------------------------------
 ! Local variables
@@ -344,7 +344,7 @@ MODULE set_icbc_flags_module
       integer     , intent(in   ) :: slo(3),shi(3)
 
       integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       ! loop/variable indices
       INTEGER :: bcv, i, j, k

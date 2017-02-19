@@ -32,7 +32,7 @@ MODULE MOD_BC
       integer, intent(in   ) :: BCV
 
       integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       ! i cell indices defining location of yz plane
       INTEGER :: i,j,k
@@ -195,7 +195,7 @@ MODULE MOD_BC
       INTEGER, intent(in) :: BCV
 
       integer, intent(in) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       ! Calculated cell indices in I,J,K directions
       INTEGER :: OWNER
@@ -351,7 +351,7 @@ MODULE MOD_BC
 ! boundary condition index
       INTEGER, intent(in) :: BCV
       integer, intent(in) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 ! calculated cell indices in I,J,K directions
       INTEGER :: OWNER

@@ -46,7 +46,7 @@ module init_fluid_module
       real(c_real), intent(inout) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -71,7 +71,7 @@ module init_fluid_module
 
       ! Set the initial viscosity
       if (is_undefined(ro_g0)) then
-         call calc_mu_g(slo,shi,lambda_g,mu_g,flag)
+         call calc_mu_g(slo,shi,lambda_g,mu_g)
       else
          where (flag(:,:,:,1) == 1) mu_g = mu_g0
          where (flag(:,:,:,1) == 1) lambda_g = -(2.0d0/3.0d0)*mu_g0
@@ -112,7 +112,7 @@ module init_fluid_module
       real(c_real), intent(inout) ::  w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       integer, intent(in) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 !-----------------------------------------------
 ! Local variables

@@ -61,7 +61,7 @@ module set_bc0_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (slo(1):shi(1),slo(2):shi(2),2)
       integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 ! Local variables
 !--------------------------------------------------------------------//
@@ -277,7 +277,7 @@ module set_bc0_module
       ! Specified constant gas density.
       real(c_real), intent(in) :: ro_g0
       integer         , intent(in) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 !--------------------------------------------------------------------//
       INTEGER :: BCV
 
@@ -453,7 +453,7 @@ module set_bc0_module
       LOGICAL, intent(IN   ) :: ldFlag
       INTEGER, intent(  OUT)  :: iErr
       integer, intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       CHARACTER(len=*), intent(IN) :: lMAP
 

@@ -241,8 +241,8 @@ mfix_level::MakeNewLevel (int lev, Real time,
     }
 
     // Define and allocate the integer MultiFab on BoxArray grids[lev] with
-    // 4 components and nghost ghost cells.
-    flag[lev].reset(new iMultiFab(grids[lev],4,nghost,dmap[lev],Fab_allocate));
+    // 1 component and nghost ghost cells.
+    flag[lev].reset(new iMultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
     flag[lev]->setVal(0);
 
     // Call set_domain for each subdomain

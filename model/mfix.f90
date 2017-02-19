@@ -42,7 +42,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       real(c_real), intent(in   ) :: dx, dy, dz
 
       integer(c_int), intent(inout) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

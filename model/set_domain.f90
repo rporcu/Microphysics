@@ -33,7 +33,7 @@ module set_domain_module
       use get_bc_area_module, only: get_bc_area
       use set_bc_flow_module, only: set_bc_flow
       use set_flags_module, only: set_flags
-      use set_flags_module, only: set_flags1
+!     use set_flags_module, only: set_flags1
 
       use param1, only: is_defined
 
@@ -42,7 +42,7 @@ module set_domain_module
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-      integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      integer(c_int), intent(inout) :: flag(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
       real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! This used to be in set_geometry
@@ -79,7 +79,7 @@ module set_domain_module
 
       ! Set the flags for wall surfaces impermeable and identify flow
       ! boundaries using FLAG_E, FLAG_N, and FLAG_T
-      call set_flags1(slo,shi,lo,hi,flag)
+!     call set_flags1(slo,shi,lo,hi,flag)
       flag_mod = flag
 
       end subroutine set_domain
