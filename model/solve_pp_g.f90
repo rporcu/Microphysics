@@ -90,8 +90,6 @@ module solve_pp_module
       real(c_real), intent(  out) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
 
-      integer :: i,j,k
-
       ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
       A_m(:,:,:,0)  = -1.0d0

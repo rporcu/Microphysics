@@ -140,7 +140,7 @@ module solve_vel_star_module
       if(point_source) call point_source_u_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
+      call calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                     ep_g, f_gds, dx, dy, dz)
 
 ! Handle special case where center coefficient is zero
@@ -292,7 +292,7 @@ module solve_vel_star_module
       if(point_source) call point_source_v_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
-      call calc_d_n(slo, shi, vlo, vhi, alo, ahi, lo, hi, d_n, A_m, &
+      call calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m, &
          ep_g, f_gds, dx, dy, dz)
 
       ! Handle special case where center coefficient is zero
@@ -442,7 +442,7 @@ module solve_vel_star_module
       if(point_source) call point_source_w_g (alo, ahi, b_m, vol)
 
       ! calculate coefficients for the pressure correction equation
-      call calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, &
+      call calc_d_t(slo, shi, wlo, whi, alo, ahi, &
          d_t, A_m, ep_g, f_gds, dx, dy, dz)
 
       ! handle special case where center coefficient is zero

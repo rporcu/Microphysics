@@ -77,7 +77,6 @@ MODULE CHECK_AXIS_MODULE
       ENDIF
 
 ! 6) CHECK CONSISTENCY OF AXIS INPUT
-  700 CONTINUE
 
 ! This must be a legacy check because the code shouldn't get here
 ! without exiting and DIMEN is calculated, not a hard-coded param.

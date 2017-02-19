@@ -25,12 +25,13 @@ module calc_d_mod
 !           pressure correction
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
+   subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                        ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_x
 
-      integer, intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),lo(3),hi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) :: ulo(3),uhi(3)
       integer, intent(in   ) :: alo(3),ahi(3)
 
       ! Pressure correction
@@ -84,13 +85,14 @@ module calc_d_mod
 
    end subroutine calc_d_e
 
-   subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, lo, hi, d_n, A_m,&
+   subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
                        ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_y
 
-      integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),lo(3),hi(3)
-      integer     , intent(in   ) :: alo(3),ahi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
+      integer, intent(in   ) :: vlo(3),vhi(3)
+      integer, intent(in   ) :: alo(3),ahi(3)
 
       ! Pressure correction
       real(c_real), intent(  out) :: d_n&
@@ -144,12 +146,13 @@ module calc_d_mod
 
    end subroutine calc_d_n
 
-   subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, d_t, A_m,&
+   subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
       ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_z
 
-      integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: slo(3),shi(3)
+      integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
 
       ! Pressure correction

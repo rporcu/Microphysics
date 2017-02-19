@@ -12,10 +12,10 @@ module set_bc_type_module
 !  Author: J. Musser                                  Date: 05-FEB-17  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-   subroutine set_bc_type(slo, shi, lo, hi, &
+   subroutine set_bc_type(slo, shi, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
-                          bc_klo_type, bc_khi_type, flag) &
+                          bc_klo_type, bc_khi_type) &
                bind(c,name='set_bc_type')
 
       use bc, only: bc_defined, bc_type
@@ -33,10 +33,7 @@ module set_bc_type_module
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       integer(c_int), intent(  out) :: bc_ilo_type&
          (slo(2):shi(2),slo(3):shi(3),2)

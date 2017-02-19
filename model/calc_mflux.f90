@@ -13,15 +13,15 @@ module calc_mflux_module
 !                                                                      C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine calc_mflux (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+      subroutine calc_mflux (ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, rop_e, rop_n, rop_t, &
          flux_e, flux_n, flux_t, dx, dy, dz) bind(C, name="calc_mflux")
 
       implicit none
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-      integer(c_int), intent(in   ) ::  lo(3), hi(3)
+      integer(c_int), intent(in   ) :: ulo(3),uhi(3)
+      integer(c_int), intent(in   ) :: vlo(3),vhi(3)
+      integer(c_int), intent(in   ) :: wlo(3),whi(3)
       real(c_real),   intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -57,32 +57,33 @@ module calc_mflux_module
       axz = dx*dz
       ayz = dy*dz
 
-! East face (i+1/2, j, k)
-      do k = lo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = slo(1), hi(1)
+      ! East face (i+1/2, j, k)
+      do k = ulo(3), uhi(3)
+         do j = ulo(2), uhi(2)
+            do i = ulo(1), uhi(1)
                flux_e(i,j,k) = rop_e(i,j,k)*ayz*u_g(i,j,k)
             enddo
          enddo
       enddo
 
-! North face (i, j+1/2, k)
-      do k = lo(3), hi(3)
-         do j = slo(2), hi(2)
-            do i = lo(1), hi(1)
+      ! North face (i, j+1/2, k)
+      do k = vlo(3), vhi(3)
+         do j = vlo(2), vhi(2)
+            do i = vlo(1), vhi(1)
                flux_n(i,j,k) = rop_n(i,j,k)*axz*v_g(i,j,k)
             enddo
          enddo
       enddo
 
-! Top face (i, j, k+1/2)
-      do k = slo(3), hi(3)
-         do j = lo(2), hi(2)
-            do i = lo(1), hi(1)
+      ! Top face (i, j, k+1/2)
+      do k = wlo(3), whi(3)
+         do j = wlo(2), whi(2)
+            do i = wlo(1), whi(1)
                flux_t(i,j,k) = rop_t(i,j,k)*axy*w_g(i,j,k)
             enddo
          enddo
       enddo
 
       end subroutine calc_mflux
+
 end module calc_mflux_module

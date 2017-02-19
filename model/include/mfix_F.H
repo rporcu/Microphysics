@@ -17,11 +17,9 @@ extern "C"
                   int* flag, Real* dx, Real* dy, Real* dz);
 
   void set_bc_type(const int* slo, const int* shi,
-                   const int*  lo, const int*  hi,
                    int* bc_ilo, int* bc_ihi,
                    int* bc_jlo, int* bc_jhi,
-                   int* bc_klo, int* bc_khi,
-                   int* flag);
+                   int* bc_klo, int* bc_khi);
 
   void mfix_main1(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,
@@ -143,11 +141,9 @@ extern "C"
          Real* dx,             Real* dy,             Real* dz);
 
   void calc_mflux(
-         const int* slo, const int* shi,
          const int* ulo, const int* uhi,
          const int* vlo, const int* vhi,
          const int* wlo, const int* whi,
-         const int* lo, const int* hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
          Real* flux_ge,        Real* flux_gn,        Real* flux_gt,

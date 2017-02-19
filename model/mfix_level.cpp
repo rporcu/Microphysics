@@ -852,9 +852,8 @@ mfix_level::mfix_calc_mflux(int lev)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     calc_mflux(sbx.loVect(), sbx.hiVect(),
+     calc_mflux(
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-        bx.loVect(),  bx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
        (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
@@ -1230,13 +1229,11 @@ mfix_level::mfix_set_bc_type(int lev)
   Box domain(geom[lev].Domain());
   for (MFIter mfi((*flag[lev])); mfi.isValid(); ++mfi)
   {
-      const Box&  bx = mfi.validbox();
       const Box& sbx = (*flag[lev])[mfi].box();
-      set_bc_type(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
+      set_bc_type(sbx.loVect(),sbx.hiVect(),
                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                  bc_klo.dataPtr(), bc_khi.dataPtr(),
-                  (*flag[lev])[mfi].dataPtr());
+                  bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
 }

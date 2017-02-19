@@ -159,7 +159,7 @@ contains
     real(c_real), intent(in   ) :: dx, dy, dz
 
     call usr3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, p_g, slo, shi,&
-       dx, dy, dz)
+              dx, dy, dz)
 
   end subroutine mfix_usr3
 
