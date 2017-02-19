@@ -65,11 +65,11 @@ MODULE set_icbc_flags_module
       DO i = slo(1),shi(1)
 
 ! Initialize the ICBC Flag
-         if (run_type == 'NEW') then
-            flag(i,j,k,1) = UNDEF_CELL
-         else
-            flag(i,j,k,1) = FLUID_
-         endif
+!        if (run_type == 'NEW') then
+!           flag(i,j,k,1) = UNDEF_CELL
+!        else
+!           flag(i,j,k,1) = FLUID_
+!        endif
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
@@ -113,100 +113,7 @@ MODULE set_icbc_flags_module
       ENDDO ! end do loop
       ENDDO ! end do loop
 
-      RETURN
-
       END SUBROUTINE INIT_ICBC_FLAG
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_ICBC_FLAG                                         !
-!  Author: P. Nicoletti                               Date: 10-DEC-91  !
-!                                                                      !
-!  Purpose: Verify that data was not given for undefined BC regions.   !
-!  Note that the error message may be incomplete
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_ICBC_FLAG(slo,shi,lo,hi,flag)
-
-      use compar, only: mype
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ival
-      use ic, only: UNDEF_CELL
-      use open_files_mod, only: open_pe_log
-      use run, only: RUN_TYPE
-
-      IMPLICIT NONE
-
-      integer     , intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
-
-      integer, intent(inout) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
-
-      INTEGER :: I, J ,K, IER
-
-      LOGICAL :: ERROR = .FALSE.
-
-      IF(RUN_TYPE(1:3) /= 'NEW') RETURN
-
-      CALL INIT_ERR_MSG("CHECK_ICBC_FLAG")
-
-      ! First check for any errors.
-      do K = lo(3)-1,hi(3)+1
-         do J = lo(2)-1,hi(2)+1
-            do I = lo(1)-1,hi(1)+1
-               IF (FLAG(i,j,k,1) == UNDEF_CELL) ERROR = .TRUE.
-            ENDDO
-         ENDDO
-      ENDDO
-
-! Sync up the error flag across all processes.
-      ! CALL GLOBAL_ALL_OR(ERROR)
-
-! If an error is detected, have each rank open a log file and write
-! it's own message. Otherwise, we need to send all the data back to
-! PE_IO and that's too much work!
-      IF(ERROR) THEN
-
-         CALL OPEN_PE_LOG(IER)
-
-         WRITE(ERR_MSG, 1100) trim(iVal(myPE))
-         CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-
-         do K = lo(3)-1,hi(3)+1
-            do J = lo(2)-1,hi(2)+1
-               do I = lo(1)-1,hi(1)+1
-                  IF (FLAG(i,j,k,1) == UNDEF_CELL) then
-                     WRITE(ERR_MSG,1101) I, J, K
-                     CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-                  ENDIF
-
-               ENDDO
-            ENDDO
-         ENDDO
-
-         WRITE(ERR_MSG, 1102)
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
-
-      ELSE
-! If no erros, sync up the ghost cell layers.
-         ! CALL SEND_RECV(FLAG,1)
-      ENDIF
-
-! Clean up and return.
-      CALL FINL_ERR_MSG
-
-      RETURN
-
- 1100 FORMAT('Error 1100 (PE ',A,') : No initial or boundary ',        &
-         'condtions specified in','the following cells:',/             &
-         '    I       J       K')
-
- 1101 FORMAT(I5,3X,I5,3X,I5)
-
- 1102 FORMAT('Please correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_ICBC_FLAG
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
