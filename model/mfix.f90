@@ -6,7 +6,7 @@
 !  Purpose: The main module in the MFIX program                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                  time, dt, u_g, v_g, w_g, &
                  p_g, ep_g, &
                  bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
@@ -35,7 +35,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
 
       IMPLICIT NONE
 
-      integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
+      integer(c_int), intent(in   ) :: slo(3),shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
       real(c_real), intent(inout) :: time, dt
@@ -83,7 +83,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
       call init_err_msg('MFIX')
 
       ! Set point sources.
-      call set_ps(slo,shi,flag,dx,dy,dz)
+      call set_ps(dx,dy,dz)
 
       ! Set normal velocities to zero as appropriate
       call zero_norm_vel(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,&

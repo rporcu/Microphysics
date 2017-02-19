@@ -27,7 +27,6 @@ extern "C"
                   const int* ulo, const int* uhi,
                   const int* vlo, const int* vhi,
                   const int* wlo, const int* whi,
-                  const int* lo, const int* hi,
                   Real* time,    Real* dt,
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* p_g,     Real* ep_g,

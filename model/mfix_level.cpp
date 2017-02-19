@@ -598,7 +598,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -607,7 +606,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
      mfix_main1(sbx.loVect(), sbx.hiVect(),
                 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                 bx.loVect(),  bx.hiVect(), &time, &dt,
+                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
@@ -674,8 +673,8 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box&  bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& bx = mfi.validbox();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -829,7 +828,6 @@ mfix_level::mfix_comp_mean_fields(int lev)
 
     for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& bx = mfi.validbox();
        const Box& sbx = (*flag[lev])[mfi].box();
 
        comp_mean_fields(sbx.loVect(), sbx.hiVect(),

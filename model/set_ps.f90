@@ -12,7 +12,7 @@ MODULE SET_PS_MODULE
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: CHECK_DATA_09                                          C
+!  Module name: set_ps
 !  Purpose: Check point source specifications.                         C
 !                                                                      C
 !  Author: J. Musser                                  Date: 10-JUN-13  C
@@ -20,7 +20,7 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine set_ps(slo,shi,flag,dx,dy,dz)
+      subroutine set_ps(dx,dy,dz)
 
       use compar  , only: myPE, PE_IO, numPEs
       use exit_mod, only: mfix_exit
@@ -28,9 +28,6 @@ MODULE SET_PS_MODULE
 
       implicit none
 
-      integer(c_int), intent(in) :: slo(3), shi(3)
-      integer(c_int), intent(in) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
       real(c_real), intent(in) :: dx,dy,dz
 
       integer :: i,j,k
@@ -53,8 +50,8 @@ MODULE SET_PS_MODULE
 
          IF(.NOT.PS_DEFINED(PSV)) cycle L50
 
-! Calculate the velocity magnitude and normalize the axial components.
-         CALL CALC_PS_VEL_MAG(PS_VEL_MAG_g(PSV), PS_U_g(PSV),          &
+         ! Calculate the velocity magnitude and normalize the axial components.
+         call calc_ps_vel_mag(PS_VEL_MAG_g(PSV), PS_U_g(PSV),          &
             PS_V_g(PSV), PS_W_g(PSV))
 
 
@@ -82,8 +79,7 @@ MODULE SET_PS_MODULE
          do k = PS_K_B(PSV), PS_K_T(PSV)
             do j = PS_J_S(PSV), PS_J_N(PSV)
                do i = PS_I_W(PSV), PS_I_E(PSV)
-                  if(1.eq.flag(i,j,k,1)) &
-                     lData_dp(myPE) = lData_dp(myPE) + VOL
+                  lData_dp(myPE) = lData_dp(myPE) + vol
                enddo
             enddo
          enddo
@@ -96,7 +92,7 @@ MODULE SET_PS_MODULE
          PS_VOLUME(PSV) = sum(gData_dp)
          if(abs(PS_VOLUME(PSV)) < epsilon(ZERO)) then
             eMsg = 'No PS_VOLUME == ZERO'
-            CALL DEBUG_PS(PSV, PS_SIZE, flag)
+            CALL DEBUG_PS(PSV, PS_SIZE)
             goto 501
          endif
 
@@ -104,7 +100,7 @@ MODULE SET_PS_MODULE
          if(allocated(gData_dp)) deallocate(gData_dp)
 
 
-         IF(dbg_PS) CALL DEBUG_PS(PSV, PS_SIZE, flag)
+         IF(dbg_PS) CALL DEBUG_PS(PSV, PS_SIZE)
 
 
       enddo L50
@@ -176,7 +172,7 @@ MODULE SET_PS_MODULE
 !  Literature/Document References:                                     C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine debug_ps(lPSV, lPS_SIZE, flag)
+      subroutine debug_ps(lPSV, lPS_SIZE)
 
       use compar  , only: myPE, PE_IO
       use param1  , only: small_number
@@ -188,13 +184,10 @@ MODULE SET_PS_MODULE
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
 
-      INTEGER, DIMENSION(:,:,:,:), intent(IN) :: FLAG
-
       INTEGER :: IJK, I, J, K
 
       INTEGER :: lc1
 
-      INTEGER, allocatable :: lFlags_i(:,:)
       INTEGER, allocatable :: gFlags_i(:,:)
 
       if(myPE == PE_IO) then
@@ -202,28 +195,11 @@ MODULE SET_PS_MODULE
          write(*,"(/3x,'Size: ',I4)") lPS_SIZE
       endif
 
-      allocate(lFlags_i(lPS_SIZE,1:2) );   lFlags_i = 0
       allocate(gFlags_i(lPS_SIZE,1:2) );   gFlags_i = 0
 
       lc1 = 0
 
-      do k = PS_K_B(lPSV), PS_K_T(lPSV)
-         do j = PS_J_S(lPSV), PS_J_N(lPSV)
-            do i = PS_I_W(lPSV), PS_I_E(lPSV)
-
-               lc1 = lc1 + 1
-               if(1.eq.flag(i,j,k,1)) then
-                  lFlags_i(lc1,1) = myPE
-                  lFlags_i(lc1,2) = FLAG(i,j,k,1)
-               endif
-            enddo
-         enddo
-      enddo
-
-! Collect flag information on root.
-      ! CALL global_sum(lFlags_i, gFlags_i)
-
-! Write some information to the screen.
+      ! Write some information to the screen.
       if(myPE == PE_IO) then
          write(*,"(/5x,'Location:')")
          write(*,"( 5x,'X:',2(2x,g12.5),' :: ',2(2x,I4))")&
@@ -263,7 +239,6 @@ MODULE SET_PS_MODULE
 
       endif
 
-      if(allocated(lFlags_i)) deallocate(lFlags_i)
       if(allocated(gFlags_i)) deallocate(gFlags_i)
 
       end subroutine debug_ps
