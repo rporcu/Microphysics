@@ -183,7 +183,7 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      int* bc_ilo,    int* bc_ihi,
+          int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);
@@ -202,7 +202,7 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      int* bc_ilo,    int* bc_ihi,
+          int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);
@@ -221,7 +221,7 @@ extern "C"
           Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
-          int* flag,      int* bc_ilo,    int* bc_ihi,
+          int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
           Real* dx,       Real* dy,       Real* dz);

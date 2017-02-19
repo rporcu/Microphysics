@@ -26,7 +26,7 @@ module calc_d_mod
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
-                       ep_g, f_gds, flag, dx, dy, dz)
+                       ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_x
 
@@ -44,8 +44,6 @@ module calc_d_mod
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -87,7 +85,7 @@ module calc_d_mod
    end subroutine calc_d_e
 
    subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, lo, hi, d_n, A_m,&
-      ep_g, f_gds, flag, dx, dy, dz)
+                       ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_y
 
@@ -105,8 +103,6 @@ module calc_d_mod
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -149,7 +145,7 @@ module calc_d_mod
    end subroutine calc_d_n
 
    subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, d_t, A_m,&
-      ep_g, f_gds, flag, dx, dy, dz)
+      ep_g, f_gds, dx, dy, dz)
 
       use geometry, only: cyclic_z
 
@@ -167,8 +163,6 @@ module calc_d_mod
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: f_gds&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer     , intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 

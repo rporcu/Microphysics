@@ -4,6 +4,8 @@ module solve_vel_star_module
    use iso_c_binding , only: c_int
    use geometry      , only: domlo, domhi
 
+   implicit none
+
    private
 
    public :: solve_u_g_star
@@ -23,7 +25,7 @@ module solve_vel_star_module
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
-         f_gds, A_m, b_m, drag_bm, flag, &
+         f_gds, A_m, b_m, drag_bm, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
          bind(C, name="solve_u_g_star")
@@ -88,8 +90,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -111,9 +111,10 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (slo(1):shi(1),slo(2):shi(2),2)
 !.....................................................................//
-     real(c_real) :: vol
+      real(c_real) :: vol
+      vol = dx*dy*dz
 
-     ! Initialize A_m and b_m
+      ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
       A_m(:,:,:,0) = -1.0d0
       b_m(:,:,:)   =  0.0d0
@@ -136,20 +137,18 @@ module solve_vel_star_module
                           dy, dz)
 
       ! Add in point sources
-      vol = dx*dy*dz
       if(point_source) call point_source_u_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_e(slo, shi, ulo, uhi, alo, ahi, lo, hi, d_e, A_m, &
-         ep_g, f_gds, flag, dx, dy, dz)
+                    ep_g, f_gds, dx, dy, dz)
 
 ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! Add in source terms for DEM drag coupling.
       if (des_continuum_coupled) &
-         call gas_drag_u(slo, shi, alo, ahi, lo, hi, &
-                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+         call gas_drag_u(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
       call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
@@ -157,7 +156,7 @@ module solve_vel_star_module
          num_resid(resid_u), den_resid(resid_u), &
          resid(resid_u), 'U')
 
-     call under_relax (u_g, ulo, uhi, flag, slo, shi, A_m, b_m, alo, ahi, 'U', 3)
+     call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, 3)
 
    end subroutine solve_u_g_star
 
@@ -173,7 +172,7 @@ module solve_vel_star_module
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, A_m, b_m, drag_bm, flag, &
+      f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_v_g_star")
@@ -199,8 +198,6 @@ module solve_vel_star_module
 ! Global data arrays for residuals
    use residual, only: resid_v
    use residual, only: resid
-
-      IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
       integer(c_int)     , intent(in   ) :: slo(3),shi(3)
@@ -246,8 +243,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: d_n&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
@@ -269,7 +264,8 @@ module solve_vel_star_module
       integer(c_int), intent(in   ) :: bc_khi_type&
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
-     real(c_real) :: vol
+      real(c_real) :: vol
+      vol = dx*dy*dz
 
 ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
@@ -294,20 +290,18 @@ module solve_vel_star_module
                          dx, dz)
 
       ! Add in point sources
-      vol = dx*dy*dz
       if(point_source) call point_source_v_g (alo, ahi, b_m, vol)
 
-! calculate coefficients for the pressure correction equation
+      ! Calculate coefficients for the pressure correction equation
       call calc_d_n(slo, shi, vlo, vhi, alo, ahi, lo, hi, d_n, A_m, &
-         ep_g, f_gds, flag, dx, dy, dz)
+         ep_g, f_gds, dx, dy, dz)
 
-! handle special case where center coefficient is zero
+      ! Handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
-! add in source terms for DEM drag coupling.
+      ! Add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_v(slo, shi, alo, ahi, lo, hi, &
-                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+         call gas_drag_v(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
       call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
@@ -315,7 +309,7 @@ module solve_vel_star_module
          num_resid(resid_v), den_resid(resid_v), &
          resid(resid_v), 'V')
 
-      call under_relax (v_g, vlo, vhi, flag, slo, shi, A_m, b_m, alo, ahi, 'V', 4)
+      call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, 4)
 
    end subroutine solve_v_g_star
 
@@ -332,7 +326,7 @@ module solve_vel_star_module
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
-      f_gds, A_m, b_m, drag_bm, flag, &
+      f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
       bind(C, name="solve_w_g_star")
@@ -355,8 +349,6 @@ module solve_vel_star_module
 ! Global data arrays for residuals
    use residual, only: resid, resid_w
    use residual, only: num_resid, den_resid
-
-      IMPLICIT NONE
 
 ! Dummy arguments ....................................................//
       integer(c_int)     , intent(in   ) :: slo(3),shi(3)
@@ -402,8 +394,6 @@ module solve_vel_star_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: drag_bm&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),4)
 
       real(c_real), intent(  out) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
@@ -426,6 +416,7 @@ module solve_vel_star_module
          (domlo(1):domhi(1),domlo(2):domhi(2),2)
 !.....................................................................//
       real(c_real) :: vol 
+      vol = dx*dy*dz
 
       ! Initialize A_m and b_m
       A_m(:,:,:,:) =  0.0d0
@@ -450,20 +441,18 @@ module solve_vel_star_module
                           dx, dy)
 
       ! Add in point sources
-      vol = dx*dy*dz
       if(point_source) call point_source_w_g (alo, ahi, b_m, vol)
 
       ! calculate coefficients for the pressure correction equation
       call calc_d_t(slo, shi, wlo, whi, alo, ahi, lo, hi, &
-         d_t, A_m, ep_g, f_gds, flag, dx, dy, dz)
+         d_t, A_m, ep_g, f_gds, dx, dy, dz)
 
       ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
 
       ! add in source terms for DEM drag coupling.
       if(des_continuum_coupled) &
-         call gas_drag_w(slo, shi, alo, ahi, lo, hi, &
-                         A_m, b_m, f_gds, drag_bm, flag, dx, dy, dz)
+         call gas_drag_w(slo, shi, alo, ahi, A_m, b_m, f_gds, drag_bm, vol)
 
       call calc_resid_vel (slo, shi, alo, ahi, lo, hi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
@@ -471,7 +460,7 @@ module solve_vel_star_module
          num_resid(resid_w), den_resid(resid_w), &
          resid(resid_w), 'W')
 
-      call under_relax (w_g, wlo, whi, flag, slo, shi, A_m, b_m, alo, ahi, 'W', 5)
+      call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, 5)
 
    end subroutine solve_w_g_star
 
