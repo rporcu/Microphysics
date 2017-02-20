@@ -86,6 +86,7 @@ module init_fluid_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
 
+      use geometry, only: domlo, domhi
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -117,71 +118,78 @@ module init_fluid_module
       integer :: istart, iend
       integer :: jstart, jend
       integer :: kstart, kend
-! local index for initial condition
+      ! local index for initial condition
       integer :: icv
-! Temporary variables for storing IC values
+
+      ! Temporary variables for storing IC values
       real(c_real) :: pgx, ugx, vgx, wgx
-!-----------------------------------------------
 
 !  Set the initial conditions.
       do icv = 1, dimension_ic
          if (ic_defined(icv)) then
 
-! Use the volume fraction already calculated from particle data
+            ! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(icv)
             ugx = ic_u_g(icv)
             vgx = ic_v_g(icv)
             wgx = ic_w_g(icv)
 
-            istart = max(slo(1), ic_i_w(icv))
-            jstart = max(slo(2), ic_j_s(icv))
-            kstart = max(slo(3), ic_k_b(icv))
-            iend   = min(shi(1), ic_i_e(icv))
-            jend   = min(shi(2), ic_j_n(icv))
-            kend   = min(shi(3), ic_k_t(icv))
+            if (is_defined(ugx)) then
+               istart = max(ulo(1), ic_i_w(icv))
+               jstart = max(ulo(2), ic_j_s(icv))
+               kstart = max(ulo(3), ic_k_b(icv))
+               iend   = min(uhi(1), ic_i_e(icv))
+               jend   = min(uhi(2), ic_j_n(icv))
+               kend   = min(uhi(3), ic_k_t(icv))
+               u_g(istart:iend,jstart:jend,kstart:kend) = ugx
+               if (ulo(1).lt.domlo(1)) &
+                  u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
+               if (uhi(1).gt.domhi(1)) &
+                  u_g(iend+1:uhi(1)  ,jstart:jend,kstart:kend) = ugx
+            end if
+
+            if (is_defined(ugx)) then
+               istart = max(vlo(1), ic_i_w(icv))
+               jstart = max(vlo(2), ic_j_s(icv))
+               kstart = max(vlo(3), ic_k_b(icv))
+               iend   = min(vhi(1), ic_i_e(icv))
+               jend   = min(vhi(2), ic_j_n(icv))
+               kend   = min(vhi(3), ic_k_t(icv))
+               v_g(istart:iend,jstart:jend,kstart:kend) = vgx
+               if (vlo(2).lt.domlo(2)) &
+                  v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
+               if (vhi(2).gt.domhi(2)) &
+                  v_g(istart:iend,jend+1:vhi(2)  ,kstart:kend) = vgx
+            end if
+
+            if (is_defined(ugx)) then
+               istart = max(wlo(1), ic_i_w(icv))
+               jstart = max(wlo(2), ic_j_s(icv))
+               kstart = max(wlo(3), ic_k_b(icv))
+               iend   = min(whi(1), ic_i_e(icv))
+               jend   = min(whi(2), ic_j_n(icv))
+               kend   = min(whi(3), ic_k_t(icv))
+               w_g(istart:iend,jstart:jend,kstart:kend) = wgx
+               if (wlo(3).lt.domlo(3)) &
+                  w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
+               if (whi(3).gt.domhi(3)) &
+                  w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
+            end if
 
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
 
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
-                           undefined, is_defined(pgx))
-
-                        if (is_defined(ugx)) u_g(i,j,k) = ugx
-                        if (is_defined(vgx)) v_g(i,j,k) = vgx
-                        if (is_defined(wgx)) w_g(i,j,k) = wgx
+                                      undefined, is_defined(pgx))
 
                   enddo
                enddo
             enddo
 
-            if (ic_i_w(icv) .eq. 0) then
-               do k = kstart, kend
-               do j = jstart, jend
-                  if (is_defined(ugx)) u_g(-1,j,k) = ugx
-               end do
-               end do
-            end if
-            if (ic_j_s(icv) .eq. 0) then
-               do k = kstart, kend
-               do i = istart, iend
-                  if (is_defined(vgx)) v_g(i,-1,k) = vgx
-               end do
-               end do
-            end if
-            if (ic_k_b(icv) .eq. 0) then
-               do j = jstart, jend
-               do i = istart, iend
-                  if (is_defined(wgx)) w_g(i,j,-1) = wgx
-               end do
-               end do
-            end if
-
          endif
       enddo
 
-
-      return
    end subroutine set_ic
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

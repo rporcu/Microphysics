@@ -220,12 +220,7 @@ mfix_level::MakeNewLevel (int lev, Real time,
     bc_klo.resize(box_klo,2);
     bc_khi.resize(box_khi,2);
 
-    int nghost;
-    if (ParallelDescriptor::NProcs() == 1) {
-       nghost = 1;
-    } else {
-       nghost = 2;
-    }
+    int nghost = 1;
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
