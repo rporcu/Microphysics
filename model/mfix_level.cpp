@@ -30,11 +30,6 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     // Particle Container
     mypc = std::unique_ptr<MyParticleContainer> (new MyParticleContainer(this));
 
-//  bc_type.resize(nlevs_max);
-//  bc_ptr.resize(nlevs_max);
-
-    flag.resize(nlevs_max);
-
     A_m.resize(nlevs_max);
     b_m.resize(nlevs_max);
 
@@ -240,21 +235,14 @@ mfix_level::MakeNewLevel (int lev, Real time,
        nghost = 2;
     }
 
-    // Define and allocate the integer MultiFab on BoxArray grids[lev] with
-    // 1 component and nghost ghost cells.
-    flag[lev].reset(new iMultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    flag[lev]->setVal(0);
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
 
     // Call set_domain to read input data, check data, 
     // do computations for IC and BC locations and flows,
     // and set geometry parameters such as X, X_E, DToDX, etc.
-
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
     set_domain(&dx,&dy,&dz);
-
-    mfix_set_bc_type(lev);
 
     // ********************************************************************************
     // Cell-based arrays
@@ -393,6 +381,8 @@ mfix_level::MakeNewLevel (int lev, Real time,
     rop_gT[lev]->setVal(0.);
 
     // ********************************************************************************
+
+    mfix_set_bc_type(lev);
 }
 
 void
@@ -480,7 +470,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
-            for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*flux_gE[lev]); mfi.isValid(); ++mfi)
             {
               const Box& sbx = (*ep_g[lev])[mfi].box();
 
@@ -521,10 +511,10 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 
     const int max_pip = particle_state.size();
 
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
        // const Box& bx = mfi.validbox();
-       const Box& sbx = (*flag[lev])[mfi].box();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
        const Box& bx = mfi.validbox();
 
        Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -561,9 +551,8 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 {
   const int max_pip = particle_state.size();
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
-     // const Box& sbx = (*flag[lev])[mfi].box();
      mfix_output_manager(&max_pip,
       &time, &dt, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
@@ -580,16 +569,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  // std::cout << "BC_ILO " << bc_ilo.box() << std::endl;
-  // std::cout << "BC_IHI " << bc_ihi.box() << std::endl;
-  // std::cout << "BC_JLO " << bc_jlo.box() << std::endl;
-  // std::cout << "BC_JHI " << bc_jhi.box() << std::endl;
-  // std::cout << "BC_KLO " << bc_klo.box() << std::endl;
-  // std::cout << "BC_KHI " << bc_khi.box() << std::endl;
-
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -618,7 +600,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Allocate the particle arrays
   if (solve_dem)
   {
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi) {
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
       const int max_pip = particle_state.size();
 
       mfix_make_arrays_des(&max_pip,
@@ -630,7 +612,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         fc.dataPtr(), tow.dataPtr());
     }
 
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi){
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
       const int max_pip = particle_state.size();
       mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
         des_pos_new.dataPtr(), des_vel_new.dataPtr(), des_usr_var.dataPtr());
@@ -662,9 +644,9 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
      const Box& bx = mfi.validbox();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -704,10 +686,10 @@ mfix_level::mfix_calc_all_coeffs(int lev)
 
   const int max_pip = particle_state.size();
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -742,10 +724,10 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -775,10 +757,10 @@ mfix_level::mfix_init_fluid(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -816,9 +798,9 @@ mfix_level::mfix_comp_mean_fields(int lev)
 
     const int max_pip = particle_state.size();
 
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& sbx = (*flag[lev])[mfi].box();
+       const Box& sbx = (*ep_g[lev])[mfi].box();
 
        comp_mean_fields(sbx.loVect(), sbx.hiVect(),
             &max_pip, (*ep_g[lev])[mfi].dataPtr(),
@@ -1188,9 +1170,9 @@ void
 mfix_level::mfix_set_bc_type(int lev)
 {
   Box domain(geom[lev].Domain());
-  for (MFIter mfi((*flag[lev])); mfi.isValid(); ++mfi)
+  for (MFIter mfi((*ep_g[lev])); mfi.isValid(); ++mfi)
   {
-      const Box& sbx = (*flag[lev])[mfi].box();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
       set_bc_type(sbx.loVect(),sbx.hiVect(),
                   bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                   bc_jlo.dataPtr(), bc_jhi.dataPtr(),
