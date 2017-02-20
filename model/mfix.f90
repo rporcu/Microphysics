@@ -22,6 +22,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       use calc_coeff_module, only: calc_coeff
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
+      use geometry, only: domlo, domhi
       use machine, only: wall_time
       use output_manager_module, only: init_output_vars
       use param1 , only: is_defined, is_undefined
@@ -30,8 +31,6 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       use set_ps_module, only: set_ps
       use write_out0_module, only: write_out0
       use zero_norm_vel_module, only: zero_norm_vel
-
-      use fld_const, only: ro_g0
 
       IMPLICIT NONE
 
@@ -54,17 +53,17 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_ihi_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jlo_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jhi_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_klo_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
       integer(c_int), intent(in   ) :: bc_khi_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
 !---------------------------------------------------------------------//
       call init_output_vars(time, dt)
 

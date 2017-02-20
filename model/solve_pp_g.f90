@@ -17,8 +17,6 @@ module solve_pp_module
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, b_mmax, &
-      bc_ilo_type, bc_ihi_type, bc_jlo_type, &
-      bc_jhi_type, bc_klo_type, bc_khi_type, &
       dt, dx, dy, dz)&
       bind(C, name="solve_pp_g")
 
@@ -69,19 +67,6 @@ module solve_pp_module
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: d_t&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-
-      integer(c_int), intent(in   ) :: bc_ilo_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_ihi_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_jlo_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_jhi_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_klo_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
-      integer(c_int), intent(in   ) :: bc_khi_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
 
       real(c_real), intent(  out) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)

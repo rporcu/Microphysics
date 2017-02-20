@@ -153,8 +153,7 @@ extern "C"
   void fill_bc0(Real* s, const int* slo, const int* shi,
                 int* bc_ilo, int* bc_ihi,
                 int* bc_jlo, int* bc_jhi,
-                int* bc_klo, int* bc_khi,
-                const int* vtype);
+                int* bc_klo, int* bc_khi);
 
   void solve_u_g_star(
           const int* slo, const int* shi,
@@ -227,9 +226,6 @@ extern "C"
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,      Real* b_mmax,
-          int* bc_ilo,    int* bc_ihi,
-          int* bc_jlo,    int* bc_jhi,
-          int* bc_klo,    int* bc_khi,
           Real* dt,       Real* dx, Real* dy, Real* dz);
 
   void set_resid_p(Real& val);

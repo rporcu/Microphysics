@@ -47,17 +47,17 @@ module set_bc0_module
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_ihi_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jlo_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jhi_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_klo_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
       integer(c_int), intent(in   ) :: bc_khi_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
 
 ! Local variables
 !--------------------------------------------------------------------//

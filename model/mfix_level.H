@@ -86,8 +86,7 @@ private:
 
   void mfix_set_bc_type(int lev);
 
-  void fill_mf_bc(int lev, iMultiFab& mf, const int vtype);
-  void fill_mf_bc(int lev,  MultiFab& mf, const int vtype);
+  void fill_mf_bc(int lev,  MultiFab& mf);
 #if 0
     void WritePlotFile () const;
 

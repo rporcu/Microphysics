@@ -212,21 +212,13 @@ mfix_level::MakeNewLevel (int lev, Real time,
     Box box_klo = BoxLib::adjCellLo(domainz,2,1);
     Box box_khi = BoxLib::adjCellHi(domainz,2,1);
 
+    // Note that each of these is a single IArrayBox so every process has a copy of them
     bc_ilo.resize(box_ilo,2);
     bc_ihi.resize(box_ihi,2);
     bc_jlo.resize(box_jlo,2);
     bc_jhi.resize(box_jhi,2);
     bc_klo.resize(box_klo,2);
     bc_khi.resize(box_khi,2);
-
-#if 0
-    BoxList bl;
-    bl.push_back(box_ilo); bl.push_back(box_ihi);
-    bl.push_back(box_jlo); bl.push_back(box_jhi);
-    bl.push_back(box_klo); bl.push_back(box_khi);
-    bc_type[lev].reset(new iMultiFab(bl,1,0);
-    bc_type[lev]->setVal(-1);
-#endif
 
     int nghost;
     if (ParallelDescriptor::NProcs() == 1) {
@@ -542,8 +534,8 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         &time, &dt, &dx, &dy, &dz, &nstep);
     }
 
-    fill_mf_bc(lev,*ep_g[lev],0);
-    fill_mf_bc(lev,*rop_g[lev],0);
+    fill_mf_bc(lev,*ep_g[lev]);
+    fill_mf_bc(lev,*rop_g[lev]);
 }
 
 void
@@ -582,16 +574,15 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                 &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                bc_klo.dataPtr(), bc_khi.dataPtr(),
                &dx, &dy, &dz );
   }
 
-  fill_mf_bc(lev,*p_g[lev],0);
-  fill_mf_bc(lev,*ep_g[lev],0);
-  fill_mf_bc(lev,*ro_g[lev],0);
-  fill_mf_bc(lev,*rop_g[lev],0);
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
   u_g[lev]->FillBoundary(geom[lev].periodicity());
   v_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -667,13 +658,13 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
       pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
       des_radius.dataPtr(), &dx, &dy, &dz );
   }
-  fill_mf_bc(lev,*ro_g[lev],0);
-  fill_mf_bc(lev,*rop_g[lev],0);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
   if (solve_dem)
   {
-    fill_mf_bc(lev,*f_gds[lev],0);
-    fill_mf_bc(lev,*drag_bm[lev],0);
+    fill_mf_bc(lev,*f_gds[lev]);
+    fill_mf_bc(lev,*drag_bm[lev]);
   }
 }
 
@@ -706,14 +697,14 @@ mfix_level::mfix_calc_all_coeffs(int lev)
        pvol.dataPtr(), des_pos_new.dataPtr(),
        des_vel_new.dataPtr(), des_radius.dataPtr(), &dx, &dy, &dz);
   }
-  fill_mf_bc(lev,*ro_g[lev],0);
-  fill_mf_bc(lev,*rop_g[lev],0);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
   if (solve_dem)
   {
-    fill_mf_bc(lev,*ep_g[lev],0);
-    fill_mf_bc(lev,*f_gds[lev],0);
-    fill_mf_bc(lev,*drag_bm[lev],0);
+    fill_mf_bc(lev,*ep_g[lev]);
+    fill_mf_bc(lev,*f_gds[lev]);
+    fill_mf_bc(lev,*drag_bm[lev]);
   }
 }
 
@@ -747,7 +738,7 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
   tau_v_g[lev]->FillBoundary(geom[lev].periodicity());
   tau_w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-  fill_mf_bc(lev,*trD_g[lev],0);
+  fill_mf_bc(lev,*trD_g[lev]);
 }
 
 void
@@ -776,17 +767,17 @@ mfix_level::mfix_init_fluid(int lev)
        &dx, &dy, &dz );
   }
 
-  fill_mf_bc(lev,*p_g[lev],0);
-  fill_mf_bc(lev,*ep_g[lev],0);
-  fill_mf_bc(lev,*ro_g[lev],0);
-  fill_mf_bc(lev,*rop_g[lev],0);
+  fill_mf_bc(lev,*p_g[lev]);
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
   u_g[lev]->FillBoundary(geom[lev].periodicity());
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
-  fill_mf_bc(lev,*mu_g[lev],0);
-  fill_mf_bc(lev,*lambda_g[lev],0);
+  fill_mf_bc(lev,*mu_g[lev]);
+  fill_mf_bc(lev,*lambda_g[lev]);
 }
 
 void
@@ -807,7 +798,7 @@ mfix_level::mfix_comp_mean_fields(int lev)
             particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
             &dx, &dy, &dz );
     }
-    fill_mf_bc(lev,*ep_g[lev],0);
+    fill_mf_bc(lev,*ep_g[lev]);
 }
 
 void
@@ -903,8 +894,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
@@ -942,8 +932,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
@@ -981,8 +970,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
-          bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-          bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+          bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
           &dt, &dx, &dy, &dz);
     }
@@ -1035,9 +1023,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
-        bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-        bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-        bc_klo.dataPtr(), bc_khi.dataPtr(),
         &dt, &dx, &dy, &dz);
     }
     pp_g[lev]->setVal(0.);
@@ -1086,8 +1071,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
 
-    fill_mf_bc(lev,*pp_g[lev],0);
-    //exit(0);
+    fill_mf_bc(lev,*pp_g[lev]);
 }
 
 void
@@ -1110,7 +1094,7 @@ mfix_level::mfix_correct_0(int lev)
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
   }
 
-  fill_mf_bc(lev,*p_g[lev],0);
+  fill_mf_bc(lev,*p_g[lev]);
 
   u_g[lev]->FillBoundary(geom[lev].periodicity());
   v_g[lev]->FillBoundary(geom[lev].periodicity());
@@ -1129,8 +1113,8 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
         (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
   }
-  fill_mf_bc(lev,*ro_g[lev],0);
-  fill_mf_bc(lev,*rop_g[lev],0);
+  fill_mf_bc(lev,*ro_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 }
 
 void
@@ -1173,16 +1157,14 @@ mfix_level::mfix_set_bc_type(int lev)
   for (MFIter mfi((*ep_g[lev])); mfi.isValid(); ++mfi)
   {
       const Box& sbx = (*ep_g[lev])[mfi].box();
-      set_bc_type(sbx.loVect(),sbx.hiVect(),
-                  bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                  bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                  bc_klo.dataPtr(), bc_khi.dataPtr());
+      set_bc_type(sbx.loVect(),sbx.hiVect(), bc_ilo.dataPtr(), bc_ihi.dataPtr(),
+                  bc_jlo.dataPtr(), bc_jhi.dataPtr(), bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
 }
 
 void
-mfix_level::fill_mf_bc(int lev, MultiFab& mf, const int vtype)
+mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 {
 
   // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
@@ -1190,18 +1172,10 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf, const int vtype)
   {
       const Box& sbx = mf[mfi].box();
       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-               bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(),
-               &vtype);
+               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+               bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
-  mf.FillBoundary(geom[lev].periodicity());
-}
-
-void
-mfix_level::fill_mf_bc(int lev, iMultiFab& mf, const int vtype)
-{
   mf.FillBoundary(geom[lev].periodicity());
 }

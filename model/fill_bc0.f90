@@ -18,7 +18,7 @@
 ! ::: -----------------------------------------------------------
 subroutine fill_bc0(s, slo, shi, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, vtype) &
+      bc_klo_type, bc_khi_type) &
    bind(C, name="fill_bc0")
 
 
@@ -34,23 +34,22 @@ subroutine fill_bc0(s, slo, shi, &
 ! Dummy arguments
 !``````````````````````````````````````````````````````````````````````
       integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: vtype
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_ihi_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
+         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jlo_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_jhi_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
+         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
       integer(c_int), intent(in   ) :: bc_klo_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
       integer(c_int), intent(in   ) :: bc_khi_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
+         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
 
 
 ! Local variables
@@ -60,8 +59,6 @@ subroutine fill_bc0(s, slo, shi, &
       integer    i, j, k
 !......................................................................
 
-      if(vtype /= 0) return
-
       nlft = max(0,domlo(1)-slo(1))
       nbot = max(0,domlo(2)-slo(2))
       ndwn = max(0,domlo(3)-slo(3))
@@ -70,7 +67,7 @@ subroutine fill_bc0(s, slo, shi, &
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
-      if (nlft .gt. 0) then
+      if (ntop .gt. 0) then
          ilo = domlo(1)
          do i = 1, nlft
             do k=slo(3),shi(3)
