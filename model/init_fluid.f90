@@ -7,7 +7,7 @@ module init_fluid_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-                         mu_g, lambda_g, flag, dx, dy, dz) &
+                         mu_g, lambda_g, dx, dy, dz) &
       bind(C, name="init_fluid")
 
       use bl_fort_module, only : c_real
@@ -45,36 +45,33 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: lambda_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-!-----------------------------------------------------------------------!
-
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g, flag)
+      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, ep_g, flag(:,:,:,1), dx, dy, dz)
+      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
 
       ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
          call calc_ro_g(slo,shi,lo,hi,ro_g,rop_g,p_g,ep_g)
       else
-         where (flag(:,:,:,1) < 100) ro_g = ro_g0
-         where (flag(:,:,:,1) < 100) rop_g = ro_g0*ep_g
+         ro_g = ro_g0
+         rop_g = ro_g0*ep_g
       endif
 
       ! Remove undefined values at wall cells for scalars
       where(rop_g == undefined) rop_g = 0.0
 
       ! Set the initial viscosity
-      if (is_undefined(ro_g0)) then
+      if (is_undefined(mu_g0)) then
          call calc_mu_g(slo,shi,lambda_g,mu_g)
       else
-         where (flag(:,:,:,1) == 1) mu_g = mu_g0
-         where (flag(:,:,:,1) == 1) lambda_g = -(2.0d0/3.0d0)*mu_g0
+      !  Set only the interior values
+             mu_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = mu_g0
+         lambda_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = -(2.0d0/3.0d0)*mu_g0
       endif
 
    end subroutine init_fluid
@@ -87,7 +84,7 @@ module init_fluid_module
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g, flag)
+   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
 
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
@@ -111,8 +108,6 @@ module init_fluid_module
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(inout) ::  w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      integer, intent(in) ::  flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
 !-----------------------------------------------
 ! Local variables
@@ -149,8 +144,6 @@ module init_fluid_module
                do j = jstart, jend
                   do i = istart, iend
 
-                     if (flag(i,j,k,1)<100) then
-
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
                            undefined, is_defined(pgx))
 
@@ -158,7 +151,6 @@ module init_fluid_module
                         if (is_defined(vgx)) v_g(i,j,k) = vgx
                         if (is_defined(wgx)) w_g(i,j,k) = wgx
 
-                     endif
                   enddo
                enddo
             enddo
@@ -201,7 +193,7 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE set_p_g(slo, shi, lo, hi, p_g, ep_g, flag, dx, dy, dz)
+      SUBROUTINE set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
 
       USE bc, only: delp_x, delp_y, delp_z
       USE bc, only: dimension_ic
@@ -227,8 +219,6 @@ module init_fluid_module
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(inout) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      integer(c_int), intent(in   ) :: flag&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -322,7 +312,7 @@ module init_fluid_module
          if (is_defined(ro_g0)) then
 
             ! If incompressible flow set P_g to zero
-            where (flag .eq. 1) p_g = zero
+            p_g = zero
             goto 100
 
          else   ! compressible case
@@ -430,7 +420,7 @@ module init_fluid_module
             pj = pj + bed_weight
             do k = lo(3),hi(3)
                do i = lo(1),hi(1)
-                  if(flag(i,j,k) ==1 .and. is_undefined(p_g(i,j,k)))&
+                  if (is_undefined(p_g(i,j,k)))&
                      p_g(i,j,k)=scale_pressure(pj)
                enddo
             enddo

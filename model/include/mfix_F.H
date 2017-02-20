@@ -43,7 +43,6 @@ extern "C"
                   Real* rop_g,   Real* p_g,
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* mu_g,    Real* lambda_g,
-                  int* flag,
                   Real* dx,       Real* dy,       Real* dz);
 
   void mfix_make_arrays_des(const int* max_pip,
@@ -152,7 +151,7 @@ extern "C"
   void physical_prop(const int* slo, const int* shi,
                      const int* lo, const int* hi,
                      int* level, Real* ro_g, Real* p_g,
-                     Real* ep_g, Real* rop_g, int* flag);
+                     Real* ep_g, Real* rop_g);
 
   void fill_bc(Real* s, const int* slo, const int* shi,
                int* flag, const int* vtype);

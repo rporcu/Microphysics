@@ -799,7 +799,7 @@ mfix_level::mfix_init_fluid(int lev)
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-       (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+       &dx, &dy, &dz );
   }
 
   fill_mf_bc(lev,*p_g[lev],0);
@@ -1168,8 +1168,7 @@ mfix_level::mfix_physical_prop(int lev, int calc_flag)
 
      physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
         (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-        (*flag[lev])[mfi].dataPtr());
+        (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
   }
   fill_mf_bc(lev,*ro_g[lev],0);
   fill_mf_bc(lev,*rop_g[lev],0);
