@@ -103,8 +103,7 @@ module solve_pp_module
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
-      call source_pp_g_bc(slo, shi, alo, ahi, A_m, bc_ilo_type, bc_ihi_type, &
-         bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
+      call source_pp_g_bc(slo, shi, alo, ahi, A_m)
 
       if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
 

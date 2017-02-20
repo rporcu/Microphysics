@@ -141,7 +141,7 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
-      use ic, only: CYCL_
+      use ic, only: cycl_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
       use geometry, only: domlo, domhi
@@ -285,7 +285,7 @@ contains
                   A_m(i,j,k,s) = zero
 
                else if(bc_jlo_type(i,k,1) == FSW_ .or. &
-                       bc_jlo_type(i,k,1) == CYCL_) then
+                       bc_jlo_type(i,k,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
@@ -328,7 +328,7 @@ contains
                   A_m(i,j,k,n) = zero
 
                else if(bc_jhi_type(i,k,1) == FSW_ .or. &
-                       bc_jhi_type(i,k,1) == CYCL_) then
+                       bc_jhi_type(i,k,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 

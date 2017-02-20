@@ -184,8 +184,6 @@ MODULE SET_PS_MODULE
 ! Number of cells comprising the point source.
       INTEGER, intent(in) :: lPS_SIZE
 
-      INTEGER :: IJK, I, J, K
-
       INTEGER :: lc1
 
       if(myPE == PE_IO) then
@@ -219,9 +217,6 @@ MODULE SET_PS_MODULE
          else
             write(*,"(//5x,'No gas phase point source.')")
          endif
-
-         write(*,"(//5x,'Point Source Cells:')")
-         write(*,"(9x,'IJK',3(6x,A1),3x,'OWNS',3x,'FLAG')") 'I','J','K'
 
       endif
 

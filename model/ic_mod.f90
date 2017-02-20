@@ -121,8 +121,8 @@
 !   NO_SLIP_WALL     100    Internal/external wall with no-slip b.c.
 !   FREE_SLIP_WALL   101    Internal/external wall with free-slip
 !   PAR_SLIP_WALL    102    Internal/external wall with partial-slip b.c.
-!   CYCLIC           106    Cyclic b.c.
-!   CYCLIC_PD        107    Cyclic b.c. with pressure drop
+!   cyclic           106    Cyclic b.c.
+!   cyclic_pd        107    Cyclic b.c. with pressure drop
 
    integer, parameter :: UNDEF_CELL =   0
    integer, parameter :: FLUID_     =   1
@@ -134,7 +134,7 @@
    integer, parameter :: NSW_       = 100
    integer, parameter :: FSW_       = 101
    integer, parameter :: PSW_       = 102
-   integer, parameter :: CYCL_      = 106
-   integer, parameter :: CYCP_      = 107
+   integer, parameter :: cycl_      = 106
+   integer, parameter :: cycp_      = 107
 
       END MODULE ic

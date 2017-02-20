@@ -8,7 +8,7 @@
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      MODULE geometry
+      module geometry
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
@@ -30,25 +30,34 @@
 
       integer :: domlo(3),domhi(3)
 
-!  one or more periodic boundary condition is used
-      LOGICAL :: CYCLIC
-! Variable to flag periodic boundary condition in X
-      LOGICAL :: CYCLIC_X
-! Variable to flag periodic boundary condition in Y
-      LOGICAL :: CYCLIC_Y
-! Variable to flag periodic boundary condition in Z
-      LOGICAL :: CYCLIC_Z
-! Variable to flag periodic bc with pressure drop in X
-      LOGICAL :: CYCLIC_X_PD
-! Variable to flag periodic bc with pressure drop in Y
-      LOGICAL :: CYCLIC_Y_PD
-! Variable to flag periodic bc with pressure drop in Z
-      LOGICAL :: CYCLIC_Z_PD
-! Variable to flag periodic bc with mass flux in X
-      LOGICAL :: CYCLIC_X_MF
-! Variable to flag periodic bc with mass flux in Y
-      LOGICAL :: CYCLIC_Y_MF
-! Variable to flag periodic bc with mass flux in Z
-      LOGICAL :: CYCLIC_Z_MF
+      !  one or more periodic boundary condition is used
+      logical :: cyclic
 
-      END MODULE geometry
+      ! Variable to flag periodic boundary condition in X
+      logical :: cyclic_x
+
+      ! Variable to flag periodic boundary condition in Y
+      logical :: cyclic_y
+
+      ! Variable to flag periodic boundary condition in Z
+      logical :: cyclic_z
+
+      ! Variable to flag periodic bc with pressure drop in X
+      logical :: cyclic_x_pd
+
+      ! Variable to flag periodic bc with pressure drop in Y
+      logical :: cyclic_y_pd
+
+      ! Variable to flag periodic bc with pressure drop in Z
+      logical :: cyclic_z_pd
+
+      ! Variable to flag periodic bc with mass flux in X
+      logical :: cyclic_x_mf
+
+      ! Variable to flag periodic bc with mass flux in Y
+      logical :: cyclic_y_mf
+
+      ! Variable to flag periodic bc with mass flux in Z
+      logical :: cyclic_z_mf
+
+      end module geometry

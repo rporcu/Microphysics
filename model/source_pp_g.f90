@@ -20,12 +20,10 @@ contains
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, ro_g, d_e, d_n, d_t,&
       dx, dy, dz)
 
-      use bc, only: one, zero, ijk_p_g
       use eos, only: droodp_g
       use fld_const, only: ro_g0
       use matrix, only: e, w, n, s, t, b
       use param1, only: is_defined, is_undefined
-      use run, only: undefined_i
       use ur_facs, only: ur_fac
       use write_error_module, only: write_error
 
@@ -131,19 +129,7 @@ contains
 
      endif   ! end if (ro_g0 == undefined); i.e., compressible flow
 
-      ! Specify P' to zero for incompressible flows. Check set_bc0
-      ! for details on selection of IJK_P_g.
-
-      if (ijk_p_g(1) /= undefined_i) then
-         b_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3)) = zero
-         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),:) = zero
-         A_m(ijk_p_g(1),ijk_p_g(2),ijk_p_g(3),0) = -one
-      endif
-
-      return
-
    end subroutine source_pp_g
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -155,135 +141,48 @@ contains
 !         conv_Pp_g                                                    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine source_pp_g_bc(slo, shi, alo, ahi, A_m, bc_ilo_type, bc_ihi_type, &
-      bc_jlo_type, bc_jhi_type, bc_klo_type, bc_khi_type)
+   subroutine source_pp_g_bc(slo, shi, alo, ahi, A_m)
 
-      use ic, only: PINF_, POUT_
       use geometry, only: domlo, domhi
       use matrix, only: e, n, t, w, s, b
       use param1, only: zero
 
-      IMPLICIT NONE
+      implicit none
 
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
 
-      integer(c_int), intent(in   ) :: bc_ilo_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_ihi_type&
-         (slo(2):shi(2),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_jlo_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_jhi_type&
-         (slo(1):shi(1),slo(3):shi(3),2)
-      integer(c_int), intent(in   ) :: bc_klo_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
-      integer(c_int), intent(in   ) :: bc_khi_type&
-         (slo(1):shi(1),slo(2):shi(2),2)
-
-! Local Variables
-!-----------------------------------------------
-      integer :: i,j,k
-      integer :: nlft, nrgt, nbot, ntop, nup, ndwn
-!-----------------------------------------------
-
-      nlft = max(0,domlo(1)-slo(1))
-      nbot = max(0,domlo(2)-slo(2))
-      ndwn = max(0,domlo(3)-slo(3))
-
-      nrgt = max(0,shi(1)-domhi(1))
-      ntop = max(0,shi(2)-domhi(2))
-      nup  = max(0,shi(3)-domhi(3))
-
-
 ! --- EAST FLUID ---------------------------------------------------------->
 
-      if (nlft .gt. 0) then
-         i = domlo(1)
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               ! if(bc_ilo_type(j,k,1) == PINF_ .or. &
-               !    bc_ilo_type(j,k,1) == POUT_) then
-                  A_m(i,j,k,w) =  zero
-               ! endif
-            end do
-         end do
-      endif
+      if (slo(1).lt.domlo(1)) &
+         A_m(domlo(1),alo(2):ahi(2),alo(3):ahi(3),w) =  zero
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
-      if (nrgt .gt. 0) then
-         i = domhi(1)
-         do k=alo(3),ahi(3)
-            do j=alo(2),ahi(2)
-               ! if(bc_ihi_type(j,k,1) == PINF_ .or. &
-               !    bc_ihi_type(j,k,1) == POUT_) then
-                  A_m(i,j,k,e) = zero
-               ! endif
-            end do
-         end do
-      endif
+      if (shi(1).gt.domhi(1)) & 
+         A_m(domhi(1),alo(2):ahi(2),alo(3):ahi(3),e) =  zero
 
 ! --- NORTH FLUID --------------------------------------------------------->
 
-      if (nbot .gt. 0) then
-         j = domlo(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               ! if(bc_jlo_type(i,k,1) == PINF_ .or. &
-               !    bc_jlo_type(i,k,1) == POUT_) then
-                  A_m(i,j,k,s) = zero
-               ! endif
-            end do
-         end do
-      endif
-
+      if (slo(2).lt.domlo(2)) &
+         A_m(alo(1):ahi(1),domlo(2),alo(3):ahi(3),s) =  zero
 
 ! --- SOUTH FLUID --------------------------------------------------------->
 
-      if (ntop .gt. 0) then
-         j = domhi(2)
-         do k=alo(3),ahi(3)
-            do i=alo(1),ahi(1)
-               ! if(bc_jhi_type(i,k,1) == PINF_ .or. &
-               !    bc_jhi_type(i,k,1) == POUT_) then
-                  A_m(i,j,k,n) = zero
-               ! endif
-            end do
-         end do
-      endif
+      if (shi(2).gt.domhi(2)) & 
+         A_m(alo(1):ahi(1),domhi(2),alo(3):ahi(3),n) =  zero
 
 ! --- TOP FLUID ----------------------------------------------------------->
 
-      if (ndwn .gt. 0) then
-         k = domlo(3)
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
-               ! if(bc_klo_type(i,j,1) == PINF_ .or. &
-               !    bc_klo_type(i,j,1) == POUT_) then
-                  A_m(i,j,k,b) = zero
-               ! endif
-            end do
-         end do
-      endif
+      if (slo(3).lt.domlo(3)) &
+         A_m(alo(1):ahi(1),alo(2):ahi(2),domlo(3),b) =  zero
 
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
-      if (nup .gt. 0) then
-         k = domhi(3)
-         do j=alo(2),ahi(2)
-            do i=alo(1),ahi(1)
-               ! if(bc_khi_type(i,j,1) == PINF_ .or. &
-               !    bc_khi_type(i,j,1) == POUT_) then
-                  A_m(i,j,k,t) = zero
-               ! endif
-            end do
-         end do
-      endif
-
-      return
+      if (shi(3).gt.domhi(3)) & 
+         A_m(alo(1):ahi(1),alo(2):ahi(2),domhi(3),t) =  zero
 
    end subroutine source_pp_g_bc
 

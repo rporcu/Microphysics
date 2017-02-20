@@ -65,18 +65,18 @@ contains
       delp_nm1 = delp_n
 
 ! Calculate the average gas mass flux and error
-      IF(CYCLIC_X_MF)THEN
+      if (cyclic_x_mf) then
          delp_n = delp_x
          mdot_n = vavg_flux_g(ulo, uhi, flux_ge, ayz)
-      ELSEIF(CYCLIC_Y_MF)THEN
+      elseif (cyclic_y_mf) then
          delp_n = delp_y
          mdot_n = vavg_flux_g(vlo, vhi, flux_gn, axz)
-      ELSEIF(CYCLIC_Z_MF)THEN
+      elseif (cyclic_z_mf) then
          delp_n = delp_z
          mdot_n = vavg_flux_g(wlo, whi, flux_gt, axy)
-      ELSE
-         RETURN
-      ENDIF
+      else
+         return
+      end if
 
       GSMF = gsmf + 1
 
@@ -118,16 +118,13 @@ contains
 5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
       G12.5, ' Gas Flux=', G12.5)
 
-
-      IF(CYCLIC_X_MF)THEN
+      if (CYCLIC_X_MF) then
          delp_x = delp_xyz
-      ELSEIF(CYCLIC_Y_MF)THEN
+      elseif (CYCLIC_Y_MF) then
          delp_y = delp_xyz
-      ELSEIF(CYCLIC_Z_MF)THEN
+      elseif (CYCLIC_Z_MF) then
          delp_z = delp_xyz
-      ENDIF
-
-      RETURN
+      end if
 
 5400 FORMAT(/1X,70('*')//' From: GoalSeekMassFlux',/&
       ' Message: Number of outer iterations exceeded ', I4,/1X,70('*')/)

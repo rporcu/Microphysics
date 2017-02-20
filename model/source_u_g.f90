@@ -91,25 +91,25 @@ contains
 
                epga = avg(ep_g(i,j,k),ep_g(i+1,j,k))
 
-! Pressure term
+               ! Pressure term
                PGE = P_G(i+1,j,k)
-               if(cyclic_x_pd) then
+               if (cyclic_x_pd) then
                   if ((i == domlo(1)-1) .or. (i == domhi(1))) &
                      pge = pge - delp_x
                end if
                sdp = -p_scale*epga*(pge - p_g(i,j,k))*ayz
 
-! Volumetric forces
+               ! Volumetric forces
                roga  = half * (ro_g(i,j,k) + ro_g(i+1,j,k))
                ropga = half * (rop_g(i,j,k) + rop_g(i+1,j,k))
 
-! Previous time step
+               ! Previous time step
                v0 = half * (rop_go(i,j,k) + rop_go(i+1,j,k))*odt
 
-! Body force
+               ! Body force
                vbf = roga*gravity(1)
 
-! Collect the terms
+               ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                 A_m(i,j,k,t) + A_m(i,j,k,b) + &
@@ -117,9 +117,6 @@ contains
 
                b_m(i,j,k) = b_m(i,j,k) -(sdp + tau_u_g(i,j,k) + &
                   ((v0)*u_go(i,j,k) + vbf)*vol)
-
-               ! if (i.eq. 3.and.j.eq.3.and.k.eq.0) print *,'B_M ', &
-               ! b_m(i,j,k), sdp , tau_u_g(i,j,k) , v0,u_go(i,j,k) , vbf, vol
 
             enddo
          enddo
@@ -145,7 +142,7 @@ contains
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
-      use ic, only: CYCL_
+      use ic, only: cycl_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
       use geometry, only: domlo, domhi
@@ -278,7 +275,7 @@ contains
                   A_m(i,j,k,s) = zero
 
                else if(bc_jlo_type(i,k,1) == FSW_ .or. &
-                       bc_jlo_type(i,k,1) == CYCL_) then
+                       bc_jlo_type(i,k,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,s)
                   A_m(i,j,k,s) = zero
 
@@ -304,9 +301,6 @@ contains
                   b_m(i,j,k) = zero
                endif
 
-               ! b_m(i,j-1,k) = zero
-               ! A_m(i,j-1,k,:) = zero
-               ! A_m(i,j-1,k,0) = -one
             end do
          end do
       endif
@@ -325,7 +319,7 @@ contains
                   A_m(i,j,k,n) = zero
 
                else if(bc_jhi_type(i,k,1) == FSW_ .or. &
-                       bc_jhi_type(i,k,1) == CYCL_) then
+                       bc_jhi_type(i,k,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,n)
                   A_m(i,j,k,n) = zero
 
@@ -351,9 +345,6 @@ contains
                   b_m(i,j,k) = zero
                endif
 
-               ! b_m(i,j+1,k) = zero
-               ! A_m(i,j+1,k,:) = zero
-               ! A_m(i,j+1,k,0) = -one
             end do
          end do
       endif
@@ -370,7 +361,7 @@ contains
                   A_m(i,j,k,b) = zero
 
                else if(bc_klo_type(i,j,1) == FSW_ .or. &
-                       bc_klo_type(i,j,1) == CYCL_) then
+                       bc_klo_type(i,j,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
@@ -412,7 +403,7 @@ contains
                   A_m(i,j,k,t) = zero
 
                else if(bc_khi_type(i,j,1) == FSW_ .or. &
-                       bc_khi_type(i,j,1) == CYCL_) then
+                       bc_khi_type(i,j,1) == cycl_) then
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 

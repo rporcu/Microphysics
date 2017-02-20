@@ -26,7 +26,7 @@ module set_bc_type_module
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
       use ic, only: MINF_, MOUT_
-      use ic, only: UNDEF_CELL, CYCL_
+      use ic, only: UNDEF_CELL, cycl_
 
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param, only: dimension_bc
@@ -53,24 +53,24 @@ module set_bc_type_module
 
 
       if(cyclic_x) then
-         bc_ilo_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = CYCL_
-         bc_ihi_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = CYCL_
+         bc_ilo_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = cycl_
+         bc_ihi_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = cycl_
       else
          bc_ilo_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = UNDEF_CELL
          bc_ihi_type(slo(2)+1:shi(2)-1,slo(3)+1:shi(3)-1,1) = UNDEF_CELL
       endif
 
       if(cyclic_y)then
-         bc_jlo_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = CYCL_
-         bc_jhi_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = CYCL_
+         bc_jlo_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = cycl_
+         bc_jhi_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = cycl_
       else
          bc_jlo_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = UNDEF_CELL
          bc_jhi_type(slo(1)+1:shi(1)-1,slo(3)+1:shi(3)-1,1) = UNDEF_CELL
       endif
 
       if(cyclic_z) then
-         bc_klo_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = CYCL_
-         bc_khi_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = CYCL_
+         bc_klo_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = cycl_
+         bc_khi_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = cycl_
       else
          bc_klo_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = UNDEF_CELL
          bc_khi_type(slo(1)+1:shi(1)-1,slo(2)+1:shi(2)-1,1) = UNDEF_CELL
