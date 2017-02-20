@@ -51,7 +51,4 @@
 ! Variable to flag periodic bc with mass flux in Z
       LOGICAL :: CYCLIC_Z_MF
 
-! Cell flags.
-      integer, DIMENSION(:,:,:,:), ALLOCATABLE :: flag_mod
-
       END MODULE geometry

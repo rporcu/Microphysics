@@ -29,8 +29,6 @@ MODULE GET_DATA_MODULE
       USE read_namelist_module, only: read_namelist
       USE run            , only: run_type, run_name
       USE set_bc_flow_module, only: set_bc_flow
-      USE set_flags_module, only: set_flags
-      USE set_icbc_flags_module, only: set_icbc_flag
       USE set_parameters_module, only: set_parameters
       USE write_header_module, only: write_header
 

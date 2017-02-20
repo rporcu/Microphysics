@@ -245,22 +245,15 @@ mfix_level::MakeNewLevel (int lev, Real time,
     flag[lev].reset(new iMultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
     flag[lev]->setVal(0);
 
-    // Call set_domain for each subdomain
-    // Read input data, check data, do computations for IC and BC locations
-    // and flows, and set geometry parameters such as X, X_E, DToDX, etc.
+    // Call set_domain to read input data, check data, 
+    // do computations for IC and BC locations and flows,
+    // and set geometry parameters such as X, X_E, DToDX, etc.
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
+    set_domain(&dx,&dy,&dz);
 
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
-    {
-       const Box&  bx = mfi.validbox();
-       const Box& sbx = (*flag[lev])[mfi].box();
-
-       set_domain(sbx.loVect(),sbx.hiVect(),bx.loVect(),bx.hiVect(),
-                  (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
-    }
     mfix_set_bc_type(lev);
 
     // ********************************************************************************

@@ -160,7 +160,6 @@ set(F90_sources
   model/machine_mod.f90
   model/matrix_mod.f90
   model/mfix.f90
-  model/mod_bc.f90
   model/output_mod.f90
   model/param1_mod.f90
   model/param_mod.f90
@@ -177,8 +176,6 @@ set(F90_sources
   model/set_bc_flow.f90
   model/set_bc_type.f90
   model/set_domain.f90
-  model/set_flags.f90
-  model/set_icbc_flags.f90
   model/set_param.f90
   model/set_ps.f90
   model/solve_pp_g.f90

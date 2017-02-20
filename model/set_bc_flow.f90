@@ -105,8 +105,6 @@ MODULE set_bc_flow_module
 
       END SUBROUTINE SET_BC_FLOW
 
-
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_BC_VEL_INFLOW                                      !
