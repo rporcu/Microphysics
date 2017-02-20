@@ -31,7 +31,6 @@ extern "C"
                   int* bc_ilo, int* bc_ihi,
                   int* bc_jlo, int* bc_jhi,
                   int* bc_klo, int* bc_khi,
-                  int* flag,
                   Real* dx,       Real* dy,       Real* dz);
 
   void init_fluid(const int* slo, const int* shi,

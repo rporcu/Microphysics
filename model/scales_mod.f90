@@ -4,29 +4,29 @@
 !                                                                      C
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 
-      MODULE scales
+      module scales
 
       use bl_fort_module, only : c_real
       use iso_c_binding , only: c_int
 
-! reference pressure
+      ! reference pressure
       real(c_real) :: P_ref
 
-! pressure scale
+      ! pressure scale
       real(c_real) :: P_scale
 
-      CONTAINS
+      contains
 
-      real(c_real) FUNCTION SCALE_PRESSURE(XXX)
+      real(c_real) function scale_pressure(XXX)
       IMPLICIT NONE
       real(c_real), intent(IN) :: XXX
-      SCALE_PRESSURE   = (XXX - P_ref) / P_scale
-      END FUNCTION SCALE_PRESSURE
+      scale_pressure   = (XXX - P_ref) / P_scale
+      END function scale_pressure
 
-      real(c_real) FUNCTION UNSCALE_PRESSURE(XXX)
+      real(c_real) function UNscale_pressure(XXX)
       IMPLICIT NONE
       real(c_real), intent(IN) :: XXX
-      UNSCALE_PRESSURE = (XXX * P_scale + P_ref)
-      END FUNCTION UNSCALE_PRESSURE
+      UNscale_pressure = (XXX * P_scale + P_ref)
+      end function UNscale_pressure
 
-      END MODULE scales
+      end module scales

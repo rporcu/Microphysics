@@ -611,7 +611,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                bc_klo.dataPtr(), bc_khi.dataPtr(),
-               (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+               &dx, &dy, &dz );
   }
 
   fill_mf_bc(lev,*p_g[lev],0);
@@ -845,7 +845,6 @@ mfix_level::mfix_calc_mflux(int lev)
 
   for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& bx = mfi.validbox();
      const Box& sbx = (*flag[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);

@@ -10,7 +10,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                  time, dt, u_g, v_g, w_g, &
                  p_g, ep_g, &
                  bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                 bc_klo_type, bc_khi_type, flag, dx, dy, dz) &
+                 bc_klo_type, bc_khi_type, dx, dy, dz) &
    bind(C, name="mfix_main1")
 
 !-----------------------------------------------
@@ -40,9 +40,6 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
       real(c_real), intent(inout) :: time, dt
       real(c_real), intent(in   ) :: dx, dy, dz
-
-      integer(c_int), intent(inout) :: flag&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),1)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -92,9 +89,9 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
                          bc_klo_type, bc_khi_type)
 
       ! Set boundary conditions
-      call set_bc0(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,p_g,ep_g,u_g,v_g,w_g,ro_g0, &
+      call set_bc0(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,p_g,ep_g,u_g,v_g,w_g,&
                    bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-                   bc_klo_type, bc_khi_type, flag)
+                   bc_klo_type, bc_khi_type)
 
 
       end subroutine mfix1
