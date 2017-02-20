@@ -262,7 +262,6 @@ mfix_level::MakeNewLevel (int lev, Real time,
                   (*flag[lev])[mfi].dataPtr(),&dx,&dy,&dz);
     }
     mfix_set_bc_type(lev);
-    //fill_mf_bc(lev,*flag[lev]);
 
     // ********************************************************************************
     // Cell-based arrays
@@ -453,7 +452,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           nit++;
 
           // User hooks
-          for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+          for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
             mfix_usr2();
 
           // Calculate transport coefficients
@@ -490,11 +489,11 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
             for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
             {
-              const Box& sbx = (*flag[lev])[mfi].box();
+              const Box& sbx = (*ep_g[lev])[mfi].box();
 
-              converged = goal_seek_mFlux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
+              converged = goal_seek_mflux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
                 (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
-                (*flag[lev])[mfi].dataPtr(), &dx, &dy, &dz);
+                &dx, &dy, &dz);
             }
 
         } while(converged==0 && nit<max_nit);
@@ -843,10 +842,8 @@ mfix_level::mfix_calc_mflux(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*u_g[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& sbx = (*flag[lev])[mfi].box();
-
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
@@ -875,7 +872,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
     for (MFIter mfi(*rop_g[lev]); mfi.isValid(); ++mfi)
     {
        const Box& bx = mfi.validbox();
-       const Box& sbx = (*flag[lev])[mfi].box();
+       const Box& sbx = (*rop_g[lev])[mfi].box();
 
        Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
        Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -910,12 +907,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
 
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
-      const Box& sbx = (*flag[lev])[mfi].box();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box()); abx.shift(0,-1);
-      //std::cout << "ABX " << abx << std::endl;
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -939,9 +935,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     int eq_id=3;
-//  std::cout << "Solving Ug " << std::endl;
-//  std::cout << "UG AM " << (*A_m[lev])[0] << std::endl;
-//  std::cout << "UG BM " << (*b_m[lev])[0] << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve V-Momentum equation
@@ -953,10 +946,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     b_m[lev].reset(new MultiFab(y_edge_ba,1,0,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
-      const Box& sbx = (*flag[lev])[mfi].box();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box()); abx.shift(1,-1);
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -981,9 +974,6 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=4;
-//  std::cout << "Solving Vg " << std::endl;
-//  std::cout << "VG AM " << (*A_m[lev])[0] << std::endl;
-//  std::cout << "VG BM " << (*b_m[lev])[0] << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve W-Momentum equation
@@ -995,10 +985,10 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     b_m[lev].reset(new MultiFab(z_edge_ba,1,0,dmap[lev],Fab_allocate));
 
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
-      const Box& sbx = (*flag[lev])[mfi].box();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box()); abx.shift(2,-1);
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -1023,11 +1013,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     }
 
     eq_id=5;
-//  std::cout << "Solving Wg " << std::endl;
-//  std::cout << "UG AM " << (*A_m[lev])[0] << std::endl;
-//  std::cout << "UG BM " << (*b_m[lev])[0] << std::endl;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
-//  exit(0);
 
     MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());
     MultiFab::Copy(*v_g[lev], *v_gt[lev], 0, 0, 1, v_g[lev]->nGrow());
@@ -1054,10 +1040,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     b_mmax.setVal(0.);
 
     // Solve the pressure correction equation
-    for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
       const Box& bx = mfi.validbox();
-      const Box& sbx = (*flag[lev])[mfi].box();
+      const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box());
 
       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
@@ -1122,7 +1108,6 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 
     resg = tmp_norm;
 
-    // std::cout << "Solving Ppg " << std::endl;
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
 
@@ -1133,10 +1118,10 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
 void
 mfix_level::mfix_correct_0(int lev)
 {
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*p_g[lev])[mfi].box();
 
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
@@ -1160,10 +1145,10 @@ mfix_level::mfix_correct_0(int lev)
 void
 mfix_level::mfix_physical_prop(int lev, int calc_flag)
 {
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*p_g[lev])[mfi].box();
 
      physical_prop(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),&calc_flag,
         (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
@@ -1180,9 +1165,9 @@ mfix_level::usr3(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*flag[lev]); mfi.isValid(); ++mfi)
+  for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
   {
-     const Box& sbx = (*flag[lev])[mfi].box();
+     const Box& sbx = (*p_g[lev])[mfi].box();
      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
@@ -1203,22 +1188,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
-#if(0)
-    for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
-    {
-       const Box& bx = mfi.validbox();
-       const Box& sbx = (*flag[lev])[mfi].box();
-
-       mfix_solve_lin_eq(&eq_id, sol[mfi].dataPtr(), matrix[mfi].dataPtr(),
-                         rhs[mfi].dataPtr(),
-                         &sweep_type, &tol, &precond_type, &max_it, &ier,
-                         sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect());
-    }
-#else
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
-#endif
-    // std::cout << "SOL " << sol[0] << std::endl;
-    // exit(0);
 }
 
 void

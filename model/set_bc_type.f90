@@ -49,7 +49,7 @@ module set_bc_type_module
          (slo(1):shi(1),slo(2):shi(2),2)
 
       ! Local index for boundary condition
-      integer :: type, bcv, i, j, k
+      integer :: type, bcv
 
 
       if(cyclic_x) then
@@ -246,71 +246,68 @@ module set_bc_type_module
       endif
 
 
+!     i = slo(1)
+!     write(6,"(2/,'bc_ilo_type for i =',i3)") i
+!     do k=shi(3),slo(3),-1
+!        do j=slo(2),shi(2)-1
+!           write(6,"(i4)",advance='no') bc_ilo_type(j,k,1)
+!        enddo
+!        j=shi(2)
+!        write(6,"(i4)",advance='yes') bc_ilo_type(j,k,1)
+!     enddo
+
+!     i = shi(1)
+!     write(6,"(2/,'bc_ihi_type for i =',i3)") i
+!     do k=shi(3),slo(3),-1
+!        do j=slo(2),shi(2)-1
+!           write(6,"(i4)",advance='no') bc_ihi_type(j,k,1)
+!        enddo
+!        j=shi(2)
+!        write(6,"(i4)",advance='yes') bc_ihi_type(j,k,1)
+!     enddo
+
+!     j = slo(2)
+!     write(6,"(2/,'bc_jlo_type for j =',i3)") j
+!     do k=slo(3),shi(3)
+!        do i=slo(1),shi(1)-1
+!           write(6,"(i4)",advance='no') bc_jlo_type(i,k,1)
+!        enddo
+!        i=shi(1)
+!        write(6,"(i4)",advance='yes') bc_jlo_type(i,k,1)
+!     enddo
+
+!     j = shi(2)
+!     write(6,"(2/,'bc_jhi_type for j =',i3)") j
+!     do k=slo(3),shi(3)
+!        do i=slo(1),shi(1)-1
+!           write(6,"(i4)",advance='no') bc_jhi_type(i,k,1)
+!        enddo
+!        i=shi(1)
+!        write(6,"(i4)",advance='yes') bc_jhi_type(i,k,1)
+!     enddo
 
 
-      i = slo(1)
-      write(6,"(2/,'bc_ilo_type for i =',i3)") i
-      do k=shi(3),slo(3),-1
-         do j=slo(2),shi(2)-1
-            write(6,"(i4)",advance='no') bc_ilo_type(j,k,1)
-         enddo
-         j=shi(2)
-         write(6,"(i4)",advance='yes') bc_ilo_type(j,k,1)
-      enddo
-
-      i = shi(1)
-      write(6,"(2/,'bc_ihi_type for i =',i3)") i
-      do k=shi(3),slo(3),-1
-         do j=slo(2),shi(2)-1
-            write(6,"(i4)",advance='no') bc_ihi_type(j,k,1)
-         enddo
-         j=shi(2)
-         write(6,"(i4)",advance='yes') bc_ihi_type(j,k,1)
-      enddo
+!     k = slo(3)
+!     write(6,"(2/,'bc_klo_type for k =',i3)") j
+!     do j=slo(2),shi(2)
+!        do i=slo(1),shi(1)-1
+!           write(6,"(i4)",advance='no') bc_klo_type(i,j,1)
+!        enddo
+!        i=shi(1)
+!        write(6,"(i4)",advance='yes') bc_klo_type(i,j,1)
+!     enddo
 
 
-      j = slo(2)
-      write(6,"(2/,'bc_jlo_type for j =',i3)") j
-      do k=slo(3),shi(3)
-         do i=slo(1),shi(1)-1
-            write(6,"(i4)",advance='no') bc_jlo_type(i,k,1)
-         enddo
-         i=shi(1)
-         write(6,"(i4)",advance='yes') bc_jlo_type(i,k,1)
-      enddo
+!     k = shi(3)
+!     write(6,"(2/,'bc_khi_type for k =',i3)") j
+!     do j=slo(2),shi(2)
+!        do i=slo(1),shi(1)-1
+!           write(6,"(i4)",advance='no') bc_khi_type(i,j,1)
+!        enddo
+!        i=shi(1)
+!        write(6,"(i4)",advance='yes') bc_khi_type(i,j,1)
+!     enddo
 
-      j = shi(2)
-      write(6,"(2/,'bc_jhi_type for j =',i3)") j
-      do k=slo(3),shi(3)
-         do i=slo(1),shi(1)-1
-            write(6,"(i4)",advance='no') bc_jhi_type(i,k,1)
-         enddo
-         i=shi(1)
-         write(6,"(i4)",advance='yes') bc_jhi_type(i,k,1)
-      enddo
-
-
-      k = slo(3)
-      write(6,"(2/,'bc_klo_type for k =',i3)") j
-      do j=slo(2),shi(2)
-         do i=slo(1),shi(1)-1
-            write(6,"(i4)",advance='no') bc_klo_type(i,j,1)
-         enddo
-         i=shi(1)
-         write(6,"(i4)",advance='yes') bc_klo_type(i,j,1)
-      enddo
-
-
-      k = shi(3)
-      write(6,"(2/,'bc_khi_type for k =',i3)") j
-      do j=slo(2),shi(2)
-         do i=slo(1),shi(1)-1
-            write(6,"(i4)",advance='no') bc_khi_type(i,j,1)
-         enddo
-         i=shi(1)
-         write(6,"(i4)",advance='yes') bc_khi_type(i,j,1)
-      enddo
-!      stop 88888
    end subroutine set_bc_type
 
    end module set_bc_type_module

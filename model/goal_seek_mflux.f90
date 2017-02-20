@@ -12,10 +12,10 @@ contains
 !            the user specifies a value for the keyword flux_g in the
 !            mfix.dat file.
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   integer(c_int) function goal_seek_mFlux(ulo, uhi, vlo, vhi, wlo, whi, &
-      NIT, gsmf, delp_n, mdot_n, &
-      flux_ge, flux_gn, flux_gt, dx, dy, dz)&
-      bind(C, name="goal_seek_mFlux")
+   integer(c_int) function &
+       goal_seek_mflux(ulo, uhi, vlo, vhi, wlo, whi, NIT, gsmf, delp_n, mdot_n, &
+                       flux_ge, flux_gn, flux_gt, dx, dy, dz)&
+      bind(C, name="goal_seek_mflux")
 
 !-----------------------------------------------
 ! Modules

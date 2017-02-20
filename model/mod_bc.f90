@@ -14,7 +14,7 @@ MODULE MOD_BC
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
-      use bc, only: BC_PLANE
+      use bc, only: bc_plane
 
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
@@ -55,7 +55,6 @@ MODULE MOD_BC
 
 ! Establish the OWNER of the BC
       OWNER = myPE
-      ! CALL GLOBAL_ALL_SUM(OWNER)
 
       IF(myPE == OWNER) THEN
 
@@ -65,7 +64,7 @@ MODULE MOD_BC
             flag(i,j,k,1) == FSW_ .or. &
             flag(i,j,k,1) == PSW_)) then
 
-            BC_PLANE(BCV) = 'E'
+            bc_plane(BCV) = 'E'
 
 ! Flow on east boundary (fluid cell on west).
          elseif(flag(i,j,k,1) == FLUID_ .and. (&
@@ -75,20 +74,20 @@ MODULE MOD_BC
 
             BC_I_W(BCV) = BC_I_W(BCV) + 1
             BC_I_E(BCV) = BC_I_E(BCV) + 1
-            BC_PLANE(BCV) = 'W'
+            bc_plane(BCV) = 'W'
 
 ! Set the plane of a value we know to be wrong so we can detect the error.
          ELSE
-            BC_PLANE(BCV) = '.'
+            bc_plane(BCV) = '.'
          ENDIF
       ENDIF
 
       !CALL BCAST(I_W,   OWNER)
       !CALL BCAST(I_E,   OWNER)
-      !CALL BCAST(BC_PLANE(BCV), OWNER)
+      !CALL BCAST(bc_plane(BCV), OWNER)
 
 ! If there is an error, send I,J,K to all ranks. Report and exit.
-      IF(BC_PLANE(BCV) == '.') THEN
+      IF(bc_plane(BCV) == '.') THEN
          WRITE(ERR_MSG, 1100) BCV, BC_I_W(BCV), BC_I_E(BCV), &
             BC_J_S(BCV), BC_K_B(BCV)
 !           FLAG(i,j,k,1), FLAG(i+1,j,k,1)
@@ -101,7 +100,7 @@ MODULE MOD_BC
 
 ! Set up the I-indices for checking the entire BC region.
       I_WALL = BC_I_W(BCV)
-      I_FLUID = merge(I_WALL-1, I_WALL+1, BC_PLANE(BCV)=='W')
+      I_FLUID = merge(I_WALL-1, I_WALL+1, bc_plane(BCV)=='W')
 
 
 ! First pass through all of the BC region and verify that you have
@@ -176,7 +175,7 @@ MODULE MOD_BC
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
-      use bc, only: BC_PLANE
+      use bc, only: bc_plane
 
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
@@ -226,7 +225,7 @@ MODULE MOD_BC
             flag(i,j  ,k,1) == FSW_ .or. &
             flag(i,j  ,k,1) == PSW_)) then
 
-            BC_PLANE(BCV) = 'N'
+            bc_plane(BCV) = 'N'
 
          elseif(flag(i,j,k,1) == FLUID_ .and. (&
             flag(i,j+1,k,1) == NSW_ .or. &
@@ -235,19 +234,19 @@ MODULE MOD_BC
 
             BC_J_S(BCV) = BC_J_S(BCV) + 1
             BC_J_N(BCV) = BC_J_N(BCV) + 1
-            BC_PLANE(BCV) = 'S'
+            bc_plane(BCV) = 'S'
 
          ELSE
-            BC_PLANE(BCV) = '.'
+            bc_plane(BCV) = '.'
          ENDIF
       ENDIF
 
       !CALL BCAST(J_S,OWNER)
       !CALL BCAST(J_N,OWNER)
-      !CALL BCAST(BC_PLANE(BCV),OWNER)
+      !CALL BCAST(bc_plane(BCV),OWNER)
 
 ! If there is an error, send i,j,k to all ranks. Report and exit.
-      IF(BC_PLANE(BCV) == '.') THEN
+      IF(bc_plane(BCV) == '.') THEN
          WRITE(ERR_MSG, 1100) BCV, BC_J_S(BCV), BC_J_N(BCV), &
             BC_I_W(BCV), BC_K_B(BCV)
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -260,7 +259,7 @@ MODULE MOD_BC
 
 
       J_WALL = BC_J_S(BCV)
-      J_FLUID = merge(J_WALL-1, J_WALL+1, BC_PLANE(BCV)=='S')
+      J_FLUID = merge(J_WALL-1, J_WALL+1, bc_plane(BCV)=='S')
 
 
 ! First pass through all of the BC region and verify that you have
@@ -333,7 +332,7 @@ MODULE MOD_BC
       use bc, only: BC_I_W, BC_I_E
       use bc, only: BC_J_S, BC_J_N
       use bc, only: BC_K_B, BC_K_T
-      use bc, only: BC_PLANE
+      use bc, only: bc_plane
 
       use ic, only: FLUID_
       use ic, only: NSW_, FSW_, PSW_
@@ -383,7 +382,7 @@ MODULE MOD_BC
             flag(i,j,k,1) == NSW_ .or. &
             flag(i,j,k,1) == FSW_ .or. &
             flag(i,j,k,1) == PSW_)) then
-            BC_PLANE(BCV) = 'T'
+            bc_plane(BCV) = 'T'
 
          ELSEIF(FLAG(i,j,k,1) == FLUID_ .and. (&
             flag(i,j,k+1,1) == NSW_ .or. &
@@ -391,19 +390,19 @@ MODULE MOD_BC
             flag(i,j,k+1,1) == PSW_)) then
             BC_K_b(BCV) = BC_K_b(BCV) + 1
             BC_K_t(BCV) = BC_K_t(BCV) + 1
-            BC_PLANE(BCV) = 'B'
+            bc_plane(BCV) = 'B'
          ELSE
-            BC_PLANE(BCV) = '.'
+            bc_plane(BCV) = '.'
          ENDIF
       ENDIF
 
 ! The owner distributes the new Iw/Ie coordinates to the other ranks.
       !CALL BCAST(K_B,OWNER)
       !CALL BCAST(K_T,OWNER)
-      !CALL BCAST(BC_PLANE(BCV),OWNER)
+      !CALL BCAST(bc_plane(BCV),OWNER)
 
 ! If there is an error, send i,j,k to all ranks. Report and exit.
-      IF(BC_PLANE(BCV) == '.') THEN
+      IF(bc_plane(BCV) == '.') THEN
 
          WRITE(ERR_MSG, 1100) BCV, BC_K_B(BCV), BC_K_T(BCV), &
             BC_I_W(BCV), BC_J_S(BCV)
@@ -416,7 +415,7 @@ MODULE MOD_BC
 
 ! Set up the I-indices for checking the entire BC region.
       K_WALL = BC_K_B(BCV)
-      K_FLUID = merge(K_WALL-1, K_WALL+1, BC_PLANE(BCV)=='B')
+      K_FLUID = merge(K_WALL-1, K_WALL+1, bc_plane(BCV)=='B')
 
 
       ERROR = .FALSE.

@@ -177,7 +177,7 @@
 !
 !                      Character variable with values W, E, S, N, B, and T
 !                      to determine the flow plane of a flow cell
-       CHARACTER       BC_PLANE (DIMENSION_BC)
+       CHARACTER       bc_plane (DIMENSION_BC)
 !
 !                      The interval at the beginning when normal vel. is equal to
 !                      BC_Jet_g0

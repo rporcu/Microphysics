@@ -152,9 +152,6 @@ extern "C"
                      int* level, Real* ro_g, Real* p_g,
                      Real* ep_g, Real* rop_g);
 
-  void fill_bc(Real* s, const int* slo, const int* shi,
-               int* flag, const int* vtype);
-
   void fill_bc0(Real* s, const int* slo, const int* shi,
                 int* bc_ilo, int* bc_ihi,
                 int* bc_jlo, int* bc_jhi,
@@ -249,36 +246,14 @@ extern "C"
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t);
 
-  void mfix_iterate(
-         Real* u_g,            Real* v_g,            Real* w_g,
-         Real* u_go,           Real* v_go,           Real* w_go,
-         Real* p_g,            Real* pp_g,
-         Real* ep_g,           Real* ro_g,
-         Real* rop_g,          Real* rop_go,
-         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
-         Real* d_e,            Real* d_n,            Real* d_t,
-         Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
-         Real* mu_g,           Real* f_gds,
-         Real* A_m,            Real* b_m,            Real* drag_bm,
-         Real* tau_u_g,        Real* tau_v_g,        Real* tau_w_g,
-         int* particle_phase,  int* particle_state,
-         Real* pvol,           Real* des_radius,
-         Real* des_pos_new,    Real* des_vel_new,
-         int* flag,
-         Real* time,           Real* dt,             int* nstep,
-         int* ier,             int* nit,
-         int* mustit, int* gsmf,
-         Real* delP_MF, Real* lMFlux, Real* resg,
-         Real* lnormg, int* lset_normg);
-
   void display_resid(int* nit);
 
   int check_convergence(int* nit);
 
-  int goal_seek_mFlux(
+  int goal_seek_mflux(
               const int* slo, const int* shi,
               int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
-              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  int* flag,
+              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  
               Real* dx     ,  Real* dy,       Real* dz);
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);

@@ -20,8 +20,6 @@ MODULE set_icbc_flags_module
 ! Subroutine: SET_ICBC_FLAG                                            !
 ! Author: J.Musser                                    Date: 01-Mar-14  !
 !                                                                      !
-! Purpose: Provided a detailed error message when the sum of volume    !
-!                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
       SUBROUTINE SET_ICBC_FLAG(slo,shi,flag)
 
@@ -73,7 +71,7 @@ MODULE set_icbc_flags_module
 
 ! If at domain boundaries then set default values (wall or, if
 ! specified, cyclic)
-         IF(K==DOMLO(3)-1 .OR. K==DOMHI(3)+1)THEN
+         IF(K==DOMLO(3)-1 .OR. K==domhi(3)+1)THEN
             IF (CYCLIC_Z_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Z) THEN
@@ -83,7 +81,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(J==DOMLO(2)-1 .OR. J==DOMHI(2)+1)THEN
+         IF(J==DOMLO(2)-1 .OR. J==domhi(2)+1)THEN
             IF (CYCLIC_Y_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_Y) THEN
@@ -93,7 +91,7 @@ MODULE set_icbc_flags_module
             ENDIF
          ENDIF
 
-         IF(I==DOMLO(1)-1 .OR. I==DOMHI(1)+1)THEN
+         IF(I==DOMLO(1)-1 .OR. I==domhi(1)+1)THEN
             IF (CYCLIC_X_PD) THEN
                FLAG(i,j,k,1) = CYCP_
             ELSEIF (CYCLIC_X) THEN
@@ -240,7 +238,7 @@ MODULE set_icbc_flags_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE SET_BC_FLAGS_FLOW(slo,shi,flag)
 
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use geometry    , only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: domhi
 
@@ -259,18 +257,10 @@ MODULE set_icbc_flags_module
       integer :: jstart, jend
       integer :: kstart, kend
 
-      INTEGER :: IER
-
-      ! error indicator
-      LOGICAL :: ERROR
-
       ! surface indictors
       LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 
       CALL INIT_ERR_MSG("SET_BC_FLAGS_FLOW")
-
-      ! Find the flow surfaces
-      ERROR = .FALSE.
 
       DO BCV = 1, DIMENSION_BC
 
@@ -297,28 +287,27 @@ MODULE set_icbc_flags_module
 
             ! Extend the boundaries for cyclic implementation
             IF (BC_I_W(BCV) == domlo(1) .and. &
-                BC_I_E(BCV) == DOMHI(1) .and. &
+                BC_I_E(BCV) == domhi(1) .and. &
                 CYCLIC_X) then
                    BC_I_W(BCV) = 1
-                   BC_I_E(BCV) = DOMHI(1)
+                   BC_I_E(BCV) = domhi(1)
             ENDIF
             IF(BC_J_S(BCV) == domlo(2) .and. &
-               BC_J_N(BCV) == DOMHI(2) .and. &
+               BC_J_N(BCV) == domhi(2) .and. &
                CYCLIC_Y) then
                BC_J_S(BCV) = 1
-               BC_J_N(BCV) = DOMHI(2)
+               BC_J_N(BCV) = domhi(2)
             ENDIF
             IF(BC_K_B(BCV) == domlo(3) .and. &
-               BC_K_T(BCV) == DOMHI(3) .and. &
+               BC_K_T(BCV) == domhi(3) .and. &
                CYCLIC_Z) then
                BC_K_B(BCV) = 1
-               BC_K_T(BCV) = DOMHI(3)
+               BC_K_T(BCV) = domhi(3)
             ENDIF
 
             ! Set add the BC to the FLAG. If a "non-wall" BC is found, then flag
             ! this as an error. The next triple-loop will take care of reporting the
             ! error.
-            ERROR = .FALSE.
 
             ! We don't want to write outside of the current grid
 
@@ -346,58 +335,15 @@ MODULE set_icbc_flags_module
                      CASE ('P_INFLOW');     FLAG(i,j,k,1) = PINF_
                   END SELECT
 
-               ELSE
-                  ERROR = .TRUE.
                ENDIF
 
             ENDDO
             ENDDO
             ENDDO
 
-! Sync the error flag over all ranks.
-            ! CALL GLOBAL_ALL_OR(ERROR)
-
-! Report errors and exit.
-            IF(ERROR)THEN
-
-               CALL OPEN_PE_LOG(IER)
-
-               WRITE(ERR_MSG, 1200) BCV
-               CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)
-
- 1200 FORMAT('Error 1200: Boundary condition ',I3,' overlaps with ',&
-         'another BC.',2/7x,'I',7x,'J',7x,'K',3x,'ICBC')
-
-               DO K = BC_K_B(BCV), BC_K_T(BCV)
-               DO J = BC_J_S(BCV), BC_J_N(BCV)
-               DO I = BC_I_W(BCV), BC_I_E(BCV)
-
-! Verify that the FLOW BC is overwriting a wall.
-                  IF(flag(i,j,k,1) /= NSW_ .and. &
-                     flag(i,j,k,1) /= FSW_ .and. &
-                     flag(i,j,k,1) /= PSW_) then
-                     WRITE(ERR_MSG, 1201) I,J,K, FLAG(i,j,k,1)
-                     CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-                  ENDIF
-
- 1201 FORMAT(1x,3(2x,I6),3x,A3)
-
-               ENDDO
-               ENDDO
-               ENDDO
-
-               WRITE(ERR_MSG,"('Please correct the mfix.dat file.')")
-               CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
-
-            ENDIF ! IF(ERROR)
          ENDIF ! IF(not a wall BC)
       ENDDO ! BC Loop
 
-! Sync the ICBC flag across ghost layers
-      ! CALL SEND_RECV(FLAG,1)
-
-      CALL FINL_ERR_MSG
-
-      RETURN
       END SUBROUTINE SET_BC_FLAGS_FLOW
+
 END MODULE set_icbc_flags_module

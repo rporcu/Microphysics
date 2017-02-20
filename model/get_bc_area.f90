@@ -43,15 +43,15 @@ MODULE GET_BC_AREA_MODULE
       DO BCV = 1, DIMENSION_BC
          IF (BC_DEFINED(BCV)) THEN
             BC_AREA(BCV) = ZERO
-            IF (BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV) == 'E') THEN
+            IF (bc_plane(BCV) == 'W' .OR. bc_plane(BCV) == 'E') THEN
                BC_AREA(BCV) = &
                   DY*dble(BC_J_N(BCV)-BC_J_S(BCV)+1)* &
                   DZ*dble(BC_K_T(BCV)-BC_K_B(BCV)+1)
-            ELSE IF (BC_PLANE(BCV)=='S' .OR. BC_PLANE(BCV)=='N') THEN
+            ELSE IF (bc_plane(BCV)=='S' .OR. bc_plane(BCV)=='N') THEN
                BC_AREA(BCV) = &
                   DX*dble(BC_I_E(BCV)-BC_I_W(BCV)+1)* &
                   DZ*dble(BC_K_T(BCV)-BC_K_B(BCV)+1)
-            ELSE IF (BC_PLANE(BCV)=='B' .OR. BC_PLANE(BCV)=='T') THEN
+            ELSE IF (bc_plane(BCV)=='B' .OR. bc_plane(BCV)=='T') THEN
                BC_AREA(BCV) = &
                   DX*dble(BC_I_E(BCV)-BC_I_W(BCV)+1)* &
                   DY*dble(BC_J_N(BCV)-BC_J_S(BCV)+1)

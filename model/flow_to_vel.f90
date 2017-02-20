@@ -291,7 +291,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
         call mfix_exit(myPE)
       END SELECT
 
-      SELECT CASE (BC_PLANE(BCV))
+      SELECT CASE (bc_plane(BCV))
       CASE ('W'); SGN = -SGN
       CASE ('S'); SGN = -SGN
       CASE ('B'); SGN = -SGN
@@ -306,7 +306,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
 ! the user did not define the boundary velocity through the plane, then
 ! if mass_inflow set the value of the boundary velocity to the
 ! calculated value. otherwise do nothing.
-      IF(BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV)== 'E') THEN
+      IF(bc_plane(BCV) == 'W' .OR. bc_plane(BCV)== 'E') THEN
 
          IF(IS_DEFINED(BC_U_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_U_G(BCV))) THEN
@@ -319,7 +319,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
             BC_W_G(BCV) = OFF * BC_W_G(BCV)
          ENDIF
 
-      ELSEIF(BC_PLANE(BCV) == 'S' .OR. BC_PLANE(BCV)== 'N') THEN
+      ELSEIF(bc_plane(BCV) == 'S' .OR. bc_plane(BCV)== 'N') THEN
          IF(IS_DEFINED(BC_V_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_V_G(BCV))) THEN
                WRITE(ERR_MSG, 1100) BCV, VEL, 'BC_V_g', BC_V_G(BCV)
@@ -331,7 +331,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
             BC_W_G(BCV) = OFF * BC_W_G(BCV)
          ENDIF
 
-      ELSEIF(BC_PLANE(BCV) == 'B' .OR. BC_PLANE(BCV)== 'T') THEN
+      ELSEIF(bc_plane(BCV) == 'B' .OR. bc_plane(BCV)== 'T') THEN
          IF(IS_DEFINED(BC_W_G(BCV)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL, BC_W_G(BCV))) THEN
                WRITE(ERR_MSG, 1100) BCV, VEL, 'BC_W_g', BC_W_G(BCV)
@@ -409,7 +409,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
         call mfix_exit(myPE)
       END SELECT
 
-      SELECT CASE (BC_PLANE(BCV))
+      SELECT CASE (bc_plane(BCV))
       CASE ('W'); SGN = -SGN
       CASE ('S'); SGN = -SGN
       CASE ('B'); SGN = -SGN
@@ -429,7 +429,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
  1101 FORMAT('Error 1101: BC No:',I2,' Non-zero vol. or mass flow ',&
          'specified with BC_ROP_s', I1,' = 0.')
 
-      IF(BC_PLANE(BCV) == 'W' .OR. BC_PLANE(BCV)== 'E') THEN
+      IF(bc_plane(BCV) == 'W' .OR. bc_plane(BCV)== 'E') THEN
          IF(IS_DEFINED(BC_U_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL, BC_U_S(BCV,M))) THEN
               WRITE(ERR_MSG, 1300) BCV, (-VEL), 'BC_U_s', M, BC_U_S(BCV,M)
@@ -441,7 +441,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
             BC_W_S(BCV,M) = OFF * BC_W_S(BCV,M)
          ENDIF
 
-      ELSEIF(BC_PLANE(BCV) == 'S' .OR. BC_PLANE(BCV)== 'N') THEN
+      ELSEIF(bc_plane(BCV) == 'S' .OR. bc_plane(BCV)== 'N') THEN
          IF(IS_DEFINED(BC_V_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_V_S(BCV,M))) THEN
                WRITE(ERR_MSG,1300) BCV, VEL, 'BC_V_s', M, BC_V_S(BCV,M)
@@ -453,7 +453,7 @@ MODULE FLOW_TO_VEL_NEW_MODULE
             BC_W_S(BCV,M) = OFF * BC_W_S(BCV,M)
          ENDIF
 
-      ELSEIF(BC_PLANE(BCV) == 'B' .OR. BC_PLANE(BCV)== 'T') THEN
+      ELSEIF(bc_plane(BCV) == 'B' .OR. bc_plane(BCV)== 'T') THEN
          IF(IS_DEFINED(BC_W_S(BCV,M)) .AND. DO_VEL_CHECK) THEN
             IF(.NOT.COMPARE(VEL,BC_W_S(BCV,M))) THEN
                WRITE(ERR_MSG, 1300) BCV, VEL, 'BC_W_s', M, BC_W_S(BCV,M)

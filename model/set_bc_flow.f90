@@ -188,7 +188,7 @@ MODULE set_bc_flow_module
       ENDDO
 
 ! Check that gas phase velocities are consistent.
-      SELECT CASE (BC_PLANE(BCV))
+      SELECT CASE (bc_plane(BCV))
 
       CASE ('W')
          IF(BC_U_G(BCV) > ZERO) THEN
@@ -359,7 +359,7 @@ MODULE set_bc_flow_module
 
 
 ! Check that gas phase velocities are consistent.
-      SELECT CASE (BC_PLANE(BCV))
+      SELECT CASE (bc_plane(BCV))
 
       CASE ('W')
          IF(BC_U_G(BCV) < ZERO) THEN

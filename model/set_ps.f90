@@ -188,14 +188,10 @@ MODULE SET_PS_MODULE
 
       INTEGER :: lc1
 
-      INTEGER, allocatable :: gFlags_i(:,:)
-
       if(myPE == PE_IO) then
          write(*,"(3/,3x,'Debug Point Source Index: ',I3)") lPSV
          write(*,"(/3x,'Size: ',I4)") lPS_SIZE
       endif
-
-      allocate(gFlags_i(lPS_SIZE,1:2) );   gFlags_i = 0
 
       lc1 = 0
 
@@ -227,19 +223,7 @@ MODULE SET_PS_MODULE
          write(*,"(//5x,'Point Source Cells:')")
          write(*,"(9x,'IJK',3(6x,A1),3x,'OWNS',3x,'FLAG')") 'I','J','K'
 
-         lc1 = 0
-         do k = PS_K_B(lPSV), PS_K_T(lPSV)
-         do j = PS_J_S(lPSV), PS_J_N(lPSV)
-         do i = PS_I_W(lPSV), PS_I_E(lPSV)
-            lc1 = lc1 + 1
-            write(*,"(4x,I8,5(3x,I4))") IJK, I, J, K,  gFlags_i(lc1,:)
-         enddo
-         enddo
-         enddo
-
       endif
-
-      if(allocated(gFlags_i)) deallocate(gFlags_i)
 
       end subroutine debug_ps
 end module set_ps_module
