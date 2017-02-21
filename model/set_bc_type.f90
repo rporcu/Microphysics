@@ -51,11 +51,21 @@ module set_bc_type_module
 
       ! Local index for boundary condition
       integer :: type, bcv
+      integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer :: i,j,k
 
+      nlft = max(0,domlo(1)-slo(1))
+      nbot = max(0,domlo(2)-slo(2))
+      ndwn = max(0,domlo(3)-slo(3))
+
+      nrgt = max(0,shi(1)-domhi(1))
+      ntop = max(0,shi(2)-domhi(2))
+      nup  = max(0,shi(3)-domhi(3))
+
+
       if(cyclic_x) then
-         bc_ilo_type(:,:,1) = cycl_
-         bc_ihi_type(:,:,1) = cycl_
+         bc_ilo_type(domlo(2):domhi(2),domlo(3):domhi(3),1) = cycl_
+         bc_ihi_type(domlo(2):domhi(2),domlo(3):domhi(3),1) = cycl_
       else
          bc_ilo_type(:,:,1) = UNDEF_CELL
          bc_ihi_type(:,:,1) = UNDEF_CELL
@@ -174,93 +184,117 @@ module set_bc_type_module
 
       if (cyclic_x)then
 
-         bc_ilo_type(slo(2),:,:) = bc_jlo_type(slo(1),:,:)
-         bc_ilo_type(shi(2),:,:) = bc_jhi_type(slo(1),:,:)
-
-         bc_ilo_type(:,slo(3),:) = bc_klo_type(slo(1),:,:)
-         bc_ilo_type(:,shi(3),:) = bc_khi_type(slo(1),:,:)
-
-         bc_ihi_type(slo(2),:,:) = bc_jlo_type(shi(1),:,:)
-         bc_ihi_type(shi(2),:,:) = bc_jhi_type(shi(1),:,:)
-
-         bc_ihi_type(:,slo(3),:) = bc_klo_type(shi(1),:,:)
-         bc_ihi_type(:,shi(3),:) = bc_khi_type(shi(1),:,:)
+         do j=1,nbot
+            bc_ilo_type(domlo(2)-j,domlo(3)-1:domhi(3)+1,:) = bc_jlo_type(domlo(1),domlo(3)-1:domhi(3)+1,:)
+            bc_ihi_type(domlo(2)-j,domlo(3)-1:domhi(3)+1,:) = bc_jlo_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do j=1,ntop
+            bc_ilo_type(domhi(2)+j,domlo(3)-1:domhi(3)+1,:) = bc_jhi_type(domlo(1),domlo(3)-1:domhi(3)+1,:)
+            bc_ihi_type(domhi(2)+j,domlo(3)-1:domhi(3)+1,:) = bc_jhi_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do k=1,ndwn
+            bc_ilo_type(domlo(2)-1:domhi(2)+1,domlo(3)-k,:) = bc_klo_type(domlo(1),domlo(2)-1:domhi(2)+1,:)
+            bc_ihi_type(domlo(2)-1:domhi(2)+1,domlo(3)-k,:) = bc_klo_type(domhi(1),domlo(2)-1:domhi(2)+1,:)
+         enddo
+         do k=1,nup
+            bc_ilo_type(domlo(2)-1:domhi(2)+1,domhi(3)+k,:) = bc_khi_type(domlo(1),domlo(2)-1:domhi(2)+1,:)
+            bc_ihi_type(domlo(2)-1:domhi(2)+1,domhi(3)+k,:) = bc_khi_type(domhi(1),domlo(2)-1:domhi(2)+1,:)
+         enddo
 
       else
 
-         bc_ilo_type(slo(2),:,:) = bc_ilo_type(slo(2)+1,:,:)
-         bc_ilo_type(shi(2),:,:) = bc_ilo_type(shi(2)-1,:,:)
-
-         bc_ilo_type(:,slo(3),:) = bc_ilo_type(:,slo(3)+1,:)
-         bc_ilo_type(:,shi(3),:) = bc_ilo_type(:,shi(3)-1,:)
-
-         bc_ihi_type(slo(2),:,:) = bc_ilo_type(slo(2)+1,:,:)
-         bc_ihi_type(shi(2),:,:) = bc_ilo_type(shi(2)-1,:,:)
-
-         bc_ihi_type(:,slo(3),:) = bc_ihi_type(:,slo(3)+1,:)
-         bc_ihi_type(:,shi(3),:) = bc_ihi_type(:,shi(3)-1,:)
+         do j=1,nbot
+            bc_ilo_type(domlo(2)-j,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domlo(2),domlo(3)-1:domhi(3)+1,:)
+            bc_ihi_type(domlo(2)-j,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domlo(2),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do j=1,ntop
+            bc_ilo_type(domhi(2)+j,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domhi(2),domlo(3)-1:domhi(3)+1,:)
+            bc_ihi_type(domhi(2)+j,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domhi(2),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do k=1,ndwn
+            bc_ilo_type(domlo(2)-1:domhi(2)+1,domlo(3)-k,:) = bc_ilo_type(domlo(2)-1:domhi(2)+1,domlo(3),:)
+            bc_ihi_type(domlo(2)-1:domhi(2)+1,domlo(3)-k,:) = bc_ihi_type(domlo(2)-1:domhi(2)+1,domlo(3),:)
+         enddo
+         do k=1,nup
+            bc_ilo_type(domlo(2)-1:domhi(2)+1,domhi(3)+k,:) = bc_ilo_type(domlo(2)-1:domhi(2)+1,domhi(3),:)
+            bc_ihi_type(domlo(2)-1:domhi(2)+1,domhi(3)+k,:) = bc_ihi_type(domlo(2)-1:domhi(2)+1,domhi(3),:)
+         enddo
       endif
 
-
-
       if(cyclic_y)then
-
-         bc_jlo_type(slo(1),:,:) = bc_ilo_type(slo(2),:,:)
-         bc_jlo_type(shi(1),:,:) = bc_ihi_type(slo(2),:,:)
-
-         bc_jlo_type(:,slo(3),:) = bc_klo_type(:,slo(2),:)
-         bc_jlo_type(:,shi(3),:) = bc_khi_type(:,slo(2),:)
-
-         bc_jhi_type(slo(1),:,:) = bc_ilo_type(shi(2),:,:)
-         bc_jhi_type(shi(1),:,:) = bc_ihi_type(shi(1),:,:)
-
-         bc_jhi_type(:,slo(3),:) = bc_klo_type(:,shi(2),:)
-         bc_jhi_type(:,shi(3),:) = bc_khi_type(:,shi(2),:)
+         do i=1,nlft
+            bc_jlo_type(domlo(1)-i,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domlo(2),domlo(3)-1:domhi(3)+1,:)
+            bc_jhi_type(domlo(1)-i,domlo(3)-1:domhi(3)+1,:) = bc_ilo_type(domhi(2),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do i=1,nrgt
+            bc_jlo_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_ihi_type(domlo(2),domlo(3)-1:domhi(3)+1,:)
+            bc_jhi_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_ihi_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do k=1,ndwn
+            bc_jlo_type(domlo(1)-1:domhi(1)+1,domlo(3)-k,:) = bc_klo_type(domlo(1)-1:domhi(1)+1,domlo(2),:)
+            bc_jhi_type(domlo(1)-1:domhi(1)+1,domlo(3)-k,:) = bc_klo_type(domlo(1)-1:domhi(1)+1,domhi(2),:)
+         enddo
+         do k=1,nup
+            bc_jlo_type(domlo(1)-1:domhi(1)+1,domhi(3)+k,:) = bc_khi_type(domlo(1)-1:domhi(1)+1,domlo(2),:)
+            bc_jhi_type(domlo(1)-1:domhi(1)+1,domhi(3)+k,:) = bc_khi_type(domlo(1)-1:domhi(1)+1,domhi(2),:)
+         enddo
 
       else
 
-         bc_jlo_type(slo(1),:,:) = bc_jlo_type(slo(1)+1,:,:)
-         bc_jlo_type(shi(1),:,:) = bc_jlo_type(shi(1)-1,:,:)
-
-         bc_jlo_type(:,slo(3),:) = bc_jlo_type(:,slo(3)+1,:)
-         bc_jlo_type(:,shi(3),:) = bc_jlo_type(:,shi(3)-1,:)
-
-         bc_jhi_type(slo(1),:,:) = bc_jhi_type(slo(1)+1,:,:)
-         bc_jhi_type(shi(1),:,:) = bc_jhi_type(shi(1)-1,:,:)
-
-         bc_jhi_type(:,slo(3),:) = bc_jhi_type(:,slo(3)+1,:)
-         bc_jhi_type(:,shi(3),:) = bc_jhi_type(:,shi(3)-1,:)
+         do i=1,nlft
+            bc_jlo_type(domlo(1)-i,domlo(3)-1:domhi(3)+1,:) = bc_jlo_type(domlo(1),domlo(3)-1:domhi(3)+1,:)
+            bc_jhi_type(domlo(1)-i,domlo(3)-1:domhi(3)+1,:) = bc_jhi_type(domlo(1),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do i=1,nrgt
+            bc_jlo_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_jlo_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+            bc_jhi_type(domhi(1)+i,domlo(3)-1:domhi(3)+1,:) = bc_jhi_type(domhi(1),domlo(3)-1:domhi(3)+1,:)
+         enddo
+         do k=1,ndwn
+            bc_jlo_type(domlo(1)-1:domhi(1)+1,domlo(3)-k,:) = bc_jlo_type(domlo(1)-1:domhi(1)+1,domlo(3),:)
+            bc_jhi_type(domlo(1)-1:domhi(1)+1,domlo(3)-k,:) = bc_jhi_type(domlo(1)-1:domhi(1)+1,domlo(3),:)
+         enddo
+         do k=1,nup
+            bc_jlo_type(domlo(1)-1:domhi(1)+1,domhi(3)+k,:) = bc_jlo_type(domlo(1)-1:domhi(1)+1,domhi(3),:)
+            bc_jhi_type(domlo(1)-1:domhi(1)+1,domhi(3)+k,:) = bc_jhi_type(domlo(1)-1:domhi(1)+1,domhi(3),:)
+         enddo
       endif
 
 
       if(cyclic_z) then
-
-         bc_klo_type(slo(1),:,:) = bc_ilo_type(:,slo(3),:)
-         bc_klo_type(shi(1),:,:) = bc_ihi_type(:,slo(3),:)
-
-         bc_klo_type(:,slo(2),:) = bc_jlo_type(:,slo(3),:)
-         bc_klo_type(:,shi(2),:) = bc_jhi_type(:,slo(3),:)
-
-         bc_khi_type(slo(1),:,:) = bc_ilo_type(:,shi(3),:)
-         bc_khi_type(shi(1),:,:) = bc_ihi_type(:,shi(3),:)
-
-         bc_khi_type(:,slo(2),:) = bc_jlo_type(:,shi(3),:)
-         bc_khi_type(:,shi(2),:) = bc_jhi_type(:,shi(3),:)
+         do i=1,nlft
+            bc_klo_type(domlo(1)-i,domlo(2)-1:domhi(2)+1,:) = bc_ilo_type(domlo(2)-1:domhi(2)+1,domlo(3),:)
+            bc_khi_type(domlo(1)-i,domlo(2)-1:domhi(2)+1,:) = bc_ilo_type(domlo(2)-1:domhi(2)+1,domhi(3),:)
+         enddo
+         do i=1,nrgt
+            bc_klo_type(domhi(1)+i,domlo(2)-1:domhi(2)+1,:) = bc_ihi_type(domlo(2)-1:domhi(2)+1,domlo(3),:)
+            bc_khi_type(domhi(1)+i,domlo(2)-1:domhi(2)+1,:) = bc_ihi_type(domlo(2)-1:domhi(2)+1,domhi(3),:)
+         enddo
+         do j=1,nbot
+            bc_klo_type(domlo(1)-1:domhi(1)+1,domlo(2)-j,:) = bc_jlo_type(domlo(1)-1:domhi(1)+1,domlo(3),:)
+            bc_khi_type(domlo(1)-1:domhi(1)+1,domlo(2)-j,:) = bc_jlo_type(domlo(1)-1:domhi(1)+1,domhi(3),:)
+         enddo
+         do j=1,ntop
+            bc_klo_type(domlo(1)-1:domhi(1)+1,domhi(2)+j,:) = bc_jhi_type(domlo(1)-1:domhi(1)+1,domlo(3),:)
+            bc_khi_type(domlo(1)-1:domhi(1)+1,domhi(2)+j,:) = bc_jhi_type(domlo(1)-1:domhi(1)+1,domhi(3),:)
+         enddo
 
       else
-
-         bc_klo_type(slo(1),:,:) = bc_klo_type(:,shi(2)-1,:)
-         bc_klo_type(shi(1),:,:) = bc_klo_type(:,shi(2)-1,:)
-
-         bc_klo_type(:,slo(2),:) = bc_klo_type(:,slo(2)+1,:)
-         bc_klo_type(:,shi(2),:) = bc_klo_type(:,shi(2)-1,:)
-
-         bc_khi_type(slo(1),:,:) = bc_khi_type(:,shi(2)-1,:)
-         bc_khi_type(shi(1),:,:) = bc_khi_type(:,shi(2)-1,:)
-
-         bc_khi_type(:,slo(2),:) = bc_khi_type(:,slo(2)+1,:)
-         bc_khi_type(:,shi(2),:) = bc_khi_type(:,shi(2)-1,:)
-
+         do i=1,nlft
+            bc_klo_type(domlo(1)-i,domlo(2)-1:domhi(2)+1,:) = bc_klo_type(domlo(1),domlo(2)-1:domhi(2)+1,:)
+            bc_khi_type(domlo(1)-i,domlo(2)-1:domhi(2)+1,:) = bc_khi_type(domlo(1),domlo(2)-1:domhi(2)+1,:)
+         enddo
+         do i=1,nrgt
+            bc_klo_type(domhi(1)+i,domlo(2)-1:domhi(2)+1,:) = bc_klo_type(domhi(1),domlo(2)-1:domhi(2)+1,:)
+            bc_khi_type(domhi(1)+i,domlo(2)-1:domhi(2)+1,:) = bc_khi_type(domhi(1),domlo(2)-1:domhi(2)+1,:)
+         enddo
+         do j=1,nbot
+            bc_klo_type(domlo(1)-1:domhi(1)+1,domlo(2)-j,:) = bc_klo_type(domlo(1)-1:domhi(1)+1,domlo(2),:)
+            bc_khi_type(domlo(1)-1:domhi(1)+1,domlo(2)-j,:) = bc_khi_type(domlo(1)-1:domhi(1)+1,domlo(2),:)
+         enddo
+         do j=1,ntop
+            bc_klo_type(domlo(1)-1:domhi(1)+1,domhi(2)+j,:) = bc_klo_type(domlo(1)-1:domhi(1)+1,domhi(2),:)
+            bc_khi_type(domlo(1)-1:domhi(1)+1,domhi(2)+j,:) = bc_khi_type(domlo(1)-1:domhi(1)+1,domhi(2),:)
+         enddo
       endif
 
 
@@ -303,7 +337,6 @@ module set_bc_type_module
          i=shi(1)
          write(6,"(i4)",advance='yes') bc_jhi_type(i,k,1)
       enddo
-
 
       k = slo(3)
       write(6,"(2/,'bc_klo_type for k =',i3)") j
