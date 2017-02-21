@@ -37,17 +37,17 @@ module set_bc_type_module
       integer(c_int), intent(in   ) :: slo(3),shi(3)
 
       integer(c_int), intent(inout) :: bc_ilo_type&
-         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(inout) :: bc_ihi_type&
-         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(inout) :: bc_jlo_type&
-         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(inout) :: bc_jhi_type&
-         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(inout) :: bc_klo_type&
-         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
       integer(c_int), intent(inout) :: bc_khi_type&
-         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 
       ! Local index for boundary condition
       integer :: type, bcv
@@ -79,11 +79,6 @@ module set_bc_type_module
       do bcv = 1, dimension_bc
          if (bc_defined(bcv)) then
 
-            print *,'BCV ',bcv
-            print *,'E/W ',bc_i_e(bcv), bc_i_w(bcv)
-            print *,'N/S ',bc_j_n(bcv), bc_j_s(bcv)
-            print *,'T/B ',bc_k_t(bcv), bc_k_b(bcv)
-
             select case (trim(bc_type(bcv)))
                case('FREE_SLIP_WALL'); type = fsw_
                case('NO_SLIP_WALL'  ); type = nsw_
@@ -106,7 +101,7 @@ module set_bc_type_module
                            bc_j_s(bcv):bc_j_n(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'E' ! Fluid is to East of bc! 
+                  bc_plane(bcv) = 'E' ! Fluid is to East of bc!
 
                else if(bc_i_w(bcv) == shi(1)) then
                   bc_ihi_type(&
@@ -116,7 +111,7 @@ module set_bc_type_module
                            bc_j_s(bcv):bc_j_n(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'W' ! Fluid is to West of bc! 
+                  bc_plane(bcv) = 'W' ! Fluid is to West of bc!
 
                endif
             endif
@@ -130,7 +125,7 @@ module set_bc_type_module
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'N' ! Fluid is to North of bc! 
+                  bc_plane(bcv) = 'N' ! Fluid is to North of bc!
 
                else if(bc_j_s(bcv) == shi(2)) then
                   bc_jhi_type(&
@@ -140,7 +135,7 @@ module set_bc_type_module
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'S' ! Fluid is to South of bc! 
+                  bc_plane(bcv) = 'S' ! Fluid is to South of bc!
 
                endif
             endif
@@ -154,7 +149,7 @@ module set_bc_type_module
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_j_s(bcv):bc_j_n(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'T' ! Fluid is to Top of bc! 
+                  bc_plane(bcv) = 'T' ! Fluid is to Top of bc!
 
                elseif(bc_k_b(bcv) == shi(3)) then
                   bc_khi_type(&
@@ -164,7 +159,7 @@ module set_bc_type_module
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_j_s(bcv):bc_j_n(bcv),2) = bcv
 
-                  bc_plane(bcv) = 'B' ! Fluid is to Bottom of bc! 
+                  bc_plane(bcv) = 'B' ! Fluid is to Bottom of bc!
 
                endif
             endif

@@ -39,17 +39,17 @@ subroutine fill_bc0(s, slo, shi, &
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
-         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(in   ) :: bc_ihi_type&
-         (domlo(2)-1:domhi(2)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(in   ) :: bc_jlo_type&
-         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(in   ) :: bc_jhi_type&
-         (domlo(1)-1:domhi(1)+1,domlo(3)-1:domhi(3)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(3)-2:domhi(3)+2,2)
       integer(c_int), intent(in   ) :: bc_klo_type&
-         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
       integer(c_int), intent(in   ) :: bc_khi_type&
-         (domlo(1)-1:domhi(1)+1,domlo(2)-1:domhi(2)+1,2)
+         (domlo(1)-2:domhi(1)+2,domlo(2)-2:domhi(2)+2,2)
 
 
 ! Local variables

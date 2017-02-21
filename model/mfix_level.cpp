@@ -193,22 +193,24 @@ mfix_level::MakeNewLevel (int lev, Real time,
     t_old[lev] = time - 1.e200;
 #endif
 
+    int nghost = 2;
+
     // Define and allocate the integer MultiFab that is the outside adjacent cells of the problem domain.
     Box domainx(geom[0].Domain());
-    domainx.grow(1,1);
-    domainx.grow(2,1);
+    domainx.grow(1,nghost);
+    domainx.grow(2,nghost);
     Box box_ilo = BoxLib::adjCellLo(domainx,0,1);
     Box box_ihi = BoxLib::adjCellHi(domainx,0,1);
 
     Box domainy(geom[0].Domain());
-    domainy.grow(0,1);
-    domainy.grow(2,1);
+    domainy.grow(0,nghost);
+    domainy.grow(2,nghost);
     Box box_jlo = BoxLib::adjCellLo(domainy,1,1);
     Box box_jhi = BoxLib::adjCellHi(domainy,1,1);
 
     Box domainz(geom[0].Domain());
-    domainz.grow(0,1);
-    domainz.grow(1,1);
+    domainz.grow(0,nghost);
+    domainz.grow(1,nghost);
     Box box_klo = BoxLib::adjCellLo(domainz,2,1);
     Box box_khi = BoxLib::adjCellHi(domainz,2,1);
 
@@ -220,13 +222,12 @@ mfix_level::MakeNewLevel (int lev, Real time,
     bc_klo.resize(box_klo,2);
     bc_khi.resize(box_khi,2);
 
-    int nghost = 1;
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    // Call set_domain to read input data, check data, 
+    // Call set_domain to read input data, check data,
     // do computations for IC and BC locations and flows,
     // and set geometry parameters such as X, X_E, DToDX, etc.
     set_domain(&dx,&dy,&dz);
