@@ -94,7 +94,7 @@ module set_bc_type_module
             end select
 
             if (bc_i_w(bcv) == bc_i_e(bcv)) then
-               if(bc_i_w(bcv) == slo(1)) then
+               if(bc_i_w(bcv) == domlo(1)-1) then
                   bc_ilo_type(&
                            bc_j_s(bcv):bc_j_n(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),1) = type
@@ -104,7 +104,7 @@ module set_bc_type_module
 
                   bc_plane(bcv) = 'E' ! Fluid is to East of bc!
 
-               else if(bc_i_w(bcv) == shi(1)) then
+               else if(bc_i_w(bcv) == domhi(1)+1) then
                   bc_ihi_type(&
                            bc_j_s(bcv):bc_j_n(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),1) = type
@@ -118,7 +118,7 @@ module set_bc_type_module
             endif
 
             if (bc_j_s(bcv) == bc_j_n(bcv)) then
-               if(bc_j_s(bcv) == slo(2)) then
+               if(bc_j_s(bcv) == domlo(2)-1) then
                   bc_jlo_type(&
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),1) = type
@@ -128,7 +128,7 @@ module set_bc_type_module
 
                   bc_plane(bcv) = 'N' ! Fluid is to North of bc!
 
-               else if(bc_j_s(bcv) == shi(2)) then
+               else if(bc_j_s(bcv) == domhi(2)+1) then
                   bc_jhi_type(&
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_k_b(bcv):bc_k_t(bcv),1) = type
@@ -142,7 +142,7 @@ module set_bc_type_module
             endif
 
             if (bc_k_b(bcv) == bc_k_t(bcv)) then
-               if(bc_k_b(bcv) == slo(3)) then
+               if(bc_k_b(bcv) == domlo(3)-1) then
                   bc_klo_type(&
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_j_s(bcv):bc_j_n(bcv),1) = type
@@ -152,7 +152,7 @@ module set_bc_type_module
 
                   bc_plane(bcv) = 'T' ! Fluid is to Top of bc!
 
-               elseif(bc_k_b(bcv) == shi(3)) then
+               elseif(bc_k_b(bcv) == domhi(3)+1) then
                   bc_khi_type(&
                            bc_i_w(bcv):bc_i_e(bcv),&
                            bc_j_s(bcv):bc_j_n(bcv),1) = type
@@ -172,7 +172,7 @@ module set_bc_type_module
 ! Edge cases
 ! --------------------------------------------------------------------------------------------
 
-      if(cyclic_x)then
+      if (cyclic_x)then
 
          bc_ilo_type(slo(2),:,:) = bc_jlo_type(slo(1),:,:)
          bc_ilo_type(shi(2),:,:) = bc_jhi_type(slo(1),:,:)
