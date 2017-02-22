@@ -252,7 +252,6 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
     	{
     	    MultiFab mf;
     	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_gt"));
-	    // u_gt[lev]->setVal(0.0);
     	    u_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
     	}
     	{
@@ -447,6 +446,83 @@ mfix_level::WriteJobInfo (const std::string& dir) const
 
 	jobInfoFile.close();
     }
+}
+
+
+void
+mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
+{
+    BL_PROFILE("mfix_vele::WritePlotFile()");
+
+    // Return if it's not time to dump plotfile yet or 
+    // plotfile have not been enabled ( check_int < 1 )
+    if ( (plot_int < 1) || ( nstep % plot_int != 0 ) )  return;
+
+
+    const std::string& plotfilename = BoxLib::Concatenate(plot_file,nstep);
+
+    if (ParallelDescriptor::IOProcessor()) {
+	std::cout << "  Writing plotfile " << plotfilename << std::endl;
+    }
+    
+    {
+	Array<std::string> varnames {"u_g", "v_g", "w_g"};
+
+	Array<std::unique_ptr<MultiFab> > mf(finest_level+1);
+    
+	for (int lev = 0; lev <= finest_level; ++lev)
+	{
+	    const int ncomp = 3;
+	    const int ngrow = 0;
+
+	    mf[lev].reset(new MultiFab(grids[lev], ncomp, ngrow, dmap[lev]));
+
+
+	    std::vector<MultiFab*> srcmf(3);
+	    PackPlotDataPtrs(srcmf, u_g, v_g, w_g, lev);
+	    int dcomp = 0;
+
+	    BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+
+
+	    // // PackPlotDataPtrs(srcmf, Efield[lev]);
+	    // dcomp += 3;
+	    // BoxLib::average_edge_to_cellcenter(*mf[lev], dcomp, srcmf);
+
+
+	    // // PackPlotDataPtrs(srcmf, Bfield[lev]);
+	    // dcomp += 3;
+	    // BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+
+	}
+    
+	Array<const MultiFab*> mf2(finest_level+1);
+	for (int lev = 0; lev <= finest_level; ++lev) {
+	    mf2[lev] = mf[lev].get();
+	}
+
+	BoxLib::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, varnames,
+					Geom(), time, istep, refRatio());
+    }
+
+    mypc->Checkpoint(plotfilename, "particle", false);
+
+    // WriteJobInfo(plotfilename);
+
+    // WriteWarpXHeader(plotfilename);
+}
+
+
+void
+mfix_level::PackPlotDataPtrs(std::vector<MultiFab*>& pmf,
+			     const Array<std::unique_ptr<MultiFab> >& comp1,
+			     const Array<std::unique_ptr<MultiFab> >& comp2,
+			     const Array<std::unique_ptr<MultiFab> >& comp3,
+			     const int lev) const
+{
+    pmf[0] = comp1[lev].get();
+    pmf[1] = comp2[lev].get();
+    pmf[2] = comp3[lev].get();
 }
 
 

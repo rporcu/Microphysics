@@ -35,6 +35,9 @@ public:
 
     int IsRestartEnabled () const;
 
+    void WritePlotFile ( int nstep, Real dt, Real time ) const;
+
+
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
     void evolve_fluid (int lev, int nstep, int set_normg,
@@ -91,6 +94,13 @@ private:
 
     void WriteJobInfo(const std::string& dir ) const;
 
+    void PackPlotDataPtrs(std::vector<MultiFab*>& pmf,
+			  const Array<std::unique_ptr<MultiFab> >& comp1,
+			  const Array<std::unique_ptr<MultiFab> >& comp2,
+			  const Array<std::unique_ptr<MultiFab> >& comp3,
+			  const int lev ) const;
+
+
     static void GotoNextLine (std::istream& is);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
@@ -102,9 +112,11 @@ private:
 #if 0
     void WritePlotFile () const;
 
-    Array<int> istep;      // which step?
+      // which step?
     Array<int> nsubsteps;  // how many substeps on each level?
 #endif
+
+    Array<int> istep = {1} ;
 
     // Particle container
     std::unique_ptr<MyParticleContainer> mypc;
