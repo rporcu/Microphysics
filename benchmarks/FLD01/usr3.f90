@@ -9,20 +9,28 @@
 !           or call appropriate user defined subroutines.              C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE USR3(slo, shi, u_g, v_g, w_g, p_g)
+      SUBROUTINE USR3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
+                      p_g, slo, shi, dx, dy, dz)
 
-      IMPLICIT NONE
+      use bl_fort_module, only : c_real
+      use iso_c_binding , only: c_int
 
-      integer(c_int), intent(in   ) :: slo(3), shi(3)
+      implicit none
 
-      double precision, intent(in) :: u_g&
+      integer, intent(in   ) :: ulo(3),uhi(3)
+      integer, intent(in   ) :: vlo(3),vhi(3)
+      integer, intent(in   ) :: wlo(3),whi(3)
+      integer, intent(in   ) :: slo(3),shi(3)
+
+      real(c_real), intent(inout) :: u_g&
+         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(inout) :: v_g&
+         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
+      real(c_real), intent(inout) :: w_g&
+         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+      real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(in) :: v_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(in) :: w_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      double precision, intent(in) :: p_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       double precision, parameter :: X(16) = (/&
           0.96880, 0.96090, 0.95310, 0.94530, &
@@ -52,22 +60,23 @@
 
       double precision, parameter :: lHalf(16) = 0.5
 
-      call MFIX_to_GHIA(lHalf, Y, U_g, U_Re0100, 'U')
-      call MFIX_to_GHIA(X, lHalf, V_g, v_Re0100, 'V')
+      call MFIX_to_GHIA(lHalf, Y, U_g, U_Re0100, 'U', dx, dy, dz)
+      call MFIX_to_GHIA(X, lHalf, V_g, v_Re0100, 'V', dx, dy, dz)
 
       RETURN
       contains
 
 !......................................................................!
-      SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, pGhia, pVar)
+      SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, pGhia, pVar, dx, dy, dz)
 
-      use geometry, only: dx, dy
       use compar, only: myPE, PE_IO
 
       double precision, intent(in) :: pX(:), pY(:)
       double precision, intent(in) :: pVel(:,:,:)
       double precision, intent(in) :: pGhia(:)
       character(len=1), intent(in) :: pVar
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       integer :: lc1, i, j, k
       double precision :: lOoDx, lOoDy
