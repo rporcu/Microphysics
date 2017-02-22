@@ -63,13 +63,12 @@ module zero_norm_vel_module
 
       ! Lo i side
       if (slo(1) .lt. domlo(1)) then
-        i = domlo(1)
         do k = slo(3),shi(3)
         do j = slo(2),shi(2)
            if (bc_ilo_type(j,k,1) == NSW_ .or. &
                bc_ilo_type(j,k,1) == FSW_ .or. &
                bc_ilo_type(j,k,1) == PSW_) then
-               u_g(i-1,j,k) = zero
+               u_g(domlo(1)-1,j,k) = zero
            end if
         end do
         end do
@@ -77,13 +76,12 @@ module zero_norm_vel_module
 
       ! Hi i side
       if (shi(1) .gt. domhi(1)) then
-        i = domhi(1)
         do k = slo(3),shi(3)
         do j = slo(2),shi(2)
            if (bc_ihi_type(j,k,1) == NSW_ .or. &
                bc_ihi_type(j,k,1) == FSW_ .or. &
                bc_ihi_type(j,k,1) == PSW_) then
-               u_g(i,j,k) = zero
+               u_g(domhi(1),j,k) = zero
            end if
         end do
         end do
@@ -91,13 +89,12 @@ module zero_norm_vel_module
 
       ! Lo j side
       if (slo(2) .lt. domlo(2)) then
-        j = domlo(2)
         do k = slo(3),shi(3)
         do i = slo(1),shi(1)
            if (bc_jlo_type(i,k,1) == NSW_ .or. &
                bc_jlo_type(i,k,1) == FSW_ .or. &
                bc_jlo_type(i,k,1) == PSW_) then
-               v_g(i,j-1,k) = zero
+               v_g(i,domlo(2)-1,k) = zero
            end if
         end do
         end do
@@ -105,13 +102,12 @@ module zero_norm_vel_module
 
       ! Hi j side
       if (shi(2) .gt. domhi(2)) then
-        j = domhi(2)
         do k = slo(3),shi(3)
         do i = slo(1),shi(1)
            if (bc_jhi_type(i,k,1) == NSW_ .or. &
                bc_jhi_type(i,k,1) == FSW_ .or. &
                bc_jhi_type(i,k,1) == PSW_) then
-               v_g(i,j,k) = zero
+               v_g(i,domhi(2),k) = zero
            end if
         end do
         end do
@@ -119,13 +115,12 @@ module zero_norm_vel_module
 
       ! Lo k side
       if (slo(3) .lt. domlo(3)) then
-        k = domlo(3)
         do j = slo(2),shi(2)
         do i = slo(1),shi(1)
            if (bc_klo_type(i,j,1) == NSW_ .or. &
                bc_klo_type(i,j,1) == FSW_ .or. &
                bc_klo_type(i,j,1) == PSW_) then
-               w_g(i,j,k-1) = zero
+               w_g(i,j,domlo(3)-1) = zero
            end if
         end do
         end do
@@ -133,13 +128,12 @@ module zero_norm_vel_module
 
       ! Hi k side
       if (shi(3) .gt. domhi(3)) then
-        k = domhi(3)
         do j = slo(2),shi(2)
         do i = slo(1),shi(1)
            if (bc_khi_type(i,j,1) == NSW_ .or. &
                bc_khi_type(i,j,1) == FSW_ .or. &
                bc_khi_type(i,j,1) == PSW_) then
-               w_g(i,j,k) = zero
+               w_g(i,j,domhi(3)) = zero
            end if
         end do
         end do

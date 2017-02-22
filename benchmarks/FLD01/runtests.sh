@@ -10,7 +10,7 @@ fi
 
 rm -f POST_* &> /dev/null
 rm -f ${RUN_NAME}* &> /dev/null
-time -p ${MFIX}
+time -p ${MFIX} inputs
 
 post_dats=AUTOTEST/POST*.dat
 

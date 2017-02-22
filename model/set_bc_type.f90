@@ -298,6 +298,7 @@ module set_bc_type_module
       endif
 
 
+      if (0.eq.1) then
       i = slo(1)
       write(6,"(2/,'bc_ilo_type for i =',i3)") i
       do k=shi(3),slo(3),-1
@@ -358,6 +359,7 @@ module set_bc_type_module
          i=shi(1)
          write(6,"(i4)",advance='yes') bc_khi_type(i,j,1)
       enddo
+      end if
 
    end subroutine set_bc_type
 

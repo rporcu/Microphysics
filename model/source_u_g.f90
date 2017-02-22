@@ -92,7 +92,7 @@ contains
                epga = avg(ep_g(i,j,k),ep_g(i+1,j,k))
 
                ! Pressure term
-               PGE = P_G(i+1,j,k)
+               pge = p_g(i+1,j,k)
                if (cyclic_x_pd) then
                   if ((i == domlo(1)-1) .or. (i == domhi(1))) &
                      pge = pge - delp_x
