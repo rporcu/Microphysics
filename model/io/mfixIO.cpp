@@ -112,45 +112,20 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
 
     for (int lev = 0; lev < nlevels; ++lev) {
 
-	// Velocities
-    	VisMF::Write(*u_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    							       level_prefix, "u_g"));
-    	VisMF::Write(*u_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "u_go"));
-    	VisMF::Write(*u_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "u_gt"));
-    	VisMF::Write(*v_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    							       level_prefix, "v_g"));
-    	VisMF::Write(*v_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "v_go"));
-    	VisMF::Write(*v_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "v_gt"));
-    	VisMF::Write(*w_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    							       level_prefix, "w_g"));
-    	VisMF::Write(*w_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "w_go"));
-    	VisMF::Write(*w_gt[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "w_gt"));
+	// Write vector variables
+	for (int i = 0; i < vectorVars.size(); i++ ) {
+	    VisMF::Write( *((*vectorVars[i])[lev]),
+			  BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+							 level_prefix, vecVarsName[i]));
+	}
 
-	// Material properties
-    	VisMF::Write(*ep_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    							       level_prefix, "ep_g"));
-    	VisMF::Write(*ep_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "ep_go"));
-    	VisMF::Write(*p_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "p_g"));
-    	VisMF::Write(*p_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "p_go"));
-    	VisMF::Write(*ro_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "ro_g"));
-    	VisMF::Write(*ro_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "ro_go"));
-    	VisMF::Write(*rop_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "rop_g"));
-    	VisMF::Write(*rop_go[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "rop_go"));
-    	VisMF::Write(*mu_g[lev], BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
-    								level_prefix, "mu_g"));
+	// Write scalar variables
+	for (int i = 0; i < scalarVars.size(); i++ ) {
+	    VisMF::Write( *((*scalarVars[i])[lev]),
+			  BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+							 level_prefix, scaVarsName[i]));
+	}
+
     }
 
     mypc->Checkpoint(checkpointname, "particle", true);
@@ -253,104 +228,22 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 
     // Initialize the field data
     for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
-    {
-	// >>>>>>>>>>>>>>>>>>>>>>>>>>
-	// Velocities
-	// >>>>>>>>>>>>>>>>>>>>>>>>>>
+    {	
+	// Read vector variables
+	for (int i = 0; i < vectorVars.size(); i++ ) {
+    	    MultiFab mf;
+	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+							   vecVarsName[i]));
+	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+	}
 
-    	// xxxxx This will be done differently in amrex!
-    	{
+	// Read scalar variables
+	for (int i = 0; i < scalarVars.size(); i++ ) {
     	    MultiFab mf;
-	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_g"));
-	    u_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_go"));
-    	    u_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "u_gt"));
-    	    u_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_g"));
-    	    v_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_go"));
-    	    v_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "v_gt"));
-    	    v_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_g"));
-    	    w_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_go"));
-    	    w_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "w_gt"));
-    	    w_gt[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ep_g"));
-    	    ep_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ep_go"));
-    	    ep_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "p_g"));
-    	    p_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "p_go"));
-    	    p_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ro_g"));
-    	    ro_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "ro_go"));
-    	    ro_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "rop_g"));
-    	    rop_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "rop_go"));
-    	    rop_go[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-    	{
-    	    MultiFab mf;
-    	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix, "mu_g"));
-    	    mu_g[lev]->copy(mf, 0, 0, 1, 0, 0);
-    	}
-
+	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+							   scaVarsName[i]));
+	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
+	}
     }
 
     // Initilize particles
@@ -501,20 +394,16 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 	    std::vector<MultiFab*> srcmf(3);
 
 	    for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
-
 		srcmf[0] = (*vectorVars[dcomp])[lev].get();
 		srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
 		srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
 		BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
-
 	    };
 
 	    // Scalar variables
 	    for( int i = 0; i < scalarVars.size(); i++ ) {
-
 		MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
 		dcomp++;
-
 	    }		
 
 	}
