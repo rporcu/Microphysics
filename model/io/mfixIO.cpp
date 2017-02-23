@@ -14,6 +14,26 @@ namespace
 }
 
 
+// This function iniatializes the attributes vectorVars, scalarVars, vecVarsName and
+// scaVarsName.				
+// If new variables need to be added to the output/checkpoint, simply
+// add them here and the IO routines will automatically take care of them.
+void
+mfix_level::InitIOData ()
+{
+    // Define the list of vector variables that need to be written
+    // to plotfile/checkfile.
+    // These are the variables that need interpolation from face to 
+    // node when written to plotfile
+    vecVarsName = {"u_g", "v_g", "w_g"}; 
+    vectorVars  = { &u_g, &v_g, &w_g };
+
+    // Define the list of scalar variables that need to be written
+    // to plotfile/checkfile.
+    scaVarsName = {"ep_g", "p_g", "ro_g", "rop_g",  "mu_g"}; 
+    scalarVars  = { &ep_g, &p_g, &ro_g,  &rop_g,  &mu_g};
+}
+
 
 void
 mfix_level::WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const
@@ -466,63 +486,58 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
     }
     
     {
-	Array<std::string> varnames {"u_g", "v_g", "w_g"};
-
-	Array<std::unique_ptr<MultiFab> > mf(finest_level+1);
+	Array< std::unique_ptr<MultiFab> > mf(finest_level+1);
     
-	for (int lev = 0; lev <= finest_level; ++lev)
-	{
-	    const int ncomp = 3;
+	for (int lev = 0; lev <= finest_level; ++lev) {
+
+	    const int ncomp = vectorVars.size() + scalarVars.size();
 	    const int ngrow = 0;
 
 	    mf[lev].reset(new MultiFab(grids[lev], ncomp, ngrow, dmap[lev]));
 
-
-	    std::vector<MultiFab*> srcmf(3);
-	    PackPlotDataPtrs(srcmf, u_g, v_g, w_g, lev);
+	    // Vector variables
 	    int dcomp = 0;
+	    std::vector<MultiFab*> srcmf(3);
 
-	    BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+	    for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
 
+		srcmf[0] = (*vectorVars[dcomp])[lev].get();
+		srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
+		srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
+		BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
 
-	    // // PackPlotDataPtrs(srcmf, Efield[lev]);
-	    // dcomp += 3;
-	    // BoxLib::average_edge_to_cellcenter(*mf[lev], dcomp, srcmf);
+	    };
 
+	    // Scalar variables
+	    for( int i = 0; i < scalarVars.size(); i++ ) {
 
-	    // // PackPlotDataPtrs(srcmf, Bfield[lev]);
-	    // dcomp += 3;
-	    // BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+		MultiFab::Copy(*mf[lev], *((*scalarVars[i])[lev].get()), 0, dcomp, 1, 0);
+		dcomp++;
+
+	    }		
 
 	}
     
 	Array<const MultiFab*> mf2(finest_level+1);
+
 	for (int lev = 0; lev <= finest_level; ++lev) {
 	    mf2[lev] = mf[lev].get();
 	}
 
-	BoxLib::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, varnames,
+	// Concatenate scalar and vector var names
+	Array<std::string>  names;
+	names.insert( names.end(),vecVarsName.begin(), vecVarsName.end());
+	names.insert( names.end(),scaVarsName.begin(), scaVarsName.end());
+
+	BoxLib::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
 					Geom(), time, istep, refRatio());
     }
 
     mypc->Checkpoint(plotfilename, "particle", false);
 
-    // WriteJobInfo(plotfilename);
+    WriteJobInfo(plotfilename);
 
-    // WriteWarpXHeader(plotfilename);
-}
-
-
-void
-mfix_level::PackPlotDataPtrs(std::vector<MultiFab*>& pmf,
-			     const Array<std::unique_ptr<MultiFab> >& comp1,
-			     const Array<std::unique_ptr<MultiFab> >& comp2,
-			     const Array<std::unique_ptr<MultiFab> >& comp3,
-			     const int lev) const
-{
-    pmf[0] = comp1[lev].get();
-    pmf[1] = comp2[lev].get();
-    pmf[2] = comp3[lev].get();
+    WriteMfixHeader(plotfilename, nstep, dt, time);
 }
 
 

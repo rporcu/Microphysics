@@ -155,6 +155,8 @@ mfix_level::Init(int lev, Real dt, Real time)
       MakeNewLevel(0, time, ba, dm);
 
       InitLevelData(lev,dt,time);
+
+      InitIOData ();
     }
 
     // if max_level > 0, define fine levels

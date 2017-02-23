@@ -87,19 +87,14 @@ private:
 
     void InitLevelData (int lev, Real dt, Real time);
 
+    void InitIOData ();
+
     void MakeNewLevel (int lev, Real time,
            const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const;
 
     void WriteJobInfo(const std::string& dir ) const;
-
-    void PackPlotDataPtrs(std::vector<MultiFab*>& pmf,
-			  const Array<std::unique_ptr<MultiFab> >& comp1,
-			  const Array<std::unique_ptr<MultiFab> >& comp2,
-			  const Array<std::unique_ptr<MultiFab> >& comp3,
-			  const int lev ) const;
-
 
     static void GotoNextLine (std::istream& is);
 
@@ -198,6 +193,7 @@ private:
     Array< std::unique_ptr<MultiFab> > f_gds  ;
     Array< std::unique_ptr<MultiFab> > drag_bm;
 
+
     Array<int> particle_state;
     Array<int> particle_phase;
 
@@ -238,6 +234,14 @@ private:
     std::string plot_file {"plt"};
     int check_int = -1;
     int plot_int = -1;
+
+
+    // Variables to simplify IO
+    Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;
+    Array< const Array< std::unique_ptr<MultiFab> >* > scalarVars;
+    Array< std::string > vecVarsName;
+    Array< std::string > scaVarsName;
+
 };
 
 #endif
