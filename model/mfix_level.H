@@ -31,12 +31,11 @@ public:
 
     void Restart();
 
-    void WriteCheckPointFile ( int nstep, Real dt, Real time )  const;
+    void WriteCheckPointFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
 
     int IsRestartEnabled () const;
 
-    void WritePlotFile ( int nstep, Real dt, Real time ) const;
-
+    void WritePlotFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
 
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 

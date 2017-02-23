@@ -476,8 +476,9 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 
     // Return if it's not time to dump plotfile yet or 
     // plotfile have not been enabled ( check_int < 1 )
-    if ( (plot_int < 1) || ( nstep % plot_int != 0 ) )  return;
-
+    // Condition nstep !=0 ensures that plotfile is dumped if WritePlotFile is 
+    // called without arguments (useful for steady state case).
+    if ( (plot_int < 0) || ( nstep % plot_int != 0 && nstep != 0) )  return;
 
     const std::string& plotfilename = BoxLib::Concatenate(plot_file,nstep);
 

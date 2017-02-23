@@ -150,6 +150,7 @@ int main (int argc, char* argv[])
 	if (!steady_state)  {
 	    time += prev_dt;
 	    nstep++;
+	    my_mfix.WritePlotFile( nstep, dt, time );
 	}
 
 	my_mfix.WriteCheckPointFile( nstep, dt, time ); 
@@ -159,6 +160,9 @@ int main (int argc, char* argv[])
 	// Mechanism to terminate MFIX normally.
 	if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
     }
+
+    // Dump plotfile if enabled for steady state
+    if (steady_state) my_mfix.WritePlotFile(); 
 
     my_mfix.usr3(0);
 
