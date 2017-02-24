@@ -60,21 +60,24 @@
 
       double precision, parameter :: lHalf(16) = 0.5
 
-      call MFIX_to_GHIA(lHalf, Y, U_g, U_Re0100, 'U', dx, dy, dz)
-      call MFIX_to_GHIA(X, lHalf, V_g, v_Re0100, 'V', dx, dy, dz)
+      call MFIX_to_GHIA(lHalf, Y, U_g, ulo, uhi, U_Re0100, 'U', dx, dy, dz)
+      call MFIX_to_GHIA(X, lHalf, V_g, vlo, vhi, v_Re0100, 'V', dx, dy, dz)
 
       RETURN
       contains
 
 !......................................................................!
-      SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, pGhia, pVar, dx, dy, dz)
+      SUBROUTINE MFIX_to_GHIA(pX, pY, pVEL, llo, lhi, pGhia, pVar, dx, dy, dz)
 
       use compar, only: myPE, PE_IO
 
+      integer, intent(in   ) :: llo(3),lhi(3)
       double precision, intent(in) :: pX(:), pY(:)
-      double precision, intent(in) :: pVel(:,:,:)
       double precision, intent(in) :: pGhia(:)
       character(len=1), intent(in) :: pVar
+
+      double precision, intent(in) :: pVel&
+         (llo(1):lhi(1),llo(2):lhi(2),llo(3):lhi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
@@ -91,14 +94,14 @@
 
       lMFIX = 0.0d0
 
-      k=1
+      k=0
       do lc1=1,15
 
-         i = int(lOoDx*pX(lc1))+1
+         i = floor(lOoDx*pX(lc1))+1
          Sx(0) = (dble(i)*dx - pX(lc1))*lOoDx
          Sx(1) = 1.0d0 - Sx(0)
 
-         j = int(lOoDy*pY(lc1))+1
+         j = floor(lOoDy*pY(lc1))+1
          Sy(0) = (dble(j)*dy - pY(lc1))*lOoDy
          Sy(1) = 1.0d0 - Sy(0)
 
