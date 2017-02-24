@@ -135,6 +135,21 @@ If _mfix.input_file=<input_file_name>_ is not given, MFIX will try to read the f
 _mfix.dat_. If both _inputs_ and _mfix.dat_ cannot be found, MFIX will stop execution
 with an error message.
 
+### Writing plotfiles
+In order to write out plotfiles, add the following to the _inputs_ file:
+```shell
+mfix.plot_int=N
+```
+N needs to be > 1 for the plotfiles to be written out. For transient solves, 
+N indicates the number of time steps between two consecutive writes.
+For steady state solve, N does not have any meaning: a plotfile will be written
+after the steady state is reached, as long as N > 1. To specify the name of the 
+plotfiles directorys, add the following to the _inputs_ file:
+```shell
+mfix.plot_file=<plotfile_name>
+```
+If no plotfile is provided, mfix will default to _plt_.
+ 
 --------------------------------------------------------------------
 
 ## Notice
