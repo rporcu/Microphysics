@@ -95,17 +95,16 @@
 
                 IF (U(i,j,k) >= ZERO) THEN
                    IC = i
-                   ID = max(i-1,domlo(1)-1)
-                   IU = max(i-1,domlo(1)-1)
+                   ID = i+1
+                   IU = i-1
                 ELSE
                    IC = i+1
                    ID = I
-                   IU = min(i+2,domhi(1)+1)
-                   IU = min(i+1,domhi(1)+1)
+                   IU = i+2
                 ENDIF
-                phi_C = phi_C_OF(phi(IU,j,k),phi(IC,j,k),phi(ID,j,k))
-                DWF = SUPERBEE(phi_C)
-                XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+                phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
+                dwf = superbee(phi_c)
+                xsi_e(i,j,k) = xsi_func(u(i,j,k),dwf)
 
               end do
             end do
@@ -346,19 +345,19 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-                IF (V(i,j,k) >= ZERO) THEN
-                   JC = J
-                   JD = min(j+1,domhi(2)+1)
-                   JU = max(j-1,domlo(2)-1)
-                ELSE
-                   JC = min(j+1,domhi(2)+1)
-                   JD = J
-                   JU = min(j+2,domhi(2)+1)
-                ENDIF
+                if (v(i,j,k) >= zero) then
+                   ju = j-1
+                   jc = j
+                   jd = j+1
+                else
+                   ju = j+2
+                   jc = j+1
+                   jd = j
+                endif
 
-                phi_C = phi_C_OF(phi(i,JU,k),phi(i,JC,k),phi(i,JD,k))
-                DWF = SUPERBEE(phi_C)
-                XSI_N(i,j,k) = XSI_func(V(i,j,k),DWF)
+                phi_c = phi_c_of(phi(i,ju,k),phi(i,jc,k),phi(i,jd,k))
+                dwf = superbee(phi_c)
+                xsi_n(i,j,k) = xsi_func(v(i,j,k),dwf)
 
               end do
             end do
@@ -600,15 +599,15 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-                IF (W(i,j,k) >= ZERO) THEN
-                   KC = K
-                   KD = min(k+1,domhi(3)+1)
-                   KU = max(k-1,domlo(3)-1)
-                ELSE
-                   KC = min(k+1,domhi(3)+1)
-                   KD = K
-                   KU = min(k+2,domhi(3)+1)
-                ENDIF
+                if (w(i,j,k) >= zero) then
+                   ku = k-1
+                   kc = k
+                   kd = k+1
+                else
+                   ku = k+2
+                   kc = k+1
+                   kd = k
+                endif
 
                 phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))
                 DWF = SUPERBEE(phi_C)
