@@ -26,6 +26,8 @@ MODULE CHECK_RUN_CONTROL_MODULE
       USE run, only: UNITS
 ! Simulation start/stop times.
       USE run, only: TSTOP
+! Flag to adjust dt when residuals diverge
+      use run, only: DETECT_STALL
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -71,6 +73,7 @@ MODULE CHECK_RUN_CONTROL_MODULE
 ! Steady-state simulation.
       ELSEIF(IS_UNDEFINED(DT) .OR. IS_UNDEFINED(DT)) THEN
          TIME = ZERO
+         DETECT_STALL = .FALSE.
 
 ! Transient simulation.
       ELSE
