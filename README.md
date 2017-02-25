@@ -125,31 +125,48 @@ Test project ~/mfixexa
 > ctest -R DEM01  # running all tests with "DEM01" in the test name
 ```
 
-### Running a generic case
+### Running a user-defined case
 ```shell
-> ./mfix inputs  mfix.input_file=<input_file_name>
+> ./mfix inputs  mfix.input_file=<user_file_name>
 ```
-_inputs_ is a text file containing the BoxLib input parameters.
-_<input_file_name>_ is a text file containing the MFIX input parameters.
-If _mfix.input_file=<input_file_name>_ is not given, MFIX will try to read the file
-_mfix.dat_. If both _inputs_ and _mfix.dat_ cannot be found, MFIX will stop execution
-with an error message.
+_inputs_ is a text file containing the BoxLib input parameters. 
+_inputs_  __has to be provided and cannot be renamed__. 
+_user_file_name_ is the name of a user-defined text file containing the MFIX input parameters.
+If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file
+_mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
 
 ### Writing plotfiles
 In order to write out plotfiles, add the following to the _inputs_ file:
 ```shell
 mfix.plot_int=N
-```
+``` 
 N needs to be > 1 for the plotfiles to be written out. For transient solves, 
 N indicates the number of time steps between two consecutive writes.
 For steady state solve, N does not have any meaning: a plotfile will be written
-after the steady state is reached, as long as N > 1. To specify the name of the 
-plotfiles directorys, add the following to the _inputs_ file:
+after the steady state is reached, as long as N > 0. To specify the name of the 
+plotfiles directories, add the following to the _inputs_ file:
 ```shell
 mfix.plot_file=<plotfile_name>
 ```
-If no plotfile is provided, mfix will default to _plt_.
- 
+If the name of the plotfile is not provided, MFIX will default to _plt_.
+
+### Writing checkfiles
+To dump a checkfile every N time steps, add the following to the _inputs_
+file:
+```shell
+mfix.check_int=N
+```
+The name of the checkfile can be specified by adding
+```shell
+mfix.check_file=<checkfile_name>
+```
+to the _inputs_ file. In order to restart a calculation from a checkpoint,
+add add the following to the _inputs_
+file:
+```shell
+mfix.restart_chkfile=<checkfile_name>
+```
+
 --------------------------------------------------------------------
 
 ## Notice
