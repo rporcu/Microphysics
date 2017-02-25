@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
     //      inputs file to be read by BoxLib, so we only pass the arguments after that
     for(int i=2; i < argc; i++) {
 	int nlen = strlen(argv[i]);
-	// If-statement avoids passing the name of the mfix input file
+	// If-statement avoids passing the name of the mfix input file if it is
 	// specified on the command line.
 	if ( strstr(argv[i], "input_file") == NULL) {
 	    mfix_add_argument(argv[i], &nlen);
@@ -117,14 +117,8 @@ int main (int argc, char* argv[])
 	} 
 	else {
 	    my_mfix.InitFromCheckpoint( &nstep, &dt, &time);
-	    printf("After restart nstep=%d dt=%f time=%f\n", nstep, dt, time ); 
-	    // my_mfix.WriteCheckPointFile( nstep, dt, time );
-	    // return 0;
 	}
     }
-
-
-    // return 0;
    
     int finish  = 0;
     int estatus = 0;
@@ -151,9 +145,8 @@ int main (int argc, char* argv[])
 	    time += prev_dt;
 	    nstep++;
 	    my_mfix.WritePlotFile( nstep, dt, time );
+	    my_mfix.WriteCheckPointFile( nstep, dt, time ); 
 	}
-
-	my_mfix.WriteCheckPointFile( nstep, dt, time ); 
 
 	my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
