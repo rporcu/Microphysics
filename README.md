@@ -10,7 +10,7 @@
 
 
 
-## Prerequisite: BoxLib Environment on Joule (Joule specific)
+## Prerequisite: AMReX Environment on Joule (Joule specific)
 For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
 ```shell
 > module load gnu/6.1.0
@@ -22,13 +22,17 @@ For the Joule environment, load the gnu module and set environment variables fir
 
 ## Prerequisite: Build and Install BoxLib
 
-Clone BoxLib repo and set environment variable.
+Clone AMReX repo and set environment variable BOXLIB_HOME to where your want to
+install AMReX. If that location is not the AMReX git repo directory, manually
+copy the Tools/ directory to BOXLIB_HOME.
+
 ```shell
-> git clone https://github.com/BoxLib-Codes/BoxLib
-> cd BoxLib
-> git checkout 16.12.2
-> export BOXLIB_HOME=$PWD
+> git clone https://bitbucket.org/berkeleylab/amrex.git
+> cd amrex
+> git checkout master
+> export BOXLIB_HOME=$HOME/local
 > cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
+> cp -r Tools $BOXLIB_HOME
 > make -j -k install
 ```
 The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
@@ -37,7 +41,7 @@ The make command may fail with an error involving mempool; if so rerun ```make -
 Go to the MFIX directory, run cmake and run make (make sure BOXLIB_HOME is still set)
 ```shell
 > cd <MFIX source directory>
-> cmake -DCMAKE_CXX_FLAGS="-std=c++11" .
+> cmake .
 > make
 ```
 
