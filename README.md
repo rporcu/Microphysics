@@ -10,7 +10,7 @@
 
 
 
-## Prerequisite: AMReX Environment on Joule (Joule specific)
+## Prerequisite: Environment Dependencies on Joule (Joule specific)
 For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
 ```shell
 > module load gnu/6.1.0
@@ -20,7 +20,7 @@ For the Joule environment, load the gnu module and set environment variables fir
 > export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
 
-## Prerequisite: Build and Install BoxLib
+## Prerequisite: Build and Install AMReX
 
 Clone AMReX repo and set environment variable BOXLIB_HOME to where your want to
 install AMReX. If that location is not the AMReX git repo directory, manually
