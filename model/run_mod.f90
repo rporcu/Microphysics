@@ -102,6 +102,10 @@
 ! Generate log files when negative gas density is detected.
       LOGICAL :: REPORT_NEG_DENSITY
 
+! Input file parameters
+      character(len=*), parameter :: IFILE_NAME_DEFAULT = 'mfix.dat'
+      character(100)              :: IFILE_NAME
+
 
 ! Flags indicating variable solids density.
       LOGICAL :: SOLVE_ROs(DIM_M), ANY_SOLVE_ROs

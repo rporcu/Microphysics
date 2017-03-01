@@ -31,6 +31,14 @@ public:
 
     void Restart();
 
+    void WriteCheckPointFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 )  const;
+
+    int IsRestartEnabled () const;
+
+    void WritePlotFile ( int nstep = 0, Real dt = 0.0, Real time = 0.0 ) const;
+
+    void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
+
     void evolve_fluid (int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
@@ -78,8 +86,16 @@ private:
 
     void InitLevelData (int lev, Real dt, Real time);
 
+    void InitIOData ();
+
     void MakeNewLevel (int lev, Real time,
            const BoxArray& new_grids, const DistributionMapping& new_dmap);
+
+    void WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const;
+
+    void WriteJobInfo(const std::string& dir ) const;
+
+    static void GotoNextLine (std::istream& is);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
@@ -90,9 +106,11 @@ private:
 #if 0
     void WritePlotFile () const;
 
-    Array<int> istep;      // which step?
+      // which step?
     Array<int> nsubsteps;  // how many substeps on each level?
 #endif
+
+    Array<int> istep = {1} ;
 
     // Particle container
     std::unique_ptr<MyParticleContainer> mypc;
@@ -174,6 +192,7 @@ private:
     Array< std::unique_ptr<MultiFab> > f_gds  ;
     Array< std::unique_ptr<MultiFab> > drag_bm;
 
+
     Array<int> particle_state;
     Array<int> particle_phase;
 
@@ -208,12 +227,20 @@ private:
 
     Real cfl = 0.7;
 
-    std::string restart_chkfile;
+    std::string restart_chkfile {"no_restart"};
 
     std::string check_file {"chk"};
     std::string plot_file {"plt"};
     int check_int = -1;
     int plot_int = -1;
+
+
+    // Variables to simplify IO
+    Array< const Array< std::unique_ptr<MultiFab> >* > vectorVars;
+    Array< const Array< std::unique_ptr<MultiFab> >* > scalarVars;
+    Array< std::string > vecVarsName;
+    Array< std::string > scaVarsName;
+
 };
 
 #endif

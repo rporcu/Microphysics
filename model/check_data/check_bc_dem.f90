@@ -1,124 +1,104 @@
-MODULE CHECK_BC_DEM_MODULE
+module check_bc_dem_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
-
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-! minimum amount of geometry data.                                     !
-!                                                                      !
-! Subroutine: CHECK_BC_DEM                                             !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Determine if BCs are "DEFINED" and that they contain the    !
-! minimum amount of geometry data.                                     !
-!                                                                      !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_DEM(M_TOT)
-
-! Global Variables:
-!---------------------------------------------------------------------//
-! User specified BC
-      use bc, only: BC_TYPE
-! User specified: BC geometry
-      use bc, only: BC_EP_s
-! Use specified flag for ignoring PO BC for discrete solids
-      USE bc, only: BC_PO_APPLY_TO_DES
-! Solids phase identifier
-      use run, only: SOLIDS_MODEL
-! Number of DEM inlet/outlet BCs detected.
-      use des_bc, only: DEM_BCMI, DEM_BCMO
-!
-      use des_bc, only: DEM_BCMI_MAP
-      use des_bc, only: DEM_BCMO_MAP
-! Global Parameters:
-!---------------------------------------------------------------------//
-! The max number of BCs.
-      use param, only: DIMENSION_BC
-! Parameter constants
-      use param1, only: ZERO, IS_DEFINED
-
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-
-      IMPLICIT NONE
-
-! Passed Arguments:
-!---------------------------------------------------------------------//
-! Total number of solids phases.
-      INTEGER, INTENT(in) :: M_TOT
-
-! Local Variables:
-!---------------------------------------------------------------------//
-! loop/variable indices
-      INTEGER :: BCV, M
-!......................................................................!
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, err_msg, flush_err_msg, &
+                          & init_err_msg, ivar
 
 
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_BC_DEM")
+  implicit none
+  private
 
-! Initialize
-      DEM_BCMI = 0
-      DEM_BCMO = 0
+  public check_bc_dem
 
-! Loop over all BCs looking for DEM solids inlets/outlets
-      DO BCV = 1, DIMENSION_BC
 
-         SELECT CASE (TRIM(BC_TYPE(BCV)))
+contains
 
-! Determine the number of mass inlets that contain DEM solids.
-         CASE ('MASS_INFLOW')
-            M_LP: DO M=1,M_TOT
-               IF(SOLIDS_MODEL(M)=='DEM' .AND.                         &
-                  BC_EP_s(BCV,M) > ZERO) THEN
-                  DEM_BCMI = DEM_BCMI + 1
-                  DEM_BCMI_MAP(DEM_BCMI) = BCV
-                  EXIT M_LP
-               ENDIF
-            ENDDO M_LP
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  ! minimum amount of geometry data.                                     !
+  !                                                                      !
+  ! Subroutine: CHECK_BC_DEM                                             !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Determine if BCs are "DEFINED" and that they contain the    !
+  ! minimum amount of geometry data.                                     !
+  !                                                                      !
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine check_bc_dem(M_TOT)
 
-! Count the number of pressure outflows.
-         CASE ('P_OUTFLOW','MASS_OUTFLOW')
-            IF(BC_PO_APPLY_TO_DES(BCV)) then
-               DEM_BCMO = DEM_BCMO + 1
-               DEM_BCMO_MAP(DEM_BCMO) = BCV
-            ENDIF
+    use bc,     only: BC_TYPE, BC_EP_s, BC_PO_APPLY_TO_DES
+    use run,    only: SOLIDS_MODEL
+    use des_bc, only: DEM_BCMI, DEM_BCMO, DEM_BCMI_MAP, DEM_BCMO_MAP
+    use param,  only: DIMENSION_BC
+    use param1, only: ZERO, IS_DEFINED
 
-! Flag CG_MI as an error if DEM solids are present.
-         CASE ('CG_MI')
-            DO M=1,M_TOT
-               IF(SOLIDS_MODEL(M)=='DEM') THEN
-                  IF(IS_DEFINED(BC_EP_s(BCV,M)) .AND.                 &
-                     BC_EP_s(BCV,M) > ZERO) THEN
-                     WRITE(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)),    &
-                        'GC_MI'
-                     CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-                  ENDIF
-               ENDIF
-            ENDDO
+    integer, intent(in) :: M_TOT
+    integer             :: BCV, M
 
-         CASE ('CG_PO')
-            WRITE(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)), 'GC_PO'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_BC_DEM")
 
-         CASE ('OUTFLOW', 'P_INFLOW')
-            WRITE(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)),             &
-               trim(BC_TYPE(BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+    ! Initialize
+    DEM_BCMI = 0
+    DEM_BCMO = 0
 
-         END SELECT
+    ! Loop over all BCs looking for DEM solids inlets/outlets
+    do BCV = 1, DIMENSION_BC
+       
+       select case (trim(BC_TYPE(BCV)))
+       
+          ! Determine the number of mass inlets that contain DEM solids.
+       case ('MASS_INFLOW')
+          M_LP: do M=1,M_TOT
+             if(SOLIDS_MODEL(M)=='DEM' .and.                         &
+                  BC_EP_s(BCV,M) > ZERO) then
+                DEM_BCMI = DEM_BCMI + 1
+                DEM_BCMI_MAP(DEM_BCMI) = BCV
+                exit M_LP
+             endif
+          enddo M_LP
+          
+          ! Count the number of pressure outflows.
+       case ('P_OUTFLOW','MASS_OUTFLOW')
+          if(BC_PO_APPLY_TO_DES(BCV)) then
+             DEM_BCMO = DEM_BCMO + 1
+             DEM_BCMO_MAP(DEM_BCMO) = BCV
+          endif
 
-      ENDDO
+          ! Flag CG_MI as an error if DEM solids are present.
+       case ('CG_MI')
+          do M=1,M_TOT
+             if(SOLIDS_MODEL(M)=='DEM') then
+                if(IS_DEFINED(BC_EP_s(BCV,M)) .and.                 &
+                     BC_EP_s(BCV,M) > ZERO) then
+                   write(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)),    &
+                        'GC_MI', trim( IFILE_NAME )
+                   call flush_err_msg(ABORT=.true.)
+                endif
+             endif
+          enddo
 
-      CALL FINL_ERR_MSG
+       case ('CG_PO')
+          write(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)), 'GC_PO', &
+               & trim( IFILE_NAME )
+          call flush_err_msg(ABORT=.true.)
 
-      RETURN
+       case ('OUTFLOW', 'P_INFLOW')
+          write(ERR_MSG,1100) trim(iVar('BC_TYPE',BCV)),             &
+               trim(BC_TYPE(BCV)), trim( IFILE_NAME )
+          call flush_err_msg(ABORT=.true.)
 
- 1100 FORMAT('Error 1100: Unsupported boundary condition specified ',  &
-         'with',/'DEM simulation: ',A,' = ',A,/'Please correct the ',&
-         'mfix.dat file.')
+       end select
 
-      END SUBROUTINE CHECK_BC_DEM
-END MODULE CHECK_BC_DEM_MODULE
+    enddo
+
+    call finl_err_msg
+
+1100 format('Error 1100: Unsupported boundary condition specified ',  &
+          'with',/'DEM simulation: ',A,' = ',A,/'Please correct the ',&
+          A,' file.')
+    
+  end subroutine check_bc_dem
+
+end module check_bc_dem_module

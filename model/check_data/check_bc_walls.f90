@@ -1,104 +1,80 @@
-MODULE CHECK_BC_WALLS_MODULE
+module check_bc_walls_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
+                          & ivar, ival, err_msg
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_WALLS                                           !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Driver routine to call checks for WALL BCs.                 !
-!                                                                      !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_WALLS(BCV)
+  implicit none
+  private
 
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival
-
-      IMPLICIT NONE
-
-! Dummy Arguments.
-!---------------------------------------------------------------------//
-! Index of BC being checked.
-      INTEGER, INTENT(in) :: BCV
-
-!......................................................................!
-
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_BC_WALLS")
-
-! Input checks for gas phase.
-      CALL CHECK_BC_WALLS_GAS(BCV)
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-      END SUBROUTINE CHECK_BC_WALLS
+  public check_bc_walls
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_WALLS_GAS                                       !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Check user-input for gas phase WALL BC parameters.          !
-!                                                                      !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_WALLS_GAS(BCV)
+contains
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! User-input: type of BC
-      use bc, only: BC_TYPE
-! User-Input: gas velocity at wall BCs.
-      use bc, only: BC_UW_G, BC_VW_G, BC_WW_G
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: CHECK_BC_WALLS                                           !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Driver routine to call checks for WALL BCs.                 !
+  !                                                                      !
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine check_bc_walls(bcv)
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-! Parameter constants.
-      use param1, only: IS_UNDEFINED
+    integer, intent(in) :: bcv
 
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_BC_WALLS")
 
-      IMPLICIT NONE
+    ! Input checks for gas phase.
+    call check_bc_walls_gas(bcv)
 
-! Dummy Arguments.
-!---------------------------------------------------------------------//
-      INTEGER, INTENT(in) :: BCV
+    call finl_err_msg
 
-!......................................................................!
+  end subroutine check_bc_walls
 
 
-! Initialize the error manger.
-      CALL INIT_ERR_MSG("CHECK_BC_WALLS_GAS")
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: CHECK_BC_WALLS_GAS                                       !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Check user-input for gas phase WALL BC parameters.          !
+  !                                                                      !
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine check_bc_walls_gas(bcv)
 
-! The wall velocities are not needed for no-slip or free-slip
-      IF(BC_TYPE(BCV) == 'PAR_SLIP_WALL') THEN
-         IF(IS_UNDEFINED(BC_UW_G(BCV))) THEN
-            WRITE(ERR_MSG,1000) trim(iVar('BC_Uw_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IS_UNDEFINED(BC_VW_G(BCV))) THEN
-            WRITE(ERR_MSG,1000) trim(iVar('BC_Vw_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ELSEIF(IS_UNDEFINED(BC_WW_G(BCV))) THEN
-            WRITE(ERR_MSG,1000) trim(iVar('BC_Ww_g',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDIF
+    use bc,     only: bc_type, bc_uw_g, bc_vw_g, bc_ww_g
+    use param1, only: is_undefined
 
 
-! Clear the error manager.
-      CALL FINL_ERR_MSG
-
-      RETURN
-
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-            'correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_BC_WALLS_GAS
-END MODULE CHECK_BC_WALLS_MODULE
+    integer, intent(in) :: bcv
+    ! Initialize the error manger.
+    call init_err_msg("CHECK_BC_WALLS_GAS")
+    
+    ! The wall velocities are not needed for no-slip or free-slip
+    if(BC_TYPE(BCV) == 'PAR_SLIP_WALL') then
+       if(is_undefined(bc_uw_g(bcv))) then
+          write(err_msg,1000) trim(ivar('BC_Uw_g',bcv)), trim(IFILE_NAME)
+          call flush_err_msg(abort=.true.)
+       elseif(is_undefined(bc_vw_g(bcv))) then
+          write(err_msg,1000) trim(ivar('BC_Vw_g',bcv)), trim(IFILE_NAME)
+          call flush_err_msg(abort=.true.)
+       elseif(is_undefined(bc_ww_g(bcv))) then
+          write(err_msg,1000) trim(ivar('BC_Ww_g',bcv)), trim(IFILE_NAME)
+          call flush_err_msg(abort=.true.)
+       endif
+    endif    
+    
+    ! Clear the error manager.
+    call finl_err_msg
+    
+1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
+          'correct the ',A,' file.')
+    
+  end subroutine check_bc_walls_gas
+  
+end module check_bc_walls_module

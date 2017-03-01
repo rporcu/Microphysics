@@ -47,11 +47,24 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRE
 
 project(MFIXEXA)
 
+# Generate buildInfo.cpp
+add_custom_command(
+  COMMAND  $(BOXLIB_HOME)/Tools/C_scripts/makebuildinfo_C.py
+  --boxlib_home "$(BOXLIB_HOME)"
+  --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
+  --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
+  --GIT ". $(BOXLIB_HOME)"
+  OUTPUT buildInfo.cpp
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Generating buildInfo.cpp" )
+
+
 set(CXX_sources
   model/main.cpp
   model/mfix_level.cpp
   model/solve_bicgstab.cpp
-  model/ParticleContainer.cpp)
+  model/ParticleContainer.cpp
+  model/io/mfixIO.cpp )
 set(CXX_includes
   model/mfix_level.H
   model/ParticleContainer.H
@@ -220,13 +233,18 @@ preprocess_boxlib_fortran(FPP_out ${FPP_sources})
 
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 set(local_includes ${CXX_includes} ${FPP_includes})
-set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} )
+set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} buildInfo.cpp)
 
 add_executable(mfix model/main.cpp ${USR_OVERRIDES})
 
 add_library(model STATIC ${local_sources} ${local_includes})
 
 target_link_libraries(mfix model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
+
+# Remove buildInfo.cpp
+add_custom_command(TARGET mfix POST_BUILD COMMAND rm buildInfo.cpp
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                   COMMENT "Removing buildInfo.cpp" )
 
 enable_testing()
 

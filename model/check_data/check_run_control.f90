@@ -1,121 +1,101 @@
-MODULE CHECK_RUN_CONTROL_MODULE
+module check_run_control_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
+                          & ivar, ival, err_msg
 
-   CONTAINS
+  implicit none
+  private
+
+  public check_run_control
+
+contains
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_RUN_CONTROL                                       !
 !  Purpose: Check the run control namelist section                     !
 !                                                                      !
-!  Author: P.Nicoletti                                Date: 27-NOV-91  !
-!          J.Musser                                   Date: 31-JAN-14  !
-!                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_RUN_CONTROL(time, dt)
+  subroutine check_run_control(time, dt)
 
-
-! Global Variables:
-!---------------------------------------------------------------------//
-! New or restart
-      USE run, only: RUN_TYPE
-! Brief description of simulation.
-      USE run, only: DESCRIPTION
-! Simulation units: SI, CGS
-      USE run, only: UNITS
-! Simulation start/stop times.
-      USE run, only: TSTOP
+    use run,    only: RUN_TYPE, DESCRIPTION, UNITS, TSTOP
+    use param1, only: UNDEFINED_C, IS_UNDEFINED, ZERO
 ! Flag to adjust dt when residuals diverge
       use run, only: DETECT_STALL
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-      USE param1, only: UNDEFINED_C, IS_UNDEFINED
-      USE param1, only: ZERO
-
-! Global Module procedures:
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
-      use error_manager, only: ivar, ival, err_msg
-
-      IMPLICIT NONE
+    real(c_real), intent(inout) :: time, dt
 
 
-! Local Variables:
-!---------------------------------------------------------------------//
-      real(c_real), intent(inout) :: time, dt
-
-!......................................................................!
+    ! Initialize the error manager.
+    CALL init_err_msg("CHECK_RUN_CONTROL")
 
 
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_RUN_CONTROL")
+    ! Clear out the run description if not specified.
+    if (DESCRIPTION == UNDEFINED_C) DESCRIPTION = ' '
+
+    ! Verify UNITS input.
+    if(UNITS == UNDEFINED_C) then
+       write(ERR_MSG,1000) 'UNITS', trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    elseif((UNITS /= 'CGS') .and. (UNITS /= 'SI')) then
+       write(ERR_MSG,1001) 'UNITS', UNITS, trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
+
+    ! Verify that DT is valid.
+    if (DT < ZERO) then
+       write(ERR_MSG,1002) 'DT', DT, trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+
+       ! Steady-state simulation.
+    elseif(IS_UNDEFINED(DT) .or. IS_UNDEFINED(DT)) then
+       DETECT_STALL = .FALSE.
+       TIME = ZERO
+
+       ! Transient simulation.
+    else
+       ! Verify the remaining time settings.
+       if (IS_UNDEFINED(TIME)) then
+          write(ERR_MSG,1000) 'TIME', trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+
+       elseif (IS_UNDEFINED(TSTOP)) then
+          write(ERR_MSG,1000) 'TSTOP', trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+
+       elseif (TIME < ZERO) then
+          write(ERR_MSG,1002)'TIME', TIME, trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+
+       elseif (TSTOP < ZERO) then
+          write(ERR_MSG,1002) 'TSTOP', TSTOP, trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+       endif
+    endif
+
+    ! Verify the run type.
+    if(.not.(RUN_TYPE=='NEW')) then
+       write(ERR_MSG,1001) 'RUN_TYPE', RUN_TYPE, trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
 
 
-! Clear out the run description if not specified.
-      IF (DESCRIPTION == UNDEFINED_C) DESCRIPTION = ' '
-
-! Verify UNITS input.
-      IF(UNITS == UNDEFINED_C) THEN
-         WRITE(ERR_MSG,1000) 'UNITS'
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ELSEIF((UNITS /= 'CGS') .AND. (UNITS /= 'SI')) THEN
-         WRITE(ERR_MSG,1001) 'UNITS', UNITS
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
-! Verify that DT is valid.
-      IF (DT < ZERO) THEN
-         WRITE(ERR_MSG,1002) 'DT', DT
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-! Steady-state simulation.
-      ELSEIF(IS_UNDEFINED(DT) .OR. IS_UNDEFINED(DT)) THEN
-         TIME = ZERO
-         DETECT_STALL = .FALSE.
-
-! Transient simulation.
-      ELSE
-! Verify the remaining time settings.
-         IF (IS_UNDEFINED(TIME)) THEN
-            WRITE(ERR_MSG,1000) 'TIME'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-         ELSEIF (IS_UNDEFINED(TSTOP)) THEN
-            WRITE(ERR_MSG,1000) 'TSTOP'
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-         ELSEIF (TIME < ZERO) THEN
-            WRITE(ERR_MSG,1002)'TIME', TIME
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
-         ELSEIF (TSTOP < ZERO) THEN
-            WRITE(ERR_MSG,1002) 'TSTOP', TSTOP
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-      ENDIF
-
-! Verify the run type.
-      IF(.NOT.(RUN_TYPE=='NEW')) THEN
-         WRITE(ERR_MSG,1001) 'RUN_TYPE', RUN_TYPE
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
+    ! Clear the error manager
+    call finl_err_msg
 
 
-! Clear the error manager
-      CALL FINL_ERR_MSG
+1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
+          'correct the ',A,' file.')
 
-      RETURN
+1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
+          'Please correct the ',A,' file.')
 
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
+1002 format('Error 1002: Illegal or unknown input: ',A,' = ',G14.4,/  &
+          'Please correct the ',A,' file.')
 
- 1001 FORMAT('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-         'Please correct the mfix.dat file.')
+  end subroutine check_run_control
 
- 1002 FORMAT('Error 1002: Illegal or unknown input: ',A,' = ',G14.4,/  &
-         'Please correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_RUN_CONTROL
-END MODULE CHECK_RUN_CONTROL_MODULE
+end module check_run_control_module

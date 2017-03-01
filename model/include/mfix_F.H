@@ -4,6 +4,10 @@ extern "C"
 {
   void mfix_add_argument(char* fname, int* nlen);
 
+  void set_resid_p(Real& val);
+
+  void mfix_set_ifile( char* fname, int len );
+
   void mfix_get_data(int* imax, int* jmax, int* kmax,
                      int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,

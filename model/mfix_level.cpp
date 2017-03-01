@@ -107,24 +107,25 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 void
 mfix_level::ReadParameters ()
 {
+    // Traditionally, max_step and stop_time do not have prefix.
     {
-    ParmParse pp;  // Traditionally, max_step and stop_time do not have prefix.
-    pp.query("max_step", max_step);
-    pp.query("stop_time", stop_time);
+	ParmParse pp; 
+	pp.query("max_step", max_step);
+	pp.query("stop_time", stop_time);
     }
 
+    // Traditionally, these have prefix "amr", but we will
+    // give them prefix mfix to make it clear that they affect the
+    // behavior of the solver and not amr (even thought they are read
+    // via BoxLib
     {
-    ParmParse pp("amr"); // Traditionally, these have prefix, amr.
-    pp.query("check_file", check_file);
-    pp.query("check_int", check_int);
-    pp.query("plot_file", plot_file);
-    pp.query("plot_int", plot_int);
-    pp.query("restart", restart_chkfile);
-    }
-
-    {
-    ParmParse pp("mfix");
-    pp.query("verbose", verbose);
+	ParmParse pp("mfix"); 
+	pp.query("check_file", check_file);
+	pp.query("check_int", check_int);
+	pp.query("plot_file", plot_file);
+	pp.query("plot_int", plot_int);
+	pp.query("restart_chkfile", restart_chkfile);
+	pp.query("verbose", verbose);
     }
 }
 
@@ -154,6 +155,8 @@ mfix_level::Init(int lev, Real dt, Real time)
       MakeNewLevel(0, time, ba, dm);
 
       InitLevelData(lev,dt,time);
+
+      InitIOData ();
     }
 
     // if max_level > 0, define fine levels

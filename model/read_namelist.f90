@@ -51,6 +51,7 @@ MODULE read_namelist_module
       use residual, only: group_resid, resid_string
       use run, only: call_usr, description, detect_stall, discretize, tstop, units
       use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
+      use run, only: IFILE_NAME
       use scales, only: p_ref, p_scale
       use toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac
@@ -101,17 +102,17 @@ MODULE read_namelist_module
 
 ! Open the mfix.dat file. Report errors if the file is not located or
 ! there is difficulties opening it.
-      inquire(file='mfix.dat',exist=lEXISTS)
+      inquire(file=trim(IFILE_NAME),exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
-         IF(myPE == PE_IO) WRITE(*,1000)
+         IF(myPE == PE_IO) WRITE(*,1000) trim(IFILE_NAME)
          CALL MFIX_EXIT(myPE)
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
-         'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
+         'The input data file, ',A,', is missing. Aborting.',/1x,   &
          70('*'),2/)
 
       ELSE
-         OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
+         OPEN(UNIT=UNIT_DAT, FILE=trim(IFILE_NAME), STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             IF(myPE == PE_IO) WRITE (*,1100)
             CALL MFIX_EXIT(myPE)
@@ -132,15 +133,15 @@ MODULE read_namelist_module
          IF(BLANK_LINE(LINE_STRING)) CYCLE READ_LP ! blank line
 
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
-            WRITE (*, 1100) trim(iVAL(LINE_NO)), trim(ival(MAXCOL)), &
-               LINE_STRING(1:MAXCOL)
+            write (*, 1100)  trim(iVAL(LINE_NO)), trim(IFILE_NAME), &
+                 &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL), trim( IFILE_NAME )
             CALL MFIX_EXIT(myPE)
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &
-         'Line ',A,' in mfix.dat has is too long. Input lines should', &
+         'Line ',A,' in file ', A, ' is too long. Input lines should', &
          /1x,'not pass column ',A,'.',2/3x,A,2/1x,'Please correct ',   &
-         'the mfix.dat file.',/1X,70('*'),2/)
+         'file ',A,'.',/1X,70('*'),2/)
 
 ! All subsequent lines are thermochemical data
          IF(LINE_STRING(1:11) == 'THERMO DATA') EXIT READ_LP

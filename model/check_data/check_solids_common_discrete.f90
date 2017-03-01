@@ -1,154 +1,117 @@
-MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
+module check_solids_common_discrete_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,    &
+       &  ivar,  ival, err_msg
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  SUBROUTINE: CHECK_SOLIDS_COMMON_DISCRETE                            !
-!  Author: J.Musser                                   Date: 02-FEB-14  !
-!                                                                      !
-!  Purpose:                                                            !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE
+  implicit none
+  private 
 
+  public check_solids_common_discrete
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! Runtime Flag: Store DES_*_OLD arrays.
-      USE discretelement, only: DO_OLD
-! Number of solids phases.
-      USE constant, only: MMAX
-! TFM solids phase diameters and densities. (DEM default)
-      USE constant, only: D_p0
+contains
 
-! User specified integration method.
-      USE discretelement, only: DES_INTG_METHOD
-      USE discretelement, only: INTG_ADAMS_BASHFORTH
-      USE discretelement, only: INTG_EULER
-! Max/Min particle radii
-      USE discretelement, only: MAX_RADIUS, MIN_RADIUS
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  !  SUBROUTINE: CHECK_SOLIDS_COMMON_DISCRETE                            !
+  !  Author: J.Musser                                   Date: 02-FEB-14  !
+  !                                                                      !
+  !  Purpose:                                                            !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine check_solids_common_discrete
 
-! Subroutine access.
-      use constant, only: MMAX
+    use constant,       only: mmax,  d_p0
+    use param1,         only: undefined
+    use discretelement, only: des_intg_method, intg_adams_bashforth, &
+                            & intg_euler, max_radius, min_radius,    &
+                            & do_old
 
-! Global Parameters:
-!---------------------------------------------------------------------//
-      use param1, only: undefined
+    integer :: lM  ! Solids phase Index
 
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_SOLIDS_COMMON_DISCRETE")
 
-      implicit none
+    max_radius = -undefined
+    min_radius =  undefined
 
-! Local Variables:
-!---------------------------------------------------------------------//
-! Loop index.
-      INTEGER :: lM  ! Solids phase Index
+    ! determine the maximum particle size in the system (max_radius), which
+    ! in turn is used for various tasks
+    do lm=1, mmax
+       max_radius = max(max_radius, 0.5d0*d_p0(lm))
+       min_radius = min(min_radius, 0.5d0*d_p0(lm))
+    enddo
 
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE")
+    ! Check for valid integration method
+    select case(trim(DES_INTG_METHOD))
+    case ('EULER')
+       intg_euler = .true.
+       intg_adams_bashforth = .false.
+       !DES_INTG_METHOD_ENUM = 1
+    case ('ADAMS_BASHFORTH')
+       intg_euler = .false.
+       intg_adams_bashforth = .true.
+       !DES_INTG_METHOD_ENUM = 2
+    case DEFAULT
+       write(err_msg,2020) trim(des_intg_method), trim(IFILE_NAME)
+       call flush_err_msg(abort=.true.)
+       
+2020   format('Error 2020:Invalid DES_INGT_METHOD: ',A,/'Please ',      &
+            'correct the ',A,' file.')
+       
+    end select
+    
+    do_old = intg_adams_bashforth
+    
+    ! Check geometry constrains.
+    call check_solids_common_discrete_geometry
+    
+    call finl_err_msg
+    
+  end subroutine check_solids_common_discrete
+  
+  
+  
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  !  Subroutine: CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY                   !
+  !  Author: J.Musser                                   Date: 11-DEC-13  !
+  !                                                                      !
+  !  Purpose: Check user input data                                      !
+  !                                                                      !
+  !  Comments: Geometry checks were moved here from CHECK_DES_DATA.      !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine check_solids_common_discrete_geometry
 
-      MAX_RADIUS = -UNDEFINED
-      MIN_RADIUS =  UNDEFINED
+    use geometry,       only: zlength
+    use discretelement, only: des_continuum_coupled, max_radius
 
-! Determine the maximum particle size in the system (MAX_RADIUS), which
-! in turn is used for various tasks
-      DO lM=1, MMAX
-         MAX_RADIUS = MAX(MAX_RADIUS, 0.5d0*D_P0(lM))
-         MIN_RADIUS = MIN(MIN_RADIUS, 0.5d0*D_P0(lM))
-      ENDDO
-
-! Check for valid integration method
-      SELECT CASE(trim(DES_INTG_METHOD))
-      CASE ('EULER')
-         INTG_EULER = .TRUE.
-         INTG_ADAMS_BASHFORTH = .FALSE.
-         !DES_INTG_METHOD_ENUM = 1
-      CASE ('ADAMS_BASHFORTH')
-         INTG_EULER = .FALSE.
-         INTG_ADAMS_BASHFORTH = .TRUE.
-         !DES_INTG_METHOD_ENUM = 2
-      CASE DEFAULT
-         WRITE(ERR_MSG,2020) trim(DES_INTG_METHOD)
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-
- 2020 FORMAT('Error 2020:Invalid DES_INGT_METHOD: ',A,/'Please ',      &
-         'correct the mfix.dat file.')
-
-      END SELECT
-
-      DO_OLD = INTG_ADAMS_BASHFORTH
-
-! Check geometry constrains.
-      CALL CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY
-
-      CALL FINL_ERR_MSG
-
-
-      RETURN
-
-      END SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE
-
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY                   !
-!  Author: J.Musser                                   Date: 11-DEC-13  !
-!                                                                      !
-!  Purpose: Check user input data                                      !
-!                                                                      !
-!  Comments: Geometry checks were moved here from CHECK_DES_DATA.      !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE geometry, only: ZLENGTH
-! Flag: Use DES E-L model
-      USE discretelement, only: DES_CONTINUUM_COUPLED
-      USE discretelement, only: MAX_RADIUS
-
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
-
-      IMPLICIT NONE
-!-----------------------------------------------
-! Local Variables
-!-----------------------------------------------
-      real(c_real) :: MIN_DEPTH
-
-!......................................................................!
-
-
-! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
-
-
-      IF(DES_CONTINUUM_COUPLED)THEN
-! Check that the depth of the simulation exceeds the largest particle
-! to ensure correct calculation of volume fraction. This is important
-! for coupled simulations.
-         MIN_DEPTH = 2.0d0*MAX_RADIUS
-         IF(ZLENGTH < MIN_DEPTH)THEN
-            WRITE(ERR_MSG, 1300)
-            CALL FLUSH_ERR_MSG(ABORT=.FALSE.)
-         ENDIF
-      ENDIF
-
- 1300 FORMAT('Error 1300: The maximum particle diameter exceeds the ', &
-         'simulation',/'depth (ZLENGTH). Please correct the mfix.dat ',&
-         'file.')
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-
-      END SUBROUTINE CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY
-
-END MODULE CHECK_SOLIDS_COMMON_DISCRETE_MODULE
+    real(c_real) :: min_depth
+    
+    ! Initialize the error manager.
+    call init_err_msg("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
+    
+    
+    if(des_continuum_coupled)then
+       ! check that the depth of the simulation exceeds the largest particle
+       ! to ensure correct calculation of volume fraction. this is important
+       ! for coupled simulations.
+       min_depth = 2.0d0*max_radius
+       if(zlength < min_depth)then
+          write(err_msg, 1300) trim(IFILE_NAME)
+          call flush_err_msg(abort=.false.)
+       endif
+    endif
+    
+1300 format('Error 1300: The maximum particle diameter exceeds the ', &
+          'simulation',/'depth (ZLENGTH). Please correct the ',A,' ',&
+          'file.')
+    
+    call finl_err_msg
+    
+  end subroutine check_solids_common_discrete_geometry
+  
+end module check_solids_common_discrete_module

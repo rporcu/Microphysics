@@ -42,6 +42,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 !---------------------------------------------------------------------//
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
 
+      use run, only: IFILE_NAME
+
       IMPLICIT NONE
 
 
@@ -116,37 +118,37 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          IF(BC_TYPE(BCV)(1:2) == 'CG') CYCLE
 
          IF(IS_UNDEFINED(BC_X_W(BCV)) .AND. IS_UNDEFINED(BC_I_W(BCV))) THEN
-            WRITE(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w'
+            write(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_UNDEFINED(BC_X_E(BCV)) .AND. IS_UNDEFINED(BC_I_E(BCV))) THEN
-            WRITE(ERR_MSG, 1101) BCV, 'BC_X_e and BC_I_e'
+            write(ERR_MSG, 1101) BCV, 'BC_X_e and BC_I_e', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_UNDEFINED(BC_Y_S(BCV)) .AND. IS_UNDEFINED(BC_J_S(BCV))) THEN
-            WRITE(ERR_MSG, 1101) BCV, 'BC_Y_s and BC_J_s'
+            write(ERR_MSG, 1101) BCV, 'BC_Y_s and BC_J_s', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_UNDEFINED(BC_Y_N(BCV)) .AND. IS_UNDEFINED(BC_J_N(BCV))) THEN
-            WRITE(ERR_MSG, 1101) BCV, 'BC_Y_n and BC_J_n'
+            write(ERR_MSG, 1101) BCV, 'BC_Y_n and BC_J_n', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_UNDEFINED(BC_Z_B(BCV)) .AND. IS_UNDEFINED(BC_K_B(BCV))) THEN
-            WRITE(ERR_MSG, 1101) BCV, 'BC_Z_b and BC_K_b'
+            write(ERR_MSG, 1101) BCV, 'BC_Z_b and BC_K_b', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_UNDEFINED(BC_Z_T(BCV)) .AND. IS_UNDEFINED(BC_K_T(BCV))) THEN
-            WRITE(ERR_MSG, 1101) BCV, 'BC_Z_t and BC_K_t'
+            write(ERR_MSG, 1101) BCV, 'BC_Z_t and BC_K_t', trim( IFILE_NAME )
             CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
  1101 FORMAT('Error 1101: Boundary condition ',I3,' is ill-defined.',/ &
-         A,' are not specified.',/'Please correct the mfix.dat file.')
+         A,' are not specified.',/'Please correct the ', A, ' file.')
 
 ! Swap BC aliases for the "full name" complement.
          DO I = 1, DIM_BCTYPE
@@ -204,6 +206,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
       use location_check_module, only: location_check
+
+      use run, only: IFILE_NAME
 
       IMPLICIT NONE
 
@@ -323,13 +327,14 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          WRITE(ERR_MSG,1100) BCV,                                      &
             'X', BC_X_W(BCV), BC_X_E(BCV),'I',BC_I_W(BCV),BC_I_E(BCV), &
             'Y', BC_Y_S(BCV), BC_Y_N(BCV),'J',BC_J_S(BCV),BC_J_N(BCV), &
-            'Z', BC_Z_B(BCV), BC_Z_T(BCV),'K',BC_K_B(BCV),BC_K_T(BCV)
+            'Z', BC_Z_B(BCV), BC_Z_T(BCV),'K',BC_K_B(BCV),BC_K_T(BCV), &
+            trim( IFILE_NAME )
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1100 FORMAT('Error 1100: Invalid location specified for BC ',I3,'.',  &
          3(/3x,A1,': ',g12.5,',',g12.5,8x,A1,': ',I8,',',I8),/         &
-         'Please correct the mfix.dat file.')
+         'Please correct the ', A, ' file.')
 
       CALL FINL_ERR_MSG
 
@@ -364,6 +369,8 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
       use location_check_module, only: location_check
+
+      use run, only: IFILE_NAME
 
       IMPLICIT NONE
 
@@ -481,13 +488,14 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          WRITE(ERR_MSG,1100) BCV,                                      &
             'X', BC_X_W(BCV), BC_X_E(BCV),'I',BC_I_W(BCV),BC_I_E(BCV), &
             'Y', BC_Y_S(BCV), BC_Y_N(BCV),'J',BC_J_S(BCV),BC_J_N(BCV), &
-            'Z', BC_Z_B(BCV), BC_Z_T(BCV),'K',BC_K_B(BCV),BC_K_T(BCV)
+            'Z', BC_Z_B(BCV), BC_Z_T(BCV),'K',BC_K_B(BCV),BC_K_T(BCV), &
+            trim( IFILE_NAME )
          CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
  1100 FORMAT('Error 1100: Invalid location specified for BC ',I3,'.',  &
          3(/3x,A1,': ',g12.5,',',g12.5,8x,A1,': ',I8,',',I8),/         &
-         'Please correct the mfix.dat file.')
+         'Please correct the ',A,' file.')
 
       CALL FINL_ERR_MSG
 

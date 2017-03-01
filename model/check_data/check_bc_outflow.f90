@@ -1,302 +1,273 @@
-MODULE CHECK_BC_OUTFLOW_MODULE
+module check_bc_outflow_module
 
-   use bl_fort_module, only : c_real
-   use iso_c_binding , only: c_int
-
-   use param1, only: one, undefined, zero, is_undefined, is_defined, equal
-
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_OUTFLOW                                         !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Provided a detailed error message concerning specification  !
-! of bc_ep_g + bc_rop_s at a outflow boundary (and pressure inflow)    !
-!                                                                      !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_OUTFLOW(M_TOT, BCV)
-
-! Modules
-! --------------------------------------------------------------------//
-      use bc, only: bc_ep_g, bc_rop_s
-      use constant, only: ro_s0
-      use run, only: solids_model
-      use toleranc, only: compare
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
-
-      IMPLICIT NONE
-
-! Dummy arguments
-! --------------------------------------------------------------------//
-! loop/variable indices
-      INTEGER, INTENT(in) :: BCV
-      INTEGER, INTENT(in) :: M_TOT
-
-! Local variables
-! --------------------------------------------------------------------//
-      INTEGER :: M
-      real(c_real) :: SUM_EP
-      LOGICAL :: FLAG_WARNING
-
-      FLAG_WARNING = .TRUE.
-      CALL INIT_ERR_MSG("CHECK_BC_OUTFLOW")
-
-! if bc_ep_g is defined at the outflow boundary, then the sum of ep_g
-! and ep_s at the boundary may not equal one given the code in the
-! subroutine set_outflow (see code for details).
-! therefore if bc_ep_g and/or bc_rop_s are defined, perform possible
-! data consistency checks and, when appropriate, provide the user with
-! a warning about their chosen settings.
-
-      IF (IS_DEFINED(BC_EP_G(BCV))) THEN
-
-         SUM_EP = BC_EP_G(BCV)
-         DO M = 1, M_TOT
-
-            IF(SOLIDS_MODEL(M) /= 'TFM' .AND. FLAG_WARNING) THEN
-               WRITE(ERR_MSG, 1101) trim(iVar('BC_EP_g',BCV))
-               CALL FLUSH_ERR_MSG
-               FLAG_WARNING = .FALSE.
-            ENDIF
-
-            IF(IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
-
-               IF(EQUAL(BC_EP_G(BCV), ONE)) THEN
-! what does it mean to force the bulk density to zero at the
-! boundary? (does this value matter anyway?)
-                  BC_ROP_S(BCV,M) = ZERO
-               ELSEIF(M_TOT == 1 ) THEN
-                  BC_ROP_S(BCV,M) = (ONE - BC_EP_G(BCV))*RO_S0(M)
-               ELSE
-! bc_ep_g is defined but some bc_rop_s(m) are undefined.
-! in this case, ep_p in the outflow boundary will be based on the user
-! defined value of bc_ep_g, while rop_s would become based on the
-! value in the adjacent fluid cell. consequently, no check ensures
-! the result is consistent with a requirement for ep_g+ep_s=1.
-                  WRITE(ERR_MSG, 1102) trim(iVar('BC_EP_g',BCV))
-                  CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
- 1102 FORMAT('Warning 1102: Volume fraction may not sum to one when ',/&
-         A,' is defined.')
-               ENDIF
-            ENDIF  ! end if(bc_rop_s(bcv,m) == undefined)
-
-! by this point bc_rop_s should either be defined or mfix exited
-! therefore we can check that sum of void fraction and solids volume
-! fractions
-            SUM_EP = SUM_EP + BC_ROP_S(BCV,M)/RO_S0(M)
-        ENDDO
-
-! now verify that the volume fractions sum to one.
-        IF(.NOT.COMPARE(SUM_EP,ONE)) THEN
-           WRITE(ERR_MSG,1103) BCV, trim(iVal(SUM_EP))
-           CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-       ENDIF
-
-! bc_ep_g is not defined but check if any bc_rop_s are defined
-      ELSE
-
-         SUM_EP = ZERO
-         DO M = 1, M_TOT
-            IF(IS_DEFINED(BC_ROP_S(BCV,M))) THEN
-               IF(SOLIDS_MODEL(M) /= 'TFM') THEN
-                  WRITE(ERR_MSG, 1101) trim(iVar('BC_ROP_s',BCV,M))
-                  CALL FLUSH_ERR_MSG
-               ENDIF
-               SUM_EP = SUM_EP + BC_ROP_S(BCV,M)/RO_S0(M)
-            ENDIF
-         ENDDO
-
-! verify that the sum of any specified volume fractions is not greater
-! than one
-         IF(SUM_EP > ONE) THEN
-            WRITE(ERR_MSG,1103) BCV, trim(iVal(SUM_EP))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-
-      ENDIF
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-
- 1101 FORMAT('Warning 1101: ',A,' should not be specified for ', &
-         'outflow BCs',/'with DEM/PIC runs except for a mass outflow ',&
-         'boundary with specified ',/ 'flow rate(s). In this case ',&
-         'volume fraction data is used for ',/ 'conversion to ',&
-         'velocity(s). However, the solids volume fraction data ',/&
-         'is effectively disregarded and it is the solids velocity ',&
-         'that is ',/'used to direct any solids at the boundary.')
-
- 1103 FORMAT('Error 1103: Illegal boundary condition region: ',I3,'. ',&
-         'Sum of volume',/'fractions does NOT equal ONE. (SUM = ',A,   &
-         ')',/'Please correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_BC_OUTFLOW
+  use bl_fort_module, only: c_real
+  use iso_c_binding , only: c_int
+  use run,            only: IFILE_NAME
+  use param1,         only: one, undefined, zero, is_undefined, is_defined, equal
+  use error_manager,  only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_P_OUTFLOW                                       !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Provided a detailed error message on bc                     !
-!                                                                      !
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_P_OUTFLOW(BCV)
+  implicit none
+  private 
 
-! Modules
-! --------------------------------------------------------------------//
-      use fld_const, only: RO_g0
-      use bc       , only: BC_P_g
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
-      IMPLICIT NONE
+  public check_bc_outflow
+  public check_bc_p_outflow
+  public check_bc_mass_outflow
 
-! Dummy arguments
-! --------------------------------------------------------------------//
-! loop/variable indices
-      INTEGER, INTENT(in) :: BCV
-! --------------------------------------------------------------------//
+contains
 
-      CALL INIT_ERR_MSG("CHECK_BC_P_OUTFLOW")
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: CHECK_BC_OUTFLOW                                         !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Provided a detailed error message concerning specification  !
+  ! of bc_ep_g + bc_rop_s at a outflow boundary (and pressure inflow)    !
+  !                                                                      !
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine check_bc_outflow(M_TOT, BCV)
 
-      IF (IS_UNDEFINED(BC_P_G(BCV))) THEN
-         WRITE(ERR_MSG,1000) trim(iVar('BC_P_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+    use bc,       only: bc_ep_g, bc_rop_s
+    use constant, only: ro_s0
+    use run,      only: solids_model
+    use toleranc, only: compare
 
-      ELSEIF (BC_P_G(BCV)<=ZERO .AND. IS_UNDEFINED(RO_G0)) THEN
-         WRITE(ERR_MSG, 1100) BCV, trim(iVal(BC_P_G(BCV)))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
+    integer, intent(in) :: BCV, M_TOT
+    integer             :: M
+    real(c_real)        :: SUM_EP
+    logical             :: FLAG_WARNING
 
- 1100 FORMAT('Error 1100: Pressure must be greater than zero for ',    &
-         'compressible flow',/3x,'BC_P_g(',I3,') = ',A,/'Please ',     &
-         'correct the mfix.dat file.')
+    FLAG_WARNING = .true.
 
-! Clean up and return.
-      CALL FINL_ERR_MSG
+    CALL init_err_msg("CHECK_BC_OUTFLOW")
 
-      RETURN
+    ! if bc_ep_g is defined at the outflow boundary, then the sum of ep_g
+    ! and ep_s at the boundary may not equal one given the code in the
+    ! subroutine set_outflow (see code for details).
+    ! therefore if bc_ep_g and/or bc_rop_s are defined, perform possible
+    ! data consistency checks and, when appropriate, provide the user with
+    ! a warning about their chosen settings.
+    if (IS_DEFINED(BC_EP_G(BCV))) then
 
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
+       SUM_EP = BC_EP_G(BCV)
+       do M = 1, M_TOT
+          
+          if(SOLIDS_MODEL(M) /= 'TFM' .and. FLAG_WARNING) then
+             write(ERR_MSG, 1101) trim(iVar('BC_EP_g',BCV))
+             call flush_err_msg
+             FLAG_WARNING = .false.
+          endif
+          
+          if(IS_UNDEFINED(BC_ROP_S(BCV,M))) then
+             
+             if(EQUAL(BC_EP_G(BCV), ONE)) then
+                ! what does it mean to force the bulk density to zero at the
+                ! boundary? (does this value matter anyway?)
+                BC_ROP_S(BCV,M) = ZERO
+             elseif(M_TOT == 1 ) then
+                BC_ROP_S(BCV,M) = (ONE - BC_EP_G(BCV))*RO_S0(M)
+             else
+                ! bc_ep_g is defined but some bc_rop_s(m) are undefined.
+                ! in this case, ep_p in the outflow boundary will be based on the user
+                ! defined value of bc_ep_g, while rop_s would become based on the
+                ! value in the adjacent fluid cell. consequently, no check ensures
+                ! the result is consistent with a requirement for ep_g+ep_s=1.
+                write(ERR_MSG, 1102) trim(iVar('BC_EP_g',BCV))
+                call flush_err_msg(ABORT=.true.)
+1102            format('Warning 1102: Volume fraction may not sum to one when ',/&
+                     A,' is defined.')
+             endif
+          endif  ! end if(bc_rop_s(bcv,m) == undefined)
+          
+          ! by this point bc_rop_s should either be defined or mfix exited
+          ! therefore we can check that sum of void fraction and solids volume
+          ! fractions
+          SUM_EP = SUM_EP + BC_ROP_S(BCV,M)/RO_S0(M)
+       enddo
+       
+       ! now verify that the volume fractions sum to one.
+       if(.not.COMPARE(SUM_EP,ONE)) then
+          write(ERR_MSG,1103) BCV, trim(iVal(SUM_EP)), trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+       endif
+       
+       ! bc_ep_g is not defined but check if any bc_rop_s are defined
+    else
+       
+       SUM_EP = ZERO
+       do M = 1, M_TOT
+          if(IS_DEFINED(BC_ROP_S(BCV,M))) then
+             if(SOLIDS_MODEL(M) /= 'TFM') then
+                write(ERR_MSG, 1101) trim(iVar('BC_ROP_s',BCV,M))
+                call flush_err_msg
+             endif
+             SUM_EP = SUM_EP + BC_ROP_S(BCV,M)/RO_S0(M)
+          endif
+       enddo
+       
+       ! verify that the sum of any specified volume fractions is not greater
+       ! than one
+       if(SUM_EP > ONE) then
+          write(ERR_MSG,1103) BCV, trim(iVal(SUM_EP)), trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+       endif
+       
+    endif
+    
+    call finl_err_msg
+    
+1101 format('Warning 1101: ',A,' should not be specified for ', &
+          'outflow BCs',/'with DEM/PIC runs except for a mass outflow ',&
+          'boundary with specified ',/ 'flow rate(s). In this case ',&
+          'volume fraction data is used for ',/ 'conversion to ',&
+          'velocity(s). However, the solids volume fraction data ',/&
+          'is effectively disregarded and it is the solids velocity ',&
+          'that is ',/'used to direct any solids at the boundary.')
+    
+1103 format('Error 1103: Illegal boundary condition region: ',I3,'. ',&
+          'Sum of volume',/'fractions does NOT equal ONE. (SUM = ',A,   &
+          ')',/'Please correct the ',A,' file.')
+    
+  end subroutine check_bc_outflow
 
-      END SUBROUTINE CHECK_BC_P_OUTFLOW
+
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: CHECK_BC_P_OUTFLOW                                       !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Provided a detailed error message on bc                     !
+  !                                                                      !
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  subroutine check_bc_p_outflow(BCV)
+
+    use fld_const, only: RO_g0
+    use bc       , only: BC_P_g
+
+    integer, intent(in) :: BCV
+
+    call init_err_msg("CHECK_BC_P_OUTFLOW")
+
+    if (IS_UNDEFINED(BC_P_G(BCV))) then
+       write(ERR_MSG,1000) trim(iVar('BC_P_g',BCV)), trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+       
+    elseif (BC_P_G(BCV)<=ZERO .and. IS_UNDEFINED(RO_G0)) then
+       write(ERR_MSG, 1100) BCV, trim(iVal(BC_P_G(BCV))), trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
+    
+1100 format('Error 1100: Pressure must be greater than zero for ',    &
+          'compressible flow',/3x,'BC_P_g(',I3,') = ',A,/'Please ',     &
+          'correct the ',A,' file.')
+    
+    ! Clean up and return.
+    call finl_err_msg
+
+1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
+         'correct the ',A,' file.')
+
+  end subroutine check_bc_p_outflow
+  
+
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: CHECK_BC_MASS_OUTFLOW                                    !
+  ! Author: J.Musser                                    Date: 01-Mar-14  !
+  !                                                                      !
+  ! Purpose: Provided a detailed error message when the sum of volume    !
+  !                                                                      !
+  ! Comments:                                                            !
+  !     The velocities at the outflow face are fixed and the momentum    !
+  !     equations are not solved in the outflow cells. Since the flow    !
+  !     is out of the domain none of the other scalars should need to    !
+  !     be specified (e.g., mass fractions, void fraction, etc.,).       !
+  !     Such values will become defined according to their adjacent      !
+  !     fluid cell                                                       !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine check_bc_mass_outflow(M_TOT, BCV)
+
+    use fld_const, only: ro_g0
+    use bc,        only: bc_plane, bc_dt_0, bc_massflow_g, bc_volflow_g, &
+                       & bc_massflow_s, bc_volflow_s, bc_ep_g, bc_rop_s, &
+                       & bc_p_g, bc_t_g, bc_u_g, bc_v_g, bc_w_g
+
+    integer, intent(in) :: BCV, M_TOT
+    integer             :: M
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-! Subroutine: CHECK_BC_MASS_OUTFLOW                                    !
-! Author: J.Musser                                    Date: 01-Mar-14  !
-!                                                                      !
-! Purpose: Provided a detailed error message when the sum of volume    !
-!                                                                      !
-! Comments:                                                            !
-!     The velocities at the outflow face are fixed and the momentum    !
-!     equations are not solved in the outflow cells. Since the flow    !
-!     is out of the domain none of the other scalars should need to    !
-!     be specified (e.g., mass fractions, void fraction, etc.,).       !
-!     Such values will become defined according to their adjacent      !
-!     fluid cell                                                       !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_MASS_OUTFLOW(M_TOT, BCV)
+    call init_err_msg("CHECK_BC_MASS_OUTFLOW")
 
-! Modules
-! --------------------------------------------------------------------//
-      use bc, only: bc_plane
-      use bc, only: bc_dt_0, bc_massflow_g, bc_volflow_g
-      use bc, only: bc_massflow_s, bc_volflow_s
-      use bc, only: bc_ep_g, bc_rop_s
-      use bc, only: bc_p_g, bc_t_g
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
-
-      use fld_const, only: ro_g0
-      use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
-      IMPLICIT NONE
-
-! Dummy arguments
-! --------------------------------------------------------------------//
-! loop/variable indices
-      INTEGER, intent(in) :: BCV
-      INTEGER, intent(in) :: M_TOT
-! Local variables
-! --------------------------------------------------------------------//
-      INTEGER :: M
-
-
-      CALL INIT_ERR_MSG("CHECK_BC_MASS_OUTFLOW")
-
-      IF(IS_UNDEFINED(BC_DT_0(BCV))) THEN
-         WRITE(ERR_MSG, 1000) trim(iVar('BC_DT_0',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-
-      IF(IS_DEFINED(BC_MASSFLOW_G(BCV)) .OR. &
-         IS_DEFINED(BC_VOLFLOW_G(BCV))) THEN
-         IF (IS_UNDEFINED(BC_EP_G(BCV))) THEN
-            WRITE(ERR_MSG,1101) trim(iVar('BC_EP_G',BCV))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
- 1101 FORMAT('Error 1101: Invalid mass outflow boundary condition: ', /&
-         'BC_MASSFLOW_G and/or BC_VOLFLOW_G are DEFINED but ',&
-         A,' is not ',/'Please correct the mfix.dat file.')
-      ENDIF
-
-      DO M = 1, M_TOT
-         IF(IS_DEFINED(BC_MASSFLOW_S(BCV,M)) .OR. &
-            IS_DEFINED(BC_VOLFLOW_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1102) trim(iVar('BC_MASSFLOW_S',BCV,M)), &
+    if(IS_UNDEFINED(BC_DT_0(BCV))) then
+       write(ERR_MSG, 1000) trim(iVar('BC_DT_0',BCV)), trim(IFILE_NAME)
+       call flush_err_msg(ABORT=.true.)
+    endif
+    
+    if(IS_DEFINED(BC_MASSFLOW_G(BCV)) .or. &
+         IS_DEFINED(BC_VOLFLOW_G(BCV))) then
+       if (IS_UNDEFINED(BC_EP_G(BCV))) then
+          write(ERR_MSG,1101) trim(iVar('BC_EP_G',BCV)), trim(IFILE_NAME)
+          call flush_err_msg(ABORT=.true.)
+       endif
+1101   format('Error 1101: Invalid mass outflow boundary condition: ', /&
+            'BC_MASSFLOW_G and/or BC_VOLFLOW_G are DEFINED but ',&
+            A,' is not ',/'Please correct the ',A,' file.')
+    endif
+    
+    do M = 1, M_TOT
+       if(IS_DEFINED(BC_MASSFLOW_S(BCV,M)) .or. &
+            IS_DEFINED(BC_VOLFLOW_S(BCV,M))) then
+          write(ERR_MSG,1102) trim(iVar('BC_MASSFLOW_S',BCV,M)), &
                trim(iVar('BC_VOLFLOW_S',BCV,M))
- 1102 FORMAT('Warning 1102: ', A,' and/or ', A,' have been defined',/&
-         'at a mass outflow boundary. A specified solids flow ',&
-         'rate may not be ',/'physically achievable depending on the ',&
-         'system and simulation ',/'setup.')
+1102      format('Warning 1102: ', A,' and/or ', A,' have been defined',/&
+               'at a mass outflow boundary. A specified solids flow ',&
+               'rate may not be ',/'physically achievable depending on the ',&
+               'system and simulation ',/'setup.')
+          
+          if (IS_UNDEFINED(BC_ROP_S(BCV,M))) then
+             write(ERR_MSG,1103) trim(iVar('BC_ROP_S',BCV,M)), trim(IFILE_NAME)
+             call flush_err_msg(ABORT=.true.)
+          endif
+1103      format('Error 1103: Invalid mass outflow boundary condition: ', /&
+               'BC_MASSFLOW_S and/or BC_VOLFLOW_S are DEFINED but ',&
+               A,' is not ',/'Please correct the ',A,' file.')
+          
+       endif
+    enddo
+    
+    ! This check probably needs changed.
+    if(IS_UNDEFINED(RO_G0) .and. (IS_UNDEFINED(BC_P_G(BCV)) .or.       &
+         IS_UNDEFINED(BC_T_G(BCV))) .and.abs(BC_MASSFLOW_G(BCV)) > ZERO) then
+       
+       if(BC_PLANE(BCV)=='W' .or. BC_PLANE(BCV)=='E') then
+          if(abs(BC_U_G(BCV)) > ZERO) then
+             write(ERR_MSG, 1100) BCV, 'BC_U_g', trim(IFILE_NAME)
+             call flush_err_msg(ABORT=.true.)
+          endif
+       elseif(BC_PLANE(BCV)=='N' .or. BC_PLANE(BCV)=='S') then
+          if(abs(BC_V_G(BCV)) > ZERO) then
+             write(ERR_MSG, 1100) BCV, 'BC_V_g', trim(IFILE_NAME)
+             call flush_err_msg(ABORT=.true.)
+          endif
+       elseif (BC_PLANE(BCV)=='T' .or. BC_PLANE(BCV)=='B') then
+          if(abs(BC_W_G(BCV)) > ZERO) then
+             write(ERR_MSG, 1100)  BCV, 'BC_W_g', trim(IFILE_NAME)
+             call flush_err_msg(ABORT=.true.)
+          endif
+       endif
+    endif   ! end if/else (ro_g0 /=undefined)
+    
+1100 format('Error 1100: Invalid mass outflow boundary condition: ',  &
+          I3,/'RO_g0, BC_P_g, and BC_T_g are UNDEFINED and ',A,' is ',  &
+          'non-zero',/'Please correct the ',A,' file.')    
+    
+    call finl_err_msg
+    
+1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
+          'correct the ',A,' file.')
+    
+  end subroutine check_bc_mass_outflow
 
-             IF (IS_UNDEFINED(BC_ROP_S(BCV,M))) THEN
-                WRITE(ERR_MSG,1103) trim(iVar('BC_ROP_S',BCV,M))
-                CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-             ENDIF
- 1103 FORMAT('Error 1103: Invalid mass outflow boundary condition: ', /&
-         'BC_MASSFLOW_S and/or BC_VOLFLOW_S are DEFINED but ',&
-         A,' is not ',/'Please correct the mfix.dat file.')
 
-         ENDIF
-      ENDDO
-
-! This check probably needs changed.
-      IF(IS_UNDEFINED(RO_G0) .AND. (IS_UNDEFINED(BC_P_G(BCV)) .OR.       &
-         IS_UNDEFINED(BC_T_G(BCV))) .AND.ABS(BC_MASSFLOW_G(BCV)) > ZERO) THEN
-
-         IF(BC_PLANE(BCV)=='W' .OR. BC_PLANE(BCV)=='E') THEN
-            IF(ABS(BC_U_G(BCV)) > ZERO) THEN
-               WRITE(ERR_MSG, 1100) BCV, 'BC_U_g'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-         ELSEIF(BC_PLANE(BCV)=='N' .OR. BC_PLANE(BCV)=='S') THEN
-            IF(ABS(BC_V_G(BCV)) > ZERO) THEN
-               WRITE(ERR_MSG, 1100) BCV, 'BC_V_g'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-         ELSEIF (BC_PLANE(BCV)=='T' .OR. BC_PLANE(BCV)=='B') THEN
-            IF(ABS(BC_W_G(BCV)) > ZERO) THEN
-               WRITE(ERR_MSG, 1100)  BCV, 'BC_W_g'
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-         ENDIF
-      ENDIF   ! end if/else (ro_g0 /=undefined)
-
- 1100 FORMAT('Error 1100: Invalid mass outflow boundary condition: ',  &
-         I3,/'RO_g0, BC_P_g, and BC_T_g are UNDEFINED and ',A,' is ',  &
-         'non-zero',/'Please correct the mfix.dat file.')
-
-
-      CALL FINL_ERR_MSG
-
-      RETURN
-
- 1000 FORMAT('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the mfix.dat file.')
-
-      END SUBROUTINE CHECK_BC_MASS_OUTFLOW
-END MODULE CHECK_BC_OUTFLOW_MODULE
+end module check_bc_outflow_module
