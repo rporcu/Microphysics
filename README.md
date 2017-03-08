@@ -30,15 +30,15 @@ copy the Tools/ directory to BOXLIB_HOME.
 > git clone https://bitbucket.org/berkeleylab/amrex.git
 > cd amrex
 > git checkout master
-> export BOXLIB_HOME=$HOME/local
-> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$BOXLIB_HOME .
-> cp -r Tools $BOXLIB_HOME
+> export AMREX_HOME=$HOME/local
+> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
+> cp -r Tools $AMREX_HOME
 > make -j -k install
 ```
 The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
 
 
-Go to the MFIX directory, run cmake and run make (make sure BOXLIB_HOME is still set)
+Go to the MFIX directory, run cmake and run make (make sure AMREX_HOME is still set)
 ```shell
 > cd <MFIX source directory>
 > cmake .

@@ -24,6 +24,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # This is where the CCSE lib was installed
 set(CCSE_DIR $ENV{BOXLIB_HOME})
 
+
 # Set some defaults
 set(BL_SPACEDIM 3 CACHE INT "Dimension of BoxLib build")
 set(ENABLE_MPI 0 CACHE INT "Enable build with MPI")
@@ -50,7 +51,7 @@ project(MFIXEXA)
 # Generate buildInfo.cpp
 add_custom_command(
   COMMAND  $(BOXLIB_HOME)/Tools/C_scripts/makebuildinfo_C.py
-  --boxlib_home "$(BOXLIB_HOME)"
+  --amrex_home "$(BOXLIB_HOME)"
   --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
   --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
   --GIT ". $(BOXLIB_HOME)"
@@ -228,7 +229,7 @@ set(F77_sources  )
 set(FPP_includes )
 set(FPP_sources  )
 
-include(PreprocessBoxLibFortran)
+include(PreprocessAMReXFortran)
 preprocess_boxlib_fortran(FPP_out ${FPP_sources})
 
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
