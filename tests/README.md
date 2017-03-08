@@ -13,7 +13,7 @@
 
 * **_DEM01:_ Freely falling particle w/wall collision** [1]
 
-A particle free-falls in a vacuum and collides with a wall. The position and velocity during the three stages (free-fall, collision, rebound) are reported. This case serves to very the linear spring-dashpot collision model as well as the accuracy of the time-stepping methods. 
+A particle free-falls in a vacuum and collides with a wall. The position and velocity during the three stages (free-fall, collision, rebound) are reported. This case serves to very the linear spring-dashpot collision model as well as the accuracy of the time-stepping methods.
 
 
 * **_DEM02:_ Bouncing particle height** [1]
@@ -38,7 +38,7 @@ A single particle strikes an angled anvil. The post-collision angle and angular 
 
 * **_DEM06:_ Single particle terminal velocity** [1]
 
-A single particle strikes an angled anvil. The post-collision angle and angular velocity are reported. This case serves to verify the normal and tangential components of both the linear spring-dashpot model and Hertzian model.
+A particle, initially at rest, is released in a uniformly flow fluid. The particle's velocity increases until it reaches _terminal velocity_ where the gravitational force balances the fluid-particle drag force. The calculated terminal velocity is compared to the theoretical value.
 
 
 * **_DEM07:_ Homogeneous Cooling System** [2]
