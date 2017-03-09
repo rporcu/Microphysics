@@ -12,7 +12,7 @@
 #                                                                      #
 ########################################################################
 
-  RUN_NAME = 'FLD01'
+  RUN_NAME = 'FLD01-x'
   DESCRIPTION = 'Lid-driven cavity'
 
 #_______________________________________________________________________
@@ -31,23 +31,23 @@
 # NUMERICAL SECTION
 
   MAX_NIT = 200000
-  TOL_RESID = 1.0E-8
+  TOL_RESID = 1.0E-3
 
   LEQ_PC = 9*'NONE'
 
   DISCRETIZE = 9*2
 
   UR_FAC(1) =     0.85
-  UR_FAC(2:4) = 3*0.70
+  UR_FAC(3:5) = 3*0.70
 
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 1.0   IMAX = 128
+  XLENGTH = 1.0   IMAX =  32
   ZLENGTH = 1.0   KMAX =   1
-  YLENGTH = 1.0   JMAX = 128
+  YLENGTH = 1.0   JMAX =  32
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
