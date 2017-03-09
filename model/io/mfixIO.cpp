@@ -391,13 +391,13 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 
 	    // Vector variables
 	    int dcomp = 0;
-	    std::vector<MultiFab*> srcmf(3);
+	    Array<const MultiFab*> srcmf(3);
 
 	    for( dcomp = 0; dcomp < vectorVars.size(); dcomp=dcomp+3 ) {
 		srcmf[0] = (*vectorVars[dcomp])[lev].get();
 		srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
 		srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
-		//	amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+		amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
 	    };
 
 	    // Scalar variables
@@ -423,7 +423,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 					Geom(), time, istep, refRatio());
     }
 
-    mypc->Checkpoint(plotfilename, "particle", false);
+    //mypc->Checkpoint(plotfilename, "particle", false);
 
     WriteJobInfo(plotfilename);
 
