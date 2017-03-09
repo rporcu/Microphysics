@@ -7,7 +7,7 @@ module leqsol
    use param, only: DIM_EQS
    use param1, only: zero
 
-   use bl_fort_module, only : c_real
+   use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
 ! Maximum number of outer iterations
@@ -141,7 +141,7 @@ CONTAINS
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
   real(c_real) function dot_product_par(r1,r2,slo,shi)
 
-    use bl_fort_module, only : c_real
+    use amrex_fort_module, only : c_real => amrex_real
 
     implicit none
     integer, intent(in) :: slo(3),shi(3)

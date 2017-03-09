@@ -1,6 +1,6 @@
       MODULE usr
 
-        use bl_fort_module, only : c_real
+        use amrex_fort_module, only : c_real => amrex_real
 
 !
 !       Declare the user-defined namelist variables (usrnlst.inc) in this module.

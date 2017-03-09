@@ -4,7 +4,7 @@ module set_domain_module
    use check_initial_conditions_module, only: check_initial_conditions
    use check_point_sources_module, only: check_point_sources
 
-   use bl_fort_module, only : c_real
+   use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
    CONTAINS

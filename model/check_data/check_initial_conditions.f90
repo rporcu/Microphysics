@@ -1,6 +1,6 @@
 MODULE CHECK_INITIAL_CONDITIONS_MODULE
 
-  use bl_fort_module,                  only: c_real
+  use amrex_fort_module,               only: c_real => amrex_real
   use iso_c_binding ,                  only: c_int
   use check_ic_common_discrete_module, only: check_ic_common_discrete
   use run,                             only: IFILE_NAME

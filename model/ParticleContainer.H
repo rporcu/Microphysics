@@ -5,8 +5,12 @@
 #include <memory>
 #include <map>
 
-#include <Particles.H>
-#include <AmrParGDB.H>
+#include <AMReX_Particles.H>
+#include <AMReX_AmrParGDB.H>
+
+using namespace amrex;
+
+
 
 struct PIdx
 {
@@ -31,7 +35,7 @@ struct PIdx
 };
 
 class MyParticleContainer
-    : public ParticleContainer<PIdx::nattribs,0,std::vector<Particle<PIdx::nattribs,0> > >
+    : public amrex::ParticleContainer<PIdx::nattribs,0> //std::vector<Particle<PIdx::nattribs,0> > >
 {
 
 public:

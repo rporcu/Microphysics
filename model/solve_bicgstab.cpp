@@ -57,16 +57,16 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     const BoxArray& ba = sol.boxArray();
     const DistributionMapping& dm = sol.DistributionMap();
 
-    MultiFab ph(ba, ncomp, nghost, dm);
-    MultiFab sh(ba, ncomp, nghost, dm);
+    MultiFab ph(ba, dm, ncomp, nghost);
+    MultiFab sh(ba, dm, ncomp, nghost);
 
-    MultiFab sorig(ba, ncomp, nghost, dm);
-    MultiFab rh   (ba, ncomp, nghost, dm);
-    MultiFab p    (ba, ncomp, nghost, dm);
-    MultiFab r    (ba, ncomp, nghost, dm);
-    MultiFab s    (ba, ncomp, nghost, dm);
-    MultiFab v    (ba, ncomp, nghost, dm);
-    MultiFab t    (ba, ncomp, nghost, dm);
+    MultiFab sorig(ba, dm, ncomp, nghost);
+    MultiFab rh   (ba, dm, ncomp, nghost);
+    MultiFab p    (ba, dm, ncomp, nghost);
+    MultiFab r    (ba, dm, ncomp, nghost);
+    MultiFab s    (ba, dm, ncomp, nghost);
+    MultiFab v    (ba, dm, ncomp, nghost);
+    MultiFab t    (ba, dm, ncomp, nghost);
 
     // Initialize these to zero so valgrind doesn't complain -- in future we should look
     // at whether some of these can get away without ghost cells
@@ -313,7 +313,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     // if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
     // {
     //   if ( ParallelDescriptor::IOProcessor())
-    //     BoxLib::Error("BiCGStab:: failed to converge!");
+    //     amrex::Error("BiCGStab:: failed to converge!");
     //   ret = 8;
     // }
 

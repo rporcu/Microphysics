@@ -12,9 +12,9 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 if (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
   set (CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -g -Wall -O2" CACHE STRING "" FORCE)
-  set (CMAKE_CXX_FLAGS_DEBUG   "-std=c++11 -g -Wall -Wextra -O0" CACHE STRING "" FORCE)
+  set (CMAKE_CXX_FLAGS_DEBUG   "-fmax-errors=2 -std=c++11 -g -Wall -Wextra -O0" CACHE STRING "" FORCE)
   set (CMAKE_Fortran_FLAGS_RELEASE "-g -std=f2008 -fcheck=all -Wall -O2" CACHE STRING "" FORCE)
-  set (CMAKE_Fortran_FLAGS_DEBUG   "-g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface" CACHE STRING "" FORCE)
+  set (CMAKE_Fortran_FLAGS_DEBUG   "-fmax-errors=2 -g -std=f2008 -fcheck=all -Wall -Wextra -Wimplicit-interface" CACHE STRING "" FORCE)
 
 endif (CMAKE_Fortran_COMPILER MATCHES ".*gfortran.*")
 
@@ -49,13 +49,17 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRE
 project(MFIXEXA)
 
 # Generate buildInfo.cpp
+if ( $ENV{AMREX_HOME} )
+  message( FATAL_ERROR "AMREX_HOME is not set" )
+endif()
+
 add_custom_command(
-  COMMAND  $(BOXLIB_HOME)/Tools/C_scripts/makebuildinfo_C.py
-  --amrex_home "$(BOXLIB_HOME)"
+  COMMAND  $(AMREX_HOME)/Tools/C_scripts/makebuildinfo_C.py
+  --amrex_home "$ENV{AMREX_HOME}"
   --COMP ${CMAKE_C_COMPILER_ID} --COMP_VERSION ${CMAKE_C_COMPILER_VERSION}
   --FCOMP ${CMAKE_Fortran_COMPILER_ID} --FCOMP_VERSION ${CMAKE_C_COMPILER_VERSION}
-  --GIT ". $(BOXLIB_HOME)"
-  OUTPUT buildInfo.cpp
+  --GIT ". $ENV{AMREX_HOME}"
+  OUTPUT AMReX_buildInfo.cpp
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Generating buildInfo.cpp" )
 
@@ -234,7 +238,7 @@ preprocess_boxlib_fortran(FPP_out ${FPP_sources})
 
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 set(local_includes ${CXX_includes} ${FPP_includes})
-set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} buildInfo.cpp)
+set(local_sources  ${CXX_sources} ${F90_sources} ${F77_sources} ${FPP_out} AMReX_buildInfo.cpp)
 
 add_executable(mfix model/main.cpp ${USR_OVERRIDES})
 
@@ -243,9 +247,9 @@ add_library(model STATIC ${local_sources} ${local_includes})
 target_link_libraries(mfix model ${CCSE_LIBRARIES} ${MPI_LIBRARIES})
 
 # Remove buildInfo.cpp
-add_custom_command(TARGET mfix POST_BUILD COMMAND rm buildInfo.cpp
+add_custom_command(TARGET mfix POST_BUILD COMMAND rm AMReX_buildInfo.cpp
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                   COMMENT "Removing buildInfo.cpp" )
+                   COMMENT "Removing AMReX_buildInfo.cpp" )
 
 enable_testing()
 

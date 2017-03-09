@@ -85,7 +85,7 @@ MODULE parse_line_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE PARSE_ARITH(LINE, LMAX)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       USE exit_mod, only: mfix_exit

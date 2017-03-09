@@ -10,7 +10,7 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 !----------------------------------------------------------------------!
       SUBROUTINE CHECK_BATCH_QUEUE_END(pEXIT_SIGNAL)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use time_cpu, only: WALL_START

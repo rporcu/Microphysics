@@ -1,6 +1,6 @@
 MODULE SET_PS_MODULE
 
-   use bl_fort_module, only : c_real
+   use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
    use ps, only: dimension_ps, point_source, ps_vel_mag_g, ps_massflow_g, ps_vel_mag_g, ps_volume, ps_defined

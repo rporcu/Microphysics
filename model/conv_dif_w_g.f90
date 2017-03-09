@@ -1,6 +1,6 @@
 module w_g_conv_dif
 
-   use bl_fort_module, only : c_real
+   use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
    use param1        , only: half, one, zero
 

@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       IMPLICIT NONE
 
@@ -42,7 +42,7 @@
          y_s3, dydt_s3, y_s2, dydt_s2
       use compar, only: mype, pe_io
       use constant, only: gravity
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       IMPLICIT NONE
 

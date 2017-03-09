@@ -1,6 +1,6 @@
 module u_g_conv_dif
 
-   use bl_fort_module, only: c_real
+   use amrex_fort_module, only : c_real => amrex_real
    use geometry      , only: domlo, domhi
    use param1        , only: half, one, zero
 

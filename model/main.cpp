@@ -1,10 +1,10 @@
 #include <fstream>
 #include <iomanip>
 
-#include <ParmParse.H>
-#include <Geometry.H>
-#include <VisMF.H>
-#include <iMultiFab.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_Geometry.H>
+#include <AMReX_VisMF.H>
+#include <AMReX_iMultiFab.H>
 
 #include <mfix_level.H>
 #include <mfix_F.H>
@@ -13,11 +13,11 @@ int main (int argc, char* argv[])
 {
     // Issue an error if AMR input file is not given
     if ( argc < 2 )  
-	BoxLib::Abort("BOXLIB INPUT FILE MISSING");
+	amrex::Abort("BOXLIB INPUT FILE MISSING");
     
     // BoxLib will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
-    BoxLib::Initialize(argc,argv);
+    amrex::Initialize(argc,argv);
 
     // Get the mfix input file name if provided via command line
     {
@@ -112,7 +112,7 @@ int main (int argc, char* argv[])
     // Restart from checkpoint if needed
     if ( my_mfix.IsRestartEnabled() ) {
 	if ( steady_state ) {
-	    BoxLib::Warning("Restart from checkpoint enabled for " 
+	    amrex::Warning("Restart from checkpoint enabled for " 
                             "steady state solve: ignoring");
 	} 
 	else {
@@ -164,6 +164,6 @@ int main (int argc, char* argv[])
     if (ParallelDescriptor::IOProcessor())
 	std::cout << "Time spent in main " << end_time << std::endl;
 
-    BoxLib::Finalize();
+    amrex::Finalize();
     return 0;
 }

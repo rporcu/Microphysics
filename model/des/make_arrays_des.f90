@@ -14,7 +14,7 @@
       use read_par_input_module, only: read_par_input
       use error_manager, only: init_err_msg, flush_err_msg
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
 ! Global data .......................................................//
@@ -141,7 +141,7 @@
       des_pos_new, des_vel_new, des_usr_var) &
       bind(C, name="mfix_write_des_data")
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use discretelement, only: print_des_data, s_time

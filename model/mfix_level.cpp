@@ -1,9 +1,10 @@
-#include <ParmParse.H>
+
+#include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
 #include <mfix_level.H>
-#include <BC_TYPES.H>
-#include <Box.H>
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_Box.H>
 
 mfix_level::~mfix_level ()
 {};
@@ -152,7 +153,7 @@ mfix_level::Init(int lev, Real dt, Real time)
       const BoxArray& ba = MakeBaseGrids();
       DistributionMapping dm(ba, ParallelDescriptor::NProcs());
 
-      MakeNewLevel(0, time, ba, dm);
+      MakeNewLevelFromScratch(0, time, ba, dm);
 
       InitLevelData(lev,dt,time);
 
@@ -185,7 +186,7 @@ mfix_level::MakeBaseGrids () const
 }
 
 void
-mfix_level::MakeNewLevel (int lev, Real time,
+mfix_level::MakeNewLevelFromScratch (int lev, Real time,
               const BoxArray& new_grids, const DistributionMapping& new_dmap)
 {
     SetBoxArray(lev, new_grids);
@@ -202,20 +203,20 @@ mfix_level::MakeNewLevel (int lev, Real time,
     Box domainx(geom[0].Domain());
     domainx.grow(1,nghost);
     domainx.grow(2,nghost);
-    Box box_ilo = BoxLib::adjCellLo(domainx,0,1);
-    Box box_ihi = BoxLib::adjCellHi(domainx,0,1);
+    Box box_ilo = amrex::adjCellLo(domainx,0,1);
+    Box box_ihi = amrex::adjCellHi(domainx,0,1);
 
     Box domainy(geom[0].Domain());
     domainy.grow(0,nghost);
     domainy.grow(2,nghost);
-    Box box_jlo = BoxLib::adjCellLo(domainy,1,1);
-    Box box_jhi = BoxLib::adjCellHi(domainy,1,1);
+    Box box_jlo = amrex::adjCellLo(domainy,1,1);
+    Box box_jhi = amrex::adjCellHi(domainy,1,1);
 
     Box domainz(geom[0].Domain());
     domainz.grow(0,nghost);
     domainz.grow(1,nghost);
-    Box box_klo = BoxLib::adjCellLo(domainz,2,1);
-    Box box_khi = BoxLib::adjCellHi(domainz,2,1);
+    Box box_klo = amrex::adjCellLo(domainz,2,1);
+    Box box_khi = amrex::adjCellHi(domainz,2,1);
 
     // Note that each of these is a single IArrayBox so every process has a copy of them
     bc_ilo.resize(box_ilo,2);
@@ -240,51 +241,51 @@ mfix_level::MakeNewLevel (int lev, Real time,
     // ********************************************************************************
 
     // Void fraction
-    ep_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    ep_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    ep_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    ep_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     ep_g[lev]->setVal(1.0);
     ep_go[lev]->setVal(1.0);
 
     // Gas pressure fraction
-    p_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    p_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    p_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    p_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     p_g[lev]->setVal(0.);
     p_go[lev]->setVal(0.);
 
     // Gas density
-    ro_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    ro_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    ro_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    ro_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     ro_g[lev]->setVal(0.);
     ro_go[lev]->setVal(0.);
 
     // Gas bulk density
-    rop_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
-    rop_go[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    rop_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    rop_go[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     rop_g[lev]->setVal(0.);
     rop_go[lev]->setVal(0.);
 
     // Pressure correction equation
-    pp_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    pp_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     pp_g[lev]->setVal(0.);
 
     // Molecular viscosity
-    mu_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    mu_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     mu_g[lev]->setVal(0.);
 
     //
-    lambda_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    lambda_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     lambda_g[lev]->setVal(0.);
 
     //
-    trD_g[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    trD_g[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     trD_g[lev]->setVal(0.);
 
     //
-    f_gds[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    f_gds[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     f_gds[lev]->setVal(0.);
 
     //
-    drag_bm[lev].reset(new MultiFab(grids[lev],3,nghost,dmap[lev],Fab_allocate));
+    drag_bm[lev].reset(new MultiFab(grids[lev],dmap[lev],3,nghost));
     drag_bm[lev]->setVal(0.);
 
     // ********************************************************************************
@@ -296,23 +297,23 @@ mfix_level::MakeNewLevel (int lev, Real time,
     x_edge_ba.surroundingNodes(0);
 
     // X-axis gas velocity
-    u_g[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    u_go[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    u_gt[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    u_g[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    u_go[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    u_gt[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     u_g[lev]->setVal(0.);
     u_go[lev]->setVal(0.);
     u_gt[lev]->setVal(0.);
 
-    d_e[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    d_e[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     d_e[lev]->setVal(0.);
 
-    tau_u_g[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    tau_u_g[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     tau_u_g[lev]->setVal(0.);
 
-    flux_gE[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    flux_gE[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     flux_gE[lev]->setVal(0.);
 
-    rop_gE[lev].reset(new MultiFab(x_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    rop_gE[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     rop_gE[lev]->setVal(0.);
 
     // ********************************************************************************
@@ -324,23 +325,23 @@ mfix_level::MakeNewLevel (int lev, Real time,
     y_edge_ba.surroundingNodes(1);
 
     // Y-axis gas velocity
-    v_g[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    v_go[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    v_gt[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    v_go[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    v_gt[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     v_g[lev]->setVal(0.);
     v_go[lev]->setVal(0.);
     v_gt[lev]->setVal(0.);
 
-    d_n[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    d_n[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     d_n[lev]->setVal(0.);
 
-    tau_v_g[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    tau_v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     tau_v_g[lev]->setVal(0.);
 
-    flux_gN[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    flux_gN[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     flux_gN[lev]->setVal(0.);
 
-    rop_gN[lev].reset(new MultiFab(y_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    rop_gN[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     rop_gN[lev]->setVal(0.);
 
     // ********************************************************************************
@@ -352,23 +353,23 @@ mfix_level::MakeNewLevel (int lev, Real time,
     z_edge_ba.surroundingNodes(2);
 
     // Z-axis gas velocity
-    w_g[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    w_go[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
-    w_gt[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    w_go[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    w_gt[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     w_g[lev]->setVal(0.);
     w_go[lev]->setVal(0.);
     w_gt[lev]->setVal(0.);
 
-    d_t[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    d_t[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     d_t[lev]->setVal(0.);
 
-    tau_w_g[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    tau_w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     tau_w_g[lev]->setVal(0.);
 
-    flux_gT[lev].reset(new MultiFab(z_edge_ba,1,nghost,dmap[lev],Fab_allocate));
+    flux_gT[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     flux_gT[lev]->setVal(0.);
 
-    rop_gT[lev].reset(new MultiFab(grids[lev],1,nghost,dmap[lev],Fab_allocate));
+    rop_gT[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
     rop_gT[lev]->setVal(0.);
 
     // ********************************************************************************
@@ -867,8 +868,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray x_edge_ba = grids[lev];
     x_edge_ba.surroundingNodes(0);
-    A_m[lev].reset(new MultiFab(x_edge_ba,7,0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(x_edge_ba,1,0,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(x_edge_ba,dmap[lev],7,0));
+    b_m[lev].reset(new MultiFab(x_edge_ba,dmap[lev],1,0));
 
     // Solve U-Momentum equation
     MultiFab::Copy(*u_gt[lev], *u_g[lev], 0, 0, 1, u_g[lev]->nGrow());
@@ -906,8 +907,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray y_edge_ba = grids[lev];
     y_edge_ba.surroundingNodes(1);
-    A_m[lev].reset(new MultiFab(y_edge_ba,7,0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(y_edge_ba,1,0,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],7,0));
+    b_m[lev].reset(new MultiFab(y_edge_ba,dmap[lev],1,0));
 
     MultiFab::Copy(*v_gt[lev], *v_g[lev], 0, 0, 1, v_g[lev]->nGrow());
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
@@ -944,8 +945,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     // Matrix and rhs vector
     BoxArray z_edge_ba = grids[lev];
     z_edge_ba.surroundingNodes(2);
-    A_m[lev].reset(new MultiFab(z_edge_ba,7,0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(z_edge_ba,1,0,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],7,0));
+    b_m[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,0));
 
     MultiFab::Copy(*w_gt[lev], *w_g[lev], 0, 0, 1, w_g[lev]->nGrow());
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
@@ -994,11 +995,11 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
     Real dz = geom[lev].CellSize(2);
 
     // Matrix and rhs vector
-    A_m[lev].reset(new MultiFab(grids[lev],7,0,dmap[lev],Fab_allocate));
-    b_m[lev].reset(new MultiFab(grids[lev],1,0,dmap[lev],Fab_allocate));
+    A_m[lev].reset(new MultiFab(grids[lev],dmap[lev],7,0));
+    b_m[lev].reset(new MultiFab(grids[lev],dmap[lev],1,0));
 
     // Solve the pressure correction equation
-    MultiFab b_mmax(b_m[lev]->boxArray(),1,b_m[lev]->nGrow());
+    MultiFab b_mmax(b_m[lev]->boxArray(),dmap[lev],1,b_m[lev]->nGrow());
     b_mmax.setVal(0.);
 
     // Solve the pressure correction equation

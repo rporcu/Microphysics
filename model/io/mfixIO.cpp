@@ -1,9 +1,9 @@
-#include <MultiFabUtil.H>
-#include <PlotFileUtil.H>
+#include <AMReX_MultiFabUtil.H>
+#include <AMReX_PlotFileUtil.H>
 
-#include <AmrCore.H>
+#include <AMReX_AmrCore.H>
 
-#include "buildInfo.H"
+#include "AMReX_buildInfo.H"
 
 #include "mfix_level.H"
 
@@ -47,7 +47,7 @@ mfix_level::WriteMfixHeader(const std::string& name, int nstep, Real dt, Real ti
 
     	if ( ! HeaderFile.good() )
 	{
-    	    BoxLib::FileOpenFailed(HeaderFileName);
+    	    amrex::FileOpenFailed(HeaderFileName);
     	}
 
     	HeaderFile.precision(17);
@@ -97,14 +97,14 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     // checkfiles have not been enabled ( check_int < 1 )
     if ( (check_int < 1) || ( nstep % check_int != 0 ) )  return;
 
-    const std::string& checkpointname = BoxLib::Concatenate( check_file, nstep );
+    const std::string& checkpointname = amrex::Concatenate( check_file, nstep );
 
     if (ParallelDescriptor::IOProcessor()) {
     	std::cout << "\n\t Writing checkpoint " << checkpointname << std::endl;
     }
 
     const int nlevels = finestLevel()+1;
-    BoxLib::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
+    amrex::PreBuildDirectorHierarchy(checkpointname, level_prefix, nlevels, true);
 
     WriteMfixHeader(checkpointname, nstep, dt, time);
     
@@ -115,14 +115,14 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
 	// Write vector variables
 	for (int i = 0; i < vectorVars.size(); i++ ) {
 	    VisMF::Write( *((*vectorVars[i])[lev]),
-			  BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+			  amrex::MultiFabFileFullPrefix(lev, checkpointname, 
 							 level_prefix, vecVarsName[i]));
 	}
 
 	// Write scalar variables
 	for (int i = 0; i < scalarVars.size(); i++ ) {
 	    VisMF::Write( *((*scalarVars[i])[lev]),
-			  BoxLib::MultiFabFileFullPrefix(lev, checkpointname, 
+			  amrex::MultiFabFileFullPrefix(lev, checkpointname, 
 							 level_prefix, scaVarsName[i]));
 	}
 
@@ -232,7 +232,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	// Read vector variables
 	for (int i = 0; i < vectorVars.size(); i++ ) {
     	    MultiFab mf;
-	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
 							   vecVarsName[i]));
 	    (*vectorVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
@@ -240,7 +240,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 	// Read scalar variables
 	for (int i = 0; i < scalarVars.size(); i++ ) {
     	    MultiFab mf;
-	    VisMF::Read(mf, BoxLib::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
+	    VisMF::Read(mf, amrex::MultiFabFileFullPrefix(lev, restart_chkfile, level_prefix,
 							   scaVarsName[i]));
 	    (*scalarVars[i])[lev] -> copy(mf, 0, 0, 1, 0, 0);
 	}
@@ -291,7 +291,7 @@ mfix_level::WriteJobInfo (const std::string& dir) const
 	jobInfoFile << "build date:    " << buildInfoGetBuildDate() << "\n";
 	jobInfoFile << "build machine: " << buildInfoGetBuildMachine() << "\n";
 	jobInfoFile << "build dir:     " << buildInfoGetBuildDir() << "\n";
-	jobInfoFile << "BoxLib dir:    " << buildInfoGetBoxlibDir() << "\n";
+	jobInfoFile << "AMReX dir:     " << buildInfoGetAMReXDir() << "\n";
 
 	jobInfoFile << "\n";
 
@@ -310,7 +310,7 @@ mfix_level::WriteJobInfo (const std::string& dir) const
 	}
 	if (strlen(githash2) > 0)
 	{
-	    jobInfoFile << "BoxLib git hash: " << githash2 << "\n";
+	    jobInfoFile << "AMReX git hash: " << githash2 << "\n";
 	}
 
 	jobInfoFile << "\n\n";
@@ -373,7 +373,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
     // called without arguments (useful for steady state case).
     if ( (plot_int < 1) || ( nstep % plot_int != 0 && nstep != 0) )  return;
 
-    const std::string& plotfilename = BoxLib::Concatenate(plot_file,nstep);
+    const std::string& plotfilename = amrex::Concatenate(plot_file,nstep);
 
     if (ParallelDescriptor::IOProcessor()) {
 	std::cout << "  Writing plotfile " << plotfilename << std::endl;
@@ -387,7 +387,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 	    const int ncomp = vectorVars.size() + scalarVars.size();
 	    const int ngrow = 0;
 
-	    mf[lev].reset(new MultiFab(grids[lev], ncomp, ngrow, dmap[lev]));
+	    mf[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, ngrow));
 
 	    // Vector variables
 	    int dcomp = 0;
@@ -397,7 +397,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 		srcmf[0] = (*vectorVars[dcomp])[lev].get();
 		srcmf[1] = (*vectorVars[dcomp+1])[lev].get();
 		srcmf[2] = (*vectorVars[dcomp+2])[lev].get();
-		BoxLib::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
+		//	amrex::average_face_to_cellcenter(*mf[lev], dcomp, srcmf);
 	    };
 
 	    // Scalar variables
@@ -419,7 +419,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 	names.insert( names.end(),vecVarsName.begin(), vecVarsName.end());
 	names.insert( names.end(),scaVarsName.begin(), scaVarsName.end());
 
-	BoxLib::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
+	amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
 					Geom(), time, istep, refRatio());
     }
 

@@ -1,6 +1,6 @@
 module check_axis_module
 
-  use bl_fort_module, only: c_real
+  use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
   use run,            only: IFILE_NAME
   use error_manager,  only: finl_err_msg, err_msg, ival, flush_err_msg, &

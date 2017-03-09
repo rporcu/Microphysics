@@ -18,7 +18,7 @@
       use constant, only: PI
 
       use usr, only: init_angle, init_vel_t
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       IMPLICIT NONE
 

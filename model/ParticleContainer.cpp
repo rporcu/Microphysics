@@ -6,15 +6,15 @@ int     MyParticleContainer::do_tiling = 0;
 IntVect MyParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
 MyParticleContainer::MyParticleContainer (AmrCore* amr_core)
-    : ParticleContainer<PIdx::nattribs,0,std::vector<Particle<PIdx::nattribs,0> > >
+    : ParticleContainer<PIdx::nattribs,0>
       (amr_core->GetParGDB())
 {
     ReadStaticParameters();
 
     this->SetVerbose(0);
 
-    m_particles.reserve(m_gdb->maxLevel()+1);
-    m_particles.resize (m_gdb->finestLevel()+1);
+    // m_particles.reserve(m_gdb->maxLevel()+1);
+    // m_particles.resize (m_gdb->finestLevel()+1);
 }
 
 void

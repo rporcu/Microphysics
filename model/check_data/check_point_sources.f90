@@ -1,6 +1,6 @@
 module check_point_sources_module
 
-  use bl_fort_module, only: c_real
+  use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
   use get_ps_module,  only: get_ps
   use run,            only: IFILE_NAME

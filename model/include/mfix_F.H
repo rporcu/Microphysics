@@ -1,4 +1,6 @@
-#include <REAL.H>
+#include <AMReX_REAL.H>
+
+using namespace amrex;
 
 extern "C"
 {

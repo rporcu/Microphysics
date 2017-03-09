@@ -16,7 +16,7 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use calc_coeff_module, only: calc_coeff

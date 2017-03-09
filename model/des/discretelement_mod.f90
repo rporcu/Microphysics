@@ -12,7 +12,7 @@
 ! Modules
 !-----------------------------------------------
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       USE param, only: dim_m

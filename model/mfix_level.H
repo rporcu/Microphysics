@@ -8,9 +8,9 @@
 #include <omp.h>
 #endif
 
-#include <AmrCore.H>
-#include <iMultiFab.H>
-#include <BLProfiler.H>
+#include <AMReX_AmrCore.H>
+#include <AMReX_iMultiFab.H>
+#include <AMReX_BLProfiler.H>
 
 #include <ParticleContainer.H>
 
@@ -51,10 +51,31 @@ public:
     void make_mg_bc (int mg_bc[]);
 
 protected:
-    virtual void ErrorEst (int lev, TagBoxArray& tags, Real time, int /*ngrow*/) override {}
 
+    //! Tagging cells for refinement
+    virtual void ErrorEst (int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
+        { amrex::Abort("ErrorEst: To be implemented"); }    
+    
+    //! Make a new level using provided BoxArray and
+    //! DistributionMapping and fill with interpolated coarse level
+    //! data.  Called by AmrCore::regrid.
+    virtual void MakeNewLevelFromCoarse (int lev, amrex::Real time, const amrex::BoxArray& ba,
+                                         const amrex::DistributionMapping& dm) override
+        { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
+    
+    //! Remake an existing level using provided BoxArray and
+    //! DistributionMapping and fill with existing fine and coarse
+    //! data.  Called by AmrCore::regrid.
+    virtual void RemakeLevel (int lev, amrex::Real time, const amrex::BoxArray& ba,
+                              const amrex::DistributionMapping& dm) override
+        { amrex::Abort("RemakeLevel: To be implemented"); }
+    
+    //! Delete level data.  Called by AmrCore::regrid.
+    virtual void ClearLevel (int lev) override
+        { amrex::Abort("ClearLevel: To be implemented"); }
+    
     void mfix_calc_coeffs (int lev, int calc_flag);
-
+    
     void mfix_calc_all_coeffs (int lev);
 
     void mfix_calc_trd_and_tau (int lev);
@@ -88,7 +109,7 @@ private:
 
     void InitIOData ();
 
-    void MakeNewLevel (int lev, Real time,
+    void MakeNewLevelFromScratch(int lev, Real time,
            const BoxArray& new_grids, const DistributionMapping& new_dmap);
 
     void WriteMfixHeader(const std::string& name, int nstep, Real dt, Real time) const;

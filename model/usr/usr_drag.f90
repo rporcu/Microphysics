@@ -25,7 +25,7 @@
       SUBROUTINE DRAG_USR(I,J,K, M_NP, lDgA, EPg, Mug, ROg, VREL, DPM, &
          ROs, lUg, lVg, lWg)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar

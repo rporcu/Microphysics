@@ -1,6 +1,6 @@
 module check_bc_outflow_module
 
-  use bl_fort_module, only: c_real
+  use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
   use run,            only: IFILE_NAME
   use param1,         only: one, undefined, zero, is_undefined, is_defined, equal

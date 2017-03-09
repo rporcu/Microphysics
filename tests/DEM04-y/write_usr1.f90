@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       IMPLICIT NONE
 
@@ -45,7 +45,7 @@
       use param1, only: zero
       use toleranc, only: COMPARE
       use usr, only: u0
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       implicit none
 

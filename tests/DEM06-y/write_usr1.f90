@@ -21,7 +21,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use usr, only: UPDATE_RK4_SOL
 
       IMPLICIT NONE
@@ -56,7 +56,7 @@
 !......................................................................!
       SUBROUTINE WRITE_DES_Out(lTime, max_pip, des_pos_new, des_vel_new)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       Use usr, only: RK4_POS, RK4_VEL
 
       IMPLICIT NONE

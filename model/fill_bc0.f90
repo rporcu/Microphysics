@@ -26,7 +26,7 @@ subroutine fill_bc0(s, slo, shi, &
 !--------------------------------------------------------------------//
       use geometry      , only: domlo, domhi
       use iso_c_binding , only: c_int
-      use bl_fort_module, only: c_real
+      use amrex_fort_module, only : c_real => amrex_real
 
       implicit none
 

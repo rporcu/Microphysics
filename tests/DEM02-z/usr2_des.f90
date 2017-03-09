@@ -17,7 +17,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine usr2_des(max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       Use usr, only: bounce_count, max_bounce, yvelo, yposo, max_height
 
       IMPLICIT NONE

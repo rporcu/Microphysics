@@ -4,7 +4,7 @@
       use discretelement, only: s_time, vtp_findex
       use error_manager, only: err_msg, ival, flush_err_msg, init_err_msg, finl_err_msg
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       IMPLICIT NONE

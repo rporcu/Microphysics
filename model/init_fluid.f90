@@ -10,7 +10,7 @@ module init_fluid_module
                          mu_g, lambda_g, dx, dy, dz) &
       bind(C, name="init_fluid")
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use calc_ro_g_module, only: calc_ro_g
@@ -93,7 +93,7 @@ module init_fluid_module
       use scales, only: scale_pressure
       use param1, only: undefined, is_defined
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       IMPLICIT NONE
@@ -217,7 +217,7 @@ module init_fluid_module
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       IMPLICIT NONE

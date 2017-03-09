@@ -11,7 +11,7 @@
    SUBROUTINE USR3(u_g, ulo, uhi, v_g, vlo, vhi, w_g, wlo, whi, &
       p_g, slo, shi, dx, dy, dz)
 
-      use bl_fort_module, only : c_real
+      use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use geometry, only: domlo, domhi
