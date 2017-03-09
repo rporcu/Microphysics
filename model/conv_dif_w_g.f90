@@ -324,7 +324,7 @@ module w_g_conv_dif
       xlo(2) = alo(2)
       xlo(3) = alo(3)
       allocate(xsi_e(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_e (discretize(5), u_g, ulo, uhi, u, vello, velhi, xsi_e, xlo, xhi, &
+      call calc_xsi_e (discretize(5), w_g, wlo, whi, u, vello, velhi, xsi_e, xlo, xhi, &
                        dt, dx, dy, dz)
 
       do k = alo(3),ahi(3)
@@ -346,7 +346,7 @@ module w_g_conv_dif
 
        u(:,:,:) = 0.d0
        v(:,:,:) = 0.d0
-      ww(:,:,:) = 0.d0
+       ww(:,:,:) = 0.d0
 
       do k = wlo(3)+1,whi(3)-1
         do j = wlo(2),whi(2)
@@ -361,7 +361,7 @@ module w_g_conv_dif
       xlo(3) = alo(3)
 
       allocate(xsi_n(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_n (discretize(5), v_g, vlo, vhi, v, vello, velhi, xsi_n, xlo, xhi, &
+      call calc_xsi_n (discretize(5), w_g, wlo, whi, v, vello, velhi, xsi_n, xlo, xhi, &
                        dt, dx, dy, dz)
 
       do k = alo(3),ahi(3)
