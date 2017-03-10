@@ -14,6 +14,7 @@ stages:
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
   LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64"
+  AMREX_HOME: "/nfs/home/0/users/jenkins/amrex"
   BOXLIB_HOME: "/nfs/home/0/users/jenkins/amrex"
   GCC_BIN_DIR: "/nfs/apps/Compilers/GNU/6.1.0/bin/"
 
