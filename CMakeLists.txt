@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This is where the CCSE lib was installed
-set(CCSE_DIR $ENV{BOXLIB_HOME})
+set(CCSE_DIR $ENV{AMREX_HOME})
 
 
 # Set some defaults
