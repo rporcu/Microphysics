@@ -22,27 +22,27 @@ For the Joule environment, load the gnu module and set environment variables fir
 
 ## Prerequisite: Build and Install AMReX
 
-Clone AMReX repo and set environment variable BOXLIB_HOME to where your want to
-install AMReX. If that location is not the AMReX git repo directory, manually
-copy the Tools/ directory to BOXLIB_HOME.
-
+Clone AMReX the official Git repository and checkout the _development_ branch.
 ```shell
 > git clone https://bitbucket.org/berkeleylab/amrex.git
 > cd amrex
-> git checkout master
-> export AMREX_HOME=$HOME/local
-> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
-> cp -r Tools $AMREX_HOME
-> make -j -k install
+> git checkout development
 ```
-The make command may fail with an error involving mempool; if so rerun ```make -j -k install``` until it succeeds.
 
-
-Go to the MFIX directory, run cmake and run make (make sure AMREX_HOME is still set)
+Create an install directory and the set environment variable AMREX_HOME to the
+install location. Here, it is assumed that you are doing an out of source
+install in $HOME/local/amrex
 ```shell
-> cd <MFIX source directory>
-> cmake .
+> cd $HOME/local
+> mkdir amrex
+> export AMREX_HOME=$HOME/local/amrex
+```
+
+From the AMReX source directory, run CMake and build the code.
+```shell
+> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
 > make
+> make install
 ```
 
 ---------------------------------------------------------------------
@@ -133,8 +133,8 @@ Test project ~/mfixexa
 ```shell
 > ./mfix inputs  mfix.input_file=<user_file_name>
 ```
-_inputs_ is a text file containing the BoxLib input parameters. 
-_inputs_  __has to be provided and cannot be renamed__. 
+_inputs_ is a text file containing the BoxLib input parameters.
+_inputs_  __has to be provided and cannot be renamed__.
 _user_file_name_ is the name of a user-defined text file containing the MFIX input parameters.
 If _mfix.input_file=input_file_name_ is not given, MFIX will try to read the file
 _mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
@@ -143,11 +143,11 @@ _mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
 In order to write out plotfiles, add the following to the _inputs_ file:
 ```shell
 mfix.plot_int=N
-``` 
-N needs to be > 1 for the plotfiles to be written out. For transient solves, 
+```
+N needs to be > 1 for the plotfiles to be written out. For transient solves,
 N indicates the number of time steps between two consecutive writes.
 For steady state solve, N does not have any meaning: a plotfile will be written
-after the steady state is reached, as long as N > 0. To specify the name of the 
+after the steady state is reached, as long as N > 0. To specify the name of the
 plotfiles directories, add the following to the _inputs_ file:
 ```shell
 mfix.plot_file=<plotfile_name>
