@@ -54,13 +54,13 @@ module set_bc_type_module
       integer    nlft, nrgt, nbot, ntop, nup, ndwn
       integer :: i,j,k
 
-      nlft = max(0,domlo(1)-slo(1))
-      nbot = max(0,domlo(2)-slo(2))
-      ndwn = max(0,domlo(3)-slo(3))
+      nlft = 2!max(0,domlo(1)-slo(1))
+      nbot = 2!max(0,domlo(2)-slo(2))
+      ndwn = 2!max(0,domlo(3)-slo(3))
 
-      nrgt = max(0,shi(1)-domhi(1))
-      ntop = max(0,shi(2)-domhi(2))
-      nup  = max(0,shi(3)-domhi(3))
+      nrgt = 2!max(0,shi(1)-domhi(1))
+      ntop = 2!max(0,shi(2)-domhi(2))
+      nup  = 2!max(0,shi(3)-domhi(3))
 
 
       if(cyclic_x) then

@@ -67,7 +67,7 @@ subroutine fill_bc0(s, slo, shi, &
       ntop = max(0,shi(2)-domhi(2))
       nup  = max(0,shi(3)-domhi(3))
 
-      if (ntop .gt. 0) then
+      if (nlft .gt. 0) then
          ilo = domlo(1)
          do i = 1, nlft
             do k=slo(3),shi(3)
