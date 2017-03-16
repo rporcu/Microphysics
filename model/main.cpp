@@ -40,8 +40,8 @@ int main (int argc, char* argv[])
     for(int i=2; i < argc; i++) {
 	int nlen = strlen(argv[i]);
 	// If-statement avoids passing the name of the mfix input file if it is
-	// specified on the command line.
-	if ( strstr(argv[i], "input_file") == NULL) {
+	// specified on the command line or any AMReX command.
+	if ( strstr(argv[i], "input_file") == NULL && strstr(argv[i], "amr") == NULL) {
 	    mfix_add_argument(argv[i], &nlen);
 	 }	
     }
