@@ -107,26 +107,26 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
 void
 mfix_level::ReadParameters ()
 {
-    // Traditionally, max_step and stop_time do not have prefix.
-    {
-	ParmParse pp; 
-	pp.query("max_step", max_step);
-	pp.query("stop_time", stop_time);
-    }
+  // Traditionally, max_step and stop_time do not have prefix.
+  {
+    ParmParse pp;
+    pp.query("max_step", max_step);
+    pp.query("stop_time", stop_time);
+  }
 
-    // Traditionally, these have prefix "amr", but we will
-    // give them prefix mfix to make it clear that they affect the
-    // behavior of the solver and not amr (even thought they are read
-    // via BoxLib
-    {
-	ParmParse pp("mfix"); 
-	pp.query("check_file", check_file);
-	pp.query("check_int", check_int);
-	pp.query("plot_file", plot_file);
-	pp.query("plot_int", plot_int);
-	pp.query("restart_chkfile", restart_chkfile);
-	pp.query("verbose", verbose);
-    }
+  // Traditionally, these have prefix "amr", but we will
+  // give them prefix mfix to make it clear that they affect the
+  // behavior of the solver and not amr (even thought they are read
+  // via BoxLib
+  {
+    ParmParse pp("mfix");
+    pp.query("check_file", check_file);
+    pp.query("check_int", check_int);
+    pp.query("plot_file", plot_file);
+    pp.query("plot_int", plot_int);
+    pp.query("restart_chkfile", restart_chkfile);
+    pp.query("verbose", verbose);
+  }
 }
 
 void
@@ -1176,7 +1176,4 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                bc_klo.dataPtr(), bc_khi.dataPtr());
   }
-
-  // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
-  mf.FillBoundary(geom[lev].periodicity());
 }
