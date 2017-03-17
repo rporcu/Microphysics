@@ -176,13 +176,17 @@ module init_fluid_module
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
+            istart = max(slo(1), ic_i_w(icv))
+            jstart = max(slo(2), ic_j_s(icv))
+            kstart = max(slo(3), ic_k_b(icv))
+            iend   = min(shi(1), ic_i_e(icv))
+            jend   = min(shi(2), ic_j_n(icv))
+            kend   = min(shi(3), ic_k_t(icv))
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
-
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
                                       undefined, is_defined(pgx))
-
                   enddo
                enddo
             enddo
