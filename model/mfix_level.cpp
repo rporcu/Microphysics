@@ -624,7 +624,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   int calc_flag = 2;
   mfix_calc_coeffs(lev,calc_flag);
 
-  mfix_finl_err_msg();
+  // mfix_finl_err_msg();
 }
 
 void
