@@ -11,6 +11,7 @@
 
       use residual, only: group_resid
       use iso_c_binding, only: c_int
+      use residual, only: num_resid, den_resid
 
       IMPLICIT NONE
 
@@ -26,6 +27,9 @@
       ELSE
          CALL DISPLAY_FIELD_RESID
       ENDIF
+
+      num_resid = 0.0d0
+      den_resid = 0.0d0
 
       RETURN
 

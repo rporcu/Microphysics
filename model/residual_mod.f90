@@ -36,10 +36,10 @@
       real(c_real) :: resid(Nresid)
 
       ! Residual Numerator
-      real(c_real) :: num_resid(Nresid)
+      real(c_real) :: num_resid(Nresid)=0.0d0
 
       ! Residual Denominator
-      real(c_real) :: den_resid(Nresid)
+      real(c_real) :: den_resid(Nresid)=0.0d0
 
 ! sum of residuals every 5 iterations
       real(c_real) :: SUM5_resid
@@ -147,8 +147,8 @@
 
 
 ! initializing
-      num = zero
-      den = zero
+      ! num = zero
+      ! den = zero
       ncells = 0
 
       do k = alo(3),ahi(3)
