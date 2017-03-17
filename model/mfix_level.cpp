@@ -120,7 +120,7 @@ mfix_level::ReadParameters ()
     // behavior of the solver and not amr (even thought they are read
     // via BoxLib
     {
-	ParmParse pp("mfix"); 
+	ParmParse pp("amr"); 
 	pp.query("check_file", check_file);
 	pp.query("check_int", check_int);
 	pp.query("plot_file", plot_file);

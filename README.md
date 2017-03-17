@@ -142,7 +142,7 @@ _mfix.dat_. MFIX __requires__ either _user_file_name_ or _mfix.dat_.
 ### Writing plotfiles
 In order to write out plotfiles, add the following to the _inputs_ file:
 ```shell
-mfix.plot_int=N
+amr.plot_int=N
 ``` 
 N needs to be > 1 for the plotfiles to be written out. For transient solves, 
 N indicates the number of time steps between two consecutive writes.
@@ -150,7 +150,7 @@ For steady state solve, N does not have any meaning: a plotfile will be written
 after the steady state is reached, as long as N > 0. To specify the name of the 
 plotfiles directories, add the following to the _inputs_ file:
 ```shell
-mfix.plot_file=<plotfile_name>
+amr.plot_file=<plotfile_name>
 ```
 If the name of the plotfile is not provided, MFIX will default to _plt_.
 
