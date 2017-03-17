@@ -216,6 +216,7 @@ module init_fluid_module
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
+      USE geometry, only: domhi
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -265,7 +266,7 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
-         pj = pj - dpodx*dx
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
          do i = hi(1), lo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
@@ -278,7 +279,7 @@ module init_fluid_module
 
       if (is_defined(delp_y)) then
          dpody = delp_y/ylength
-         pj = pj - dpody*dy
+         pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
          do j = hi(2), lo(2), -1
             pj = pj + dpody*dy
             do k = lo(3), hi(3)
@@ -291,7 +292,7 @@ module init_fluid_module
 
       if (is_defined(delp_z)) then
          dpodz = delp_z/zlength
-         pj = pj - dpodz*dz
+         pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
          do k = hi(3), lo(3), -1
             pj = pj + dpodz*dz
             do j = lo(2), hi(2)

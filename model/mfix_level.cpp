@@ -1,4 +1,3 @@
-
 #include <AMReX_ParmParse.H>
 
 #include <mfix_F.H>
@@ -1167,6 +1166,8 @@ void
 mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 {
 
+  // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
+  mf.FillBoundary(geom[lev].periodicity());
   // Fill all cell-centered arrays with first-order extrapolation at domain boundaries
   for (MFIter mfi(mf); mfi.isValid(); ++mfi)
   {
