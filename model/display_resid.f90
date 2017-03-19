@@ -11,30 +11,52 @@
 
       use residual, only: group_resid
       use iso_c_binding, only: c_int
-      use residual, only: num_resid, den_resid
+      use residual, only: resid, resid_u, resid_v, resid_w
 
       IMPLICIT NONE
 
 ! iteration number
       integer(c_int), intent(in) :: nit
 
-! Print Location of Max_Resid
-!      LOGICAL,PARAMETER:: Print_ijk=.FALSE.
+! Normalize momentum equation residuals
+      resid(resid_u) = normalize_resid(resid_u)
+      resid(resid_v) = normalize_resid(resid_v)
+      resid(resid_w) = normalize_resid(resid_w)
 
+      if(group_resid) then
+         call display_group_resid
+      else
+         call display_field_resid
+      endif
 
-      IF(GROUP_RESID) THEN
-         CALL DISPLAY_GROUP_RESID
-      ELSE
-         CALL DISPLAY_FIELD_RESID
-      ENDIF
+      return
 
-      num_resid = 0.0d0
-      den_resid = 0.0d0
+   contains
 
-      RETURN
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: normallize resid                                       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      double precision function normalize_resid(id)
 
-      contains
+      use residual, only: resid, resid_u, resid_v, resid_w
+      use residual, only: num_resid, den_resid
+      use param1, only: zero, large_number
 
+      integer, intent(in) :: id
+
+      if (den_resid(id) > zero) then
+         normalize_resid = num_resid(id)/den_resid(id)
+      elseif (abs(num_resid(id)) < epsilon(num_resid(id))) then
+         normalize_resid = zero
+      else
+         normalize_resid = large_number
+      endif
+      num_resid(id) = zero
+      den_resid(id) = zero
+
+      end function normalize_resid
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -53,7 +75,7 @@
 
       IMPLICIT NONE
 
-      INTEGER :: LL, LC, LS, LE
+      integer :: ll, lc, ls, le
 
       IF(NIT == 1) THEN
          WRITE(ERR_MSG(1)(1:5),'("  Nit")')
