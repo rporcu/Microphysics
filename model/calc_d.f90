@@ -28,7 +28,7 @@ module calc_d_mod
    subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                        ep_g, f_gds, dx, dy, dz)
 
-      use geometry, only: cyclic_x
+      use geometry, only: cyclic_x, domlo
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: ulo(3),uhi(3)
@@ -62,10 +62,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_x) then
-         llo(1) = llo(1)+1
-         ! lhi(1) = lhi(1)-1
-      endif
+      if(.not.cyclic_x .and. alo(1) < domlo(1)) llo(1) = alo(1)+1
 
       do k = llo(3), lhi(3)
          do j = llo(2), lhi(2)
@@ -88,7 +85,7 @@ module calc_d_mod
    subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
                        ep_g, f_gds, dx, dy, dz)
 
-      use geometry, only: cyclic_y
+      use geometry, only: cyclic_y, domlo
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: vlo(3),vhi(3)
@@ -122,10 +119,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_y) then
-         llo(2) = llo(2)+1
-         ! lhi(2) = lhi(2)-1
-      endif
+      if(.not.cyclic_y .and. alo(2) < domlo(2)) llo(2) = alo(2)+1
 
       do k = llo(3), lhi(3)
          do j = llo(2), lhi(2)
@@ -149,7 +143,7 @@ module calc_d_mod
    subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
       ep_g, f_gds, dx, dy, dz)
 
-      use geometry, only: cyclic_z
+      use geometry, only: cyclic_z, domlo
 
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
@@ -183,10 +177,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_z) then
-         llo(3) = llo(3)+1
-         ! lhi(3) = lhi(3)-1
-      endif
+      if(.not.cyclic_z .and. alo(3) < domlo(3)) llo(3) = alo(3)+1
 
       do k = llo(3), lhi(3)
         do j = llo(2), lhi(2)

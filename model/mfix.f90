@@ -20,7 +20,6 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       use iso_c_binding , only: c_int
 
       use calc_coeff_module, only: calc_coeff
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg
       use exit_mod, only: mfix_exit
       use geometry, only: domlo, domhi
       use machine, only: wall_time
@@ -75,8 +74,6 @@ subroutine mfix1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
 
       ! Write the initial part of the special output file(s)
       call write_usr0
-
-      call init_err_msg('MFIX')
 
       ! Set point sources.
       call set_ps(dx,dy,dz)

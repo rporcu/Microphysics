@@ -176,13 +176,17 @@ module init_fluid_module
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
+            istart = max(slo(1), ic_i_w(icv))
+            jstart = max(slo(2), ic_j_s(icv))
+            kstart = max(slo(3), ic_k_b(icv))
+            iend   = min(shi(1), ic_i_e(icv))
+            jend   = min(shi(2), ic_j_n(icv))
+            kend   = min(shi(3), ic_k_t(icv))
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend
-
                         p_g(i,j,k) = merge(scale_pressure(pgx),&
                                       undefined, is_defined(pgx))
-
                   enddo
                enddo
             enddo
@@ -216,6 +220,7 @@ module init_fluid_module
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
+      USE geometry, only: domhi
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -265,7 +270,7 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
-         pj = pj - dpodx*dx
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
          do i = hi(1), lo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
@@ -278,7 +283,7 @@ module init_fluid_module
 
       if (is_defined(delp_y)) then
          dpody = delp_y/ylength
-         pj = pj - dpody*dy
+         pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
          do j = hi(2), lo(2), -1
             pj = pj + dpody*dy
             do k = lo(3), hi(3)
@@ -291,7 +296,7 @@ module init_fluid_module
 
       if (is_defined(delp_z)) then
          dpodz = delp_z/zlength
-         pj = pj - dpodz*dz
+         pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
          do k = hi(3), lo(3), -1
             pj = pj + dpodz*dz
             do j = lo(2), hi(2)
