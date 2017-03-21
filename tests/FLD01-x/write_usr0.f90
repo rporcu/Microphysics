@@ -12,6 +12,7 @@
       use compar, only: myPE, PE_IO
       IMPLICIT NONE
 
+      RETURN
       IF(myPE /= PE_IO) RETURN
 
       CALL WRITE_DAT_HEADER('POST_UG.dat','U_g')

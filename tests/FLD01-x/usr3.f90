@@ -51,6 +51,7 @@
 ! Norm Errors
       double precision :: L1, L2, LI
 
+      RETURN
 ! Open file for output
       open(unit=fUnit, file='POST_UG.dat', &
          position='append', status='old')

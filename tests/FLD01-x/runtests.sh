@@ -10,12 +10,6 @@ fi
 
 rm -f POST_* &> /dev/null
 
-rm -f ${RUN_NAME}* &> /dev/null
+rm -rf ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} inputs
-
-post_dats=AUTOTEST/POST*.dat
-
-for test_post_file in ${post_dats}; do
-    numdiff -a 0.000001 -r 0.05 ${test_post_file} \
-      $(basename ${test_post_file})
-done
+~/packages/amrex/amrex-source/Tools/Postprocessing/F_Src/fextract.Linux.gfortran.exe -p FLD0100000/ -d 2 -v u_g && mv FLD0100000.slice POST_UG.dat
