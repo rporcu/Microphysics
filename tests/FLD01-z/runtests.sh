@@ -12,7 +12,4 @@ rm -f POST_* &> /dev/null
 
 rm -rf ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} inputs
-
-rm -rf ${RUN_NAME}* &> /dev/null
-time -p ${MFIX} inputs
-~/packages/amrex/amrex-source/Tools/Postprocessing/F_Src/fextract.Linux.gfortran.exe -p FLD0100000/ -d 2 -v u_g && mv FLD0100000.slice POST_UG.dat
+~/packages/amrex/amrex-source/Tools/Postprocessing/F_Src/fextract.Linux.gfortran.exe -p FLD0100000/ -d 1 -v w_g && mv FLD0100000.slice POST_WG.dat
