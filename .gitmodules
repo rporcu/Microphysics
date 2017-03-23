@@ -1,0 +1,3 @@
+[submodule "ThirdParty/amrex"]
+	path = ThirdParty/amrex
+	url = https://bitbucket.org/mrosso84/amrex.git
