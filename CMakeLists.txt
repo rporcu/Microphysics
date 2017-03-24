@@ -63,10 +63,9 @@ link_directories(${AMREX_LIB_DIR})
 # Main 
 add_subdirectory( src )
 
-
 FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable(mfix ${MAIN} ${USR_OVERRIDES})
-target_link_libraries( mfix model ${AMREX_LIBRARIES} ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES} )
+target_link_libraries( mfix mfixcore ${AMREX_LIBRARIES} ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES} )
 
 # Tests
 enable_testing()

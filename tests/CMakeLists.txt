@@ -1,5 +1,3 @@
-# enable_testing()
-
 set( TESTS  FLD01-x FLD01-y FLD01-z FLD02-x FLD02-y FLD02-z 
             DEM01-x DEM01-y DEM01-z DEM02-x DEM02-y DEM02-z
             DEM03-x DEM03-y DEM03-z DEM04-x DEM04-y DEM04-z
@@ -40,6 +38,6 @@ foreach( rel_testdir ${TESTS})
       PROPERTIES ENVIRONMENT "MFIX=${CMAKE_BINARY_DIR}/${TEST_EXE}"
       )
 
-   target_link_libraries(${TEST_EXE} model ${AMREX_LIBRARIES} ${MPI_LIBRARIES})
+   target_link_libraries(${TEST_EXE} mfixcore ${AMREX_LIBRARIES} ${MPI_LIBRARIES})
 
 endforeach( rel_testdir ${TESTS})

@@ -31,6 +31,7 @@ set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  
    usr/usr_mod.f90  usr/write_usr0.f90  usr/write_usr1.f90  utilities_mod.f90  vavg_g.f90  xsi_mod.f90  zero_norm_vel.f90
    boxlib_to_mfix.F90)
 
+# Generate AMReX_buildInfo.cpp
 add_custom_command(
    COMMAND  ${AMREX_TOOLS}/C_scripts/makebuildinfo_C.py
    --amrex_home "${AMREX_ROOT}"
@@ -39,12 +40,12 @@ add_custom_command(
    --GIT ". ${AMREX_GIT}"
    OUTPUT AMReX_buildInfo.cpp
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   COMMENT "Generating buildInfo.cpp" )
+   COMMENT "Generating AMReX_buildInfo.cpp" )
 
-add_library(model STATIC ${CXX_sources} ${F90_sources} ${CXX_includes} AMReX_buildInfo.cpp )
+add_library(mfixcore STATIC ${CXX_sources} ${F90_sources} ${CXX_includes} AMReX_buildInfo.cpp )
 
-# Remove buildInfo.cpp
-add_custom_command(TARGET model POST_BUILD COMMAND rm AMReX_buildInfo.cpp
+# Remove AMReX_buildInfo.cpp
+add_custom_command(TARGET mfixcore POST_BUILD COMMAND rm AMReX_buildInfo.cpp
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Removing AMReX_buildInfo.cpp" )
 
