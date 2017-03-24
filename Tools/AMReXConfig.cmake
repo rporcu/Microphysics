@@ -1,6 +1,6 @@
-if (ENABLE_SUPERBUILD)
+function ( build_amrex )
 
-   message( STATUS "Configuring for SUPERBUILD")
+   message( STATUS "Configuring build to compile AMReX as part of MFIX")
 
    # Include cmake config files to build external projects
    include(ExternalProject)
@@ -36,10 +36,11 @@ if (ENABLE_SUPERBUILD)
       LOG_UPDATE 1
       )
 
+endfunction (build_amrex)
 
-else (ENABLE_SUPERBUILD)
+function (find_amrex)
    
-   message( STATUS "Configuring for building with external libraries")
+   message( STATUS "Configuring build to use external AMReX install")
 
    # Exit if AMREX_HOME is not set
    if ( "$ENV{AMREX_HOME}" STREQUAL "" )
@@ -53,21 +54,39 @@ else (ENABLE_SUPERBUILD)
 
    # Check if cmake folder is in the installation path   
    check_path( $ENV{AMREX_HOME}/cmake FATAL_ERROR )
-   # set(AMREX_TOOLS $ENV{AMREX_HOME}/cmake )  
 
    # Check if FindCCSE.cmake is in path given by AMREX_TOOLS
    check_path( $ENV{AMREX_HOME}/cmake/FindCCSE.cmake FATAL_ERROR ) 
+
+   # Issue warning 
+   if (ENABLE_MPI)
+      message( STATUS "")
+      message( STATUS "==================== WARNING ====================" )     
+      message( STATUS " MFIX is being compiled with MPI enabled" ) 
+      message( STATUS " Make sure that AMReX is built with ENABLE_MPI=1" )
+      message( STATUS " to avoid linking problems" )
+      message( STATUS "=================================================" )  
+      message( STATUS "")
+   endif (ENABLE_MPI) 
+
    set(CCSE_DIR $ENV{AMREX_HOME})
    list(APPEND CMAKE_MODULE_PATH $ENV{AMREX_HOME}/cmake)
    find_package(CCSE REQUIRED)
 
    # Set AMReX paths to use in mfix config
-   set(AMREX_ROOT        $ENV{AMREX_HOME}    )
-   set(AMREX_LIB_DIR     ${AMREX_ROOT}/lib   )
-   set(AMREX_TOOLS       ${AMREX_ROOT}/Tools )
-   set(AMREX_INCLUDES    ${CCSE_INCLUDE_DIR} )
-   set(AMREX_LIBRARIES   ${CCSE_LIBRARIES}   )
-   set(AMREX_LIB_DIR     ${CCSE_LIBRARY_DIR} )
-	 
-endif (ENABLE_SUPERBUILD)
+   set(AMREX_ROOT        $ENV{AMREX_HOME}       PARENT_SCOPE )
+   set(AMREX_LIB_DIR     $ENV{AMREX_HOME}/lib   PARENT_SCOPE )
+   set(AMREX_TOOLS       $ENV{AMREX_HOME}/Tools PARENT_SCOPE )
+   set(AMREX_INCLUDES    ${CCSE_INCLUDE_DIR}    PARENT_SCOPE )
+   set(AMREX_LIBRARIES   ${CCSE_LIBRARIES}      PARENT_SCOPE )
+   set(AMREX_LIB_DIR     ${CCSE_LIBRARY_DIR}    PARENT_SCOPE )
+
+   # Set mpi-specific flags ( defined by CCSEFind )
+   if (ENABLE_MPI)
+      set( MPI_INCLUDES ${MPI_CXX_INCLUDE_PATH} PARENT_SCOPE )
+      set( MPI_LFLAGS   ${MPI_CXX_LINK_FLAGS}   PARENT_SCOPE )
+      set( MPI_LIBS     ${MPI_CXX_LIBRARIES}    PARENT_SCOPE )
+   endif (ENABLE_MPI) 
+
+endfunction (find_amrex)
       
