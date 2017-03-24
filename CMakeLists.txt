@@ -37,8 +37,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRE
 # Load MFIX Cmake Tools
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
 include(MFIXTools)
-include(AMReX)
-
+include(AMReXConfig)
 project(MFIXEXA)
 
 # This is the main file
