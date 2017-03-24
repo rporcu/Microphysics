@@ -54,28 +54,28 @@ protected:
 
     //! Tagging cells for refinement
     virtual void ErrorEst (int lev, amrex::TagBoxArray& tags, amrex::Real time, int /*ngrow*/) override
-        { amrex::Abort("ErrorEst: To be implemented"); }    
-    
+        { amrex::Abort("ErrorEst: To be implemented"); }
+
     //! Make a new level using provided BoxArray and
     //! DistributionMapping and fill with interpolated coarse level
     //! data.  Called by AmrCore::regrid.
     virtual void MakeNewLevelFromCoarse (int lev, amrex::Real time, const amrex::BoxArray& ba,
                                          const amrex::DistributionMapping& dm) override
         { amrex::Abort("MakeNewLevelFromCoarse: To be implemented"); }
-    
+
     //! Remake an existing level using provided BoxArray and
     //! DistributionMapping and fill with existing fine and coarse
     //! data.  Called by AmrCore::regrid.
     virtual void RemakeLevel (int lev, amrex::Real time, const amrex::BoxArray& ba,
                               const amrex::DistributionMapping& dm) override
         { amrex::Abort("RemakeLevel: To be implemented"); }
-    
+
     //! Delete level data.  Called by AmrCore::regrid.
     virtual void ClearLevel (int lev) override
         { amrex::Abort("ClearLevel: To be implemented"); }
-    
+
     void mfix_calc_coeffs (int lev, int calc_flag);
-    
+
     void mfix_calc_all_coeffs (int lev);
 
     void mfix_calc_trd_and_tau (int lev);
@@ -88,11 +88,11 @@ protected:
 
     void mfix_calc_mflux (int lev);
 
-    void mfix_solve_for_vels (int lev, Real dt);
+    void mfix_solve_for_vels (int lev, Real dt, Real (&residuals)[16]);
 
     void mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab& matrix, MultiFab& rhs);
 
-    void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg);
+    void mfix_solve_for_pp (int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16]);
 
     void mfix_physical_prop (int lev, int calc_flag);
 
