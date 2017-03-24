@@ -45,10 +45,10 @@ project(MFIXEXA)
 set( MAIN ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp )
 
 
-# # Find CCSE check for mpi libraries if ENABLE_MPI is on.
-# # Thus all the variables defined by FindMPI are available
-# # Notice that only need c++-related variables are needed, since
-# # mfix itself does not call mpi function explicitly 
+# Find CCSE check for mpi libraries if ENABLE_MPI is on.
+# Thus all the variables defined by FindMPI are available
+# Notice that only need c++-related variables are needed, since
+# mfix itself does not call mpi function explicitly 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # include_directories(${CCSE_INCLUDE_DIR})
 include_directories(${AMREX_INCLUDES})
@@ -63,6 +63,8 @@ link_directories(${AMREX_LIB_DIR})
 # Main 
 add_subdirectory( src )
 
+
+FILE(GLOB USR_OVERRIDES ${CMAKE_CURRENT_BINARY_DIR}/*.f90)
 add_executable(mfix ${MAIN} ${USR_OVERRIDES})
 target_link_libraries( mfix model ${AMREX_LIBRARIES} ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES} )
 
