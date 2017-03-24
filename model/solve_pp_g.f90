@@ -17,13 +17,16 @@ module solve_pp_module
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, b_mmax, &
-      dt, dx, dy, dz)&
+      dt, dx, dy, dz, resid)&
       bind(C, name="solve_pp_g")
+
+      use residual, only: resid_p
 
 ! Module procedures ..................................................//
       use conv_pp_g_module, only: conv_pp_g
       use source_pp_module, only: source_pp_g
       use source_pp_module, only: source_pp_g_bc
+      use residual,         only: calc_resid_pp
 
 ! Global data .........................................................//
 ! Fluid array bounds
@@ -74,6 +77,7 @@ module solve_pp_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: b_mmax&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(  out) :: resid(8,2)
 
       ! Initialize A_m and b_m
       A_m(:,:,:,:)  =  0.0d0
@@ -91,6 +95,9 @@ module solve_pp_module
       call source_pp_g_bc(slo, shi, alo, ahi, A_m)
 
       if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
+
+      call calc_resid_pp (alo, ahi, b_m, b_mmax, &
+         resid(resid_p,1), resid(resid_p,2))
 
       end subroutine solve_pp_g
 
