@@ -10,14 +10,14 @@ fi
 rm -f POST_* &> /dev/null
 
 for DELP_X in -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0; do
-  rm -f ${RUN_NAME}* &> /dev/null
+  rm -rf ${RUN_NAME}* &> /dev/null
   time -p ${MFIX} inputs DELP_X=${DELP_X}
+  ${FEXTRACT} -p FLD0200000/ -d 2 -v u_g
+  cat FLD0200000.slice >> POST_UG.dat
+  echo -e "\n\n\n" >> POST_UG.dat
 done
 
-
-post_dats=AUTOTEST/POST*.dat
-
-for test_post_file in ${post_dats}; do
-    numdiff -a 0.000001 -r 0.05 ${test_post_file} \
-      $(basename ${test_post_file})
+post_dats=POST*.dat
+for result in ${post_dats}; do
+    numdiff -a 0.0 AUTOTEST/${result} ${result}
 done
