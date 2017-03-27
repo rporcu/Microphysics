@@ -1,9 +1,13 @@
 ########################################################################
 # Horizontal channel (rectangular plane Poiseuille flow)               #
 #                                                                      #
-# Author: Aniruddha Choudhary                           Date: Jan 2015 #
+# Note: This is the same case for FLD01 however, rather than a         #
+# periodic domain with an imposed pressure drop, this case uses a      #
+# pressure inflow/outflow combination to impose the pressure drop.     #
 #                                                                      #
-#                                                                      #
+# The pressure drop here appears larger (270 v. 240) because the drop  #
+# over the periodic domain is over the domain length. Here, the drop   #
+# is from inflow cell to outflow cell which adds one cell width.       #
 ########################################################################
 
   RUN_NAME = 'FLD03'
@@ -24,7 +28,7 @@
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
-  MAX_NIT = 20
+  MAX_NIT = 5000
   TOL_RESID = 1.0E-10
 
   LEQ_PC = 9*'NONE'
@@ -40,9 +44,9 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 0.20  ! IMAX passed as argument
-  YLENGTH = 0.01  ! JMAX passed as argument
-  ZLENGTH = 1.00    KMAX = 1
+  XLENGTH = 0.20   IMAX = 8
+  YLENGTH = 0.01   JMAX = 8
+  ZLENGTH = 1.00   KMAX = 1
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
@@ -67,7 +71,7 @@
 
   IC_EP_g(1) =  1.0
 
-  IC_P_g(1) =   0.00    ! (Pa)
+  IC_P_g(1) = 120.0     ! (Pa)
 
   IC_U_g(1) =  10.0     ! (m/sec)
   IC_V_g(1) =   0.0     ! (m/sec)
@@ -106,17 +110,17 @@
 ! The east and west boundaries are set at cyclic with a specified
 ! pressure drop (delP_X).
 !---------------------------------------------------------------------//
-  BC_X_w(5:6) =   0.00     0.20  ! (m)
-  BC_X_e(5:6) =   0.00     0.20  ! (m)
-  BC_Y_s(5:6) =   0.00     0.00  ! (m)
-  BC_Y_n(5:6) =   0.01     0.01  ! (m)
-  BC_Z_b(5:6) =   0.00     0.00  ! (m)
-  BC_Z_t(5:6) =   1.00     1.00  ! (m)
+  BC_X_w(5:6) =   0.00    0.20  ! (m)
+  BC_X_e(5:6) =   0.00    0.20  ! (m)
+  BC_Y_s(5:6) =   0.00    0.00  ! (m)
+  BC_Y_n(5:6) =   0.01    0.01  ! (m)
+  BC_Z_b(5:6) =   0.00    0.00  ! (m)
+  BC_Z_t(5:6) =   1.00    1.00  ! (m)
 
-  BC_Type(5:6) =  'PI'     'PO'
+  BC_Type(5:6) =  'PI'    'PO'
 
-  BC_EP_g(5:6) =  1.0      1.0
-  BC_P_g(5:6) = 210.0      0.0   ! (Pa)
+  BC_EP_g(5:6) =  1.0     1.0
+  BC_P_g(5:6) = 270.0     0.0   ! (Pa)
 
 
 #_______________________________________________________________________
@@ -126,4 +130,4 @@
 
   FULL_LOG = .T.
 
-  RESID_STRING  = 'P0', 'U0', 'V0'
+  RESID_STRING  = 'P0', 'U0', 'V0', 'W0'
