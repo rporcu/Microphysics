@@ -6,35 +6,50 @@ function ( build_amrex )
    include(ExternalProject)
 
    # Set AMReX paths to use in mfix config
-   set(AMREX_SOURCE_DIR  ${PROJECT_SOURCE_DIR}/ThirdParty/amrex)
-   set(AMREX_ROOT        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty )
-   set(AMREX_LIB_DIR     ${AMREX_ROOT}/lib)
-   set(AMREX_GIT         ${AMREX_SOURCE_DIR})
-   set(AMREX_TOOLS       ${AMREX_SOURCE_DIR}/Tools)
-   set(AMREX_INCLUDES    ${AMREX_ROOT}/include)
-   set(AMREX_LIBRARIES    )
+   set(AMREX_SOURCE_DIR  ${CMAKE_SOURCE_DIR}/ThirdParty/amrex )
+   set(AMREX_ROOT        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty PARENT_SCOPE )
+   set(AMREX_LIB_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/lib PARENT_SCOPE )
+   set(AMREX_GIT         ${CMAKE_SOURCE_DIR}/ThirdParty/amrex PARENT_SCOPE )
+   set(AMREX_TOOLS       ${CMAKE_SOURCE_DIR}/ThirdParty/amrex/Tools PARENT_SCOPE )
+   set(AMREX_INCLUDES    ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/include PARENT_SCOPE )
+
+   # Set mpi-specific flags ( defined by CCSEFind )
+   if (ENABLE_MPI)
+      find_package(MPI REQUIRED)
+      set( MPI_INCLUDES ${MPI_CXX_INCLUDE_PATH} PARENT_SCOPE )
+      set( MPI_LFLAGS   ${MPI_CXX_LINK_FLAGS}   PARENT_SCOPE )
+      set( MPI_LIBS     ${MPI_CXX_LIBRARIES}    PARENT_SCOPE )
+   endif (ENABLE_MPI) 
 
    # Set manually list of libraries 
    # ( not using cmake find utilities in this case)
    if (ENABLE_MPI)
-      set( AMREX_LIBRARIES fboxlib;cboxlib;fboxlib;cfboxlib;box_camrdata)
-   else ()
-      set( AMREX_LIBRARIES cboxlib;fboxlib;cfboxlib;box_camrdata)
-   endif ()
+      set( AMREX_LIBRARIES fboxlib;cboxlib;fboxlib;cfboxlib;box_camrdata PARENT_SCOPE )
+   else (ENABLE_MPI)
+      set( AMREX_LIBRARIES cboxlib;fboxlib;cfboxlib;box_camrdata PARENT_SCOPE )
+   endif (ENABLE_MPI)
 
    # Add Cmake Tools from AMReX
-   set(CMAKE_MODULE_PATH ${AMREX_SOURCE_DIR}/Tools/CMake/)
+   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/ThirdParty/amrex/Tools/CMake/)
 
    ExternalProject_Add(
       amrex
-      PREFIX          ${AMREX_ROOT}
+      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty
       SOURCE_DIR      ${AMREX_SOURCE_DIR}
-      INSTALL_DIR     ${AMREX_ROOT}
-      CMAKE_ARGS      -DENABLE_MPI=${ENABLE_MPI} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-      -DBL_USE_PARTICLES=1 -DBL_SPACEDIM=3 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-      LOG_DOWNLOAD 1
-      LOG_UPDATE 1
+      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty
+      CMAKE_ARGS  -DENABLE_MPI=${ENABLE_MPI} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DBL_USE_PARTICLES=1 -DBL_SPACEDIM=${BL_SPACEDIM} -DENABLE_OpenMP=${ENABLE_OpenMP} -DBL_PRECISION=${BL_PRECISION}
+        -DENABLE_PROFILING=${ENABLE_PROFILING} -DENABLE_BACKTRACE=${ENABLE_BACKTRACE}
+        -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER} -DMPI_CXX_INCLUDE_PATH=${MPI_CXX_INCLUDE_PATH} 
+	-DMPI_CXX_LIBRARIES=${MPI_CXX_LIBRARIES} 
+      LOG_CONFIGURE 1
+      LOG_BUILD 1
+      LOG_INSTALL 1
       )
+
+   # AMReX defines for compilation
+   include(CCSEOptions)
 
 endfunction (build_amrex)
 

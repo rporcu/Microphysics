@@ -53,9 +53,9 @@ macro(set_defaults)
    set(BL_USE_PARTICLES 1 CACHE INT "Include Particles classes in AMReX build")
    set(ENABLE_PROFILING 0 CACHE INT "Include profiling information in AMReX build")
    set(ENABLE_BACKTRACE 1 CACHE INT "Include backtrace information in AMReX build")
-   set(ENABLE_SUPERBUILD 1 CACHE INT  "Allow CMake to download, build and install AMReX")
    set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mod)
-   
+   set(ENABLE_SUPERBUILD 1 CACHE INT  "Allow CMake to download, build and install AMReX")
+      
 endmacro(set_defaults)
 
 ###############################

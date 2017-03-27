@@ -15,11 +15,11 @@ set_defaults()
 set_compiler_flags()
 
 # Config Amrex
-if (SUPERBUILD)
+if (ENABLE_SUPERBUILD)
    build_amrex()
-else (SUPERBUILD)
+else (ENABLE_SUPERBUILD)
    find_amrex()
-endif (SUPERBUILD)
+endif (ENABLE_SUPERBUILD)
 
 # Set build flags ( provides MFIX_INCLUDES, 
 # MFIX_EXT_LINK_STRING  and MFIX_EXT_LINK_DIRS )

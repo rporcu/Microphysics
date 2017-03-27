@@ -44,6 +44,10 @@ add_custom_command(
 
 add_library(mfixcore STATIC ${CXX_sources} ${F90_sources} ${CXX_includes} AMReX_buildInfo.cpp )
 
+if ( ENABLE_SUPERBUILD )
+   add_dependencies( mfixcore amrex )
+endif ( ENABLE_SUPERBUILD )
+
 # Remove AMReX_buildInfo.cpp
 add_custom_command(TARGET mfixcore POST_BUILD COMMAND rm AMReX_buildInfo.cpp
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
