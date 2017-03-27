@@ -357,7 +357,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
       use geometry, only: domlo,domhi
-      use geometry, only: xlength
+      use geometry, only: xlength, ylength, zlength
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -417,6 +417,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          if(.not.equal(bc_y_s(bcv), bc_y_n(bcv))) then
             y_constant = .false.
             j_s = j_s + 1
+         else if(equal(bc_y_s(bcv),ylength)) then
+            j_s = j_s + 1
+            j_n = j_s
          endif
          bc_j_s(bcv) = j_s
          bc_j_n(bcv) = j_n
@@ -428,6 +431,9 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          if(.not.equal(bc_z_b(bcv), bc_z_t(bcv))) then
             z_constant = .false.
             k_b = k_b + 1
+         else if(equal(bc_z_b(bcv),zlength)) then
+            k_b = k_b + 1
+            k_t = k_b
          endif
          bc_k_b(bcv) = k_b
          bc_k_t(bcv) = k_t
