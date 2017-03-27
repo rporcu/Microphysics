@@ -5,10 +5,10 @@
 | File       | Description                                         |
 | ---------  | --------------------------------------------------- |
 | benchmarks | UC Benchmark cases (see benchmark/README.md)        |
-| model      | Fortran source files                                |
+| src        | Fortran source files                                |
 | tests      | Regression tests (see tests/README.md)              |
-
-
+| ThirdParty | External libraries sources                          |
+| Tools      | CMake configuration files                           |
 
 ## Prerequisite: Environment Dependencies on Joule (Joule specific)
 For the Joule environment, load the gnu module and set environment variables first. If not on Joule, skip this step.
@@ -19,37 +19,91 @@ For the Joule environment, load the gnu module and set environment variables fir
 > export F77=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 > export FC=/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran
 ```
-
-## Prerequisite: Build and Install AMReX
-
-Clone AMReX the official Git repository and checkout the _development_ branch.
+## Prerequisite: Building and installing AMReX (not needed if SUPERBUILD is enabled: see below)
+Clone AMReX from the official Git repository and checkout the _development_ branch.
 ```shell
 > git clone https://bitbucket.org/berkeleylab/amrex.git
 > cd amrex
 > git checkout development
 ```
-
-Create an install directory and the set environment variable AMREX_HOME to the
-install location. Here, it is assumed that you are doing an out of source
-install in $HOME/local/amrex
+Set the environment variable AMREX_HOME to point to *installdir*, an installation directory of choice. If *installdir* does not exist, the build system will create it for you. __It is strongly recommended that *installdir* not be placed in the same folder as the AMReX source files.__ 
 ```shell
-> cd $HOME/local
-> mkdir amrex
-> export AMREX_HOME=$HOME/local/amrex
+> export AMREX_HOME=absolute-path-to-installdir
 ```
-
-From the AMReX source directory, run CMake and build the code.
+From the AMReX source directory, run CMake to build and install AMReX.
 ```shell
-> cmake -DENABLE_MPI=0 -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
-> make
+> cmake CMAKE_CONFIG_OPTIONS -DBL_USE_PARTICLES=1 -DCMAKE_INSTALL_PREFIX:PATH=$AMREX_HOME .
 > make install
 ```
+CMAKE_CONFIG_OPTIONS represents a string of CMake configuration options as explained below.
 
----------------------------------------------------------------------
+--------------------------------------------------------------------
 
 ## Building MFIX-Exa
 
-To build MFIX-Exa, run cmake then make.
+To build MFIX-Exa, you have two options:
+
+1. Use an already existing AMReX installation
+1. Build and install AMReX as part of the MFIX build (SUPERBUILD,default)
+
+### 1. Building MFIX against a pre-installed version of AMReX 
+Clone the mfix git repo
+```shell
+> git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
+> cd mfix
+``` 
+Create a build directory
+```shell
+> mkdir build
+> cd build
+``` 
+Make sure that AMREX_HOME points to the AMReX installation directory (see above)
+```shell
+> export AMREX_HOME=absolute-path-to-amrex_installdir
+```
+Run CMake and build
+```shell
+> cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
+> make -j
+```
+CMAKE_CONFIG_OPTIONS must be the same string used for the AMReX configuration.
+
+### 2. Building MFIX via SUPERBUILD
+In order to avoid a separate AMReX installation, you can take advantage of the default MFIX build configuration
+by doing as follows (starting from the clone phase)
+```shell
+> git clone http://mfix.netl.doe.gov/gitlab/exa/mfix.git
+> cd mfix
+> mkdir build
+> cd build
+> cmake CMAKE_CONFIG_OPTIONS  ..
+> make -j
+```  
+This will build AMReX internally the first time the *make* command is issued. No external installation of AMReX will be needed. 
+
+## Customizing MFIX configuration
+The options string CMAKE_CONFIG_OPTIONS allows to enable/disable features of both AMReX and MFIX. If AMReX is built separatly, MFIX must be configured with the same CMAKE_CONFIG_OPTIONS used for the configuration of AMReX. If instead SUPERBUILD is used, MFIX build system will take care of applying CMAKE_CONFIG_OPTIONS to the AMReX configuration.
+
+CMAKE_CONFIG_OPTIONS consists of a series of options of the form -D*option-name*=*option_value*. The table below lists all the possible options, their possible values and a description of their effect on the build.
+ 
+| Option name          |  Description                                 | Possible values              | Default value  |
+| ---------------------|----------------------------------------------|------------------------------|----------------| 
+| ENABLE_MPI           | Enable build with MPI                        |   0/1                        |   0            |
+| ENABLE_OpenMP        | Enable build with OpenMP                     |   0/1                        |   0            |
+| ENABLE_PROFILING     | Include profiling information in AMReX build |   0/1                        |   0            |
+| ENABLE_BACKTRACE     | Include backtrace information in AMReX build |   0/1                        |   1            |
+| FFLAGS               | User-defined Fortran flags                   | all compiler-supported flags |   None         |
+| CXXFLAGS             | User-defined C++ flags                       | all compiler-supported flags |   None         |
+
+For example, invoking cmake as follows (_CMAKE_CONFIG_OPTIONS="-DFFLAGS=-fcray-pointer -DENABLE_MPI=1"_ )
+```shell
+> cmake -DFFLAGS=-fcray-pointer -DENABLE_MPI=1 ..
+```
+adds the flag *-fcray-pointer* to the cFortran compilation command and enable MPI subroutines.  
+The system defaults compilers can be overwritten as well by setting the flags FC and CXX before invoking the cmake command.
+```shell
+> FC=fortran-compiler CXX=c++-compiler cmake CMAKE_CONFIG_OPTIONS  ..
+```  
 
 ### Building with defaults
 ```shell
@@ -73,14 +127,6 @@ mfix.dat usr.f90 usr_mof.f90
 > make -j
 ```
 
-### Building with compiler flags
-
-You can specify compiler options with CMAKE_Fortran_FLAGS and CMAKE_CXX_FLAGS,
-either specified on the command line or by editing them in CMakeCache.txt.
-
-```shell
-> cmake -DCMAKE_Fortran_FLAGS="-O2 -g -ffpe-trap=invalid -fimplicit-none" -DCMAKE_CXX_FLAGS="-std=c++11" ..
-```
 
 ### Building with SMP or DMP
 
