@@ -2,6 +2,24 @@ function ( build_amrex )
 
    message( STATUS "Configuring build to compile AMReX as part of MFIX")
 
+   # First make sure the submodule has been pulled and updated
+   set( GIT_OUTPUT  "" )
+
+   execute_process( COMMAND git submodule init  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE  GIT_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+   if ( NOT "${GIT_OUTPUT}" STREQUAL "" )
+      message( STATUS ${GIT_OUTPUT} )
+   endif ( NOT "${GIT_OUTPUT}" STREQUAL "" )
+
+   execute_process( COMMAND git submodule update  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE  GIT_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+   if ( NOT "${GIT_OUTPUT}" STREQUAL "" )
+      message( STATUS "${GIT_OUTPUT}" )
+   endif ( NOT "${GIT_OUTPUT}" STREQUAL "" )
+
+
    # Include cmake config files to build external projects
    include(ExternalProject)
 
@@ -104,4 +122,5 @@ function (find_amrex)
    endif (ENABLE_MPI) 
 
 endfunction (find_amrex)
-      
+
+
