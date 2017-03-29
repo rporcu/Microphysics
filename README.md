@@ -84,7 +84,7 @@ This will build AMReX internally the first time the *make* command is issued. No
 ## Customizing MFIX configuration
 The options string CMAKE_CONFIG_OPTIONS allows to enable/disable features of both AMReX and MFIX. If AMReX is built separatly, MFIX must be configured with the same CMAKE_CONFIG_OPTIONS used for the configuration of AMReX. If instead SUPERBUILD is used, MFIX build system will take care of applying CMAKE_CONFIG_OPTIONS to the AMReX configuration.
 
-CMAKE_CONFIG_OPTIONS consists of a series of options of the form -D*option-name*=*option_value*. The table below lists all the possible options, their possible values and a description of their effect on the build.
+CMAKE_CONFIG_OPTIONS consists of a series of options of the form -D _option-name_=*option_value*. The table below lists all the possible options, their possible values and a description of their effect on the build.
  
 | Option name          |  Description                                 | Possible values              | Default value  |
 | ---------------------|----------------------------------------------|------------------------------|----------------| 
@@ -99,18 +99,11 @@ For example, invoking cmake as follows (_CMAKE_CONFIG_OPTIONS="-DFFLAGS=-fcray-p
 ```shell
 > cmake -DFFLAGS=-fcray-pointer -DENABLE_MPI=1 ..
 ```
-adds the flag *-fcray-pointer* to the cFortran compilation command and enable MPI subroutines.  
+adds the flag *-fcray-pointer* to the Fortran compilation command and enable MPI subroutines.  
 The system defaults compilers can be overwritten as well by setting the flags FC and CXX before invoking the cmake command.
 ```shell
 > FC=fortran-compiler CXX=c++-compiler cmake CMAKE_CONFIG_OPTIONS  ..
 ```  
-
-### Building with defaults
-```shell
-> cd <path to>/mfix
-> cmake .
-> make -j
-```
 
 ### Building with user-defined files (UDFs)
 
@@ -127,54 +120,66 @@ mfix.dat usr.f90 usr_mof.f90
 > make -j
 ```
 
-
-### Building with SMP or DMP
-
-Specify DMP or SMP to building with MPI or OpenMP support.
-
-```shell
-> cmake -DDMP=1 ../..   # for distributed memory (MPI) executable
-> cmake -DSMP=1 ../..   # for shared memory (OpenMP) executable
-```
-
 ## Running MFIX Test Suite
+MFIX comes  with a number of test cases aimed at testing the functionalities of the software package.
+The source files as well as the required input files for each test are located in _MFIX-git-repo_/_tests_/_test-name_. 
+During the MFIX configuration process, the directory *tests* is copied to the build directory.
+When a test is run (see below), the output files are stored in _build-dir_/_tests_/_test-name_.
 
-Running tests requires the `numdiff` command, which can be installed with `apt
-install numdiff` on Ubuntu.
+**Running tests requires the `numdiff` command, which can be installed with `apt install numdiff` on Ubuntu.**
 
 ### Running all tests
 ```shell
+> cd to mfix-build-dir
 > ctest
 ```
 
 ### Listing all tests (without running them)
 ```shell
+> cd to mfix-build-dir
 > ctest -N
-Test project ~/mfixexa
-  Test #1: tests_FLD01
-  Test #2: tests_FLD02
-  Test #3: tests_DEM01
-  Test #4: tests_DEM02
-  Test #5: tests_DEM03
-  Test #6: tests_DEM04
-  Test #7: tests_DEM05
-  Test #8: tests_DEM06
-
-Total Tests: 8
+Test project path-to-build-dir
+  Test  #1: FLD01-x
+  Test  #2: FLD01-y
+  Test  #3: FLD01-z
+  Test  #4: FLD02-x
+  Test  #5: FLD02-y
+  Test  #6: FLD02-z
+  Test  #7: DEM01-x
+  Test  #8: DEM01-y
+  Test  #9: DEM01-z
+  Test #10: DEM02-x
+  Test #11: DEM02-y
+  Test #12: DEM02-z
+  Test #13: DEM03-x
+  Test #14: DEM03-y
+  Test #15: DEM03-z
+  Test #16: DEM04-x
+  Test #17: DEM04-y
+  Test #18: DEM04-z
+  Test #19: DEM05-x
+  Test #20: DEM05-y
+  Test #21: DEM05-z
+  Test #22: DEM06-y
+  Test #23: DEM06-z
+  Test #24: DEM06-x
 ```
 
 ### Running a particular test by the index listed in ctest -N
 ```shell
-> ctest -I 3             # run the third test
-Test project ~/mfixexa
-    Start 3: tests_DEM01
+> cd to mfix-build-dir
+> ctest -I 3,3             # run the third test
 ```
-
 ### Running a particular test by name
 ```shell
+> cd to mfix-build-dir
 > ctest -R DEM01  # running all tests with "DEM01" in the test name
 ```
-
+### Running a particular test via make
+```shell
+> cd to mfix-build-dir
+> make run_DEM01-x  # running "DEM01-x" and output to the screen
+```
 ### Running a user-defined case
 ```shell
 > ./mfix inputs  mfix.input_file=<user_file_name>
