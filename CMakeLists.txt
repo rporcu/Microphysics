@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Tools/)
 include(MFIXTools)
 include(AMReXConfig)
 
+check_build_tree_path()
 set_defaults()
 set_compiler_flags()
 

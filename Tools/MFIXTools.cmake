@@ -107,6 +107,15 @@ macro(set_compiler_flags)
 
 endmacro(set_compiler_flags)
 
+#################################
+# Stop if in-source build
+#################################
+macro( check_build_tree_path )
+   string(FIND "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/src" RESULT )
+   if (NOT "${RESULT}" STREQUAL "-1")
+      message( FATAL_ERROR  "ERROR: in-source builds are not allowed!")
+   endif (NOT "${RESULT}" STREQUAL "-1" )
+endmacro( check_build_tree_path )
 
 #####################################
 # Print build config values
