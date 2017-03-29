@@ -149,7 +149,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nlft
          do j = 1, nbot
-            do k=domlo(3),domhi(3)
+            do k=slo(3)+ndwn,shi(3)-nup
                s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1),domlo(2),k)
             end do
          end do
@@ -157,7 +157,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nlft
          do j = 1, ntop
-            do k=domlo(3),domhi(3)
+            do k=slo(3)+ndwn,shi(3)-nup
                s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1),domhi(2),k)
             end do
          end do
@@ -165,7 +165,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nlft
          do k = 1, ndwn
-            do j=domlo(2),domhi(2)
+            do j=slo(2)+nbot,shi(2)-ntop
                s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1),j,domlo(3))
             end do
          end do
@@ -173,7 +173,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nlft
          do k = 1, nup
-            do j=domlo(2),domhi(2)
+            do j=slo(2)+nbot,shi(2)-ntop
                s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1),j,domhi(3))
             end do
          end do
@@ -181,7 +181,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nrgt
          do j = 1, nbot
-            do k=domlo(3),domhi(3)
+            do k=slo(3)+ndwn,shi(3)-nup
                s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1),domlo(2),k)
             end do
          end do
@@ -189,7 +189,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nrgt
          do j = 1, ntop
-            do k=domlo(3),domhi(3)
+            do k=slo(3)+ndwn,shi(3)-nup
                s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1),domhi(2),k)
             end do
          end do
@@ -197,7 +197,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nrgt
          do k = 1, ndwn
-            do j=domlo(2),domhi(2)
+            do j=slo(2)+nbot,shi(2)-ntop
                s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1),j,domlo(3))
             end do
          end do
@@ -205,7 +205,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do i = 1, nrgt
          do k = 1, nup
-            do j=domlo(2),domhi(2)
+            do j=slo(2)+nbot,shi(2)-ntop
                s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1),j,domhi(3))
             end do
          end do
@@ -213,7 +213,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do j = 1, nbot
          do k = 1, ndwn
-            do i=domlo(1),domhi(1)
+            do i=slo(1)+nlft,shi(1)-nrgt
                s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2),domlo(3))
             end do
          end do
@@ -221,7 +221,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do j = 1, ntop
          do k = 1, ndwn
-            do i=domlo(1),domhi(1)
+            do i=slo(1)+nlft,shi(1)-nrgt
                s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2),domlo(3))
             end do
          end do
@@ -229,7 +229,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do j = 1, nbot
          do k = 1, nup
-            do i=domlo(1),domhi(1)
+            do i=slo(1)+nlft,shi(1)-nrgt
                s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2),domhi(3))
             end do
          end do
@@ -237,7 +237,7 @@ subroutine fill_bc0(s, slo, shi, &
 
       do j = 1, ntop
          do k = 1, nup
-            do i=domlo(1),domhi(1)
+            do i=slo(1)+nlft,shi(1)-nrgt
                s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2),domhi(3))
             end do
          end do
