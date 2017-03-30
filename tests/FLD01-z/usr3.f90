@@ -17,7 +17,7 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use geometry, only: imax,jmax,domlo,domhi
+      use geometry, only: domlo,domhi
 
       implicit none
 
