@@ -270,7 +270,7 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
-         pj = pj - dpodx*dx*(hi(1)-domhi(1)+2)
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
          do i = shi(1), slo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
