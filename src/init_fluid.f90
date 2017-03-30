@@ -69,9 +69,8 @@ module init_fluid_module
       if (is_undefined(mu_g0)) then
          call calc_mu_g(slo,shi,lambda_g,mu_g)
       else
-      !  Set only the interior values
-             mu_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = mu_g0
-         lambda_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = -(2.0d0/3.0d0)*mu_g0
+             mu_g(:,:,:) = mu_g0
+         lambda_g(:,:,:) = -(2.0d0/3.0d0)*mu_g0
       endif
 
    end subroutine init_fluid
@@ -209,14 +208,13 @@ module init_fluid_module
 
       USE bc, only: delp_x, delp_y, delp_z
       USE bc, only: dimension_ic
-      USE bc, only: dimension_bc, bc_type, bc_p_g, bc_defined
+      USE bc, only: dimension_bc, bc_type, bc_p_g, bc_defined, bc_plane
       USE compar, only: myPE
       USE constant , only: gravity
       USE eos, ONLY: EOSG
       USE fld_const, only: mw_avg, ro_g0
       USE geometry, only: xlength, ylength, zlength
       USE ic       , only: ic_p_g, ic_defined
-      USE param1   , only: is_defined, zero, undefined, is_undefined
       USE scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
@@ -224,6 +222,8 @@ module init_fluid_module
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
+      USE param1   , only: zero, undefined
+      USE param1   , only: is_defined, is_undefined
 
       IMPLICIT NONE
 
@@ -270,8 +270,8 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
-         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
-         do i = hi(1), lo(1), -1
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+2)
+         do i = shi(1), slo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)

@@ -147,99 +147,101 @@ subroutine fill_bc0(s, slo, shi, &
 
 ! fill edges --------------------------------------------
 
-      if (nlft .gt. 0) then
-         ilo = domlo(1)
-         if (nbot .gt. 0) then
-            jlo = domlo(2)
-            do i = 1, nlft
-               do j = 1, nbot
-                  do k=slo(3),shi(3)
-                     s(ilo-i,jlo-j,k) = s(ilo,jlo,k)
-                  end do
-               end do
+      do i = 1, nlft
+         do j = 1, nbot
+            do k=slo(3)+ndwn,shi(3)-nup
+               s(domlo(1)-i,domlo(2)-j,k) = s(domlo(1),domlo(2),k)
             end do
-         endif
+         end do
+      end do
 
-         if (ntop .gt. 0) then
-            jhi = domhi(2)
-            do i = 1, nlft
-               do j = 1, ntop
-                  do k=slo(3),shi(3)
-                     s(ilo-i,jhi+j,k) = s(ilo,jhi,k)
-                  end do
-               end do
+      do i = 1, nlft
+         do j = 1, ntop
+            do k=slo(3)+ndwn,shi(3)-nup
+               s(domlo(1)-i,domhi(2)+j,k) = s(domlo(1),domhi(2),k)
             end do
-         endif
+         end do
+      end do
 
-         if (ndwn .gt. 0) then
-            klo = domlo(3)
-            do i = 1, nlft
-               do k = 1, ndwn
-                  do j=slo(2),shi(2)
-                     s(ilo-i,j,klo-k) = s(ilo-i,j,klo)
-                  end do
-               end do
+      do i = 1, nlft
+         do k = 1, ndwn
+            do j=slo(2)+nbot,shi(2)-ntop
+               s(domlo(1)-i,j,domlo(3)-k) = s(domlo(1),j,domlo(3))
             end do
-         endif
+         end do
+      end do
 
-         if (nup .gt. 0) then
-            khi = domhi(3)
-            do i = 1, nlft
-               do k = 1, nup
-                  do j=slo(2),shi(2)
-                     s(ilo-i,j,khi+k) = s(ilo-i,j,khi)
-                  end do
-               end do
+      do i = 1, nlft
+         do k = 1, nup
+            do j=slo(2)+nbot,shi(2)-ntop
+               s(domlo(1)-i,j,domhi(3)+k) = s(domlo(1),j,domhi(3))
             end do
-         endif
-      endif
+         end do
+      end do
 
-      if (nrgt .gt. 0) then
-         ihi = domhi(1)
-         if (nbot .gt. 0) then
-            jlo = domlo(2)
-            do i = 1, nrgt
-               do j = 1, nbot
-                  do k=slo(3),shi(3)
-                     s(ihi+i,jlo-j,k) = s(ihi,jlo,k)
-                  end do
-               end do
+      do i = 1, nrgt
+         do j = 1, nbot
+            do k=slo(3)+ndwn,shi(3)-nup
+               s(domhi(1)+i,domlo(2)-j,k) = s(domhi(1),domlo(2),k)
             end do
-         endif
+         end do
+      end do
 
-         if (ntop .gt. 0) then
-            jhi = domhi(2)
-            do i = 1, nrgt
-               do j = 1, ntop
-                  do k=slo(3),shi(3)
-                     s(ihi+i,jhi+j,k) = s(ihi,jhi,k)
-                  end do
-               end do
+      do i = 1, nrgt
+         do j = 1, ntop
+            do k=slo(3)+ndwn,shi(3)-nup
+               s(domhi(1)+i,domhi(2)+j,k) = s(domhi(1),domhi(2),k)
             end do
-         endif
+         end do
+      end do
 
-         if (ndwn .gt. 0) then
-            klo = domlo(3)
-            do i = 1, nrgt
-               do k = 1, ndwn
-                  do j=slo(2),shi(2)
-                     s(ihi+i,j,klo-k) = s(ihi,j,klo)
-                  end do
-               end do
+      do i = 1, nrgt
+         do k = 1, ndwn
+            do j=slo(2)+nbot,shi(2)-ntop
+               s(domhi(1)+i,j,domlo(3)-k) = s(domhi(1),j,domlo(3))
             end do
-         endif
+         end do
+      end do
 
-         if (nup .gt. 0) then
-            khi = domhi(3)
-            do i = 1, nrgt
-               do k = 1, nup
-                  do j=slo(2),shi(2)
-                     s(ihi+i,j,khi+k) = s(ihi,j,khi)
-                  end do
-               end do
+      do i = 1, nrgt
+         do k = 1, nup
+            do j=slo(2)+nbot,shi(2)-ntop
+               s(domhi(1)+i,j,domhi(3)+k) = s(domhi(1),j,domhi(3))
             end do
-         endif
-      endif
+         end do
+      end do
+
+      do j = 1, nbot
+         do k = 1, ndwn
+            do i=slo(1)+nlft,shi(1)-nrgt
+               s(i,domlo(2)-j,domlo(3)-k) = s(i,domlo(2),domlo(3))
+            end do
+         end do
+      end do
+
+      do j = 1, ntop
+         do k = 1, ndwn
+            do i=slo(1)+nlft,shi(1)-nrgt
+               s(i,domhi(2)+j,domlo(3)-k) = s(i,domhi(2),domlo(3))
+            end do
+         end do
+      end do
+
+      do j = 1, nbot
+         do k = 1, nup
+            do i=slo(1)+nlft,shi(1)-nrgt
+               s(i,domlo(2)-j,domhi(3)+k) = s(i,domlo(2),domhi(3))
+            end do
+         end do
+      end do
+
+      do j = 1, ntop
+         do k = 1, nup
+            do i=slo(1)+nlft,shi(1)-nrgt
+               s(i,domhi(2)+j,domhi(3)+k) = s(i,domhi(2),domhi(3))
+            end do
+         end do
+      end do
 
       return
    end subroutine fill_bc0
