@@ -1,7 +1,12 @@
-set( TESTS  FLD01-x FLD01-y FLD01-z FLD02-x FLD02-y FLD02-z 
-            DEM01-x DEM01-y DEM01-z DEM02-x DEM02-y DEM02-z
-            DEM03-x DEM03-y DEM03-z DEM04-x DEM04-y DEM04-z
-            DEM05-x DEM05-y DEM05-z DEM06-y DEM06-z DEM06-x
+set( TESTS  FLD01-x FLD01-y FLD01-z
+            FLD02-x FLD02-y FLD02-z
+            FLD03-x FLD03-y FLD03-z
+            DEM01-x DEM01-y DEM01-z
+            DEM02-x DEM02-y DEM02-z
+            DEM03-x DEM03-y DEM03-z
+            DEM04-x DEM04-y DEM04-z
+            DEM05-x DEM05-y DEM05-z
+            DEM06-x DEM06-y DEM06-z
    )
 
 set (BUILD_TEST build_tests)
@@ -22,7 +27,7 @@ foreach( THIS_TEST ${TESTS})
 
    target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
-   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR} 
+   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
        RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
    target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
@@ -32,7 +37,7 @@ foreach( THIS_TEST ${TESTS})
 
    # Create test dir in build path if needed
    # Update test files if needed
-   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD 
+   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD
       COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
       COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
       WORKING_DIRECTORY  ${TEST_DIR}
@@ -40,12 +45,12 @@ foreach( THIS_TEST ${TESTS})
 
    # Setup for running a single test
    set(TEST_RUN run_${TEST_NAME})
-   add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE} 
-      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} 
+   add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
+      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE}
       WORKING_DIRECTORY  ${TEST_DIR} )
 
    # Setup for running the whole suite of tests via ctest
-   add_test(NAME ${TEST_NAME} 
+   add_test(NAME ${TEST_NAME}
       COMMAND make  ${TEST_RUN}
       WORKING_DIRECTORY ${PROJECT_BINDARY_DIR})
 
