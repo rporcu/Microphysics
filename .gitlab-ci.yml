@@ -9,23 +9,26 @@
 stages:
   - build
   - test
-  - benchmarks
 
 variables:
   CTEST_OUTPUT_ON_FAILURE: "1"
   LD_LIBRARY_PATH: "/nfs/apps/Compilers/GNU/6.1.0/lib:/nfs/apps/Compilers/GNU/6.1.0/lib64"
+  CC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gcc"
+  CXX: "/nfs/apps/Compilers/GNU/6.1.0/bin/g++"
+  F77: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
+  FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
   AMREX_HOME: "/nfs/home/0/users/jenkins/amrex/install"
-  GCC_BIN_DIR: "/nfs/apps/Compilers/GNU/6.1.0/bin/"
+  MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
+  FEXTRACT: "/nfs/home/0/users/jenkins/local/bin/fextract.Linux.gfortran.exe"
+  FCOMPARE: "/nfs/home/0/users/jenkins/local/bin/fcompare.Linux.gfortran.exe"
 
 build:
   stage: build
   script:
     - mkdir build
     - cd build
-    - FC="${GCC_BIN_DIR}/gfortran" CC="${GCC_BIN_DIR}/gcc" CXX="${GCC_BIN_DIR}/g++" cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
-
-    - make
-    - make build_test
+    - cmake CMAKE_CONFIG_OPTIONS -DENABLE_SUPERBUILD=0 ..
+    - make build_tests
   artifacts:
     expire_in: 1 day
     paths:
@@ -35,13 +38,4 @@ test:
   stage: test
   script:
     - cd build
-    - ctest -R tests
-
-benchmarks:
-  stage: benchmarks
-  script:
-    - mkdir build-benchmarks
-    - cd build-benchmarks
-    - FC="${GCC_BIN_DIR}/gfortran" CC="${GCC_BIN_DIR}/gcc" CXX="${GCC_BIN_DIR}/g++" cmake CMAKE_CONFIG_OPTIONS="-DENABLE_SUPERBUILD=0 -DCMAKE_BUILD_TYPE=Release" ..
-
-    - ctest -R benchmarks
+    - make test
