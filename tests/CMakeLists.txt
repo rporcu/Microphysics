@@ -41,7 +41,7 @@ foreach( THIS_TEST ${TESTS})
    # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME})
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE}
-      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE}
+      COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} ${CMAKE_BINARY_DIR}/ThirdParty/bin
       WORKING_DIRECTORY  ${TEST_DIR} )
 
    # Setup for running the whole suite of tests via ctest

@@ -19,8 +19,8 @@ variables:
   FC: "/nfs/apps/Compilers/GNU/6.1.0/bin/gfortran"
   AMREX_HOME: "/nfs/home/0/users/jenkins/amrex/install"
   MFIX_BENCHMARKS_HOME: "/nfs/home/0/users/jenkins/exa-benchmarks/MFIX-benchmarks"
-  FEXTRACT: "/nfs/home/0/users/jenkins/local/bin/fextract.Linux.gfortran.exe"
-  FCOMPARE: "/nfs/home/0/users/jenkins/local/bin/fcompare.Linux.gfortran.exe"
+  FEXTRACT: "/nfs/home/0/users/jenkins/local/bin/fextract"
+  FCOMPARE: "/nfs/home/0/users/jenkins/local/bin/plt_compare_diff_grids"
 
 build:
   stage: build

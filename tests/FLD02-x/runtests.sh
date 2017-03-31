@@ -7,11 +7,16 @@ if [ -n "$1" ]; then
     MFIX=$1
 fi
 
+if [ -n "$2" ]; then
+    FCOMPARE=$2/plt_compare_diff_grids
+    FEXTRACT=$2/fextract
+fi
+
 rm -rf POST_* ${RUN_NAME}* &> /dev/null
 time -p ${MFIX} inputs
 
 if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
-    ${FCOMPARE} ${MFIX_BENCHMARKS_HOME}/FLD02-x_FLD02-x_plt00000 FLD0200000/
+    ${FCOMPARE} --infile1 ${MFIX_BENCHMARKS_HOME}/FLD02-x_FLD02-x_plt00000 --infile2 FLD0200000/
 fi
 
 if ! [ -z "${FEXTRACT}" ]; then
