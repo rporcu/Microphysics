@@ -180,7 +180,8 @@ mfix_level::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid dupliates
     }
-    std::cout << "BA " << ba << std::endl;
+    if ( ParallelDescriptor::IOProcessor() )
+       std::cout << "BA " << ba << std::endl;
     return ba;
 }
 
@@ -463,7 +464,8 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           converged = check_convergence(&nit, residuals);
 
           // Display current iteration residuals
-          display_resid(&nit, residuals);
+          if ( ParallelDescriptor::IOProcessor() )
+             display_resid(&nit, residuals);
 
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
