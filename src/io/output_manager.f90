@@ -284,12 +284,9 @@ module output_manager_module
 
  2000 FORMAT('Wall Time - ',2(A,1X,A,A,4X))
 
+      end subroutine flush_notify_user
 
-
-      RETURN
-      END SUBROUTINE FLUSH_NOTIFY_USER
-
-      END SUBROUTINE OUTPUT_MANAGER
+      end subroutine output_manager
 
 
 !----------------------------------------------------------------------!

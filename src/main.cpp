@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
   int estatus = 0;
 
   // Call to output before entering time march loop
-  if (solve_fluid)
+  if (solve_fluid && ParallelDescriptor::IOProcessor())
     my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
   // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
@@ -147,7 +147,8 @@ int main (int argc, char* argv[])
       my_mfix.WriteCheckPointFile( nstep, dt, time );
     }
 
-    my_mfix.output(lev,estatus,finish,nstep,dt,time);
+    if (ParallelDescriptor::IOProcessor())
+       my_mfix.output(lev,estatus,finish,nstep,dt,time);
 
     // Mechanism to terminate MFIX normally.
     if (steady_state || (time + 0.1*dt >= tstop) || (solve_dem && !solve_fluid)) finish = 1;
