@@ -23,10 +23,10 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 
       IMPLICIT NONE
 
-      LOGICAL, INTENT(INOUT) :: pEXIT_SIGNAL
+      logical, INTENT(INOUT) :: pEXIT_SIGNAL
 
 ! Logical flags for hault cases.
-      LOGICAL :: useR_HAULT
+      logical :: useR_HAULT
 ! Elapsed wall time, and fancy formatted buffer/batch queue times.
       real(c_real) :: WALL_STOP
 

@@ -15,7 +15,7 @@ module leqsol
 
 ! Automatic adjustment of leq parameters possible (set in iterate after
 ! the completion of first iteration).
-  LOGICAL :: LEQ_ADJUST
+  logical :: LEQ_ADJUST
 
 ! Maximum number of linear equation solver iterations
   integer :: LEQ_IT(DIM_EQS)
@@ -36,21 +36,21 @@ module leqsol
   CHARACTER(LEN=4) :: LEQ_PC(DIM_EQS)
 
 ! Option to minimize dot products
-  LOGICAL :: MINIMIZE_DOTPRODUCTS
+  logical :: MINIMIZE_DOTPRODUCTS
 
 ! Option to transpose A_m
-  LOGICAL :: DO_TRANSPOSE
+  logical :: DO_TRANSPOSE
 
 ! Frequency of convergence check in BiCGStab
   integer :: ICHECK_BICGS
 
 ! Optimize for massively parallel machine
-  LOGICAL :: OPT_PARALLEL
+  logical :: OPT_PARALLEL
 
 ! Linear and non-linear solver statistics
-  LOGICAL :: SOLVER_STATISTICS
+  logical :: SOLVER_STATISTICS
 
-  LOGICAL :: USE_DOLOOP
+  logical :: USE_DOLOOP
 
 CONTAINS
 

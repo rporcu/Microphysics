@@ -40,7 +40,7 @@ MODULE READ_PAR_INPUT_MODULE
 ! IO Status:
       integer :: IOS
 ! Flag to indicate if file exists.
-      LOGICAL :: lEXISTS
+      logical :: lEXISTS
 ! Read dimension: 2D vs 3D data
       integer :: RDMN
 !-----------------------------------------------

@@ -479,7 +479,7 @@ MODULE INIT_NAMELIST_MODULE
 !</description>
 !  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      CYCLIC_X = .FALSE.
+      cyclic_x = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -491,7 +491,7 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <valid value=".FALSE." note="No cyclic condition at x-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition with pressure drop at x-boundary."/>
-      CYCLIC_X_PD = .FALSE.
+      cyclic_x_pd = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -499,7 +499,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across XLENGTH when a cyclic boundary condition
 !    with pressure drop is imposed in the x-direction.
 !  </description>
-      DELP_X = UNDEFINED
+      delp_x = UNDEFINED
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -509,7 +509,7 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition at x-boundary."/>
-      CYCLIC_Y = .FALSE.
+      cyclic_y = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -521,7 +521,7 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <valid value=".FALSE." note="No cyclic condition at y-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition with pressure drop at y-boundary."/>
-      CYCLIC_Y_PD = .FALSE.
+      cyclic_y_pd = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -529,7 +529,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across YLENGTH when a cyclic boundary condition
 !    with pressure drop is imposed in the y-direction.
 !  </description>
-      DELP_Y = UNDEFINED
+      delp_y = UNDEFINED
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -539,7 +539,7 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition at z-boundary."/>
-      CYCLIC_Z = .FALSE.
+      cyclic_z = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -552,7 +552,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <valid value=".FALSE." note="No cyclic condition at z-boundary."/>
 !  <valid value=".TRUE." note="Cyclic condition with pressure drop at
 !    z-boundary."/>
-      CYCLIC_Z_PD = .FALSE.
+      cyclic_z_pd = .FALSE.
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">
@@ -560,7 +560,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Fluid pressure drop across ZLENGTH when a cyclic boundary condition
 !    with pressure drop is imposed in the z-direction.
 !  </description>
-      DELP_Z = UNDEFINED
+      delp_z = UNDEFINED
 !</keyword>
 
 

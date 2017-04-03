@@ -26,8 +26,8 @@
 !                      error message
       CHARACTER(LEN=80)     LINE
 !
-!                      LOGICAL
-      LOGICAL          STRING_DEFINED
+!                      logical
+      logical          STRING_DEFINED
 
 !
 !-----------------------------------------------

@@ -14,7 +14,7 @@ CONTAINS
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 
-      LOGICAL FUNCTION mfix_isnan(x)
+      logical FUNCTION mfix_isnan(x)
 
 !-----------------------------------------------
 ! Dummy arguments
@@ -164,7 +164,7 @@ CONTAINS
 ! Purpose: Return .TRUE. if a line contains no input or only spaces.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE LOGICAL FUNCTION BLANK_LINE (line)
+      PURE logical FUNCTION BLANK_LINE (line)
 
       IMPLICIT NONE
 

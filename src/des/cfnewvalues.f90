@@ -41,9 +41,9 @@ MODULE CFNEWVALUES_MODULE
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-      INTEGER :: L
+      integer :: L
       real(c_real) :: DD(3)
-      LOGICAL, SAVE :: FIRST_PASS = .TRUE.
+      logical, SAVE :: FIRST_PASS = .TRUE.
 
       real(c_real) :: lVELo(3), lPOSo(3)
 

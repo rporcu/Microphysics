@@ -65,7 +65,7 @@
 !----------------------------------------------------------------->>>
 ! Logic that controls whether to print data dem simulations (granular or
 ! coupled)
-      LOGICAL :: PRINT_DES_DATA
+      logical :: PRINT_DES_DATA
       CHARACTER(LEN=255) :: VTP_DIR
 
 ! Output file count for .vtp type files and for tecplot files;
@@ -76,12 +76,12 @@
 !-----------------------------------------------------------------<<<
 
 ! DES - Continuum
-      LOGICAL :: DES_CONTINUUM_COUPLED
-      LOGICAL :: DES_EXPLICITLY_COUPLED
+      logical :: DES_CONTINUUM_COUPLED
+      logical :: DES_EXPLICITLY_COUPLED
 
 ! With this logic the particles see the fluid but the fluid does
 ! not see the particles.
-      LOGICAL :: DES_ONEWAY_COUPLED
+      logical :: DES_ONEWAY_COUPLED
 
 ! Collision model, options are as follows
 !   linear spring dashpot model (default/undefined)
@@ -95,8 +95,8 @@
 !   'euler' first-order scheme (default)
 !   'adams_bashforth' second-order scheme (by T.Li)
       CHARACTER(LEN=64) :: DES_INTG_METHOD
-      LOGICAL :: INTG_ADAMS_BASHFORTH
-      LOGICAL :: INTG_EULER
+      logical :: INTG_ADAMS_BASHFORTH
+      logical :: INTG_EULER
 
 ! Value of solids time step based on particle properties
       real(c_real) :: DTSOLID
@@ -108,10 +108,10 @@
 !----------------------------------------------------------------->>>
 ! Quantities used to determine whether neighbor search should be called
 
-      LOGICAL :: DO_NSEARCH
+      logical :: DO_NSEARCH
 
 ! Flag on whether to have DES_*_OLD arrays, if either Adams Bashforth or PIC is used
-      LOGICAL :: DO_OLD
+      logical :: DO_OLD
 
 ! Quantities used for reporting: max no. neighbors and max overlap
 ! that exists during last solid time step of dem simulation

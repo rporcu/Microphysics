@@ -79,7 +79,7 @@ module drag_gs_des1_module
 ! Local variables
 !---------------------------------------------------------------------//
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: np
+      integer :: np
 ! Interpolated gas phase quanties.
       real(c_real) :: lEPg, VELFP(3)
 ! Drag force acting on each particle.

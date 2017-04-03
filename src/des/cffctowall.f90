@@ -24,7 +24,7 @@ MODULE CFFCTOWALL_MODULE
 ! Dummy arguments
 !-----------------------------------------------
 ! particle index
-      INTEGER, INTENT(IN) :: L
+      integer, INTENT(IN) :: L
 ! distance between particle center and wall
       real(c_real), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from

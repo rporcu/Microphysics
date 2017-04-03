@@ -37,7 +37,7 @@
       CHARACTER(LEN=16) :: RUN_TYPE
 
 ! Variable which triggers automatic restart
-      LOGICAL :: AUTOMATIC_RESTART
+      logical :: AUTOMATIC_RESTART
 
 ! counter to keep track of how many auto_retart were performed
       integer :: ITER_RESTART
@@ -52,7 +52,7 @@
       integer :: DISCRETIZE(DIM_EQS)
 
 ! If .TRUE. call user-defined subroutines
-      LOGICAL :: CALL_USR
+      logical :: CALL_USR
 
 ! Drag model options (see drag_gs for full details)
 ! default is syam_obrien (may enforce a corrected Umf by defining
@@ -97,10 +97,10 @@
       real(c_real) :: DT_FAC
 
 ! If .TRUE. reduce time step when residuals do not decrease
-      LOGICAL :: DETECT_STALL
+      logical :: DETECT_STALL
 
 ! Generate log files when negative gas density is detected.
-      LOGICAL :: REPORT_NEG_DENSITY
+      logical :: REPORT_NEG_DENSITY
 
 ! Input file parameters
       character(len=*), parameter :: IFILE_NAME_DEFAULT = 'mfix.dat'
@@ -108,15 +108,15 @@
 
 
 ! Flags indicating variable solids density.
-      LOGICAL :: SOLVE_ROs(DIM_M), ANY_SOLVE_ROs
+      logical :: SOLVE_ROs(DIM_M), ANY_SOLVE_ROs
 
 ! Specifies the type of solids: TFM, DEM, MPPIC
       CHARACTER(len=3), DIMENSION(DIM_M) :: SOLIDS_MODEL
 
 ! Flags for various solids phase models.
-      LOGICAL :: TFM_SOLIDS
-      LOGICAL :: DEM_SOLIDS
-      LOGICAL :: PIC_SOLIDS
+      logical :: TFM_SOLIDS
+      logical :: DEM_SOLIDS
+      logical :: PIC_SOLIDS
 ! The number of the various solids phases.
       integer :: TFM_COUNT = 0
       integer :: DEM_COUNT = 0

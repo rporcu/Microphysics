@@ -64,9 +64,9 @@ module check_boundary_conditions_module
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counters
-      INTEGER :: BCV, I
+      integer :: BCV, I
 ! Flag to skip checks on indexed solid phase.
-      LOGICAL :: SKIP(1:DIM_M)
+      logical :: SKIP(1:DIM_M)
 !......................................................................!
 
 
@@ -190,12 +190,12 @@ module check_boundary_conditions_module
 ! Dummy Arguments:
 !---------------------------------------------------------------------/
 ! Boundary condition index.
-      INTEGER, INTENT(in) :: BCV
+      integer, INTENT(in) :: BCV
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Generic loop varaibles.
-      INTEGER :: M, N
+      integer :: M, N
 !......................................................................!
 
 

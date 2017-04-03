@@ -21,7 +21,7 @@
       integer :: DEM_BCMI
       integer :: DEM_BCMO
 
-      LOGICAL DEM_MIO  ! either inlet or outlet exists
+      logical DEM_MIO  ! either inlet or outlet exists
 
 ! Map between DEM MI/MO IDs and the user input BC index.
       integer :: DEM_BCMI_MAP(DIMENSION_BC)
@@ -63,7 +63,7 @@
 ! Number of positions in the layout grid.
          integer :: OCCUPANTS
 ! Flag for polydisperse inlets.
-         LOGICAL :: POLYDISPERSE
+         logical :: POLYDISPERSE
 ! Uniform grid dimension (width and height).
          real(c_real) :: WINDOW
 ! Offset for placing particles in ghost cell.

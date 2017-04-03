@@ -54,7 +54,7 @@
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER :: L
+      integer :: L
 
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")

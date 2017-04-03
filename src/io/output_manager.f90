@@ -63,7 +63,7 @@ module output_manager_module
 ! Loop counter and counter
       integer :: LC, IDX
 ! Flag that the header (time) has not be written.
-      LOGICAL :: HDR_MSG
+      logical :: HDR_MSG
 ! Wall time at the start of IO operations.
       real(c_real) :: WALL_START
 ! SPX file extensions.
@@ -111,7 +111,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      LOGICAL FUNCTION CHECK_TIME(lTIME)
+      logical FUNCTION CHECK_TIME(lTIME)
 
       real(c_real), INTENT(IN) :: lTIME
 
@@ -155,7 +155,7 @@ module output_manager_module
       CHARACTER(len=*), INTENT(IN), OPTIONAL :: EXT
 
 
-      LOGICAL :: SCR_LOG
+      logical :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
@@ -196,7 +196,7 @@ module output_manager_module
       use funits, only: DMP_LOG
       use funits, only: UNIT_LOG
 
-      LOGICAL :: SCR_LOG
+      logical :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
@@ -231,7 +231,7 @@ module output_manager_module
       CHARACTER(LEN=4) :: UNIT_ELAP, UNIT_LEFT
 
       integer :: TNITS
-      LOGICAL :: SCR_LOG
+      logical :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 

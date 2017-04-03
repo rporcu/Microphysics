@@ -19,7 +19,7 @@
       integer, parameter :: myPE = 0
       integer, parameter :: numPEs = 1
 
-! specify the rank of the PE to be used for I/O
-      INTEGER :: PE_IO = 0
+      ! specify the rank of the PE to be used for I/O
+      integer :: PE_IO = 0
 
       end module compar

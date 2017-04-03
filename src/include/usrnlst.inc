@@ -1,6 +1,6 @@
 !
 !  First, define the user-defined namelist variables as DOUBLE PRECISION,
-!  INTEGER, LOGICAL, or CHARACTER.  Second, include the variable in the
+!  integer, logical, or CHARACTER.  Second, include the variable in the
 !  appropriate common.  Third, add the variable name in the NAMELIST section.
 !  A dummy variable is defined, so that the code can be compiled with the
 !  template include file.

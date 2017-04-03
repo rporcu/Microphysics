@@ -169,7 +169,7 @@
       integer :: IER
 
 ! logical used for testing is the data file already exists
-      LOGICAL :: EXISTS_VTP
+      logical :: EXISTS_VTP
 ! status of the vtp file to be written
       CHARACTER(LEN=8) :: STATUS_VTP
 
@@ -263,14 +263,14 @@
 ! Index position of desired character
       integer IDX_f, IDX_b
 ! logical used for testing is the data file already exists
-      LOGICAL :: EXISTS_PVD
+      logical :: EXISTS_PVD
 ! Generic input limited to 256 characters
       CHARACTER(LEN=256) INPUT
 
 ! formatted file name
       CHARACTER(LEN=64) :: FNAME_PVD = ''
 
-      LOGICAL, SAVE :: FIRST_PASS = .TRUE.
+      logical, SAVE :: FIRST_PASS = .TRUE.
 
 ! IO Status flag
       integer :: IOS

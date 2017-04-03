@@ -118,11 +118,11 @@ contains
 5500  Format('Mass Flux Iterations:', I0,'   DelP=', &
       G12.5, ' Gas Flux=', G12.5)
 
-      if (CYCLIC_X_MF) then
+      if (cyclic_x_mf) then
          delp_x = delp_xyz
-      elseif (CYCLIC_Y_MF) then
+      elseif (cyclic_y_mf) then
          delp_y = delp_xyz
-      elseif (CYCLIC_Z_MF) then
+      elseif (cyclic_z_mf) then
          delp_z = delp_xyz
       end if
 

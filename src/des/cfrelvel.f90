@@ -36,7 +36,7 @@ MODULE CFRELVEL_MODULE
 ! Dummy arguments
 !-----------------------------------------------
 ! indices of particle-particle contact pair
-      INTEGER, INTENT(IN) :: L, II
+      integer, INTENT(IN) :: L, II
 ! distance between particle centers
       real(c_real), INTENT(IN) :: DIST_LI
 ! unit normal vector along the line of contact pointing from

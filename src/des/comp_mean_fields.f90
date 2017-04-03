@@ -40,9 +40,9 @@ module comp_mean_fields_module
 ! Local variables
 !-----------------------------------------------
 ! Loop counters: particles, filter cells, phases
-      INTEGER NP
+      integer NP
 ! Fluid cell index
-      INTEGER :: I,J,K
+      integer :: I,J,K
 ! Total Mth solids phase volume in IJK
       real(c_real) :: SOLVOLINC&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

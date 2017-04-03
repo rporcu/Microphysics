@@ -158,7 +158,7 @@
 !                      in discrete implementation or not. For example, setting
 !                      Pressure outflow only for gas-phase.
 
-      LOGICAL          BC_PO_APPLY_TO_DES (DIMENSION_BC)
+      logical          BC_PO_APPLY_TO_DES (DIMENSION_BC)
 
 !                      Gas volumetric flow rate through the boundary
       real(c_real) BC_VOLFLOW_g (DIMENSION_BC)
@@ -173,7 +173,7 @@
       real(c_real) BC_MASSFLOW_s (DIMENSION_BC, DIM_M)
 !
 !                      Logical variable to determine whether a bc is defined
-       LOGICAL         BC_DEFINED (DIMENSION_BC)
+       logical         BC_DEFINED (DIMENSION_BC)
 !
 !                      Character variable with values W, E, S, N, B, and T
 !                      to determine the flow plane of a flow cell
@@ -329,7 +329,7 @@
       real(c_real) BC_C_X_s (DIMENSION_BC, DIM_M, DIM_N_s)
 !
 
-      LOGICAL:: CG_MI_CONVERTED_TO_PS(DIMENSION_BC)
+      logical:: CG_MI_CONVERTED_TO_PS(DIMENSION_BC)
 
 
 ! Flag to specify the constant number of particles per cell
@@ -344,7 +344,7 @@
 
       CONTAINS
 
-         LOGICAL FUNCTION IS_CG(boundary_condition)
+         logical FUNCTION IS_CG(boundary_condition)
             implicit none
             integer, intent(in) :: boundary_condition
             IS_CG = ((boundary_condition .eq. CG_PO) &
@@ -356,21 +356,21 @@
                  )
          END FUNCTION IS_CG
 
-         LOGICAL FUNCTION IS_NSW(boundary_condition)
+         logical FUNCTION IS_NSW(boundary_condition)
             implicit none
             integer, intent(in) :: boundary_condition
             IS_NSW = ((boundary_condition .eq. CG_NSW) &
                  )
          END FUNCTION IS_NSW
 
-         LOGICAL FUNCTION IS_FSW(boundary_condition)
+         logical FUNCTION IS_FSW(boundary_condition)
             implicit none
             integer, intent(in) :: boundary_condition
             IS_FSW = ((boundary_condition .eq. CG_FSW) &
                  )
          END FUNCTION IS_FSW
 
-         LOGICAL FUNCTION IS_PSW(boundary_condition)
+         logical FUNCTION IS_PSW(boundary_condition)
             implicit none
             integer, intent(in) :: boundary_condition
             IS_PSW = ((boundary_condition .eq. CG_PSW) )

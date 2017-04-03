@@ -76,7 +76,7 @@ MODULE CALC_FORCE_DEM_MODULE
       real(c_real) :: ETAN_DES, ETAT_DES
       real(c_real) :: KN_DES, KT_DES
 
-      LOGICAL, PARAMETER :: report_excess_overlap = .FALSE.
+      logical, PARAMETER :: report_excess_overlap = .FALSE.
 
       real(c_real) :: FNMD, MAG_OVERLAP_T, TANGENT(3)
 

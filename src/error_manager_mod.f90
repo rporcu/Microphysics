@@ -38,7 +38,7 @@
       CHARACTER(LEN=128), DIMENSION(MAX_CALL_DEPTH), PRIVATE :: CALLERS
 
 ! Flag for writing messages to the screen.
-      LOGICAL, PRIVATE :: SCR_LOG
+      logical, PRIVATE :: SCR_LOG
 
 ! Error Flag.
       integer :: IER_EM
@@ -316,17 +316,17 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Debug flag.
-      LOGICAL, INTENT(IN), OPTIONAL :: DEBUG
+      logical, INTENT(IN), OPTIONAL :: DEBUG
 ! Flag to suppress the message header.
-      LOGICAL, INTENT(IN), OPTIONAL :: HEADER
+      logical, INTENT(IN), OPTIONAL :: HEADER
 ! Flag to suppress the message footer.
-      LOGICAL, INTENT(IN), OPTIONAL :: FOOTER
+      logical, INTENT(IN), OPTIONAL :: FOOTER
 ! Flag to abort execution by invoking MFIX_EXIT.
-      LOGICAL, INTENT(IN), OPTIONAL :: ABORT
+      logical, INTENT(IN), OPTIONAL :: ABORT
 ! Flag to force (or override) writing data to the log file.
-      LOGICAL, INTENT(IN), OPTIONAL :: LOG
+      logical, INTENT(IN), OPTIONAL :: LOG
 ! Provide the call tree in error message.
-      LOGICAL, INTENT(IN), OPTIONAL :: CALL_TREE
+      logical, INTENT(IN), OPTIONAL :: CALL_TREE
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -339,17 +339,17 @@
 ! Line Counter
       integer :: LC
 ! Local debug flag.
-      LOGICAL :: D_FLAG
+      logical :: D_FLAG
 ! Local flag to suppress writing the header.
-      LOGICAL :: H_FLAG
+      logical :: H_FLAG
 ! Local flag to suppress writing the footer.
-      LOGICAL :: F_FLAG
+      logical :: F_FLAG
 ! Local abort flag.
-      LOGICAL :: A_FLAG
+      logical :: A_FLAG
 ! Local call tree flag.
-      LOGICAL :: CT_FLAG
+      logical :: CT_FLAG
 ! Local flag to store output to UNIT_LOG
-      LOGICAL :: UNT_LOG
+      logical :: UNT_LOG
 
 ! The current calling routine.
       CHARACTER(LEN=128) :: CALLER
@@ -500,16 +500,16 @@
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Flag to suppress the message header.
-      LOGICAL, INTENT(IN), OPTIONAL :: HEADER
+      logical, INTENT(IN), OPTIONAL :: HEADER
 ! Flag to suppress the message footer.
-      LOGICAL, INTENT(IN), OPTIONAL :: FOOTER
+      logical, INTENT(IN), OPTIONAL :: FOOTER
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Local flag to suppress writing the header.
-      LOGICAL :: H_FLAG
+      logical :: H_FLAG
 ! Local flag to suppress writing the footer.
-      LOGICAL :: F_FLAG
+      logical :: F_FLAG
 ! Generic loop counters.
       integer ::  LC, SL
 
@@ -626,7 +626,7 @@
 !                                                                      !
 !......................................................................!
       CHARACTER(len=32) FUNCTION iVal_log(VAL)
-      LOGICAL, intent(in) :: VAL
+      logical, intent(in) :: VAL
 
       IF(VAL) THEN
          iVal_log = ".TRUE."

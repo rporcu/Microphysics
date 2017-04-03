@@ -92,10 +92,10 @@ module des_time_march_module
 ! Local variables
 !------------------------------------------------
 ! time step loop counter index
-      INTEGER :: NN
+      integer :: NN
 
 ! loop counter index for any initial particle settling incoupled cases
-      INTEGER :: FACTOR
+      integer :: FACTOR
 
 ! Temporary variables when des_continuum_coupled is T to track
 ! changes in solid time step

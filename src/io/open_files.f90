@@ -161,7 +161,7 @@ MODULE OPEN_FILES_MOD
 !         .FALSE. :: GLOBAL_ALL_SUM is zero.                           !
 !                                                                      !
 !......................................................................!
-      LOGICAL FUNCTION ERROR_OPENING(IER_l)
+      logical FUNCTION ERROR_OPENING(IER_l)
 
 ! Array containing error flags from all ranks.
       integer, INTENT(IN) :: IER_L(0:numPEs-1)
@@ -222,7 +222,7 @@ MODULE OPEN_FILES_MOD
       CHARACTER(len=255) :: LOGFILE
       CHARACTER(len=255) :: FILE_NAME
 ! Flag for LOG files that are already open.
-      LOGICAL :: DO_NOTHING
+      logical :: DO_NOTHING
 ! Index of first blank character in RUN_NAME
       integer :: NB
 !......................................................................!

@@ -27,9 +27,9 @@
       use param, only: dimension_ps, dim_n_g, dim_m, dim_n_s
 
 ! Run-time logical indicating that point sources are present.
-      LOGICAL :: POINT_SOURCE
+      logical :: POINT_SOURCE
 
-      LOGICAL :: PS_DEFINED(DIMENSION_PS)
+      logical :: PS_DEFINED(DIMENSION_PS)
 
 ! Physical location of point sources.
       real(c_real) :: PS_X_w(DIMENSION_PS)  ! West

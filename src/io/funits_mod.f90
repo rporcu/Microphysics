@@ -3,10 +3,10 @@
 ! Whether this processor should write the log file in DMP mode.
 ! Usually this flag is true only for PE_IO.  All the PEs may be forced
 ! to write a log file by setting ENABLE_DMP_LOG to .true. in output_mod.f.
-      LOGICAL :: DMP_LOG
+      logical :: DMP_LOG
 
 ! Flag indicated that the log was opened globally.
-      LOGICAL :: LOG_WAS_CLOSED = .FALSE.
+      logical :: LOG_WAS_CLOSED = .FALSE.
 
 ! RRATES debug file unit number
       integer, PARAMETER :: UNIT_RRATES = 43
@@ -47,7 +47,7 @@
 ! lower and upper limits to search for available units
       integer, PARAMETER  :: lun_min = 100, lun_max= 999
 ! check to see if the unit is open
-      LOGICAL :: is_open
+      logical :: is_open
 ! looping variable
       integer :: lun
 

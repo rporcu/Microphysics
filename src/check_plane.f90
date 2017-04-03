@@ -31,7 +31,7 @@ MODULE CHECK_PLANE_MODULE
 ! Dummy arguments
 !-----------------------------------------------
 ! surface indicators
-      LOGICAL, INTENT(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
+      logical, INTENT(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
 ! boundary condition or internal surface index
       integer, INTENT(IN) ::  BC
 ! BC or IS

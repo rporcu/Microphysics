@@ -43,7 +43,7 @@ MODULE GET_PS_MODULE
 ! Calculated indices of the wall boundary
       integer :: I_w , I_e , J_s , J_n , K_b , K_t
 ! Surface indictors
-      LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
+      logical :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 !......................................................................!
 
       CALL INIT_ERR_MSG('GET_PS')

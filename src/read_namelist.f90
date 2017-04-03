@@ -100,8 +100,8 @@ MODULE read_namelist_module
       time = undefined
       dt = undefined
 
-! Open the mfix.dat file. Report errors if the file is not located or
-! there is difficulties opening it.
+      ! Open the mfix.dat file. Report errors if the file is not located or
+      ! there is difficulties opening it.
       inquire(file=trim(IFILE_NAME),exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          IF(myPE == PE_IO) WRITE(*,1000) trim(IFILE_NAME)

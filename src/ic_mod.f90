@@ -96,7 +96,7 @@
       real(c_real) :: IC_W_s(DIMENSION_IC, DIM_M)
 
 ! Logical variable to determine whether an ic is defined
-      LOGICAL :: IC_DEFINED (DIMENSION_IC)
+      logical :: IC_DEFINED (DIMENSION_IC)
 
 ! Initial gas species mass fractions
       real(c_real) :: IC_X_g(DIMENSION_IC, DIM_N_g)
@@ -105,7 +105,7 @@
       real(c_real) :: IC_X_s(DIMENSION_IC, DIM_M, DIM_N_s)
 
 ! Flag to extend the lattice distribution in a given IC to available area
-      LOGICAL :: IC_DES_FIT_TO_REGION (DIMENSION_IC)
+      logical :: IC_DES_FIT_TO_REGION (DIMENSION_IC)
 
 !  Cell flag definitions
 !

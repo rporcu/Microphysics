@@ -60,11 +60,11 @@ MODULE OPEN_FILE_MOD
 ! Local Variables
 !---------------------------------------------------------------------//
 ! Logical used to store result of file INQUIRE
-      LOGICAL :: FILE_EXISTS
+      logical :: FILE_EXISTS
 
 ! Logicals that determine if files should be index.
-      LOGICAL :: RES_IDX  ! Index RES files
-      LOGICAL :: use_IDX  ! Use the IDX value
+      logical :: RES_IDX  ! Index RES files
+      logical :: use_IDX  ! Use the IDX value
 
 ! Initialize the error flag.
       IER = 0

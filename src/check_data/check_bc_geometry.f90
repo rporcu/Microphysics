@@ -50,11 +50,11 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! loop/variable indices
-      INTEGER :: BCV, I
+      integer :: BCV, I
 ! Error flag
-      LOGICAL :: RECOGNIZED_BC_TYPE
+      logical :: RECOGNIZED_BC_TYPE
 ! Total number of valid BC types
-      INTEGER, PARAMETER :: DIM_BCTYPE = 21
+      integer, PARAMETER :: DIM_BCTYPE = 21
 ! Valid boundary condition types
       CHARACTER(LEN=16), DIMENSION(1:DIM_BCTYPE) ::VALID_BC_TYPE = (/&
            'MASS_INFLOW     ', 'MI              ',&
@@ -210,14 +210,14 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Index of boundary condition.
-      INTEGER, INTENT(in) :: BCV
+      integer, INTENT(in) :: BCV
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Calculated indices of the wall boundary
-      INTEGER :: I_w , I_e , J_s , J_n , K_b , K_t
+      integer :: I_w , I_e , J_s , J_n , K_b , K_t
 ! Integer error flag
-      INTEGER :: IER
+      integer :: IER
 !......................................................................!
 
 
@@ -374,20 +374,20 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Index of boundary condition.
-      INTEGER, INTENT(in) :: BCV
+      integer, INTENT(in) :: BCV
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Calculated indices of the wall boundary
-      INTEGER :: I_w, I_e, J_s, J_n, K_b, K_t
+      integer :: I_w, I_e, J_s, J_n, K_b, K_t
 ! Indices for error checking
-      INTEGER :: IER
+      integer :: IER
 
 ! surface indictors:
 ! a value of T indicates that the defined boundary region does not
 ! vary in indicated coordinate direction. that is, if bc_x_w is
 ! equal to bc_x_e then the boundary region must be in the yz plane
-      LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
+      logical :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 !......................................................................!
 
 

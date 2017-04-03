@@ -28,7 +28,7 @@ MODULE CFSLIDE_MODULE
 ! tangent to the plane of contact
       real(c_real), INTENT(IN) :: V_TANG(3)
 ! logic set to T when a sliding contact occurs
-      LOGICAL, INTENT(OUT) :: PARTICLE_SLIDE
+      logical, INTENT(OUT) :: PARTICLE_SLIDE
 ! Coefficient of friction
       real(c_real), INTENT(IN) :: MU
 ! normal force

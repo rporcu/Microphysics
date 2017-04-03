@@ -127,34 +127,31 @@
       !write(*,'(7X,A,2X,ES15.5)') 'specified sigma =', sigma
       !write(*,'(7X,A,2X,ES15.5)') 'computed sigma =', lsigma
 
-      RETURN
-      END SUBROUTINE NOR_RNO
-
-
+      end subroutine NOR_RNO
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-      SUBROUTINE init_random_seed
+      subroutine init_random_seed
 
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      IMPLICIT NONE
+      implicit none
 
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
-      INTEGER              :: isize,idate(8)
-      INTEGER,ALLOCATABLE  :: iseed(:)
+      integer              :: isize,idate(8)
+      integer,allocatable  :: iseed(:)
 !-----------------------------------------------
 
-      CALL DATE_AND_TIME(VALUES=idate)
-      CALL RANDOM_SEED(SIZE=isize)
-      ALLOCATE( iseed(isize) )
-      CALL RANDOM_SEED(GET=iseed)
+      call DATE_AND_TIME(VALUES=idate)
+      call RANDOM_SEED(SIZE=isize)
+      allocate( iseed(isize) )
+      call RANDOM_SEED(GET=iseed)
       iseed = iseed * (idate(8)-500) ! idate(8) contains millisecond
-      CALL RANDOM_SEED(PUT=iseed)
+      call RANDOM_SEED(PUT=iseed)
 
-      DEALLOCATE( iseed )
+      deallocate( iseed )
 
-      END SUBROUTINE init_random_seed
+      end subroutine init_random_seed
 
 
     END MODULE randomno
