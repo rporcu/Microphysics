@@ -11,15 +11,15 @@ module u_g_conv_dif
 
 contains
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: conv_dif_u_g                                            C
-!  Purpose: Determine convection diffusion terms for U_g momentum eqs  C
-!  The off-diagonal coefficients calculated here must be positive. The C
-!  center coefficient and the source vector are negative;              C
-!  See source_u_g                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: conv_dif_u_g                                            !
+!  Purpose: Determine convection diffusion terms for U_g momentum eqs  !
+!  The off-diagonal coefficients calculated here must be positive. The !
+!  center coefficient and the source vector are negative;              !
+!  See source_u_g                                                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine conv_dif_u_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
@@ -73,23 +73,17 @@ contains
 
       end subroutine conv_dif_u_g
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: store_a_u_g0                                            C
-!  Purpose: Determine convection diffusion terms for U_g momentum eqs. C
-!  The off-diagonal coefficients calculated here must be positive.     C
-!  The center coefficient and the source vector are negative. See      C
-!  source_u_g.                                                         C
-!  Implement FOUP discretization                                       C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 29-APR-96  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: store_a_u_g0                                            !
+!  Purpose: Determine convection diffusion terms for U_g momentum eqs. !
+!  The off-diagonal coefficients calculated here must be positive.     !
+!  The center coefficient and the source vector are negative. See      !
+!  source_u_g.                                                         !
+!                                                                      !
+!  Implement FOUP discretization                                       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine store_a_u_g0(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
@@ -203,22 +197,16 @@ contains
       return
    end subroutine store_a_u_g0
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: store_a_u_g1                                            C
-!  Purpose: Determine convection diffusion terms for U_g momentum eqs  C
-!  The off-diagonal coefficients calculated here must be positive.     C
-!  The center coefficient and the source vector are negative.          C
-!  Implements higher order discretization.                             C
-!  See source_u_g                                                      C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 20-MAR-97  C
-!                                                                      C
-!  Revision Number: 1                                                  C
-!  Purpose: To incorporate Cartesian grid modifications                C
-!  Author: Jeff Dietiker                              Date: 01-Jul-09  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: store_a_u_g1                                            !
+!  Purpose: Determine convection diffusion terms for U_g momentum eqs  !
+!  The off-diagonal coefficients calculated here must be positive.     !
+!  The center coefficient and the source vector are negative.          !
+!  Implements higher order discretization.                             !
+!  See source_u_g                                                      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine store_a_u_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &

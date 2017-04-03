@@ -5,17 +5,14 @@ module conv_rop_module
 
    implicit none
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CONV_rop                                                C
-!  Purpose: Calculate the face value of density used for calculating   C
-!  convection fluxes. Master routine.                                  C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 31-MAY-05  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+   contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: CONV_rop                                                !
+!  Purpose: Calculate the face value of density used for calculating   !
+!  convection fluxes. Master routine.                                  !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_rop(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                           u_g, v_g, w_g, rop_g, ropX, ropY, ropZ, &
                           dt, dx, dy, dz) &
@@ -61,18 +58,15 @@ module conv_rop_module
 
    end subroutine conv_rop
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: CONV_rop                                                C
-!  Purpose: Calculate the face value of density used for calculating   C
-!  convection fluxes. FOU routine.                                     C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 31-MAY-05  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: CONV_rop                                                !
+!  Purpose: Calculate the face value of density used for calculating   !
+!  convection fluxes. FOU routine.                                     !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_rop0(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                           rop, U, V, W, rop_E, rop_N, rop_T)
+                           rop, U, V, W, ropX, ropY, ropZ)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -95,11 +89,11 @@ module conv_rop_module
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       ! Face value of density (for calculating convective fluxes)
-      real(c_real), intent(  out) :: rop_e&
+      real(c_real), intent(  out) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: rop_n&
+      real(c_real), intent(  out) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(  out) :: rop_t&
+      real(c_real), intent(  out) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       integer :: I, J, K
@@ -108,11 +102,10 @@ module conv_rop_module
         do J = lo(2),hi(2)
           do I = slo(1),hi(1)
 
-            ! East face (i+1/2, j, k)
             if (U(i,j,k) >= ZERO) THEN
-               rop_E(i,j,k) = rop(i,j,k)
+               ropX(i,j,k) = rop(i,j,k)
             else
-               rop_E(i,j,k) = rop(i+1,j,k)
+               ropX(i,j,k) = rop(i+1,j,k)
             end if
 
           end do
@@ -123,11 +116,10 @@ module conv_rop_module
         do J = slo(2),hi(2)
           do I = lo(1),hi(1)
 
-            ! North face (i, j+1/2, k)
             if (V(i,j,k) >= ZERO) THEN
-               rop_N(i,j,k) = rop(i,j,k)
+               ropY(i,j,k) = rop(i,j,k)
             else
-               rop_N(i,j,k) = rop(i,j+1,k)
+               ropY(i,j,k) = rop(i,j+1,k)
             end if
 
           end do
@@ -138,11 +130,10 @@ module conv_rop_module
         do J = lo(2),hi(2)
           do I = lo(1),hi(1)
 
-            ! Top face (i, j, k+1/2)
             if (W(i,j,k) >= ZERO) THEN
-               rop_T(i,j,k) = rop(i,j,k)
+               ropZ(i,j,k) = rop(i,j,k)
             else
-               rop_T(i,j,k) = rop(i,j,k+1)
+               ropZ(i,j,k) = rop(i,j,k+1)
             end if
 
           end do
@@ -152,21 +143,18 @@ module conv_rop_module
       END SUBROUTINE CONV_rop0
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: conv_rop1                                               C
-!  Purpose: Calculate the face value of density used for calculating   C
-!  convection fluxes. HR routine.  Here interpolate the face value of  C
-!  density.                                                            C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 31-MAY-05  C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: conv_rop1                                               !
+!  Purpose: Calculate the face value of density used for calculating   !
+!  convection fluxes. HR routine.  Here interpolate the face value of  !
+!  density.                                                            !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_rop1(DISC, &
                            slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                            rop, u_g, v_g, w_g, &
-                           rop_e, rop_n, rop_t, &
+                           ropX, ropY, ropZ, &
                            dt, dx, dy, dz)
 
 ! Modules
@@ -194,11 +182,11 @@ module conv_rop_module
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Face value of density (for calculating convective fluxes)
-      real(c_real), intent(  out) :: rop_e&
+      real(c_real), intent(  out) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: rop_n&
+      real(c_real), intent(  out) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(  out) :: rop_t&
+      real(c_real), intent(  out) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in) :: dt, dx, dy, dz
@@ -206,62 +194,67 @@ module conv_rop_module
       integer :: xlo(3)
       integer :: i,j,k
 
-      real(c_real), allocatable :: xsi_e(:,:,:), xsi_n(:,:,:), xsi_t(:,:,:)
+      real(c_real), allocatable :: xsi_(:,:,:)
 
       ! Calculate factors
 
       xlo(1) = lo(1)-1
       xlo(2) = lo(2)
       xlo(3) = lo(3)
-      allocate( xsi_e(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, xsi_e, xlo,  hi, &
-                       dt, dx, dy, dz)
+
+      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, &
+         xsi_, xlo,  hi, dt, dx, dy, dz)
+
+      do k = lo(3),hi(3)
+        do j = lo(2),hi(2)
+          do i = lo(1)-1,hi(1)
+            ropX(i,j,k) = ((one - xsi_(i,j,k))*rop(i  ,j,k) + &
+                                  xsi_(i,j,k) *rop(i+1,j,k) )
+          end do
+        end do
+      end do
+      deallocate(xsi_)
+
+!---------------------------------------------------------------------//
 
       xlo(1) = lo(1)
       xlo(2) = lo(2)-1
       xlo(3) = lo(3)
-      allocate( xsi_n(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, xsi_n, xlo,  hi, &
-                       dt, dx, dy, dz)
+
+      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, &
+         xsi_, xlo,  hi, dt, dx, dy, dz)
+
+      do k = lo(3),hi(3)
+        do j = lo(2)-1,hi(2)
+          do i = lo(1),hi(1)
+            ropY(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j  ,k)+&
+                                  xsi_(i,j,k) *rop(i,j+1,k))
+          end do
+        end do
+      end do
+      deallocate(xsi_)
+
+!---------------------------------------------------------------------//
 
       xlo(1) = lo(1)
       xlo(2) = lo(2)
       xlo(3) = lo(3)-1
-      allocate( xsi_t(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, xsi_t, xlo,  hi, &
-                       dt, dx, dy, dz)
 
-      ! East face (i+1/2, j, k)
-      do K = lo(3),hi(3)
-        do J = lo(2),hi(2)
-          do I = lo(1)-1,hi(1)
-            rop_e(i,j,k) = ((ONE - XSI_E(i,j,k))*rop(i,j,k) + &
-                                   XSI_E(i,j,k) *rop(i+1,j,k) )
+      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
+      call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, &
+         xsi_, xlo,  hi, dt, dx, dy, dz)
+
+      do k = lo(3)-1,hi(3)
+        do j = lo(2),hi(2)
+          do i = lo(1),hi(1)
+            ropZ(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j,k  ) + &
+                                  xsi_(i,j,k) *rop(i,j,k+1) )
           end do
         end do
       end do
-
-      ! North face (i, j+1/2, k)
-      do K = lo(3),hi(3)
-        do J = lo(2)-1,hi(2)
-          do I = lo(1),hi(1)
-            rop_n(i,j,k) = ((ONE - XSI_N(i,j,k))*rop(i,j,k)+&
-                                   XSI_N(i,j,k) *rop(i,j+1,k))
-          end do
-        end do
-      end do
-
-      ! Top face (i, j, k+1/2)
-      do K = lo(3)-1,hi(3)
-        do J = lo(2),hi(2)
-          do I = lo(1),hi(1)
-            rop_t(i,j,k) = ((ONE - XSI_T(i,j,k))*rop(i,j,k  ) + &
-                                   XSI_T(i,j,k) *rop(i,j,k+1) )
-          end do
-        end do
-      end do
-
-      deallocate( xsi_e, xsi_n, xsi_t)
+      deallocate(xsi_)
 
       end subroutine conv_rop1
 
