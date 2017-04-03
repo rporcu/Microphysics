@@ -326,8 +326,8 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine solids_volflow_to_velocity(do_vel_check, bcv, m, skip_m)
 
-    USE funits, only: dmp_log, unit_log
-    USE compar, only: myPE
+    use funits, only: dmp_log, unit_log
+    use compar, only: myPE
 
     integer, intent(in) :: bcv, m
     logical, intent(in) :: do_vel_check, skip_m

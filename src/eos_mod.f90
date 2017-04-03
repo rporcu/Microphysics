@@ -24,8 +24,8 @@ MODULE eos
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-      USE constant, only: gas_const
-      USE scales, only: unscale_pressure
+      use constant, only: gas_const
+      use scales, only: unscale_pressure
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -49,7 +49,7 @@ MODULE eos
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-      USE scales, only: p_ref
+      use scales, only: p_ref
       IMPLICIT NONE
 
 ! Dummy arguments

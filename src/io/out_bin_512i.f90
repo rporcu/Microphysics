@@ -29,7 +29,7 @@ MODULE OUT_BIN_512I_MOD
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE machine, only: nwords_i
+      use machine, only: nwords_i
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

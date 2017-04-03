@@ -109,11 +109,11 @@
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
          IF(myPE  == PE_IO) WRITE (*, 1000) 'short', trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
          if(myPE == PE_IO) write (*, 1000) 'long', trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
@@ -145,7 +145,7 @@
       ! CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
          IF(myPE == PE_IO) WRITE(*,1001) trim(FILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
       RETURN
@@ -186,7 +186,7 @@
          IF(SCR_LOG) WRITE(*,1000) CALL_DEPTH
          IF(DMP_LOG) WRITE(UNIT_LOG,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ELSE
 ! Store the caller routines name.
          CALL_DEPTH = CALL_DEPTH + 1
@@ -240,7 +240,7 @@
       IF(CALL_DEPTH < 1) THEN
          IF(SCR_LOG) WRITE(*,1000)
          IF(DMP_LOG) WRITE(UNIT_LOG,1000)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ELSE
 ! Store the current caller, clear the array position, and decrement
 ! the counter.
@@ -273,7 +273,7 @@
          ENDDO
          IF(SCR_LOG) WRITE(*,1003)
          IF(DMP_LOG) WRITE(UNIT_LOG, 1003)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
 ! This shouldn't be needed, but it doesn't hurt.
@@ -469,7 +469,7 @@
 ! Abort the run if specified.
       IF(A_FLAG) THEN
          IF(D_FLAG) WRITE(*,3000) myPE
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
       RETURN

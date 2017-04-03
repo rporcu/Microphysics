@@ -86,7 +86,7 @@ module output_manager_module
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
             CALL WRITE_USR1 (LC, time, dt, max_pip, des_pos_new,&
                des_vel_new, omega_new)
-            CALL NOTIFY_USER('.USR:',EXT_END(LC:LC))
+            CALL NOTIFY_useR('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
       ENDDO
@@ -97,11 +97,11 @@ module output_manager_module
             VTP_TIME = NEXT_TIME(VTP_DT)
             CALL WRITE_DES_DATA(max_pip, particle_state, des_radius, &
                des_pos_new, des_vel_new, des_usr_var)
-            CALL NOTIFY_USER('DES.vtp;')
+            CALL NOTIFY_useR('DES.vtp;')
          ENDIF
       ENDIF
 
-      CALL FLUSH_NOTIFY_USER
+      CALL FLUSH_NOTIFY_useR
 
       ! Add the amount of time needed for all IO operations to total.
       CPU_IO = CPU_IO + (WALL_TIME() - WALL_START)
@@ -145,7 +145,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine NOTIFY_USER(MSG, EXT)
+      subroutine NOTIFY_useR(MSG, EXT)
 
       use output, only: FULL_LOG
       use funits, only: DMP_LOG
@@ -185,7 +185,7 @@ module output_manager_module
  1120 FORMAT(',',A)
 
       RETURN
-      END subroutine NOTIFY_USER
+      END subroutine NOTIFY_useR
 
 !----------------------------------------------------------------------!
 !                                                                      !
@@ -212,7 +212,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine FLUSH_NOTIFY_USER
+      subroutine FLUSH_NOTIFY_useR
 
       use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DTSOLID
@@ -299,7 +299,7 @@ module output_manager_module
 
       INTERFACE
          FUNCTION rename(input,output) BIND(C,name="rename") RESULT(r)
-            USE iso_c_binding, only: c_char, c_int
+            use iso_c_binding, only: c_char, c_int
             CHARACTER(kind=c_char),INTENT(in) :: input(*)
             CHARACTER(kind=c_char),INTENT(in) :: output(*)
             INTEGER(c_int)        :: r

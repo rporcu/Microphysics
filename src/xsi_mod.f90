@@ -14,20 +14,20 @@
       use iso_c_binding , only: c_int
       use geometry      , only: domlo, domhi
 
-      USE discretization, only: phi_c_of
-      USE discretization, only: superbee
-      USE discretization, only: smart
-      USE discretization, only: ultra_quick
-      USE discretization, only: quickest
-      USE discretization, only: muscl
-      USE discretization, only: vanleer
-      USE discretization, only: minmod
-      USE discretization, only: central_scheme
+      use discretization, only: phi_c_of
+      use discretization, only: superbee
+      use discretization, only: smart
+      use discretization, only: ultra_quick
+      use discretization, only: quickest
+      use discretization, only: muscl
+      use discretization, only: vanleer
+      use discretization, only: minmod
+      use discretization, only: central_scheme
 
-      USE geometry , only: domlo, domhi
-      USE param1, only: zero
-      USE error_manager, only: err_msg, init_err_msg, finl_err_msg
-      USE error_manager, only: ival, flush_err_msg
+      use geometry , only: domlo, domhi
+      use param1, only: zero
+      use error_manager, only: err_msg, init_err_msg, finl_err_msg
+      use error_manager, only: ival, flush_err_msg
 
       IMPLICIT NONE
 

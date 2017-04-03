@@ -21,9 +21,9 @@ MODULE CHECK_PLANE_MODULE
 
       SUBROUTINE CHECK_PLANE(X_CONSTANT, Y_CONSTANT, Z_CONSTANT, BC, NAME)
 
-      USE compar, only: mype
-      USE exit_mod, only: mfix_exit
-      USE funits, only: dmp_log, unit_log
+      use compar, only: mype
+      use exit_mod, only: mfix_exit
+      use funits, only: dmp_log, unit_log
 
       IMPLICIT NONE
 

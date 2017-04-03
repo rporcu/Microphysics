@@ -23,48 +23,45 @@ MODULE INIT_NAMELIST_MODULE
 
       SUBROUTINE INIT_NAMELIST
 
-      USE bc
-      USE constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
-      USE deprecated_or_unknown_module, only: deprecated_or_unknown
-      USE des_init_namelist_module, only: des_init_namelist
-      USE error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      USE exit_mod, only: mfix_exit
-      USE fld_const, only: mu_g0, mw_avg
-      USE fld_const, only: ro_g0
-      USE fld_const, only: ro_g0, mu_g0, mw_avg
-      USE geometry, only: coordinates
-      USE geometry, only: cyclic_x, cyclic_y, cyclic_z
-      USE geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      USE geometry, only: imax, jmax, kmax
-      USE geometry, only: xlength, ylength, zlength
-      USE ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
-      USE ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
-      USE ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
-      USE ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      USE leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
-      USE leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
-      USE output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
-      USE output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
-      USE output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
-      USE output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      USE param, only: dimension_c
-      USE param1, only: undefined_c
-      USE ps, only: dimension_ps
-      USE ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
-      USE ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
-      USE ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
-      USE remove_comment_module, only: remove_comment
-      USE remove_comment_module, only: remove_par_blanks
-      USE residual, only: group_resid, resid_string
-      USE run, only: automatic_restart, iter_restart, undefined_i, bdist_io
-      USE run, only: call_usr, description, detect_stall, discretize, tstop, units
-      USE run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
-      USE scales, only: p_ref, p_scale
-      USE toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
-      USE ur_facs, only: ur_fac
-      USE usr
-      USE utilities, only: blank_line, line_too_big, seek_comment
-      USE utilities, only: make_upper_case, replace_tab
+      use bc
+      use constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
+      use deprecated_or_unknown_module, only: deprecated_or_unknown
+      use des_init_namelist_module, only: des_init_namelist
+      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
+      use fld_const, only: mu_g0, mw_avg
+      use fld_const, only: ro_g0
+      use fld_const, only: ro_g0, mu_g0, mw_avg
+      use geometry, only: coordinates
+      use geometry, only: cyclic_x, cyclic_y, cyclic_z
+      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use geometry, only: imax, jmax, kmax
+      use geometry, only: xlength, ylength, zlength
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
+      use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
+      use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
+      use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
+      use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
+      use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
+      use output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
+      use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
+      use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
+      use param, only: dimension_c
+      use param1, only: undefined_c
+      use ps, only: dimension_ps
+      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
+      use ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
+      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
+      use residual, only: group_resid, resid_string
+      use run, only: automatic_restart, iter_restart, undefined_i, bdist_io
+      use run, only: call_usr, description, detect_stall, discretize, tstop, units
+      use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
+      use scales, only: p_ref, p_scale
+      use toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
+      use ur_facs, only: ur_fac
+      use usr
+      use utilities, only: blank_line, line_too_big, seek_comment
+      use utilities, only: make_upper_case, replace_tab
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -175,7 +172,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <valid value="BVK" note="Beetstra, van der Hoef, Kuipers (2007).
 !   Chemical Engineering Science 62:246-255"/>
 !
-!  <valid value="USER_DRAG" note="Invoke user-defined drag law. (usr_drag.f)"/>
+!  <valid value="useR_DRAG" note="Invoke user-defined drag law. (usr_drag.f)"/>
 !
 !  <valid value="GIDASPOW_PCF" note="see GIDASPOW"/>
 !  <valid value="GIDASPOW_BLEND_PCF" note="see GIDASPOW_BLEND"/>
@@ -425,7 +422,7 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>
 !    Use do-loop assignment over direct vector assignment.
 !  </description>
-      USE_DOLOOP = .FALSE.
+      use_DOLOOP = .FALSE.
 !</keyword>
 
 !#####################################################################!

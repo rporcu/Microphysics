@@ -24,8 +24,8 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      USE param, only: dimension_bc, dim_m, dim_n_g, dim_n_s, dimension_ic
-      USE param1, only: zero, small_number, one, undefined, half
+      use param, only: dimension_bc, dim_m, dim_n_g, dim_n_s, dimension_ic
+      use param1, only: zero, small_number, one, undefined, half
 
 !                      x coordinate of the west face of a region where
 !                      boundary conditions are specified

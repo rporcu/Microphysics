@@ -28,7 +28,7 @@ module vavg_mod
 !
       real(c_real) function vavg_flux_g (dimlo, dimhi, flux_g, A_FACE)
 
-      USE param1, only: zero
+      use param1, only: zero
 
       IMPLICIT NONE
 

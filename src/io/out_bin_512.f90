@@ -30,7 +30,7 @@ MODULE OUT_BIN_512_MOD
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE machine, only: nwords_dp
+      use machine, only: nwords_dp
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s

@@ -8,7 +8,7 @@
 ! For code that is not performance-critical, do:
 
 ! SUBROUTINE subname
-! USE functions
+! use functions
 ! ...
 ! END SUBROUTINE subname
 
@@ -33,7 +33,7 @@
 
 ! Harmonic average
       DOUBLE PRECISION FUNCTION AVG_H(XXXm, XXXp)
-      USE param1, only: SMALL_NUMBER
+      use param1, only: SMALL_NUMBER
       IMPLICIT NONE
       DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
       AVG_H = XXXm * XXXp / MAX(SMALL_NUMBER, 0.5d0*(XXXm + XXXp) )

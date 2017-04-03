@@ -105,7 +105,7 @@ MODULE read_namelist_module
       inquire(file=trim(IFILE_NAME),exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          IF(myPE == PE_IO) WRITE(*,1000) trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
          'The input data file, ',A,', is missing. Aborting.',/1x,   &
@@ -115,7 +115,7 @@ MODULE read_namelist_module
          OPEN(UNIT=UNIT_DAT, FILE=trim(IFILE_NAME), STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             IF(myPE == PE_IO) WRITE (*,1100)
-            CALL MFIX_EXIT(myPE)
+            call mfix_exit(myPE)
          ENDIF
 
       ENDIF
@@ -127,7 +127,7 @@ MODULE read_namelist_module
          LINE_NO = LINE_NO + 1
 
          LINE_LEN = SEEK_COMMENT(LINE_STRING,LEN(LINE_STRING)) - 1
-         CALL REMOVE_COMMENT(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
+         call remove_comment(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
 
          IF(LINE_LEN <= 0) CYCLE READ_LP           ! comment line
          IF(BLANK_LINE(LINE_STRING)) CYCLE READ_LP ! blank line
@@ -135,7 +135,7 @@ MODULE read_namelist_module
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
             write (*, 1100)  trim(iVAL(LINE_NO)), trim(IFILE_NAME), &
                  &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL), trim( IFILE_NAME )
-            CALL MFIX_EXIT(myPE)
+            call mfix_exit(myPE)
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &
@@ -207,7 +207,7 @@ MODULE read_namelist_module
 
       CALL MAKE_UPPER_CASE (LINE_STRING, LINE_LEN)
       CALL REPLACE_TAB (LINE_STRING, LINE_LEN)
-      CALL REMOVE_PAR_BLANKS(LINE_STRING)
+      call remove_par_blanks(LINE_STRING)
 
 ! Complete arithmetic operations and expand line
       CALL PARSE_LINE (LINE_STRING, LINE_LEN, READ_FLAG)

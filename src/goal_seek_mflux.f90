@@ -20,13 +20,13 @@ contains
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE bc, only: delp_x, delp_y, delp_z, flux_g
-      USE param1, only: one
-      USE compar   ,only: myPE, PE_IO
-      USE exit_mod, only: mfix_exit
-      USE geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-      USE utilities, ONLY: mfix_isnan
-      USE vavg_mod, ONLY: vavg_flux_g
+      use bc, only: delp_x, delp_y, delp_z, flux_g
+      use param1, only: one
+      use compar   ,only: myPE, PE_IO
+      use exit_mod, only: mfix_exit
+      use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+      use utilities, ONLY: mfix_isnan
+      use vavg_mod, ONLY: vavg_flux_g
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
 
       IMPLICIT NONE

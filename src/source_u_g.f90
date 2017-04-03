@@ -24,15 +24,15 @@ contains
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE constant, only: gravity
-      USE bc      , only: delp_x
+      use constant, only: gravity
+      use bc      , only: delp_x
 
-      USE functions, only: avg
+      use functions, only: avg
 
-      USE geometry, only: domlo, domhi, cyclic_x_pd
+      use geometry, only: domlo, domhi, cyclic_x_pd
 
       use matrix, only: e, w, s, n, t, b
-      USE scales, only: p_scale
+      use scales, only: p_scale
 
       integer     , intent(in   ) :: slo(3),shi(3),ulo(3),uhi(3),alo(3),ahi(3),lo(3),hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz

@@ -64,7 +64,7 @@ MODULE OPEN_FILE_MOD
 
 ! Logicals that determine if files should be index.
       LOGICAL :: RES_IDX  ! Index RES files
-      LOGICAL :: USE_IDX  ! Use the IDX value
+      LOGICAL :: use_IDX  ! Use the IDX value
 
 ! Initialize the error flag.
       IER = 0
@@ -73,11 +73,11 @@ MODULE OPEN_FILE_MOD
       RES_IDX = .FALSE.
 
 ! Flag for indexing files.
-      USE_IDX = .FALSE.
+      use_IDX = .FALSE.
 
 ! Construct the file name.
       FULL_NAME = ''
-      IF(USE_IDX)THEN
+      IF(use_IDX)THEN
          WRITE(FULL_NAME,1000) FILENAME(1:NB-1), myPE, EXT(1:4)
       ELSE
          WRITE(FULL_NAME,1001) FILENAME(1:NB-1), EXT(1:4)

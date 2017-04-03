@@ -1,13 +1,13 @@
-MODULE EXIT_MOD
+module exit_mod
 
-   CONTAINS
+   contains
 
-      SUBROUTINE MFIX_EXIT(myID)
+      subroutine mfix_exit(myID)
 
 ! File unit for .OUT file
-      USE funits, only : UNIT_OUT
+      use funits, only : UNIT_OUT
 ! File unit for .LOG files
-      USE funits, only : UNIT_LOG
+      use funits, only : UNIT_LOG
 
       use compar, only: myPE, pe_io
       use funits, only: dmp_log
@@ -54,16 +54,14 @@ MODULE EXIT_MOD
 
  1002 FORMAT(2/,1x,'Program Terminated.',2/)
 
-      END SUBROUTINE MFIX_EXIT
-
-
+      end subroutine mfix_exit
 
 !``````````````````````````````````````````````````````````````````````!
-! Subroutine: CLOSE_FILE                                               !
+! Subroutine: close_file                                               !
 !                                                                      !
 ! Purpose: Close a file if it is open.                                 !
 !......................................................................!
-      SUBROUTINE CLOSE_FILE(UNIT_l)
+      subroutine close_file(unit_l)
 
 ! Global Variables.
 !---------------------------------------------------------------------//
@@ -87,6 +85,5 @@ MODULE EXIT_MOD
 ! Close it.
       IF(FOPEN) CLOSE(UNIT_l)
 
-      RETURN
-      END SUBROUTINE CLOSE_FILE
-END MODULE EXIT_MOD
+      end subroutine close_file
+end module exit_mod
