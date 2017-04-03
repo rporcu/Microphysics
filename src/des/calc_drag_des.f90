@@ -59,7 +59,7 @@ module calc_drag_des_module
 
       real(c_real), intent(in   ) :: dx, dy, dz
 
-      INTEGER :: II
+      integer :: II
 
 ! Apply the drag force calculated by the gas phase.
       if(des_explicitly_coupled) then

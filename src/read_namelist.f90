@@ -68,27 +68,27 @@ MODULE read_namelist_module
 ! Local Variables:
 !------------------------------------------------------------------------//
 ! LINE_STRING(1:MAXCOL) has valid input data
-      INTEGER, PARAMETER :: MAXCOL = 80
+      integer, PARAMETER :: MAXCOL = 80
 ! Holds one line in the input file
       CHARACTER(LEN=512) :: LINE_STRING
 ! Length of noncomment string
-      INTEGER :: LINE_LEN
+      integer :: LINE_LEN
 ! Line number
-      INTEGER :: LINE_NO
+      integer :: LINE_NO
 ! Coefficient of restitution (old symbol)
       real(c_real) :: e
 ! Indicate whether to do a namelist read on the line
-      LOGICAL :: READ_FLAG
+      logical :: READ_FLAG
 ! Logical to check if file exits.
-      LOGICAL :: lEXISTS
+      logical :: lEXISTS
 ! Error flag
-      LOGICAL :: ERROR
+      logical :: ERROR
 
       CHARACTER(len=256) :: STRING
-      INTEGER :: IOS, II
+      integer :: IOS, II
 
 ! Flags restricting what data from the mfix.dat to process
-      LOGICAL :: READ_LOCKED, READ_FULL
+      logical :: READ_LOCKED, READ_FULL
 
       E = UNDEFINED
       READ_FLAG = .TRUE.
@@ -105,7 +105,7 @@ MODULE read_namelist_module
       inquire(file=trim(IFILE_NAME),exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
          IF(myPE == PE_IO) WRITE(*,1000) trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
          'The input data file, ',A,', is missing. Aborting.',/1x,   &
@@ -115,7 +115,7 @@ MODULE read_namelist_module
          OPEN(UNIT=UNIT_DAT, FILE=trim(IFILE_NAME), STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
             IF(myPE == PE_IO) WRITE (*,1100)
-            CALL MFIX_EXIT(myPE)
+            call mfix_exit(myPE)
          ENDIF
 
       ENDIF
@@ -127,7 +127,7 @@ MODULE read_namelist_module
          LINE_NO = LINE_NO + 1
 
          LINE_LEN = SEEK_COMMENT(LINE_STRING,LEN(LINE_STRING)) - 1
-         CALL REMOVE_COMMENT(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
+         call remove_comment(LINE_STRING, LINE_LEN+1, LEN(LINE_STRING))
 
          IF(LINE_LEN <= 0) CYCLE READ_LP           ! comment line
          IF(BLANK_LINE(LINE_STRING)) CYCLE READ_LP ! blank line
@@ -135,7 +135,7 @@ MODULE read_namelist_module
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
             write (*, 1100)  trim(iVAL(LINE_NO)), trim(IFILE_NAME), &
                  &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL), trim( IFILE_NAME )
-            CALL MFIX_EXIT(myPE)
+            call mfix_exit(myPE)
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &
@@ -183,31 +183,31 @@ MODULE read_namelist_module
 
       IMPLICIT NONE
 
-      LOGICAL, intent(OUT) ::ERROR
+      logical, intent(OUT) ::ERROR
 
 
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      INCLUDE 'run_control.inc'
-      INCLUDE 'physical_params.inc'
-      INCLUDE 'numerical_params.inc'
-      INCLUDE 'geometry.inc'
-      INCLUDE 'gas_phase.inc'
-      INCLUDE 'solids_phase.inc'
-      INCLUDE 'initial_conditions.inc'
-      INCLUDE 'boundary_conditions.inc'
-      INCLUDE 'point_sources.inc'
-      INCLUDE 'output_control.inc'
-      INCLUDE 'usr_hooks.inc'
-      INCLUDE 'desnamelist.inc'
-      INCLUDE 'usrnlst.inc'
+      include 'run_control.inc'
+      include 'physical_params.inc'
+      include 'numerical_params.inc'
+      include 'geometry.inc'
+      include 'gas_phase.inc'
+      include 'solids_phase.inc'
+      include 'initial_conditions.inc'
+      include 'boundary_conditions.inc'
+      include 'point_sources.inc'
+      include 'output_control.inc'
+      include 'usr_hooks.inc'
+      include 'desnamelist.inc'
+      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 
       CALL MAKE_UPPER_CASE (LINE_STRING, LINE_LEN)
       CALL REPLACE_TAB (LINE_STRING, LINE_LEN)
-      CALL REMOVE_PAR_BLANKS(LINE_STRING)
+      call remove_par_blanks(LINE_STRING)
 
 ! Complete arithmetic operations and expand line
       CALL PARSE_LINE (LINE_STRING, LINE_LEN, READ_FLAG)

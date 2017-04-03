@@ -27,7 +27,7 @@ module solve_vel_star_module
          rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
          f_gds, A_m, b_m, drag_bm, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
+         bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
          bind(C, name="solve_u_g_star")
 
       use u_g_conv_dif, only: conv_dif_u_g
@@ -44,8 +44,7 @@ module solve_vel_star_module
       use ps, only: point_source
 
       ! Global data arrays for residuals
-      use residual, only: resid, resid_u
-      use residual, only: num_resid, den_resid
+      use residual, only: resid_u
 
       integer(c_int)     , intent(in   ) :: slo(3),shi(3)
       integer(c_int)     , intent(in   ) :: ulo(3),uhi(3)
@@ -97,6 +96,7 @@ module solve_vel_star_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real), intent(  out) :: d_e&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
+      real(c_real), intent(  out) :: resid(8,2)
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -153,7 +153,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, &
-         resid_u, num_resid(resid_u), den_resid(resid_u))
+         resid_u, resid(resid_u,1), resid(resid_u,2))
 
      call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, 3)
 
@@ -173,7 +173,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
       bind(C, name="solve_v_g_star")
 
 
@@ -185,7 +185,6 @@ module solve_vel_star_module
       use adjust_a, only: adjust_a_g
       use gas_drag_module, only: gas_drag_v
       use residual, only: calc_resid_vel
-      use residual, only: num_resid, den_resid
       use ur_facs, only: under_relax
 
 ! Global data .........................................................//
@@ -196,7 +195,6 @@ module solve_vel_star_module
    use ps, only: point_source
 ! Global data arrays for residuals
    use residual, only: resid_v
-   use residual, only: resid
 
 ! Dummy arguments ....................................................//
       integer(c_int)     , intent(in   ) :: slo(3),shi(3)
@@ -249,6 +247,7 @@ module solve_vel_star_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(  out) :: resid(8,2)
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -305,7 +304,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, &
-         resid_v, num_resid(resid_v), den_resid(resid_v))
+         resid_v, resid(resid_v,1), resid(resid_v,2))
 
       call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, 4)
 
@@ -326,7 +325,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, dt, dx, dy, dz) &
+      bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -345,8 +344,7 @@ module solve_vel_star_module
 ! Flag for existence of point souces
    use ps, only: point_source
 ! Global data arrays for residuals
-   use residual, only: resid, resid_w
-   use residual, only: num_resid, den_resid
+   use residual, only: resid_w
 
 ! Dummy arguments ....................................................//
       integer(c_int)     , intent(in   ) :: slo(3),shi(3)
@@ -399,6 +397,7 @@ module solve_vel_star_module
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
       real(c_real), intent(  out) :: b_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+      real(c_real), intent(  out) :: resid(8,2)
 
       integer(c_int), intent(in   ) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
@@ -455,7 +454,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, &
-         resid_w, num_resid(resid_w), den_resid(resid_w))
+         resid_w, resid(resid_w,1), resid(resid_w,2))
 
       call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, 5)
 

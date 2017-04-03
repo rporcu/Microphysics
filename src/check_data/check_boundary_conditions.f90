@@ -1,4 +1,4 @@
-MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
+module check_boundary_conditions_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
@@ -26,7 +26,7 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BOUNDARY_CONDITIONS(dx,dy,dz)
+      subroutine check_boundary_conditions(dx,dy,dz)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -160,15 +160,14 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 !  Purpose: Verify that data was not given for undefined BC regions.   !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_RANGE(BCV)
+      subroutine check_bc_range(BCV)
 
-! Global Variables:
-!---------------------------------------------------------------------//
-! Gas phase BC varaibles
+      ! Gas phase BC varaibles
       use bc, only: BC_EP_g, BC_T_g, BC_X_g, BC_P_g
       use bc, only: BC_U_g, BC_V_g, BC_W_g
-! Solids phase BC variables.
-      USE bc, only: BC_EP_s, BC_ROP_s, BC_T_s, BC_X_s
+
+      ! Solids phase BC variables.
+      use bc, only: BC_EP_s, BC_ROP_s, BC_T_s, BC_X_s
       use bc, only: BC_U_s, BC_V_s, BC_W_s
 
 
@@ -274,15 +273,11 @@ MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
 
       ENDDO
 
-
-      CALL FINL_ERR_MSG
-
-
-      RETURN
+      call finl_err_msg
 
  1100 FORMAT('Error 1100:',A,' specified for an undefined BC location')
 
-      END SUBROUTINE CHECK_BC_RANGE
+      end subroutine check_bc_range
 
-   END SUBROUTINE CHECK_BOUNDARY_CONDITIONS
-END MODULE CHECK_BOUNDARY_CONDITIONS_MODULE
+   end subroutine check_boundary_conditions
+end module check_boundary_conditions_module

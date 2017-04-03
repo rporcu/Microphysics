@@ -26,7 +26,7 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
       LOGICAL, INTENT(INOUT) :: pEXIT_SIGNAL
 
 ! Logical flags for hault cases.
-      LOGICAL :: USER_HAULT
+      LOGICAL :: useR_HAULT
 ! Elapsed wall time, and fancy formatted buffer/batch queue times.
       real(c_real) :: WALL_STOP
 
@@ -35,10 +35,10 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
       WALL_STOP = WALL_STOP - WALL_START
 
 ! Set flags for wall time exceeded or user specified hault.
-      INQUIRE(file="MFIX.STOP", exist=USER_HAULT)
+      INQUIRE(file="MFIX.STOP", exist=useR_HAULT)
 
 ! Report that the hault signal was detected.
-      IF(USER_HAULT) THEN
+      IF(useR_HAULT) THEN
          WRITE(ERR_MSG, 1200)
          CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ENDIF
@@ -50,7 +50,7 @@ MODULE CHECK_BATCH_QUEUE_END_MODULE
 
 ! This routine was restructured so all MPI ranks to the same action. As
 ! a result, broadcasting the BATCHQ flag may not be needed.
-      pEXIT_SIGNAL = (USER_HAULT) .OR. pEXIT_SIGNAL
+      pEXIT_SIGNAL = (useR_HAULT) .OR. pEXIT_SIGNAL
       ! call bcast (pEXIT_SIGNAL,PE_IO)
 
       END SUBROUTINE CHECK_BATCH_QUEUE_END

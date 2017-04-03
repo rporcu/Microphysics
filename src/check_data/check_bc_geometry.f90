@@ -76,23 +76,18 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       L50: DO BCV = 1, DIMENSION_BC
 
          BC_DEFINED(BCV) = .FALSE.
-         IF(IS_DEFINED(BC_X_W(BCV)))   BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_X_E(BCV)))   BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Y_S(BCV)))   BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Y_N(BCV)))   BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Z_B(BCV)))   BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Z_T(BCV)))   BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_X_W(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_X_E(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Y_S(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Y_N(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Z_B(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(IS_DEFINED(BC_Z_T(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_I_W(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_I_E(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_J_S(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_J_N(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_K_B(BCV))) BC_DEFINED(BCV) = .TRUE.
          IF(IS_DEFINED(BC_K_T(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(BC_TYPE(BCV) == 'CG_NSW')   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_TYPE(BCV) == 'CG_FSW')   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_TYPE(BCV) == 'CG_PSW')   BC_DEFINED(BCV) = .TRUE.
-         IF(BC_TYPE(BCV) == 'CG_MI')    BC_DEFINED(BCV) = .TRUE.
-         IF(BC_TYPE(BCV) == 'CG_PO')    BC_DEFINED(BCV) = .TRUE.
 
          IF (BC_TYPE(BCV) == 'DUMMY') BC_DEFINED(BCV) = .FALSE.
 
@@ -115,7 +110,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          ENDIF
 
          IF(.NOT.BC_DEFINED(BCV)) CYCLE
-         IF(BC_TYPE(BCV)(1:2) == 'CG') CYCLE
 
          IF(IS_UNDEFINED(BC_X_W(BCV)) .AND. IS_UNDEFINED(BC_I_W(BCV))) THEN
             write(ERR_MSG,1101) BCV, 'BC_X_w and BC_I_w', trim( IFILE_NAME )
@@ -363,6 +357,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 ! Basic grid information
       use geometry, only: domlo,domhi
+      use geometry, only: xlength, ylength, zlength
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -402,68 +397,47 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       Y_CONSTANT = .TRUE.
       Z_CONSTANT = .TRUE.
 
-      IF (IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
-         I_W = CALC_CELL (BC_X_W(BCV), DX)
-         I_E = CALC_CELL (BC_X_E(BCV), DX)
-         IF (.NOT.EQUAL(BC_X_W(BCV), BC_X_E(BCV))) THEN
-            X_CONSTANT = .FALSE.
-            I_W = I_W + 1
-            IF(BC_I_W(BCV)/=UNDEFINED_I.OR.BC_I_E(BCV)/=UNDEFINED_I)THEN
-               CALL LOCATION_CHECK (BC_I_W(BCV), I_W, BCV, 'BC - west')
-               CALL LOCATION_CHECK (BC_I_E(BCV), I_E, BCV, 'BC - east')
-            ENDIF
-         ENDIF
-         BC_I_W(BCV) = I_W
-         BC_I_E(BCV) = I_E
-      ELSE
-         IF(BC_I_W(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DX,BC_I_W(BCV),BC_X_W(BCV))
-         IF(BC_I_E(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DX,BC_I_E(BCV),BC_X_E(BCV))
-         IF(.NOT.EQUAL(BC_X_W(BCV), BC_X_E(BCV))) X_CONSTANT = .FALSE.
-      ENDIF
+      if (is_defined(bc_x_w(bcv)) .and. is_defined(bc_x_e(bcv))) then
+         i_w = calc_cell (bc_x_w(bcv), dx)
+         i_e = calc_cell (bc_x_e(bcv), dx)
+         if (.not.equal(bc_x_w(bcv), bc_x_e(bcv))) then
+            x_constant = .false.
+            i_w = i_w + 1
+         else if(equal(bc_x_w(bcv),xlength)) then
+            i_w = i_w + 1
+            i_e = i_w
+         endif
+         bc_i_w(bcv) = i_w
+         bc_i_e(bcv) = i_e
+      endif
 
-      IF (IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
-         J_S = CALC_CELL (BC_Y_S(BCV), DY)
-         J_N = CALC_CELL (BC_Y_N(BCV), DY)
-         IF(.NOT.EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))) THEN
-            Y_CONSTANT = .FALSE.
-            J_S = J_S + 1
-            IF(BC_J_S(BCV)/=UNDEFINED_I.OR.BC_J_N(BCV)/=UNDEFINED_I)THEN
-               CALL LOCATION_CHECK (BC_J_S(BCV), J_S, BCV, 'BC - south')
-               CALL LOCATION_CHECK (BC_J_N(BCV), J_N, BCV, 'BC - north')
-            ENDIF
-         ENDIF
-         BC_J_S(BCV) = J_S
-         BC_J_N(BCV) = J_N
-      ELSE
-         IF(BC_J_S(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DY,BC_J_S(BCV),BC_Y_S(BCV))
-         IF(BC_J_N(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DY,BC_J_N(BCV),BC_Y_N(BCV))
-         IF (.NOT.EQUAL(BC_Y_S(BCV), BC_Y_N(BCV))) Y_CONSTANT = .FALSE.
-      ENDIF
+      if (is_defined(bc_y_s(bcv)) .and. is_defined(bc_y_n(bcv))) then
+         j_s = calc_cell (bc_y_s(bcv), dy)
+         j_n = calc_cell (bc_y_n(bcv), dy)
+         if(.not.equal(bc_y_s(bcv), bc_y_n(bcv))) then
+            y_constant = .false.
+            j_s = j_s + 1
+         else if(equal(bc_y_s(bcv),ylength)) then
+            j_s = j_s + 1
+            j_n = j_s
+         endif
+         bc_j_s(bcv) = j_s
+         bc_j_n(bcv) = j_n
+      endif
 
-      IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
-         K_B = CALC_CELL (BC_Z_B(BCV), DZ)
-         K_T = CALC_CELL (BC_Z_T(BCV), DZ)
-         IF(.NOT.EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))) THEN
-            Z_CONSTANT = .FALSE.
-            K_B = K_B + 1
-            IF(BC_K_B(BCV)/=UNDEFINED_I.OR.BC_K_T(BCV)/=UNDEFINED_I)THEN
-               CALL LOCATION_CHECK (BC_K_B(BCV), K_B, BCV, 'BC - bottom')
-               CALL LOCATION_CHECK (BC_K_T(BCV), K_T, BCV, 'BC - top')
-            ENDIF
-         ENDIF
-         BC_K_B(BCV) = K_B
-         BC_K_T(BCV) = K_T
-      ELSE
-         IF(BC_K_B(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DZ,BC_K_B(BCV),BC_Z_B(BCV))
-         IF(BC_K_T(BCV) /= UNDEFINED_I) &
-            CALL CALC_LOC (DZ,BC_K_T(BCV),BC_Z_T(BCV))
-         IF(.NOT.EQUAL(BC_Z_B(BCV), BC_Z_T(BCV))) Z_CONSTANT = .FALSE.
-      ENDIF
+      if(is_defined(bc_z_b(bcv)) .and. is_defined(bc_z_t(bcv))) then
+         k_b = calc_cell (bc_z_b(bcv), dz)
+         k_t = calc_cell (bc_z_t(bcv), dz)
+         if(.not.equal(bc_z_b(bcv), bc_z_t(bcv))) then
+            z_constant = .false.
+            k_b = k_b + 1
+         else if(equal(bc_z_b(bcv),zlength)) then
+            k_b = k_b + 1
+            k_t = k_b
+         endif
+         bc_k_b(bcv) = k_b
+         bc_k_t(bcv) = k_t
+      endif
 
 ! Check whether the boundary is a plane parallel to one of the three
 ! coordinate planes

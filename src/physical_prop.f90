@@ -18,7 +18,6 @@ contains
       use calc_ro_g_module, only: calc_ro_g
       use param1, only: is_undefined
 
-      USE exit_mod, only: mfix_exit
       use fld_const, only: ro_g0
 
       implicit none

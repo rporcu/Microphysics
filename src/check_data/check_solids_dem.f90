@@ -327,7 +327,7 @@ contains
   subroutine check_solids_dem_coll_hertz
     
     use constant,       only: MMAX, D_P0, RO_s0, PI
-    USE param,          only: DIM_M
+    use param,          only: DIM_M
     use discretelement, only: DES_EN_INPUT, DES_EN_WALL_INPUT, &
                            &  DES_ET_INPUT, DES_ET_WALL_INPUT, &
                            &  DES_ETAN, DES_ETAN_WALL,         &

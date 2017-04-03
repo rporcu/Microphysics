@@ -27,16 +27,16 @@ MODULE GET_BC_AREA_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE GET_BC_AREA(dx,dy,dz)
 
-      USE param, only: dimension_bc
-      USE param1, only: zero
-      USE bc, only: bc_defined, bc_area, bc_plane, bc_k_b, bc_k_t, bc_defined, bc_j_n, bc_j_s, bc_i_e, bc_i_w
+      use param, only: dimension_bc
+      use param1, only: zero
+      use bc, only: bc_defined, bc_area, bc_plane, bc_k_b, bc_k_t, bc_defined, bc_j_n, bc_j_s, bc_i_e, bc_i_w
 
       IMPLICIT NONE
 
       real(c_real), intent(in) :: dx, dy, dz
 !
 ! BC number
-      INTEGER :: BCV
+      integer :: BCV
 !-----------------------------------------------
 !
 

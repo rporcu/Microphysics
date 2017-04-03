@@ -15,13 +15,13 @@ MODULE GET_PS_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine get_ps(PSV,dx,dy,dz)
 
-      USE calc_cell_module, only: calc_loc, calc_cell
-      USE geometry, only: domlo, domhi
-      USE location_check_module, only: location_check
-      USE param1, only: undefined_i, is_undefined, is_defined, equal
-      USE ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
-      USE ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
-      USE ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t
+      use calc_cell_module, only: calc_loc, calc_cell
+      use geometry, only: domlo, domhi
+      use location_check_module, only: location_check
+      use param1, only: undefined_i, is_undefined, is_defined, equal
+      use ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
+      use ps, only: ps_y_n, ps_y_s, ps_j_s, ps_j_n
+      use ps, only: ps_z_t, ps_z_b, ps_k_b, ps_k_t
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -33,15 +33,15 @@ MODULE GET_PS_MODULE
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Loop/variable indices
-      INTEGER, INTENT(in) :: PSV
+      integer, INTENT(in) :: PSV
       real(c_real), intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Error flag.
-      INTEGER :: IER
+      integer :: IER
 ! Calculated indices of the wall boundary
-      INTEGER :: I_w , I_e , J_s , J_n , K_b , K_t
+      integer :: I_w , I_e , J_s , J_n , K_b , K_t
 ! Surface indictors
       LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 !......................................................................!

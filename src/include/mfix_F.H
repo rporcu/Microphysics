@@ -8,6 +8,16 @@ extern "C"
 
   void set_resid_p(Real& val);
 
+  void init_output_vars(Real* time, Real* dt);
+
+  void parse_resid_string();
+
+  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz);
+
+  void write_usr0();
+
+  void set_ps(Real* dx, Real* dy, Real* dz, int* err, int* is_ioproc);
+
   void mfix_set_ifile( char* fname, int len );
 
   void mfix_get_data(int* imax, int* jmax, int* kmax,
@@ -25,17 +35,24 @@ extern "C"
                    int* bc_jlo, int* bc_jhi,
                    int* bc_klo, int* bc_khi);
 
-  void mfix_main1(const int* slo, const int* shi,
-                  const int* ulo, const int* uhi,
-                  const int* vlo, const int* vhi,
-                  const int* wlo, const int* whi,
-                  Real* time,    Real* dt,
-                  Real* u_g,     Real* v_g,      Real* w_g,
-                  Real* p_g,     Real* ep_g,
-                  int* bc_ilo, int* bc_ihi,
-                  int* bc_jlo, int* bc_jhi,
-                  int* bc_klo, int* bc_khi,
-                  Real* dx,       Real* dy,       Real* dz);
+  void zero_norm_vel(const int* slo, const int* shi,
+                     const int* ulo, const int* uhi,
+                     const int* vlo, const int* vhi,
+                     const int* wlo, const int* whi,
+                     Real* u_g,     Real* v_g,      Real* w_g,
+                     int* bc_ilo, int* bc_ihi,
+                     int* bc_jlo, int* bc_jhi,
+                     int* bc_klo, int* bc_khi);
+
+  void set_bc0(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               Real* p_g,     Real* ep_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi);
 
   void init_fluid(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,
@@ -178,7 +195,7 @@ extern "C"
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
-          Real* dx,       Real* dy,       Real* dz);
+          Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_v_g_star(
           const int* slo, const int* shi,
@@ -197,7 +214,7 @@ extern "C"
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
-          Real* dx,       Real* dy,       Real* dz);
+          Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_w_g_star(
           const int* slo, const int* shi,
@@ -216,7 +233,7 @@ extern "C"
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
           int* bc_klo,    int* bc_khi,    Real* dt,
-          Real* dx,       Real* dy,       Real* dz);
+          Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_pp_g(
           const int* slo, const int* shi,
@@ -232,9 +249,7 @@ extern "C"
           Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,      Real* b_mmax,
-          Real* dt,       Real* dx, Real* dy, Real* dz);
-
-  void set_resid_p(Real& val);
+          Real* dt,       Real* dx, Real* dy, Real* dz, Real (&residuals)[16]);
 
   void correct_0(
           const int* slo, const int* shi,
@@ -246,14 +261,14 @@ extern "C"
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t);
 
-  void display_resid(int* nit);
+  void display_resid(int* nit, Real (&residuals)[16]);
 
-  int check_convergence(int* nit);
+  int check_convergence(int* nit, Real (&residuals)[16]);
 
   int goal_seek_mflux(
               const int* slo, const int* shi,
               int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
-              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,  
+              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
               Real* dx     ,  Real* dy,       Real* dz);
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);

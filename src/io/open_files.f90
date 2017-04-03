@@ -1,6 +1,6 @@
 MODULE OPEN_FILES_MOD
 
-      USE open_file_mod, only: open_file
+      use open_file_mod, only: open_file
 
    CONTAINS
 
@@ -14,15 +14,15 @@ MODULE OPEN_FILES_MOD
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE OPEN_FILES(RUN_NAME, RUN_TYPE)
 
-      USE compar, only: mype, numPEs, pe_io
-      USE error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
-      USE exit_mod, only: mfix_exit
-      USE funits, only: unit_out
+      use compar, only: mype, numPEs, pe_io
+      use error_manager, only: err_msg, init_err_msg, flush_err_msg, finl_err_msg
+      use exit_mod, only: mfix_exit
+      use funits, only: unit_out
 
       IMPLICIT NONE
 
 ! Error index: 0 - no error, 1 could not open file
-      INTEGER :: IER(0:numPEs-1)
+      integer :: IER(0:numPEs-1)
 ! RUN_NAME (as specified in input file)
       CHARACTER(LEN=*) :: RUN_NAME
 ! Run_type (as specified in input file)
@@ -30,7 +30,7 @@ MODULE OPEN_FILES_MOD
 ! run_name + extension
       CHARACTER(len=255) :: FILE_NAME
 ! index to first blank character in run_name
-      INTEGER :: NB
+      integer :: NB
       CHARACTER(len=10) :: CSTATUS
 ! Character error code.
       CHARACTER(len=32) :: CER
@@ -164,7 +164,7 @@ MODULE OPEN_FILES_MOD
       LOGICAL FUNCTION ERROR_OPENING(IER_l)
 
 ! Array containing error flags from all ranks.
-      INTEGER, INTENT(IN) :: IER_L(0:numPEs-1)
+      integer, INTENT(IN) :: IER_L(0:numPEs-1)
 ! Initialize error flags.
       ERROR_OPENING = .FALSE.
 ! Globally collect flags.
@@ -197,13 +197,13 @@ MODULE OPEN_FILES_MOD
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! File unit for LOG files.
-      USE funits, only: UNIT_LOG
+      use funits, only: UNIT_LOG
 ! User specifed run name
-      USE run, only: RUN_NAME
+      use run, only: RUN_NAME
 ! MPI Rank of current process.
-      USE compar, only: myPE
+      use compar, only: myPE
 ! Total number of MPI ranks.
-      USE compar, only: numPEs
+      use compar, only: numPEs
 ! Flag: My rank reports errors.
       use funits, only: DMP_LOG
 ! Flag: The log had to be opened.
@@ -214,7 +214,7 @@ MODULE OPEN_FILES_MOD
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Error index.
-      INTEGER, INTENT(inout) :: IER
+      integer, INTENT(inout) :: IER
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -224,7 +224,7 @@ MODULE OPEN_FILES_MOD
 ! Flag for LOG files that are already open.
       LOGICAL :: DO_NOTHING
 ! Index of first blank character in RUN_NAME
-      INTEGER :: NB
+      integer :: NB
 !......................................................................!
 
 
@@ -286,7 +286,7 @@ MODULE OPEN_FILES_MOD
 ! Global Variables:
 !---------------------------------------------------------------------//
 ! File unit for LOG files.
-      USE funits, only: UNIT_LOG
+      use funits, only: UNIT_LOG
 ! Flag: My rank reports errors.
       use funits, only: DMP_LOG
 ! Flag: The log had to be opened.

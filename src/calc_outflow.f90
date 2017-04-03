@@ -32,7 +32,7 @@ MODULE CALC_OUTFLOW_MODULE
 
 
       ! Boundary condition number
-      INTEGER, intent(in) :: L
+      integer, intent(in) :: L
 
       real(c_real), intent(in) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -49,7 +49,7 @@ MODULE CALC_OUTFLOW_MODULE
 ! Local variables
 !--------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 !--------------------------------------------------------------------//
 
       BC_OUT_N(L) = BC_OUT_N(L) + 1

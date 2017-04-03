@@ -15,14 +15,14 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      USE discretelement, only: des_coll_model_enum
-      USE discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
-      USE discretelement, only: des_crossprdct
-      USE discretelement, only: kn_w, kt_w, mew_w, dtsolid
-      USE error_manager, only: err_msg, flush_err_msg, init_err_msg
-      USE param1, only: small_number, zero
+      use discretelement, only: des_coll_model_enum
+      use discretelement, only: des_etat_wall, des_etan_wall, hert_kwn, hert_kwt, hertzian
+      use discretelement, only: des_crossprdct
+      use discretelement, only: kn_w, kt_w, mew_w, dtsolid
+      use error_manager, only: err_msg, flush_err_msg, init_err_msg
+      use param1, only: small_number, zero
 
-      USE stl_functions_des, only: closestptpointtriangle
+      use stl_functions_des, only: closestptpointtriangle
       use discretelement, only: normal_particle
 
       PRIVATE
@@ -51,11 +51,11 @@
       real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
       real(c_real), DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
       real(c_real), DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_state
-      INTEGER, DIMENSION(:), INTENT(IN) :: particle_phase
+      integer, DIMENSION(:), INTENT(IN) :: particle_state
+      integer, DIMENSION(:), INTENT(IN) :: particle_phase
 
-      INTEGER :: LL
-      INTEGER :: NF
+      integer :: LL
+      integer :: NF
       real(c_real) ::OVERLAP_N, SQRT_OVERLAP
 
       real(c_real) :: V_REL_TRANS_NORM, DISTSQ, RADSQ, CLOSEST_PT(3)
@@ -63,7 +63,7 @@
       real(c_real) :: NORMAL(3), VREL_T(3), DIST(3), DISTMOD
       real(c_real) :: FT(3), FN(3), OVERLAP_T(3)
 
-      INTEGER :: PHASELL
+      integer :: PHASELL
 
       real(c_real) :: TANGENT(3)
       real(c_real) :: FNMD
@@ -77,7 +77,7 @@
 ! extended plane detects an overlap
 
       real(c_real) :: MAX_DISTSQ
-      INTEGER :: MAX_NF
+      integer :: MAX_NF
       real(c_real), DIMENSION(3) :: PARTICLE_MIN, PARTICLE_MAX, POS_TMP
 !     Vertex Coordinates X ,Y and Z
       real(c_real), DIMENSION(3,3,6) :: VERTEX
@@ -308,7 +308,7 @@
 ! Dummy arguments:
 !---------------------------------------------------------------------//
 ! Particle index.
-      INTEGER, INTENT(IN) :: LL
+      integer, INTENT(IN) :: LL
 ! Magnitude of the total relative translational velocity.
       real(c_real), INTENT(OUT):: VRN
 ! Total relative translational velocity (vector).

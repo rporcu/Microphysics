@@ -63,15 +63,14 @@ module init_fluid_module
       endif
 
       ! Remove undefined values at wall cells for scalars
-      where(rop_g == undefined) rop_g = 0.0
+      where(rop_g .eq. undefined) rop_g = 0.0
 
       ! Set the initial viscosity
       if (is_undefined(mu_g0)) then
          call calc_mu_g(slo,shi,lambda_g,mu_g)
       else
-      !  Set only the interior values
-             mu_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = mu_g0
-         lambda_g(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = -(2.0d0/3.0d0)*mu_g0
+             mu_g(:,:,:) = mu_g0
+         lambda_g(:,:,:) = -(2.0d0/3.0d0)*mu_g0
       endif
 
    end subroutine init_fluid
@@ -96,7 +95,7 @@ module init_fluid_module
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      IMPLICIT NONE
+      implicit none
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
@@ -205,27 +204,28 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
+      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
 
-      USE bc, only: delp_x, delp_y, delp_z
-      USE bc, only: dimension_ic
-      USE bc, only: dimension_bc, bc_type, bc_p_g, bc_defined
-      USE compar, only: myPE
-      USE constant , only: gravity
-      USE eos, ONLY: EOSG
-      USE fld_const, only: mw_avg, ro_g0
-      USE geometry, only: xlength, ylength, zlength
-      USE ic       , only: ic_p_g, ic_defined
-      USE param1   , only: is_defined, zero, undefined, is_undefined
-      USE scales   , only: scale_pressure
+      use bc, only: delp_x, delp_y, delp_z
+      use bc, only: dimension_ic
+      use bc, only: dimension_bc, bc_type, bc_p_g, bc_defined
+      use compar, only: myPE
+      use constant , only: gravity
+      use eos, ONLY: EOSG
+      use fld_const, only: mw_avg, ro_g0
+      use geometry, only: xlength, ylength, zlength
+      use ic       , only: ic_p_g, ic_defined
+      use scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
-      USE geometry, only: domhi
+      use geometry, only: domhi
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
+      use param1   , only: zero, undefined
+      use param1   , only: is_defined, is_undefined
 
-      IMPLICIT NONE
+      implicit none
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
 
@@ -239,9 +239,9 @@ module init_fluid_module
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Local loop counter
-      INTEGER :: L
+      integer :: L
 ! Gas pressure at the axial location j
       real(c_real) :: PJ
 ! Bed weight per unit area
@@ -271,7 +271,7 @@ module init_fluid_module
       if (is_defined(delp_x)) then
          dpodx = delp_x/xlength
          pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
-         do i = hi(1), lo(1), -1
+         do i = shi(1), slo(1), -1
             pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -394,7 +394,7 @@ module init_fluid_module
                enddo
             enddo
 
-! Global Sum
+            ! Global Sum
             if (0.0 < abs(area)) bed_weight = bed_weight/area
 
             pj = pj + bed_weight
@@ -408,7 +408,7 @@ module init_fluid_module
       else
          do j = hi(2), lo(2), -1
 
-! Find the average weight per unit area over an x-z slice
+            ! Find the average weight per unit area over an x-z slice
             bed_weight = 0.0
             area = 0.0
             darea = dx*dz
@@ -425,7 +425,7 @@ module init_fluid_module
                enddo
             enddo
 
-! Global Sum
+         ! Global Sum
          ! call global_all_sum(bed_weight)
          ! call global_all_sum(area)
             IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA

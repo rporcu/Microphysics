@@ -49,7 +49,6 @@ contains
     logical             :: converted = .false.
     integer             :: m
 
-
     call init_err_msg("FLOW_TO_VEL_NEW")
 
     ! mass flows rates are converted to volumetric flow rates.
@@ -238,7 +237,6 @@ contains
     logical, intent(in) :: do_vel_check
     real(c_real)        :: sgn, off, vel
 
-
     call init_err_msg("GAS_VOLFLOW_TO_VELOCITY")
 
     select case (trim(bc_type(bcv)))
@@ -326,8 +324,8 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine solids_volflow_to_velocity(do_vel_check, bcv, m, skip_m)
 
-    USE funits, only: dmp_log, unit_log
-    USE compar, only: myPE
+    use funits, only: dmp_log, unit_log
+    use compar, only: myPE
 
     integer, intent(in) :: bcv, m
     logical, intent(in) :: do_vel_check, skip_m

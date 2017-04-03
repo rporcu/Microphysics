@@ -1,36 +1,36 @@
-MODULE GET_DATA_MODULE
+module get_data_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  SUBROUTINE: GET_DATA                                                C
+!  subroutine: get_data                                                C
 !  Purpose: read and verify input data, open files                     C
 !                                                                      C
 !  Author: P. Nicoletti                               Date: 04-DEC-91  C
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_DATA(time, dt)
+      subroutine get_data(time, dt)
 
-      USE check_gas_phase_module, only: check_gas_phase
-      USE check_geometry_prereqs_module, only: check_geometry_prereqs
-      USE check_numerics_module, only: check_numerics
-      USE check_output_control_module, only: check_output_control
-      USE check_run_control_module, only: check_run_control
-      USE check_solids_model_prereqs_module, only: check_solids_model_prereqs
-      USE check_solids_phases_module, only: check_solids_phases
-      USE error_manager  , only: init_error_manager
-      USE get_bc_area_module, only: get_bc_area
-      USE init_namelist_module, only: init_namelist
-      USE open_files_mod, only: open_files
-      USE read_namelist_module, only: read_namelist
-      USE run            , only: run_type, run_name
-      USE set_bc_flow_module, only: set_bc_flow
-      USE set_parameters_module, only: set_parameters
-      USE write_header_module, only: write_header
+      use check_gas_phase_module, only: check_gas_phase
+      use check_geometry_prereqs_module, only: check_geometry_prereqs
+      use check_numerics_module, only: check_numerics
+      use check_output_control_module, only: check_output_control
+      use check_run_control_module, only: check_run_control
+      use check_solids_model_prereqs_module, only: check_solids_model_prereqs
+      use check_solids_phases_module, only: check_solids_phases
+      use error_manager  , only: init_error_manager
+      use get_bc_area_module, only: get_bc_area
+      use init_namelist_module, only: init_namelist
+      use open_files_mod, only: open_files
+      use read_namelist_module, only: read_namelist
+      use run            , only: run_type, run_name
+      use set_bc_flow_module, only: set_bc_flow
+      use set_parameters_module, only: set_parameters
+      use write_header_module, only: write_header
 
       use geometry, only: domlo, domhi
       use geometry, only: imax, jmax, kmax
@@ -39,26 +39,27 @@ MODULE GET_DATA_MODULE
 
       real(c_real), intent(  out) :: time, dt
 
-! This module call routines to initialize the namelist variables.
-      CALL INIT_NAMELIST
-! Read in the namelist variables from the ascii input file.
-      CALL READ_NAMELIST(time, dt)
+      ! This module call routines to initialize the namelist variables.
+      call init_namelist
 
-! Initialize the error manager. This call occurs after the mfix.dat
-! is read so that message verbosity can be set and the .LOG file
-! can be opened.
-      CALL INIT_ERROR_MANAGER
+      ! Read in the namelist variables from the ascii input file.
+      call read_namelist(time, dt)
 
-! Write header in the .LOG file and to screen.
-! Not sure if the values are correct or useful
-      CALL WRITE_HEADER
+      ! Initialize the error manager. This call occurs after the mfix.dat
+      ! is read so that message verbosity can be set and the .LOG file
+      ! can be opened.
+      call init_error_manager
 
-! Open files
-      CALL OPEN_FILES(RUN_NAME, RUN_TYPE)
+      ! Write header in the .LOG file and to screen.
+      ! Not sure if the values are correct or useful
+      call write_header
 
-! These checks verify that sufficient information was provided
-! to setup the domain indices and DMP gridmap.
-      CALL CHECK_GEOMETRY_PREREQS
+      ! Open files
+      call open_files(RUN_NAME, RUN_TYPE)
+
+      ! These checks verify that sufficient information was provided
+      ! to setup the domain indices and DMP gridmap.
+      call CHECK_GEOMETRY_PREREQS
 
       domlo(1) = 0
       domlo(2) = 0
@@ -68,15 +69,16 @@ MODULE GET_DATA_MODULE
       domhi(3) = kmax-1
 
       ! Check the minimum solids phase requirements.
-      CALL CHECK_SOLIDS_MODEL_PREREQS
+      call check_solids_model_prereqs
 
-      CALL CHECK_RUN_CONTROL(time, dt)
-      CALL CHECK_NUMERICS
-      CALL CHECK_OUTPUT_CONTROL
+      call check_run_control(time, dt)
+      call check_numerics
+      call check_output_control
 
-      CALL CHECK_GAS_PHASE
-      CALL CHECK_SOLIDS_PHASES
-      CALL SET_PARAMETERS
+      call check_gas_phase
+      call check_solids_phases
+      call set_parameters
 
-      END SUBROUTINE GET_DATA
-END MODULE GET_DATA_MODULE
+      end subroutine get_data
+
+end module get_data_module

@@ -12,7 +12,7 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      IMPLICIT NONE
+      implicit none
 
 ! Use this module only to define functions and subroutines.
       CONTAINS
@@ -26,9 +26,9 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine ClosestPtPointTriangle(pointp, points, closest_point)
-      USE param1, only: zero, one
+      use param1, only: zero, one
 
-      IMPLICIT NONE
+      implicit none
 
 ! points are the three nodes of the triangle
 ! point p is the sphere center
@@ -120,9 +120,9 @@
       Subroutine intersectLnPlane(ref_line, dir_line, ref_plane,       &
          norm_plane, line_param)
 
-      USE param1, only: zero
+      use param1, only: zero
 
-      IMPLICIT NONE
+      implicit none
 
 ! Reference point and direction of the line
       real(c_real), INTENT(IN) :: REF_LINE(3),  DIR_LINE(3)
@@ -160,7 +160,7 @@
 !......................................................................!
       SUBROUTINE TRI_BOX_OVERLAP(pCENTER, pHALFSIZE, pVERTS, pOVERLAP)
 
-      IMPLICIT NONE
+      implicit none
 
       real(c_real), INTENT(IN) :: pCENTER(3), pHALFSIZE(3)
       real(c_real), INTENT(IN) :: pVERTS(3,3)

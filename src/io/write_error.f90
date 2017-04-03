@@ -21,7 +21,7 @@ MODULE WRITE_ERROR_MODULE
 !
       SUBROUTINE WRITE_ERROR(NAME, LINE, LMAX)
 
-      USE funits, only: unit_log, dmp_log
+      use funits, only: unit_log, dmp_log
 
       IMPLICIT NONE
 
@@ -32,10 +32,10 @@ MODULE WRITE_ERROR_MODULE
       CHARACTER(LEN=*)    LINE(*)
 
 !                      Dimension of message array
-      INTEGER          LMAX
+      integer          LMAX
 
 !                      Index
-      INTEGER          L
+      integer          L
 
 !-----------------------------------------------
 

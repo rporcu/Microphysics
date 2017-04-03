@@ -33,10 +33,10 @@
       IMPLICIT NONE
 
 ! Index of fluid cell:
-      INTEGER, INTENT(IN) :: I,J,K
+      integer, INTENT(IN) :: I,J,K
 ! TFM SOLIDS --> Index of phase (M)
 ! DES SOLIDS --> Index of particle (NP); M = particle_phase(NP,5)
-      INTEGER, INTENT(IN) :: M_NP
+      integer, INTENT(IN) :: M_NP
 
 ! drag coefficient
       real(c_real), INTENT(OUT) :: lDgA

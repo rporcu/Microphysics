@@ -63,7 +63,7 @@ module calc_pg_grad_module
 
 
 ! Loop counters: Particle, fluid cell, neighbor cells
-      INTEGER :: NP, I, J, K
+      integer :: NP, I, J, K
 ! mean pressure gradient for the case of periodic boundaries
       real(c_real) :: cPG(3)
 ! One over cell volume

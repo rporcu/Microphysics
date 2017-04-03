@@ -26,7 +26,7 @@ MODULE CFRELVEL_MODULE
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: DES_CROSSPRDCT
+      use discretelement, only: DES_CROSSPRDCT
       IMPLICIT NONE
 
       real(c_real), DIMENSION(:), INTENT(IN) :: des_radius

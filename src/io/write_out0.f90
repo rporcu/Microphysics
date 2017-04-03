@@ -1,55 +1,54 @@
-MODULE WRITE_OUT0_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
-
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: WRITE_OUT0                                              !
+!  Subroutine: write_out0                                              !
 !  Author: P. Nicoletti, M. Syamlal                   Date: 04-DEC-91  !
 !                                                                      !
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_OUT0(time, dt, dx, dy, dz)
+      subroutine write_out0(time, dt, dx, dy, dz) &
+         bind(C, name="write_out0")
 
-      USE bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
-      USE bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
-      USE bc, only: bc_t_g, bc_ep_g, bc_massflow_g, bc_volflow_g, bc_massflow_s, bc_volflow_s
-      USE bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_rop_s
-      USE bc, only: bc_u_g, bc_v_g, bc_w_g
-      USE bc, only: bc_u_s, bc_v_s, bc_w_s
-      USE bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
-      USE compar, only: mype, pe_io
-      USE constant, only: gravity, c_name, c
-      USE discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
-      USE discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
-      USE fld_const, only: mw_avg, mu_g0, ro_g0
-      USE funits, only: unit_out
-      USE geometry, only: coordinates
-      USE geometry, only: cyclic_x, cyclic_y, cyclic_z
-      USE geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      USE geometry, only: imax, jmax, kmax
-      USE geometry, only: xlength, ylength, zlength
-      USE ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
-      USE ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
-      USE ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      USE leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
-      USE machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
-      USE output, only: out_dt, res_dt
-      USE param, only: dimension_c, dimension_ic, dimension_bc
-      USE param1, only: half, undefined, zero, is_defined
-      USE constant, only: mmax, ro_s0, d_p0
-      USE run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
-      USE run, only: units, discretize, solids_model
-      USE scales, only: p_scale, p_ref
-      USE toleranc, only: tol_com, zero_ep_s
-      USE ur_facs, only: ur_fac
-      USE write_table_mod, only: write_table
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
+
+      use bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
+      use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
+      use bc, only: bc_t_g, bc_ep_g, bc_massflow_g, bc_volflow_g, bc_massflow_s, bc_volflow_s
+      use bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_rop_s
+      use bc, only: bc_u_g, bc_v_g, bc_w_g
+      use bc, only: bc_u_s, bc_v_s, bc_w_s
+      use bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
+      use compar, only: mype, pe_io
+      use constant, only: gravity, c_name, c
+      use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
+      use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
+      use fld_const, only: mw_avg, mu_g0, ro_g0
+      use funits, only: unit_out
+      use geometry, only: coordinates
+      use geometry, only: cyclic_x, cyclic_y, cyclic_z
+      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use geometry, only: imax, jmax, kmax
+      use geometry, only: xlength, ylength, zlength
+      use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
+      use ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
+      use ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
+      use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
+      use output, only: out_dt, res_dt
+      use param, only: dimension_c, dimension_ic, dimension_bc
+      use param1, only: half, undefined, zero, is_defined
+      use constant, only: mmax, ro_s0, d_p0
+      use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
+      use run, only: units, discretize, solids_model
+      use scales, only: p_scale, p_ref
+      use toleranc, only: tol_com, zero_ep_s
+      use ur_facs, only: ur_fac
+      use write_table_mod, only: write_table
       use geometry, only: domhi
 
-      IMPLICIT NONE
+      implicit none
 
       real(c_real), intent(in   ) :: time, dt, dx, dy, dz
 !-----------------------------------------------
@@ -61,9 +60,9 @@ MODULE WRITE_OUT0_MODULE
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
-      INTEGER :: L, M, N
+      integer :: L, M, N
 
-      INTEGER :: MMAX_TOT
+      integer :: MMAX_TOT
       real(c_real) :: TMP_DP
 
       real(c_real), DIMENSION(6) :: LOC
@@ -575,19 +574,19 @@ MODULE WRITE_OUT0_MODULE
 !  Local variables: L                                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION FUNCTION LOCATION (L2, DX)
+      DOUBLE PRECISION function LOCATION (L2, DX)
 !
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE param1, only: half
+      use param1, only: half
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
 !
 ! Index for which the location is required
-      INTEGER :: L2
+      integer :: L2
 ! Cell sizes (DX, DY, or DZ)
       real(c_real) :: DX
 !
@@ -595,8 +594,6 @@ MODULE WRITE_OUT0_MODULE
 !
       LOCATION = HALF*DX + DX*dble(L2-1)
 
-      RETURN
-      END FUNCTION LOCATION
+      end function LOCATION
 
-      END SUBROUTINE WRITE_OUT0
-END MODULE WRITE_OUT0_MODULE
+      end subroutine write_out0

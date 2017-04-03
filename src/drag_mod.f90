@@ -84,7 +84,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE constant, only : drag_c1, drag_d1
+      use constant, only : drag_c1, drag_d1
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments
@@ -247,7 +247,7 @@ CONTAINS
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE constant, only : PI
+      use constant, only : PI
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

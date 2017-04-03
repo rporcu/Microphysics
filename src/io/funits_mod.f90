@@ -9,22 +9,22 @@
       LOGICAL :: LOG_WAS_CLOSED = .FALSE.
 
 ! RRATES debug file unit number
-      INTEGER, PARAMETER :: UNIT_RRATES = 43
+      integer, PARAMETER :: UNIT_RRATES = 43
 
 ! mfix.dat file unit number
-      INTEGER, PARAMETER :: UNIT_DAT = 51
+      integer, PARAMETER :: UNIT_DAT = 51
 
 ! RUN_NAME.OUT file unit number
-      INTEGER, PARAMETER :: UNIT_OUT = 52
+      integer, PARAMETER :: UNIT_OUT = 52
 
 ! RUN_NAME.LOG file unit number. (DEFAULT/Serial 53)
-      INTEGER, PARAMETER :: UNIT_LOG = 53
+      integer, PARAMETER :: UNIT_LOG = 53
 
 ! Temporary (scratch) file unit number
-      INTEGER, PARAMETER :: UNIT_TMP = 54
+      integer, PARAMETER :: UNIT_TMP = 54
 
 ! RUN_NAME.RES file unit number
-      INTEGER, PARAMETER :: UNIT_RES = 55
+      integer, PARAMETER :: UNIT_RES = 55
 
       CONTAINS
 
@@ -39,17 +39,17 @@
 !   open(convert='big_endian',unit=newunit(myunit),file='filename')    !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      INTEGER FUNCTION newunit(unit)
+      integer FUNCTION newunit(unit)
       IMPLICIT NONE
 
 ! optional variable to hold unit number
-      INTEGER, INTENT(OUT), OPTIONAL  :: unit
+      integer, INTENT(OUT), OPTIONAL  :: unit
 ! lower and upper limits to search for available units
-      INTEGER, PARAMETER  :: lun_min = 100, lun_max= 999
+      integer, PARAMETER  :: lun_min = 100, lun_max= 999
 ! check to see if the unit is open
       LOGICAL :: is_open
 ! looping variable
-      INTEGER :: lun
+      integer :: lun
 
       newunit = -1
 
@@ -100,8 +100,8 @@
       CHARACTER(LEN=*), INTENT(IN) :: pDIR
 
       CHARACTER(LEN=256) :: CMD
-      INTEGER :: IOS, I
-      INTEGER, PARAMETER :: tUNIT = 9638
+      integer :: IOS, I
+      integer, PARAMETER :: tUNIT = 9638
 
       IF(myPE /= PE_IO) RETURN
 

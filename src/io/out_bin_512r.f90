@@ -27,7 +27,7 @@
 !-----------------------------------------------
 !   M o d u l e s
 !-----------------------------------------------
-      USE machine, only: nwords_r
+      use machine, only: nwords_r
       IMPLICIT NONE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
@@ -37,35 +37,35 @@
       REAL             ARRAY(*)
 !
 !                      output unit number
-      INTEGER          IUNIT
+      integer          IUNIT
 !
 !                      number of elements in ARRAY
-      INTEGER          N
+      integer          N
 !
 !                      next record number in direct access output file
-      INTEGER          NEXT_REC
+      integer          NEXT_REC
 !
 ! local variables
 !
 !                      number of words for 512 bytes (nwords * 4 = 512)
-      INTEGER          NWORDS
+      integer          NWORDS
 !
 !                      loop counter
-      INTEGER          L
+      integer          L
 !
 !                      number of full 512 byte segments need to write N
 !                      double precision words
-      INTEGER          NSEG
+      integer          NSEG
 !
 !                      number of double precision words in the partially
 !                      filled last record
-      INTEGER          NREM
+      integer          NREM
 !
 !                      loop counter
-      INTEGER          LC
+      integer          LC
 !
 !                      write out array elements N1 to N2
-      INTEGER          N1 , N2
+      integer          N1 , N2
 !
 !-----------------------------------------------
 !

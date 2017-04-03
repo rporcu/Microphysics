@@ -25,7 +25,6 @@ contains
       use matrix, only: e, w, n, s, t, b
       use param1, only: is_defined, is_undefined
       use ur_facs, only: ur_fac
-      use write_error_module, only: write_error
 
       implicit none
 
@@ -80,7 +79,6 @@ contains
 
       odt = 1.0d0/dt
       vol = dx*dy*dz
-
 
 ! Calculate convection-diffusion fluxes through each of the faces
 
@@ -161,7 +159,7 @@ contains
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
-      if (shi(1).gt.domhi(1)) & 
+      if (shi(1).gt.domhi(1)) &
          A_m(domhi(1),alo(2):ahi(2),alo(3):ahi(3),e) =  zero
 
 ! --- NORTH FLUID --------------------------------------------------------->
@@ -171,7 +169,7 @@ contains
 
 ! --- SOUTH FLUID --------------------------------------------------------->
 
-      if (shi(2).gt.domhi(2)) & 
+      if (shi(2).gt.domhi(2)) &
          A_m(alo(1):ahi(1),domhi(2),alo(3):ahi(3),n) =  zero
 
 ! --- TOP FLUID ----------------------------------------------------------->
@@ -181,7 +179,7 @@ contains
 
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
-      if (shi(3).gt.domhi(3)) & 
+      if (shi(3).gt.domhi(3)) &
          A_m(alo(1):ahi(1),alo(2):ahi(2),domhi(3),t) =  zero
 
    end subroutine source_pp_g_bc

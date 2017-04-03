@@ -3,7 +3,7 @@ module output_manager_module
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param1, only: UNDEFINED, UNDEFINED_I, IS_DEFINED, IS_UNDEFINED
+   use param1, only: IS_DEFINED, IS_UNDEFINED
 
   contains
 !----------------------------------------------------------------------!
@@ -15,7 +15,7 @@ module output_manager_module
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     SUBROUTINE OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+     subroutine OUTPUT_MANAGER(max_pip, time, dt, nstep, &
         particle_state, &
         des_radius, des_pos_new, des_vel_new, des_usr_var,&
         omega_new, finished) &
@@ -61,7 +61,7 @@ module output_manager_module
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counter and counter
-      INTEGER :: LC, IDX
+      integer :: LC, IDX
 ! Flag that the header (time) has not be written.
       LOGICAL :: HDR_MSG
 ! Wall time at the start of IO operations.
@@ -86,7 +86,7 @@ module output_manager_module
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
             CALL WRITE_USR1 (LC, time, dt, max_pip, des_pos_new,&
                des_vel_new, omega_new)
-            CALL NOTIFY_USER('.USR:',EXT_END(LC:LC))
+            CALL NOTIFY_useR('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
       ENDDO
@@ -97,20 +97,16 @@ module output_manager_module
             VTP_TIME = NEXT_TIME(VTP_DT)
             CALL WRITE_DES_DATA(max_pip, particle_state, des_radius, &
                des_pos_new, des_vel_new, des_usr_var)
-            CALL NOTIFY_USER('DES.vtp;')
+            CALL NOTIFY_useR('DES.vtp;')
          ENDIF
       ENDIF
 
-      CALL FLUSH_NOTIFY_USER
+      CALL FLUSH_NOTIFY_useR
 
-
-! Add the amount of time needed for all IO operations to total.
+      ! Add the amount of time needed for all IO operations to total.
       CPU_IO = CPU_IO + (WALL_TIME() - WALL_START)
 
-      RETURN
-
       contains
-
 
 !----------------------------------------------------------------------!
 !                                                                      !
@@ -149,7 +145,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE NOTIFY_USER(MSG, EXT)
+      subroutine NOTIFY_useR(MSG, EXT)
 
       use output, only: FULL_LOG
       use funits, only: DMP_LOG
@@ -189,12 +185,12 @@ module output_manager_module
  1120 FORMAT(',',A)
 
       RETURN
-      END SUBROUTINE NOTIFY_USER
+      END subroutine NOTIFY_useR
 
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE FLUSH_LIST
+      subroutine FLUSH_LIST
 
       use output, only: FULL_LOG
       use funits, only: DMP_LOG
@@ -210,13 +206,13 @@ module output_manager_module
  1000 FORMAT(';')
 
       RETURN
-      END SUBROUTINE FLUSH_LIST
+      END subroutine FLUSH_LIST
 
 
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      SUBROUTINE FLUSH_NOTIFY_USER
+      subroutine FLUSH_NOTIFY_useR
 
       use discretelement, only: DES_CONTINUUM_COUPLED
       use discretelement, only: DTSOLID
@@ -234,7 +230,7 @@ module output_manager_module
       CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT
       CHARACTER(LEN=4) :: UNIT_ELAP, UNIT_LEFT
 
-      INTEGER :: TNITS
+      integer :: TNITS
       LOGICAL :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
@@ -284,104 +280,16 @@ module output_manager_module
 
  2000 FORMAT('Wall Time - ',2(A,1X,A,A,4X))
 
+      end subroutine flush_notify_user
 
-
-      RETURN
-      END SUBROUTINE FLUSH_NOTIFY_USER
-
-      END SUBROUTINE OUTPUT_MANAGER
-
-
-!----------------------------------------------------------------------!
-! Subroutine: INIT_OUTPUT_VARS                                         !
-! Purpose: Initialize variables used for controling ouputs of the      !
-! various files.                                                       !
-!----------------------------------------------------------------------!
-      SUBROUTINE INIT_OUTPUT_VARS(time, dt)
-
-      use machine, only: wall_time
-      use output, only: OUT_TIME, OUT_DT
-      use output, only: RES_TIME, RES_DT
-      use output, only: USR_TIME, USR_DT
-      use output, only: VTP_TIME, VTP_DT
-      use output, only: RES_BACKUP_TIME, RES_BACKUP_DT
-      use output, only: RES_BACKUPS
-      use param, only: DIMENSION_USR
-      use run, only: RUN_TYPE
-      use time_cpu, only: CPU_IO
-      use time_cpu, only: TIME_START
-      use time_cpu, only: WALL_START
-      use discretelement, only: PRINT_DES_DATA
-
-      use funits, only: CREATE_DIR
-
-      IMPLICIT NONE
-      real(c_real), intent(in) :: dt, time
-! Loop counter
-      INTEGER :: LC
-
-! Initialize times for writing outputs
-      OUT_TIME = merge(TIME, UNDEFINED, IS_DEFINED(OUT_DT))
-
-! Initialize the amount of time spent on IO
-      CPU_IO = 0.0d0
-
-! Initizle RES
-      IF (RUN_TYPE == 'NEW') THEN
-         RES_TIME = TIME
-      ELSE
-         IF (IS_DEFINED(DT)) THEN
-            RES_TIME = RES_DT *                                        &
-               (INT((TIME + 0.1d0*DT)/RES_DT) + 1)
-         ENDIF
-      ENDIF
-
-! Initizle RES_BACKUP_TIME
-      RES_BACKUP_TIME = UNDEFINED
-      IF(IS_DEFINED(RES_BACKUP_DT)) RES_BACKUP_TIME =                 &
-         RES_BACKUP_DT * (INT((TIME+0.1d0*DT)/RES_BACKUP_DT)+1)
-
-! Initialize USR_TIME
-      DO LC = 1, DIMENSION_USR
-         USR_TIME(LC) = UNDEFINED
-         IF (IS_DEFINED(USR_DT(LC))) THEN
-            IF (RUN_TYPE == 'NEW') THEN
-               USR_TIME(LC) = TIME
-            ELSE
-               USR_TIME(LC) = USR_DT(LC) *                             &
-                  (INT((TIME+0.1d0*DT)/USR_DT(LC))+1)
-            ENDIF
-         ENDIF
-      ENDDO
-
-      VTP_TIME = UNDEFINED
-      IF(IS_DEFINED(VTP_DT)) THEN
-         PRINT_DES_DATA = .TRUE.
-         IF (RUN_TYPE == 'NEW'.OR.RUN_TYPE=='RESTART_2') THEN
-            VTP_TIME = TIME
-         ELSE
-            VTP_TIME = VTP_DT*(INT((TIME + 0.1d0*DT)/VTP_DT)+1)
-         ENDIF
-      ENDIF
-
-! Create a subdir for RES backup files.
-      IF(RES_BACKUPS /= UNDEFINED_I) CALL CREATE_DIR('BACKUP_RES')
-
-
-      WALL_START = WALL_TIME()
-      TIME_START = TIME
-
-      RETURN
-      END SUBROUTINE INIT_OUTPUT_VARS
-
-
+      end subroutine output_manager
 
 !----------------------------------------------------------------------!
 ! Subroutine: BACKUP_RES                                               !
 ! Purpose: Shift existing RES file backup files by one index, then     !
 ! create a copy of the current RES file.                               !
 !----------------------------------------------------------------------!
-      SUBROUTINE BACKUP_RES
+      subroutine BACKUP_RES
 
       use compar, only: myPE, PE_IO
       use output, only: RES_BACKUPS
@@ -391,19 +299,19 @@ module output_manager_module
 
       INTERFACE
          FUNCTION rename(input,output) BIND(C,name="rename") RESULT(r)
-            USE iso_c_binding, only: c_char, c_int
+            use iso_c_binding, only: c_char, c_int
             CHARACTER(kind=c_char),INTENT(in) :: input(*)
             CHARACTER(kind=c_char),INTENT(in) :: output(*)
-            INTEGER(c_int)        :: r
+            integer(c_int)        :: r
          END FUNCTION rename
       END INTERFACE
 
       CHARACTER(len=256) :: FNAME0, FNAME1
       CHARACTER :: CHAR
 
-      INTEGER :: LC, I, IERR, IREC
-      INTEGER, PARAMETER :: ISRC = 1234567
-      INTEGER, PARAMETER :: IDST = 12345678
+      integer :: LC, I, IERR, IREC
+      integer, PARAMETER :: ISRC = 1234567
+      integer, PARAMETER :: IDST = 12345678
 
       IF(myPE /= PE_IO) RETURN
 
@@ -458,7 +366,7 @@ module output_manager_module
 ! Subroutine: SET_FNAME                                                !
 ! Purpose: Set the backup RES file name based on pINDX.                !
 !----------------------------------------------------------------------!
-      SUBROUTINE SET_FNAME(pFNAME, pEXT, pINDX)
+      subroutine SET_FNAME(pFNAME, pEXT, pINDX)
 
       use run, only: RUN_NAME
 
@@ -466,7 +374,7 @@ module output_manager_module
 
       CHARACTER(LEN=*), INTENT(OUT) :: pFNAME
       CHARACTER(LEN=*), INTENT(IN) ::  pEXT
-      INTEGER, INTENT(IN), OPTIONAL :: pINDX
+      integer, INTENT(IN), OPTIONAL :: pINDX
 
 ! Set the file format for backup copies
       pFNAME=''
@@ -496,8 +404,7 @@ module output_manager_module
  1005 FORMAT('BACKUP_RES/',2A,I5.5)
  1006 FORMAT('BACKUP_RES/',2A,I6.6)
 
-      RETURN
-      END SUBROUTINE SET_FNAME
+      end subroutine SET_FNAME
 
-      END SUBROUTINE BACKUP_RES
+      end subroutine BACKUP_RES
 end module output_manager_module

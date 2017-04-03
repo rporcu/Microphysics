@@ -21,14 +21,14 @@ MODULE REMOVE_COMMENT_MODULE
 ! Input data line
       CHARACTER(len=*), intent(INOUT) :: LINE
 !Start of comments
-      INTEGER, intent(IN) :: LSTART
+      integer, intent(IN) :: LSTART
 ! Maximum column of input data line to search
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop index
-      INTEGER :: L
+      integer :: L
 
       DO L = LSTART, MAXCOL
          LINE(L:L) = ' '
@@ -62,15 +62,15 @@ MODULE REMOVE_COMMENT_MODULE
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop index
-      INTEGER :: L
+      integer :: L
 ! Search positions
-      INTEGER :: POS, lP, rP
+      integer :: POS, lP, rP
 ! Flag for space replacement
-      LOGICAL :: searchRight
+      logical :: searchRight
 ! Internal search flag
-      LOGICAL :: replace
+      logical :: replace
 ! Debug flag
-      LOGICAL, parameter :: verbose = .FALSE.
+      logical, parameter :: verbose = .FALSE.
 
 
 ! Exit if the string is empty.

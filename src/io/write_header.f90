@@ -11,11 +11,11 @@ MODULE WRITE_HEADER_MODULE
 
       SUBROUTINE WRITE_HEADER
 
-      USE compar, only: mype, pe_io
-      USE funits, only: unit_log, dmp_log
-      USE machine, only: id_hour, id_minute, id_day, id_month, id_year
-      USE output, only: full_log
-      USE run, only: run_name
+      use compar, only: mype, pe_io
+      use funits, only: unit_log, dmp_log
+      use machine, only: id_hour, id_minute, id_day, id_month, id_year
+      use output, only: full_log
+      use run, only: run_name
 
       IMPLICIT NONE
 

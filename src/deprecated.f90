@@ -18,7 +18,7 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: LINE_NO
+      integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
 ! 2015-2 Deprecated list:
@@ -46,7 +46,7 @@ MODULE DEPRECATED_OR_UNKNOWN_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE UNKNOWN_KEYWORD(LINE_NO, INPUT)
 
-      INTEGER, INTENT(IN) :: LINE_NO
+      integer, INTENT(IN) :: LINE_NO
       CHARACTER(len=*), INTENT(IN) :: INPUT
 
       IF(myPE == 0) WRITE(*,2000) trim(iVAL(LINE_NO)), trim(INPUT)

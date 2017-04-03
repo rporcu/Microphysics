@@ -154,6 +154,39 @@ mfix_level::Init(int lev, Real dt, Real time)
 
       MakeNewLevelFromScratch(0, time, ba, dm);
 
+      init_output_vars(&time, &dt);
+ 
+      // Parse residual strings
+      parse_resid_string();
+
+      Real dx = geom[lev].CellSize(0);
+      Real dy = geom[lev].CellSize(1);
+      Real dz = geom[lev].CellSize(2);
+ 
+      // Since these involving writing to output files we only do these on the IOProcessor
+      if ( ParallelDescriptor::IOProcessor() )
+      {
+
+         // Write the initial part of the standard output file
+         write_out0(&time, &dt, &dx, &dy, &dz);
+
+         // Write the initial part of the special output file(s)
+         write_usr0();
+      }
+ 
+      // Set point sources.
+      {
+      int err_ps = 0;
+      int is_ioproc = 0;
+      if ( ParallelDescriptor::IOProcessor() ) 
+         is_ioproc = 1;
+
+      set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
+
+      if (err_ps == 1) 
+         amrex::Abort("Bad data in set_ps");
+      }
+
       InitLevelData(lev,dt,time);
 
       InitIOData ();
@@ -180,7 +213,8 @@ mfix_level::MakeBaseGrids () const
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid dupliates
     }
-    std::cout << "BA " << ba << std::endl;
+    if ( ParallelDescriptor::IOProcessor() )
+       std::cout << "BA " << ba << std::endl;
     return ba;
 }
 
@@ -224,7 +258,6 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     bc_jhi.resize(box_jhi,2);
     bc_klo.resize(box_klo,2);
     bc_khi.resize(box_khi,2);
-
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -425,6 +458,10 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         do {
           nit++;
 
+          Real residuals[2*8];
+          for (int i=0; i<=2*8; ++i)
+            residuals[i] = 0.0L;
+
           // User hooks
           for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
             mfix_usr2();
@@ -433,8 +470,8 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           int calc_flag = 1;
           mfix_calc_coeffs(lev,calc_flag);
 
-          mfix_solve_for_vels(lev,dt);
-
+          // Solve momentum equations
+          mfix_solve_for_vels(lev, dt, residuals);
 
           // Calculate transport coefficients
           mfix_physical_prop(lev,0);
@@ -443,8 +480,9 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           mfix_conv_rop(lev,dt);
 
           // Solve the pressure correction equation
-          mfix_solve_for_pp(lev,dt,lnormg,resg);
+          mfix_solve_for_pp(lev,dt,lnormg,resg, residuals);
 
+          // Apply pressure correction to all Pg, Ug, Vg, Wg
           mfix_correct_0(lev);
 
           // Update fluid density
@@ -453,11 +491,13 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
           // Calculate face mass fluxes
           mfix_calc_mflux(lev);
 
-          // Display current iteration residuals
-          display_resid(&nit);
-
           // Check for convergence
-          converged = check_convergence(&nit);
+          ParallelDescriptor::ReduceRealSum(residuals,16);
+          converged = check_convergence(&nit, residuals);
+
+          // Display current iteration residuals
+          if ( ParallelDescriptor::IOProcessor() )
+             display_resid(&nit, residuals);
 
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
@@ -568,14 +608,18 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     mfix_main1(sbx.loVect(), sbx.hiVect(),
-                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                &time, &dt,
-               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(),
-               &dx, &dy, &dz );
+     zero_norm_vel(sbx.loVect(), sbx.hiVect(),
+                   ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                   bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                   bc_klo.dataPtr(), bc_khi.dataPtr());
+
+     set_bc0(sbx.loVect(), sbx.hiVect(),
+             ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+             (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+             (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+             bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
   fill_mf_bc(lev,*p_g[lev]);
@@ -858,7 +902,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 }
 
 void
-mfix_level::mfix_solve_for_vels(int lev, Real dt)
+mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -895,8 +939,9 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
-          &dt, &dx, &dy, &dz);
+          &dt, &dx, &dy, &dz, residuals);
     }
+
 
     int eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
@@ -933,7 +978,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
-          &dt, &dx, &dy, &dz);
+          &dt, &dx, &dy, &dz, residuals);
     }
 
     eq_id=4;
@@ -971,7 +1016,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
           bc_klo.dataPtr(), bc_khi.dataPtr(),
-          &dt, &dx, &dy, &dz);
+          &dt, &dx, &dy, &dz, residuals);
     }
 
     eq_id=5;
@@ -984,10 +1029,12 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt)
     u_g[lev]->FillBoundary(geom[lev].periodicity());
     v_g[lev]->FillBoundary(geom[lev].periodicity());
     w_g[lev]->FillBoundary(geom[lev].periodicity());
+
+
 }
 
 void
-mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
+mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -1022,54 +1069,12 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg)
         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
-        &dt, &dx, &dy, &dz);
+        &dt, &dx, &dy, &dz, residuals);
     }
     pp_g[lev]->setVal(0.);
 
-    // normg:  Normalization factor for gas pressure correction residual.
-    // At start of the iterate loop normg will either be 1 (i.e. not
-    // normalized) or a user defined value given by norm_g.  If norm_g
-    // was set to zero then the normalization is based on dominate
-    // term in the equation
-
-    // resg:  Gas pressure correction residual
-
-    Real normgloc = lnormg;
-
-    // Parameter to make tolerance for residual scaled with max value
-    // compatible with residual scaled with first iteration residual.
-    // Increase it to tighten convergence.
-    Real den_param = 10.;  // 5.0D2
-
-    Box domain(geom[lev].Domain());
-    Real numPts = domain.numPts();
-
-    // For correction equations the convergence for the corrections must go to zero,
-    // therefore the vector b must go to zero. this value cannot be normalized as the other
-    // equations are since the denominator here will vanish.  thus the residual is normalized
-    // based on its value in the first iteration
-
-    if (std::abs(lnormg) < std::numeric_limits<double>::epsilon())
-    {
-       Real sum = b_mmax.norm1();
-
-       Real tmp_norm = (sum/numPts);
-       set_resid_p(tmp_norm);
-
-       normgloc = tmp_norm / den_param;
-    }
-
-    Real sum = b_m[lev]->norm1();
-
-    // Normalizing the residual
-    Real tmp_norm = (sum/numPts) / normgloc;
-    set_resid_p( tmp_norm);
-
-    resg = tmp_norm;
-
     int eq_id=1;
     mfix_solve_linear_equation(eq_id,lev,(*pp_g[lev]),(*A_m[lev]),(*b_m[lev]));
-
     fill_mf_bc(lev,*pp_g[lev]);
 }
 

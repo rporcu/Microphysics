@@ -21,7 +21,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION SUPERBEE (PHI_C)
-      USE param1, only: one, half, zero
+      use param1, only: one, half, zero
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -43,7 +43,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION SMART (PHI_C)
-      USE param1, only: zero, half, one
+      use param1, only: zero, half, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -67,7 +67,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION ULTRA_QUICK (PHI_C, CF)
-      USE param1, only: zero, half, one
+      use param1, only: zero, half, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
       real(c_real), INTENT(IN) :: CF
@@ -98,7 +98,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION QUICKEST (PHI_C, CF, ODXC, ODXUC, ODXCD)
-      USE param1, only: zero, half, one, small_number
+      use param1, only: zero, half, one, small_number
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
       real(c_real), INTENT(IN) :: CF
@@ -125,7 +125,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION MUSCL (PHI_C)
-      USE param1, only: zero, half, one
+      use param1, only: zero, half, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -147,7 +147,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION VANLEER (PHI_C)
-      USE param1, only: zero, one
+      use param1, only: zero, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -164,7 +164,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION MINMOD (PHI_C)
-      USE param1, only: zero, half, one
+      use param1, only: zero, half, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -188,7 +188,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION CENTRAL_SCHEME ()
-      USE param1, only: half
+      use param1, only: half
       IMPLICIT NONE
 
       CENTRAL_SCHEME = HALF
@@ -200,7 +200,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION UMIST (PHI_C)
-      USE param1, only: zero, half, one
+      use param1, only: zero, half, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_C
 
@@ -222,7 +222,7 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION XSI (V, DWF)
-      USE param1, only: zero, one
+      use param1, only: zero, one
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: V
       real(c_real), INTENT(IN) :: DWF
@@ -240,8 +240,8 @@ MODULE discretization
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION PHI_C_OF (PHI_U, PHI_C, PHI_D)
-      USE param1, only: zero
-      USE toleranc, only: compare
+      use param1, only: zero
+      use toleranc, only: compare
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_U
       real(c_real), INTENT(IN) :: PHI_C

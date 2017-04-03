@@ -7,7 +7,7 @@
 
       integer, parameter :: MAX_resid_INDEX = 8
 !
-      integer, parameter :: Nresid = 8 + DIM_N
+      integer, parameter :: Nresid = 8
 
       integer, parameter :: resid_p  =  1 ! Pressure
       integer, parameter :: resid_ro =  2 ! Density, volume fraction
@@ -32,20 +32,11 @@
       CHARACTER, parameter, DIMENSION(NPREFIX) :: resid_PREFIX = &
         (/ 'P', 'R', 'U', 'V', 'W', 'T', 'G', 'S', 'K', 'X' /)
 
-      ! Average residual
-      real(c_real) :: resid(Nresid)
-
-      ! Residual Numerator
-      real(c_real) :: num_resid(Nresid)=0.0d0
-
-      ! Residual Denominator
-      real(c_real) :: den_resid(Nresid)=0.0d0
-
 ! sum of residuals every 5 iterations
       real(c_real) :: SUM5_resid
 
 ! Residual sum within a group of equations
-      LOGICAL          :: GROUP_resid
+      logical :: group_resid
       real(c_real) :: resid_GRP(6)
 
 ! Residuals to be printed out
@@ -60,28 +51,13 @@
 
    contains
 
-!---------------------------------------------------------------------
 
-      subroutine set_resid_p(val) &
-          bind(C, name="set_resid_p")
-
-      real(c_real)  , intent(in) :: val
-
-      resid(resid_p) = val
-
-      end subroutine set_resid_p
-
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Subroutine: calc_resid_vel                                          C
-!  Purpose: Calculate residuals for momentum equations                 C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 21-MAY-96  C
-!  Reviewer:                                          Date:            C
-!                                                                      C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: calc_resid_vel                                          !
+!  Purpose: Calculate residuals for momentum equations                 !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_resid_vel(alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, &
@@ -90,7 +66,7 @@
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: small_number, zero
+      use param1  , only: small_number
       use matrix  , only: e, w, s, n, t, b
       use geometry, only: domlo
 
@@ -130,7 +106,7 @@
       real(c_real) :: magvel
 
       ! Indices
-      INTEGER :: i, j, k
+      integer :: i, j, k
 
       ! Numerators and denominators
       real(c_real) :: num1, den1
@@ -184,4 +160,58 @@
 
    end subroutine calc_resid_vel
 
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: CALC_RESID_pp                                           !
+!  Purpose: Calculate residuals for pressure correction equation       !
+!                                                                      !
+!  Comments:                                                           !
+!  for correction equations the convergence for the corrections must   !
+!  go to zero, therefore the vector b must go to zero. this value      !
+!  cannot be normalized as the other equations are since the           !
+!  denominator here will vanish.  thus the residual is normalized      !
+!  based on its value in the first iteration                           !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
+
+      use toleranc, only: norm_g
+
+      implicit none
+
+      integer, intent(in   ) :: alo(3),ahi(3)
+      real(c_real), intent(inout) :: num, den
+
+!   Vector b_m
+      real(c_real) :: b_m&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+      real(c_real) :: b_mmax&
+         (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
+
+      integer :: i, j, k
+
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
+               num = num  + abs(b_m(i,j,k))
+            enddo
+         enddo
+      enddo
+
+      if(norm_g <= epsilon(0.0)) then
+         do k = alo(3),ahi(3)
+            do j = alo(2),ahi(2)
+               do i = alo(1),ahi(1)
+                  den = den + 10.d0*abs(b_mmax(i,j,k))
+               enddo
+            enddo
+         enddo
+      else
+         den = den + (ahi(3)-alo(3)+1)*(ahi(2)-alo(2)+1)*(ahi(1)-alo(1)+1)
+      endif
+
+      return
+   end subroutine calc_resid_pp
 end module residual

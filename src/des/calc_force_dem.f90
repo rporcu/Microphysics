@@ -17,14 +17,14 @@ MODULE CALC_FORCE_DEM_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
 
-         USE cfrelvel_module, only: cfrelvel
-         USE discretelement, only: des_coll_model_enum, dtsolid
-         USE discretelement, only: des_etan, des_etat, hert_kt, hert_kn
-         USE discretelement, only: s_time, des_crossprdct
-         USE discretelement, only: kn, kt, mew, hertzian
+         use cfrelvel_module, only: cfrelvel
+         use discretelement, only: des_coll_model_enum, dtsolid
+         use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
+         use discretelement, only: s_time, des_crossprdct
+         use discretelement, only: kn, kt, mew, hertzian
 
-         USE drag_gs_des1_module, only: drag_gs_des
-         USE error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
+         use drag_gs_des1_module, only: drag_gs_des
+         use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
          IMPLICIT NONE
 
@@ -43,7 +43,7 @@ MODULE CALC_FORCE_DEM_MODULE
 ! percent of particle radius when excess overlap will be flagged
       real(c_real), PARAMETER :: flag_overlap = 0.20d0
 ! particle no. indices
-      INTEGER :: I, LL, cc
+      integer :: I, LL, cc
 ! the overlap occuring between particle-particle or particle-wall
 ! collision in the normal direction
       real(c_real) :: OVERLAP_N, OVERLAP_T(3)
@@ -71,7 +71,7 @@ MODULE CALC_FORCE_DEM_MODULE
       real(c_real) :: TOW_TMP(3,2)
 
 ! store solids phase index of particle (i.e. particle_phase(np))
-      INTEGER :: PHASEI, PHASELL
+      integer :: PHASEI, PHASELL
 ! local values used spring constants and damping coefficients
       real(c_real) :: ETAN_DES, ETAT_DES
       real(c_real) :: KN_DES, KT_DES

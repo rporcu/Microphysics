@@ -1,8 +1,8 @@
-MODULE parse_line_module
+module parse_line_module
 
       use compar, only: mype
-      use exit_mod, only: mfix_exit
       use param1, only: one
+      use exit_mod, only: mfix_exit
 
    contains
 
@@ -15,7 +15,7 @@ MODULE parse_line_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 !
-      SUBROUTINE PARSE_LINE(LINE, LMAX, READ_FLAG)
+      subroutine PARSE_LINE(LINE, LMAX, READ_FLAG)
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -23,18 +23,17 @@ MODULE parse_line_module
 !-----------------------------------------------
 
 ! Line to be parsed.
-      CHARACTER(len=*), intent(IN) :: LINE
+      character(len=*), intent(IN) :: LINE
 
 ! Length of of LINE.
-      INTEGER, intent(IN) :: LMAX
+      integer, intent(IN) :: LMAX
 
 ! Indicate whether to do a namelist read on the line. A namelist read
 ! is still preformed when an arithmetic operation is found.
-      LOGICAL, intent(OUT) :: READ_FLAG
+      logical, intent(OUT) :: READ_FLAG
 
 ! Start and end locations for the search parameters.
-      INTEGER LSTART, LEND
-
+      integer LSTART, LEND
 
 ! The string is empty. No need to parse.
       IF (LMAX == 0) THEN
@@ -56,10 +55,9 @@ MODULE parse_line_module
          LEND = LSTART - 1 + INDEX(LINE(LSTART:LMAX),')')
          IF (LEND <= LSTART) THEN
             WRITE (*, 1000) myPE,LINE(LSTART:LMAX)
-            CALL MFIX_EXIT(myPE)
+            CALL mfix_exit(myPE)
          ENDIF
       ENDIF ! IF (LSTART /= 0) THEN
-
 !
       LSTART = INDEX(LINE,'@(')             !Arithmetic processing ?
       IF (LSTART /= 0) CALL PARSE_ARITH (LINE, LMAX)
@@ -72,7 +70,7 @@ MODULE parse_line_module
          'the input line,',/' but no ending parenthesis was located:',/&
          ' INPUT: ',A,/1X,70('*')//)
 
-      END SUBROUTINE PARSE_LINE
+      END subroutine PARSE_LINE
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
@@ -83,13 +81,12 @@ MODULE parse_line_module
 !  Purpose: Complete arithmetic operations and expand the line         C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE PARSE_ARITH(LINE, LMAX)
+      subroutine PARSE_ARITH(LINE, LMAX)
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      USE exit_mod, only: mfix_exit
-      USE utilities, ONLY: seek_end
+      use utilities, ONLY: seek_end
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -97,11 +94,11 @@ MODULE parse_line_module
 !-----------------------------------------------
 !C
 !                      The part of LINE containing input
-      INTEGER LMAX
+      integer LMAX
 !                      Input line with arithmetic operations.  Out put
 !                      line with completed arithmetic statements.
 !
-      CHARACTER LINE*(*)
+      character LINE*(*)
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -116,22 +113,22 @@ MODULE parse_line_module
       real(c_real) VALUE, SUB_VALUE
 !
 !                      Start and end locations for the arithmetic operation
-      INTEGER          LSTART, LEND
+      integer          LSTART, LEND
 !
 !                      Length of arithmetic operation string
-      INTEGER          LENGTH
+      integer          LENGTH
 !
 !                      22 - LENGTH
-      INTEGER          LDIF
+      integer          LDIF
 !
 !                      Locations in SUB_STR, and LINE
-      INTEGER          LSUB, L
+      integer          LSUB, L
 !
 !                      Operator symbol (Legal values: *, /)
-      CHARACTER(LEN=1) :: OPERATION
+      character(LEN=1) :: OPERATION
 !
 !                      Substring taken from LINE
-      CHARACTER(LEN=80) :: SUB_STR
+      character(LEN=80) :: SUB_STR
 !
 !-----------------------------------------------
 !
@@ -150,7 +147,7 @@ MODULE parse_line_module
       LEND = LSTART - 1 + INDEX(LINE(LSTART:LMAX),')')
       IF (LEND <= LSTART) THEN
          WRITE (*, 1000) myPE,LINE(LSTART:LMAX)
-         CALL MFIX_EXIT(myPE)
+         CALL mfix_exit(myPE)
       ENDIF
 !
 !    Do the arithmetic
@@ -162,7 +159,7 @@ MODULE parse_line_module
          IF (LINE(L:L)=='*' .OR. LINE(L:L)=='/' .OR. LINE(L:L)==')') THEN
             IF (LSUB == 1) THEN
                WRITE (*, 1015) myPE,LINE(LSTART:LEND)
-               CALL MFIX_EXIT(myPE)
+               CALL mfix_exit(myPE)
             ENDIF
             IF (SUB_STR(1:LSUB-1) == 'PI') THEN
                SUB_VALUE = PI
@@ -192,7 +189,7 @@ MODULE parse_line_module
          LDIF = 22 - LENGTH
          IF (LMAX + LDIF > LEN(LINE)) THEN
             WRITE (*, 1020) myPE,LINE(1:80)
-            CALL MFIX_EXIT(myPE)
+            CALL mfix_exit(myPE)
          ENDIF
          DO L = LMAX, LEND + 1, -1
             LINE(L+LDIF:L+LDIF) = LINE(L:L)
@@ -211,7 +208,7 @@ MODULE parse_line_module
 !
   900 CONTINUE
       WRITE (*, 1010) myPE, SUB_STR(1:LSUB-1)
-      CALL MFIX_EXIT(myPE)
+      CALL mfix_exit(myPE)
  1000 FORMAT(/1X,70('*')//'(PE ',I6,'): From: PARSE_ARITH',/&
          ' Message: No ending ) found in the input line: ',/9X,A,/1X,70('*')/)
  1010 FORMAT(/1X,70('*')//'(PE ',I6,'): From: PARSE_ARITH',/&
@@ -221,6 +218,6 @@ MODULE parse_line_module
  1020 FORMAT(/1X,70('*')//'(PE ',I6,'): From: PARSE_ARITH',/&
          ' Message: Too many arithmetic operations in the line: ',/1X,A,/1X,70(&
          '*')/)
-      END SUBROUTINE PARSE_ARITH
+      end subroutine PARSE_ARITH
 
-   END MODULE parse_line_module
+   end module parse_line_module

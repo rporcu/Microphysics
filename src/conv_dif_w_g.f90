@@ -30,7 +30,7 @@ module w_g_conv_dif
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE run, only: discretize
+      use run, only: discretize
 
       implicit none
 
@@ -234,7 +234,7 @@ module w_g_conv_dif
       use functions, only: avg, avg_h
       use matrix, only: e, w, n, s, t, b
 
-      USE run, only: discretize
+      use run, only: discretize
 
       use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
 

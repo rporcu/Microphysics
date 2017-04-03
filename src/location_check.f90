@@ -18,13 +18,13 @@ MODULE LOCATION_CHECK_MODULE
       IMPLICIT NONE
 
       ! Cell index specified in the input file.
-      INTEGER, intent(IN) :: CELL_SPECIFIED
+      integer, intent(IN) :: CELL_SPECIFIED
 
       ! Cell index calculated for location coordinate.
-      INTEGER, intent(IN) :: CELL_CALCULATED
+      integer, intent(IN) :: CELL_CALCULATED
 
       ! Index for BC, IC, or IS
-      INTEGER, intent(IN) :: COUNTER
+      integer, intent(IN) :: COUNTER
 
       ! Error message to print out
       CHARACTER(len=*) :: MESSAGE

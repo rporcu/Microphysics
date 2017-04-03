@@ -3,7 +3,7 @@ MODULE CHECK_CONVERGENCE_MODULE
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   CONTAINS
+contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: CHECK_CONVERGENCE                                       C
@@ -12,109 +12,97 @@ MODULE CHECK_CONVERGENCE_MODULE
 !  Purpose: Monitor convergence                                        C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      integer(c_int) function check_convergence(nit) &
-         bind(C, name="check_convergence")
+   integer(c_int) function check_convergence(nit, resid) &
+      bind(C, name="check_convergence")
 
-      use param1, only: zero, undefined_i, is_undefined
       use residual, only: max_resid_index, nresid
       use residual, only: resid_p, resid_u, resid_v, resid_w
-      use residual, only: resid, resid_index, resid_string, resid_x
+      use residual, only: resid_index, resid_string, resid_x
       use residual, only: sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
       use run, only: detect_stall
       use toleranc, only: tol_resid, tol_diverge
-      use utilities, only: check_vel_bound
+
+      use param1, only: zero, undefined_i, is_undefined, large_number
 
       implicit none
 
       ! Iteration number
       integer(c_int), intent(in) :: nit
 
+      real(c_real), intent(inout) :: resid(8,2)
+
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! sum of residuals
-      real(c_real) :: SUM
+      real(c_real) :: SUM_RESID
 ! max of residuals
       real(c_real) :: maxres
 ! index
-      integer :: L, maxL, maxM, maxN
+      integer :: lc, maxl
 !-----------------------------------------------
 
-! sum the residuals from correction equation (pressure and/or
-! solids), continuity equations (gas and/or solids) and momentum
-! equations (gas and solids)
+! Normalize residuals
+      do lc=1, 8
+         if (resid(lc,2) > zero) then
+            resid(lc,1) = resid(lc,1)/resid(lc,2)
+         elseif (abs(resid(lc,1)) < epsilon(resid(lc,1))) then
+            resid(lc,1) = zero
+         else
+            resid(lc,1) = large_number
+         endif
+      enddo
 
-! add pressure correction residual
-      SUM = RESID(RESID_P)
-
-! add momentum equation residuals
-      SUM = SUM + RESID(RESID_U)
-      SUM = SUM + RESID(RESID_V)
-      SUM = SUM + RESID(RESID_W)
-
+! add pressure correction residual to momentum residuals
+      sum_resid = resid(resid_p,1) + resid(resid_u,1) + &
+         resid(resid_v,1) + resid(resid_w,1)
 
 ! find the variable with maximum residual
-      MAXM = 0
-      IF (IS_UNDEFINED(RESID_INDEX(MAX_RESID_INDEX,1))) THEN
-         MAXRES = ZERO
-         DO L = 1, NRESID
-            IF (RESID(L) >= MAXRES) THEN
-               MAXRES = RESID(L)
-               MAXL = L
-               IF (L >= RESID_X) THEN
-                  MAXN = L - RESID_X + 1
-               ELSE
-                  MAXN = UNDEFINED_I
-               ENDIF
-            ENDIF
-         ENDDO
-         IF (IS_UNDEFINED(MAXN)) THEN
-            WRITE (RESID_STRING(MAX_RESID_INDEX), '(A1,I1)') &
-               RESID_PREFIX(MAXL), MAXM
-         ELSE
-            WRITE (RESID_STRING(MAX_RESID_INDEX), '(A1,I1,I2.0)') &
-               'X', MAXM, MAXN
-         ENDIF
-      ENDIF
-      IF (GROUP_RESID) RESID_GRP(HYDRO_GRP) = SUM
+      if (is_undefined(resid_index(max_resid_index,1))) then
+         maxres = -1.0d0
+         maxl = 0
+         do lc = 1, 8
+            if (resid(lc,1) >= maxres) then
+               maxres = resid(lc,1)
+               maxl = lc
+            endif
+         enddo
+         write (resid_string(max_resid_index), '(a1,i1)') &
+            resid_prefix(maxl), 0
+      endif
+      if (group_resid) resid_grp(hydro_grp) = sum_resid
 
 ! Every 5 iterations detect whether the run is stalled by checking
 ! that the total residual has decreased.
-      IF(DETECT_STALL .AND. MOD(NIT,5) == 0) THEN
-         IF(NIT > 10) THEN
-            IF(SUM5_RESID <= SUM) THEN
+      if(detect_stall .and. mod(nit,5) == 0) then
+         if(nit > 10) then
+            if(sum5_resid <= sum_resid) then
 ! The run is stalled. Reduce the time step.
                check_convergence = 2
-               RETURN
-            ENDIF
-         ENDIF
-         SUM5_RESID = SUM
-      ENDIF
+               return
+            endif
+         endif
+         sum5_resid = sum_resid
+      endif
 
 ! Require at least two iterations.
-      IF(NIT == 1) THEN
+      if(nit == 1) then
          check_convergence = 0
-         RETURN
-      ENDIF
+         return
+      endif
 
 ! total residual
-      IF(SUM<=TOL_RESID) THEN
+      if(sum_resid<=tol_resid) then
          check_convergence = 1          ! converged
-      ELSEIF (SUM>=TOL_DIVERGE ) THEN
-         IF (NIT /= 1) THEN
+      elseif (sum_resid>=tol_diverge ) then
+         if (nit /= 1) then
             check_convergence = 2       ! diverged
-         ELSE
+         else
             check_convergence = 0       ! not converged
-         ENDIF
-      ELSE
+         endif
+      else
          check_convergence = 0          ! not converged
-      ENDIF
-
-! Check upper bound (speed of sound) limit for gas velocity components.
-!      IF(MOMENTUM_X_EQ(0) .OR. MOMENTUM_Y_EQ(0) .OR. &
-!          MOMENTUM_Z_EQ(0)) THEN
-!         IF(CHECK_VEL_BOUND(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g)) check_convergence = 2     !divergence
-!      ENDIF
+      endif
 
    end function check_convergence
 end module check_convergence_module

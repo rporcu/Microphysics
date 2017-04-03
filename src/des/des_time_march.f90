@@ -20,7 +20,7 @@ module des_time_march_module
          time, dt, dx, dy, dz, nstep) &
          bind(C, name="mfix_des_time_march")
 
-      USE calc_collision_wall, only: calc_dem_force_with_wall_stl
+      use calc_collision_wall, only: calc_dem_force_with_wall_stl
       use calc_drag_des_module, only: calc_drag_des
       use calc_force_dem_module, only: calc_force_dem
       use calc_pg_grad_module, only: calc_pg_grad
@@ -37,8 +37,7 @@ module des_time_march_module
       use run, only: call_USR
       use run, only: TSTOP
 
-
-      IMPLICIT NONE
+      implicit none
 
       integer(c_int), intent(in   ) :: max_pip
       integer(c_int), intent(in   ) :: slo(3), shi(3)

@@ -8,11 +8,31 @@ static
 Real
 dotxy (const MultiFab& r,
        const MultiFab& z,
+       const Periodicity& period,
        bool            local = false)
 {
     const int ncomp = 1;
     const int nghost = 0;
-    return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
+    BL_ASSERT(r.boxArray().ixType() == z.boxArray().ixType());
+
+    // If the MultiFab is cell-centered we can use the standard dot product routine
+    if (r.boxArray().ixType().cellCentered()) 
+    {
+      return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
+    }
+
+    // If the MultiFab is not cell-centered we have to create a special mask to make sure we
+    //    don't double (or more) count the faces, edges or corners
+    else
+    {
+       MultiFab tmpmf(r.boxArray(), r.DistributionMap(), ncomp, nghost);
+       MultiFab::Copy(tmpmf, r, 0, 0, ncomp, nghost);
+ 
+       auto mask = r.OverlapMask(period);
+       MultiFab::Divide(tmpmf, *mask, 0, 0, ncomp, nghost);
+ 
+       return MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
+    }
 }
 
 static
@@ -27,6 +47,7 @@ sxay (MultiFab&       ss,
     const int sscomp = 0;
     const int xxcomp = 0;
     MultiFab::LinComb(ss, 1.0, xx, xxcomp, a, yy, yycomp, sscomp, ncomp, 1);
+    
 }
 
 inline
@@ -80,8 +101,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
        ph.setVal(0.0);
        sh.setVal(0.0);
 
-//  Lp.residual(r, rhs, sol, bc_mode);
-
     const Real eps_abs=1.0E-12;
 
     // Unit scaling
@@ -111,13 +130,15 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                    A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
     }
-      // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
-      r.FillBoundary(geom[lev].periodicity());
+
+    // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+    r.FillBoundary(geom[lev].periodicity());
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
 
-    Real rnorm = dotxy(r,r,true);
+    Real rnorm = dotxy(r,r,geom[lev].periodicity(),true);
+ 
     ParallelDescriptor::ReduceRealSum(rnorm);
     const Real rnorm0   = sqrt(rnorm);
 
@@ -144,13 +165,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     for (; nit <= maxiter; ++nit)
     {
 
-      Real rho = dotxy(rh,r,true);
+      Real rho = dotxy(rh,r,geom[lev].periodicity(),true);
       if ( rho == 0 )
       {
         ret = 1;
         break;
       }
-
 
       if ( nit == 1 )
       {
@@ -173,7 +193,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       else if ( precond_type == 1) // pc_type == diag
       {
-        for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+        for (MFIter mfi(p); mfi.isValid(); ++mfi)
         {
           const Box& pbx =   p[mfi].box();
           const Box& abx = A_m[mfi].box();
@@ -192,7 +212,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
       ph.FillBoundary(geom[lev].periodicity());
 
-      for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
+      for (MFIter mfi(ph); mfi.isValid(); ++mfi)
       {
         const Box& pbx =  ph[mfi].box();
         const Box& abx = A_m[mfi].box();
@@ -202,7 +222,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                     v[mfi].dataPtr(), vbx.loVect(), vbx.hiVect());
       }
 
-      Real rhTv = dotxy(rh,v,true);
+      Real rhTv = dotxy(rh,v,geom[lev].periodicity(),true);
       ParallelDescriptor::ReduceRealSum(rhTv);
 
       // Compute alpha
@@ -262,7 +282,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
-      Real vals[2] = { dotxy(t,t,true), dotxy(t,s,true) };
+      Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true), dotxy(t,s,geom[lev].periodicity(),true) };
       ParallelDescriptor::ReduceRealSum(vals,2);
 
 
@@ -285,9 +305,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 
       sxay(r,     s, -omega,  t);
 
-
-      //rnorm = s.norm0();
-      rnorm = dotxy(r,r,true);
+      rnorm = dotxy(r,r,geom[lev].periodicity(),true);
       ParallelDescriptor::ReduceRealSum(rnorm);
       rnorm = sqrt(rnorm);
 
@@ -300,32 +318,11 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       rho_1 = rho;
     }
 
-
     if ( verbose > 0 && ParallelDescriptor::IOProcessor())
     {
       std::cout << "BiCGStab: final Rnorm " << rnorm << '\n';
       std::cout << "BiCGStab: ratio " << nit << " L-2 "<< rnorm/(rnorm0) << '\n';
     }
-
-    // HACK: MFIX isn't enforcing this. It sets an error flag but does
-    // do anything with that information.
-    //-------------------------------------------------------------------
-    // if ( ret == 0 && rnorm > eps_rel*rnorm0 && rnorm > eps_abs)
-    // {
-    //   if ( ParallelDescriptor::IOProcessor())
-    //     amrex::Error("BiCGStab:: failed to converge!");
-    //   ret = 8;
-    // }
-
-    // if ( ( ret == 0 || ret == 8 ) && (rnorm < rnorm0) )
-    // {
-    //   sol.plus(sorig, 0, 1, 0);
-    // }
-    // else
-    // {
-    //   sol.setVal(0);
-    //   sol.plus(sorig, 0, 1, 0);
-    // }
 
     return ret;
 }

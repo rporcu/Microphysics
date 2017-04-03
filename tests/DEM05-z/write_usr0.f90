@@ -7,21 +7,16 @@
 !  Reviewer:                                          Date: dd-mmm-yy  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE WRITE_USR0
+      subroutine write_usr0() &
+        bind(C, name="write_usr0")
 
-      use compar, only: myPE, PE_IO
-
-      IMPLICIT NONE
-
-      IF(myPE /= PE_IO) RETURN
+      implicit none
 
       CALL WRITE_DAT_HEADER('POST_ALPHA.dat','ALPHA')
       CALL WRITE_DAT_HEADER('POST_OMEGA.dat','OMEGA')
       CALL WRITE_DAT_HEADER('POST_COEFF.dat','COEFF')
 
-      RETURN
-
-      CONTAINS
+      contains
 
 !----------------------------------------------------------------------!
 !                                                                      !

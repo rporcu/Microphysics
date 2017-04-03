@@ -41,103 +41,6 @@ CONTAINS
       RETURN
     END FUNCTION mfix_isnan
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Function: CHECK_VEL_BOUND()                                         C
-!  Purpose: Check velocities upper bound to be less than speed of      C
-!           sound                                                      C
-!                                                                      C
-!  Author: S. Benyahia                                Date: 25-AUG-05  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced:                                               C
-!  Variables modified:                                                 C
-!  Local variables:                                                    C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-      logical function check_vel_bound (slo,shi,ulo,uhi,vlo,vhi,wlo,whi,u_g,v_g,w_g,ep_g)
-
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE toleranc, only: max_inlet_vel
-
-      IMPLICIT NONE
-
-      integer(c_int), intent(in   ) :: slo(3),shi(3)
-      integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
-
-      real(c_real)  , intent(in   ) :: u_g&
-         (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real)  , intent(in   ) :: v_g&
-         (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real)  , intent(in   ) :: w_g&
-         (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real)  , intent(in   ) :: ep_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-      integer :: I,J,K
-
-      check_vel_bound = .FALSE.
-
-      do k = wlo(3),whi(3)
-      do j = wlo(2),whi(2)
-      do i = wlo(1),whi(1)
-         if ( abs(w_g(I,J,K)) > max_inlet_vel) THEN
-            check_vel_bound = .true.
-            write(*,1000) max_inlet_vel, I, J, K, &
-                          ep_g(I,J,K), w_g(I,J,K)
-         end if
-      end do
-      end do
-      end do
-
-      do k = vlo(3),vhi(3)
-      do j = vlo(2),vhi(2)
-      do i = vlo(1),vhi(1)
-         if (abs(v_g(I,J,K)) > max_inlet_vel) then
-            check_vel_bound = .true.
-            write(*,1001) max_inlet_vel, I, J, K, &
-                          ep_g(I,J,K), v_g(I,J,K)
-         end if
-      end do
-      end do
-      end do
-
-      do k = ulo(3),uhi(3)
-      do j = ulo(2),uhi(2)
-      do i = ulo(1),uhi(1)
-         if (abs(u_g(I,J,K)) > max_inlet_vel) then
-            check_vel_bound = .true.
-            write(*,1002) max_inlet_vel, I, J, K, &
-                          ep_g(I,J,K), u_g(I,J,K)
-         end if
-      end do
-      end do
-      end do
-
- 1000 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
-            'WARNING: w velocity higher than maximum allowed velocity: ', &
-            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
-            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
-            '  ','Epg = ', G12.5, 'Wg = ', G12.5)
- 1001 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
-            'WARNING: v velocity higher than maximum allowed velocity: ', &
-            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
-            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
-            '  ','Epg = ', G12.5, 'Vg = ', G12.5)
- 1002 FORMAT(1X,'Message from: CHECK_VEL_BOUND',/&
-            'WARNING: u velocity higher than maximum allowed velocity: ', &
-            G12.5, '(to change this adjust the scale factor max_inlet_vel_FAC)'/&
-            'in this cell: ','I = ',I4,2X,' J = ',I4,2X,' K = ',I4, /&
-            '  ','Epg = ', G12.5, 'Ug = ', G12.5)
-
-      end function check_vel_bound
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Function name: SEEK_COMMENT (LINE_MAXCOL)                           !
@@ -148,7 +51,7 @@ CONTAINS
 !  in the line.                                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION SEEK_COMMENT (LINE, MAXCOL)
+      PURE integer FUNCTION SEEK_COMMENT (LINE, MAXCOL)
 
       IMPLICIT NONE
 
@@ -157,16 +60,16 @@ CONTAINS
 ! Input data line
       CHARACTER(len=*), intent(IN) :: LINE
 ! Maximum column of input data line to search
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
 ! The number of designated comment characters
-      INTEGER, PARAMETER :: DIM_COMMENT = 2
+      integer, PARAMETER :: DIM_COMMENT = 2
 ! The comment characters
       CHARACTER, PARAMETER :: COMMENT_CHAR(DIM_COMMENT) = (/'#', '!'/)
 ! Loop indicies
-      INTEGER :: L, L2
+      integer :: L, L2
 !.......................................................................!
 
       DO L = 1, MAXCOL
@@ -192,7 +95,7 @@ CONTAINS
 !  in the line.                                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION SEEK_END (LINE, MAXCOL)
+      PURE integer FUNCTION SEEK_END (LINE, MAXCOL)
 
       IMPLICIT NONE
 
@@ -201,11 +104,11 @@ CONTAINS
 ! input data line
       CHARACTER, intent(IN) :: LINE*(*)
 ! maximum column of input data line to search
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       SEEK_END = 0
@@ -225,7 +128,7 @@ CONTAINS
 !  condition (data passed column MAXCOL in LINE)                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
+      PURE integer FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
 
       IMPLICIT NONE
 
@@ -234,13 +137,13 @@ CONTAINS
 ! input data line
       CHARACTER(LEN=*), intent(IN) :: LINE
 ! length of input data line
-      INTEGER, intent(IN) :: LINE_LEN
+      integer, intent(IN) :: LINE_LEN
 ! maximum column that non-blank charcater are in the input data line
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = MAXCOL + 1, LINE_LEN
@@ -271,7 +174,7 @@ CONTAINS
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       BLANK_LINE = .FALSE.
@@ -301,20 +204,20 @@ CONTAINS
 ! Input line to change to uppercase
       CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
 ! ICHAR value for UPPERCASE A, lowercase a, lowercase z
-      INTEGER, PARAMETER :: A_UP = ICHAR('A')
-      INTEGER, PARAMETER :: A_LO = ICHAR('a')
-      INTEGER, PARAMETER :: Z_LO = ICHAR('z')
+      integer, PARAMETER :: A_UP = ICHAR('A')
+      integer, PARAMETER :: A_LO = ICHAR('a')
+      integer, PARAMETER :: Z_LO = ICHAR('z')
 ! ICHAR differnce between lower and uppercase letters
-      INTEGER, PARAMETER :: A_DIFF = A_LO - A_UP
+      integer, PARAMETER :: A_DIFF = A_LO - A_UP
 ! Holds ICHAR value of current character
-      INTEGER :: INT_C
+      integer :: INT_C
 ! loop index
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = 1, MAXCOL
@@ -345,14 +248,14 @@ CONTAINS
 ! Input line to change to uppercase
       CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
       CHARACTER, PARAMETER :: TAB = CHAR(9)
       CHARACTER, PARAMETER :: CRET = CHAR(13)
 ! Loop index
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = 1, MAXCOL

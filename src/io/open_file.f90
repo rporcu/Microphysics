@@ -45,17 +45,17 @@ MODULE OPEN_FILE_MOD
 ! Open form ('FORMATTED' or 'UNFORMATTED')
       CHARACTER(LEN=*)   OPEN_FORM
 ! Index to first blank character in FILENAME
-      INTEGER, INTENT(IN) :: NB
+      integer, INTENT(IN) :: NB
 ! Unit number to open
-      INTEGER, INTENT(IN) :: IUNIT
+      integer, INTENT(IN) :: IUNIT
 ! Record length
-      INTEGER, INTENT(IN) :: IRECL
+      integer, INTENT(IN) :: IRECL
 ! Integer Error index:
 ! 000 - no error
 ! 100 - NEW run with existing files in directory
 ! 101 - OLD run missing RES file
 ! 102 - Unknown OPEN_STAT
-      INTEGER, INTENT(OUT) :: IER
+      integer, INTENT(OUT) :: IER
 
 ! Local Variables
 !---------------------------------------------------------------------//
@@ -64,7 +64,7 @@ MODULE OPEN_FILE_MOD
 
 ! Logicals that determine if files should be index.
       LOGICAL :: RES_IDX  ! Index RES files
-      LOGICAL :: USE_IDX  ! Use the IDX value
+      LOGICAL :: use_IDX  ! Use the IDX value
 
 ! Initialize the error flag.
       IER = 0
@@ -73,11 +73,11 @@ MODULE OPEN_FILE_MOD
       RES_IDX = .FALSE.
 
 ! Flag for indexing files.
-      USE_IDX = .FALSE.
+      use_IDX = .FALSE.
 
 ! Construct the file name.
       FULL_NAME = ''
-      IF(USE_IDX)THEN
+      IF(use_IDX)THEN
          WRITE(FULL_NAME,1000) FILENAME(1:NB-1), myPE, EXT(1:4)
       ELSE
          WRITE(FULL_NAME,1001) FILENAME(1:NB-1), EXT(1:4)

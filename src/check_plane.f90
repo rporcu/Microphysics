@@ -21,9 +21,9 @@ MODULE CHECK_PLANE_MODULE
 
       SUBROUTINE CHECK_PLANE(X_CONSTANT, Y_CONSTANT, Z_CONSTANT, BC, NAME)
 
-      USE compar, only: mype
-      USE exit_mod, only: mfix_exit
-      USE funits, only: dmp_log, unit_log
+      use compar, only: mype
+      use exit_mod, only: mfix_exit
+      use funits, only: dmp_log, unit_log
 
       IMPLICIT NONE
 
@@ -33,14 +33,14 @@ MODULE CHECK_PLANE_MODULE
 ! surface indicators
       LOGICAL, INTENT(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
 ! boundary condition or internal surface index
-      INTEGER, INTENT(IN) ::  BC
+      integer, INTENT(IN) ::  BC
 ! BC or IS
       CHARACTER(LEN=2), INTENT(IN) :: NAME
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! number of directions that are not constant (must equal 2)
-      INTEGER :: N
+      integer :: N
 !-----------------------------------------------
 
 

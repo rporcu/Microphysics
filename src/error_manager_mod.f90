@@ -22,17 +22,17 @@
       end interface
 
 ! Maximum number of lines a message can have before a flush is needed.
-      INTEGER, PARAMETER :: LINE_COUNT  = 32
+      integer, PARAMETER :: LINE_COUNT  = 32
 ! Maximum number of characters per line.
-      INTEGER, PARAMETER :: LINE_LENGTH = 256
+      integer, PARAMETER :: LINE_LENGTH = 256
 
 ! Character string for storing the error message.
       CHARACTER(LEN=LINE_LENGTH), DIMENSION(LINE_COUNT) :: ERR_MSG
 
 ! Depth that the current call tree can go.
-      INTEGER, PARAMETER, PRIVATE :: MAX_CALL_DEPTH = 16
+      integer, PARAMETER, PRIVATE :: MAX_CALL_DEPTH = 16
 ! Current call depth.
-      INTEGER, PRIVATE :: CALL_DEPTH
+      integer, PRIVATE :: CALL_DEPTH
 
 ! The name of the calling routine. Set by calling: INIT_ERR_MSG
       CHARACTER(LEN=128), DIMENSION(MAX_CALL_DEPTH), PRIVATE :: CALLERS
@@ -41,7 +41,7 @@
       LOGICAL, PRIVATE :: SCR_LOG
 
 ! Error Flag.
-      INTEGER :: IER_EM
+      integer :: IER_EM
 
       contains
 
@@ -84,9 +84,9 @@
       CHARACTER(len=255) :: LOGFILE
       CHARACTER(len=255) :: FILE_NAME
 ! First non-blank character in run_name.
-      INTEGER :: NB
+      integer :: NB
 ! Integer error flag
-      INTEGER :: IER(0:numPEs-1)
+      integer :: IER(0:numPEs-1)
 
 ! Initizilae the error flags.
       IER = 0
@@ -109,11 +109,11 @@
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
          IF(myPE  == PE_IO) WRITE (*, 1000) 'short', trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
          if(myPE == PE_IO) write (*, 1000) 'long', trim(IFILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
@@ -145,7 +145,7 @@
       ! CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
          IF(myPE == PE_IO) WRITE(*,1001) trim(FILE_NAME)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
       RETURN
@@ -186,7 +186,7 @@
          IF(SCR_LOG) WRITE(*,1000) CALL_DEPTH
          IF(DMP_LOG) WRITE(UNIT_LOG,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ELSE
 ! Store the caller routines name.
          CALL_DEPTH = CALL_DEPTH + 1
@@ -227,11 +227,11 @@
 ! Single line.
       CHARACTER(LEN=LINE_LENGTH) :: LINE
 ! Line length with trailing space removed.
-      INTEGER :: LENGTH
+      integer :: LENGTH
 ! Line Counter
-      INTEGER :: LC
+      integer :: LC
 ! Number of non-empty lines.
-      INTEGER :: COUNT
+      integer :: COUNT
 
 ! The current calling routine.
       CHARACTER(LEN=128) :: CALLER
@@ -240,7 +240,7 @@
       IF(CALL_DEPTH < 1) THEN
          IF(SCR_LOG) WRITE(*,1000)
          IF(DMP_LOG) WRITE(UNIT_LOG,1000)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ELSE
 ! Store the current caller, clear the array position, and decrement
 ! the counter.
@@ -273,7 +273,7 @@
          ENDDO
          IF(SCR_LOG) WRITE(*,1003)
          IF(DMP_LOG) WRITE(UNIT_LOG, 1003)
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
 ! This shouldn't be needed, but it doesn't hurt.
@@ -333,11 +333,11 @@
 ! Single line.
       CHARACTER(LEN=LINE_LENGTH) :: LINE
 ! Line length with trailing space removed.
-      INTEGER :: LENGTH
+      integer :: LENGTH
 ! Index of last line in the message.
-      INTEGER :: LAST_LINE
+      integer :: LAST_LINE
 ! Line Counter
-      INTEGER :: LC
+      integer :: LC
 ! Local debug flag.
       LOGICAL :: D_FLAG
 ! Local flag to suppress writing the header.
@@ -469,7 +469,7 @@
 ! Abort the run if specified.
       IF(A_FLAG) THEN
          IF(D_FLAG) WRITE(*,3000) myPE
-         CALL MFIX_EXIT(myPE)
+         call mfix_exit(myPE)
       ENDIF
 
       RETURN
@@ -511,7 +511,7 @@
 ! Local flag to suppress writing the footer.
       LOGICAL :: F_FLAG
 ! Generic loop counters.
-      INTEGER ::  LC, SL
+      integer ::  LC, SL
 
 ! Set the header flag. Write the header by default.
       H_FLAG = merge(HEADER, .TRUE., PRESENT(HEADER))
@@ -558,9 +558,9 @@
 
       CHARACTER(len=*), intent(in) :: VAR
 
-      INTEGER,  intent(in) :: i1
-      INTEGER, OPTIONAL, intent(in) :: i2
-      INTEGER, OPTIONAL, intent(in) :: i3
+      integer,  intent(in) :: i1
+      integer, OPTIONAL, intent(in) :: i2
+      integer, OPTIONAL, intent(in) :: i3
 
       CHARACTER(len=16) :: iASc
       CHARACTER(len=64) :: tVAR
@@ -592,7 +592,7 @@
 !                                                                      !
 !......................................................................!
       CHARACTER(len=32) FUNCTION iVal_int(VAL)
-      INTEGER, intent(in) :: VAL
+      integer, intent(in) :: VAL
 
       CHARACTER(len=32) :: iASc
 

@@ -7,11 +7,6 @@ MODULE CALC_INTERP_WEIGHTS_MODULE
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE CALC_INTERP_WEIGHTS
 
-
-
-
-
-
-      RETURN
       END SUBROUTINE CALC_INTERP_WEIGHTS
+
    END MODULE CALC_INTERP_WEIGHTS_MODULE

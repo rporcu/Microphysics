@@ -3,10 +3,10 @@ MODULE WRITE_TABLE_MOD
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   USE param, only: dim_i, dim_j, dim_k
-   USE funits, only: unit_out
+   use param, only: dim_i, dim_j, dim_k
+   use funits, only: unit_out
 
-   CONTAINS
+   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
@@ -47,10 +47,10 @@ MODULE WRITE_TABLE_MOD
 
 
 !                      Starting array index
-      INTEGER          LSTART
+      integer          LSTART
 
 !                      Ending array index
-      INTEGER          LEND
+      integer          LEND
 
       real(c_real) SCALAR
 
@@ -63,29 +63,29 @@ MODULE WRITE_TABLE_MOD
 
 !                      Number of columns in the table.  When this is changed
 !                      remember to change the FORMAT statement also.
-      INTEGER, PARAMETER :: NCOL = 5
+      integer, PARAMETER :: NCOL = 5
 !
 !                      Some dimension large enough for I, J, and K.
-      INTEGER, PARAMETER :: DIMENSION_1 = MAX(DIM_I, DIM_J, DIM_K)
+      integer, PARAMETER :: DIMENSION_1 = MAX(DIM_I, DIM_J, DIM_K)
 
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
 !
 !                      Indices
-      INTEGER          ARRAY1(DIMENSION_1)
+      integer          ARRAY1(DIMENSION_1)
 !
 !                      Array3 to be written
       real(c_real) ARRAY3(DIMENSION_1)
 !
 !                      Number of rows
-      INTEGER          NROW
+      integer          NROW
 !
 !                      Temporary storage for distance calculation
       real(c_real) DIST
 !
 !                      Local array indices
-      INTEGER          L, L1, L2, L3
+      integer          L, L1, L2, L3
 !-----------------------------------------------
 !
 !

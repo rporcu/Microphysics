@@ -7,18 +7,18 @@
 
 ! For code that is not performance-critical, do:
 
-! SUBROUTINE subname
-! USE functions
+! subroutine subname
+! use functions
 ! ...
-! END SUBROUTINE subname
+! end subroutine subname
 
 ! For code that is performance-critical, do:
 
-! SUBROUTINE subname
+! subroutine subname
 ! ...
-! CONTAINS
-! INCLUDE 'functions.inc'
-! END SUBROUTINE subname
+! contains
+! include 'functions.inc'
+! end subroutine subname
 
 !---------------------------------------------------------------------//
 ! Misc
@@ -33,7 +33,7 @@
 
 ! Harmonic average
       DOUBLE PRECISION FUNCTION AVG_H(XXXm, XXXp)
-      USE param1, only: SMALL_NUMBER
+      use param1, only: SMALL_NUMBER
       IMPLICIT NONE
       DOUBLE PRECISION, INTENT(IN) :: XXXp, XXXm
       AVG_H = XXXm * XXXp / MAX(SMALL_NUMBER, 0.5d0*(XXXm + XXXp) )

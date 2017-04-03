@@ -24,14 +24,14 @@ contains
 
 ! Modules
 !---------------------------------------------------------------------//
-      USE constant, only: gravity
-      USE bc, only: delp_z
+      use constant, only: gravity
+      use bc, only: delp_z
 
-      USE functions, only: avg
-      USE geometry , only: domlo, domhi, cyclic_z_pd
+      use functions, only: avg
+      use geometry , only: domlo, domhi, cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
-      USE scales, only: p_scale
+      use scales, only: p_scale
 
       integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),alo(3),ahi(3),lo(3),hi(3)
 
