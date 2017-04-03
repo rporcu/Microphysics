@@ -56,7 +56,7 @@ contains
 ! Local variables
 !-----------------------------------------------
 ! Variable
-    INTEGER :: I, J, K
+    integer :: I, J, K
 !-----------------------------------------------
 
     do k = alo(3),ahi(3)

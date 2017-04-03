@@ -33,15 +33,15 @@ MODULE GET_PS_MODULE
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Loop/variable indices
-      INTEGER, INTENT(in) :: PSV
+      integer, INTENT(in) :: PSV
       real(c_real), intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Error flag.
-      INTEGER :: IER
+      integer :: IER
 ! Calculated indices of the wall boundary
-      INTEGER :: I_w , I_e , J_s , J_n , K_b , K_t
+      integer :: I_w , I_e , J_s , J_n , K_b , K_t
 ! Surface indictors
       LOGICAL :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 !......................................................................!

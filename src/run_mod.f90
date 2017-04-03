@@ -40,7 +40,7 @@
       LOGICAL :: AUTOMATIC_RESTART
 
 ! counter to keep track of how many auto_retart were performed
-      INTEGER :: ITER_RESTART
+      integer :: ITER_RESTART
 
 ! version.release of software
       CHARACTER(LEN=10) :: ID_VERSION
@@ -49,7 +49,7 @@
       real(c_real) :: TSTOP
 
 ! Discretization scheme for different equations
-      INTEGER :: DISCRETIZE(DIM_EQS)
+      integer :: DISCRETIZE(DIM_EQS)
 
 ! If .TRUE. call user-defined subroutines
       LOGICAL :: CALL_USR
@@ -58,19 +58,19 @@
 ! default is syam_obrien (may enforce a corrected Umf by defining
 ! drag_c1 and drag_d1 accordingly)
       CHARACTER(64) :: DRAG_TYPE
-      INTEGER :: DRAG_TYPE_ENUM
-      INTEGER,PARAMETER :: SYAM_OBRIEN=0
-      INTEGER,PARAMETER :: GIDASPOW=1
-      INTEGER,PARAMETER :: GIDASPOW_PCF=2
-      INTEGER,PARAMETER :: GIDASPOW_BLEND=3
-      INTEGER,PARAMETER :: GIDASPOW_BLEND_PCF=4
-      INTEGER,PARAMETER :: WEN_YU=5
-      INTEGER,PARAMETER :: WEN_YU_PCF=6
-      INTEGER,PARAMETER :: KOCH_HILL=7
-      INTEGER,PARAMETER :: KOCH_HILL_PCF=8
-      INTEGER,PARAMETER :: BVK=9
-      INTEGER,PARAMETER :: HYS=10
-      INTEGER,PARAMETER :: useR_DRAG=11
+      integer :: DRAG_TYPE_ENUM
+      integer,PARAMETER :: SYAM_OBRIEN=0
+      integer,PARAMETER :: GIDASPOW=1
+      integer,PARAMETER :: GIDASPOW_PCF=2
+      integer,PARAMETER :: GIDASPOW_BLEND=3
+      integer,PARAMETER :: GIDASPOW_BLEND_PCF=4
+      integer,PARAMETER :: WEN_YU=5
+      integer,PARAMETER :: WEN_YU_PCF=6
+      integer,PARAMETER :: KOCH_HILL=7
+      integer,PARAMETER :: KOCH_HILL_PCF=8
+      integer,PARAMETER :: BVK=9
+      integer,PARAMETER :: HYS=10
+      integer,PARAMETER :: useR_DRAG=11
 
 ! Single particle drag correlation
       CHARACTER(64) :: CD_FUNCTION
@@ -85,7 +85,7 @@
 
 ! parameters for dynamically adjusting time step
 ! +1 -> increase dt; -1 decrease dt
-      INTEGER :: DT_dir = -1
+      integer :: DT_dir = -1
 
 ! Maximum Time step.
       real(c_real) :: DT_MAX
@@ -118,9 +118,9 @@
       LOGICAL :: DEM_SOLIDS
       LOGICAL :: PIC_SOLIDS
 ! The number of the various solids phases.
-      INTEGER :: TFM_COUNT = 0
-      INTEGER :: DEM_COUNT = 0
-      INTEGER :: PIC_COUNT = 0
+      integer :: TFM_COUNT = 0
+      integer :: DEM_COUNT = 0
+      integer :: PIC_COUNT = 0
       logical :: bDist_IO
 
       END MODULE RUN

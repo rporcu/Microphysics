@@ -21,7 +21,7 @@
 
 !
 !                      local index
-      INTEGER          L, L1
+      integer          L, L1
 !
 !                      error message
       CHARACTER(LEN=80)     LINE

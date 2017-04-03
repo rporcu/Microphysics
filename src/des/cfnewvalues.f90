@@ -16,12 +16,12 @@ MODULE CFNEWVALUES_MODULE
          omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
          des_acc_old, rot_acc_old)
 
-      USE discretelement, only: dtsolid
-      USE discretelement, only: intg_euler, intg_adams_bashforth
-      USE discretelement, only: entering_particle, entering_ghost
-      USE discretelement, only: nonexistent, exiting_ghost
-      USE discretelement, only: normal_ghost
-      USE param1, only: zero
+      use discretelement, only: dtsolid
+      use discretelement, only: intg_euler, intg_adams_bashforth
+      use discretelement, only: entering_particle, entering_ghost
+      use discretelement, only: nonexistent, exiting_ghost
+      use discretelement, only: normal_ghost
+      use param1, only: zero
       use constant, only: gravity
 
       IMPLICIT NONE

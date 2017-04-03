@@ -5,23 +5,23 @@
 
 ! Record length used in open statement for unformatted, direct access
 ! file, with 512 bytes per record.
-      INTEGER, PARAMETER :: OPEN_N1 =   512
+      integer, PARAMETER :: OPEN_N1 =   512
 
 ! Number words in 512 bytes
-      INTEGER, PARAMETER :: NWORDS_DP =  64  ! double precision
-      INTEGER, PARAMETER :: NWORDS_R  = 128  ! real
-      INTEGER, PARAMETER :: NWORDS_I  = 128  ! integer
+      integer, PARAMETER :: NWORDS_DP =  64  ! double precision
+      integer, PARAMETER :: NWORDS_R  = 128  ! real
+      integer, PARAMETER :: NWORDS_I  = 128  ! integer
 
 ! computer node name/id
       CHARACTER(LEN=64) :: ID_NODE
 
 ! RUN ID info
-      INTEGER :: ID_MONTH
-      INTEGER :: ID_DAY
-      INTEGER :: ID_YEAR
-      INTEGER :: ID_HOUR
-      INTEGER :: ID_MINUTE
-      INTEGER :: ID_SECOND
+      integer :: ID_MONTH
+      integer :: ID_DAY
+      integer :: ID_YEAR
+      integer :: ID_HOUR
+      integer :: ID_MINUTE
+      integer :: ID_SECOND
 
     CONTAINS
 
@@ -38,7 +38,7 @@
       IMPLICIT NONE
 
 ! temporary array to hold time data
-      INTEGER DAT(8)
+      integer DAT(8)
       CHARACTER(LEN=10) DATE, TIM, ZONE
 
       CALL DATE_AND_TIME(DATE, TIM, ZONE, DAT)
@@ -66,16 +66,16 @@
 
       IMPLICIT NONE
 
-      INTEGER, SAVE :: COUNT_OLD=0, WRAP=0
+      integer, SAVE :: COUNT_OLD=0, WRAP=0
 
 ! local variables
 !----------------------------------------------------------------------//
 ! Clock cycle
-      INTEGER :: COUNT
+      integer :: COUNT
 ! Number of cycles per second
-      INTEGER :: COUNT_RATE
+      integer :: COUNT_RATE
 ! Max number of cycles, after which count is reset to 0
-      INTEGER :: COUNT_MAX
+      integer :: COUNT_MAX
 
       CALL SYSTEM_CLOCK(COUNT, COUNT_RATE, COUNT_MAX)
       IF(COUNT_OLD .GT. COUNT) THEN

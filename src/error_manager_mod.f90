@@ -22,17 +22,17 @@
       end interface
 
 ! Maximum number of lines a message can have before a flush is needed.
-      INTEGER, PARAMETER :: LINE_COUNT  = 32
+      integer, PARAMETER :: LINE_COUNT  = 32
 ! Maximum number of characters per line.
-      INTEGER, PARAMETER :: LINE_LENGTH = 256
+      integer, PARAMETER :: LINE_LENGTH = 256
 
 ! Character string for storing the error message.
       CHARACTER(LEN=LINE_LENGTH), DIMENSION(LINE_COUNT) :: ERR_MSG
 
 ! Depth that the current call tree can go.
-      INTEGER, PARAMETER, PRIVATE :: MAX_CALL_DEPTH = 16
+      integer, PARAMETER, PRIVATE :: MAX_CALL_DEPTH = 16
 ! Current call depth.
-      INTEGER, PRIVATE :: CALL_DEPTH
+      integer, PRIVATE :: CALL_DEPTH
 
 ! The name of the calling routine. Set by calling: INIT_ERR_MSG
       CHARACTER(LEN=128), DIMENSION(MAX_CALL_DEPTH), PRIVATE :: CALLERS
@@ -41,7 +41,7 @@
       LOGICAL, PRIVATE :: SCR_LOG
 
 ! Error Flag.
-      INTEGER :: IER_EM
+      integer :: IER_EM
 
       contains
 
@@ -84,9 +84,9 @@
       CHARACTER(len=255) :: LOGFILE
       CHARACTER(len=255) :: FILE_NAME
 ! First non-blank character in run_name.
-      INTEGER :: NB
+      integer :: NB
 ! Integer error flag
-      INTEGER :: IER(0:numPEs-1)
+      integer :: IER(0:numPEs-1)
 
 ! Initizilae the error flags.
       IER = 0
@@ -227,11 +227,11 @@
 ! Single line.
       CHARACTER(LEN=LINE_LENGTH) :: LINE
 ! Line length with trailing space removed.
-      INTEGER :: LENGTH
+      integer :: LENGTH
 ! Line Counter
-      INTEGER :: LC
+      integer :: LC
 ! Number of non-empty lines.
-      INTEGER :: COUNT
+      integer :: COUNT
 
 ! The current calling routine.
       CHARACTER(LEN=128) :: CALLER
@@ -333,11 +333,11 @@
 ! Single line.
       CHARACTER(LEN=LINE_LENGTH) :: LINE
 ! Line length with trailing space removed.
-      INTEGER :: LENGTH
+      integer :: LENGTH
 ! Index of last line in the message.
-      INTEGER :: LAST_LINE
+      integer :: LAST_LINE
 ! Line Counter
-      INTEGER :: LC
+      integer :: LC
 ! Local debug flag.
       LOGICAL :: D_FLAG
 ! Local flag to suppress writing the header.
@@ -511,7 +511,7 @@
 ! Local flag to suppress writing the footer.
       LOGICAL :: F_FLAG
 ! Generic loop counters.
-      INTEGER ::  LC, SL
+      integer ::  LC, SL
 
 ! Set the header flag. Write the header by default.
       H_FLAG = merge(HEADER, .TRUE., PRESENT(HEADER))
@@ -558,9 +558,9 @@
 
       CHARACTER(len=*), intent(in) :: VAR
 
-      INTEGER,  intent(in) :: i1
-      INTEGER, OPTIONAL, intent(in) :: i2
-      INTEGER, OPTIONAL, intent(in) :: i3
+      integer,  intent(in) :: i1
+      integer, OPTIONAL, intent(in) :: i2
+      integer, OPTIONAL, intent(in) :: i3
 
       CHARACTER(len=16) :: iASc
       CHARACTER(len=64) :: tVAR
@@ -592,7 +592,7 @@
 !                                                                      !
 !......................................................................!
       CHARACTER(len=32) FUNCTION iVal_int(VAL)
-      INTEGER, intent(in) :: VAL
+      integer, intent(in) :: VAL
 
       CHARACTER(len=32) :: iASc
 

@@ -9,13 +9,13 @@
 
       IMPLICIT NONE
 
-      INTEGER, PRIVATE :: GLOBAL_CNT
-      INTEGER, PRIVATE :: LOCAL_CNT
+      integer, PRIVATE :: GLOBAL_CNT
+      integer, PRIVATE :: LOCAL_CNT
 
-      INTEGER :: DES_UNIT = 2000
+      integer :: DES_UNIT = 2000
 
 ! file unit for ParaView *.pvd data
-      INTEGER, PARAMETER :: PVD_UNIT = 2050
+      integer, PARAMETER :: PVD_UNIT = 2050
 
 ! formatted file name
       CHARACTER(LEN=64) :: FNAME_VTP
@@ -40,7 +40,7 @@
       CHARACTER(len=*), INTENT(in) :: NAME
       real(c_real), INTENT(in) :: DATA(:)
 
-      INTEGER :: LC
+      integer :: LC
 
       WRITE(DES_UNIT,1000) NAME
       DO LC=1, GLOBAL_CNT
@@ -67,8 +67,8 @@
       real(c_real), INTENT(in) :: DATA(:,:)
 
       CHARACTER(len=16) :: NOC
-      INTEGER :: LB, UB
-      INTEGER :: LC1, LC2
+      integer :: LB, UB
+      integer :: LC1, LC2
 
       LB = LBOUND(DATA,2)
       UB = UBOUND(DATA,2)
@@ -103,9 +103,9 @@
       SUBROUTINE VTP_WRITE_I1(NAME, DATA)
 
       CHARACTER(len=*), INTENT(in) :: NAME
-      INTEGER, INTENT(in) :: DATA(:)
+      integer, INTENT(in) :: DATA(:)
 
-      INTEGER :: LC
+      integer :: LC
 
 
       IF(myPE == PE_IO) THEN
@@ -161,12 +161,12 @@
       integer         , intent(in   ) :: particle_state(max_pip)
       character(len=*), intent(  out) :: nopc
 
-      INTEGER :: NumberOfPoints
+      integer :: NumberOfPoints
 
 ! check whether an error occurs in opening a file
-      INTEGER :: IOS
+      integer :: IOS
 ! Integer error flag.
-      INTEGER :: IER
+      integer :: IER
 
 ! logical used for testing is the data file already exists
       LOGICAL :: EXISTS_VTP
@@ -261,7 +261,7 @@
 ! Local Variables
 !-----------------------------------------------
 ! Index position of desired character
-      INTEGER IDX_f, IDX_b
+      integer IDX_f, IDX_b
 ! logical used for testing is the data file already exists
       LOGICAL :: EXISTS_PVD
 ! Generic input limited to 256 characters
@@ -273,7 +273,7 @@
       LOGICAL, SAVE :: FIRST_PASS = .TRUE.
 
 ! IO Status flag
-      INTEGER :: IOS
+      integer :: IOS
 
 ! Variables related to gather
       integer :: IER

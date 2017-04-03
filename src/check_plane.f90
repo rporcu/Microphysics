@@ -33,14 +33,14 @@ MODULE CHECK_PLANE_MODULE
 ! surface indicators
       LOGICAL, INTENT(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
 ! boundary condition or internal surface index
-      INTEGER, INTENT(IN) ::  BC
+      integer, INTENT(IN) ::  BC
 ! BC or IS
       CHARACTER(LEN=2), INTENT(IN) :: NAME
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
 ! number of directions that are not constant (must equal 2)
-      INTEGER :: N
+      integer :: N
 !-----------------------------------------------
 
 

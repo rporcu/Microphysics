@@ -34,7 +34,7 @@
       real(c_real), intent(in) :: time, dt
 
       ! Loop counter
-      INTEGER :: LC
+      integer :: LC
 
       ! Initialize times for writing outputs
       OUT_TIME = merge(TIME, undefined, is_defined(OUT_DT))

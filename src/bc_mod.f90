@@ -53,27 +53,27 @@
 !
 !                      i index of the west face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_I_w (DIMENSION_BC)
+      integer          BC_I_w (DIMENSION_BC)
 !
 !                      i index of the east face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_I_e (DIMENSION_BC)
+      integer          BC_I_e (DIMENSION_BC)
 !
 !                      j index of the south face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_J_s (DIMENSION_BC)
+      integer          BC_J_s (DIMENSION_BC)
 !
 !                      j index of the north face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_J_n (DIMENSION_BC)
+      integer          BC_J_n (DIMENSION_BC)
 !
 !                      k index of the bottom face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_K_b (DIMENSION_BC)
+      integer          BC_K_b (DIMENSION_BC)
 !
 !                      k index of the top face of a region where
 !                      boundary conditions are specified
-      INTEGER          BC_K_t (DIMENSION_BC)
+      integer          BC_K_t (DIMENSION_BC)
 !
 !                      Void fraction in a specified boundary region
       real(c_real) BC_EP_g (DIMENSION_BC)
@@ -142,7 +142,7 @@
 !                      Type of boundary: MASS_INFLOW, MASS_OUTFLOW,
 !                      P_INFLOW, P_OUTFLOW, FREE_SLIP_WALL, NO_SLIP_WALL
       CHARACTER(LEN=16)     BC_TYPE (DIMENSION_BC)
-      INTEGER ::     BC_TYPE_ENUM (DIMENSION_BC)
+      integer ::     BC_TYPE_ENUM (DIMENSION_BC)
 
       ENUM, BIND(C)
          ENUMERATOR :: CG_NSW, CG_FSW, CG_PSW, CG_MI, NONE
@@ -229,7 +229,7 @@
       real(c_real) BC_VOUT_s(DIMENSION_BC, DIM_M)
 !
 !                      Number of outflow rate values accumulated
-      INTEGER          BC_OUT_N (DIMENSION_BC)
+      integer          BC_OUT_N (DIMENSION_BC)
 !
 !                      Pressure drop specified for cyclic b.c. in X
       real(c_real) DELP_X
@@ -264,7 +264,7 @@
       real(c_real) W_s0 (DIM_M)
 !
 !                      IJK location where P_g is fixed for cyclic b.c's
-      INTEGER          IJK_P_g(3)
+      integer          IJK_P_g(3)
 !
 !                      Coefficient in partial slip condition -- gas
       real(c_real) BC_hw_g (DIMENSION_BC)
@@ -335,7 +335,7 @@
 ! Flag to specify the constant number of particles per cell
 ! for the PIC solids
 ! Statistical weight of parcels will be calculated by the code
-      INTEGER :: BC_PIC_MI_CONST_NPC(DIMENSION_BC, DIM_M)
+      integer :: BC_PIC_MI_CONST_NPC(DIMENSION_BC, DIM_M)
 
 ! Flag to specify the constant statistical weight.
 ! for the PIC solids
@@ -346,7 +346,7 @@
 
          LOGICAL FUNCTION IS_CG(boundary_condition)
             implicit none
-            INTEGER, intent(in) :: boundary_condition
+            integer, intent(in) :: boundary_condition
             IS_CG = ((boundary_condition .eq. CG_PO) &
                  .or. (boundary_condition .eq. CG_MO) &
                  .or. (boundary_condition .eq. CG_NSW) &
@@ -358,21 +358,21 @@
 
          LOGICAL FUNCTION IS_NSW(boundary_condition)
             implicit none
-            INTEGER, intent(in) :: boundary_condition
+            integer, intent(in) :: boundary_condition
             IS_NSW = ((boundary_condition .eq. CG_NSW) &
                  )
          END FUNCTION IS_NSW
 
          LOGICAL FUNCTION IS_FSW(boundary_condition)
             implicit none
-            INTEGER, intent(in) :: boundary_condition
+            integer, intent(in) :: boundary_condition
             IS_FSW = ((boundary_condition .eq. CG_FSW) &
                  )
          END FUNCTION IS_FSW
 
          LOGICAL FUNCTION IS_PSW(boundary_condition)
             implicit none
-            INTEGER, intent(in) :: boundary_condition
+            integer, intent(in) :: boundary_condition
             IS_PSW = ((boundary_condition .eq. CG_PSW) )
          END FUNCTION IS_PSW
 

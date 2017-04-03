@@ -48,7 +48,7 @@ contains
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-      INTEGER, PARAMETER :: MAXGSMF = 500
+      integer, parameter :: MAXGSMF = 500
       real(c_real), PARAMETER :: omega = 0.9
       real(c_real), PARAMETER :: TOL = 1E-03
 

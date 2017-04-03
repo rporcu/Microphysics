@@ -23,18 +23,17 @@ module parse_line_module
 !-----------------------------------------------
 
 ! Line to be parsed.
-      CHARACTER(len=*), intent(IN) :: LINE
+      character(len=*), intent(IN) :: LINE
 
 ! Length of of LINE.
-      INTEGER, intent(IN) :: LMAX
+      integer, intent(IN) :: LMAX
 
 ! Indicate whether to do a namelist read on the line. A namelist read
 ! is still preformed when an arithmetic operation is found.
-      LOGICAL, intent(OUT) :: READ_FLAG
+      logical, intent(OUT) :: READ_FLAG
 
 ! Start and end locations for the search parameters.
-      INTEGER LSTART, LEND
-
+      integer LSTART, LEND
 
 ! The string is empty. No need to parse.
       IF (LMAX == 0) THEN
@@ -59,7 +58,6 @@ module parse_line_module
             CALL mfix_exit(myPE)
          ENDIF
       ENDIF ! IF (LSTART /= 0) THEN
-
 !
       LSTART = INDEX(LINE,'@(')             !Arithmetic processing ?
       IF (LSTART /= 0) CALL PARSE_ARITH (LINE, LMAX)
@@ -96,11 +94,11 @@ module parse_line_module
 !-----------------------------------------------
 !C
 !                      The part of LINE containing input
-      INTEGER LMAX
+      integer LMAX
 !                      Input line with arithmetic operations.  Out put
 !                      line with completed arithmetic statements.
 !
-      CHARACTER LINE*(*)
+      character LINE*(*)
 !-----------------------------------------------
 !   L o c a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -115,22 +113,22 @@ module parse_line_module
       real(c_real) VALUE, SUB_VALUE
 !
 !                      Start and end locations for the arithmetic operation
-      INTEGER          LSTART, LEND
+      integer          LSTART, LEND
 !
 !                      Length of arithmetic operation string
-      INTEGER          LENGTH
+      integer          LENGTH
 !
 !                      22 - LENGTH
-      INTEGER          LDIF
+      integer          LDIF
 !
 !                      Locations in SUB_STR, and LINE
-      INTEGER          LSUB, L
+      integer          LSUB, L
 !
 !                      Operator symbol (Legal values: *, /)
-      CHARACTER(LEN=1) :: OPERATION
+      character(LEN=1) :: OPERATION
 !
 !                      Substring taken from LINE
-      CHARACTER(LEN=80) :: SUB_STR
+      character(LEN=80) :: SUB_STR
 !
 !-----------------------------------------------
 !

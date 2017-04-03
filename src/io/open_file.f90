@@ -45,17 +45,17 @@ MODULE OPEN_FILE_MOD
 ! Open form ('FORMATTED' or 'UNFORMATTED')
       CHARACTER(LEN=*)   OPEN_FORM
 ! Index to first blank character in FILENAME
-      INTEGER, INTENT(IN) :: NB
+      integer, INTENT(IN) :: NB
 ! Unit number to open
-      INTEGER, INTENT(IN) :: IUNIT
+      integer, INTENT(IN) :: IUNIT
 ! Record length
-      INTEGER, INTENT(IN) :: IRECL
+      integer, INTENT(IN) :: IRECL
 ! Integer Error index:
 ! 000 - no error
 ! 100 - NEW run with existing files in directory
 ! 101 - OLD run missing RES file
 ! 102 - Unknown OPEN_STAT
-      INTEGER, INTENT(OUT) :: IER
+      integer, INTENT(OUT) :: IER
 
 ! Local Variables
 !---------------------------------------------------------------------//

@@ -10,7 +10,7 @@ module calc_grad_des_module
 ! Modules
 !-----------------------------------------------
 
-      USE geometry, only: domlo,domhi
+      use geometry, only: domlo,domhi
       use functions, only: avg
       use param1, only: zero
 
@@ -28,7 +28,7 @@ module calc_grad_des_module
 ! Local variables
 !---------------------------------------------------------------------//
 ! general i, j, k indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
       real(c_real) :: odx, ody, odz
 !......................................................................!
 

@@ -109,7 +109,7 @@
       IMPLICIT NONE
 
 
-      INTEGER :: LC, LS, LE
+      integer :: LC, LS, LE
 
       if (nit == 1) then
          write(err_msg(1)(1:5),'("  Nit")')

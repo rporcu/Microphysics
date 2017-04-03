@@ -61,7 +61,7 @@ contains
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: i,j,k
+      integer :: i,j,k
 ! Pressure at north cell
       real(c_real) :: PgN
 ! Average volume fraction

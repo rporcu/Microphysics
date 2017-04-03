@@ -27,34 +27,34 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       SUBROUTINE DES_INIT_NAMELIST
 
-      USE discretelement, only: des_intg_method
-      usE discretelement, only: des_coll_model
+      use discretelement, only: des_intg_method
+      use discretelement, only: des_coll_model
 
-      USE discretelement, only: des_continuum_coupled
-      USE discretelement, only: des_explicitly_coupled
-      USE discretelement, only: des_oneway_coupled
+      use discretelement, only: des_continuum_coupled
+      use discretelement, only: des_explicitly_coupled
+      use discretelement, only: des_oneway_coupled
 
-      USE discretelement, only: kn, kn_w
-      USE discretelement, only: kt_fac, kt_w_fac
+      use discretelement, only: kn, kn_w
+      use discretelement, only: kt_fac, kt_w_fac
 
-      USE discretelement, only: mew, mew_w
+      use discretelement, only: mew, mew_w
 
-      USE discretelement, only: des_en_input, des_en_wall_input
-      USE discretelement, only: des_et_input, des_et_wall_input
+      use discretelement, only: des_en_input, des_en_wall_input
+      use discretelement, only: des_et_input, des_et_wall_input
 
-      USE discretelement, only: e_young, ew_young
-      USE discretelement, only: v_poisson, vw_poisson
+      use discretelement, only: e_young, ew_young
+      use discretelement, only: v_poisson, vw_poisson
 
-      USE discretelement, only: des_etat_fac, des_etat_w_fac
+      use discretelement, only: des_etat_fac, des_etat_w_fac
 
-      USE discretelement, only: particles
-      USE discretelement, only: des_usr_var_size
+      use discretelement, only: particles
+      use discretelement, only: des_usr_var_size
 
-      USE discretelement, only: print_des_data
-      USE discretelement, only: vtp_findex
+      use discretelement, only: print_des_data
+      use discretelement, only: vtp_findex
 
-      USE discretelement, only: dim_m
-      USE param1, only: undefined_i, undefined
+      use discretelement, only: dim_m
+      use param1, only: undefined_i, undefined
 
 
       IMPLICIT NONE
@@ -64,28 +64,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 
 !-----------------------------------------------
 
-      INCLUDE 'desnamelist.inc'
-
-
-
-!#####################################################################!
-!                             Run Control                             !
-!#####################################################################!
-
-
-
-
-!#####################################################################!
-!                           Physical Parameters                       !
-!#####################################################################!
-
-
-
-!#####################################################################!
-!                          Numerical Parameters                       !
-!#####################################################################!
-
-
+      include 'desnamelist.inc'
 
 !#####################################################################!
 !                          Output Control                             !
@@ -102,11 +81,9 @@ MODULE DES_INIT_NAMELIST_MODULE
 !</keyword>
 
 
-
 !#####################################################################!
 ! DEM/PIC COMMON:      Discrete Element Simulation                    !
 !#####################################################################!
-
 
 !<keyword category="Discrete Element Simulation" required="false"
 !  dem="true" pic="true">

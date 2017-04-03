@@ -24,7 +24,7 @@ MODULE READ_PAR_INPUT_MODULE
 
       real(c_real), DIMENSION(:), INTENT(OUT) :: des_radius, ro_sol
       real(c_real), DIMENSION(:,:), INTENT(OUT) :: des_vel_new, des_pos_new
-      INTEGER, DIMENSION(:), INTENT(OUT) :: particle_state
+      integer, DIMENSION(:), INTENT(OUT) :: particle_state
 
 !-----------------------------------------------
 ! Local variables
@@ -32,13 +32,13 @@ MODULE READ_PAR_INPUT_MODULE
 ! indices
       integer :: k
 ! index of particle
-      INTEGER :: lcurpar
+      integer :: lcurpar
 ! local unit
-      INTEGER, PARAMETER :: lunit=10
+      integer, PARAMETER :: lunit=10
 ! local filename
       character(255) lfilename
 ! IO Status:
-      INTEGER :: IOS
+      integer :: IOS
 ! Flag to indicate if file exists.
       LOGICAL :: lEXISTS
 ! Read dimension: 2D vs 3D data

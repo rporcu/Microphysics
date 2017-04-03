@@ -106,7 +106,7 @@
       real(c_real) :: magvel
 
       ! Indices
-      INTEGER :: i, j, k
+      integer :: i, j, k
 
       ! Numerators and denominators
       real(c_real) :: num1, den1

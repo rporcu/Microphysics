@@ -22,7 +22,7 @@ MODULE OPEN_FILES_MOD
       IMPLICIT NONE
 
 ! Error index: 0 - no error, 1 could not open file
-      INTEGER :: IER(0:numPEs-1)
+      integer :: IER(0:numPEs-1)
 ! RUN_NAME (as specified in input file)
       CHARACTER(LEN=*) :: RUN_NAME
 ! Run_type (as specified in input file)
@@ -30,7 +30,7 @@ MODULE OPEN_FILES_MOD
 ! run_name + extension
       CHARACTER(len=255) :: FILE_NAME
 ! index to first blank character in run_name
-      INTEGER :: NB
+      integer :: NB
       CHARACTER(len=10) :: CSTATUS
 ! Character error code.
       CHARACTER(len=32) :: CER
@@ -164,7 +164,7 @@ MODULE OPEN_FILES_MOD
       LOGICAL FUNCTION ERROR_OPENING(IER_l)
 
 ! Array containing error flags from all ranks.
-      INTEGER, INTENT(IN) :: IER_L(0:numPEs-1)
+      integer, INTENT(IN) :: IER_L(0:numPEs-1)
 ! Initialize error flags.
       ERROR_OPENING = .FALSE.
 ! Globally collect flags.
@@ -214,7 +214,7 @@ MODULE OPEN_FILES_MOD
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Error index.
-      INTEGER, INTENT(inout) :: IER
+      integer, INTENT(inout) :: IER
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -224,7 +224,7 @@ MODULE OPEN_FILES_MOD
 ! Flag for LOG files that are already open.
       LOGICAL :: DO_NOTHING
 ! Index of first blank character in RUN_NAME
-      INTEGER :: NB
+      integer :: NB
 !......................................................................!
 
 

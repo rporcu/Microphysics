@@ -15,9 +15,9 @@ module exit_mod
       implicit none
 
 ! Rank ID
-      INTEGER, INTENT(IN) :: myID
+      integer, INTENT(IN) :: myID
 ! Logical showing that a file unit is open.
-      LOGICAL :: isOpen
+      logical :: isOpen
 ! Process ID (myPE) converted to a character string.
       CHARACTER(len=64) :: myID_c
 
@@ -71,14 +71,14 @@ module exit_mod
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
-      INTEGER, INTENT(IN) :: UNIT_l
+      integer, INTENT(IN) :: UNIT_l
 
 ! Local Variables.
 !---------------------------------------------------------------------//
 ! Retruned status of the specifed file unit
-      INTEGER :: IOS
+      integer :: IOS
 ! Logical indicating if the file is open
-      LOGICAL :: FOPEN
+      logical :: FOPEN
 
 ! If the file is open...
       INQUIRE(UNIT=UNIT_l, OPENED=FOPEN, IOSTAT=IOS )

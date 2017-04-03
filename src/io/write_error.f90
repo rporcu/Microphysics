@@ -32,10 +32,10 @@ MODULE WRITE_ERROR_MODULE
       CHARACTER(LEN=*)    LINE(*)
 
 !                      Dimension of message array
-      INTEGER          LMAX
+      integer          LMAX
 
 !                      Index
-      INTEGER          L
+      integer          L
 
 !-----------------------------------------------
 

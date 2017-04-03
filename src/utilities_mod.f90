@@ -51,7 +51,7 @@ CONTAINS
 !  in the line.                                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION SEEK_COMMENT (LINE, MAXCOL)
+      PURE integer FUNCTION SEEK_COMMENT (LINE, MAXCOL)
 
       IMPLICIT NONE
 
@@ -60,16 +60,16 @@ CONTAINS
 ! Input data line
       CHARACTER(len=*), intent(IN) :: LINE
 ! Maximum column of input data line to search
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
 ! The number of designated comment characters
-      INTEGER, PARAMETER :: DIM_COMMENT = 2
+      integer, PARAMETER :: DIM_COMMENT = 2
 ! The comment characters
       CHARACTER, PARAMETER :: COMMENT_CHAR(DIM_COMMENT) = (/'#', '!'/)
 ! Loop indicies
-      INTEGER :: L, L2
+      integer :: L, L2
 !.......................................................................!
 
       DO L = 1, MAXCOL
@@ -95,7 +95,7 @@ CONTAINS
 !  in the line.                                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION SEEK_END (LINE, MAXCOL)
+      PURE integer FUNCTION SEEK_END (LINE, MAXCOL)
 
       IMPLICIT NONE
 
@@ -104,11 +104,11 @@ CONTAINS
 ! input data line
       CHARACTER, intent(IN) :: LINE*(*)
 ! maximum column of input data line to search
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       SEEK_END = 0
@@ -128,7 +128,7 @@ CONTAINS
 !  condition (data passed column MAXCOL in LINE)                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      PURE INTEGER FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
+      PURE integer FUNCTION LINE_TOO_BIG (LINE, LINE_LEN, MAXCOL)
 
       IMPLICIT NONE
 
@@ -137,13 +137,13 @@ CONTAINS
 ! input data line
       CHARACTER(LEN=*), intent(IN) :: LINE
 ! length of input data line
-      INTEGER, intent(IN) :: LINE_LEN
+      integer, intent(IN) :: LINE_LEN
 ! maximum column that non-blank charcater are in the input data line
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = MAXCOL + 1, LINE_LEN
@@ -174,7 +174,7 @@ CONTAINS
 
 ! Local Variables
 !---------------------------------------------------------------------//
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       BLANK_LINE = .FALSE.
@@ -204,20 +204,20 @@ CONTAINS
 ! Input line to change to uppercase
       CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
 ! ICHAR value for UPPERCASE A, lowercase a, lowercase z
-      INTEGER, PARAMETER :: A_UP = ICHAR('A')
-      INTEGER, PARAMETER :: A_LO = ICHAR('a')
-      INTEGER, PARAMETER :: Z_LO = ICHAR('z')
+      integer, PARAMETER :: A_UP = ICHAR('A')
+      integer, PARAMETER :: A_LO = ICHAR('a')
+      integer, PARAMETER :: Z_LO = ICHAR('z')
 ! ICHAR differnce between lower and uppercase letters
-      INTEGER, PARAMETER :: A_DIFF = A_LO - A_UP
+      integer, PARAMETER :: A_DIFF = A_LO - A_UP
 ! Holds ICHAR value of current character
-      INTEGER :: INT_C
+      integer :: INT_C
 ! loop index
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = 1, MAXCOL
@@ -248,14 +248,14 @@ CONTAINS
 ! Input line to change to uppercase
       CHARACTER(len=*), intent(INOUT) :: LINE_STRING
 ! Number of characters to look at in LINE_STRING
-      INTEGER, intent(IN) :: MAXCOL
+      integer, intent(IN) :: MAXCOL
 
 ! Local Variables
 !---------------------------------------------------------------------//
       CHARACTER, PARAMETER :: TAB = CHAR(9)
       CHARACTER, PARAMETER :: CRET = CHAR(13)
 ! Loop index
-      INTEGER :: L
+      integer :: L
 !.......................................................................!
 
       DO L = 1, MAXCOL

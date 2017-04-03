@@ -11,9 +11,9 @@
       use iso_c_binding , only: c_int
 
 ! Ghost particle packet size.
-      INTEGER :: iGhostPacketSize
-      INTEGER :: iParticlePacketSize
-      INTEGER :: iPairPacketSize
+      integer :: iGhostPacketSize
+      integer :: iParticlePacketSize
+      integer :: iPairPacketSize
 
 ! Flags and constants for interfaces
       integer, dimension(:), allocatable :: ineighproc

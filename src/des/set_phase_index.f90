@@ -17,10 +17,10 @@ CONTAINS
 
 
     use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
-    USE discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
-    USE open_files_mod, only: open_pe_log
-    USE param1, only: small_number
-    USE constant, only: MMAX, D_P0, RO_s0
+    use discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
+    use open_files_mod, only: open_pe_log
+    use param1, only: small_number
+    use constant, only: MMAX, D_P0, RO_s0
     use run,      only: IFILE_NAME
 
     IMPLICIT NONE
@@ -36,11 +36,11 @@ CONTAINS
     ! Local Variables
     !-----------------------------------------------
     ! particle no.
-    INTEGER :: L
+    integer :: L
     ! solids phase no.
-    INTEGER :: M
+    integer :: M
     ! IER for error reporting
-    INTEGER :: IER
+    integer :: IER
     ! Difference between a particles diameter (density) and the diameter
     ! (density) of a phase specified in the data file.
     real(c_real) dDp, dRho

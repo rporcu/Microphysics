@@ -239,9 +239,9 @@ module init_fluid_module
 ! Local variables
 !-----------------------------------------------
 ! indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Local loop counter
-      INTEGER :: L
+      integer :: L
 ! Gas pressure at the axial location j
       real(c_real) :: PJ
 ! Bed weight per unit area

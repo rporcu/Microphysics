@@ -61,7 +61,7 @@ module output_manager_module
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counter and counter
-      INTEGER :: LC, IDX
+      integer :: LC, IDX
 ! Flag that the header (time) has not be written.
       LOGICAL :: HDR_MSG
 ! Wall time at the start of IO operations.
@@ -230,7 +230,7 @@ module output_manager_module
       CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT
       CHARACTER(LEN=4) :: UNIT_ELAP, UNIT_LEFT
 
-      INTEGER :: TNITS
+      integer :: TNITS
       LOGICAL :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
@@ -302,16 +302,16 @@ module output_manager_module
             use iso_c_binding, only: c_char, c_int
             CHARACTER(kind=c_char),INTENT(in) :: input(*)
             CHARACTER(kind=c_char),INTENT(in) :: output(*)
-            INTEGER(c_int)        :: r
+            integer(c_int)        :: r
          END FUNCTION rename
       END INTERFACE
 
       CHARACTER(len=256) :: FNAME0, FNAME1
       CHARACTER :: CHAR
 
-      INTEGER :: LC, I, IERR, IREC
-      INTEGER, PARAMETER :: ISRC = 1234567
-      INTEGER, PARAMETER :: IDST = 12345678
+      integer :: LC, I, IERR, IREC
+      integer, PARAMETER :: ISRC = 1234567
+      integer, PARAMETER :: IDST = 12345678
 
       IF(myPE /= PE_IO) RETURN
 
@@ -374,7 +374,7 @@ module output_manager_module
 
       CHARACTER(LEN=*), INTENT(OUT) :: pFNAME
       CHARACTER(LEN=*), INTENT(IN) ::  pEXT
-      INTEGER, INTENT(IN), OPTIONAL :: pINDX
+      integer, INTENT(IN), OPTIONAL :: pINDX
 
 ! Set the file format for backup copies
       pFNAME=''

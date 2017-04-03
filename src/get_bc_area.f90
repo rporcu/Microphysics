@@ -36,7 +36,7 @@ MODULE GET_BC_AREA_MODULE
       real(c_real), intent(in) :: dx, dy, dz
 !
 ! BC number
-      INTEGER :: BCV
+      integer :: BCV
 !-----------------------------------------------
 !
 

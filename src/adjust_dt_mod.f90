@@ -51,11 +51,11 @@ module adjust_dt
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Number of steps in between DT adjustments.
-      INTEGER, PARAMETER :: STEPS_MIN = 5
+      integer, PARAMETER :: STEPS_MIN = 5
 ! Number of time steps since last DT adjustment
-      INTEGER, SAVE :: STEPS_TOT=0
+      integer, SAVE :: STEPS_TOT=0
 ! number of iterations since last DT adjustment
-      INTEGER, SAVE :: NIT_TOT=0
+      integer, SAVE :: NIT_TOT=0
 ! Iterations per second for last dt
       real(c_real), SAVE :: NIToS=0.0
 ! Current number of iterations per second

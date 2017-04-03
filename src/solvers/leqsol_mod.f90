@@ -11,20 +11,20 @@ module leqsol
    use iso_c_binding , only: c_int
 
 ! Maximum number of outer iterations
-  INTEGER :: MAX_NIT
+  integer :: MAX_NIT
 
 ! Automatic adjustment of leq parameters possible (set in iterate after
 ! the completion of first iteration).
   LOGICAL :: LEQ_ADJUST
 
 ! Maximum number of linear equation solver iterations
-  INTEGER :: LEQ_IT(DIM_EQS)
+  integer :: LEQ_IT(DIM_EQS)
 
 ! Linear equation solver method
-  INTEGER :: LEQ_METHOD(DIM_EQS)
+  integer :: LEQ_METHOD(DIM_EQS)
 
 ! Total Iterations
-  INTEGER :: ITER_TOT(DIM_EQS) = 0
+  integer :: ITER_TOT(DIM_EQS) = 0
 
 ! Linear equation solver sweep direction
   CHARACTER(LEN=4) :: LEQ_SWEEP(DIM_EQS)
@@ -42,7 +42,7 @@ module leqsol
   LOGICAL :: DO_TRANSPOSE
 
 ! Frequency of convergence check in BiCGStab
-  INTEGER :: ICHECK_BICGS
+  integer :: ICHECK_BICGS
 
 ! Optimize for massively parallel machine
   LOGICAL :: OPT_PARALLEL

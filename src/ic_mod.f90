@@ -39,22 +39,22 @@
       real(c_real) :: IC_Z_t (DIMENSION_IC)
 
 ! IC region, West face, I Index
-      INTEGER :: IC_I_w (DIMENSION_IC)
+      integer :: IC_I_w (DIMENSION_IC)
 
 ! IC region, East face, I Index
-      INTEGER :: IC_I_e (DIMENSION_IC)
+      integer :: IC_I_e (DIMENSION_IC)
 
 ! IC region, South face, J Index
-      INTEGER :: IC_J_s (DIMENSION_IC)
+      integer :: IC_J_s (DIMENSION_IC)
 
 ! IC region, North face, J Index
-      INTEGER :: IC_J_n (DIMENSION_IC)
+      integer :: IC_J_n (DIMENSION_IC)
 
 ! IC region, Bottom face, K Index
-      INTEGER :: IC_K_b (DIMENSION_IC)
+      integer :: IC_K_b (DIMENSION_IC)
 
 ! IC region, Top face, K Index
-      INTEGER :: IC_K_t (DIMENSION_IC)
+      integer :: IC_K_t (DIMENSION_IC)
 
 ! Type of initial condition: PATCH
       CHARACTER(LEN=16) :: IC_TYPE(DIMENSION_IC)

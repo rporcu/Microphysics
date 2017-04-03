@@ -29,7 +29,7 @@ MODULE ADJUST_LEQ_MODULE
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-      INTEGER LEQ_ITL, LEQ_METHODL, LEQI, LEQM
+      integer LEQ_ITL, LEQ_METHODL, LEQI, LEQM
 !
 !  The adjustment is disabled, because it was adversely affecting species
 !  conservation

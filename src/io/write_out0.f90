@@ -60,9 +60,9 @@
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
-      INTEGER :: L, M, N
+      integer :: L, M, N
 
-      INTEGER :: MMAX_TOT
+      integer :: MMAX_TOT
       real(c_real) :: TMP_DP
 
       real(c_real), DIMENSION(6) :: LOC
@@ -586,7 +586,7 @@
 !-----------------------------------------------
 !
 ! Index for which the location is required
-      INTEGER :: L2
+      integer :: L2
 ! Cell sizes (DX, DY, or DZ)
       real(c_real) :: DX
 !

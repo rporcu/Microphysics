@@ -15,13 +15,13 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      USE param, only: dim_m
-      USE param1, only: undefined, one, zero, half
-      IMPLICIT NONE
+      use param, only: dim_m
+      use param1, only: undefined, one, zero, half
+      implicit none
 !-----------------------------------------------
 
 ! Total number of particles in simulation: read from input or generated
-      INTEGER :: PARTICLES
+      integer :: PARTICLES
 
 ! Start particle tracking quantities
 !----------------------------------------------------------------->>>
@@ -71,7 +71,7 @@
 ! Output file count for .vtp type files and for tecplot files;
 ! for vtp output used to label .vtp file names in sequential order
 ! and is saved so restarts begin at the correct count
-      INTEGER :: VTP_FINDEX
+      integer :: VTP_FINDEX
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
@@ -87,9 +87,9 @@
 !   linear spring dashpot model (default/undefined)
 !   'hertzian' model
       CHARACTER(LEN=64) :: DES_COLL_MODEL
-      INTEGER :: DES_COLL_MODEL_ENUM
-      INTEGER,PARAMETER :: HERTZIAN=0
-      INTEGER,PARAMETER :: LSD=1
+      integer :: DES_COLL_MODEL_ENUM
+      integer,PARAMETER :: HERTZIAN=0
+      integer,PARAMETER :: LSD=1
 
 ! Integration method, options are as follows
 !   'euler' first-order scheme (default)
@@ -163,7 +163,7 @@
       real(c_real) :: MIN_RADIUS, MAX_RADIUS
 
 ! Defining user defined allocatable array
-      INTEGER :: DES_USR_VAR_SIZE = 0
+      integer :: DES_USR_VAR_SIZE = 0
 
 !-----------------------------------------------------------------<<<
 
@@ -181,7 +181,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       FUNCTION DES_CROSSPRDCT(XX,YY)
 
-      IMPLICIT NONE
+      implicit none
 
 ! Dummy arguments
 !---------------------------------------------------------------------//

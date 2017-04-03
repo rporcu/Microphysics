@@ -7,18 +7,18 @@
 
 ! For code that is not performance-critical, do:
 
-! SUBROUTINE subname
+! subroutine subname
 ! use functions
 ! ...
-! END SUBROUTINE subname
+! end subroutine subname
 
 ! For code that is performance-critical, do:
 
-! SUBROUTINE subname
+! subroutine subname
 ! ...
-! CONTAINS
-! INCLUDE 'functions.inc'
-! END SUBROUTINE subname
+! contains
+! include 'functions.inc'
+! end subroutine subname
 
 !---------------------------------------------------------------------//
 ! Misc

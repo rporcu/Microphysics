@@ -136,8 +136,8 @@ module solve_pp_module
 !-----------------------------------------------
 
 ! Indices
-      INTEGER :: I, J, K
-      INTEGER :: PSV
+      integer :: I, J, K
+      integer :: PSV
 
 ! terms of bm expression
       real(c_real) pSource

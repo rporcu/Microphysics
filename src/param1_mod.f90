@@ -4,24 +4,24 @@
       use iso_c_binding , only: c_int
 
 ! Maximum number of corner cells
-      INTEGER, PARAMETER :: MAX_NCORN = 4000
+      integer, parameter :: MAX_NCORN = 4000
 
 ! Total number of species
-      INTEGER :: DIMENSION_N_all
+      integer :: DIMENSION_N_all
 
 ! Parameters for testing if user input was specifed.
-      real(c_real), PARAMETER :: UNDEFINED = 9.87654321D31
-      INTEGER, PARAMETER :: UNDEFINED_I = 987654321
-      CHARACTER, PARAMETER :: UNDEFINED_C = ' '
+      real(c_real), parameter :: UNDEFINED = 9.87654321D31
+      integer, parameter :: UNDEFINED_I = 987654321
+      CHARACTER, parameter :: UNDEFINED_C = ' '
 
 ! Cutoffs for large and small numbers
-      real(c_real), PARAMETER :: LARGE_NUMBER = 1.0D32
-      real(c_real), PARAMETER :: SMALL_NUMBER = 1.0D-15
+      real(c_real), parameter :: LARGE_NUMBER = 1.0D32
+      real(c_real), parameter :: SMALL_NUMBER = 1.0D-15
 
 ! ZERO, HALF, ONE
-      real(c_real), PARAMETER :: ZERO = 0.0d0
-      real(c_real), PARAMETER :: HALF = 0.5d0
-      real(c_real), PARAMETER :: ONE  = 1.0d0
+      real(c_real), parameter :: ZERO = 0.0d0
+      real(c_real), parameter :: HALF = 0.5d0
+      real(c_real), parameter :: ONE  = 1.0d0
 
       interface is_defined
          module procedure is_defined_db
@@ -35,29 +35,29 @@
 
    CONTAINS
 
-      PURE LOGICAL FUNCTION IS_DEFINED_DB(x)
+      pure logical function IS_DEFINED_DB(x)
          real(c_real), intent(IN) :: x
          IS_DEFINED_DB = .NOT.EQUAL(x, UNDEFINED)
-      END FUNCTION IS_DEFINED_DB
+      end function IS_DEFINED_DB
 
-      PURE LOGICAL FUNCTION IS_DEFINED_I(x)
-         INTEGER, intent(IN) :: x
+      pure logical function IS_DEFINED_I(x)
+         integer, intent(IN) :: x
          IS_DEFINED_I = (x /= UNDEFINED_I)
-      END FUNCTION IS_DEFINED_I
+      end function IS_DEFINED_I
 
-      PURE LOGICAL FUNCTION IS_UNDEFINED_DB(x)
+      pure logical function IS_UNDEFINED_DB(x)
          real(c_real), intent(IN) :: x
          IS_UNDEFINED_DB = EQUAL(x, UNDEFINED)
-      END FUNCTION IS_UNDEFINED_DB
+      end function IS_UNDEFINED_DB
 
-      PURE LOGICAL FUNCTION IS_UNDEFINED_I(x)
-         INTEGER, intent(IN) :: x
+      pure logical function IS_UNDEFINED_I(x)
+         integer, intent(IN) :: x
          IS_UNDEFINED_I = (x == UNDEFINED_I)
-      END FUNCTION IS_UNDEFINED_I
+      end function IS_UNDEFINED_I
 
       pure logical function equal(x, y)
          real(c_real), intent(in) :: x, y
          equal = (abs(x-y) < epsilon(x))
       end function equal
 
-      END MODULE param1
+      end MODULE param1

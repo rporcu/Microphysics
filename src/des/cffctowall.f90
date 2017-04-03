@@ -18,7 +18,7 @@ MODULE CFFCTOWALL_MODULE
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      USE discretelement, only: des_crossprdct
+      use discretelement, only: des_crossprdct
       IMPLICIT NONE
 !-----------------------------------------------
 ! Dummy arguments

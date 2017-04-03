@@ -68,27 +68,27 @@ MODULE read_namelist_module
 ! Local Variables:
 !------------------------------------------------------------------------//
 ! LINE_STRING(1:MAXCOL) has valid input data
-      INTEGER, PARAMETER :: MAXCOL = 80
+      integer, PARAMETER :: MAXCOL = 80
 ! Holds one line in the input file
       CHARACTER(LEN=512) :: LINE_STRING
 ! Length of noncomment string
-      INTEGER :: LINE_LEN
+      integer :: LINE_LEN
 ! Line number
-      INTEGER :: LINE_NO
+      integer :: LINE_NO
 ! Coefficient of restitution (old symbol)
       real(c_real) :: e
 ! Indicate whether to do a namelist read on the line
-      LOGICAL :: READ_FLAG
+      logical :: READ_FLAG
 ! Logical to check if file exits.
-      LOGICAL :: lEXISTS
+      logical :: lEXISTS
 ! Error flag
-      LOGICAL :: ERROR
+      logical :: ERROR
 
       CHARACTER(len=256) :: STRING
-      INTEGER :: IOS, II
+      integer :: IOS, II
 
 ! Flags restricting what data from the mfix.dat to process
-      LOGICAL :: READ_LOCKED, READ_FULL
+      logical :: READ_LOCKED, READ_FULL
 
       E = UNDEFINED
       READ_FLAG = .TRUE.
@@ -183,25 +183,25 @@ MODULE read_namelist_module
 
       IMPLICIT NONE
 
-      LOGICAL, intent(OUT) ::ERROR
+      logical, intent(OUT) ::ERROR
 
 
 
 ! External namelist files:
 !---------------------------------------------------------------------//
-      INCLUDE 'run_control.inc'
-      INCLUDE 'physical_params.inc'
-      INCLUDE 'numerical_params.inc'
-      INCLUDE 'geometry.inc'
-      INCLUDE 'gas_phase.inc'
-      INCLUDE 'solids_phase.inc'
-      INCLUDE 'initial_conditions.inc'
-      INCLUDE 'boundary_conditions.inc'
-      INCLUDE 'point_sources.inc'
-      INCLUDE 'output_control.inc'
-      INCLUDE 'usr_hooks.inc'
-      INCLUDE 'desnamelist.inc'
-      INCLUDE 'usrnlst.inc'
+      include 'run_control.inc'
+      include 'physical_params.inc'
+      include 'numerical_params.inc'
+      include 'geometry.inc'
+      include 'gas_phase.inc'
+      include 'solids_phase.inc'
+      include 'initial_conditions.inc'
+      include 'boundary_conditions.inc'
+      include 'point_sources.inc'
+      include 'output_control.inc'
+      include 'usr_hooks.inc'
+      include 'desnamelist.inc'
+      include 'usrnlst.inc'
 
       ERROR = .FALSE.
 

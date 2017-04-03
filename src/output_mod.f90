@@ -26,15 +26,15 @@
 ! Interval to check and report the mass balance
       real(c_real) :: REPORT_MASS_BALANCE_DT
 ! Number of RES file copies to retain.
-      INTEGER :: RES_BACKUPS
+      integer :: RES_BACKUPS
 ! Interval in number of time steps at which LOG file is written
-      INTEGER :: NLOG
+      integer :: NLOG
 ! Flag to display messages and residuals on the screen
-      LOGICAL :: FULL_LOG
+      logical :: FULL_LOG
 ! Flag to enable all ranks to write private LOG files.
-      LOGICAL :: ENABLE_DMP_LOG
+      logical :: ENABLE_DMP_LOG
 ! Flag to print the index layout for  ijk<=>i,j,k  debugging tasks
-      LOGICAL :: DBGPRN_LAYOUT
+      logical :: DBGPRN_LAYOUT
 ! The approximated total disk space (in MB)
       real(c_real) :: DISK_TOT = 0.0d0
 ! One megabite (MB)
@@ -58,17 +58,17 @@
 ! Z coordinate of the top face of user output region
       real(c_real) :: USR_Z_t (DIMENSION_USR)
 ! I index of the west face of user output region
-      INTEGER :: USR_I_w (DIMENSION_USR)
+      integer :: USR_I_w (DIMENSION_USR)
 ! I index of the east face of user output region
-      INTEGER :: USR_I_e (DIMENSION_USR)
+      integer :: USR_I_e (DIMENSION_USR)
 ! J index of the south face of user output region
-      INTEGER :: USR_J_s (DIMENSION_USR)
+      integer :: USR_J_s (DIMENSION_USR)
 ! J index of the north face of user output region
-      INTEGER :: USR_J_n (DIMENSION_USR)
+      integer :: USR_J_n (DIMENSION_USR)
 ! K index of the bottom face of user output region
-      INTEGER :: USR_K_b (DIMENSION_USR)
+      integer :: USR_K_b (DIMENSION_USR)
 ! K index of the top face of user output region
-      INTEGER :: USR_K_t (DIMENSION_USR)
+      integer :: USR_K_t (DIMENSION_USR)
 ! Type of user-defined output: BINARY or ASCII.
       CHARACTER(LEN=6) :: USR_TYPE (DIMENSION_USR)
 ! Variables to be written in the user-defined output file.

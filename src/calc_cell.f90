@@ -48,7 +48,7 @@ CONTAINS
 
       ! the i, j, or k cell index that corresponds to the x, y or z
       ! reactor_location to be found
-      INTEGER, INTENT(IN) :: CELL_LOC
+      integer, INTENT(IN) :: CELL_LOC
 
       ! the cell lengths along the corresponding axis (DX, DY or DZ)
       real(c_real), INTENT(IN) :: D_DIR
@@ -58,7 +58,7 @@ CONTAINS
       real(c_real), INTENT(INOUT) :: REACTOR_LOC
 
       ! loop counter
-      INTEGER :: LC
+      integer :: LC
 
       REACTOR_LOC = 0.0d0
       LC = 2
@@ -92,16 +92,16 @@ CONTAINS
 ! Point to check for intersection.
       real(c_real), INTENT(in) :: LOC
 ! Number of cells in this direction (IMAX,JMAX,KMAX)
-      INTEGER, INTENT(in) :: N_DIR
+      integer, INTENT(in) :: N_DIR
 ! Cell lengths (DX,DY,DZ)
       real(c_real), INTENT(IN) :: D_DIR
 ! Cell indices corresponding to LOC
-      INTEGER, INTENT(out) :: CELL
+      integer, INTENT(out) :: CELL
 
 ! Local Variables:
 !---------------------------------------------------------------------//
 ! Loop counter
-      INTEGER :: LC
+      integer :: LC
 ! Start/End coordinates for cell
       real(c_real) :: CELL_START, CELL_END
 !......................................................................!

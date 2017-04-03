@@ -8,7 +8,6 @@ module boxlib_to_mfix_module
 
 contains
 
-
   subroutine mfix_set_ifile( fname, len ) bind(C, name="mfix_set_ifile")
 
     use run, only: IFILE_NAME, IFILE_NAME_DEFAULT

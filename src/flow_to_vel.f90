@@ -49,7 +49,6 @@ contains
     logical             :: converted = .false.
     integer             :: m
 
-
     call init_err_msg("FLOW_TO_VEL_NEW")
 
     ! mass flows rates are converted to volumetric flow rates.
@@ -237,7 +236,6 @@ contains
     integer, intent(in) :: bcv
     logical, intent(in) :: do_vel_check
     real(c_real)        :: sgn, off, vel
-
 
     call init_err_msg("GAS_VOLFLOW_TO_VELOCITY")
 

@@ -68,7 +68,7 @@ MODULE INIT_NAMELIST_MODULE
 ! Local variables
 !-----------------------------------------------
 ! loop counters
-      INTEGER :: LC
+      integer :: LC
 
 !#####################################################################!
 !                             Run Control                             !

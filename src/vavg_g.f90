@@ -40,7 +40,7 @@ module vavg_mod
       ! gas mass flux
       real(c_real), intent(in) ::  flux_g(dimlo(1):dimhi(1),dimlo(2):dimhi(2),dimlo(3):dimhi(3))
 
-      INTEGER :: I,J,K
+      integer :: I,J,K
 
       ! Integral of U_g*ROP_g*Area
       real(c_real) :: SUM_G

@@ -73,7 +73,7 @@ contains
 ! Local variables
 !---------------------------------------------------------------------//
 ! Indices
-      INTEGER :: I, J, K
+      integer :: I, J, K
 ! Source terms (Surface)
       real(c_real) :: Sbv, Ssx, Ssy, Ssz
       real(c_real) :: odx, axy, axz, ayz

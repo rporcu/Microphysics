@@ -40,12 +40,12 @@
       real(c_real) :: PS_Z_t(DIMENSION_PS)  ! Top
 
 ! Cell indices delineating point source region:
-      INTEGER :: PS_I_w(DIMENSION_PS)  ! West
-      INTEGER :: PS_I_e(DIMENSION_PS)  ! East
-      INTEGER :: PS_J_s(DIMENSION_PS)  ! South
-      INTEGER :: PS_J_n(DIMENSION_PS)  ! North
-      INTEGER :: PS_K_b(DIMENSION_PS)  ! Bottom
-      INTEGER :: PS_K_t(DIMENSION_PS)  ! Top
+      integer :: PS_I_w(DIMENSION_PS)  ! West
+      integer :: PS_I_e(DIMENSION_PS)  ! East
+      integer :: PS_J_s(DIMENSION_PS)  ! South
+      integer :: PS_J_n(DIMENSION_PS)  ! North
+      integer :: PS_K_b(DIMENSION_PS)  ! Bottom
+      integer :: PS_K_t(DIMENSION_PS)  ! Top
 
 ! Gas mass flow rate through the point source:
       real(c_real) PS_MASSFLOW_g (DIMENSION_PS)
@@ -87,7 +87,7 @@
       real(c_real) :: PS_VOLUME(DIMENSION_PS)
 
 ! Legacy variable... to be deleated
-      INTEGER, DIMENSION(:), ALLOCATABLE :: POINT_SOURCES
+      integer, DIMENSION(:), ALLOCATABLE :: POINT_SOURCES
 
 
       END MODULE ps

@@ -179,7 +179,7 @@ module conv_rop_module
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
 ! Discretization scheme
-      INTEGER, INTENT(IN) :: DISC
+      integer, INTENT(IN) :: DISC
 
 ! macroscopic density (rho_prime)
       real(c_real), INTENT(in) :: rop&
