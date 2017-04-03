@@ -67,13 +67,13 @@ mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n
     lambda_g.resize(nlevs_max);
     trD_g.resize(nlevs_max);
 
-    flux_gE.resize(nlevs_max);
-    flux_gN.resize(nlevs_max);
-    flux_gT.resize(nlevs_max);
+    fluxX.resize(nlevs_max);
+    fluxY.resize(nlevs_max);
+    fluxZ.resize(nlevs_max);
 
-    rop_gE.resize(nlevs_max);
-    rop_gN.resize(nlevs_max);
-    rop_gT.resize(nlevs_max);
+    ropX.resize(nlevs_max);
+    ropY.resize(nlevs_max);
+    ropZ.resize(nlevs_max);
 
     tau_u_g.resize(nlevs_max);
     tau_v_g.resize(nlevs_max);
@@ -155,14 +155,14 @@ mfix_level::Init(int lev, Real dt, Real time)
       MakeNewLevelFromScratch(0, time, ba, dm);
 
       init_output_vars(&time, &dt);
- 
+
       // Parse residual strings
       parse_resid_string();
 
       Real dx = geom[lev].CellSize(0);
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
- 
+
       // Since these involving writing to output files we only do these on the IOProcessor
       if ( ParallelDescriptor::IOProcessor() )
       {
@@ -173,17 +173,17 @@ mfix_level::Init(int lev, Real dt, Real time)
          // Write the initial part of the special output file(s)
          write_usr0();
       }
- 
+
       // Set point sources.
       {
       int err_ps = 0;
       int is_ioproc = 0;
-      if ( ParallelDescriptor::IOProcessor() ) 
+      if ( ParallelDescriptor::IOProcessor() )
          is_ioproc = 1;
 
       set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
 
-      if (err_ps == 1) 
+      if (err_ps == 1)
          amrex::Abort("Bad data in set_ps");
       }
 
@@ -342,11 +342,11 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     tau_u_g[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
     tau_u_g[lev]->setVal(0.);
 
-    flux_gE[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    flux_gE[lev]->setVal(0.);
+    fluxX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    fluxX[lev]->setVal(0.);
 
-    rop_gE[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
-    rop_gE[lev]->setVal(0.);
+    ropX[lev].reset(new  MultiFab(x_edge_ba,dmap[lev],1,nghost));
+    ropX[lev]->setVal(0.);
 
     // ********************************************************************************
     // Y-face-based arrays
@@ -370,11 +370,11 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     tau_v_g[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
     tau_v_g[lev]->setVal(0.);
 
-    flux_gN[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    flux_gN[lev]->setVal(0.);
+    fluxY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    fluxY[lev]->setVal(0.);
 
-    rop_gN[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
-    rop_gN[lev]->setVal(0.);
+    ropY[lev].reset(new  MultiFab(y_edge_ba,dmap[lev],1,nghost));
+    ropY[lev]->setVal(0.);
 
     // ********************************************************************************
     // Z-face-based arrays
@@ -398,11 +398,11 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     tau_w_g[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     tau_w_g[lev]->setVal(0.);
 
-    flux_gT[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
-    flux_gT[lev]->setVal(0.);
+    fluxZ[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
+    fluxZ[lev]->setVal(0.);
 
-    rop_gT[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
-    rop_gT[lev]->setVal(0.);
+    ropZ[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    ropZ[lev]->setVal(0.);
 
     // ********************************************************************************
 
@@ -501,12 +501,12 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
           // Iterate over cyclic mass flux bc
           if(cyclic_mf==1 && (converged==1 || nit >= max_nit))
-            for (MFIter mfi(*flux_gE[lev]); mfi.isValid(); ++mfi)
+            for (MFIter mfi(*fluxX[lev]); mfi.isValid(); ++mfi)
             {
               const Box& sbx = (*ep_g[lev])[mfi].box();
 
               converged = goal_seek_mflux(sbx.loVect(), sbx.hiVect(), &nit, &gsmf, &delP_MF, &lMFlux,
-                (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+                (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
                 &dx, &dy, &dz);
             }
 
@@ -860,15 +860,15 @@ mfix_level::mfix_calc_mflux(int lev)
      calc_mflux(
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
        (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-       (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
-       (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+       (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
+       (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
        &dx, &dy, &dz);
   }
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
-  flux_gE[lev]->FillBoundary(geom[lev].periodicity());
-  flux_gN[lev]->FillBoundary(geom[lev].periodicity());
-  flux_gT[lev]->FillBoundary(geom[lev].periodicity());
+  fluxX[lev]->FillBoundary(geom[lev].periodicity());
+  fluxY[lev]->FillBoundary(geom[lev].periodicity());
+  fluxZ[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -892,13 +892,13 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
           bx.loVect(),  bx.hiVect(),
          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
          (*rop_g[lev])[mfi].dataPtr(),
-         (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+         (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
          &dt, &dx, &dy, &dz);
     }
 
-    rop_gE[lev]->FillBoundary(geom[lev].periodicity());
-    rop_gN[lev]->FillBoundary(geom[lev].periodicity());
-    rop_gT[lev]->FillBoundary(geom[lev].periodicity());
+    ropX[lev]->FillBoundary(geom[lev].periodicity());
+    ropY[lev]->FillBoundary(geom[lev].periodicity());
+    ropZ[lev]->FillBoundary(geom[lev].periodicity());
 }
 
 void
@@ -934,7 +934,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*u_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
           (*tau_u_g[lev])[mfi].dataPtr(),  (*d_e[lev])[mfi].dataPtr(),
-          (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+          (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
@@ -973,7 +973,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*v_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
           (*tau_v_g[lev])[mfi].dataPtr(),  (*d_n[lev])[mfi].dataPtr(),
-          (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+          (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
@@ -1011,7 +1011,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*w_go[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),      (*ro_g[lev])[mfi].dataPtr(),
           (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),   (*ep_g[lev])[mfi].dataPtr(),
           (*tau_w_g[lev])[mfi].dataPtr(),  (*d_t[lev])[mfi].dataPtr(),
-          (*flux_gE[lev])[mfi].dataPtr(),  (*flux_gN[lev])[mfi].dataPtr(),  (*flux_gT[lev])[mfi].dataPtr(),
+          (*fluxX[lev])[mfi].dataPtr(),  (*fluxY[lev])[mfi].dataPtr(),  (*fluxZ[lev])[mfi].dataPtr(),
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
@@ -1066,7 +1066,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
         (*p_g[lev])[mfi].dataPtr(),      (*ep_g[lev])[mfi].dataPtr(),
         (*rop_g[lev])[mfi].dataPtr(),    (*rop_go[lev])[mfi].dataPtr(),
         (*ro_g[lev])[mfi].dataPtr(),
-        (*rop_gE[lev])[mfi].dataPtr(),   (*rop_gN[lev])[mfi].dataPtr(),   (*rop_gT[lev])[mfi].dataPtr(),
+        (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
         &dt, &dx, &dy, &dz, residuals);

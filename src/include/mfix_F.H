@@ -155,7 +155,7 @@ extern "C"
          const int*  lo,       const int*  hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
-         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
+         Real* ropX,         Real* ropY,         Real* ropZ,
          Real* dt,
          Real* dx,             Real* dy,             Real* dz);
 
@@ -164,8 +164,8 @@ extern "C"
          const int* vlo, const int* vhi,
          const int* wlo, const int* whi,
          Real* u_g,            Real* v_g,            Real* w_g,
-         Real* rop_ge,         Real* rop_gn,         Real* rop_gt,
-         Real* flux_ge,        Real* flux_gn,        Real* flux_gt,
+         Real* ropX,         Real* ropY,         Real* ropZ,
+         Real* fluxX,        Real* fluxY,        Real* fluxZ,
          Real* dx,             Real* dy,             Real* dz);
 
   void physical_prop(const int* slo, const int* shi,
@@ -189,7 +189,7 @@ extern "C"
           Real* u_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_u_g,  Real* d_e,
-          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* fluxX,  Real* fluxY,  Real* fluxZ,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
@@ -208,7 +208,7 @@ extern "C"
           Real* v_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_v_g,  Real* d_n,
-          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* fluxX,  Real* fluxY,  Real* fluxZ,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
@@ -227,7 +227,7 @@ extern "C"
           Real* w_go,     Real* p_g,      Real* ro_g,
           Real* rop_g,    Real* rop_go,   Real* ep_g,
           Real* tau_w_g,  Real* d_t,
-          Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+          Real* fluxX,  Real* fluxY,  Real* fluxZ,
           Real* mu_g,     Real* f_gds,
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
@@ -246,7 +246,7 @@ extern "C"
           Real* p_g,      Real* ep_g,
           Real* rop_g,    Real* rop_go,
           Real* ro_g,
-          Real* rop_gE,   Real* rop_gN,   Real* rop_gT,
+          Real* ropX,   Real* ropY,   Real* ropZ,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,      Real* b_mmax,
           Real* dt,       Real* dx, Real* dy, Real* dz, Real (&residuals)[16]);
@@ -268,7 +268,7 @@ extern "C"
   int goal_seek_mflux(
               const int* slo, const int* shi,
               int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
-              Real* flux_gE,  Real* flux_gN,  Real* flux_gT,
+              Real* fluxX,  Real* fluxY,  Real* fluxZ,
               Real* dx     ,  Real* dy,       Real* dz);
 
   int mfix_adjustdt(int* ier, int* nit, Real* dt);

@@ -201,13 +201,13 @@ private:
     Array< std::unique_ptr<MultiFab> > tau_v_g ;
     Array< std::unique_ptr<MultiFab> > tau_w_g ;
 
-    Array< std::unique_ptr<MultiFab> > flux_gE ;
-    Array< std::unique_ptr<MultiFab> > flux_gN ;
-    Array< std::unique_ptr<MultiFab> > flux_gT ;
+    Array< std::unique_ptr<MultiFab> > fluxX ;
+    Array< std::unique_ptr<MultiFab> > fluxY ;
+    Array< std::unique_ptr<MultiFab> > fluxZ ;
 
-    Array< std::unique_ptr<MultiFab> > rop_gE ;
-    Array< std::unique_ptr<MultiFab> > rop_gN ;
-    Array< std::unique_ptr<MultiFab> > rop_gT ;
+    Array< std::unique_ptr<MultiFab> > ropX ;
+    Array< std::unique_ptr<MultiFab> > ropY ;
+    Array< std::unique_ptr<MultiFab> > ropZ ;
 
     //
     Array< std::unique_ptr<MultiFab> > f_gds  ;

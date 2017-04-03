@@ -25,7 +25,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine conv_dif_u_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-      A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt,&
+      A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
       dt, dx, dy, dz)
 
 ! Modules
@@ -49,28 +49,28 @@ contains
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 !---------------------------------------------------------------------//
 
       if (discretize(3) == 0) then
          call store_a_u_g0(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-            A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
+            A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
       else
          call store_a_u_g1(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-            A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+            A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
             dt, dx, dy, dz)
       end if
 
@@ -95,7 +95,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine store_a_u_g0(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-      A_m, mu_g, flux_ge, flux_gn, flux_gt, dx, dy, dz)
+      A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
       use functions, only: avg_h
       use matrix   , only: e, w, n, s, t, b
@@ -115,11 +115,11 @@ contains
       real(c_real), intent(in   ) :: mu_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Local variables
@@ -147,7 +147,7 @@ contains
             do i = alo(1)-1,ahi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
-               flux_e = HALF * (flux_gE(i,j,k) + flux_gE(i+1,j,k))
+               flux_e = HALF * (fluxX(i,j,k) + fluxX(i+1,j,k))
 
                ! East face (i+1, j, k)
                D_FE = mu_g(i+1,j,k) * c_ae
@@ -169,7 +169,7 @@ contains
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_n = HALF * (flux_gN(i,j,k) + flux_gN(i+1,j,k))
+               flux_n = HALF * (fluxY(i,j,k) + fluxY(i+1,j,k))
 
                d_fn = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j+1,k)),&
                             avg_h(mu_g(i+1,j,k),mu_g(i+1,j+1,k))) * c_an
@@ -191,7 +191,7 @@ contains
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_t = HALF * (flux_gT(i,j,k) + flux_gT(i+1,j,k))
+               flux_t = HALF * (fluxZ(i,j,k) + fluxZ(i+1,j,k))
 
                d_ft = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j,k+1)),&
                             avg_h(mu_g(i+1,j,k),mu_g(i+1,j,k+1))) * c_at
@@ -230,7 +230,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine store_a_u_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+         A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
          dt, dx, dy, dz)
 
       use functions, only: avg, avg_h
@@ -260,11 +260,11 @@ contains
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
 ! Local variables
@@ -331,7 +331,7 @@ contains
          do j = alo(2),ahi(2)
             do i = alo(1)-1,ahi(1)
 
-               flux_e = half * (flux_gE(i  ,j,k) + flux_gE(i+1,j,k))
+               flux_e = half * (fluxX(i  ,j,k) + fluxX(i+1,j,k))
                d_fe = c_ae*mu_g(i+1,j,k)
 
                if (i.ge.alo(1)) A_m(i,  j,k,e) = d_fe - flux_e*(      xsi_e(i,j,k))
@@ -366,7 +366,7 @@ contains
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_n = HALF * (flux_gN(i,j  ,k) + flux_gN(i+1,j  ,k))
+               flux_n = HALF * (fluxY(i,j  ,k) + fluxY(i+1,j  ,k))
 
                d_fn = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j+1,k)),&
                             avg_h(mu_g(i+1,j,k),mu_g(i+1,j+1,k))) * c_an
@@ -403,7 +403,7 @@ contains
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               flux_t = HALF * (flux_gT(i,j,k  ) + flux_gT(i+1,j,k  ))
+               flux_t = HALF * (fluxZ(i,j,k  ) + fluxZ(i+1,j,k  ))
 
                d_ft = avg_h(avg_h(mu_g(i  ,j,k),mu_g(i  ,j,k+1)),&
                             avg_h(mu_g(i+1,j,k),mu_g(i+1,j,k+1))) * c_at

@@ -17,7 +17,7 @@ module conv_rop_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine conv_rop(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                          u_g, v_g, w_g, rop_g, rop_ge, rop_gn, rop_gt, &
+                          u_g, v_g, w_g, rop_g, ropX, ropY, ropZ, &
                           dt, dx, dy, dz) &
                           bind(C, name="conv_rop")
 
@@ -36,11 +36,11 @@ module conv_rop_module
       real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(  out) :: rop_ge&
+      real(c_real), intent(  out) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(  out) :: rop_gn&
+      real(c_real), intent(  out) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(  out) :: rop_gt&
+      real(c_real), intent(  out) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: dt, dx, dy, dz
@@ -49,12 +49,12 @@ module conv_rop_module
 
       if (discretize(1) == 0) then       ! 0 & 1 => first order upwinding
          call conv_rop0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         rop_g, U_g, V_g, W_g, rop_gE, rop_gN, rop_gT)
+                         rop_g, U_g, V_g, W_g, ropX, ropY, ropZ)
       else
          call conv_rop1 (discretize(1), &
                          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          rop_g, u_g, v_g, w_g, &
-                         rop_ge, rop_gn, rop_gt, dt, dx, dy, dz)
+                         ropX, ropY, ropZ, dt, dx, dy, dz)
       end if
 
 !  contains
