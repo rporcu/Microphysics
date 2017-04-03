@@ -154,6 +154,39 @@ mfix_level::Init(int lev, Real dt, Real time)
 
       MakeNewLevelFromScratch(0, time, ba, dm);
 
+      init_output_vars(&time, &dt);
+ 
+      // Parse residual strings
+      parse_resid_string();
+
+      Real dx = geom[lev].CellSize(0);
+      Real dy = geom[lev].CellSize(1);
+      Real dz = geom[lev].CellSize(2);
+ 
+      // Since these involving writing to output files we only do these on the IOProcessor
+      if ( ParallelDescriptor::IOProcessor() )
+      {
+
+         // Write the initial part of the standard output file
+         write_out0(&time, &dt, &dx, &dy, &dz);
+
+         // Write the initial part of the special output file(s)
+         write_usr0();
+      }
+ 
+      // Set point sources.
+      {
+      int err_ps = 0;
+      int is_ioproc = 0;
+      if ( ParallelDescriptor::IOProcessor() ) 
+         is_ioproc = 1;
+
+      set_ps(&dx,&dy,&dz,&err_ps,&is_ioproc);
+
+      if (err_ps == 1) 
+         amrex::Abort("Bad data in set_ps");
+      }
+
       InitLevelData(lev,dt,time);
 
       InitIOData ();
@@ -225,7 +258,6 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     bc_jhi.resize(box_jhi,2);
     bc_klo.resize(box_klo,2);
     bc_khi.resize(box_khi,2);
-
 
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
@@ -578,12 +610,10 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
      mfix_main1(sbx.loVect(), sbx.hiVect(),
                 ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                &time, &dt,
                (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr(),
-               &dx, &dy, &dz );
+               bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
   fill_mf_bc(lev,*p_g[lev]);

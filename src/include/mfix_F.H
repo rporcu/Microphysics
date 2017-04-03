@@ -8,6 +8,16 @@ extern "C"
 
   void set_resid_p(Real& val);
 
+  void init_output_vars(Real* time, Real* dt);
+
+  void parse_resid_string();
+
+  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz);
+
+  void write_usr0();
+
+  void set_ps(Real* dx, Real* dy, Real* dz, int* err, int* is_ioproc);
+
   void mfix_set_ifile( char* fname, int len );
 
   void mfix_get_data(int* imax, int* jmax, int* kmax,
@@ -29,13 +39,11 @@ extern "C"
                   const int* ulo, const int* uhi,
                   const int* vlo, const int* vhi,
                   const int* wlo, const int* whi,
-                  Real* time,    Real* dt,
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* p_g,     Real* ep_g,
                   int* bc_ilo, int* bc_ihi,
                   int* bc_jlo, int* bc_jhi,
-                  int* bc_klo, int* bc_khi,
-                  Real* dx,       Real* dy,       Real* dz);
+                  int* bc_klo, int* bc_khi);
 
   void init_fluid(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,

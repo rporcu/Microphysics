@@ -7,10 +7,12 @@
 !  Purpose: This routine is called before the time loop starts and is  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE WRITE_USR0
+      subroutine write_usr0() &
+        bind(C, name="write_usr0")
 
       CALL GEN_PARTICLES
       CALL WRITE_DAT_HEADER('POST_GRAN_TEMP.dat')
+
       contains
 
 !----------------------------------------------------------------------!

@@ -20,7 +20,7 @@ set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  
    display_resid.f90  dmp_modules/compar_mod.f90  drag_mod.f90  eos_mod.f90  error_manager_mod.f90  exit.f90  fill_bc0.f90
    fld_constants_mod.f90  flow_to_vel.f90  functions_mod.f90  geometry_mod.f90  get_bc_area.f90  get_data.f90  get_ps.f90
    get_tunit.f90  goal_seek_mflux.f90  ic_mod.f90  init_fluid.f90  init_namelist.f90  io/funits_mod.f90  io/open_file.f90
-   io/open_files.f90  io/out_bin_512.f90  io/out_bin_512i.f90  io/out_bin_512r.f90  io/output_manager.f90  io/write_error.f90
+   io/open_files.f90  io/out_bin_512.f90  io/out_bin_512i.f90  io/out_bin_512r.f90  io/output_manager.f90  io/init_output_vars.f90 io/write_error.f90
    io/write_header.f90  io/write_out0.f90  io/write_table.f90  location_check.f90  machine_mod.f90  matrix_mod.f90  mfix.f90
    output_mod.f90  param1_mod.f90  param_mod.f90  parse_line.f90  parse_resid_string.f90  physical_prop.f90  ps_mod.f90
    read_namelist.f90  remove_comment.f90  residual_mod.f90  run_mod.f90  scales_mod.f90  set_bc0.f90  set_bc_flow.f90 
