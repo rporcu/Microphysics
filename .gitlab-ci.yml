@@ -24,7 +24,7 @@ build:
     - cd build
     - FC="${GCC_BIN_DIR}/gfortran" CC="${GCC_BIN_DIR}/gcc" CXX="${GCC_BIN_DIR}/g++" cmake ..
     - make
-    - make build_test
+    - make build_tests
   artifacts:
     expire_in: 1 day
     paths:
