@@ -608,12 +608,18 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
 
-     mfix_main1(sbx.loVect(), sbx.hiVect(),
-                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-               (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-               (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
-               bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr());
+     zero_norm_vel(sbx.loVect(), sbx.hiVect(),
+                   ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+                   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+                   bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+                   bc_klo.dataPtr(), bc_khi.dataPtr());
+
+     set_bc0(sbx.loVect(), sbx.hiVect(),
+             ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
+             (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
+             (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
+             bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
+             bc_klo.dataPtr(), bc_khi.dataPtr());
   }
 
   fill_mf_bc(lev,*p_g[lev]);

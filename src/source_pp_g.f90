@@ -25,7 +25,6 @@ contains
       use matrix, only: e, w, n, s, t, b
       use param1, only: is_defined, is_undefined
       use ur_facs, only: ur_fac
-      use write_error_module, only: write_error
 
       implicit none
 

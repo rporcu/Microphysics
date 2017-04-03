@@ -1,9 +1,3 @@
-module zero_norm_vel_module
-
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
-
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
 !  Subroutine: zero_norm_vel                                           C
@@ -20,17 +14,18 @@ module zero_norm_vel_module
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      subroutine zero_norm_vel(slo,shi, &
-                               ulo,uhi,vlo,vhi,wlo,whi,&
-                               u_g,v_g,w_g, &
-                               bc_ilo_type, bc_ihi_type, &
-                               bc_jlo_type, bc_jhi_type, &
-                               bc_klo_type, bc_khi_type)
+   subroutine zero_norm_vel(slo,shi, &
+                            ulo,uhi,vlo,vhi,wlo,whi,&
+                            u_g,v_g,w_g, &
+                            bc_ilo_type, bc_ihi_type, &
+                            bc_jlo_type, bc_jhi_type, &
+                            bc_klo_type, bc_khi_type) &
+         bind(C, name="zero_norm_vel")
 
-!-----------------------------------------------
-! Modules
-!-----------------------------------------------
-      USE param1  , only: zero
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
+
+      use param1  , only: zero
       use geometry, only: domlo,domhi
       use ic      , only: NSW_, FSW_, PSW_
 
@@ -139,6 +134,4 @@ module zero_norm_vel_module
         end do
       end if
  
-      end subroutine zero_norm_vel
-
-end module zero_norm_vel_module
+   end subroutine zero_norm_vel

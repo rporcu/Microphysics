@@ -35,15 +35,24 @@ extern "C"
                    int* bc_jlo, int* bc_jhi,
                    int* bc_klo, int* bc_khi);
 
-  void mfix_main1(const int* slo, const int* shi,
-                  const int* ulo, const int* uhi,
-                  const int* vlo, const int* vhi,
-                  const int* wlo, const int* whi,
-                  Real* u_g,     Real* v_g,      Real* w_g,
-                  Real* p_g,     Real* ep_g,
-                  int* bc_ilo, int* bc_ihi,
-                  int* bc_jlo, int* bc_jhi,
-                  int* bc_klo, int* bc_khi);
+  void zero_norm_vel(const int* slo, const int* shi,
+                     const int* ulo, const int* uhi,
+                     const int* vlo, const int* vhi,
+                     const int* wlo, const int* whi,
+                     Real* u_g,     Real* v_g,      Real* w_g,
+                     int* bc_ilo, int* bc_ihi,
+                     int* bc_jlo, int* bc_jhi,
+                     int* bc_klo, int* bc_khi);
+
+  void set_bc0(const int* slo, const int* shi,
+               const int* ulo, const int* uhi,
+               const int* vlo, const int* vhi,
+               const int* wlo, const int* whi,
+               Real* u_g,     Real* v_g,      Real* w_g,
+               Real* p_g,     Real* ep_g,
+               int* bc_ilo, int* bc_ihi,
+               int* bc_jlo, int* bc_jhi,
+               int* bc_klo, int* bc_khi);
 
   void init_fluid(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,
