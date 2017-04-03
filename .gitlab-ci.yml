@@ -27,13 +27,12 @@ build:
     - cd build
     - cmake ..
     - make build_tests
-  artifacts:
-    expire_in: 1 day
-    paths:
-    - build/tests
 
 test:
   stage: test
   script:
+    - mkdir build
     - cd build
+    - cmake ..
+    - make -j 4
     - make test
