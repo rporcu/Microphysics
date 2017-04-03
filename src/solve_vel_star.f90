@@ -24,7 +24,7 @@ module solve_vel_star_module
       subroutine solve_u_g_star(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          u_g, v_g, w_g, u_go, p_g, ro_g, rop_g, &
-         rop_go, ep_g, tau_u_g, d_e, flux_ge, flux_gn, flux_gt ,mu_g,  &
+         rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ ,mu_g,  &
          f_gds, A_m, b_m, drag_bm, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
          bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
@@ -58,19 +58,19 @@ module solve_vel_star_module
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: u_go&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: tau_u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: p_g&
@@ -122,7 +122,7 @@ module solve_vel_star_module
 
       ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-                         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
                          dt, dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs
@@ -170,7 +170,7 @@ module solve_vel_star_module
    subroutine solve_v_g_star(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, v_go, p_g, ro_g, rop_g, &
-      rop_go, ep_g, tau_v_g, d_n, flux_ge, flux_gn, flux_gt, mu_g,  &
+      rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
@@ -207,21 +207,21 @@ module solve_vel_star_module
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: v_go&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
       real(c_real), intent(in   ) :: tau_v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: p_g&
@@ -272,7 +272,7 @@ module solve_vel_star_module
 
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+         A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
          dt, dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
@@ -322,7 +322,7 @@ module solve_vel_star_module
    subroutine solve_w_g_star(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, w_go, p_g, ro_g, rop_g, &
-      rop_go, ep_g, tau_w_g, d_t, flux_ge, flux_gn, flux_gt, mu_g,  &
+      rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
@@ -357,19 +357,19 @@ module solve_vel_star_module
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
 
       real(c_real), intent(in   ) :: v_g&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
 
       real(c_real), intent(inout) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: w_go&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: tau_w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
@@ -423,7 +423,7 @@ module solve_vel_star_module
 
       ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-                         A_m, mu_g, u_g, v_g, w_g, flux_ge, flux_gn, flux_gt, &
+                         A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
                          dt, dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs

@@ -14,7 +14,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    integer(c_int) function &
        goal_seek_mflux(ulo, uhi, vlo, vhi, wlo, whi, NIT, gsmf, delp_n, mdot_n, &
-                       flux_ge, flux_gn, flux_gt, dx, dy, dz)&
+                       fluxX, fluxY, fluxZ, dx, dy, dz)&
       bind(C, name="goal_seek_mflux")
 
 !-----------------------------------------------
@@ -37,11 +37,11 @@ contains
       integer(c_int), intent(inout) :: gsmf
       real(c_real), intent(inout) :: delp_n, mdot_n
 
-      real(c_real), intent(in   ) :: flux_ge&
+      real(c_real), intent(in   ) :: fluxX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: flux_gn&
+      real(c_real), intent(in   ) :: fluxY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: flux_gt&
+      real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
@@ -67,13 +67,13 @@ contains
 ! Calculate the average gas mass flux and error
       if (cyclic_x_mf) then
          delp_n = delp_x
-         mdot_n = vavg_flux_g(ulo, uhi, flux_ge, ayz)
+         mdot_n = vavg_flux_g(ulo, uhi, fluxX, ayz)
       elseif (cyclic_y_mf) then
          delp_n = delp_y
-         mdot_n = vavg_flux_g(vlo, vhi, flux_gn, axz)
+         mdot_n = vavg_flux_g(vlo, vhi, fluxY, axz)
       elseif (cyclic_z_mf) then
          delp_n = delp_z
-         mdot_n = vavg_flux_g(wlo, whi, flux_gt, axy)
+         mdot_n = vavg_flux_g(wlo, whi, fluxZ, axy)
       else
          return
       end if

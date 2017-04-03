@@ -16,7 +16,7 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
-      ro_g, rop_ge, rop_gn, rop_gt, d_e,d_n, d_t, A_m, b_m, b_mmax, &
+      ro_g, ropX, ropY, ropZ, d_e,d_n, d_t, A_m, b_m, b_mmax, &
       dt, dx, dy, dz, resid)&
       bind(C, name="solve_pp_g")
 
@@ -57,11 +57,11 @@ module solve_pp_module
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-      real(c_real), intent(in   ) :: rop_ge&
+      real(c_real), intent(in   ) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
-      real(c_real), intent(in   ) :: rop_gn&
+      real(c_real), intent(in   ) :: ropY&
          (vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3))
-      real(c_real), intent(in   ) :: rop_gt&
+      real(c_real), intent(in   ) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
       real(c_real), intent(in   ) :: d_e&
@@ -86,7 +86,7 @@ module solve_pp_module
 
       ! Forming the sparse matrix equation.
       call conv_pp_g (ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-         A_m, rop_ge, rop_gn, rop_gt, dx, dy, dz)
+         A_m, ropX, ropY, ropZ, dx, dy, dz)
 
       call source_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
