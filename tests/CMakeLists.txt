@@ -14,6 +14,9 @@ foreach( THIS_TEST ${TESTS})
    set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
    set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
 
+   # Copy file to binary dir
+   FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
+
    # Setup for building a test
    FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90)
 
@@ -23,23 +26,15 @@ foreach( THIS_TEST ${TESTS})
 
    target_include_directories(${TEST_EXE} PUBLIC ${TEST_DIR} ${CMAKE_Fortran_MODULE_DIRECTORY})
 
-   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR} 
-       RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
+   set_target_properties( ${TEST_EXE}  PROPERTIES  Fortran_MODULE_DIRECTORY ${TEST_DIR}
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR} )
 
    target_link_libraries(${TEST_EXE} mfixcore ${MFIX_EXT_LINK_STRING} )
 
    # Accumulate the build for each test into target "build_tests"
    add_dependencies ( ${BUILD_TEST} ${TEST_EXE} )
 
-   # Create test dir in build path if needed
-   # Update test files if needed
-   add_custom_command(TARGET ${TEST_EXE} PRE_BUILD 
-      COMMAND [ -d ${TEST_DIR} ] || mkdir ${TEST_DIR}
-      COMMAND cp -R --update ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST}/* .
-      WORKING_DIRECTORY  ${TEST_DIR}
-      COMMENT "Updating test folder")
-
-   # Setup for running a single test
+   # Setup for running the a single test
    set(TEST_RUN run_${TEST_NAME})
    add_custom_target(${TEST_RUN} DEPENDS ${TEST_EXE} 
       COMMAND ${TEST_DIR}/runtests.sh ${TEST_DIR}/${TEST_EXE} 
