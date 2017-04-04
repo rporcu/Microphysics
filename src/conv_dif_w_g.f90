@@ -277,16 +277,16 @@ module w_g_conv_dif
       velhi(2) = shi(2)+2
       velhi(3) = shi(3)+2
 
-      xhi(1) = ahi(1)
-      xhi(2) = ahi(2)
-      xhi(3) = ahi(3)
+      xlo(1) = alo(1)
+      xlo(2) = alo(2)
+      xlo(3) = alo(3)
 
       allocate( vel(vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3)))
 !---------------------------------------------------------------------//
 
-      xlo(1) = alo(1)-1
-      xlo(2) = alo(2)
-      xlo(3) = alo(3)
+      xhi(1) = ahi(1)+1
+      xhi(2) = ahi(2)
+      xhi(3) = ahi(3)
 
       vel(:,:,:) = 0.d0
       do k = wlo(3)+1,whi(3)-1
@@ -319,9 +319,9 @@ module w_g_conv_dif
       deallocate(xsi_)
 !---------------------------------------------------------------------//
 
-      xlo(1) = alo(1)
-      xlo(2) = alo(2)-1
-      xlo(3) = alo(3)
+      xhi(1) = ahi(1)
+      xhi(2) = ahi(2)+1
+      xhi(3) = ahi(3)
 
       vel(:,:,:) = 0.d0
       do k = wlo(3)+1,whi(3)-1
@@ -355,6 +355,10 @@ module w_g_conv_dif
 
 !---------------------------------------------------------------------//
 
+      xhi(1) = ahi(1)
+      xhi(2) = ahi(2)
+      xhi(3) = ahi(3)+1
+
       vel(:,:,:) = 0.d0
       do k = wlo(3)+1,whi(3)-1
         do j = wlo(2),whi(2)
@@ -364,9 +368,6 @@ module w_g_conv_dif
         end do
       end do
 
-      xlo(1) = alo(1)
-      xlo(2) = alo(2)
-      xlo(3) = alo(3)-1
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_z (discretize(5), w_g, wlo, whi, vel, vello, velhi, &
          xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
