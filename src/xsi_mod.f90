@@ -84,42 +84,27 @@ contains
        ody = 1.d0 / dy
        odz = 1.d0 / dz
 
-       SELECT CASE (DISCR)                    !first order upwinding
-       CASE (:1)
 
-       do k = xlo(3),xhi(3)
-         do j = xlo(2),xhi(2)
-           do i = xlo(1),xhi(1)
-             XSI_E(i,j,k) = XSI_func(vel(i,j,k),ZERO)
-           end do
-         end do
-       end do
+      do k = xlo(3),xhi(3)
+        do j = xlo(2),xhi(2)
+          do i = xlo(1),xhi(1)
 
-       CASE (2)                               !Superbee
+            IF (vel(i,j,k) >= ZERO) THEN
+               IC = i
+               ID = i+1
+               IU = i-1
+            ELSE
+               IC = i+1
+               ID = I
+               IU = i+2
+            ENDIF
+            phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
+            dwf = superbee(phi_c)
+            xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
 
-          do k = xlo(3),xhi(3)
-            do j = xlo(2),xhi(2)
-              do i = xlo(1),xhi(1)
-
-                IF (vel(i,j,k) >= ZERO) THEN
-                   IC = i
-                   ID = i+1
-                   IU = i-1
-                ELSE
-                   IC = i+1
-                   ID = I
-                   IU = i+2
-                ENDIF
-                phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
-                dwf = superbee(phi_c)
-                xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
-
-              end do
-            end do
           end do
-
-
-       END SELECT
+        end do
+      end do
 
       end subroutine calc_xsi_x
 
@@ -170,46 +155,31 @@ contains
       real(c_real) :: odx, ody, odz
 !---------------------------------------------------------------------//
 
-       odx = 1.d0 / dx
-       ody = 1.d0 / dy
-       odz = 1.d0 / dz
+      odx = 1.d0 / dx
+      ody = 1.d0 / dy
+      odz = 1.d0 / dz
 
-       SELECT CASE (DISCR)                    !first order upwinding
-       CASE (:1)
+      do k = xlo(3),xhi(3)
+        do j = xlo(2),xhi(2)
+          do i = xlo(1),xhi(1)
 
-       do k = xlo(3),xhi(3)
-         do j = xlo(2),xhi(2)
-           do i = xlo(1),xhi(1)
-             XSI_N(i,j,k) = XSI_func(V(i,j,k),ZERO)
-           end do
-         end do
-       end do
+            if (v(i,j,k) >= zero) then
+               ju = j-1
+               jc = j
+               jd = j+1
+            else
+               ju = j+2
+               jc = j+1
+               jd = j
+            endif
 
-       CASE (2)                               !Superbee
+            phi_c = phi_c_of(phi(i,ju,k),phi(i,jc,k),phi(i,jd,k))
+            dwf = superbee(phi_c)
+            xsi_n(i,j,k) = xsi_func(v(i,j,k),dwf)
 
-          do k = xlo(3),xhi(3)
-            do j = xlo(2),xhi(2)
-              do i = xlo(1),xhi(1)
-
-                if (v(i,j,k) >= zero) then
-                   ju = j-1
-                   jc = j
-                   jd = j+1
-                else
-                   ju = j+2
-                   jc = j+1
-                   jd = j
-                endif
-
-                phi_c = phi_c_of(phi(i,ju,k),phi(i,jc,k),phi(i,jd,k))
-                dwf = superbee(phi_c)
-                xsi_n(i,j,k) = xsi_func(v(i,j,k),dwf)
-
-              end do
-            end do
           end do
-
-       END SELECT
+        end do
+      end do
 
       end subroutine calc_xsi_y
 
@@ -264,42 +234,27 @@ contains
        ody = 1.d0 / dy
        odz = 1.d0 / dz
 
-       SELECT CASE (DISCR)                    !first order upwinding
-       CASE (:1)
+      do k = xlo(3),xhi(3)
+        do j = xlo(2),xhi(2)
+          do i = xlo(1),xhi(1)
 
-       do k = xlo(3),xhi(3)
-         do j = xlo(2),xhi(2)
-           do i = xlo(1),xhi(1)
-             XSI_T(i,j,k) = XSI_func(W(i,j,k),ZERO)
-           end do
-         end do
-       end do
+            if (w(i,j,k) >= zero) then
+               ku = k-1
+               kc = k
+               kd = k+1
+            else
+               ku = k+2
+               kc = k+1
+               kd = k
+            endif
 
-       CASE (2)                               !Superbee
+            phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))
+            DWF = SUPERBEE(phi_C)
+            XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
 
-          do k = xlo(3),xhi(3)
-            do j = xlo(2),xhi(2)
-              do i = xlo(1),xhi(1)
-
-                if (w(i,j,k) >= zero) then
-                   ku = k-1
-                   kc = k
-                   kd = k+1
-                else
-                   ku = k+2
-                   kc = k+1
-                   kd = k
-                endif
-
-                phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))
-                DWF = SUPERBEE(phi_C)
-                XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
-
-              end do
-            end do
           end do
-
-       END SELECT
+        end do
+      end do
 
       END subroutine calc_xsi_z
 
