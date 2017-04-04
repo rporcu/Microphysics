@@ -34,15 +34,15 @@ struct PIdx
     };
 };
 
-class MyParticleContainer
+class MFIXParticleContainer
     : public amrex::ParticleContainer<PIdx::nattribs,0> //std::vector<Particle<PIdx::nattribs,0> > >
 {
 
 public:
 
-    MyParticleContainer (AmrCore* amr_core);
+    MFIXParticleContainer (AmrCore* amr_core);
 
-    virtual ~MyParticleContainer() {}
+    virtual ~MFIXParticleContainer() {}
 
     void InitData ();
 
