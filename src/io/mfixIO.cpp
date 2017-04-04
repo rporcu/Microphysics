@@ -128,7 +128,7 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
 
     }
 
-    mypc->Checkpoint(checkpointname, "particle", true);
+    pc->Checkpoint(checkpointname, "particle", true);
 }
 
 
@@ -216,7 +216,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
 //     	//     MakeNewLevel(lev, ba, dm);
 //     	// }
 
-// //	mypc->ReadHeader(is);
+// //	pc->ReadHeader(is);
     }
 
     int nghost;
@@ -247,7 +247,7 @@ mfix_level::InitFromCheckpoint (int *nstep, Real *dt, Real *time) const
     }
 
     // Initilize particles
-    mypc->Restart(restart_chkfile, "particle");
+    pc->Restart(restart_chkfile, "particle");
 }
 
 
@@ -423,7 +423,7 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 					Geom(), time, istep, refRatio());
     }
 
-    //mypc->Checkpoint(plotfilename, "particle", false);
+    //pc->Checkpoint(plotfilename, "particle", false);
 
     WriteJobInfo(plotfilename);
 

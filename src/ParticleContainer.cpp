@@ -2,10 +2,10 @@
 
 #include <ParticleContainer.H>
 
-int     MyParticleContainer::do_tiling = 0;
-IntVect MyParticleContainer::tile_size   { D_DECL(1024000,8,8) };
+int     MFIXParticleContainer::do_tiling = 0;
+IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
-MyParticleContainer::MyParticleContainer (AmrCore* amr_core)
+MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     : ParticleContainer<PIdx::nattribs,0>
       (amr_core->GetParGDB())
 {
@@ -18,7 +18,7 @@ MyParticleContainer::MyParticleContainer (AmrCore* amr_core)
 }
 
 void
-MyParticleContainer::ReadStaticParameters ()
+MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
     if (!initialized)
@@ -37,12 +37,12 @@ MyParticleContainer::ReadStaticParameters ()
 }
 
 void
-MyParticleContainer::InitData()
+MFIXParticleContainer::InitData()
 {
 }
 
 void
-MyParticleContainer::Evolve (int lev, Real dt)
+MFIXParticleContainer::Evolve (int lev, Real dt)
 {
     BL_PROFILE("MyPC::Evolve()");
 

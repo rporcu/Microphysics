@@ -29,7 +29,7 @@ mfix_level::mfix_level ()
 #endif
 
     // Particle Container
-    mypc = std::unique_ptr<MyParticleContainer> (new MyParticleContainer(this));
+    pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
     A_m.resize(nlevs_max);
     b_m.resize(nlevs_max);
@@ -202,7 +202,7 @@ mfix_level::Init(int lev, Real dt, Real time)
 
     // if max_level > 0, define fine levels
 
-    mypc->InitData();
+    pc->InitData();
 }
 
 void

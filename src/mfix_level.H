@@ -134,7 +134,7 @@ private:
     Array<int> istep = {1} ;
 
     // Particle container
-    std::unique_ptr<MyParticleContainer> mypc;
+    std::unique_ptr<MFIXParticleContainer> pc;
 
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
