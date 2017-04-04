@@ -66,11 +66,9 @@ contains
 ! Indices
       integer :: i,j,k
 ! Pressure at top cell
-      real(c_real) :: PgT
+      real(c_real) :: PgB
 ! Average volume fraction
       real(c_real) :: EPGA
-! Average density
-      real(c_real) :: ROPGA, ROGA
 ! Source terms (Surface)
       real(c_real) Sdp
 ! Source terms (Volumetric)
@@ -88,25 +86,21 @@ contains
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
 
-               epga = avg(ep_g(i,j,k),ep_g(i,j,k+1))
+               epga = half*(ep_g(i,j,k-1) + ep_g(i,j,k))
 
 ! Pressure term
-               pgt = p_g(i,j,k+1)
+               pgb = p_g(i,j,k-1)
                if(cyclic_z_pd) then
-                  if((k==domlo(3)-1) .or. (k==domhi(3)) ) &
-                     pgt = p_g(i,j,k+1) - delp_z
+                  if((k==domlo(3)) .or. (k==domhi(3)+1) ) &
+                     pgb = pgb + delp_z
                end if
-               sdp = -p_scale*epga*(pgt - p_g(i,j,k))*axy
-
-! Volumetric forces
-               roga  = avg( ro_g(i,j,k), ro_g(i,j,k+1))
-               ropga = avg(rop_g(i,j,k),rop_g(i,j,k+1))
+               sdp = -p_scale*epga*(p_g(i,j,k) - pgb)*axy
 
 ! Previous time step
-               v0 = avg(rop_go(i,j,k),rop_go(i,j,k+1))*odt
+               v0 = half*(rop_go(i,j,k-1) + rop_go(i,j,k))*odt
 
 ! Body force
-               vbf = ropga*gravity(3)
+               vbf = half*(ro_g(i,j,k-1) + ro_g(i,j,k))*gravity(3)
 
 ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
