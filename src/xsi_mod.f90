@@ -1,50 +1,57 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: XSI                                                    C
-!  Author: M. Syamlal                                 Date: 6-MAR-97   C
-!                                                                      C
-!  Purpose: Determine convection weighting factors for higher order    C
-!  discretization.                                                     C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: XSI                                                    !
+!                                                                      !
+!  Purpose: Determine convection weighting factors for higher order    !
+!  discretization.                                                     !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+MODULE XSI
 
-      MODULE XSI
+   use amrex_fort_module, only : c_real => amrex_real
+   use iso_c_binding , only: c_int
 
-      use amrex_fort_module, only : c_real => amrex_real
-      use iso_c_binding , only: c_int
+   use discretization, only: phi_c_of
+   use discretization, only: superbee
+   use discretization, only: smart
+   use discretization, only: ultra_quick
+   use discretization, only: quickest
+   use discretization, only: muscl
+   use discretization, only: vanleer
+   use discretization, only: minmod
+   use discretization, only: central_scheme
 
-      use discretization, only: phi_c_of
-      use discretization, only: superbee
-      use discretization, only: smart
-      use discretization, only: ultra_quick
-      use discretization, only: quickest
-      use discretization, only: muscl
-      use discretization, only: vanleer
-      use discretization, only: minmod
-      use discretization, only: central_scheme
+   use param1, only: zero
 
-      use param1, only: zero
-      use error_manager, only: err_msg, init_err_msg, finl_err_msg
-      use error_manager, only: ival, flush_err_msg
+   implicit none
 
-      IMPLICIT NONE
+contains
 
-      CONTAINS
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Procedure: calc_xsi_x                                               !
+!                                                                      !
+!  Purpose: Determine convection weighting factors for higher order    !
+!  discretization in x-axial direction.                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_xsi_x(DISCR, phi, philo, phihi, vel, vello, velhi, &
+      xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
-      subroutine calc_xsi_e(DISCR, phi, philo, phihi, U, vello, velhi, xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
-
-      integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
+      integer     , intent(in   ) :: philo(3),phihi(3)
+      integer     , intent(in   ) :: vello(3),velhi(3)
+      integer     , intent(in   ) :: xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! discretization method
       integer, intent(IN) :: DISCR
 
       ! convected quantity
-      real(c_real), intent(IN) :: phi&
+      real(c_real), intent(in) :: phi&
          (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
-      real(c_real), intent(IN) :: U&
+      real(c_real), intent(in) :: vel&
          (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
@@ -55,7 +62,7 @@
 
 !---------------------------------------------------------------------//
 ! Indices
-      integer :: IC, ID, IU
+      integer :: ic, id, iu
       integer :: i, j, k
 !
       real(c_real) :: phi_C
@@ -81,7 +88,7 @@
        do k = xlo(3),xhi(3)
          do j = xlo(2),xhi(2)
            do i = xlo(1),xhi(1)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),ZERO)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),ZERO)
            end do
          end do
        end do
@@ -92,7 +99,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-                IF (U(i,j,k) >= ZERO) THEN
+                IF (vel(i,j,k) >= ZERO) THEN
                    IC = i
                    ID = i+1
                    IU = i-1
@@ -103,7 +110,7 @@
                 ENDIF
                 phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
                 dwf = superbee(phi_c)
-                xsi_e(i,j,k) = xsi_func(u(i,j,k),dwf)
+                xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
 
               end do
             end do
@@ -115,7 +122,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-                IF (U(i,j,k) >= ZERO) THEN
+                IF (vel(i,j,k) >= ZERO) THEN
                    IC = I
                    ID = i
                    IU = i-1
@@ -126,7 +133,7 @@
                 ENDIF
                 phi_C = phi_C_OF(phi(IU,j,k),phi(IC,j,k),phi(ID,j,k))
                 DWF = SMART(phi_C)
-                XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+                XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -138,7 +145,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = i
                 ID = i+1
                 IU = i-1
@@ -148,9 +155,9 @@
                 IU = min(i+2,domhi(1)+1)
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
-             CF = ABS(U(i,j,k))*DT*ODX
+             CF = ABS(vel(i,j,k))*DT*ODX
              DWF = ULTRA_QUICK(phi_C,CF)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -163,7 +170,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = i
                 ID = i+1
                 IU = i-1
@@ -177,9 +184,9 @@
                 ODXUC = ODX
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
-             CF = ABS(U(i,j,k))*DT*ODX
+             CF = ABS(vel(i,j,k))*DT*ODX
              DWF = QUICKEST(phi_C,CF,ODXC,ODXUC,ODX)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -192,7 +199,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = I
                 ID = i+1
                 IU = i-1
@@ -203,7 +210,7 @@
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
              DWF = MUSCL(phi_C)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -215,7 +222,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = i
                 ID = i+1
                 IU = i-1
@@ -226,7 +233,7 @@
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
              DWF = VANLEER(phi_C)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -238,7 +245,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = I
                 ID = i+1
                 IU = i-1
@@ -249,7 +256,7 @@
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
              DWF = MINMOD(phi_C)
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -261,7 +268,7 @@
             do j = xlo(2),xhi(2)
               do i = xlo(1),xhi(1)
 
-             IF (U(i,j,k) >= ZERO) THEN
+             IF (vel(i,j,k) >= ZERO) THEN
                 IC = I
                 ID = i+1
                 IU = i-1
@@ -272,7 +279,7 @@
              ENDIF
              phi_C = phi_C_OF(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
              DWF = CENTRAL_SCHEME()
-             XSI_E(i,j,k) = XSI_func(U(i,j,k),DWF)
+             XSI_E(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
               end do
             end do
@@ -280,13 +287,18 @@
 
        END SELECT
 
-      end subroutine calc_xsi_e
+      end subroutine calc_xsi_x
 
-!---------------------------------------------------------------------//
-!---------------------------------------------------------------------//
-!---------------------------------------------------------------------//
 
-      subroutine calc_xsi_n(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Procedure: calc_xsi_y                                               !
+!                                                                      !
+!  Purpose: Determine convection weighting factors for higher order    !
+!  discretization in y-axial direction.                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      subroutine calc_xsi_y(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
@@ -538,11 +550,19 @@
 
        END SELECT
 
-      end subroutine calc_xsi_n
+      end subroutine calc_xsi_y
 
 !---------------------------------------------------------------------//
 
-      subroutine calc_xsi_t(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Procedure: calc_xsi_z                                               !
+!                                                                      !
+!  Purpose: Determine convection weighting factors for higher order    !
+!  discretization in z-axial direction.                                !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+      subroutine calc_xsi_z(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
@@ -787,7 +807,7 @@
 
        END SELECT
 
-      END subroutine calc_xsi_t
+      END subroutine calc_xsi_z
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

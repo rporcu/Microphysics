@@ -88,7 +88,7 @@ contains
 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-            do i = lo(1)-1, hi(1)
+            do i = lo(1), hi(1)+1
 
                epga = avg(ep_g(i,j,k),ep_g(i+1,j,k))
 

@@ -101,12 +101,12 @@ module conv_rop_module
 
       do K = lo(3),hi(3)
         do J = lo(2),hi(2)
-          do I = slo(1),hi(1)
+          do I = lo(1),hi(1)+1
 
-            if (U(i,j,k) >= ZERO) THEN
-               ropX(i,j,k) = rop(i,j,k)
+            if (u(i,j,k) >= ZERO) THEN
+               ropX(i,j,k) = rop(i-1,j,k)
             else
-               ropX(i,j,k) = rop(i+1,j,k)
+               ropX(i,j,k) = rop(i  ,j,k)
             end if
 
           end do
@@ -114,27 +114,27 @@ module conv_rop_module
       end do
 
       do K = lo(3),hi(3)
-        do J = slo(2),hi(2)
+        do J = lo(2),hi(2)+1
           do I = lo(1),hi(1)
 
             if (V(i,j,k) >= ZERO) THEN
-               ropY(i,j,k) = rop(i,j,k)
+               ropY(i,j,k) = rop(i,j-1,k)
             else
-               ropY(i,j,k) = rop(i,j+1,k)
+               ropY(i,j,k) = rop(i,j  ,k)
             end if
 
           end do
         end do
       end do
 
-      do K = slo(3),hi(3)
+      do K = lo(3),hi(3)+1
         do J = lo(2),hi(2)
           do I = lo(1),hi(1)
 
             if (W(i,j,k) >= ZERO) THEN
-               ropZ(i,j,k) = rop(i,j,k)
+               ropZ(i,j,k) = rop(i,j,k-1)
             else
-               ropZ(i,j,k) = rop(i,j,k+1)
+               ropZ(i,j,k) = rop(i,j,k  )
             end if
 
           end do
@@ -161,7 +161,7 @@ module conv_rop_module
 ! Modules
 !---------------------------------------------------------------------//
       use param1, only: one
-      use xsi   , only: calc_xsi_e, calc_xsi_n, calc_xsi_t
+      use xsi   , only: calc_xsi_x, calc_xsi_y, calc_xsi_z
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
@@ -193,26 +193,26 @@ module conv_rop_module
 
       real(c_real), intent(in) :: dt, dx, dy, dz
 
-      integer :: xlo(3)
+      integer :: xhi(3)
       integer :: i,j,k
 
       real(c_real), allocatable :: xsi_(:,:,:)
 
       ! Calculate factors
 
-      xlo(1) = lo(1)-1
-      xlo(2) = lo(2)
-      xlo(3) = lo(3)
+      xhi(1) = hi(1)+1
+      xhi(2) = hi(2)
+      xhi(3) = hi(3)
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
+      allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
+      call calc_xsi_x (DISC, rop, slo, shi, u_g, ulo, uhi, &
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = lo(3),hi(3)
         do j = lo(2),hi(2)
-          do i = lo(1)-1,hi(1)
-            ropX(i,j,k) = ((one - xsi_(i,j,k))*rop(i  ,j,k) + &
-                                  xsi_(i,j,k) *rop(i+1,j,k) )
+          do i = lo(1),hi(1)+1
+            ropX(i,j,k) = ((one - xsi_(i,j,k))*rop(i-1,j,k) + &
+                                  xsi_(i,j,k) *rop(i  ,j,k) )
           end do
         end do
       end do
@@ -220,19 +220,19 @@ module conv_rop_module
 
 !---------------------------------------------------------------------//
 
-      xlo(1) = lo(1)
-      xlo(2) = lo(2)-1
-      xlo(3) = lo(3)
+      xhi(1) = hi(1)
+      xhi(2) = hi(2)+1
+      xhi(3) = hi(3)
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
+      allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
+      call calc_xsi_y (DISC, rop, slo, shi, v_g, vlo, vhi, &
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = lo(3),hi(3)
-        do j = lo(2)-1,hi(2)
+        do j = lo(2),hi(2)+1
           do i = lo(1),hi(1)
-            ropY(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j  ,k)+&
-                                  xsi_(i,j,k) *rop(i,j+1,k))
+            ropY(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j-1,k)+&
+                                  xsi_(i,j,k) *rop(i,j  ,k))
           end do
         end do
       end do
@@ -240,19 +240,19 @@ module conv_rop_module
 
 !---------------------------------------------------------------------//
 
-      xlo(1) = lo(1)
-      xlo(2) = lo(2)
-      xlo(3) = lo(3)-1
+      xhi(1) = hi(1)
+      xhi(2) = hi(2)
+      xhi(3) = hi(3)+1
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
+      allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
+      call calc_xsi_z (DISC, rop, slo, shi, w_g, wlo, whi, &
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
 
-      do k = lo(3)-1,hi(3)
+      do k = lo(3),hi(3)+1
         do j = lo(2),hi(2)
           do i = lo(1),hi(1)
-            ropZ(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j,k  ) + &
-                                  xsi_(i,j,k) *rop(i,j,k+1) )
+            ropZ(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j,k-1) + &
+                                  xsi_(i,j,k) *rop(i,j,k  ) )
           end do
         end do
       end do

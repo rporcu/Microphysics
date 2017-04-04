@@ -556,9 +556,9 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
        const Box& sbx = (*ep_g[lev])[mfi].box();
        const Box& bx = mfi.validbox();
 
-       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+       Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
        mfix_des_time_march(&max_pip,
         sbx.loVect(), sbx.hiVect(),
@@ -615,9 +615,9 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   {
      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      zero_norm_vel(sbx.loVect(), sbx.hiVect(),
                    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -694,9 +694,9 @@ mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
      const Box& sbx = (*ep_g[lev])[mfi].box();
      const Box& bx = mfi.validbox();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      const int max_pip = particle_state.size();
 
@@ -736,9 +736,9 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      calc_coeff_all(sbx.loVect(), sbx.hiVect(),
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -774,9 +774,9 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      calc_trd_and_tau(sbx.loVect(), sbx.hiVect(),
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -809,13 +809,13 @@ mfix_level::mfix_init_fluid(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*ep_g[lev])[mfi].box();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      init_fluid(sbx.loVect(), sbx.hiVect(),
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-        bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(), 
+        bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
        (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -866,9 +866,9 @@ mfix_level::mfix_calc_mflux(int lev)
 
   for (MFIter mfi(*u_g[lev]); mfi.isValid(); ++mfi)
   {
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+    Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      calc_mflux(
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -898,9 +898,9 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
        const Box& bx = mfi.validbox();
        const Box& sbx = (*rop_g[lev])[mfi].box();
 
-       Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-       Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-       Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+       Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+       Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+       Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
        conv_rop(sbx.loVect(), sbx.hiVect(),
          ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -937,11 +937,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box abx((*A_m[lev])[mfi].box()); abx.shift(0,-1);
+      Box abx((*A_m[lev])[mfi].box()); //abx.shift(0,-1);
 
-      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
       solve_u_g_star(sbx.loVect(), sbx.hiVect(),
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
@@ -976,11 +976,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box abx((*A_m[lev])[mfi].box()); abx.shift(1,-1);
+      Box abx((*A_m[lev])[mfi].box()); //abx.shift(1,-1);
 
-      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
       solve_v_g_star(sbx.loVect(), sbx.hiVect(),
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
@@ -1014,11 +1014,11 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
     {
       const Box& bx = mfi.validbox();
       const Box& sbx = (*ep_g[lev])[mfi].box();
-      Box abx((*A_m[lev])[mfi].box()); abx.shift(2,-1);
+      Box abx((*A_m[lev])[mfi].box()); //abx.shift(2,-1);
 
-      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
       solve_w_g_star(sbx.loVect(), sbx.hiVect(),
           ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(),
@@ -1074,9 +1074,9 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
       const Box& sbx = (*ep_g[lev])[mfi].box();
       Box abx((*A_m[lev])[mfi].box());
 
-      Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-      Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-      Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+      Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+      Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+      Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
       solve_pp_g(sbx.loVect(), sbx.hiVect(),
         ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
@@ -1106,13 +1106,13 @@ mfix_level::mfix_correct_0(int lev)
      const Box& bx = mfi.validbox();
      const Box& sbx = (*p_g[lev])[mfi].box();
 
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      correct_0(sbx.loVect(), sbx.hiVect(),
                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(), 
+                bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
@@ -1151,9 +1151,9 @@ mfix_level::usr3(int lev)
   for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& sbx = (*p_g[lev])[mfi].box();
-     Box ubx((*u_g[lev])[mfi].box()); ubx.shift(0,-1);
-     Box vbx((*v_g[lev])[mfi].box()); vbx.shift(1,-1);
-     Box wbx((*w_g[lev])[mfi].box()); wbx.shift(2,-1);
+     Box ubx((*u_g[lev])[mfi].box()); //ubx.shift(0,-1);
+     Box vbx((*v_g[lev])[mfi].box()); //vbx.shift(1,-1);
+     Box wbx((*w_g[lev])[mfi].box()); //wbx.shift(2,-1);
 
      mfix_usr3((*u_g[lev])[mfi].dataPtr(), ubx.loVect(), ubx.hiVect(),
                (*v_g[lev])[mfi].dataPtr(), vbx.loVect(), vbx.hiVect(),

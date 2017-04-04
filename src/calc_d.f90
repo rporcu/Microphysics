@@ -22,7 +22,7 @@ module calc_d_mod
 !  Author: M. Syamlal                                 Date: 21-JUN-96  !
 !                                                                      !
 !  Purpose: calculate coefficients linking velocity correction to      !
-!           pressure correction
+!           pressure correction                                        !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
@@ -70,9 +70,9 @@ module calc_d_mod
             do i = llo(1), lhi(1)
                Am0 = -A_m(i,j,k,0)
                if (abs(am0) > small_number) then
-                  epga = ayz*0.5d0*(ep_g(i,j,k)+ep_g(i+1,j,k))
+                  epga = ayz*0.5d0*(ep_g(i-1,j,k)+ep_g(i,j,k))
                   if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                     (f_gds(i,j,k) + f_gds(i+1,j,k))
+                     (f_gds(i-1,j,k) + f_gds(i,j,k))
                   d_e(i,j,k) = p_scale*epga/am0
                else
                   d_e(i,j,k) = zero
@@ -128,9 +128,9 @@ module calc_d_mod
             do i = llo(1), lhi(1)
                Am0 = -A_m(i,j,k,0)
                if(abs(Am0) > small_number) then
-                  epga = axz*0.5d0*(ep_g(i,j,k)+ep_g(i,j+1,k))
+                  epga = axz*0.5d0*(ep_g(i,j-1,k)+ep_g(i,j,k))
                   if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                     (f_gds(i,j,k) + f_gds(i,j+1,k))
+                     (f_gds(i,j-1,k) + f_gds(i,j,k))
                   d_n(i,j,k) = p_scale*epga/am0
                else
                   d_n(i,j,k) = zero
@@ -187,9 +187,9 @@ module calc_d_mod
            do i = llo(1), lhi(1)
               Am0 = -A_m(I,J,K,0)
               IF(abs(Am0) > SMALL_NUMBER) THEN
-                 epga = axy*0.5d0*(ep_g(i,j,k)+ep_g(i,j,k+1))
+                 epga = axy*0.5d0*(ep_g(i,j,k-1)+ep_g(i,j,k))
                  if(coupled) Am0 = Am0 + 0.5d0*vol* &
-                    (f_gds(i,j,k) + f_gds(i,j,k+1))
+                    (f_gds(i,j,k-1) + f_gds(i,j,k))
                  d_t(i,j,k) = p_scale*epga/am0
               else
                  d_t(i,j,k) = zero

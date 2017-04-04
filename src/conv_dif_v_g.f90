@@ -141,12 +141,11 @@ module v_g_conv_dif
             do i = alo(1)-1,ahi(1)
 
                ! Calculate convection-diffusion fluxes through each of the faces
-               lflux = HALF * (fluxX(i,j,k) + fluxX(i,j+1,k))
+               lflux = HALF * (fluxX(i+1,j-1,k) + fluxX(i+1,j  ,k))
 
-               d_f = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
-                            avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k))) * ayz_x
+               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i+1,j-1,k)),&
+                           avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k))) * ayz_x
 
-               ! East face (i+1, j, k)
                if (lflux >= zero) then
                   if (i.ge.alo(1)) A_m(i,  j,k,e) = d_f
                   if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_f + lflux
@@ -163,10 +162,9 @@ module v_g_conv_dif
          do j = alo(2)-1,ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = HALF * (fluxY(i,j,k) + fluxY(i,j+1,k))
-               d_f = mu_g(i,j+1,k) * axz_y
+               lflux = HALF * (fluxY(i,j  ,k) + fluxY(i,j+1,k))
+               d_f = mu_g(i,j,k) * axz_y
 
-               ! North face (i+1/2, j+1/2, k)
                if (lflux >= zero) then
                   if (j.ge.alo(2)) A_m(i,j,  k,n) = d_f
                   if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_f + lflux
@@ -183,10 +181,10 @@ module v_g_conv_dif
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = HALF * (fluxZ(i,j,k) + fluxZ(i,j+1,k))
+               lflux = HALF * (fluxZ(i,j-1,k+1) + fluxZ(i,j  ,k+1))
 
-               d_f = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
-                            avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * axy_z
+               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i,j-1,k+1)),&
+                           avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1))) * axy_z
 
                if (lflux >= zero) then
                   if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f
@@ -224,7 +222,7 @@ module v_g_conv_dif
       use matrix, only: e, w, n, s, t, b
       use run, only: discretize
 
-      use xsi, only: calc_xsi_e, calc_xsi_n, calc_xsi_t
+      use xsi, only: calc_xsi_x, calc_xsi_y, calc_xsi_z
 
       implicit none
 
@@ -301,23 +299,23 @@ module v_g_conv_dif
       do k = vlo(3),vhi(3)
         do j = vlo(2)+1,vhi(2)-1
           do i = vlo(1),vhi(1)
-             vel(i,j,k) = avg(u_g(i,j,k), u_g(i,j+1,k))
+             vel(i,j,k) = avg(u_g(i+1,j-1 ,k), u_g(i+1,j  ,k))
           end do
         end do
       end do
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_e (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
+      call calc_xsi_x (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
          xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1)-1,ahi(1)
 
-               lflux = half * (fluxX(i,j,k) + fluxX(i,j+1,k))
+               lflux = half * (fluxX(i+1,j-1,k) + fluxX(i+1,j  ,k))
 
-               d_f = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k)),&
-                            avg_h(mu_g(i,j+1,k),mu_g(i+1,j+1,k))) * ayz_x
+               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i+1,j-1,k)),&
+                           avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k))) * ayz_x
 
                if (i.ge.alo(1)) A_m(i,  j,k,e) = d_f - lflux*(xsi_(i,j,k))
                if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_f + lflux*(one - xsi_(i,j,k))
@@ -343,7 +341,7 @@ module v_g_conv_dif
       end do
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_n (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
+      call calc_xsi_y (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
          xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
      do k = alo(3),ahi(3)
@@ -352,7 +350,7 @@ module v_g_conv_dif
 
                lflux = half * (fluxY(i,j,k) + fluxY(i,j+1,k))
 
-               d_f = mu_g(i,j+1,k) * axz_y
+               d_f = mu_g(i,j,k) * axz_y
 
                if (j.ge.alo(2)) A_m(i,j  ,k,n) = d_f - lflux*(      xsi_(i,j,k))
                if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_f + lflux*(one - xsi_(i,j,k))
@@ -372,23 +370,23 @@ module v_g_conv_dif
       do k = vlo(3),vhi(3)
         do j = vlo(2)+1,vhi(2)-1
           do i = vlo(1),vhi(1)
-             vel(i,j,k) = avg(w_g(i,j,k), w_g(i,j+1,k))
+             vel(i,j,k) = avg(w_g(i,j-1,k+1), w_g(i,j  ,k+1))
           end do
         end do
       end do
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_t (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
+      call calc_xsi_z (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
          xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
      do k = alo(3)-1,ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = half * (fluxZ(i,j,k) + fluxZ(i,j+1,k))
+               lflux = half * (fluxZ(i,j-1,k+1) + fluxZ(i,j  ,k+1))
 
-               d_f = avg_h(avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1)),&
-                            avg_h(mu_g(i,j+1,k),mu_g(i,j+1,k+1))) * axy_z
+               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i,j-1,k+1)),&
+                           avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1))) * axy_z
 
                if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f - lflux*(xsi_(i,j,k))
                if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_f + lflux*(one - xsi_(i,j,k))
