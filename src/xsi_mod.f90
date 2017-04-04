@@ -36,12 +36,13 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_xsi_x(DISCR, phi, philo, phihi, vel, vello, velhi, &
-      xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+                         xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3)
       integer     , intent(in   ) :: vello(3),velhi(3)
       integer     , intent(in   ) :: xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
+      logical     , intent(in   ) :: is_centered
 
       ! discretization method
       integer, intent(IN) :: DISCR
@@ -73,32 +74,43 @@ contains
       ! Courant number
       real(c_real) :: cf
 
-      ! cell widths for QUICKEST
-      real(c_real) :: odxc, odxuc
-      real(c_real) :: odx, ody, odz
-
-      integer :: jm_shift
 !---------------------------------------------------------------------//
 
-       odx = 1.d0 / dx
-       ody = 1.d0 / dy
-       odz = 1.d0 / dz
-
+      print *,'XLO ', xlo(:)
+      print *,'XHI ', xhi(:)
+      print *,'VELLO ', vello(:)
+      print *,'VELHI ', velhi(:)
+      print *,'phiLO ', philo(:)
+      print *,'phiHI ', phihi(:)
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
-            IF (vel(i,j,k) >= ZERO) THEN
-               IC = i
-               ID = i+1
-               IU = i-1
-            ELSE
-               IC = i+1
-               ID = I
-               IU = i+2
-            ENDIF
+            if (.not. is_centered) then
+               IF (vel(i,j,k) >= ZERO) THEN
+                  IC = i
+                  ID = i+1
+                  IU = i-1
+               ELSE
+                  IC = i+1
+                  ID = i
+                  IU = i+2
+               ENDIF
+            else
+               IF (vel(i,j,k) >= ZERO) THEN
+                  IC = i-1
+                  ID = i
+                  IU = i-2
+               ELSE
+                  IC = i
+                  ID = i-1
+                  IU = i+1
+               ENDIF
+            endif 
+
             phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
+
             dwf = superbee(phi_c)
             xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
 
@@ -117,10 +129,12 @@ contains
 !  discretization in y-axial direction.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_xsi_y(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+      subroutine calc_xsi_y(DISCR, phi, philo, phihi, V, vello, velhi, &
+                            xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
+      logical     , intent(in   ) :: is_centered
 
       ! discretization method
       integer, intent(IN) :: DISCR
@@ -150,27 +164,20 @@ contains
       ! Courant number
       real(c_real) :: cf
 
-      ! cell widths for QUICKEST
-      real(c_real) :: odyc, odyuc
-      real(c_real) :: odx, ody, odz
 !---------------------------------------------------------------------//
-
-      odx = 1.d0 / dx
-      ody = 1.d0 / dy
-      odz = 1.d0 / dz
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
             if (v(i,j,k) >= zero) then
-               ju = j-1
-               jc = j
-               jd = j+1
-            else
-               ju = j+2
-               jc = j+1
+               ju = j-2
+               jc = j-1
                jd = j
+            else
+               ju = j+1
+               jc = j
+               jd = j-1
             endif
 
             phi_c = phi_c_of(phi(i,ju,k),phi(i,jc,k),phi(i,jd,k))
@@ -193,10 +200,12 @@ contains
 !  discretization in z-axial direction.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_xsi_z(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+      subroutine calc_xsi_z(DISCR, phi, philo, phihi, W, vello, velhi, &
+                            xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
+      logical     , intent(in   ) :: is_centered
 
       ! discretization method
       integer, intent(IN) :: DISCR
@@ -225,27 +234,20 @@ contains
       real(c_real) :: dwf
 ! Courant number
       real(c_real) :: cf
-! cell widths for QUICKEST
-      real(c_real) :: odzc, odzuc
-      real(c_real) :: odx, ody, odz
 !---------------------------------------------------------------------//
-
-       odx = 1.d0 / dx
-       ody = 1.d0 / dy
-       odz = 1.d0 / dz
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
             if (w(i,j,k) >= zero) then
-               ku = k-1
-               kc = k
-               kd = k+1
-            else
-               ku = k+2
-               kc = k+1
+               ku = k-2
+               kc = k-1
                kd = k
+            else
+               ku = k+1
+               kc = k
+               kd = k-1
             endif
 
             phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))

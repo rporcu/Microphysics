@@ -204,9 +204,11 @@ module conv_rop_module
       xhi(2) = hi(2)
       xhi(3) = hi(3)
 
+      print *,'CALLING FROM CONV_ROP'
+
       allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
       call calc_xsi_x (DISC, rop, slo, shi, u_g, ulo, uhi, &
-         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
 
       do k = lo(3),hi(3)
         do j = lo(2),hi(2)
@@ -226,7 +228,7 @@ module conv_rop_module
 
       allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
       call calc_xsi_y (DISC, rop, slo, shi, v_g, vlo, vhi, &
-         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
 
       do k = lo(3),hi(3)
         do j = lo(2),hi(2)+1
@@ -246,7 +248,7 @@ module conv_rop_module
 
       allocate( xsi_(lo(1):xhi(1), lo(2):xhi(2), lo(3):xhi(3)) )
       call calc_xsi_z (DISC, rop, slo, shi, w_g, wlo, whi, &
-         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_,  lo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
 
       do k = lo(3),hi(3)+1
         do j = lo(2),hi(2)

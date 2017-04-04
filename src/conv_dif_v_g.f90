@@ -308,7 +308,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_x (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
@@ -348,7 +348,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_y (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .false.)
 
      do k = alo(3),ahi(3)
          do j = alo(2)-1,ahi(2)
@@ -387,7 +387,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_z (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
 
      do k = alo(3)-1,ahi(3)
          do j = alo(2),ahi(2)
