@@ -17,7 +17,7 @@ module solve_pp_module
    subroutine solve_pp_g(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, lo, hi, &
       u_g, v_g, w_g, p_g, ep_g, rop_g, rop_go, &
       ro_g, ropX, ropY, ropZ, d_e,d_n, d_t, A_m, b_m, b_mmax, &
-      dt, dx, dy, dz, resid)&
+      dt, dx, dy, dz, domlo, domhi, resid)&
       bind(C, name="solve_pp_g")
 
       use residual, only: resid_p
@@ -37,6 +37,7 @@ module solve_pp_module
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
       real(c_real)  , intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(in   ) :: u_g&
@@ -92,7 +93,7 @@ module solve_pp_module
          A_m, b_m, b_mmax, dt, u_g, v_g, w_g, p_g, ep_g,&
          rop_g, rop_go, ro_g, d_e, d_n, d_t, dx, dy, dz)
 
-      call source_pp_g_bc(slo, shi, alo, ahi, A_m)
+      call source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
 
       if (point_source) call point_source_pp_g (alo, ahi, b_m, b_mmax, dx, dy, dz)
 

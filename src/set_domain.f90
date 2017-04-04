@@ -51,17 +51,5 @@ module set_domain_module
       IF (cyclic_z_pd) cyclic_z = .TRUE.
       cyclic = cyclic_x .OR. cyclic_y .OR. cyclic_z
 
-      ! End of what used to be in set_geometry
-
-      call check_initial_conditions(dx,dy,dz)
-      call check_boundary_conditions(dx,dy,dz)
-      call check_point_sources(dx,dy,dz)
-
-      ! Compute area of boundary surfaces.
-      call get_bc_area(dx,dy,dz)
-
-      ! Convert (mass, volume) flows to velocities.
-      call set_bc_flow
-
       end subroutine set_domain
 end module set_domain_module

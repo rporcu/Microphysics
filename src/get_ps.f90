@@ -16,7 +16,6 @@ MODULE GET_PS_MODULE
       subroutine get_ps(PSV,dx,dy,dz)
 
       use calc_cell_module, only: calc_loc, calc_cell
-      use geometry, only: domlo, domhi
       use location_check_module, only: location_check
       use param1, only: undefined_i, is_undefined, is_defined, equal
       use ps, only: ps_x_w, ps_x_e, ps_i_w, ps_i_e
@@ -33,8 +32,8 @@ MODULE GET_PS_MODULE
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Loop/variable indices
-      integer, INTENT(in) :: PSV
-      real(c_real), intent(in) :: dx,dy,dz
+      integer(c_int), intent(in) :: PSV
+      real(c_real)  , intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -121,12 +120,15 @@ MODULE GET_PS_MODULE
 
 ! CHECK FOR VALID VALUES
       IER = 0
-      IF(PS_I_W(PSV)<domlo(1)-1 .OR. PS_I_W(PSV)>domhi(1)+1) IER = 1
-      IF(PS_I_E(PSV)<domlo(1)-1 .OR. PS_I_E(PSV)>domhi(1)+1) IER = 1
-      IF(PS_J_S(PSV)<domlo(2)-1 .OR. PS_J_S(PSV)>domhi(2)+1) IER = 1
-      IF(PS_J_N(PSV)<domlo(2)-1 .OR. PS_J_N(PSV)>domhi(2)+1) IER = 1
-      IF(PS_K_B(PSV)<domlo(3)-1 .OR. PS_K_B(PSV)>domhi(3)+1) IER = 1
-      IF(PS_K_T(PSV)<domlo(3)-1 .OR. PS_K_T(PSV)>domhi(3)+1) IER = 1
+
+!     We should check on physical locations, not index locations for these
+!     IF(PS_I_W(PSV)<domlo(1)-1 .OR. PS_I_W(PSV)>domhi(1)+1) IER = 1
+!     IF(PS_I_E(PSV)<domlo(1)-1 .OR. PS_I_E(PSV)>domhi(1)+1) IER = 1
+!     IF(PS_J_S(PSV)<domlo(2)-1 .OR. PS_J_S(PSV)>domhi(2)+1) IER = 1
+!     IF(PS_J_N(PSV)<domlo(2)-1 .OR. PS_J_N(PSV)>domhi(2)+1) IER = 1
+!     IF(PS_K_B(PSV)<domlo(3)-1 .OR. PS_K_B(PSV)>domhi(3)+1) IER = 1
+!     IF(PS_K_T(PSV)<domlo(3)-1 .OR. PS_K_T(PSV)>domhi(3)+1) IER = 1
+
       IF(PS_K_B(PSV) > PS_K_T(PSV)) IER = 1
       IF(PS_J_S(PSV) > PS_J_N(PSV)) IER = 1
       IF(PS_I_W(PSV) > PS_I_E(PSV)) IER = 1

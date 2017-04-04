@@ -6,7 +6,7 @@ module init_fluid_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                         ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
+                         domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
                          mu_g, lambda_g, dx, dy, dz) &
       bind(C, name="init_fluid")
 
@@ -24,6 +24,7 @@ module init_fluid_module
 ! Dummy arguments .....................................................//
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -49,10 +50,10 @@ module init_fluid_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
+      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, domlo, domhi, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
+      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, domlo, domhi)
 
       ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
@@ -83,9 +84,8 @@ module init_fluid_module
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, p_g, u_g, v_g, w_g)
+   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, domlo, domhi, p_g, u_g, v_g, w_g)
 
-      use geometry, only: domlo, domhi
       use ic, only: dimension_ic, ic_defined
       use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
@@ -99,6 +99,7 @@ module init_fluid_module
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -204,7 +205,7 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz)
+      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, domlo, domhi)
 
       use bc, only: delp_x, delp_y, delp_z
       use bc, only: dimension_ic
@@ -218,7 +219,6 @@ module init_fluid_module
       use scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
       use funits   , only: dmp_log, unit_log
-      use geometry, only: domhi
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -228,6 +228,7 @@ module init_fluid_module
       implicit none
 
       integer, intent(in) :: slo(3), shi(3), lo(3), hi(3)
+      integer, intent(in) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

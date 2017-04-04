@@ -1,7 +1,6 @@
 module u_g_conv_dif
 
    use amrex_fort_module, only : c_real => amrex_real
-   use geometry      , only: domlo, domhi
    use param1        , only: half, one, zero
 
    implicit none
@@ -23,7 +22,7 @@ contains
    subroutine conv_dif_u_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
-      dt, dx, dy, dz)
+      dt, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -36,6 +35,7 @@ contains
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(inout) :: A_m&
@@ -68,7 +68,7 @@ contains
          call store_a_u_g1(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
             A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-            dt, dx, dy, dz)
+            dt, dx, dy, dz, domlo, domhi)
       end if
 
       end subroutine conv_dif_u_g
@@ -210,7 +210,7 @@ contains
       subroutine store_a_u_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz)
+         dt, dx, dy, dz, domlo, domhi)
 
       use functions, only: avg, avg_h
       use matrix   , only: e, w, n, s, t, b
@@ -223,6 +223,7 @@ contains
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz, dt
 
 
@@ -297,7 +298,7 @@ contains
 
       allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_e (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
@@ -331,7 +332,7 @@ contains
 
       allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_n (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = alo(3),ahi(3)
          do j = alo(2)-1,ahi(2)
@@ -367,7 +368,7 @@ contains
 
       allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_t (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = alo(3)-1,ahi(3)
          do j = alo(2),ahi(2)

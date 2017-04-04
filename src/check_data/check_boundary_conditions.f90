@@ -26,7 +26,7 @@ module check_boundary_conditions_module
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine check_boundary_conditions(dx,dy,dz)
+      subroutine check_boundary_conditions(dx,dy,dz,domlo,domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -57,9 +57,10 @@ module check_boundary_conditions_module
 
       use check_bc_geometry_module, only: check_bc_geometry, check_bc_geometry_flow, check_bc_geometry_wall
 
-      IMPLICIT NONE
+      implicit none
 
-      real(c_real), intent(in) :: dx,dy,dz
+      integer(c_int), intent(in) :: domlo(3),domhi(3)
+      real(c_real)  , intent(in) :: dx,dy,dz
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -95,40 +96,40 @@ module check_boundary_conditions_module
             SELECT CASE (TRIM(BC_TYPE(BCV)))
 
             CASE ('MASS_INFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
                ! CALL CHECK_BC_INFLOW(MMAX,SKIP,BCV)
 
             CASE ('P_INFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
                ! CALL CHECK_BC_INFLOW(MMAX, SKIP, BCV)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('MASS_OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_MASS_OUTFLOW(MMAX, BCV)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('P_OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_P_OUTFLOW(BCV)
                CALL CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('FREE_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_WALLS(BCV)
 
             CASE ('NO_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_WALLS(BCV)
 
             CASE ('PAR_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz)
+               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
                CALL CHECK_BC_WALLS(BCV)
 
             END SELECT

@@ -15,13 +15,14 @@ module conv_rop_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_rop(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                           u_g, v_g, w_g, rop_g, ropX, ropY, ropZ, &
-                          dt, dx, dy, dz) &
+                          dt, dx, dy, dz, domlo, domhi) &
                           bind(C, name="conv_rop")
 
       use run, only: discretize
 
       integer(c_int), intent(in   ) :: slo(3), shi(3), lo(3), hi(3)
       integer(c_int), intent(in   ) :: ulo(3), uhi(3), vlo(3), vhi(3), wlo(3), whi(3)
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
@@ -51,7 +52,7 @@ module conv_rop_module
          call conv_rop1 (discretize(1), &
                          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          rop_g, u_g, v_g, w_g, &
-                         ropX, ropY, ropZ, dt, dx, dy, dz)
+                         ropX, ropY, ropZ, dt, dx, dy, dz, domlo, domhi)
       end if
 
 !  contains
@@ -155,7 +156,7 @@ module conv_rop_module
                            slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                            rop, u_g, v_g, w_g, &
                            ropX, ropY, ropZ, &
-                           dt, dx, dy, dz)
+                           dt, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -165,6 +166,7 @@ module conv_rop_module
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
 ! Discretization scheme
       integer, INTENT(IN) :: DISC
@@ -204,7 +206,7 @@ module conv_rop_module
 
       allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
       call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
 
       do k = lo(3),hi(3)
         do j = lo(2),hi(2)
@@ -224,7 +226,7 @@ module conv_rop_module
 
       allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
       call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
 
       do k = lo(3),hi(3)
         do j = lo(2)-1,hi(2)
@@ -244,7 +246,7 @@ module conv_rop_module
 
       allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
       call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+         xsi_, xlo,  hi, dt, dx, dy, dz, domlo, domhi)
 
       do k = lo(3)-1,hi(3)
         do j = lo(2),hi(2)

@@ -19,7 +19,7 @@ class mfix_level
 {
 public:
 
-    mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
+//  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
     ~mfix_level();
 

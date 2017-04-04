@@ -35,9 +35,9 @@
 
   COORDINATES = 'CARTESIAN'
 
-  XLENGTH  = 1.0000  IMAX =  1
-  YLENGTH  = 0.0018  JMAX =  1
-  ZLENGTH  = 1.0000  KMAX =  1
+  XLENGTH  = 1.0000
+  YLENGTH  = 0.0018
+  ZLENGTH  = 1.0000
 
 
 #_______________________________________________________________________

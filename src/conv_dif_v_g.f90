@@ -22,7 +22,7 @@ module v_g_conv_dif
    subroutine conv_dif_v_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
-      dt, dx, dy, dz)
+      dt, dx, dy, dz, domlo, domhi)
 
 
 ! Modules
@@ -34,6 +34,7 @@ module v_g_conv_dif
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       ! Septadiagonal matrix A_m
@@ -69,7 +70,7 @@ module v_g_conv_dif
          call store_a_v_g1(&
               slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
               A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-              dt, dx, dy, dz)
+              dt, dx, dy, dz, domlo, domhi)
       endIF
 
       end subroutine conv_dif_v_g
@@ -214,7 +215,7 @@ module v_g_conv_dif
       subroutine store_a_v_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz)
+         dt, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -232,6 +233,7 @@ module v_g_conv_dif
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz, dt
 
       ! Septadiagonal matrix A_m
@@ -306,7 +308,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_e (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
@@ -342,7 +344,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_n (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
      do k = alo(3),ahi(3)
          do j = alo(2)-1,ahi(2)
@@ -377,7 +379,7 @@ module v_g_conv_dif
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
       call calc_xsi_t (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz)
+         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
      do k = alo(3)-1,ahi(3)
          do j = alo(2),ahi(2)

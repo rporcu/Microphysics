@@ -34,7 +34,6 @@ MODULE INIT_NAMELIST_MODULE
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
       use geometry, only: xlength, ylength, zlength
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
@@ -438,32 +437,14 @@ MODULE INIT_NAMELIST_MODULE
 
 
 !<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the x (r) direction.</description>
-      IMAX = UNDEFINED_I
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the x (r) direction.</description>
       XLENGTH = UNDEFINED
 !</keyword>
 
 
 !<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the y-direction.</description>
-      JMAX = UNDEFINED_I
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
 !  <description>Reactor length in the y-direction.</description>
       YLENGTH = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the z-direction.</description>
-      KMAX = UNDEFINED_I
 !</keyword>
 
 !<keyword category="Geometry and Discretization" required="false">

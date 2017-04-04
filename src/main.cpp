@@ -62,8 +62,7 @@ int main (int argc, char* argv[])
   int coord;
   int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
 
-  mfix_get_data( &imax, &jmax, &kmax,
-                 &solve_fluid,
+  mfix_get_data( &solve_fluid,
                  &solve_dem,
                  &steady_state,
                  &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
@@ -80,6 +79,7 @@ int main (int argc, char* argv[])
   real_box.setHi(1, ylength);
   real_box.setHi(2, zlength);
 
+#if 0
   // This sets the boundary conditions to be doubly or triply periodic
   Array<int> is_per(3);
   is_per[0] = cyclic_x;
@@ -91,18 +91,24 @@ int main (int argc, char* argv[])
   // table here so when we call Geometry::Setup from the AmrCore constructor it will see it.
   ParmParse pp("geometry");
   pp.addarr("is_periodic",is_per);
+#endif
+
+  int lev = 0;
+
+#if 0
 
   int max_level = 0;
-  int lev = 0;
   Array<int> n_cell(3);
   n_cell[0] = imax;
   n_cell[1] = jmax;
   n_cell[2] = kmax;
-
   const RealBox* rb_ptr = &real_box;
 
+#endif
+
   // Note that the constructor constructs the Geometry object now.
-  mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
+  mfix_level my_mfix;
+//mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
 
   my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
 

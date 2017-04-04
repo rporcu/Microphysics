@@ -20,7 +20,7 @@ module calc_pg_grad_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_pg_grad(slo, shi, lo, hi, max_pip, &
                               p_g, gradPg,  particle_state, des_pos_new,&
-                              pvol, drag_fc, dx, dy, dz)
+                              pvol, drag_fc, dx, dy, dz, domlo, domhi)
 
       use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, entering_ghost
@@ -47,6 +47,7 @@ module calc_pg_grad_module
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) ::  lo(3), hi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
       integer, intent(in   ) :: max_pip
 
       real(c_real), intent(in   ) :: p_g&
@@ -71,7 +72,7 @@ module calc_pg_grad_module
 !......................................................................!
 
 ! Calculate the gas phase pressure gradient. (dP/dx)
-      CALL CALC_GRAD_DES(slo, shi, lo, hi, P_G, gradPg, dx, dy, dz)
+      call calc_grad_des(slo, shi, lo, hi, P_G, gradPg, dx, dy, dz, domlo, domhi)
 
 ! Add in cyclic BC pressure drop.
       cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)

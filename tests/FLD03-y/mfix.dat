@@ -42,9 +42,9 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 1.00   IMAX = 1
-  YLENGTH = 0.20   JMAX = 8
-  ZLENGTH = 0.01   KMAX = 8
+  XLENGTH = 1.00
+  YLENGTH = 0.20
+  ZLENGTH = 0.01
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION

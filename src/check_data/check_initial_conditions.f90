@@ -28,7 +28,7 @@ contains
   !     - check specification of physical quantities                     !
   !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_initial_conditions(dx,dy,dz)
+  subroutine check_initial_conditions(dx,dy,dz,domlo,domhi)
 
     use ic,                    only: IC_DEFINED
     use run,                   only: DEM_SOLIDS, RUN_TYPE
@@ -37,15 +37,16 @@ contains
     use location_check_module, only: location_check
 
 
-    real(c_real), intent(in) :: dx,dy,dz
-    integer                  :: ICV
+    integer(c_int), intent(in) :: domlo(3),domhi(3)
+    real(c_real)  , intent(in) :: dx,dy,dz
+    integer(c_int)             :: ICV
 
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_INITIAL_CONDITIONS")
 
     ! Determine which ICs are DEFINED
-    call check_ic_geometry(dx,dy,dz)
+    call check_ic_geometry(dx,dy,dz,domlo,domhi)
 
     ! Loop over all IC arrays.
     do ICV=1, DIMENSION_IC
@@ -80,9 +81,8 @@ contains
     ! Purpose: Provided a detailed error message when the sum of volume    !
     !                                                                      !
     !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-    subroutine check_ic_geometry(dx,dy,dz)
+    subroutine check_ic_geometry(dx,dy,dz,domlo,domhi)
 
-      use geometry, only: domlo, domhi
       use param,    only: DIMENSION_IC
       use run,      only: RUN_TYPE
       use ic,       only: IC_DEFINED, IC_TYPE,             &
@@ -90,7 +90,8 @@ contains
                         & IC_Y_n, IC_Y_s, IC_J_n, IC_J_s,  &
                         & IC_Z_t, IC_Z_b, IC_K_t, IC_K_b
 
-      real(c_real), intent(in) :: dx,dy,dz
+      integer(c_int), intent(in) :: domlo(3),domhi(3)
+      real(c_real)  , intent(in) :: dx,dy,dz
       integer                  :: ICV, I_w, I_e, J_s, J_n, K_b, K_t
 
 

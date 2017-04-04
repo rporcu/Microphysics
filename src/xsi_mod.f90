@@ -12,7 +12,6 @@
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
-      use geometry      , only: domlo, domhi
 
       use discretization, only: phi_c_of
       use discretization, only: superbee
@@ -24,7 +23,6 @@
       use discretization, only: minmod
       use discretization, only: central_scheme
 
-      use geometry , only: domlo, domhi
       use param1, only: zero
       use error_manager, only: err_msg, init_err_msg, finl_err_msg
       use error_manager, only: ival, flush_err_msg
@@ -33,9 +31,10 @@
 
       CONTAINS
 
-      subroutine calc_xsi_e(DISCR, phi, philo, phihi, U, vello, velhi, xsi_e, xlo, xhi, dt, dx, dy, dz)
+      subroutine calc_xsi_e(DISCR, phi, philo, phihi, U, vello, velhi, xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! discretization method
       integer, intent(IN) :: DISCR
@@ -287,9 +286,10 @@
 !---------------------------------------------------------------------//
 !---------------------------------------------------------------------//
 
-      subroutine calc_xsi_n(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz)
+      subroutine calc_xsi_n(DISCR, phi, philo, phihi, V, vello, velhi, xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! discretization method
       integer, intent(IN) :: DISCR
@@ -542,9 +542,10 @@
 
 !---------------------------------------------------------------------//
 
-      subroutine calc_xsi_t(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz)
+      subroutine calc_xsi_t(DISCR, phi, philo, phihi, W, vello, velhi, xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! discretization method
       integer, intent(IN) :: DISCR

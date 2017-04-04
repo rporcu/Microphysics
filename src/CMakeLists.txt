@@ -4,7 +4,7 @@ set(CXX_includes mfix_level.H  ParticleContainer.H include/mfix_F.H)
 
 set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  calc_cell.f90  calc_coeff.f90
    calc_d.f90  calc_mflux.f90  calc_mu_g.f90  calc_outflow.f90  calc_ro_g.f90  calc_trd_g.f90  check_bqend.f90
-   check_convergence.f90  check_data/check_axis.f90  check_data/check_bc_dem.f90  check_data/check_bc_geometry.f90
+   check_convergence.f90  check_domain.f90 check_data/check_axis.f90  check_data/check_bc_dem.f90  check_data/check_bc_geometry.f90
    check_data/check_bc_inflow.f90  check_data/check_bc_outflow.f90  check_data/check_bc_walls.f90 
    check_data/check_boundary_conditions.f90  check_data/check_gas_phase.f90  check_data/check_geometry_prereqs.f90 
    check_data/check_ic_common_discrete.f90  check_data/check_initial_conditions.f90  check_data/check_numerics.f90 

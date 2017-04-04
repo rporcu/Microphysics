@@ -6,13 +6,13 @@ module des_time_march_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!     Subroutine: DES_TIME_MARCH                                       !
+!     Subroutine: des_time_march                                       !
 !                                                                      !
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(max_pip, slo, shi, ulo, uhi, vlo, vhi,&
-         wlo, whi, lo, hi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g, &
+      subroutine des_time_march(max_pip, slo, shi, ulo, uhi, vlo, vhi,&
+         wlo, whi, lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g, &
          particle_state, particle_phase, &
          des_radius,  pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
@@ -45,6 +45,7 @@ module des_time_march_module
       integer(c_int), intent(in   ) :: vlo(3), vhi(3)
       integer(c_int), intent(in   ) :: wlo(3), whi(3)
       integer(c_int), intent(in   ) ::  lo(3),  hi(3)
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -157,7 +158,7 @@ module des_time_march_module
          ENDIF
          call calc_pg_grad(slo, shi, lo, hi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
-                           pvol, drag_fc, dx, dy, dz)
+                           pvol, drag_fc, dx, dy, dz, domlo, domhi)
       ENDIF
 
 
@@ -326,8 +327,8 @@ module des_time_march_module
             ENDIF
          ENDDO
       ENDDO
-      END SUBROUTINE CALC_COLLISIONS
+      end subroutine calc_collisions
 
-      END SUBROUTINE DES_TIME_MARCH
+      end subroutine des_time_march
 
 end module des_time_march_module

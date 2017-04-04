@@ -8,8 +8,9 @@
 mfix_level::~mfix_level ()
 {};
 
-mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
- : AmrCore(rb,max_level_in,n_cell_in,coord)
+mfix_level::mfix_level ()
+//mfix_level::mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord)
+// AmrCore(rb,max_level_in,n_cell_in,coord)
 {
     ReadParameters();
 
@@ -163,12 +164,14 @@ mfix_level::Init(int lev, Real dt, Real time)
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
+      Box domain(geom[0].Domain());
+
       // Since these involving writing to output files we only do these on the IOProcessor
       if ( ParallelDescriptor::IOProcessor() )
       {
 
          // Write the initial part of the standard output file
-         write_out0(&time, &dt, &dx, &dy, &dz);
+         write_out0(&time, &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect());
 
          // Write the initial part of the special output file(s)
          write_usr0();
@@ -267,6 +270,9 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     // do computations for IC and BC locations and flows,
     // and set geometry parameters such as X, X_E, DToDX, etc.
     set_domain(&dx,&dy,&dz);
+
+    Box domain(geom[0].Domain());
+    check_domain(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
 
     // ********************************************************************************
     // Cell-based arrays
@@ -536,6 +542,8 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
 {
     int pair_count = 0;
 
+    Box domain(geom[lev].Domain());
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -558,6 +566,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         vbx.loVect(), vbx.hiVect(),
         wbx.loVect(), wbx.hiVect(),
         bx.loVect(), bx.hiVect(),
+        domain.loVect(), domain.hiVect(),
         (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
         (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
         (*ro_g[lev])[mfi].dataPtr(),
@@ -600,6 +609,8 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
+  Box domain(geom[lev].Domain());
+
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& sbx = (*ep_g[lev])[mfi].box();
@@ -612,14 +623,14 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
                    ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
                    (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
                    bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                   bc_klo.dataPtr(), bc_khi.dataPtr());
+                   bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
 
      set_bc0(sbx.loVect(), sbx.hiVect(),
              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
              (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
              (*p_g[lev])[mfi].dataPtr(),     (*ep_g[lev])[mfi].dataPtr(),
              bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-             bc_klo.dataPtr(), bc_khi.dataPtr());
+             bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
   }
 
   fill_mf_bc(lev,*p_g[lev]);
@@ -787,6 +798,8 @@ mfix_level::mfix_calc_trd_and_tau(int lev)
 void
 mfix_level::mfix_init_fluid(int lev)
 {
+  Box domain(geom[lev].Domain());
+
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
@@ -802,7 +815,7 @@ mfix_level::mfix_init_fluid(int lev)
 
      init_fluid(sbx.loVect(), sbx.hiVect(),
        ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-        bx.loVect(),  bx.hiVect(),
+        bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(), 
        (*ep_g[lev])[mfi].dataPtr(),     (*ro_g[lev])[mfi].dataPtr(),
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
@@ -874,6 +887,8 @@ mfix_level::mfix_calc_mflux(int lev)
 void
 mfix_level::mfix_conv_rop(int lev, Real dt)
 {
+    Box domain(geom[lev].Domain());
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -893,7 +908,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
          (*rop_g[lev])[mfi].dataPtr(),
          (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
-         &dt, &dx, &dy, &dz);
+         &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect());
     }
 
     ropX[lev]->FillBoundary(geom[lev].periodicity());
@@ -904,6 +919,8 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
 void
 mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 {
+    Box domain(geom[lev].Domain());
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -938,7 +955,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
           &dt, &dx, &dy, &dz, residuals);
     }
 
@@ -977,7 +994,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
           &dt, &dx, &dy, &dz, residuals);
     }
 
@@ -1015,7 +1032,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           (*mu_g[lev])[mfi].dataPtr(),     (*f_gds[lev])[mfi].dataPtr(),
           (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),      (*drag_bm[lev])[mfi].dataPtr(),
           bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-          bc_klo.dataPtr(), bc_khi.dataPtr(),
+          bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect(),
           &dt, &dx, &dy, &dz, residuals);
     }
 
@@ -1036,6 +1053,8 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
 void
 mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (&residuals)[16])
 {
+    Box domain(geom[lev].Domain());
+
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
@@ -1069,7 +1088,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
         (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
         (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr(),
         (*A_m[lev])[mfi].dataPtr(),      (*b_m[lev])[mfi].dataPtr(),           b_mmax[mfi].dataPtr(),
-        &dt, &dx, &dy, &dz, residuals);
+        &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect(), residuals);
     }
     pp_g[lev]->setVal(0.);
 
@@ -1081,6 +1100,7 @@ mfix_level::mfix_solve_for_pp(int lev, Real dt, Real& lnormg, Real& resg, Real (
 void
 mfix_level::mfix_correct_0(int lev)
 {
+  Box domain(geom[lev].Domain());
   for (MFIter mfi(*p_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -1092,7 +1112,7 @@ mfix_level::mfix_correct_0(int lev)
 
      correct_0(sbx.loVect(), sbx.hiVect(),
                ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                bx.loVect(),  bx.hiVect(),
+                bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(), 
       (*p_g[lev])[mfi].dataPtr(),      (*pp_g[lev])[mfi].dataPtr(),
       (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
       (*d_e[lev])[mfi].dataPtr(),      (*d_n[lev])[mfi].dataPtr(),      (*d_t[lev])[mfi].dataPtr());
@@ -1162,7 +1182,8 @@ mfix_level::mfix_set_bc_type(int lev)
   {
       const Box& sbx = (*ep_g[lev])[mfi].box();
       set_bc_type(sbx.loVect(),sbx.hiVect(), bc_ilo.dataPtr(), bc_ihi.dataPtr(),
-                  bc_jlo.dataPtr(), bc_jhi.dataPtr(), bc_klo.dataPtr(), bc_khi.dataPtr());
+                  bc_jlo.dataPtr(), bc_jhi.dataPtr(), bc_klo.dataPtr(), bc_khi.dataPtr(),
+                  domain.loVect(),domain.hiVect());
   }
 
 }
@@ -1170,6 +1191,7 @@ mfix_level::mfix_set_bc_type(int lev)
 void
 mfix_level::fill_mf_bc(int lev, MultiFab& mf)
 {
+  Box domain(geom[lev].Domain());
 
   // Impose periodic bc's at domain boundaries and fine-fine copies in the interio
   mf.FillBoundary(geom[lev].periodicity());
@@ -1179,6 +1201,6 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
       const Box& sbx = mf[mfi].box();
       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-               bc_klo.dataPtr(), bc_khi.dataPtr());
+               bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
   }
 }

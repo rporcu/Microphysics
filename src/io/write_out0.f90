@@ -7,7 +7,7 @@
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine write_out0(time, dt, dx, dy, dz) &
+      subroutine write_out0(time, dt, dx, dy, dz, domlo, domhi) &
          bind(C, name="write_out0")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -29,7 +29,6 @@
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
       use geometry, only: xlength, ylength, zlength
       use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
       use ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
@@ -46,11 +45,11 @@
       use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
       use write_table_mod, only: write_table
-      use geometry, only: domhi
 
       implicit none
 
-      real(c_real), intent(in   ) :: time, dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+      real(c_real)  , intent(in   ) :: time, dt, dx, dy, dz
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -159,22 +158,22 @@
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
          LEGEND(3) = 'X_E'
-         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, DOMHI(1)+1)
-         WRITE (UNIT_OUT, 1212) IMAX
+         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, domhi(1)+1)
+         WRITE (UNIT_OUT, 1212) (domhi(1)-domlo(1)+1)
          WRITE (UNIT_OUT, 1213) XLENGTH
          WRITE (UNIT_OUT, 1220)
          LEGEND(1) = '  J'
          LEGEND(2) = ' DY'
          LEGEND(3) = 'Y_N'
-         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, DOMHI(2)+1)
-         WRITE (UNIT_OUT, 1221) JMAX
+         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, domhi(2)+1)
+         WRITE (UNIT_OUT, 1221) (domhi(2)-domlo(2)+1)
          WRITE (UNIT_OUT, 1222) YLENGTH
          WRITE (UNIT_OUT, 1230)
          LEGEND(1) = '  K'
          LEGEND(2) = ' DZ'
          LEGEND(3) = 'Z_T'
-         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, DOMHI(3)+1)
-         WRITE (UNIT_OUT, 1231) KMAX
+         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, domhi(3)+1)
+         WRITE (UNIT_OUT, 1231) (domhi(3)-domlo(3)+1)
          WRITE (UNIT_OUT, 1232) ZLENGTH
 
 !

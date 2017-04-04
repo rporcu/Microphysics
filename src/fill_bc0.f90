@@ -18,13 +18,12 @@
 ! ::: -----------------------------------------------------------
 subroutine fill_bc0(s, slo, shi, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type) &
+      bc_klo_type, bc_khi_type, domlo, domhi) &
    bind(C, name="fill_bc0")
 
 
 ! Global modules
 !--------------------------------------------------------------------//
-      use geometry      , only: domlo, domhi
       use iso_c_binding , only: c_int
       use amrex_fort_module, only : c_real => amrex_real
 
@@ -34,6 +33,7 @@ subroutine fill_bc0(s, slo, shi, &
 ! Dummy arguments
 !``````````````````````````````````````````````````````````````````````
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout) ::  s&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

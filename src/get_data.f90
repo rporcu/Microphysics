@@ -32,10 +32,7 @@ module get_data_module
       use set_parameters_module, only: set_parameters
       use write_header_module, only: write_header
 
-      use geometry, only: domlo, domhi
-      use geometry, only: imax, jmax, kmax
-
-      IMPLICIT NONE
+      implicit none
 
       real(c_real), intent(  out) :: time, dt
 
@@ -60,13 +57,6 @@ module get_data_module
       ! These checks verify that sufficient information was provided
       ! to setup the domain indices and DMP gridmap.
       call CHECK_GEOMETRY_PREREQS
-
-      domlo(1) = 0
-      domlo(2) = 0
-      domlo(3) = 0
-      domhi(1) = imax-1
-      domhi(2) = jmax-1
-      domhi(3) = kmax-1
 
       ! Check the minimum solids phase requirements.
       call check_solids_model_prereqs

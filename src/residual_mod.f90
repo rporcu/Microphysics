@@ -61,14 +61,13 @@
       subroutine calc_resid_vel(alo, ahi, &
          v0lo, v0hi, v1lo, v1hi, v2lo, v2hi, &
          vel, vels1, vels2, A_m, b_m, &
-         eq_id, num, den)
+         eq_id, num, den, domlo, domhi)
 
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
       use param1  , only: small_number
       use matrix  , only: e, w, s, n, t, b
-      use geometry, only: domlo
 
       implicit none
 
@@ -76,6 +75,7 @@
       integer     , intent(in   ) :: v0lo(3),v0hi(3)
       integer     , intent(in   ) :: v1lo(3),v1hi(3)
       integer     , intent(in   ) :: v2lo(3),v2hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! primary velocity component
       real(c_real), intent(IN) :: vel&

@@ -20,7 +20,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, &
         A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, w_go, &
-        tau_w_g, dx, dy, dz)
+        tau_w_g, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -28,12 +28,13 @@ contains
       use bc, only: delp_z
 
       use functions, only: avg
-      use geometry , only: domlo, domhi, cyclic_z_pd
+      use geometry , only: cyclic_z_pd
 
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale
 
       integer     , intent(in   ) :: slo(3),shi(3),wlo(3),whi(3),alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -135,7 +136,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine source_w_g_bc(slo,shi,alo,ahi,A_m,b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, dx, dy)
+         bc_klo_type, bc_khi_type, domlo, domhi, dx, dy)
 
 
       use ic, only: NSW_, FSW_, PSW_
@@ -144,12 +145,12 @@ contains
       use ic, only: cycl_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
-      use geometry, only: domlo, domhi
 
       use matrix, only: e, w, s, n, t, b
       use param1, only: is_defined
 
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dy
 
       real(c_real), intent(INOUT) :: A_m&

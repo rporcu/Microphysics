@@ -15,7 +15,8 @@ module set_bc_type_module
    subroutine set_bc_type(slo, shi, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
-                          bc_klo_type, bc_khi_type) &
+                          bc_klo_type, bc_khi_type, &
+                          domlo, domhi) &
                bind(c,name='set_bc_type')
 
       use bc, only: bc_defined, bc_type, bc_plane
@@ -29,12 +30,12 @@ module set_bc_type_module
       use ic, only: UNDEF_CELL, cycl_
 
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: domlo, domhi
       use param, only: dimension_bc
 
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       integer(c_int), intent(inout) :: bc_ilo_type&
          (domlo(2)-2:domhi(2)+2,domlo(3)-2:domhi(3)+2,2)
