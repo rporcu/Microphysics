@@ -159,10 +159,7 @@ extern "C"
          const int*  lo,       const int*  hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
-         Real* ropX,         Real* ropY,         Real* ropZ,
-         Real* dt,
-         Real* dx,             Real* dy,             Real* dz,
-         const int* domlo , const int* domhi);
+         Real* ropX,         Real* ropY,         Real* ropZ);
 
   void calc_mflux(
          const int* ulo, const int* uhi,

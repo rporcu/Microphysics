@@ -907,8 +907,7 @@ mfix_level::mfix_conv_rop(int lev, Real dt)
           bx.loVect(),  bx.hiVect(),
          (*u_g[lev])[mfi].dataPtr(),      (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
          (*rop_g[lev])[mfi].dataPtr(),
-         (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr(),
-         &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect());
+         (*ropX[lev])[mfi].dataPtr(),   (*ropY[lev])[mfi].dataPtr(),   (*ropZ[lev])[mfi].dataPtr());
     }
 
     ropX[lev]->FillBoundary(geom[lev].periodicity());
