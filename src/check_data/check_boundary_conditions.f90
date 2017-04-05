@@ -26,7 +26,7 @@ module check_boundary_conditions_module
 !  Comments:                                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine check_boundary_conditions(dx,dy,dz,domlo,domhi)
+      subroutine check_boundary_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -61,6 +61,7 @@ module check_boundary_conditions_module
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
       real(c_real)  , intent(in) :: dx,dy,dz
+      real(c_real)  , intent(in) :: xlength,ylength,zlength
 
 ! Local Variables:
 !---------------------------------------------------------------------//
@@ -72,10 +73,10 @@ module check_boundary_conditions_module
 
 
 ! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_BOUNDARY_CONDITIONS")
+      call INIT_ERR_MSG("CHECK_BOUNDARY_CONDITIONS")
 
 ! Determine which BCs are DEFINED
-      CALL CHECK_BC_GEOMETRY
+      call CHECK_BC_GEOMETRY
 
 ! Loop over each defined BC and check the user data.
       DO BCV = 1, DIMENSION_BC
@@ -96,41 +97,41 @@ module check_boundary_conditions_module
             SELECT CASE (TRIM(BC_TYPE(BCV)))
 
             CASE ('MASS_INFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
-               ! CALL CHECK_BC_INFLOW(MMAX,SKIP,BCV)
+               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
+               ! call CHECK_BC_INFLOW(MMAX,SKIP,BCV)
 
             CASE ('P_INFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
-               ! CALL CHECK_BC_INFLOW(MMAX, SKIP, BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
+               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
+               ! call CHECK_BC_INFLOW(MMAX, SKIP, BCV)
+               call CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
+               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('MASS_OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_MASS_OUTFLOW(MMAX, BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
+               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_MASS_OUTFLOW(MMAX, BCV)
+               call CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('P_OUTFLOW')
-               CALL CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_P_OUTFLOW(BCV)
-               CALL CHECK_BC_OUTFLOW(MMAX, BCV)
+               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_P_OUTFLOW(BCV)
+               call CHECK_BC_OUTFLOW(MMAX, BCV)
 
             CASE ('FREE_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_WALLS(BCV)
+               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_WALLS(BCV)
 
             CASE ('NO_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_WALLS(BCV)
+               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_WALLS(BCV)
 
             CASE ('PAR_SLIP_WALL')
-               CALL CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
-               CALL CHECK_BC_WALLS(BCV)
+               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call CHECK_BC_WALLS(BCV)
 
             END SELECT
 
@@ -138,20 +139,17 @@ module check_boundary_conditions_module
          ELSEIF(BC_TYPE(BCV) /= 'DUMMY' .AND.                          &
             BC_TYPE(BCV)(1:2) /= 'CG') THEN
 
-            CALL CHECK_BC_RANGE(BCV)
+            call CHECK_BC_RANGE(BCV)
 
          ENDIF
       ENDDO
 ! Additional checks needed for DEM boundaries
-      IF(DEM_SOLIDS) CALL CHECK_BC_DEM(MMAX)
+      IF(DEM_SOLIDS) call CHECK_BC_DEM(MMAX)
 
 ! Cleanup and exit.
-      CALL FINL_ERR_MSG
-
-      RETURN
+      call FINL_ERR_MSG
 
    CONTAINS
-
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -201,39 +199,39 @@ module check_boundary_conditions_module
 
 
 ! Initialize the error manager.
-      CALL INIT_ERR_MSG("CHECK_BC_RANGE")
+      call INIT_ERR_MSG("CHECK_BC_RANGE")
 
 
 ! Check gas phase variables.
       IF(IS_DEFINED(BC_U_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_U_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
       IF(IS_DEFINED(BC_V_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_V_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
       IF (IS_DEFINED(BC_W_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_W_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
       IF (IS_DEFINED(BC_EP_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_EP_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
       IF (IS_DEFINED(BC_P_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_P_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
       IF (IS_DEFINED(BC_T_G(BCV))) THEN
          WRITE(ERR_MSG,1100) trim(iVar('BC_T_g',BCV))
-         CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+         call FLUSH_ERR_MSG(ABORT=.TRUE.)
       ENDIF
 
       DO N = 1, DIMENSION_N_G
          IF(IS_DEFINED(BC_X_G(BCV,N))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_X_g',BCV,N))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
       ENDDO
 
@@ -241,34 +239,34 @@ module check_boundary_conditions_module
       DO M = 1, DIM_M
          IF(IS_DEFINED(BC_ROP_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_ROP_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
          IF(IS_DEFINED(BC_EP_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_EP_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
          IF(IS_DEFINED(BC_U_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_U_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
          IF(IS_DEFINED(BC_V_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_V_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          IF(IS_DEFINED(BC_W_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_W_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
          IF(IS_DEFINED(BC_T_S(BCV,M))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_T_s',BCV,M))
-            CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+            call FLUSH_ERR_MSG(ABORT=.TRUE.)
          ENDIF
 
          DO N = 1, DIMENSION_N_S
             IF(IS_DEFINED(BC_X_S(BCV,M,N))) THEN
                WRITE(ERR_MSG,1100) trim(iVar('BC_X_s',BCV,M,N))
-               CALL FLUSH_ERR_MSG(ABORT=.TRUE.)
+               call FLUSH_ERR_MSG(ABORT=.TRUE.)
             ENDIF
          ENDDO
 

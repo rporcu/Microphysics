@@ -1,8 +1,9 @@
-MODULE CHECK_PLANE_MODULE
-   CONTAINS
+module check_plane_module
+
+   contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: CHECK_PLANE                                            C
+!  Module name: check_plane                                            C
 !  Purpose: make sure the flow boundary condition or internal surface  C
 !           is a plane                                                 C
 !                                                                      C
@@ -19,7 +20,7 @@ MODULE CHECK_PLANE_MODULE
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
 
-      SUBROUTINE CHECK_PLANE(X_CONSTANT, Y_CONSTANT, Z_CONSTANT, BC, NAME)
+      subroutine check_plane(X_CONSTANT, Y_CONSTANT, Z_CONSTANT, BC, NAME)
 
       use compar, only: mype
       use exit_mod, only: mfix_exit
@@ -30,12 +31,15 @@ MODULE CHECK_PLANE_MODULE
 !-----------------------------------------------
 ! Dummy arguments
 !-----------------------------------------------
-! surface indicators
-      logical, INTENT(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
-! boundary condition or internal surface index
-      integer, INTENT(IN) ::  BC
-! BC or IS
-      CHARACTER(LEN=2), INTENT(IN) :: NAME
+
+      ! surface indicators
+      logical, intent(IN) :: X_CONSTANT,Y_CONSTANT,Z_CONSTANT
+
+      ! boundary condition or internal surface index
+      integer, intent(IN) ::  BC
+
+      ! BC or IS
+      CHARACTER(LEN=2), intent(IN) :: NAME
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------
@@ -57,7 +61,8 @@ MODULE CHECK_PLANE_MODULE
 
       RETURN
 
- 1000 FORMAT(/70('*')//' From: CHECK_PLANE',/'Message: ',A,' No ',I3,&
+ 1000 FORMAT(/70('*')//' From: check_plane',/'Message: ',A,' No ',I3,&
          ' is not a plane',/70('*')/)
-      END SUBROUTINE CHECK_PLANE
-END MODULE CHECK_PLANE_MODULE
+      end subroutine check_plane
+
+end module check_plane_module

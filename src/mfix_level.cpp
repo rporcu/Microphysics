@@ -164,6 +164,10 @@ mfix_level::Init(int lev, Real dt, Real time)
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
+      Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+      Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+      Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
       Box domain(geom[0].Domain());
 
       // Since these involving writing to output files we only do these on the IOProcessor
@@ -171,7 +175,8 @@ mfix_level::Init(int lev, Real dt, Real time)
       {
 
          // Write the initial part of the standard output file
-         write_out0(&time, &dt, &dx, &dy, &dz, domain.loVect(), domain.hiVect());
+         write_out0(&time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen,
+                    domain.loVect(), domain.hiVect());
 
          // Write the initial part of the special output file(s)
          write_usr0();
@@ -266,13 +271,14 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    // Call set_domain to read input data, check data,
-    // do computations for IC and BC locations and flows,
-    // and set geometry parameters such as X, X_E, DToDX, etc.
-    set_domain(&dx,&dy,&dz);
+    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+    set_domain();
 
     Box domain(geom[0].Domain());
-    check_domain(&dx,&dy,&dz,domain.loVect(),domain.hiVect());
+    check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
 
     // ********************************************************************************
     // Cell-based arrays
@@ -548,6 +554,10 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
+    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
     const int max_pip = particle_state.size();
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
@@ -579,7 +589,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
         drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
         pairs.dataPtr(),          &pair_count,
-        &time, &dt, &dx, &dy, &dz, &nstep);
+        &time, &dt, &dx, &dy, &dz, &xlen, &ylen, &zlen, &nstep);
     }
 
     fill_mf_bc(lev,*ep_g[lev]);
@@ -605,10 +615,6 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
 {
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
   Box domain(geom[lev].Domain());
 
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
@@ -804,6 +810,10 @@ mfix_level::mfix_init_fluid(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      const Box& bx = mfi.validbox();
@@ -820,7 +830,7 @@ mfix_level::mfix_init_fluid(int lev)
        (*rop_g[lev])[mfi].dataPtr(),     (*p_g[lev])[mfi].dataPtr(),
        (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
        (*mu_g[lev])[mfi].dataPtr(),   (*lambda_g[lev])[mfi].dataPtr(),
-       &dx, &dy, &dz );
+       &dx, &dy, &dz, &xlen, &ylen, &zlen );
   }
 
   fill_mf_bc(lev,*p_g[lev]);
@@ -888,10 +898,6 @@ void
 mfix_level::mfix_conv_rop(int lev, Real dt)
 {
     Box domain(geom[lev].Domain());
-
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
 
     for (MFIter mfi(*rop_g[lev]); mfi.isValid(); ++mfi)
     {

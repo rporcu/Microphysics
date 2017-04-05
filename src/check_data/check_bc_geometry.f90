@@ -1,4 +1,4 @@
-MODULE CHECK_BC_GEOMETRY_MODULE
+module check_bc_geometry_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
@@ -8,7 +8,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C, IS_UNDEFINED, IS_DEFINED, ZERO, EQUAL
+      use param1, only: UNDEFINED, UNDEFINED_I, UNDEFINED_C, IS_UNDEFINED, is_defined, ZERO, EQUAL
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -20,7 +20,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! minimum amount of geometry data.                                     !
 !                                                                      !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-      SUBROUTINE CHECK_BC_GEOMETRY
+      subroutine check_bc_geometry
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -76,18 +76,18 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       L50: DO BCV = 1, DIMENSION_BC
 
          BC_DEFINED(BCV) = .FALSE.
-         IF(IS_DEFINED(BC_X_W(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_X_E(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Y_S(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Y_N(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Z_B(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_Z_T(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_I_W(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_I_E(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_J_S(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_J_N(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_K_B(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(IS_DEFINED(BC_K_T(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_X_W(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_X_E(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_Y_S(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_Y_N(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_Z_B(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_Z_T(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_I_W(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_I_E(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_J_S(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_J_N(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_K_B(BCV))) BC_DEFINED(BCV) = .TRUE.
+         IF(is_defined(BC_K_T(BCV))) BC_DEFINED(BCV) = .TRUE.
 
          IF (BC_TYPE(BCV) == 'DUMMY') BC_DEFINED(BCV) = .FALSE.
 
@@ -161,25 +161,22 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       CALL FINL_ERR_MSG
 
-      RETURN
-
-
  1100 FORMAT('Error 1100: Illegal entry: ',A,' = ',A,/'Valid entries:',&
          ' ',10(/5X,A,2x,A),/5X,A)
 
-      END SUBROUTINE CHECK_BC_GEOMETRY
-
-
+      end subroutine check_bc_geometry
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: CHECK_BC_GEOMETRY_WALL                                  !
+!  Subroutine: check_bc_geometry_wall                                  !
 !  Author: P. Nicoletti                               Date: 10-DEC-91  !
 !                                                                      !
 !  Purpose: Find and validate i, j, k locations for walls BC's         !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,domlo,domhi)
+      subroutine check_bc_geometry_wall(BCV,dx,dy,dz, &
+                                        xlength,ylength,zlength, &
+                                        domlo,domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -188,10 +185,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
 
-      ! Basic grid information
-      use geometry, only: XLENGTH
-      use geometry, only: YLENGTH
-      use geometry, only: ZLENGTH
 ! Function to compare two values
       use toleranc, only: COMPARE
 
@@ -207,6 +200,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
       real(c_real)  , intent(in) :: dx, dy, dz
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -224,7 +218,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       CALL INIT_ERR_MSG("CHECK_BC_GEOMETRY_WALL")
 
-      IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_X_E(BCV))) THEN
+      IF(is_defined(BC_X_W(BCV)) .AND. is_defined(BC_X_E(BCV))) THEN
 
 ! setting indices to 1 if there is no variation in the i (x) direction
          I_W = CALC_CELL (BC_X_W(BCV), DX)
@@ -235,7 +229,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             IF(COMPARE(BC_X_W(BCV),0.0d0)) THEN
                I_W = domlo(1)-1
                I_E = domlo(1)-1
-            ELSEIF(COMPARE(BC_X_W(BCV),XLENGTH)) THEN
+            ELSEIF(COMPARE(BC_X_W(BCV),xlength)) THEN
                I_W = domhi(1)+1
                I_E = domhi(1)+1
             ENDIF
@@ -253,7 +247,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       ENDIF
 
 
-      IF(IS_DEFINED(BC_Y_S(BCV)) .AND. IS_DEFINED(BC_Y_N(BCV))) THEN
+      IF(is_defined(BC_Y_S(BCV)) .AND. is_defined(BC_Y_N(BCV))) THEN
 ! setting indices to 1 if there is no variation in the j (y) direction
          J_S = CALC_CELL (BC_Y_S(BCV), DY)
          J_S = J_S + 1
@@ -263,7 +257,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             IF(COMPARE(BC_Y_S(BCV),ZERO)) THEN
                J_S = domlo(2)-1
                J_N = domlo(2)-1
-            ELSE IF (COMPARE(BC_Y_S(BCV),YLENGTH)) THEN
+            ELSE IF (COMPARE(BC_Y_S(BCV),ylength)) THEN
                J_S = domhi(2)+1
                J_N = domhi(2)+1
             ENDIF
@@ -279,7 +273,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          ENDIF
       ENDIF
 
-      IF(IS_DEFINED(BC_Z_B(BCV)) .AND. IS_DEFINED(BC_Z_T(BCV))) THEN
+      IF(is_defined(BC_Z_B(BCV)) .AND. is_defined(BC_Z_T(BCV))) THEN
 ! setting indices to 1 if there is no variation in the k (z) direction
          K_B = CALC_CELL (BC_Z_B(BCV), DZ)
          K_B = K_B + 1
@@ -289,7 +283,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
             IF(COMPARE(BC_Z_B(BCV),ZERO)) THEN
                K_B = domlo(3)-1
                K_T = domlo(3)-1
-            ELSEIF(COMPARE(BC_Z_B(BCV),ZLENGTH)) THEN
+            ELSEIF(COMPARE(BC_Z_B(BCV),zlength)) THEN
                K_B = domhi(3)+1
                K_T = domhi(3)+1
             ENDIF
@@ -333,22 +327,18 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       CALL FINL_ERR_MSG
 
-      RETURN
-
-      END SUBROUTINE CHECK_BC_GEOMETRY_WALL
-
-
+      end subroutine check_bc_geometry_wall
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: CHECK_BC_GEOMETRY_FLOW                                  !
+!  Subroutine: check_bc_geometry_flow                                  !
 !  Author: P. Nicoletti                               Date: 10-DEC-91  !
 !                                                                      !
 !  Purpose: Find and validate i, j, k locations for flow BC's. Also    !
 !           set value of bc_plane for flow BC's.                       !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,domlo,domhi)
+      subroutine check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -356,8 +346,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
       use bc, only: BC_X_w, BC_X_e, BC_I_w, BC_I_e
       use bc, only: BC_Y_s, BC_Y_n, BC_J_s, BC_J_n
       use bc, only: BC_Z_b, BC_Z_t, BC_K_b, BC_K_t
-! Basic grid information
-      use geometry, only: xlength, ylength, zlength
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -371,6 +359,7 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
       real(c_real)  , intent(in) :: dx, dy, dz
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -390,7 +379,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 ! equal to bc_x_e then the boundary region must be in the yz plane
       logical :: X_CONSTANT, Y_CONSTANT, Z_CONSTANT
 !......................................................................!
-
 
       CALL INIT_ERR_MSG("CHECK_BC_GEOMETRY_FLOW")
 
@@ -440,11 +428,11 @@ MODULE CHECK_BC_GEOMETRY_MODULE
          bc_k_t(bcv) = k_t
       endif
 
-! Check whether the boundary is a plane parallel to one of the three
-! coordinate planes
-      IF(IS_DEFINED(BC_X_W(BCV)) .AND. IS_DEFINED(BC_Y_S(BCV)) .AND. &
-         IS_DEFINED(BC_Z_B(BCV))) CALL CHECK_PLANE (X_CONSTANT, &
-         Y_CONSTANT, Z_CONSTANT, BCV, 'BC')
+      ! Check whether the boundary is a plane parallel to one of the three
+      ! coordinate planes
+      if (is_defined(BC_X_W(BCV)) .AND. is_defined(BC_Y_S(BCV)) .AND. &
+          is_defined(BC_Z_B(BCV))) &
+         call check_plane (x_constant, y_constant, z_constant, BCV, 'BC')
 
 
 ! CHECK FOR VALID VALUES
@@ -474,7 +462,6 @@ MODULE CHECK_BC_GEOMETRY_MODULE
 
       CALL FINL_ERR_MSG
 
-      RETURN
+      end subroutine check_bc_geometry_flow
 
-      END SUBROUTINE CHECK_BC_GEOMETRY_FLOW
-END MODULE CHECK_BC_GEOMETRY_MODULE
+end module check_bc_geometry_module

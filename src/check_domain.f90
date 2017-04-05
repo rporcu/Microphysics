@@ -13,7 +13,7 @@ module check_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine check_domain(dx,dy,dz,domlo,domhi) &
+      subroutine check_domain(dx,dy,dz,xlength,ylength,zlength,domlo,domhi) &
           bind(C, name="check_domain")
 
        use get_bc_area_module, only: get_bc_area
@@ -24,9 +24,10 @@ module check_domain_module
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
       real(c_real)  , intent(in) :: dx, dy ,dz
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
 
-      call check_initial_conditions(dx,dy,dz,domlo,domhi)
-      call check_boundary_conditions(dx,dy,dz,domlo,domhi)
+      call check_initial_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+      call check_boundary_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
       call check_point_sources(dx,dy,dz)
 
       ! Compute area of boundary surfaces.

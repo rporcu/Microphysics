@@ -12,7 +12,9 @@ extern "C"
 
   void parse_resid_string();
 
-  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz, const int* domlo, const int* domhi);
+  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz, 
+                  Real* xlength, Real* ylength, Real* zlength, 
+                  const int* domlo, const int* domhi);
 
   void write_usr0();
 
@@ -27,8 +29,10 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void   set_domain(Real* dx, Real* dy, Real* dz);
-  void check_domain(Real* dx, Real* dy, Real* dz, const int* domlo, const int* domhi);
+  void   set_domain();
+  void check_domain(Real* dx, Real* dy, Real* dz, 
+                    Real* xlength, Real* ylength, Real* zlength,
+                    const int* domlo, const int* domhi);
 
   void set_bc_type(const int* slo, const int* shi,
                    int* bc_ilo, int* bc_ihi,
@@ -67,7 +71,8 @@ extern "C"
                   Real* rop_g,   Real* p_g,
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* mu_g,    Real* lambda_g,
-                  Real* dx,       Real* dy,       Real* dz);
+                  Real* dx,       Real* dy,       Real* dz,
+                  Real* xlength, Real* ylength, Real* zlength); 
 
   void mfix_make_arrays_des(const int* max_pip,
                  int* particle_state,
@@ -305,6 +310,7 @@ extern "C"
           int* pairs,           int* pair_count,
           Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
+          Real* xlength, Real* ylength, Real* zlength, 
           int * nstep);
 
   void mfix_usr0();

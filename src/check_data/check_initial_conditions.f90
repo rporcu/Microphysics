@@ -28,7 +28,7 @@ contains
   !     - check specification of physical quantities                     !
   !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_initial_conditions(dx,dy,dz,domlo,domhi)
+  subroutine check_initial_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
 
     use ic,                    only: IC_DEFINED
     use run,                   only: DEM_SOLIDS, RUN_TYPE
@@ -38,7 +38,8 @@ contains
 
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
-    real(c_real)  , intent(in) :: dx,dy,dz
+    real(c_real)  , intent(in) :: dx, dy, dz
+    real(c_real)  , intent(in) :: xlength, ylength, zlength
     integer(c_int)             :: ICV
 
 
@@ -66,7 +67,7 @@ contains
     enddo
     
     ! Check the initial conditions for the DEM model as well
-    if(DEM_SOLIDS) call check_ic_common_discrete
+    if(DEM_SOLIDS) call check_ic_common_discrete(xlength,ylength,zlength)
     
     ! Finalize the error manager.
     call finl_err_msg

@@ -65,53 +65,8 @@ contains
     
     do_old = intg_adams_bashforth
     
-    ! Check geometry constrains.
-    call check_solids_common_discrete_geometry
-    
     call finl_err_msg
     
   end subroutine check_solids_common_discrete
-  
-  
-  
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  !  Subroutine: CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY                   !
-  !  Author: J.Musser                                   Date: 11-DEC-13  !
-  !                                                                      !
-  !  Purpose: Check user input data                                      !
-  !                                                                      !
-  !  Comments: Geometry checks were moved here from CHECK_DES_DATA.      !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_solids_common_discrete_geometry
-
-    use geometry,       only: zlength
-    use discretelement, only: des_continuum_coupled, max_radius
-
-    real(c_real) :: min_depth
-    
-    ! Initialize the error manager.
-    call init_err_msg("CHECK_SOLIDS_COMMON_DISCRETE_GEOMETRY")
-    
-    
-    if(des_continuum_coupled)then
-       ! check that the depth of the simulation exceeds the largest particle
-       ! to ensure correct calculation of volume fraction. this is important
-       ! for coupled simulations.
-       min_depth = 2.0d0*max_radius
-       if(zlength < min_depth)then
-          write(err_msg, 1300) trim(IFILE_NAME)
-          call flush_err_msg(abort=.false.)
-       endif
-    endif
-    
-1300 format('Error 1300: The maximum particle diameter exceeds the ', &
-          'simulation',/'depth (ZLENGTH). Please correct the ',A,' ',&
-          'file.')
-    
-    call finl_err_msg
-    
-  end subroutine check_solids_common_discrete_geometry
   
 end module check_solids_common_discrete_module

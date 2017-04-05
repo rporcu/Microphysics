@@ -1,9 +1,5 @@
 module set_domain_module
 
-   use check_boundary_conditions_module, only: check_boundary_conditions
-   use check_initial_conditions_module, only: check_initial_conditions
-   use check_point_sources_module, only: check_point_sources
-
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
@@ -17,7 +13,7 @@ module set_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_domain(dx,dy,dz) &
+      subroutine set_domain() &
           bind(C, name="set_domain")
 
       ! Cyclic domain flags.
@@ -35,8 +31,6 @@ module set_domain_module
       use param1, only: is_defined
 
       implicit none
-
-      real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! This used to be in set_geometry
 

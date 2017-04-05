@@ -69,8 +69,9 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             int             maxiter,
                             Real            eps_rel, int lev)
 {
-    // We're not quite ready to use this yet ... just want it all to compile
     int ret = 0, nit = 1;
+
+    std::cout << "AM IN SOLVE " << A_m[0] << std::endl;
 
     const int ncomp  = 1;
     const int nghost = sol.nGrow();

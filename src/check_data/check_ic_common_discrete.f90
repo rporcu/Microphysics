@@ -25,11 +25,9 @@ contains
   !     - ensure the ICs are non-overlapping                             !
   !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_ic_common_discrete
+  subroutine check_ic_common_discrete(xlength,ylength,zlength)
 
- 
     use param1,   only: undefined_i, zero, one, equal
-    use geometry, only: xlength, ylength, zlength
     use param,    only: dimension_ic
     use ic,       only: ic_defined, ic_ep_g, ic_x_w, ic_x_e, ic_y_s, &
                       &  ic_y_n, ic_z_b, ic_z_t
@@ -39,7 +37,7 @@ contains
     real(c_real) :: ic_min, ic_max, ic2_min, ic2_max , tol_ic_reg
     logical      :: sep_axis, first_ic_ok
 
-
+    real(c_real), intent(in) :: xlength, ylength, zlength
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_IC_COMMON_DISCRETE")

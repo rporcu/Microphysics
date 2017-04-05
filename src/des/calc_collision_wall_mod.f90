@@ -40,19 +40,19 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
          SUBROUTINE CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, &
             particle_state,  des_radius, des_pos_new, &
-            des_vel_new, omega_new, fc, tow)
+            des_vel_new, omega_new, fc, tow, xlength, ylength, zlength)
 
-      use geometry, only: xlength, ylength, zlength
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param1, only: zero, one
 
       IMPLICIT NONE
 
-      real(c_real), DIMENSION(:), INTENT(IN) :: des_radius
-      real(c_real), DIMENSION(:,:), INTENT(IN) :: des_pos_new, des_vel_new, omega_new
-      real(c_real), DIMENSION(:,:), INTENT(INOUT) :: fc, tow
-      integer, DIMENSION(:), INTENT(IN) :: particle_state
-      integer, DIMENSION(:), INTENT(IN) :: particle_phase
+      real(c_real)  , intent(in   ) :: des_radius(:)
+      real(c_real)  , intent(in   ) :: des_pos_new(:,:), des_vel_new(:,:), omega_new(:,:)
+      real(c_real)  , intent(inout) :: fc(:,:), tow(:,:)
+      real(c_real)  , intent(in   ) :: xlength, ylength, zlength
+      integer(c_int), intent(in   ) :: particle_state(:)
+      integer(c_int), intent(in   ) :: particle_phase(:)
 
       integer :: LL
       integer :: NF
