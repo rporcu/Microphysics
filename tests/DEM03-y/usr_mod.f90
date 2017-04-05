@@ -1,15 +1,17 @@
-      MODULE usr
+module usr
+
+      use amrex_fort_module, only : c_real => amrex_real
 
       ! a dummy variable listed in usrnlst.inc
-      DOUBLE PRECISION DUMMY_DP
+      real(c_real) :: DUMMY_DP
 
       ! Position and velocity for direct integration
-      DOUBLE PRECISION :: gx1, gx2
-      DOUBLE PRECISION :: gz1, gz2
+      real(c_real) :: gx1, gx2
+      real(c_real) :: gy1, gy2
 
       ! Body forces. (Gravity)
-      double precision :: F1b
-      double precision :: F2b
+      real(c_real) :: F1b
+      real(c_real) :: F2b
 
       contains
 
@@ -336,4 +338,4 @@
 
       end subroutine rk4_v4
 
-      END MODULE usr
+end module usr

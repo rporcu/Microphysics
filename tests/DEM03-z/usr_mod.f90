@@ -1,17 +1,19 @@
 module usr
 
-      ! a dummy variable listed in usrnlst.inc
-      real(c_real) :: DUMMY_DP
+     use amrex_fort_module, only : c_real => amrex_real
 
-      ! Position and velocity for direct integration
-      real(c_real) :: gz1, gz2
-      real(c_real) :: gy1, gy2
+     ! a dummy variable listed in usrnlst.inc
+     real(c_real) :: DUMMY_DP
 
-      ! Body forces. (Gravity)
-      real(c_real) :: F1b
-      real(c_real) :: F2b
+     ! Position and velocity for direct integration
+     real(c_real) :: gz1, gz2
+     real(c_real) :: gy1, gy2
 
-      contains
+     ! Body forces. (Gravity)
+     real(c_real) :: F1b
+     real(c_real) :: F2b
+
+     contains
 
 !......................................................................!
 !                                                                      !

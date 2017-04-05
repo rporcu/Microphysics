@@ -4,7 +4,7 @@
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new,
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new, &
                             xlength, ylength, zlength )
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -83,12 +83,12 @@
       endif
 
       do I=1, rk4_STEPS
-         CALL rk4_V4(rk4_DT, gx1, gz1, gx2, gz2)
+         call rk4_V4(rk4_DT, gx1, gz1, gx2, gz2, length)
          rk4_TIME = rk4_TIME + rk4_DT
       enddo
 
       IF(IS_DEFINED(rk4_DT_LAST)) THEN
-         CALL rk4_V4(rk4_DT_LAST, gx1, gz1, gx2, gz2, length)
+         call rk4_V4(rk4_DT_LAST, gx1, gz1, gx2, gz2, length)
          rk4_TIME = rk4_TIME + rk4_DT_LAST
       endif
 

@@ -1,5 +1,7 @@
 module usr
 
+      use amrex_fort_module, only : c_real => amrex_real
+
       ! a dummy variable listed in usrnlst.inc
       real(c_real) :: DUMMY_DP
 
