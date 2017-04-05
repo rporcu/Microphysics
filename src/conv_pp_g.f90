@@ -64,14 +64,16 @@ module conv_pp_g_module
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               A_m(i,j,k,e) = ropX(i  ,j,k)*ayz
-               A_m(i,j,k,w) = ropX(i-1,j,k)*ayz
+               A_m(i,j,k,e) = ropX(i+1,j,k)*ayz
+               A_m(i,j,k,w) = ropX(i  ,j,k)*ayz
 
-               A_m(i,j,k,n) = ropY(i,j  ,k)*axz
-               A_m(i,j,k,s) = ropY(i,j-1,k)*axz
+               A_m(i,j,k,n) = ropY(i,j+1,k)*axz
+               A_m(i,j,k,s) = ropY(i,j  ,k)*axz
 
-               A_m(i,j,k,t) = ropZ(i,j,k  )*axy
-               A_m(i,j,k,b) = ropZ(i,j,k-1)*axy
+               A_m(i,j,k,t) = ropZ(i,j,k+1)*axy
+               A_m(i,j,k,b) = ropZ(i,j,k  )*axy
+
+               if (j.eq.0 .and. k.eq.0) print *,"AM ",i, A_M(i,j,k,3)
 
             enddo
          enddo
