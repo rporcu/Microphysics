@@ -601,10 +601,14 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
 {
   const int max_pip = particle_state.size();
 
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
      mfix_output_manager(&max_pip,
-      &time, &dt, &nstep,
+      &time, &dt, &xlen, &ylen, &zlen, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
       des_pos_new.dataPtr(),
       des_vel_new.dataPtr(), des_usr_var.dataPtr(),
@@ -1176,6 +1180,7 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
+    if (eq_id == 5) std::cout << "bM IN SOLVE " << rhs[0] << std::endl;
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
 }
 

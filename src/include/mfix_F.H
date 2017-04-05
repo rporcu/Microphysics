@@ -105,7 +105,9 @@ extern "C"
 
   void mfix_output_manager(
          const int* max_pip,
-         Real* time, Real* dt, int* nstep,
+         Real* time, Real* dt, 
+         Real* xlength, Real* ylength, Real* zlength, 
+         int* nstep,
          int* particle_state,    Real* des_radius,
          Real* des_pos_new,
          Real* des_vel_new,      Real* des_usr_var,

@@ -34,7 +34,7 @@ module des_time_march_module
       use machine, only:  wall_time
       use output_manager_module, only: output_manager
       use param1, only: zero
-      use run, only: call_USR
+      use run, only: call_usr
       use run, only: TSTOP
 
       implicit none
@@ -131,7 +131,8 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+         call output_manager(max_pip, time, dt, &
+            xlength, ylength, zlength, nstep, &
             particle_state, des_radius, &
             des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
@@ -148,7 +149,7 @@ module des_time_march_module
  1000 FORMAT(/'DEM NITs: ',A)
  1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
-      IF(call_USR) call USR0_DES
+      IF(call_usr) call USR0_DES
 
       IF(des_continuum_coupled) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
@@ -201,7 +202,7 @@ module des_time_march_module
             des_radius,particle_phase,dx, dy, dz)
 
 ! Call user functions.
-         IF(call_USR) call USR1_DES
+         IF(call_usr) call USR1_DES
 ! Update position and velocities
          call CFNEWVALUES(max_pip, particle_state, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
@@ -231,20 +232,22 @@ module des_time_march_module
 ! Keep track of TIME and number of steps for DEM simulations
             TIME = S_TIME
             NSTEP = NSTEP + 1
-! Call the output manager to write RES data.
-            call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+
+            ! Call the output manager to write RES data.
+            call output_manager(max_pip, time, dt, &
+               xlength, ylength, zlength, nstep, &
                particle_state, des_radius, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(call_USR) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+         IF(call_usr) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
 ! END DEM time loop
 !-----------------------------------------------------------------<<<
 
-      IF(call_USR) call USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+      IF(call_usr) call USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN

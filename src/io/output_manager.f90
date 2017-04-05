@@ -8,14 +8,15 @@ module output_manager_module
   contains
 !----------------------------------------------------------------------!
 !                                                                      !
-!  Subroutine: OUTPUT_MANAGER                                          !
+!  Subroutine: output_manager                                          !
 !  Author: J.Musser                                   Date:            !
 !                                                                      !
 !  Purpose: Relocate calls to write output files (RES,VTP). This was   !
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     subroutine OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+     subroutine output_manager(max_pip, time, dt, &
+        xlength, ylength, zlength, nstep, &
         particle_state, &
         des_radius, des_pos_new, des_vel_new, des_usr_var,&
         omega_new, finished) &
@@ -39,8 +40,7 @@ module output_manager_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: max_pip
-
-      real(c_real), INTENT(IN   ) :: time, dt
+      real(c_real)  , intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int), intent(in   ) :: nstep
 
       real(c_real), intent(in) :: des_radius(max_pip)
@@ -84,9 +84,9 @@ module output_manager_module
       DO LC = 1, DIMENSION_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            CALL WRITE_USR1 (LC, time, dt, max_pip, des_pos_new,&
-               des_vel_new, omega_new)
-            CALL NOTIFY_useR('.USR:',EXT_END(LC:LC))
+            call write_usr1 (LC, time, dt, max_pip, des_pos_new,&
+                             des_vel_new, omega_new, xlength, ylength, zlength)
+            call notify_user('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
       ENDDO
@@ -407,4 +407,5 @@ module output_manager_module
       end subroutine SET_FNAME
 
       end subroutine BACKUP_RES
+
 end module output_manager_module

@@ -71,8 +71,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
 {
     int ret = 0, nit = 1;
 
-    std::cout << "AM IN SOLVE " << A_m[0] << std::endl;
-
     const int ncomp  = 1;
     const int nghost = sol.nGrow();
 

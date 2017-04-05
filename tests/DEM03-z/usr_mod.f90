@@ -1,15 +1,15 @@
-      MODULE usr
+module usr
 
-! a dummy variable listed in usrnlst.inc
-      DOUBLE PRECISION DUMMY_DP
+      ! a dummy variable listed in usrnlst.inc
+      real(c_real) :: DUMMY_DP
 
-! Position and velocity for direct integration
-      DOUBLE PRECISION :: gz1, gz2
-      DOUBLE PRECISION :: gy1, gy2
+      ! Position and velocity for direct integration
+      real(c_real) :: gz1, gz2
+      real(c_real) :: gy1, gy2
 
-! Body forces. (Gravity)
-      double precision :: F1b
-      double precision :: F2b
+      ! Body forces. (Gravity)
+      real(c_real) :: F1b
+      real(c_real) :: F2b
 
       contains
 
@@ -148,21 +148,21 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 22, Equation (67).                                             !
 !......................................................................!
-      double precision function F2kw(y2)
+      double precision function F2kw(y2,length)
 
       use discretelement, only: KN_W
-      use geometry, only: ZLENGTH
       use constant, only: pi
 
       implicit none
 
-      double precision, intent(in) :: y2  ! particle height.
-      double precision, parameter :: lRad = 0.5d-3
-      double precision :: lMass
+      real(c_real), intent(in) :: y2       ! particle height.
+      real(c_real), intent(in) :: length
+      real(c_real), parameter  :: lRad = 0.5d-3
+      real(c_real) :: lMass
 
       lMass = (4.0D0/3.0D0)*PI*(lRad**3)*1.0d+4
 
-      F2kw = -(KN_W/lMass)*(lRad - (ZLENGTH - y2))
+      F2kw = -(KN_W/lMass)*(lRad - (length - y2))
 
       return
       end function F2kw
@@ -263,8 +263,6 @@
       return
       end function F21d
 
-
-
 !......................................................................!
 !                                                                      !
 !  Subroutine name: F21d                                               !
@@ -277,20 +275,19 @@
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !  page 22, Equation (67).                                             !
 !......................................................................!
-      SUBROUTINE RK4_V4(DT, y1_a, x1_a, y2_a, x2_a)
+      subroutine rk4_v4(DT, y1_a, x1_a, y2_a, x2_a, length)
 
       implicit none
 
-      double precision, intent(in) :: DT
+      real(c_real), intent(in   ) :: dt, length
+      real(c_real), intent(inout) :: y1_a, x1_a
+      real(c_real), intent(inout) :: y2_a, x2_a
 
-      double precision, intent(inout) :: y1_a, x1_a
-      double precision, intent(inout) :: y2_a, x2_a
+      real(c_real) :: y1, x1
+      real(c_real) :: y2, x2
 
-      double precision :: y1, x1
-      double precision :: y2, x2
-
-      double precision :: x1_k1, x1_k2, x1_k3, x1_k4, x2_k1, x2_k2, x2_k3, x2_k4
-      double precision :: y1_k1, y1_k2, y1_k3, y1_k4, y2_k1, y2_k2, y2_k3, y2_k4
+      real(c_real) :: x1_k1, x1_k2, x1_k3, x1_k4, x2_k1, x2_k2, x2_k3, x2_k4
+      real(c_real) :: y1_k1, y1_k2, y1_k3, y1_k4, y2_k1, y2_k2, y2_k3, y2_k4
 
       y1 = y1_a
       y2 = y2_a
@@ -300,7 +297,7 @@
       y1_K1 = DT * x1
       y2_K1 = DT * x2
       x1_K1 = DT * (F1b+F1kw(y1)+F1dw(x1)+F12k(y1,y2)+F12d(x1,x2))
-      x2_K1 = DT * (F2b+F2kw(y2)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
+      x2_K1 = DT * (F2b+F2kw(y2,length)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
 
 
       y1 = y1_a + y1_K1/2.0d0
@@ -311,7 +308,7 @@
       y1_K2 = DT * x1
       y2_K2 = DT * x2
       x1_K2 = DT * (F1b+F1kw(y1)+F1dw(x1)+F12k(y1,y2)+F12d(x1,x2))
-      x2_K2 = DT * (F2b+F2kw(y2)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
+      x2_K2 = DT * (F2b+F2kw(y2,length)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
 
 
       y1 = y1_a + y1_K2/2.0d0
@@ -322,7 +319,7 @@
       y1_K3 = DT * x1
       y2_K3 = DT * x2
       x1_K3 = DT * (F1b+F1kw(y1)+F1dw(x1)+F12k(y1,y2)+F12d(x1,x2))
-      x2_K3 = DT * (F2b+F2kw(y2)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
+      x2_K3 = DT * (F2b+F2kw(y2,length)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
 
 
       y1 = y1_a + y1_K3
@@ -333,14 +330,13 @@
       y1_K4 = DT * x1
       y2_K4 = DT * x2
       x1_K4 = DT * (F1b+F1kw(y1)+F1dw(x1)+F12k(y1,y2)+F12d(x1,x2))
-      x2_K4 = DT * (F2b+F2kw(y2)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
+      x2_K4 = DT * (F2b+F2kw(y2,length)+F2dw(x2)+F21k(y1,y2)+F21d(x1,x2))
 
       y1_a = y1_a + (y1_K1 + 2.0d0*y1_K2 + 2.0d0*y1_K3 + y1_K4)/6.0d0
       y2_a = y2_a + (y2_K1 + 2.0d0*y2_K2 + 2.0d0*y2_K3 + y2_K4)/6.0d0
       x1_a = x1_a + (x1_K1 + 2.0d0*x1_K2 + 2.0d0*x1_K3 + x1_K4)/6.0d0
       x2_a = x2_a + (x2_K1 + 2.0d0*x2_K2 + 2.0d0*x2_K3 + x2_K4)/6.0d0
 
-      RETURN
-      END SUBROUTINE RK4_V4
+      end subroutine rk4_v4
 
-      END MODULE usr
+end module usr
