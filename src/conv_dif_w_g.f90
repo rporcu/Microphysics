@@ -289,7 +289,7 @@ module w_g_conv_dif
       do k = wlo(3)+1,whi(3)-1
         do j = wlo(2),whi(2)
           do i = wlo(1),whi(1)
-             vel(i,j,k) = avg(u_g(i+1,j,k-1), u_g(i+1,j,k  ))
+             vel(i,j,k) = avg(u_g(i,j,k-1), u_g(i,j,k  ))
           end do
         end do
       end do
