@@ -86,7 +86,7 @@ contains
 
                epga = half*(ep_g(i,j,k-1) + ep_g(i,j,k))
 
-! Pressure term
+               ! Pressure term
                pgb = p_g(i,j,k-1)
                if(cyclic_z_pd) then
                   if((k==domlo(3)) .or. (k==domhi(3)+1) ) &
@@ -94,10 +94,10 @@ contains
                end if
                sdp = -p_scale*epga*(p_g(i,j,k) - pgb)*axy
 
-! Previous time step
+               ! Previous time step
                v0 = half*(rop_go(i,j,k-1) + rop_go(i,j,k))*odt
 
-! Body force
+               ! Body force
                vbf = half*(ro_g(i,j,k-1) + ro_g(i,j,k))*gravity(3)
 
 ! Collect the terms
