@@ -100,7 +100,7 @@ contains
                ! Body force
                vbf = half*(ro_g(i,j,k-1) + ro_g(i,j,k))*gravity(3)
 
-! Collect the terms
+               ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
                                 A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                 A_m(i,j,k,t) + A_m(i,j,k,b) + v0*vol)
