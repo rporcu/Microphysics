@@ -109,8 +109,6 @@ contains
                                  A_m(i,j,k,n) + A_m(i,j,k,s) + &
                                  A_m(i,j,k,t) + A_m(i,j,k,b))
 
-              if (j.eq.0 .and. k.eq.0) print *,"SR A ", i,A_m(i,j,k,3)
-
              enddo
           enddo
       enddo

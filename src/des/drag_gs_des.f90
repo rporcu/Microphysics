@@ -109,9 +109,9 @@ module drag_gs_des1_module
          ! Calculate the gas volume fraction, velocity, and pressure force at
          ! the particle's position.
          lEPG = EP_G(I,J,K)
-         VELFP(1) = 0.5d0*(u_g(i-1,j,k) + u_g(I,J,K))
-         VELFP(2) = 0.5d0*(v_g(i,j-1,k) + v_g(I,J,K))
-         VELFP(3) = 0.5d0*(w_g(i,j,k-1) + w_g(I,J,K))
+         velfp(1) = 0.5d0*(u_g(i,j,k) + u_g(i+1,j,k))
+         velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
+         velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
 
          ! For explicit coupling, use the drag coefficient calculated for the
          ! gas phase drag calculations.
@@ -239,9 +239,9 @@ module drag_gs_des1_module
          ! Calculate the gas volume fraction, velocity, and at the
          ! particle's position.
          lepg = ep_g(i,j,k)
-         velfp(1) = 0.5d0*(u_g(i-1,j,k) + u_g(i,j,k))
-         velfp(2) = 0.5d0*(v_g(i,j-1,k) + v_g(i,j,k))
-         velfp(3) = 0.5d0*(w_g(i,j,k-1) + w_g(i,j,k))
+         velfp(1) = 0.5d0*(u_g(i,j,k) + u_g(i+1,j,k))
+         velfp(2) = 0.5d0*(v_g(i,j,k) + v_g(i,j+1,k))
+         velfp(3) = 0.5d0*(w_g(i,j,k) + w_g(i,j,k+1))
 
          if(lepg < epsilon(lepg)) lepg = ep_g(i,j,k)
 
