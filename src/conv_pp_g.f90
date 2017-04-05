@@ -73,8 +73,6 @@ module conv_pp_g_module
                A_m(i,j,k,t) = ropZ(i,j,k+1)*axy
                A_m(i,j,k,b) = ropZ(i,j,k  )*axy
 
-               if (j.eq.0 .and. k.eq.0) print *,"AM ",i, A_M(i,j,k,3)
-
             enddo
          enddo
       enddo

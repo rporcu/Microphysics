@@ -63,7 +63,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_x .and. alo(1) < domlo(1)) llo(1) = alo(1)+1
+      if(.not.cyclic_x .and. alo(1) == domlo(1)) llo(1) = alo(1)+1
 
       do k = llo(3), lhi(3)
          do j = llo(2), lhi(2)
@@ -121,7 +121,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_y .and. alo(2) < domlo(2)) llo(2) = alo(2)+1
+      if(.not.cyclic_y .and. alo(2) == domlo(2)) llo(2) = alo(2)+1
 
       do k = llo(3), lhi(3)
          do j = llo(2), lhi(2)
@@ -180,7 +180,7 @@ module calc_d_mod
       llo = alo
       lhi = ahi
 
-      if(.not.cyclic_z .and. alo(3) < domlo(3)) llo(3) = alo(3)+1
+      if(.not.cyclic_z .and. alo(3) == domlo(3)) llo(3) = alo(3)+1
 
       do k = llo(3), lhi(3)
         do j = llo(2), lhi(2)

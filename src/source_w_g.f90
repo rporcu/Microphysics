@@ -80,9 +80,9 @@ contains
       axy = dx*dy
       vol = dx*dy*dz
 
-      do k = lo(3),hi(3)+1
-         do j = lo(2),hi(2)
-            do i = lo(1),hi(1)
+      do k = alo(3),ahi(3)
+         do j = alo(2),ahi(2)
+            do i = alo(1),ahi(1)
 
                epga = half*(ep_g(i,j,k-1) + ep_g(i,j,k))
 
