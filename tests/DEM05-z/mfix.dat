@@ -41,10 +41,6 @@
 
   COORDINATES = 'Cartesian'
 
-  XLENGTH  = 0.500
-  YLENGTH  = 0.500
-  ZLENGTH  = 0.100
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 

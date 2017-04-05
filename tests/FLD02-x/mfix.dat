@@ -38,10 +38,6 @@
 
   COORDINATES   = 'CARTESIAN'
 
-  XLENGTH = 1.00
-  YLENGTH = 0.01
-  ZLENGTH = 1.00
-
 #_______________________________________________________________________
 # GAS-PHASE SECTION
 
