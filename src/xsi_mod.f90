@@ -35,17 +35,13 @@ contains
 !  discretization in x-axial direction.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_xsi_x(DISCR, phi, philo, phihi, vel, vello, velhi, &
-                         xsi_e, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
+   subroutine calc_xsi_x(phi, philo, phihi, vel, vello, velhi, &
+                         xsi_e, xlo, xhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3)
       integer     , intent(in   ) :: vello(3),velhi(3)
       integer     , intent(in   ) :: xlo(3),xhi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
       logical     , intent(in   ) :: is_centered
-
-      ! discretization method
-      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(in) :: phi&
@@ -59,57 +55,26 @@ contains
       real(c_real), intent(out) :: xsi_e&
          (xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
-
-!---------------------------------------------------------------------//
-! Indices
-      integer :: ic, id, iu
-      integer :: i, j, k
-!
-      real(c_real) :: phi_C
-
-      ! down wind factor
-      real(c_real) :: dwf
-
-      ! Courant number
-      real(c_real) :: cf
-
-!---------------------------------------------------------------------//
-
-      print *,'XLO ', xlo(:)
-      print *,'XHI ', xhi(:)
-      print *,'VELLO ', vello(:)
-      print *,'VELHI ', velhi(:)
-      print *,'phiLO ', philo(:)
-      print *,'phiHI ', phihi(:)
+      integer(c_int) :: i, j, k
+      real(c_real)   :: phi_c, dwf
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
             if (.not. is_centered) then
-               IF (vel(i,j,k) >= ZERO) THEN
-                  IC = i
-                  ID = i+1
-                  IU = i-1
-               ELSE
-                  IC = i+1
-                  ID = i
-                  IU = i+2
-               ENDIF
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i-1,j,k),phi(i,j,k),phi(i+1,j,k))
+               else
+                  phi_c = phi_c_of(phi(i+2,j,k),phi(i+1,j,k),phi(i,j,k))
+               endif
             else
-               IF (vel(i,j,k) >= ZERO) THEN
-                  IC = i-1
-                  ID = i
-                  IU = i-2
-               ELSE
-                  IC = i
-                  ID = i-1
-                  IU = i+1
-               ENDIF
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i-2,j,k),phi(i-1,j,k),phi(i,j,k))
+               else
+                  phi_c = phi_c_of(phi(i+1,j,k),phi(i,j,k),phi(i-1,j,k))
+               endif
             endif 
-
-            phi_c = phi_c_of(phi(iu,j,k),phi(ic,j,k),phi(id,j,k))
 
             dwf = superbee(phi_c)
             xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
@@ -129,60 +94,47 @@ contains
 !  discretization in y-axial direction.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_xsi_y(DISCR, phi, philo, phihi, V, vello, velhi, &
-                            xsi_n, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
+      subroutine calc_xsi_y(phi, philo, phihi, vel, vello, velhi, &
+                            xsi_n, xlo, xhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
       logical     , intent(in   ) :: is_centered
-
-      ! discretization method
-      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(IN) :: phi&
          (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
-      real(c_real), intent(IN) :: V&
+      real(c_real), intent(IN) :: vel&
          (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
       real(c_real), intent(out) :: xsi_n&
          (xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
-
-      integer :: JC, JD, JU
-      integer :: i, j, k
-
-      real(c_real) :: phi_C
-
-      ! down wind factor
-      real(c_real) :: dwf
-
-      ! Courant number
-      real(c_real) :: cf
-
-!---------------------------------------------------------------------//
+      integer(c_int) :: i, j, k
+      real(c_real)   :: phi_c, dwf
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
-            if (v(i,j,k) >= zero) then
-               ju = j-2
-               jc = j-1
-               jd = j
+            if (.not. is_centered) then
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i,j-1,k),phi(i,j,k),phi(i,j+1,k))
+               else
+                  phi_c = phi_c_of(phi(i,j+2,k),phi(i,j+1,k),phi(i,j,k))
+               endif
             else
-               ju = j+1
-               jc = j
-               jd = j-1
-            endif
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i,j-2,k),phi(i,j-1,k),phi(i,j,k))
+               else
+                  phi_c = phi_c_of(phi(i,j+1,k),phi(i,j,k),phi(i,j-1,k))
+               endif
+            endif 
 
-            phi_c = phi_c_of(phi(i,ju,k),phi(i,jc,k),phi(i,jd,k))
             dwf = superbee(phi_c)
-            xsi_n(i,j,k) = xsi_func(v(i,j,k),dwf)
+            xsi_n(i,j,k) = xsi_func(vel(i,j,k),dwf)
 
           end do
         end do
@@ -200,65 +152,53 @@ contains
 !  discretization in z-axial direction.                                !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine calc_xsi_z(DISCR, phi, philo, phihi, W, vello, velhi, &
-                            xsi_t, xlo, xhi, dt, dx, dy, dz, domlo, domhi, is_centered)
+      subroutine calc_xsi_z(phi, philo, phihi, vel, vello, velhi, &
+                            xsi_t, xlo, xhi, is_centered)
 
       integer     , intent(in   ) :: philo(3),phihi(3),vello(3),velhi(3),xlo(3),xhi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
       logical     , intent(in   ) :: is_centered
-
-      ! discretization method
-      integer, intent(IN) :: DISCR
 
       ! convected quantity
       real(c_real), intent(IN) :: phi&
          (philo(1):phihi(1),philo(2):phihi(2),philo(3):phihi(3))
 
       ! Velocity components
-      real(c_real), intent(IN) :: W&
+      real(c_real), intent(IN) :: vel&
          (vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3))
 
       ! Convection weighting factors
       real(c_real), intent(out) :: xsi_t&
          (xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
-! Local variables
-!---------------------------------------------------------------------//
-! Indices
-      integer :: KC, KD, KU
-      integer :: i, j, k
-!
-      real(c_real) :: phi_C
-! down wind factor
-      real(c_real) :: dwf
-! Courant number
-      real(c_real) :: cf
-!---------------------------------------------------------------------//
+      integer(c_int) :: i, j, k
+      real(c_real)   :: phi_c, dwf
 
       do k = xlo(3),xhi(3)
         do j = xlo(2),xhi(2)
           do i = xlo(1),xhi(1)
 
-            if (w(i,j,k) >= zero) then
-               ku = k-2
-               kc = k-1
-               kd = k
+            if (.not. is_centered) then
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i,j,k-1),phi(i,j,k),phi(i,j,k+1))
+               else
+                  phi_c = phi_c_of(phi(i,j,k+2),phi(i,j,k+1),phi(i,j,k))
+               endif
             else
-               ku = k+1
-               kc = k
-               kd = k-1
-            endif
+               if (vel(i,j,k) >= zero) then
+                  phi_c = phi_c_of(phi(i,j,k-2),phi(i,j,k-1),phi(i,j,k))
+               else
+                  phi_c = phi_c_of(phi(i,j,k+1),phi(i,j,k),phi(i,j,k-1))
+               endif
+            endif 
 
-            phi_C = phi_C_OF(phi(i,j,KU),phi(i,j,KC),phi(i,j,KD))
-            DWF = SUPERBEE(phi_C)
-            XSI_T(i,j,k) = XSI_func(W(i,j,k),DWF)
+            dwf = superbee(phi_C)
+            XSI_T(i,j,k) = XSI_func(vel(i,j,k),DWF)
 
           end do
         end do
       end do
 
-      END subroutine calc_xsi_z
+      end subroutine calc_xsi_z
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

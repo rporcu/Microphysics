@@ -21,8 +21,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine conv_dif_u_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
-      A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
-      dt, dx, dy, dz, domlo, domhi)
+      A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
@@ -35,8 +34,6 @@ contains
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
 
       real(c_real), intent(inout) :: A_m&
          (alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3),-3:3)
@@ -58,9 +55,12 @@ contains
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
       real(c_real), intent(in   ) :: fluxZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
+
+      real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
 
       if (discretize(3) == 0) then
+
          call store_a_u_g0(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
             A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
@@ -68,7 +68,7 @@ contains
          call store_a_u_g1(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
             A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-            dt, dx, dy, dz, domlo, domhi)
+            dx, dy, dz)
       end if
 
       end subroutine conv_dif_u_g
@@ -210,11 +210,10 @@ contains
       subroutine store_a_u_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz, domlo, domhi)
+         dx, dy, dz)
 
       use functions, only: avg, avg_h
       use matrix   , only: e, w, n, s, t, b
-      use run      , only: discretize
 
       use xsi, only: calc_xsi_x, calc_xsi_y, calc_xsi_z
 
@@ -223,8 +222,7 @@ contains
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
-      real(c_real), intent(in   ) :: dx, dy, dz, dt
+      real(c_real), intent(in   ) :: dx, dy, dz
 
 
       real(c_real), intent(inout) :: A_m&
@@ -254,10 +252,10 @@ contains
       integer :: i,j,k
 
       ! Diffusion parameter
-      real(c_real) :: d_f
+      real(c_real) :: d_f,d_f_s,d_f_n,d_f_b,d_f_t
 
       ! Face mass flux
-      real(c_real) :: lflux
+      real(c_real) :: lflux,lflux_s,lflux_n,lflux_b,lflux_t
 
       real(c_real), allocatable :: vel(:,:,:)
       real(c_real), allocatable :: xsi_(:,:,:)
@@ -297,11 +295,14 @@ contains
         end do
       end do
 
-      print *,'CALL FROM CONV_DIF_U'
+      ! NOTES:   u_g  lives on x-faces    :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
+      !          A_m  lives on x-faces    :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
+      !          vel  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !          xsi  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !               (so xsi(i-1,j,k) and xsi(i,j,k) contribute to A_m(i,j,k))
 
       allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_x (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi,.false.)
+      call calc_xsi_x (u_g, ulo, uhi, vel, vello, velhi, xsi_, xlo, xhi, .false.)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
@@ -320,10 +321,6 @@ contains
 
 !---------------------------------------------------------------------//
 
-      xlo(1) = alo(1)
-      xlo(2) = alo(2)
-      xlo(3) = alo(3)
-
       xhi(1) = ahi(1)
       xhi(2) = ahi(2)+1
       xhi(3) = ahi(3)
@@ -332,26 +329,34 @@ contains
       do k = ulo(3),uhi(3)
         do j = ulo(2),uhi(2)
           do i = ulo(1)+1,uhi(1)-1
-             vel(i,j,k) = avg(v_g(i-1,j+1,k), v_g(i,j+1,k))
+             vel(i,j,k) = avg(v_g(i-1,j,k), v_g(i,j,k))
           end do
         end do
       end do
 
-      allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_y (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi,.true.)
+      allocate(xsi_(alo(1):xhi(1),alo(2):xhi(2),alo(3):xhi(3)) )
+      call calc_xsi_y (u_g, ulo, uhi, vel, vello, velhi, xsi_, alo, xhi, .true.)
+  
+      ! NOTES:   u_g  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
+      !          A_m  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
+      !          vel  lives on x-y edges :   (lo(1): hi(1)+1, lo(2):hi(2)+1, lo(3):hi(3))
+      !          xsi  lives on x-y edges :   (lo(1): hi(1)+1, lo(2):hi(2)+1, lo(3):hi(3))
 
       do k = alo(3),ahi(3)
-         do j = alo(2)-1,ahi(2)
+         do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = HALF * (fluxY(i-1,j+1,k) + fluxY(i  ,j+1,k))
+               lflux_n = HALF * (fluxY(i-1,j+1,k) + fluxY(i  ,j+1,k))
+               lflux_s = HALF * (fluxY(i-1,j  ,k) + fluxY(i  ,j  ,k))
 
-               d_f = avg_h(avg_h(mu_g(i-1,j,k),mu_g(i-1,j+1,k)),&
-                           avg_h(mu_g(i  ,j,k),mu_g(i  ,j+1,k))) * axz_y
+               d_f_n = avg_h(avg_h(mu_g(i-1,j,k),mu_g(i-1,j+1,k)),&
+                             avg_h(mu_g(i  ,j,k),mu_g(i  ,j+1,k))) * axz_y
 
-               if (j.ge.alo(2)) A_m(i,j,  k,n) = d_f - lflux*(      xsi_(i,j,k))
-               if (j.lt.ahi(2)) A_m(i,j+1,k,s) = d_f + lflux*(one - xsi_(i,j,k))
+               d_f_s = avg_h(avg_h(mu_g(i-1,j-1,k),mu_g(i-1,j,k)),&
+                             avg_h(mu_g(i  ,j-1,k),mu_g(i  ,j,k))) * axz_y
+
+               A_m(i,j,k,n) = d_f_n - lflux_n*(      xsi_(i,j+1,k))
+               A_m(i,j,k,s) = d_f_s + lflux_s*(one - xsi_(i,j  ,k))
 
             enddo
          enddo
@@ -359,10 +364,6 @@ contains
       deallocate(xsi_)
 
 !---------------------------------------------------------------------//
-
-      xlo(1) = alo(1)
-      xlo(2) = alo(2)
-      xlo(3) = alo(3)
 
       xhi(1) = ahi(1)
       xhi(2) = ahi(2)
@@ -372,26 +373,34 @@ contains
       do k = ulo(3),uhi(3)
         do j = ulo(2),uhi(2)
           do i = ulo(1)+1,uhi(1)-1
-            vel(i,j,k) = avg(w_g(i-1,j,k+1), w_g(i,j,k+1))
+            vel(i,j,k) = avg(w_g(i-1,j,k), w_g(i,j,k))
           end do
         end do
       end do
+  
+      ! NOTES:   u_g  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)  )
+      !          A_m  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)  )
+      !          vel  lives on x-z edges :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)+1)
+      !          xsi  lives on x-z edges :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)+1)
 
-      allocate(xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_z (discretize(3), u_g, ulo, uhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi,.true.)
+      allocate(xsi_(alo(1):xhi(1),alo(2):xhi(2),alo(3):xhi(3)) )
+      call calc_xsi_z (u_g, ulo, uhi, vel, vello, velhi, xsi_, alo, xhi, .true.)
 
-      do k = alo(3)-1,ahi(3)
+      do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = HALF * (fluxZ(i-1,j,k+1) + fluxZ(i  ,j,k+1))
+               lflux_t = HALF * (fluxZ(i-1,j,k+1) + fluxZ(i  ,j,k+1))
+               lflux_b = HALF * (fluxZ(i-1,j,k  ) + fluxZ(i  ,j,k  ))
 
-               d_f = avg_h(avg_h(mu_g(i-1,j,k),mu_g(i-1,j,k+1)),&
-                           avg_h(mu_g(i  ,j,k),mu_g(i  ,j,k+1))) * axy_z
+               d_f_t = avg_h(avg_h(mu_g(i-1,j,k),mu_g(i-1,j,k+1)),&
+                             avg_h(mu_g(i  ,j,k),mu_g(i  ,j,k+1))) * axy_z
 
-               if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f - lflux*(      xsi_(i,j,k))
-               if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_f + lflux*(one - xsi_(i,j,k))
+               d_f_b = avg_h(avg_h(mu_g(i-1,j,k-1),mu_g(i-1,j,k)),&
+                             avg_h(mu_g(i  ,j,k-1),mu_g(i  ,j,k))) * axy_z
+
+               A_m(i,j,k,t) = d_f_t - lflux_t*(      xsi_(i,j,k+1))
+               A_m(i,j,k,b) = d_f_b + lflux_b*(one - xsi_(i,j,k  ))
 
             enddo
          enddo
@@ -402,6 +411,5 @@ contains
 
       deallocate(vel )
 
-      return
    end subroutine store_a_u_g1
 end module u_g_conv_dif

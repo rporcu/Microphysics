@@ -22,7 +22,7 @@ module v_g_conv_dif
    subroutine conv_dif_v_g(&
       slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
       A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ,&
-      dt, dx, dy, dz, domlo, domhi)
+      dx, dy, dz)
 
 
 ! Modules
@@ -34,8 +34,7 @@ module v_g_conv_dif
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -70,7 +69,7 @@ module v_g_conv_dif
          call store_a_v_g1(&
               slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
               A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-              dt, dx, dy, dz, domlo, domhi)
+              dx, dy, dz)
       endIF
 
       end subroutine conv_dif_v_g
@@ -121,11 +120,11 @@ module v_g_conv_dif
 
       integer :: i, j, k
 
-      ! Face mass flux
-      real(c_real) :: lflux
-
       ! Diffusion parameter
       real(c_real) :: d_f
+
+      ! Face mass flux
+      real(c_real) :: lflux
 
       real(c_real) :: ayz_x, axz_y, axy_z
 
@@ -213,14 +212,13 @@ module v_g_conv_dif
       subroutine store_a_v_g1(&
          slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz, domlo, domhi)
+         dx, dy, dz)
 
 ! Modules
 !---------------------------------------------------------------------//
 
       use functions, only: avg, avg_h
       use matrix, only: e, w, n, s, t, b
-      use run, only: discretize
 
       use xsi, only: calc_xsi_x, calc_xsi_y, calc_xsi_z
 
@@ -231,8 +229,7 @@ module v_g_conv_dif
       integer     , intent(in   ) :: vlo(3),vhi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)
       integer     , intent(in   ) :: alo(3),ahi(3)
-      integer     , intent(in   ) :: domlo(3),domhi(3)
-      real(c_real), intent(in   ) :: dx, dy, dz, dt
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -260,12 +257,12 @@ module v_g_conv_dif
       integer :: xlo(3), xhi(3)
       integer :: vello(3),velhi(3)
       integer :: i, j, k
-
+ 
       ! Diffusion parameter
-      real(c_real) :: d_f
-
+      real(c_real) :: d_f,d_f_e,d_f_w,d_f_b,d_f_t
+ 
       ! Face mass flux
-      real(c_real) :: lflux
+      real(c_real) :: lflux,lflux_e,lflux_w,lflux_b,lflux_t
 
       real(c_real), allocatable :: vel(:,:,:)
       real(c_real), allocatable :: xsi_(:,:,:)
@@ -285,6 +282,8 @@ module v_g_conv_dif
 
       allocate( vel(vello(1):velhi(1),vello(2):velhi(2),vello(3):velhi(3)))
 
+!---------------------------------------------------------------------//
+
       xlo(1) = alo(1)
       xlo(2) = alo(2)
       xlo(3) = alo(3)
@@ -293,34 +292,38 @@ module v_g_conv_dif
       xhi(2) = ahi(2)
       xhi(3) = ahi(3)
 
-!---------------------------------------------------------------------//
-
       vel(:,:,:) = 0.d0
       do k = vlo(3),vhi(3)
         do j = vlo(2)+1,vhi(2)-1
           do i = vlo(1),vhi(1)
-             vel(i,j,k) = avg(u_g(i+1,j-1 ,k), u_g(i+1,j  ,k))
+             vel(i,j,k) = avg(u_g(i,j-1 ,k), u_g(i,j  ,k))
           end do
         end do
       end do
 
-      print *,'CALL FROM CONV_DIF_V'
+      ! NOTES:   v_g  lives on y-faces    :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3))
+      !          A_m  lives on y-faces    :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3))
+      !          vel  lives on x-y edges  :   (lo(1): hi(1)+1, lo(2):hi(2)+1, lo(3):hi(3))
+      !          xsi  lives on x-y edges  :   (lo(1): hi(1)+1, lo(2):hi(2)+1, lo(3):hi(3))
 
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_x (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
+      call calc_xsi_x (v_g, vlo, vhi, vel, vello, velhi, xsi_, xlo, xhi, .true.)
 
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
-            do i = alo(1)-1,ahi(1)
+            do i = alo(1),ahi(1)
 
-               lflux = half * (fluxX(i+1,j-1,k) + fluxX(i+1,j  ,k))
+               lflux_e = half * (fluxX(i+1,j-1,k) + fluxX(i+1,j,k))
+               lflux_w = half * (fluxX(i  ,j-1,k) + fluxX(i  ,j,k))
 
-               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i+1,j-1,k)),&
-                           avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k))) * ayz_x
+               d_f_e = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i+1,j-1,k)),&
+                             avg_h(mu_g(i,j  ,k),mu_g(i+1,j  ,k))) * ayz_x
 
-               if (i.ge.alo(1)) A_m(i,  j,k,e) = d_f - lflux*(xsi_(i,j,k))
-               if (i.lt.ahi(1)) A_m(i+1,j,k,w) = d_f + lflux*(one - xsi_(i,j,k))
+               d_f_w = avg_h(avg_h(mu_g(i-1,j-1,k),mu_g(i,j-1,k)),&
+                             avg_h(mu_g(i-1,j  ,k),mu_g(i,j  ,k))) * ayz_x
+
+               A_m(i,j,k,e) = d_f_e - lflux_e*(      xsi_(i+1,j,k))
+               A_m(i,j,k,w) = d_f_w + lflux_w*(one - xsi_(i  ,j,k))
 
             enddo
          enddo
@@ -346,9 +349,14 @@ module v_g_conv_dif
         end do
       end do
 
+      ! NOTES:   v_g  lives on y-faces    :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3))
+      !          A_m  lives on y-faces    :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3))
+      !          vel  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !          xsi  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !               (so xsi(i,j-1,k) and xsi(i,j,k) contribute to A_m(i,j,k))
+
       allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_y (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .false.)
+      call calc_xsi_y (v_g, vlo, vhi, vel, vello, velhi,  xsi_, xlo, xhi, .false.)
 
      do k = alo(3),ahi(3)
          do j = alo(2)-1,ahi(2)
@@ -380,26 +388,34 @@ module v_g_conv_dif
       do k = vlo(3),vhi(3)
         do j = vlo(2)+1,vhi(2)-1
           do i = vlo(1),vhi(1)
-             vel(i,j,k) = avg(w_g(i,j-1,k+1), w_g(i,j  ,k+1))
+             vel(i,j,k) = avg(w_g(i,j-1,k), w_g(i,j  ,k))
           end do
         end do
       end do
 
-      allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
-      call calc_xsi_z (discretize(4), v_g, vlo, vhi, vel, vello, velhi, &
-         xsi_, xlo, xhi, dt, dx, dy, dz, domlo, domhi, .true.)
+      ! NOTES:   v_g  lives on y-faces   :   (lo(1): hi(1), lo(2):hi(2)+1 lo(3):hi(3)  )
+      !          A_m  lives on y-faces   :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3)  )
+      !          vel  lives on y-z edges :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3)+1)
+      !          xsi  lives on y-z edges :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3)+1)
 
-     do k = alo(3)-1,ahi(3)
+      allocate( xsi_(xlo(1):xhi(1),xlo(2):xhi(2),xlo(3):xhi(3)) )
+      call calc_xsi_z (v_g, vlo, vhi, vel, vello, velhi, xsi_, xlo, xhi, .true.)
+
+     do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
 
-               lflux = half * (fluxZ(i,j-1,k+1) + fluxZ(i,j  ,k+1))
+               lflux_t = half * (fluxZ(i,j-1,k+1) + fluxZ(i,j  ,k+1))
+               lflux_b = half * (fluxZ(i,j-1,k  ) + fluxZ(i,j  ,k  ))
 
-               d_f = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i,j-1,k+1)),&
-                           avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1))) * axy_z
+               d_f_t = avg_h(avg_h(mu_g(i,j-1,k),mu_g(i,j-1,k+1)),&
+                             avg_h(mu_g(i,j  ,k),mu_g(i,j  ,k+1))) * axy_z
 
-               if (k.ge.alo(3)) A_m(i,j,k,  t) = d_f - lflux*(xsi_(i,j,k))
-               if (k.lt.ahi(3)) A_m(i,j,k+1,b) = d_f + lflux*(one - xsi_(i,j,k))
+               d_f_b = avg_h(avg_h(mu_g(i,j-1,k-1),mu_g(i,j-1,k)),&
+                             avg_h(mu_g(i,j  ,k-1),mu_g(i,j  ,k))) * axy_z
+
+               A_m(i,j,k,t) = d_f_t - lflux_t*(      xsi_(i,j,k+1))
+               A_m(i,j,k,b) = d_f_b + lflux_b*(one - xsi_(i,j,k  ))
 
             end do
          end do

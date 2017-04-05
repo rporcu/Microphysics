@@ -123,7 +123,7 @@ module solve_vel_star_module
       ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-                         dt, dx, dy, dz, domlo, domhi)
+                          dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, &
@@ -274,7 +274,7 @@ module solve_vel_star_module
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz, domlo, domhi)
+          dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, A_m,&
@@ -426,7 +426,7 @@ module solve_vel_star_module
       ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-                         dt, dx, dy, dz, domlo, domhi)
+                         dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, &
