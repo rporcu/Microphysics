@@ -134,7 +134,7 @@ module calc_drag_des_module
       real(c_real), intent(in   ) :: dx, dy, dz
 
 ! Calculate gas-solids drag force.
-      IF(DES_CONTINUUM_COUPLED) THEN
+      IF(des_continuum_coupled) THEN
          CALL DRAG_GS_GAS(slo, shi,ulo, uhi, vlo, vhi, wlo, whi, max_pip,&
             ep_g, u_g, v_g, w_g, ro_g, mu_g, f_gds, drag_bm, particle_phase,&
             particle_state, pvol, des_pos_new, des_vel_new, des_radius, &
@@ -203,7 +203,7 @@ module calc_drag_des_module
          pvol, dx, dy, dz)
 
 ! Calculate gas-solids drag force on particle
-      IF(DES_CONTINUUM_COUPLED) &
+      IF(des_continuum_coupled) &
          call drag_gs_gas(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, max_pip, &
             ep_g, u_g, v_g, w_g, ro_g, mu_g, &
             f_gds, drag_bm, particle_phase, particle_state, pvol, &

@@ -36,7 +36,7 @@ contains
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
      time, max_nitC, normg, set_normg, call_udf, &
      cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf, &
-     xlength_C,ylength_C, zlength_C, coord_C) &
+     coord_C) &
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
@@ -44,7 +44,6 @@ contains
     use geometry, only: cyclic_x,    cyclic_y,    cyclic_z
     use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
     use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-    use geometry, only: xlength, ylength, zlength
     use get_data_module, only: get_data
     use leqsol, only: max_nit
     use param1, only: is_undefined
@@ -59,7 +58,6 @@ contains
     integer(c_int), intent(out) :: steady_state
     real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
     real(c_real), intent(out) :: dt, time
-    real(c_real), intent(out) :: xlength_C, ylength_C, zlength_C
     integer(c_int)         , intent(out) :: max_nitC, coord_C
     real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
@@ -88,10 +86,6 @@ contains
     cyclic_zC = merge(1,0,cyclic_z .or. cyclic_z_pd .or. cyclic_z_mf)
 
     cyclic_mf = merge(1,0,cyclic_x_mf .or. cyclic_y_mf .or. cyclic_z_mf)
-
-    xlength_C = xlength
-    ylength_C = ylength
-    zlength_C = zlength
 
     if (coordinates .eq. 'CARTESIAN') then
        coord_C = 0

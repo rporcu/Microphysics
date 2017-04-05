@@ -105,7 +105,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !    and dispersed phase flows.
 !  </description>
 !  <valid value=".true." note="Performs coupled simulations. "/>
-      DES_CONTINUUM_COUPLED = .FALSE.
+      des_continuum_coupled = .FALSE.
 !</keyword>
 
 !<keyword category="Discrete Element Simulation" required="false"

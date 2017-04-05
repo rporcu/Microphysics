@@ -7,7 +7,7 @@ module init_fluid_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine init_fluid(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          domlo, domhi, ep_g, ro_g, rop_g, p_g, u_g, v_g, w_g, &
-                         mu_g, lambda_g, dx, dy, dz) &
+                         mu_g, lambda_g, dx, dy, dz, xlength, ylength, zlength) &
       bind(C, name="init_fluid")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -48,12 +48,14 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: xlength, ylength, zlength
 
       ! Set user specified initial conditions (IC)
       call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, domlo, domhi, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
-      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, domlo, domhi)
+      call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+                   xlength, ylength, zlength, domlo, domhi)
 
       ! Set the initial fluid density
       if (is_undefined(ro_g0)) then
@@ -205,7 +207,8 @@ module init_fluid_module
 !           is acting in the negative y-direction.                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, domlo, domhi)
+      subroutine set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
+                         xlength, ylength, zlength, domlo, domhi)
 
       use bc, only: delp_x, delp_y, delp_z
       use bc, only: dimension_ic
@@ -214,7 +217,6 @@ module init_fluid_module
       use constant , only: gravity
       use eos, ONLY: EOSG
       use fld_const, only: mw_avg, ro_g0
-      use geometry, only: xlength, ylength, zlength
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
@@ -236,6 +238,7 @@ module init_fluid_module
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: xlength, ylength, zlength
 !-----------------------------------------------
 ! Local variables
 !-----------------------------------------------

@@ -20,7 +20,8 @@ module calc_pg_grad_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine calc_pg_grad(slo, shi, lo, hi, max_pip, &
                               p_g, gradPg,  particle_state, des_pos_new,&
-                              pvol, drag_fc, dx, dy, dz, domlo, domhi)
+                              pvol, drag_fc, dx, dy, dz, &
+                              xlength, ylength, zlength, domlo, domhi)
 
       use calc_grad_des_module, only: calc_grad_des
       use discretelement, only: entering_particle, entering_ghost
@@ -34,7 +35,6 @@ module calc_pg_grad_module
       use bc, only: DELP_X, DELP_Y, DELP_Z
 
       ! Domain length
-      use geometry, only: XLENGTH, YLENGTH, ZLENGTH
 
       use discretelement, only: DES_EXPLICITLY_COUPLED
 
@@ -61,6 +61,7 @@ module calc_pg_grad_module
       real(c_real), intent(inout) :: drag_fc(max_pip,3)
 
       real(c_real), intent(in   ) :: dx, dy, dz
+      real(c_real), intent(in   ) :: xlength, ylength, zlength
 
 
 ! Loop counters: Particle, fluid cell, neighbor cells
@@ -75,9 +76,9 @@ module calc_pg_grad_module
       call calc_grad_des(slo, shi, lo, hi, P_G, gradPg, dx, dy, dz, domlo, domhi)
 
 ! Add in cyclic BC pressure drop.
-      cPG(1) = merge(DELP_X/XLENGTH, ZERO, CYCLIC_X_PD)
-      cPG(2) = merge(DELP_Y/YLENGTH, ZERO, CYCLIC_Y_PD)
-      cPG(3) = merge(DELP_Z/ZLENGTH, ZERO, CYCLIC_Z_PD)
+      cPG(1) = merge(delp_x/xlength, zero, CYCLIC_X_PD)
+      cPG(2) = merge(delp_y/ylength, zero, CYCLIC_Y_PD)
+      cPG(3) = merge(delp_z/zlength, zero, CYCLIC_Z_PD)
 
       DO K = lo(3),hi(3)
          DO J = lo(2),hi(2)

@@ -34,7 +34,6 @@ MODULE INIT_NAMELIST_MODULE
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: xlength, ylength, zlength
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
@@ -435,24 +434,6 @@ MODULE INIT_NAMELIST_MODULE
       COORDINATES = UNDEFINED_C
 !</keyword>
 
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the x (r) direction.</description>
-      XLENGTH = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the y-direction.</description>
-      YLENGTH = UNDEFINED
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the z (theta) direction.</description>
-      ZLENGTH = UNDEFINED
-!</keyword>
-
-
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
 !    Flag for making the x-direction cyclic without pressure drop. No other
@@ -477,7 +458,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across XLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across xlength when a cyclic boundary condition
 !    with pressure drop is imposed in the x-direction.
 !  </description>
       delp_x = UNDEFINED
@@ -507,7 +488,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across YLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across ylength when a cyclic boundary condition
 !    with pressure drop is imposed in the y-direction.
 !  </description>
       delp_y = UNDEFINED
@@ -538,7 +519,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across ZLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across zlength when a cyclic boundary condition
 !    with pressure drop is imposed in the z-direction.
 !  </description>
       delp_z = UNDEFINED

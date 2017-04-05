@@ -127,7 +127,7 @@ module solve_vel_star_module
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, &
-         p_g, ep_g, ro_g, rop_g, rop_go, u_go, tau_u_g, dx, dy, dz, domlo, domhi)
+         p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, dx, dy, dz, domlo, domhi)
 
       ! modifications for bc
       call source_u_g_bc (slo, shi, alo, ahi, A_m, b_m, &
@@ -278,7 +278,7 @@ module solve_vel_star_module
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, A_m,&
-         b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+         b_m, dt, p_g, ep_g, ro_g, rop_go, &
          v_go, tau_v_g, dx, dy, dz, domlo, domhi)
 
 ! modifications for bc
@@ -430,7 +430,7 @@ module solve_vel_star_module
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, &
-         p_g, ep_g, ro_g, rop_g, rop_go, w_go, tau_w_g, dx, dy, dz, domlo, domhi)
+         p_g, ep_g, ro_g, rop_go, w_go, tau_w_g, dx, dy, dz, domlo, domhi)
 
       ! modifications for bc
       call source_w_g_bc (slo, shi, alo, ahi, A_m, b_m, &

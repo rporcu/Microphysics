@@ -18,7 +18,7 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, &
-      A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
+      A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, &
       v_go, tau_v_g, dx, dy, dz, domlo, domhi)
 
       use constant, only: gravity
@@ -47,8 +47,6 @@ contains
       real(c_real), intent(in   ) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

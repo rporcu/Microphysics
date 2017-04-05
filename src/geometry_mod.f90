@@ -18,13 +18,6 @@
 ! Coordinates: CARTESIAN
       CHARACTER(LEN=16)     COORDINATES
 
-! Reactor length in the x or r direction
-      real(c_real) :: XLENGTH
-! Reactor length in the y direction
-      real(c_real) :: YLENGTH
-! Reactor length in the z or theta direction
-      real(c_real) :: ZLENGTH
-
       !  one or more periodic boundary condition is used
       logical :: cyclic
 

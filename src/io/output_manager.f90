@@ -212,9 +212,9 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine FLUSH_NOTIFY_useR
+      subroutine flush_notify_user
 
-      use discretelement, only: DES_CONTINUUM_COUPLED
+      use discretelement, only: des_continuum_coupled
       use discretelement, only: DTSOLID
       use error_manager, only: err_msg, flush_err_msg, ival
       use funits, only: DMP_LOG
@@ -245,7 +245,7 @@ module output_manager_module
 ! Write the elapsed time and estimated remaining time
       IF(MOD(NSTEP,NLOG) == 0) THEN
 
-         IF(DEM_SOLIDS .AND. .NOT.DES_CONTINUUM_COUPLED) THEN
+         IF(DEM_SOLIDS .AND. .NOT.des_continuum_coupled) THEN
             TNITs = CEILING(real((TSTOP-TIME)/DTSOLID))
             WRITE(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(TNITs))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)

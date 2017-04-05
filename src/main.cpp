@@ -33,7 +33,6 @@ int main (int argc, char* argv[])
     delete[] mfix_ifile;
   }
 
-
   // Copy arguments into MFIX -- note that the first argument is now the name of the
   //      inputs file to be read by BoxLib, so we only pass the arguments after that
   for(int i=2; i < argc; i++) {
@@ -47,8 +46,6 @@ int main (int argc, char* argv[])
 
   Real strt_time = ParallelDescriptor::second();
 
-  // Size of the entire domain
-  int imax,jmax,kmax;
   int max_nit;
   int solve_fluid;
   int solve_dem;
@@ -70,15 +67,6 @@ int main (int argc, char* argv[])
                  &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
                  &xlength, &ylength, &zlength, &coord);
 
-  // This defines the physical size of the box using {xlength,ylength,zlength}
-  // from the mfix input file
-  RealBox real_box;
-  for (int n = 0; n < BL_SPACEDIM; n++)
-    real_box.setLo(n, 0.0);
-  real_box.setHi(0, xlength);
-  real_box.setHi(1, ylength);
-  real_box.setHi(2, zlength);
-
 #if 0
   // This sets the boundary conditions to be doubly or triply periodic
   Array<int> is_per(3);
@@ -94,17 +82,6 @@ int main (int argc, char* argv[])
 #endif
 
   int lev = 0;
-
-#if 0
-
-  int max_level = 0;
-  Array<int> n_cell(3);
-  n_cell[0] = imax;
-  n_cell[1] = jmax;
-  n_cell[2] = kmax;
-  const RealBox* rb_ptr = &real_box;
-
-#endif
 
   // Note that the constructor constructs the Geometry object now.
   mfix_level my_mfix;
