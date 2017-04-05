@@ -25,9 +25,7 @@ module get_data_module
       use error_manager  , only: init_error_manager
       use get_bc_area_module, only: get_bc_area
       use init_namelist_module, only: init_namelist
-      use open_files_mod, only: open_files
       use read_namelist_module, only: read_namelist
-      use run            , only: run_type, run_name
       use set_bc_flow_module, only: set_bc_flow
       use set_parameters_module, only: set_parameters
       use write_header_module, only: write_header
@@ -50,9 +48,6 @@ module get_data_module
       ! Write header in the .LOG file and to screen.
       ! Not sure if the values are correct or useful
       call write_header
-
-      ! Open files
-      call open_files(RUN_NAME, RUN_TYPE)
 
       ! These checks verify that sufficient information was provided
       ! to setup the domain indices and DMP gridmap.

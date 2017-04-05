@@ -15,7 +15,7 @@ module flow_to_vel_new_module
               & bc_ep_g, bc_area, bc_u_g, bc_v_g, bc_w_g
 
   implicit none
-  private 
+  private
 
   public flow_to_vel_new
 
@@ -274,7 +274,7 @@ contains
           bc_v_g(bcv) = off * bc_v_g(bcv)
           bc_w_g(bcv) = off * bc_w_g(bcv)
        endif
-       
+
     elseif(bc_plane(BCV) == 'S' .or. bc_plane(BCV)== 'N') then
        if(is_defined(bc_v_g(bcv)) .and. do_vel_check) then
           if(.not.compare(vel,bc_v_g(bcv))) then
@@ -286,7 +286,7 @@ contains
           bc_u_g(bcv) = off * bc_u_g(bcv)
           bc_w_g(bcv) = off * bc_w_g(bcv)
        endif
-       
+
     elseif(bc_plane(BCV) == 'B' .or. bc_plane(BCV)== 'T') then
        if(is_defined(bc_w_g(bcv)) .and. do_vel_check) then
           if(.not.compare(vel, bc_w_g(bcv))) then
@@ -298,9 +298,9 @@ contains
           bc_u_g(bcv) = off * bc_u_g(bcv)
           bc_v_g(bcv) = off * bc_v_g(bcv)
        endif
-       
+
     endif
-    
+
     call finl_err_msg
 
 
@@ -324,7 +324,6 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine solids_volflow_to_velocity(do_vel_check, bcv, m, skip_m)
 
-    use funits, only: dmp_log, unit_log
     use compar, only: myPE
 
     integer, intent(in) :: bcv, m
@@ -352,27 +351,24 @@ contains
        write(*,*) 'error in SOLIDS_VOLFLOW_TO_VELOCITY'
        call mfix_exit(myPE)
     end select
-    
+
     select case (bc_plane(BCV))
     CASE ('W'); SGN = -SGN
     case ('S'); SGN = -SGN
     case ('B'); SGN = -SGN
     end select
-    
+
     if(abs(bc_ep_s(bcv,m)) > zero) then
        vel = sgn * bc_volflow_s(bcv,m)/(bc_area(bcv)*bc_ep_s(bcv,m))
     else
        if(abs(bc_volflow_s(bcv,m)) > zero) then
           vel = zero
        else
-          if(dmp_log)write (unit_log, 1101) bcv, m
           call flush_err_msg(abort=.true.)
        endif
     endif
-    
-1101 format('Error 1101: BC No:',I2,' Non-zero vol. or mass flow ',&
-          'specified with BC_ROP_s', I1,' = 0.')
-    
+
+
     if(bc_plane(BCV) == 'W' .or. bc_plane(BCV)== 'E') then
        if(is_defined(bc_u_s(bcv,m)) .and. do_vel_check) then
           if(.not.compare(vel, bc_u_s(bcv,m))) then
@@ -384,7 +380,7 @@ contains
           bc_v_s(bcv,m) = off * bc_v_s(bcv,m)
           bc_w_s(bcv,m) = off * bc_w_s(bcv,m)
        endif
-       
+
     elseif(bc_plane(BCV) == 'S' .or. bc_plane(BCV)== 'N') then
        if(is_defined(bc_v_s(bcv,m)) .and. do_vel_check) then
           if(.not.compare(vel,bc_v_s(bcv,m))) then
@@ -396,7 +392,7 @@ contains
           bc_u_s(bcv,m) = off * bc_u_s(bcv,m)
           bc_w_s(bcv,m) = off * bc_w_s(bcv,m)
        endif
-       
+
     elseif(bc_plane(BCV) == 'B' .or. bc_plane(BCV)== 'T') then
        if(is_defined(bc_w_s(bcv,m)) .and. do_vel_check) then
           if(.not.compare(vel,bc_w_s(bcv,m))) then
@@ -409,12 +405,12 @@ contains
           bc_v_s(bcv,m) = off * bc_v_s(bcv,m)
        endif
     endif
-    
-    
+
+
     call finl_err_msg
-    
-    
-    
+
+
+
 1300 format(/1X,70('*')//' From: FLOW_TO_VEL',/' Message: BC No:',I2,/,&
          ' Computed velocity is not equal to specified value',/,&
          ' Value computed from vol. or mass flow  = ',G14.7,/,&

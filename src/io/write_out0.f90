@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: write_out0                                              !
@@ -25,7 +24,6 @@
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
-      use funits, only: unit_out
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
@@ -43,7 +41,6 @@
       use scales, only: p_scale, p_ref
       use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
-      use write_table_mod, only: write_table
 
       implicit none
 
@@ -68,22 +65,24 @@
 
 ! Coefficient of restitution (old symbol)
       CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
-      CHARACTER(LEN=12), DIMENSION(0:9) :: DISCR_NAME
-      CHARACTER(LEN=12), DIMENSION(0:9) :: DISCR_NAME1
+      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME
+      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME1
       CHARACTER(LEN=8), DIMENSION(1:4) :: LEQ_METHOD_NAME
+! RUN_NAME.OUT file unit number
+      integer, PARAMETER :: UNIT_OUT = 52
+      integer :: ier
 !-----------------------------------------------
 
 !
-      DATA DISCR_NAME/'FOUP', 'FOUP', 'Superbee', 'Smart', 'Ultra-Quick', &
-         'QUICKEST', 'Muscl', 'VanLeer', 'Minmod', 'Central'/
-      DATA DISCR_NAME1/'FOUP', 'FOUP', 'Fourth Order', 'Smart', 'Ultra-Quick', &
-         'QUICKEST', 'Muscl', 'VanLeer', 'Minmod', 'Central'/
+      DATA DISCR_NAME/'FOUP', '    ', 'Superbee'/
+      DATA DISCR_NAME1/'FOUP', '    ', 'Fourth Order'/
       DATA LEQ_METHOD_NAME/'   SOR  ', 'BiCGSTAB', '  GMRES ', '   CG   '/
 
-      if (myPE.ne.PE_IO) return
-
       MMAX_TOT = MMAX
-!
+
+      open(unit=unit_out, file=trim(run_name)//'.out', status='unknown', &
+         access='sequential', form='formatted', position='append', iostat=ier)
+
 !  Write Headers for .OUT file
 !
       WRITE(UNIT_OUT,1000)ID_VERSION,ID_HOUR,ID_MINUTE,ID_MONTH,ID_DAY,ID_YEAR
@@ -595,4 +594,116 @@
 
       end function LOCATION
 
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Module name: WRITE_TABLE (LEGEND, ARRAY, DIST_MIN, LSTART, LEND)    C
+!  Purpose: To write a table of DX, DY, DZ, and cell wall locations    C
+!                                                                      C
+!  Author: M. Syamlal                                 Date: 09-JAN-92  C
+!  Reviewer: S. Venkatesan                            Date: 11-DEC-92  C
+!                                                                      C
+!  Revision Number:                                                    C
+!  Purpose:                                                            C
+!  Author:                                            Date: dd-mmm-yy  C
+!  Reviewer:                                          Date: dd-mmm-yy  C
+!                                                                      C
+!  Literature/Document References:                                     C
+!                                                                      C
+!  Variables referenced: None                                          C
+!  Variables modified: None                                            C
+!                                                                      C
+!  Local variables: NROW, L, L1, L2, L3, DIST, ARRAY1, ARRAY3          C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!
+      SUBROUTINE WRITE_TABLE(LEGEND, SCALAR, DIST_MIN, LSTART, LEND)
+
+!-----------------------------------------------
+!   M o d u l e s
+!-----------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------
+!   D u m m y   A r g u m e n t s
+!-----------------------------------------------
+
+!                      Legend
+      CHARACTER(LEN=*)    LEGEND(3)
+
+!                      DX, DY, or DZ Array to be written
+
+
+!                      Starting array index
+      integer          LSTART
+
+!                      Ending array index
+      integer          LEND
+
+      real(c_real) SCALAR
+
+!                      Starting value of distance
+      real(c_real) DIST_MIN
+
+!-----------------------------------------------
+!   L o c a l   P a r a m e t e r s
+!-----------------------------------------------
+
+!                      Number of columns in the table.  When this is changed
+!                      remember to change the FORMAT statement also.
+      integer, PARAMETER :: NCOL = 5
+!
+!                      Some dimension large enough for I, J, and K.
+      integer, PARAMETER :: DIMENSION_1 = 5000
+
+!-----------------------------------------------
+!   L o c a l   V a r i a b l e s
+!-----------------------------------------------
+!
+!                      Indices
+      integer          ARRAY1(DIMENSION_1)
+!
+!                      Array3 to be written
+      real(c_real) ARRAY3(DIMENSION_1)
+!
+!                      Number of rows
+      integer          NROW
+!
+!                      Temporary storage for distance calculation
+      real(c_real) DIST
+!
+!                      Local array indices
+      integer          L, L1, L2, L3
+!-----------------------------------------------
+!
+!
+!  Fill arrays 1 and 3
+!
+      DIST = DIST_MIN
+      DO L = LSTART, LEND
+         ARRAY1(L) = L
+         ARRAY3(L) = DIST
+         IF (L < LEND) DIST = DIST + SCALAR
+      END DO
+      NROW = (LEND - LSTART + 1)/NCOL
+!
+      L2 = LSTART - 1
+      DO L = 1, NROW
+         L1 = L2 + 1
+         L2 = L1 + NCOL - 1
+         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
+         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
+      END DO
+      IF (NROW*NCOL < LEND - LSTART + 1) THEN
+         L1 = L2 + 1
+         L2 = LEND
+         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
+         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
+      ENDIF
+      RETURN
+!
+ 1010 FORMAT(7X,A3,2X,5(4X,I3,5X,1X))
+ 1020 FORMAT(7X,A3,2X,5(G12.5,1X))
+ 1030 FORMAT(7X,A3,2X,5(G12.5,1X),/)
+      END SUBROUTINE WRITE_TABLE
       end subroutine write_out0

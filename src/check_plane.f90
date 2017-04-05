@@ -24,7 +24,6 @@ module check_plane_module
 
       use compar, only: mype
       use exit_mod, only: mfix_exit
-      use funits, only: dmp_log, unit_log
 
       IMPLICIT NONE
 
@@ -55,7 +54,7 @@ module check_plane_module
       IF (Z_CONSTANT) N = N - 1
 
       IF (N /= 2) THEN
-         IF(DMP_LOG)WRITE (UNIT_LOG, 1000) NAME, BC
+         WRITE (*, 1000) NAME, BC
          call mfix_exit(myPE)
       ENDIF
 

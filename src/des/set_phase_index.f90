@@ -18,7 +18,6 @@ CONTAINS
 
     use error_manager, only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar
     use discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
-    use open_files_mod, only: open_pe_log
     use param1, only: small_number
     use constant, only: MMAX, D_P0, RO_s0
     use run,      only: IFILE_NAME
@@ -79,7 +78,6 @@ CONTAINS
     !----------------------------------------------------------------------
     CALL INIT_ERR_MSG("SET_PHASE_INDEX")
 
-    CALL OPEN_PE_LOG(IER)
 
     WRITE(ERR_MSG, 1100)
     CALL FLUSH_ERR_MSG(FOOTER=.FALSE.)

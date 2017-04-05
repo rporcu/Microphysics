@@ -220,7 +220,6 @@ module init_fluid_module
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
       use exit_mod, only: mfix_exit
-      use funits   , only: dmp_log, unit_log
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -338,7 +337,7 @@ module init_fluid_module
 ! if a case is compressible and pressure in any of the initial
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
-            if(dmp_log)write (unit_log, 1000)
+            write (*, 1000)
             call mfix_exit(mype)
          endif
       endif

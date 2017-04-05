@@ -34,7 +34,6 @@ module des_drag_gp_module
          drag_type_enum, drag_type
       use run, only: wen_yu, koch_hill, user_drag
       use run, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
-      use funits  , only: dmp_log, unit_log
       use param1, only: one
       use constant, only: ro_s0
       use constant, only: D_p0
@@ -205,9 +204,7 @@ module des_drag_gp_module
             CALL DRAG_BVK(DgA,EPg,Mu,ROPg,VREL,DPM,DPA,phis)
 
          CASE DEFAULT
-            IF(dmp_log) WRITE (*, '(A,A)') &
-               'Unknown DRAG_TYPE: ', DRAG_TYPE
-            WRITE (unit_log, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
+            WRITE (*, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
             CALL mfix_exit(myPE)
          end SELECT   ! end selection of drag_type
 

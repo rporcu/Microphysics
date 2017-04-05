@@ -1,32 +1,10 @@
       MODULE FUNITS
 
-! Whether this processor should write the log file in DMP mode.
-! Usually this flag is true only for PE_IO.  All the PEs may be forced
-! to write a log file by setting ENABLE_DMP_LOG to .true. in output_mod.f.
-      logical :: DMP_LOG
-
-! Flag indicated that the log was opened globally.
-      logical :: LOG_WAS_CLOSED = .FALSE.
-
-! RRATES debug file unit number
-      integer, PARAMETER :: UNIT_RRATES = 43
-
 ! mfix.dat file unit number
       integer, PARAMETER :: UNIT_DAT = 51
 
-! RUN_NAME.OUT file unit number
-      integer, PARAMETER :: UNIT_OUT = 52
 
-! RUN_NAME.LOG file unit number. (DEFAULT/Serial 53)
-      integer, PARAMETER :: UNIT_LOG = 53
-
-! Temporary (scratch) file unit number
-      integer, PARAMETER :: UNIT_TMP = 54
-
-! RUN_NAME.RES file unit number
-      integer, PARAMETER :: UNIT_RES = 55
-
-      CONTAINS
+   CONTAINS
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

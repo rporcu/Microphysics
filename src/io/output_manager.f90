@@ -148,8 +148,6 @@ module output_manager_module
       subroutine NOTIFY_useR(MSG, EXT)
 
       use output, only: FULL_LOG
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
 
       CHARACTER(len=*), INTENT(IN) :: MSG
       CHARACTER(len=*), INTENT(IN), OPTIONAL :: EXT
@@ -160,7 +158,6 @@ module output_manager_module
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
       IF(HDR_MSG) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG, 1000, ADVANCE='NO') TIME
          IF(SCR_LOG) WRITE(*, 1000, ADVANCE='NO') TIME
          HDR_MSG = .FALSE.
       ENDIF
@@ -168,14 +165,11 @@ module output_manager_module
  1000 FORMAT(' ',/' t=',F12.6,' Wrote')
 
       IF(.NOT.present(EXT)) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG, 1100, ADVANCE='NO') MSG
          IF(SCR_LOG) WRITE(*, 1100, ADVANCE='NO') MSG
       ELSE
          IF(IDX == 0) THEN
-            IF(DMP_LOG) WRITE(UNIT_LOG, 1110, ADVANCE='NO') MSG, EXT
             IF(SCR_LOG) WRITE(*, 1110, ADVANCE='NO') MSG, EXT
          ELSE
-            IF(DMP_LOG) WRITE(UNIT_LOG, 1120, ADVANCE='NO') EXT
             IF(SCR_LOG) WRITE(*, 1120, ADVANCE='NO') EXT
          ENDIF
       ENDIF
@@ -193,14 +187,11 @@ module output_manager_module
       subroutine FLUSH_LIST
 
       use output, only: FULL_LOG
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
 
       logical :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
-      IF(DMP_LOG) WRITE(UNIT_LOG,1000, ADVANCE='NO')
       IF(SCR_LOG) WRITE(*,1000, ADVANCE='NO')
 
  1000 FORMAT(';')
@@ -217,8 +208,6 @@ module output_manager_module
       use discretelement, only: des_continuum_coupled
       use discretelement, only: DTSOLID
       use error_manager, only: err_msg, flush_err_msg, ival
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
       use tunit_module, only: get_tunit
       use machine, only: wall_time
       use output, only: FULL_LOG
@@ -236,7 +225,6 @@ module output_manager_module
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
       IF(.NOT.HDR_MSG) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG,1000)
          IF(SCR_LOG) WRITE(*,1000)
       ENDIF
 
