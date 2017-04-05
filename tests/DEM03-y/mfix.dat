@@ -35,11 +35,6 @@
 
   COORDINATES = 'CARTESIAN'
 
-  XLENGTH  = 1.0000
-  YLENGTH  = 0.0018
-  ZLENGTH  = 1.0000
-
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 
