@@ -119,9 +119,9 @@
       llo = alo
       lhi = ahi
 
-      if(eq_id == resid_u .and. alo(1) /= domlo(1)-1) llo(1) = alo(1)+1
-      if(eq_id == resid_v .and. alo(2) /= domlo(2)-1) llo(2) = alo(2)+1
-      if(eq_id == resid_w .and. alo(3) /= domlo(3)-1) llo(3) = alo(3)+1
+      if(eq_id == resid_u .and. alo(1) /= domlo(1)) llo(1) = alo(1)+1
+      if(eq_id == resid_v .and. alo(2) /= domlo(2)) llo(2) = alo(2)+1
+      if(eq_id == resid_w .and. alo(3) /= domlo(3)) llo(3) = alo(3)+1
 
 ! initializing
 

@@ -308,13 +308,13 @@ module w_g_conv_dif
 
                lflux_e = half * (fluxX(i+1,j,k-1) + fluxX(i+1,j,k))
                lflux_w = half * (fluxX(i  ,j,k-1) + fluxX(i  ,j,k))
- 
+
                d_f_e = avg_h(avg_h(mu_g(i,j,k-1),mu_g(i+1,j,k-1)),&
                              avg_h(mu_g(i,j,k  ),mu_g(i+1,j,k  ))) * ayz_x
- 
+
                d_f_w = avg_h(avg_h(mu_g(i-1,j,k-1),mu_g(i,j,k-1)),&
                              avg_h(mu_g(i-1,j,k  ),mu_g(i,j,k  ))) * ayz_x
- 
+
                A_m(i,j,k,e) = d_f_e - lflux_e*(      xsi_(i+1,j,k))
                A_m(i,j,k,w) = d_f_w + lflux_w*(one - xsi_(i  ,j,k))
 
@@ -341,7 +341,7 @@ module w_g_conv_dif
           end do
         end do
       end do
- 
+
       ! NOTES:   w_g  lives on z-faces   :   (lo(1): hi(1)  , lo(2):hi(2), lo(3):hi(3)+1)
       !          A_m  lives on z-faces   :   (lo(1): hi(1)  , lo(2):hi(2), lo(3):hi(3)+1)
       !          vel  lives on y-z edges :   (lo(1): hi(1), lo(2):hi(2)+1, lo(3):hi(3)+1)
@@ -353,19 +353,19 @@ module w_g_conv_dif
       do k = alo(3),ahi(3)
          do j = alo(2),ahi(2)
             do i = alo(1),ahi(1)
- 
+
                lflux_n = half * (fluxY(i,j+1,k-1) + fluxY(i,j+1,k  ))
                lflux_s = half * (fluxY(i,j  ,k-1) + fluxY(i,j  ,k  ))
- 
+
                d_f_n = avg_h(avg_h(mu_g(i,j,k-1),mu_g(i,j+1,k-1)),&
-                             avg_h(mu_g(i,j,k  ),mu_g(i,j+1,k  ))) * axy_z
- 
+                             avg_h(mu_g(i,j,k  ),mu_g(i,j+1,k  ))) * axz_y
+
                d_f_s = avg_h(avg_h(mu_g(i,j-1,k-1),mu_g(i,j,k-1)),&
-                             avg_h(mu_g(i,j-1,k  ),mu_g(i,j,k  ))) * axy_z
- 
+                             avg_h(mu_g(i,j-1,k  ),mu_g(i,j,k  ))) * axz_y
+
                A_m(i,j,k,n) = d_f_n - lflux_n*(      xsi_(i,j+1,k))
                A_m(i,j,k,s) = d_f_s + lflux_s*(one - xsi_(i,j  ,k))
- 
+
             end do
          end do
       end do
@@ -389,7 +389,7 @@ module w_g_conv_dif
           end do
         end do
       end do
- 
+
       ! NOTES:   w_g  lives on z-faces   :   (lo(1): hi(1)  , lo(2):hi(2), lo(3):hi(3)+1)
       !          A_m  lives on z-faces   :   (lo(1): hi(1)  , lo(2):hi(2), lo(3):hi(3)+1)
       !          vel  lives on cell ctrs :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
