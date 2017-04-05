@@ -16,7 +16,7 @@ dotxy (const MultiFab& r,
     BL_ASSERT(r.boxArray().ixType() == z.boxArray().ixType());
 
     // If the MultiFab is cell-centered we can use the standard dot product routine
-    if (r.boxArray().ixType().cellCentered()) 
+    if (r.boxArray().ixType().cellCentered())
     {
       return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
     }
@@ -27,10 +27,10 @@ dotxy (const MultiFab& r,
     {
        MultiFab tmpmf(r.boxArray(), r.DistributionMap(), ncomp, nghost);
        MultiFab::Copy(tmpmf, r, 0, 0, ncomp, nghost);
- 
+
        auto mask = r.OverlapMask(period);
        MultiFab::Divide(tmpmf, *mask, 0, 0, ncomp, nghost);
- 
+
        return MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
     }
 }
@@ -47,7 +47,7 @@ sxay (MultiFab&       ss,
     const int sscomp = 0;
     const int xxcomp = 0;
     MultiFab::LinComb(ss, 1.0, xx, xxcomp, a, yy, yycomp, sscomp, ncomp, 1);
-    
+
 }
 
 inline
@@ -70,8 +70,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                             Real            eps_rel, int lev)
 {
     int ret = 0, nit = 1;
-
-    std::cout << "AM IN SOLVE " << A_m[0] << std::endl;
 
     const int ncomp  = 1;
     const int nghost = sol.nGrow();
@@ -139,7 +137,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
 
     Real rnorm = dotxy(r,r,geom[lev].periodicity(),true);
- 
+
     ParallelDescriptor::ReduceRealSum(rnorm);
     const Real rnorm0   = sqrt(rnorm);
 
