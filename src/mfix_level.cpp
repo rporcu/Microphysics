@@ -1178,7 +1178,6 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 
     get_solver_params (&eq_id,&sweep_type,&precond_type,&max_it,&tol);
 
-    if (eq_id == 5) std::cout << "bM IN SOLVE " << rhs[0] << std::endl;
     solve_bicgstab(sol, rhs, matrix, sweep_type, precond_type, max_it, tol, lev);
 }
 
