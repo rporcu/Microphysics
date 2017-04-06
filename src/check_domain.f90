@@ -16,10 +16,8 @@ module check_domain_module
       subroutine check_domain(dx,dy,dz,xlength,ylength,zlength,domlo,domhi) &
           bind(C, name="check_domain")
 
-       use get_bc_area_module, only: get_bc_area
-       use set_bc_flow_module, only: set_bc_flow
-       use check_boundary_conditions_module, only: check_boundary_conditions
        use check_initial_conditions_module, only: check_initial_conditions
+       use check_boundary_conditions_module, only: check_boundary_conditions
        use check_point_sources_module, only: check_point_sources
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
@@ -29,12 +27,6 @@ module check_domain_module
       call check_initial_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
       call check_boundary_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
       call check_point_sources(dx,dy,dz)
-
-      ! Compute area of boundary surfaces.
-      call get_bc_area(dx,dy,dz)
-
-      ! Convert (mass, volume) flows to velocities.
-      call set_bc_flow
 
       end subroutine check_domain
 

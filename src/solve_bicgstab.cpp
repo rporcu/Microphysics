@@ -15,10 +15,12 @@ dotxy (const MultiFab& r,
     const int nghost = 0;
     BL_ASSERT(r.boxArray().ixType() == z.boxArray().ixType());
 
+    Real val;
+
     // If the MultiFab is cell-centered we can use the standard dot product routine
     if (r.boxArray().ixType().cellCentered())
     {
-      return MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
+      val = MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
     }
 
     // If the MultiFab is not cell-centered we have to create a special mask to make sure we
@@ -31,8 +33,10 @@ dotxy (const MultiFab& r,
        auto mask = r.OverlapMask(period);
        MultiFab::Divide(tmpmf, *mask, 0, 0, ncomp, nghost);
 
-       return MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
+       val = MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
     }
+    ParallelDescriptor::ReduceRealSum(val);
+    return val;
 }
 
 static
@@ -113,7 +117,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                   A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect());
     }
 
-
     // Compute initial residual r = rhs - A*sol
     //-------------------------------------------------------------------
     for (MFIter mfi(rhs); mfi.isValid(); ++mfi)
@@ -130,15 +133,12 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                      r[mfi].dataPtr(), rbx.loVect(), rbx.hiVect());
     }
 
-    // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
     r.FillBoundary(geom[lev].periodicity());
 
     MultiFab::Copy(sorig,sol,0,0,1,nghost);
     MultiFab::Copy(rh,   r,  0,0,1,nghost);
 
     Real rnorm = dotxy(r,r,geom[lev].periodicity(),true);
-
-    ParallelDescriptor::ReduceRealSum(rnorm);
     const Real rnorm0   = sqrt(rnorm);
 
     if ( verbose > 0 && ParallelDescriptor::IOProcessor() )
@@ -157,7 +157,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
       return ret;
     }
-
 
     // Main loop
     //-------------------------------------------------------------------

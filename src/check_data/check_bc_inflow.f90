@@ -1,4 +1,4 @@
-module CHECK_BC_INFLOW_MODULE
+module check_bc_inflow_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
@@ -17,7 +17,7 @@ contains
 
   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   !                                                                      !
-  ! Subroutine: CHECK_BC_MASS_INFLOW                                     !
+  ! Subroutine: check_bc_mass_inflow                                     !
   ! Author: J.Musser                                    Date: 01-Mar-14  !
   !                                                                      !
   ! Purpose: Provided a detailed error message on BC                     !
@@ -154,7 +154,7 @@ contains
 
   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   !                                                                      !
-  ! Subroutine: CHECK_BC_P_INFLOW                                        !
+  ! Subroutine: check_bc_p_inflow                                        !
   ! Author: J.Musser                                    Date: 01-Mar-14  !
   !                                                                      !
   ! Purpose: Provided detailed error message on bc                       !

@@ -278,7 +278,19 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     set_domain();
 
     Box domain(geom[0].Domain());
-    check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
+
+    // Only call this check on one processor since it has a bunch of print statements
+    // if ( ParallelDescriptor::IOProcessor() )
+       check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
+
+    set_bc_area(&dx,&dy,&dz);
+
+    // Convert (mass, volume) flows to velocities.
+    set_bc_flow();
+
+    // Only call this check on one processor since it has a bunch of print statements
+    if ( ParallelDescriptor::IOProcessor() )
+       check_bc_flow();
 
     // ********************************************************************************
     // Cell-based arrays

@@ -1,12 +1,5 @@
-MODULE GET_BC_AREA_MODULE
-
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
-
-   CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: GET_BC_AREA                                            C
 !  Purpose: Compute area of boundary surfaces                          C
 !                                                                      C
 !  Author: M. Syamlal                                 Date: 29-JUL-92  C
@@ -25,7 +18,11 @@ MODULE GET_BC_AREA_MODULE
 !  Local variables:                                                    C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE GET_BC_AREA(dx,dy,dz)
+      subroutine set_bc_area(dx,dy,dz) &
+         bind(C,name = "set_bc_area")
+
+      use amrex_fort_module, only : c_real => amrex_real
+      use iso_c_binding , only: c_int
 
       use param, only: dimension_bc
       use param1, only: zero
@@ -59,7 +56,4 @@ MODULE GET_BC_AREA_MODULE
          ENDIF
       ENDDO
 
-
-      RETURN
-      END SUBROUTINE GET_BC_AREA
-END MODULE GET_BC_AREA_MODULE
+      end subroutine set_bc_area

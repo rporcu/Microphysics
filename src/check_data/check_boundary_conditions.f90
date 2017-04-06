@@ -19,7 +19,6 @@ module check_boundary_conditions_module
 !                                                                      !
 !  Purpose: Check boundary condition specifications                    !
 !     - convert physical locations to i, j, k's                        !
-!     - compute area of boundary surfaces (GET_BC_AREA)                !
 !     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
 !     - check specification of physical quantities                     !
 !                                                                      !
@@ -76,7 +75,7 @@ module check_boundary_conditions_module
       call INIT_ERR_MSG("CHECK_BOUNDARY_CONDITIONS")
 
 ! Determine which BCs are DEFINED
-      call CHECK_BC_GEOMETRY
+      call check_bc_geometry
 
 ! Loop over each defined BC and check the user data.
       DO BCV = 1, DIMENSION_BC
@@ -97,41 +96,41 @@ module check_boundary_conditions_module
             SELECT CASE (TRIM(BC_TYPE(BCV)))
 
             CASE ('MASS_INFLOW')
-               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_MASS_INFLOW(MMAX, SKIP, BCV)
-               ! call CHECK_BC_INFLOW(MMAX,SKIP,BCV)
+               call check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_mass_inflow(MMAX, SKIP, BCV)
+               ! call check_bc_inflow(MMAX,SKIP,BCV)
 
             CASE ('P_INFLOW')
-               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_P_INFLOW(MMAX, SKIP, BCV)
-               ! call CHECK_BC_INFLOW(MMAX, SKIP, BCV)
-               call CHECK_BC_OUTFLOW(MMAX, BCV)
+               call check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_p_inflow(MMAX, SKIP, BCV)
+               ! call check_bc_inflow(MMAX, SKIP, BCV)
+               call check_bc_outflow(MMAX, BCV)
 
             CASE ('OUTFLOW')
-               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_OUTFLOW(MMAX, BCV)
+               call check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_outflow(MMAX, BCV)
 
             CASE ('MASS_OUTFLOW')
-               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_MASS_OUTFLOW(MMAX, BCV)
-               call CHECK_BC_OUTFLOW(MMAX, BCV)
+               call check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_mass_outflow(MMAX, BCV)
+               call check_bc_outflow(MMAX, BCV)
 
             CASE ('P_OUTFLOW')
-               call CHECK_BC_GEOMETRY_FLOW(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_P_OUTFLOW(BCV)
-               call CHECK_BC_OUTFLOW(MMAX, BCV)
+               call check_bc_geometry_flow(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_p_outflow(BCV)
+               call check_bc_outflow(MMAX, BCV)
 
             CASE ('FREE_SLIP_WALL')
-               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_WALLS(BCV)
+               call check_bc_geometry_wall(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_walls(BCV)
 
             CASE ('NO_SLIP_WALL')
-               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_WALLS(BCV)
+               call check_bc_geometry_wall(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_walls(BCV)
 
             CASE ('PAR_SLIP_WALL')
-               call CHECK_BC_GEOMETRY_WALL(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
-               call CHECK_BC_WALLS(BCV)
+               call check_bc_geometry_wall(BCV,dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+               call check_bc_walls(BCV)
 
             END SELECT
 

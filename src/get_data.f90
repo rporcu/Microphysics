@@ -23,7 +23,6 @@ module get_data_module
       use check_solids_model_prereqs_module, only: check_solids_model_prereqs
       use check_solids_phases_module, only: check_solids_phases
       use error_manager  , only: init_error_manager
-      use get_bc_area_module, only: get_bc_area
       use init_namelist_module, only: init_namelist
       use read_namelist_module, only: read_namelist
       use set_bc_flow_module, only: set_bc_flow

@@ -34,6 +34,11 @@ extern "C"
                     Real* xlength, Real* ylength, Real* zlength,
                     const int* domlo, const int* domhi);
 
+  void set_bc_area(Real* dx, Real* dy, Real* dz); 
+
+  void   set_bc_flow();
+  void check_bc_flow();
+
   void set_bc_type(const int* slo, const int* shi,
                    int* bc_ilo, int* bc_ihi,
                    int* bc_jlo, int* bc_jhi,
