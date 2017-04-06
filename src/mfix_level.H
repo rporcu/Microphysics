@@ -12,7 +12,7 @@
 #include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
 
-#include <ParticleContainer.H>
+#include <MFIXParticleContainer.H>
 
 class mfix_level
     : public AmrCore
