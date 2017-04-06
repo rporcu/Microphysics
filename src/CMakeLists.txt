@@ -1,6 +1,6 @@
-set(CXX_sources main.cpp mfix_level.cpp solve_bicgstab.cpp ParticleContainer.cpp io/mfixIO.cpp )
+set(CXX_sources main.cpp mfix_level.cpp solve_bicgstab.cpp MFIXParticleContainer.cpp io/mfixIO.cpp )
 
-set(CXX_includes mfix_level.H  ParticleContainer.H include/mfix_F.H)
+set(CXX_includes mfix_level.H  MFIXParticleContainer.H include/mfix_F.H)
 
 set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  calc_cell.f90  calc_coeff.f90
    calc_d.f90  calc_mflux.f90  calc_mu_g.f90  calc_outflow.f90  calc_ro_g.f90  calc_trd_g.f90  check_bqend.f90

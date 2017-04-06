@@ -1,5 +1,5 @@
-#ifndef _ParticleContainer_H_
-#define _ParticleContainer_H_
+#ifndef _MFIXParticleContainer_H_
+#define _MFIXParticleContainer_H_
 
 
 #include <AMReX.H>
