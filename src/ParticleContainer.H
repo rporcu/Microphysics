@@ -1,15 +1,13 @@
-
 #ifndef _ParticleContainer_H_
 #define _ParticleContainer_H_
 
-#include <memory>
-#include <map>
 
-#include <AMReX_Particles.H>
+#include <AMReX.H>
 #include <AMReX_AmrParGDB.H>
+#include "AMReX_Particles.H"
+
 
 using namespace amrex;
-
 
 
 struct PIdx
@@ -60,8 +58,6 @@ public:
     amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
 };
 
-
-
 class MFIXParticleContainer
     : public amrex::ParticleContainer<0,0,PIdx::nattribs> 
 {
@@ -70,11 +66,15 @@ public:
 
     MFIXParticleContainer (AmrCore* amr_core);
 
-    virtual ~MFIXParticleContainer() {}
+    virtual ~MFIXParticleContainer() {};
 
     void InitData ();
 
     void Evolve (int lev, Real dt);
+
+    void InitParticlesAscii (const std::string& file);
+
+    void printParticles ();
 
 private:
 
