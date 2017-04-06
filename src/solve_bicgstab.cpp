@@ -35,7 +35,9 @@ dotxy (const MultiFab& r,
 
        val = MultiFab::Dot(z, 0, tmpmf, 0, ncomp, nghost);
     }
-    ParallelDescriptor::ReduceRealSum(val);
+
+    // Note that the MultiFab::Dot has already done the ParallelDescriptor::ReduceRealSum()
+    //      so we don't need to do that here
     return val;
 }
 
@@ -221,7 +223,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       }
 
       Real rhTv = dotxy(rh,v,geom[lev].periodicity(),true);
-      ParallelDescriptor::ReduceRealSum(rhTv);
 
       // Compute alpha
       //----------------------------------------------------------------
@@ -280,8 +281,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
-      Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true), dotxy(t,s,geom[lev].periodicity(),true) };
-      ParallelDescriptor::ReduceRealSum(vals,2);
+      Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true), 
+                       dotxy(t,s,geom[lev].periodicity(),true) };
 
 
       // Compute omega
@@ -304,7 +305,6 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       sxay(r,     s, -omega,  t);
 
       rnorm = dotxy(r,r,geom[lev].periodicity(),true);
-      ParallelDescriptor::ReduceRealSum(rnorm);
       rnorm = sqrt(rnorm);
 
       if ( rnorm < eps_rel*rnorm0 || rnorm < eps_abs ) break;
