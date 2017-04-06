@@ -26,7 +26,7 @@ contains
   !     - check specification of physical quantities                     !
   !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_initial_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+  subroutine check_initial_conditions(dx,dy,dz,domlo,domhi)
 
     use ic,                    only: IC_DEFINED
     use run,                   only: DEM_SOLIDS, RUN_TYPE
@@ -35,43 +35,32 @@ contains
     use location_check_module, only: location_check
     use check_ic_common_discrete_module, only: check_ic_common_discrete
 
-
     integer(c_int), intent(in) :: domlo(3),domhi(3)
     real(c_real)  , intent(in) :: dx, dy, dz
-    real(c_real)  , intent(in) :: xlength, ylength, zlength
-    integer(c_int)             :: ICV
-
-
-    write(*,*) ' a'
+    integer(c_int)             :: icv
 
     ! Determine which ICs are DEFINED
     call check_ic_geometry(dx,dy,dz,domlo,domhi)
-    write(*,*) ' b'
 
     ! Loop over all IC arrays.
     do icv=1, dimension_ic
 
        ! Verify user input for defined defined IC.
-       if(IC_DEFINED(ICV)) then
-    write(*,*) ' c'
+       if(ic_defined(icv)) then
           ! Gas phase checks.
           call check_ic_gas_phase(ICV)
           ! Generic solids phase checks.
-    write(*,*) ' d'
           call check_ic_solids_phases(ICV)
-    write(*,*) ' e'
 
           ! Verify that no data was defined for unspecified IC. ICs are only
           ! defined for new runs, so these checks are restricted to new runs.
-       elseif(RUN_TYPE == 'NEW') then
+       elseif(run_type == 'NEW') then
           call check_ic_overflow(ICV)
        endif
     enddo
-    write(*,*) ' f'
 
     ! Check the initial conditions for the DEM model as well
-    if(DEM_SOLIDS) call check_ic_common_discrete(xlength,ylength,zlength)
-    write(*,*) ' f'
+    if(dem_solids) call check_ic_common_discrete
 
   contains
 

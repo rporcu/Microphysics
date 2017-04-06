@@ -24,7 +24,7 @@ module check_domain_module
       real(c_real)  , intent(in) :: dx, dy ,dz
       real(c_real)  , intent(in) :: xlength, ylength, zlength
 
-      call check_initial_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+      call check_initial_conditions(dx,dy,dz,domlo,domhi)
       call check_boundary_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
       call check_point_sources(dx,dy,dz)
 
