@@ -25,8 +25,6 @@ module set_domain_module
       ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
 
-      use set_bc_flow_module, only: set_bc_flow
-
       use param1, only: is_defined
 
       implicit none

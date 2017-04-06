@@ -25,7 +25,6 @@ module get_data_module
       use error_manager  , only: init_error_manager
       use init_namelist_module, only: init_namelist
       use read_namelist_module, only: read_namelist
-      use set_bc_flow_module, only: set_bc_flow
       use set_parameters_module, only: set_parameters
       use write_header_module, only: write_header
 
