@@ -6,7 +6,7 @@ int     MFIXParticleContainer::do_tiling = 0;
 IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
-    : ParticleContainer<PIdx::nattribs,0>
+    : ParticleContainer<0,0,PIdx::nattribs>
       (amr_core->GetParGDB())
 {
     ReadStaticParameters();

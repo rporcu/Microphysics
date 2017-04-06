@@ -34,8 +34,23 @@ struct PIdx
     };
 };
 
+
+class MFIXParIter
+    : public amrex::ParIter<0,0,PIdx::nattribs>
+{
+public:
+    using amrex::ParIter<0,0,PIdx::nattribs>::ParIter;
+
+    const SoA& GetAttribs () const { return GetStructOfArrays(); }
+    SoA&       GetAttribs ()       { return GetStructOfArrays(); }
+    const amrex::Array<amrex::Real>& GetAttribs (int comp) const { return GetStructOfArrays()[comp]; }
+    amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
+};
+
+
+
 class MFIXParticleContainer
-    : public amrex::ParticleContainer<PIdx::nattribs,0> //std::vector<Particle<PIdx::nattribs,0> > >
+    : public amrex::ParticleContainer<0,0,PIdx::nattribs> 
 {
 
 public:
