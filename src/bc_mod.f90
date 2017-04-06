@@ -172,9 +172,6 @@
 !                      Solids mass flow rate through the boundary
       real(c_real) BC_MASSFLOW_s (DIMENSION_BC, DIM_M)
 !
-!                      Logical variable to determine whether a bc is defined
-       logical         BC_DEFINED (DIMENSION_BC)
-!
 !                      Character variable with values W, E, S, N, B, and T
 !                      to determine the flow plane of a flow cell
        CHARACTER       bc_plane (DIMENSION_BC)
@@ -344,36 +341,26 @@
 
       CONTAINS
 
-         logical FUNCTION IS_CG(boundary_condition)
-            implicit none
-            integer, intent(in) :: boundary_condition
-            IS_CG = ((boundary_condition .eq. CG_PO) &
-                 .or. (boundary_condition .eq. CG_MO) &
-                 .or. (boundary_condition .eq. CG_NSW) &
-                 .or. (boundary_condition .eq. CG_FSW) &
-                 .or. (boundary_condition .eq. CG_PSW) &
-                 .or. (boundary_condition .eq. CG_MI) &
-                 )
-         END FUNCTION IS_CG
 
-         logical FUNCTION IS_NSW(boundary_condition)
-            implicit none
-            integer, intent(in) :: boundary_condition
-            IS_NSW = ((boundary_condition .eq. CG_NSW) &
-                 )
-         END FUNCTION IS_NSW
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutine: ic_defined                                               !
+!                                                                      !
+! Purpose: Return if a IC region has been defined based on coordinates !
+! defined in the input deck.                                           !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+   logical function bc_defined(icv)
 
-         logical FUNCTION IS_FSW(boundary_condition)
-            implicit none
-            integer, intent(in) :: boundary_condition
-            IS_FSW = ((boundary_condition .eq. CG_FSW) &
-                 )
-         END FUNCTION IS_FSW
+      use param1, only: is_defined
 
-         logical FUNCTION IS_PSW(boundary_condition)
-            implicit none
-            integer, intent(in) :: boundary_condition
-            IS_PSW = ((boundary_condition .eq. CG_PSW) )
-         END FUNCTION IS_PSW
+      integer, intent(in) :: icv
 
-      END MODULE bc
+      bc_defined = is_defined(bc_x_w(icv)) .or. is_defined(bc_x_e(icv)) .or. &
+                   is_defined(bc_y_s(icv)) .or. is_defined(bc_y_n(icv)) .or. &
+                   is_defined(bc_z_b(icv)) .or. is_defined(bc_z_t(icv))
+
+! An IC is defined for restart runs only if it is a 'PATCH'.
+      if(bc_type(icv) == 'DUMMY') bc_defined = .false.
+
+   end function bc_defined
+end module bc

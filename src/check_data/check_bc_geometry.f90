@@ -75,22 +75,6 @@ module check_bc_geometry_module
 
       L50: DO BCV = 1, DIMENSION_BC
 
-         BC_DEFINED(BCV) = .FALSE.
-         IF(is_defined(BC_X_W(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_X_E(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_Y_S(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_Y_N(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_Z_B(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_Z_T(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_I_W(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_I_E(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_J_S(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_J_N(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_K_B(BCV))) BC_DEFINED(BCV) = .TRUE.
-         IF(is_defined(BC_K_T(BCV))) BC_DEFINED(BCV) = .TRUE.
-
-         IF (BC_TYPE(BCV) == 'DUMMY') BC_DEFINED(BCV) = .FALSE.
-
          IF(BC_TYPE(BCV)/=UNDEFINED_C .AND. BC_TYPE(BCV)/='DUMMY')THEN
 
             RECOGNIZED_BC_TYPE = .FALSE.
