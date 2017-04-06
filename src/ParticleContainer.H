@@ -15,20 +15,33 @@ using namespace amrex;
 struct PIdx
 {
     enum { // Particle data stored in p.m_data
-	particle_phase = 0, 
-	particle_state,
-        des_radius,
-        ro_sol,
-        pvol, pmass, omoi,
-        des_pos_new,
-        des_vel_new,
-        des_usr_var,
-        omega_new,
-        des_acc_old,
-        des_rot_old,
-        drag_fc,
-        fc,
-        tow,
+	phase = 0, 
+	state,
+        radius,
+	volume,
+        density, 
+        oneOverI,
+	velx,
+	vely,
+	velz,
+        omegax,
+	omegay,
+	omegaz,
+	accx,
+	accy,
+	accz,
+        alphax,  //angular acceleration
+	alphay, 
+	alphaz,
+        dragx,
+	dragy,
+	dragz,
+        cforcex,  //Collision force for linear momenta
+	cforcey,
+	cforcez,
+        acforcex,  //Collision force for angular momenta
+	acforcey,
+	acforcez,
         pairs,
 	nattribs
     };
@@ -71,4 +84,4 @@ private:
     static int do_tiling;
     static IntVect tile_size;
 };
-#endif /*_ParticleContainer_H_*/
+#endif 
