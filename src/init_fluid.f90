@@ -51,7 +51,8 @@ module init_fluid_module
       real(c_real), intent(in   ) :: xlength, ylength, zlength
 
       ! Set user specified initial conditions (IC)
-      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, domlo, domhi, p_g, u_g, v_g, w_g)
+      call set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+         domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
       ! Set the initial pressure field
       call set_p_g(slo, shi, lo, hi, p_g, ep_g, dx, dy, dz, &
@@ -86,22 +87,27 @@ module init_fluid_module
 !  Purpose: This module sets all the initial conditions.               !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, domlo, domhi, p_g, u_g, v_g, w_g)
+   subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+      domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
       use ic, only: dimension_ic, ic_defined
-      use ic, only: ic_i_w, ic_j_s, ic_k_b, ic_i_e, ic_j_n, ic_k_t
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
+      use ic, only: ic_x_e, ic_y_n, ic_z_t
+      use ic, only: ic_x_w, ic_y_s, ic_z_b
       use scales, only: scale_pressure
       use param1, only: undefined, is_defined
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
+      use calc_cell_module, only: calc_cell
+
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
       integer(c_int), intent(in   ) :: domlo(3),domhi(3)
+      real(c_real), intent(in   ) :: dx, dy, dz
 
       real(c_real), intent(inout) ::  p_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -126,9 +132,19 @@ module init_fluid_module
       ! Temporary variables for storing IC values
       real(c_real) :: pgx, ugx, vgx, wgx
 
+      integer :: i_w, j_s, k_b
+      integer :: i_e, j_n, k_t
+
 !  Set the initial conditions.
       do icv = 1, dimension_ic
          if (ic_defined(icv)) then
+
+            i_w = calc_cell (ic_x_w(icv), dx) + 1
+            i_e = calc_cell (ic_x_e(icv), dx)
+            j_s = calc_cell (ic_y_s(icv), dy) + 1
+            j_n = calc_cell (ic_y_n(icv), dy)
+            k_b = calc_cell (ic_z_b(icv), dz) + 1
+            k_t = calc_cell (ic_z_t(icv), dz)
 
             ! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(icv)
@@ -137,12 +153,12 @@ module init_fluid_module
             wgx = ic_w_g(icv)
 
             if (is_defined(ugx)) then
-               istart = max(ulo(1), ic_i_w(icv))
-               jstart = max(ulo(2), ic_j_s(icv))
-               kstart = max(ulo(3), ic_k_b(icv))
-               iend   = min(uhi(1), ic_i_e(icv))
-               jend   = min(uhi(2), ic_j_n(icv))
-               kend   = min(uhi(3), ic_k_t(icv))
+               istart = max(ulo(1), i_w)
+               jstart = max(ulo(2), j_s)
+               kstart = max(ulo(3), k_b)
+               iend   = min(uhi(1), i_e)
+               jend   = min(uhi(2), j_n)
+               kend   = min(uhi(3), k_t)
                u_g(istart:iend,jstart:jend,kstart:kend) = ugx
                if (ulo(1).lt.domlo(1)) &
                   u_g(ulo(1):istart-1,jstart:jend,kstart:kend) = ugx
@@ -151,12 +167,12 @@ module init_fluid_module
             end if
 
             if (is_defined(ugx)) then
-               istart = max(vlo(1), ic_i_w(icv))
-               jstart = max(vlo(2), ic_j_s(icv))
-               kstart = max(vlo(3), ic_k_b(icv))
-               iend   = min(vhi(1), ic_i_e(icv))
-               jend   = min(vhi(2), ic_j_n(icv))
-               kend   = min(vhi(3), ic_k_t(icv))
+               istart = max(vlo(1), i_w)
+               jstart = max(vlo(2), j_s)
+               kstart = max(vlo(3), k_b)
+               iend   = min(vhi(1), i_e)
+               jend   = min(vhi(2), j_n)
+               kend   = min(vhi(3), k_t)
                v_g(istart:iend,jstart:jend,kstart:kend) = vgx
                if (vlo(2).lt.domlo(2)) &
                   v_g(istart:iend,vlo(2):jstart-1,kstart:kend) = vgx
@@ -165,12 +181,12 @@ module init_fluid_module
             end if
 
             if (is_defined(ugx)) then
-               istart = max(wlo(1), ic_i_w(icv))
-               jstart = max(wlo(2), ic_j_s(icv))
-               kstart = max(wlo(3), ic_k_b(icv))
-               iend   = min(whi(1), ic_i_e(icv))
-               jend   = min(whi(2), ic_j_n(icv))
-               kend   = min(whi(3), ic_k_t(icv))
+               istart = max(wlo(1), i_w)
+               jstart = max(wlo(2), j_s)
+               kstart = max(wlo(3), k_b)
+               iend   = min(whi(1), i_e)
+               jend   = min(whi(2), j_n)
+               kend   = min(whi(3), k_t)
                w_g(istart:iend,jstart:jend,kstart:kend) = wgx
                if (wlo(3).lt.domlo(3)) &
                   w_g(istart:iend,jstart:jend,wlo(3):kstart-1) = wgx
@@ -178,12 +194,12 @@ module init_fluid_module
                   w_g(istart:iend,jstart:jend,kend+1:whi(3)  ) = wgx
             end if
 
-            istart = max(slo(1), ic_i_w(icv))
-            jstart = max(slo(2), ic_j_s(icv))
-            kstart = max(slo(3), ic_k_b(icv))
-            iend   = min(shi(1), ic_i_e(icv))
-            jend   = min(shi(2), ic_j_n(icv))
-            kend   = min(shi(3), ic_k_t(icv))
+            istart = max(slo(1), i_w)
+            jstart = max(slo(2), j_s)
+            kstart = max(slo(3), k_b)
+            iend   = min(shi(1), i_e)
+            jend   = min(shi(2), j_n)
+            kend   = min(shi(3), k_t)
             do k = kstart, kend
                do j = jstart, jend
                   do i = istart, iend

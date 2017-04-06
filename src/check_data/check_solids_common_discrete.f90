@@ -7,7 +7,7 @@ module check_solids_common_discrete_module
        &  ivar,  ival, err_msg
 
   implicit none
-  private 
+  private
 
   public check_solids_common_discrete
 
@@ -49,24 +49,22 @@ contains
     case ('EULER')
        intg_euler = .true.
        intg_adams_bashforth = .false.
-       !DES_INTG_METHOD_ENUM = 1
     case ('ADAMS_BASHFORTH')
        intg_euler = .false.
        intg_adams_bashforth = .true.
-       !DES_INTG_METHOD_ENUM = 2
     case DEFAULT
        write(err_msg,2020) trim(des_intg_method), trim(IFILE_NAME)
        call flush_err_msg(abort=.true.)
-       
+
 2020   format('Error 2020:Invalid DES_INGT_METHOD: ',A,/'Please ',      &
             'correct the ',A,' file.')
-       
+
     end select
-    
+
     do_old = intg_adams_bashforth
-    
+
     call finl_err_msg
-    
+
   end subroutine check_solids_common_discrete
-  
+
 end module check_solids_common_discrete_module

@@ -19,7 +19,6 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
       use bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
-      use compar, only: mype, pe_io
       use constant, only: gravity, c_name, c
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
@@ -27,8 +26,10 @@
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
-      use ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
+      use ic, only: ic_ep_g, ic_u_g, ic_v_g, ic_w_g, ic_p_g
+      use ic, only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
+
+      use ic, only: ic_defined
       use ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
@@ -42,6 +43,7 @@
       use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
 
+      use calc_cell_module, only: calc_cell
       implicit none
 
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
@@ -71,6 +73,8 @@
 ! RUN_NAME.OUT file unit number
       integer, PARAMETER :: UNIT_OUT = 52
       integer :: ier
+      integer :: i_w, j_s, k_b
+      integer :: i_e, j_n, k_t
 !-----------------------------------------------
 
 !
@@ -273,24 +277,32 @@
       WRITE (UNIT_OUT, 1500)
       DO L = 1, DIMENSION_IC
          IF (IC_DEFINED(L)) THEN
+
+            i_w = calc_cell (ic_x_w(l), dx) + 1
+            i_e = calc_cell (ic_x_e(l), dx)
+            j_s = calc_cell (ic_y_s(l), dy) + 1
+            j_n = calc_cell (ic_y_n(l), dy)
+            k_b = calc_cell (ic_z_b(l), dz) + 1
+            k_t = calc_cell (ic_z_t(l), dz)
+
             WRITE (UNIT_OUT, 1510) L
-            LOC(1) = LOCATION(IC_I_W(L),DX) - HALF*DX
-            LOC(2) = LOCATION(IC_I_E(L),DX) + HALF*DX
-            LOC(3) = LOCATION(IC_J_S(L),DY) - HALF*DY
-            LOC(4) = LOCATION(IC_J_N(L),DY) + HALF*DY
-            LOC(5) = LOCATION(IC_K_B(L),DZ) - HALF*DZ
-            LOC(6) = LOCATION(IC_K_T(L),DZ) + HALF*DZ
-            WRITE (UNIT_OUT, 1520) IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), IC_Y_S&
-               (L), LOC(3), IC_Y_N(L), LOC(4), IC_Z_B(L), LOC(5), IC_Z_T(L), &
-               LOC(6)
-            WRITE (UNIT_OUT, 1530) IC_I_W(L), IC_I_E(L), IC_J_S(L), IC_J_N(L), &
-               IC_K_B(L), IC_K_T(L)
+            LOC(1) = LOCATION(I_W,DX) - HALF*DX
+            LOC(2) = LOCATION(I_E,DX) + HALF*DX
+            LOC(3) = LOCATION(J_S,DY) - HALF*DY
+            LOC(4) = LOCATION(J_N,DY) + HALF*DY
+            LOC(5) = LOCATION(K_B,DZ) - HALF*DZ
+            LOC(6) = LOCATION(K_T,DZ) + HALF*DZ
+            WRITE (UNIT_OUT, 1520) &
+               IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), &
+               IC_Y_S(L), LOC(3), IC_Y_N(L), LOC(4), &
+               IC_Z_B(L), LOC(5), IC_Z_T(L), LOC(6)
+            WRITE (UNIT_OUT, 1530) I_W, I_E, J_S, J_N, K_B, K_T
             WRITE (UNIT_OUT, 1540) IC_EP_G(L)
             IF (IS_DEFINED(IC_P_G(L))) WRITE (UNIT_OUT, 1541) IC_P_G(L)
 !
             WRITE (UNIT_OUT, 1550) IC_U_G(L), IC_V_G(L), IC_W_G(L)
             DO M = 1, MMAX_TOT
-               WRITE (UNIT_OUT, 1560) M, IC_ROP_S(L,M)
+               WRITE (UNIT_OUT, 1560) M, IC_EP_S(L,M)
             END DO
 
             DO M = 1, MMAX_TOT
@@ -487,7 +499,7 @@
  1550 FORMAT(9X,'X-component of gas velocity (IC_U_g) = ',G12.5,/9X,&
          'Y-component of gas velocity (IC_V_g) = ',G12.5,/9X,&
          'Z-component of gas velocity (IC_W_g) = ',G12.5)
- 1560 FORMAT(9X,'Solids phase-',I2,' Density x Volume fr. (IC_ROP_s) = ',G12.5)
+ 1560 FORMAT(9X,'Solids phase-',I2,' Volume fr. (IC_EP_s) = ',G12.5)
  1570 FORMAT(9X,'X-component of solids phase-',I2,' velocity (IC_U_s) =',G12.5,&
          /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
          ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)

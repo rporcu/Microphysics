@@ -37,9 +37,6 @@
 ! The name of the calling routine. Set by calling: INIT_ERR_MSG
       CHARACTER(LEN=128), DIMENSION(MAX_CALL_DEPTH), PRIVATE :: CALLERS
 
-! Flag for writing messages to the screen.
-      logical, PRIVATE :: SCR_LOG
-
 ! Error Flag.
       integer :: IER_EM
 
@@ -93,10 +90,6 @@
       ERR_MSG = ''
 ! Clear the caller routine information.
       CALLERS = ''
-
-! This turns on error messaging from all processes.
-! Flag for printing screen messages.
-      SCR_LOG = (myPE == PE_IO) .AND. FULL_LOG
 
 ! Verify the length of user-provided name.
       LOGFILE = ''
@@ -166,7 +159,7 @@
 ! Verify that the maximum call dept will not be exceeded.  If so, flag
 ! the error and exit.
       IF(CALL_DEPTH + 1 > MAX_CALL_DEPTH) THEN
-         IF(SCR_LOG) WRITE(*,1000) CALL_DEPTH
+         WRITE(*,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
          call mfix_exit(myPE)
       ELSE
@@ -216,7 +209,7 @@
 
 ! Verify that at the INIT routine was called.
       IF(CALL_DEPTH < 1) THEN
-         IF(SCR_LOG) WRITE(*,1000)
+         WRITE(*,1000)
          call mfix_exit(myPE)
       ELSE
 ! Store the current caller, clear the array position, and decrement
@@ -237,16 +230,16 @@
 ! If the error message container is not empty, report the error, dump
 ! the error message and abort MFIX.
       IF(COUNT /= 0) THEN
-         IF(SCR_LOG) WRITE(*,1001) trim(CALLER)
+         WRITE(*,1001) trim(CALLER)
 ! Write out the error message container contents.
          DO LC = 1, LINE_COUNT
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(0 < LENGTH .AND. LENGTH < 256 ) THEN
-               IF(SCR_LOG) WRITE(*,1002)LC, LENGTH, trim(LINE)
+               WRITE(*,1002)LC, LENGTH, trim(LINE)
             ENDIF
          ENDDO
-         IF(SCR_LOG) WRITE(*,1003)
+         WRITE(*,1003)
          call mfix_exit(myPE)
       ENDIF
 
@@ -363,9 +356,9 @@
 ! Set the current caller.
          CALLER = CALLERS(CALL_DEPTH)
          IF(D_FLAG) THEN
-            IF(SCR_LOG) WRITE(*,2000) trim(CALLER)
+            WRITE(*,2000) trim(CALLER)
          ELSE
-            IF(SCR_LOG) WRITE(*,1000) trim(CALLER)
+            WRITE(*,1000) trim(CALLER)
          ENDIF
       ENDIF
 
@@ -383,11 +376,11 @@
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(LENGTH == 0) THEN
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, "EMPTY."
+               WRITE(*,2001) LC, LENGTH, "EMPTY."
             ELSEIF(LENGTH >=  LINE_LENGTH)THEN
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, "OVERFLOW."
+               WRITE(*,2001) LC, LENGTH, "OVERFLOW."
             ELSE
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, trim(LINE)
+               WRITE(*,2001) LC, LENGTH, trim(LINE)
             ENDIF
          ENDDO
       ELSE
@@ -395,22 +388,22 @@
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(0 < LENGTH .AND. LENGTH < 256 ) THEN
-               IF(SCR_LOG) WRITE(*,1001) trim(LINE)
+               WRITE(*,1001) trim(LINE)
             ELSE
-               IF(SCR_LOG) WRITE(*,"('  ')")
+               WRITE(*,"('  ')")
             ENDIF
          ENDDO
          IF(LAST_LINE == 0) THEN
-            IF(SCR_LOG) WRITE(*,"('  ')")
+            WRITE(*,"('  ')")
          ENDIF
       ENDIF
 
 ! Print footer.
       IF(F_FLAG) THEN
          IF(D_FLAG) THEN
-            IF(SCR_LOG) WRITE(*, 2002)
+            WRITE(*, 2002)
          ELSE
-            IF(SCR_LOG) WRITE(*, 1002)
+            WRITE(*, 1002)
          ENDIF
       ENDIF
 
@@ -468,20 +461,20 @@
 
 ! Header
       IF(H_FLAG) THEN
-         IF(SCR_LOG) WRITE(*,1000)
+         WRITE(*,1000)
       ENDIF
 
 ! Call Tree
       DO LC=1,MAX_CALL_DEPTH
          DO SL=1,LC
-            IF(SCR_LOG) WRITE(*,1001,ADVANCE='NO')
+            WRITE(*,1001,ADVANCE='NO')
          ENDDO
-         IF(SCR_LOG) WRITE(*,1002,ADVANCE='YES') CALLERS(LC)
+         WRITE(*,1002,ADVANCE='YES') CALLERS(LC)
       ENDDO
 
 ! Footer.
       IF(F_FLAG) THEN
-         IF(SCR_LOG) WRITE(*,1003)
+         WRITE(*,1003)
       ENDIF
 
       RETURN
