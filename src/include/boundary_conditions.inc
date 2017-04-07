@@ -8,7 +8,6 @@
 
       BC_TYPE, &
       BC_X_w, BC_X_e, BC_Y_s, BC_Y_n, BC_Z_b, BC_Z_t, &
-      BC_I_w, BC_I_e, BC_J_s, BC_J_n, BC_K_b, BC_K_t, &
 
       BC_PO_APPLY_TO_DES, BC_PIC_MI_CONST_NPC, BC_PIC_MI_CONST_STATWT, &
       U_g0, U_s0, V_g0, V_s0, W_g0, W_s0, BC_ROP_g, BC_RO_g

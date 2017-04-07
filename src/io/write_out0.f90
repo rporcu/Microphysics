@@ -13,7 +13,6 @@
       use iso_c_binding , only: c_int
 
       use bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
-      use bc, only: bc_i_w, bc_i_e, bc_j_s, bc_j_n, bc_k_b, bc_k_t
       use bc, only: bc_t_g, bc_ep_g, bc_massflow_g, bc_volflow_g, bc_massflow_s, bc_volflow_s
       use bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_rop_s
       use bc, only: bc_u_g, bc_v_g, bc_w_g
@@ -43,7 +42,15 @@
       use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
 
+
+      use ic, only: nsw_, fsw_, psw_
+      use ic, only: pinf_, pout_
+      use ic, only: minf_, mout_
+
       use calc_cell_module, only: calc_cell
+      use calc_cell_module, only: calc_cell_bc_flow
+      use calc_cell_module, only: calc_cell_bc_wall
+
       implicit none
 
       integer(c_int), intent(in   ) :: domlo(3), domhi(3)
@@ -312,54 +319,69 @@
       END DO
 
 ! Boundary Condition Data
-      WRITE (UNIT_OUT, 1600)
-      DO L = 1, DIMENSION_BC
-         IF (BC_DEFINED(L)) THEN
-            WRITE (UNIT_OUT, 1610) L
-            WRITE (UNIT_OUT, 1611) BC_TYPE(L)
-            SELECT CASE (TRIM(BC_TYPE(L)))
-            CASE ('MASS_INFLOW','CG_MI')
-               WRITE (UNIT_OUT, 1612)
-            CASE ('MASS_OUTFLOW')
-               WRITE (UNIT_OUT, 1613)
-            CASE ('P_INFLOW')
-               WRITE (UNIT_OUT, 1614)
-            CASE ('P_OUTFLOW','CG_PO')
-               WRITE (UNIT_OUT, 1615)
-            CASE ('FREE_SLIP_WALL','CG_FSW')
-               WRITE (UNIT_OUT, 1616)
-            CASE ('NO_SLIP_WALL','CG_NSW')
-               WRITE (UNIT_OUT, 1617)
-            CASE ('PAR_SLIP_WALL','CG_PSW')
-               WRITE (UNIT_OUT, 1618)
-            CASE ('OUTFLOW')
-               WRITE (UNIT_OUT, 1619)
-            END SELECT
-            IF (BC_TYPE(L)(1:2)/='CG') THEN
-               LOC(1) = LOCATION(BC_I_W(L),DX) - HALF*DX
-               LOC(2) = LOCATION(BC_I_E(L),DX) + HALF*DX
-               LOC(3) = LOCATION(BC_J_S(L),DY) - HALF*DY
-               LOC(4) = LOCATION(BC_J_N(L),DY) + HALF*DY
-               LOC(5) = LOCATION(BC_K_B(L),DZ) - HALF*DZ
-               LOC(6) = LOCATION(BC_K_T(L),DZ) + HALF*DZ
-               WRITE (UNIT_OUT, 1620) BC_X_W(L), LOC(1), BC_X_E(L), LOC(2), BC_Y_S&
-               (L), LOC(3), BC_Y_N(L), LOC(4), BC_Z_B(L), LOC(5), BC_Z_T(L), &
-               LOC(6)
-               WRITE (UNIT_OUT, 1630) BC_I_W(L), BC_I_E(L), BC_J_S(L), BC_J_N(L), &
-               BC_K_B(L), BC_K_T(L)
-            ENDIF
-            WRITE (UNIT_OUT,1635)  BC_AREA(L)
+      write (unit_out, 1600)
+      do l = 1, dimension_bc
+         if (bc_defined(l)) then
+            write (unit_out, 1610) l
+            write (unit_out, 1611) bc_type(l)
+            select case (trim(bc_type(l)))
+            case ('MASS_INFLOW','MI')
+               write (unit_out, 1612)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('MASS_OUTFLOW','MO')
+               write (unit_out, 1613)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('P_INFLOW','PI')
+               write (unit_out, 1614)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('P_OUTFLOW','PO')
+               write (unit_out, 1615)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('OUTFLOW','OF')
+               write (unit_out, 1619)
+               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
+                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('FREE_SLIP_WALL','FSW')
+               write (unit_out, 1616)
+               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
+                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('NO_SLIP_WALL','NSW')
+               write (unit_out, 1617)
+               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
+                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('PAR_SLIP_WALL','PSW')
+               write (unit_out, 1618)
+               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
+                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+            end select
+
+            write (unit_out, 1620) &
+               bc_x_w(l), location(i_w,dx) - half*dx, &
+               bc_x_e(l), location(i_e,dx) + half*dx, &
+               bc_y_s(l), location(j_s,dy) - half*dy, &
+               bc_y_n(l), location(j_n,dy) + half*dy, &
+               bc_z_b(l), location(k_b,dz) - half*dz, &
+               bc_z_t(l), location(k_t,dz) + half*dz
+
+            write (unit_out, 1630) i_w, i_e, j_s, j_n, k_b, k_t
+            write (unit_out,1635)  bc_area(l)
 
             IF (IS_DEFINED(BC_EP_G(L))) WRITE (UNIT_OUT, 1640) BC_EP_G(L)
-            IF (IS_DEFINED(BC_P_G(L))) WRITE (UNIT_OUT, 1641) BC_P_G(L)
-            IF (IS_DEFINED(BC_T_G(L))) WRITE (UNIT_OUT, 1642) BC_T_G(L)
-            IF (IS_DEFINED(BC_MASSFLOW_G(L))) WRITE (UNIT_OUT, 1648) &
-               BC_MASSFLOW_G(L)
-            IF (IS_DEFINED(BC_VOLFLOW_G(L))) WRITE (UNIT_OUT, 1649) &
-               BC_VOLFLOW_G(L)
-            IF (IS_DEFINED(BC_U_G(L))) WRITE (UNIT_OUT, 1650) BC_U_G(L)
-            IF (IS_DEFINED(BC_V_G(L))) WRITE (UNIT_OUT, 1651) BC_V_G(L)
-            IF (IS_DEFINED(BC_W_G(L))) WRITE (UNIT_OUT, 1652) BC_W_G(L)
+            IF (IS_DEFINED(BC_P_G(L)))  WRITE (UNIT_OUT, 1641) BC_P_G(L)
+            IF (IS_DEFINED(BC_T_G(L)))  WRITE (UNIT_OUT, 1642) BC_T_G(L)
+            IF (IS_DEFINED(BC_MASSFLOW_G(L))) &
+               WRITE (UNIT_OUT, 1648) BC_MASSFLOW_G(L)
+            IF (IS_DEFINED(BC_VOLFLOW_G(L))) &
+               WRITE (UNIT_OUT, 1649) BC_VOLFLOW_G(L)
+            IF (IS_DEFINED(BC_U_G(L)))  WRITE (UNIT_OUT, 1650) BC_U_G(L)
+            IF (IS_DEFINED(BC_V_G(L)))  WRITE (UNIT_OUT, 1651) BC_V_G(L)
+            IF (IS_DEFINED(BC_W_G(L)))  WRITE (UNIT_OUT, 1652) BC_W_G(L)
             DO M = 1, MMAX_TOT
                IF (IS_DEFINED(BC_ROP_S(L,M))) THEN
                   WRITE (UNIT_OUT, "(' ')")
@@ -376,7 +398,7 @@
                IF(IS_DEFINED(BC_V_S(L,M))) WRITE(UNIT_OUT,1671)M,BC_V_S(L,M)
                IF(IS_DEFINED(BC_W_S(L,M))) WRITE(UNIT_OUT,1672)M,BC_W_S(L,M)
             END DO
-            IF (BC_TYPE(L) == 'PAR_SLIP_WALL') THEN
+            IF (BC_TYPE(L) == 'PAR_SLIP_WALL' .or. BC_TYPE(L) == 'PSW') THEN
                WRITE (UNIT_OUT, 1675) BC_HW_G(L), BC_UW_G(L), BC_VW_G(L), &
                   BC_WW_G(L)
                DO M = 1, MMAX_TOT
@@ -573,16 +595,6 @@
 !  Purpose: Find the cell center location in X, Y, or Z direction for  C
 !           the given index L2.                                        C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 01-SEP-92  C
-!  Reviewer: M. Syamlal                               Date: 11-DEC-92  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: None                                            C
-!                                                                      C
-!  Local variables: L                                                  C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       DOUBLE PRECISION function LOCATION (L2, DX)
 !
@@ -611,23 +623,7 @@
 !  Module name: WRITE_TABLE (LEGEND, ARRAY, DIST_MIN, LSTART, LEND)    C
 !  Purpose: To write a table of DX, DY, DZ, and cell wall locations    C
 !                                                                      C
-!  Author: M. Syamlal                                 Date: 09-JAN-92  C
-!  Reviewer: S. Venkatesan                            Date: 11-DEC-92  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References:                                     C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: None                                            C
-!                                                                      C
-!  Local variables: NROW, L, L1, L2, L3, DIST, ARRAY1, ARRAY3          C
-!                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-!
       SUBROUTINE WRITE_TABLE(LEGEND, SCALAR, DIST_MIN, LSTART, LEND)
 
 !-----------------------------------------------

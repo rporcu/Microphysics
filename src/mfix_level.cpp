@@ -281,12 +281,10 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
     // Only call this check on one processor since it has a bunch of print statements
     // if ( ParallelDescriptor::IOProcessor() )
-       check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
-
-    set_bc_area(&dx,&dy,&dz);
+    check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
 
     // Convert (mass, volume) flows to velocities.
-    set_bc_flow();
+    set_bc_flow(&xlen, &ylen, &zlen, &dx,&dy,&dz);
 
     // Only call this check on one processor since it has a bunch of print statements
     if ( ParallelDescriptor::IOProcessor() )
@@ -1196,13 +1194,19 @@ mfix_level::mfix_solve_linear_equation(int eq_id,int lev,MultiFab& sol, MultiFab
 void
 mfix_level::mfix_set_bc_type(int lev)
 {
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
   Box domain(geom[lev].Domain());
   for (MFIter mfi((*ep_g[lev])); mfi.isValid(); ++mfi)
   {
       const Box& sbx = (*ep_g[lev])[mfi].box();
       set_bc_type(sbx.loVect(),sbx.hiVect(), bc_ilo.dataPtr(), bc_ihi.dataPtr(),
                   bc_jlo.dataPtr(), bc_jhi.dataPtr(), bc_klo.dataPtr(), bc_khi.dataPtr(),
-                  domain.loVect(),domain.hiVect());
+                  domain.loVect(),domain.hiVect(), &dx, &dy, &dz, &xlen, &ylen, &zlen);
   }
 
 }

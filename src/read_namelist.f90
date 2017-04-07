@@ -182,8 +182,6 @@ MODULE read_namelist_module
 
       logical, intent(OUT) ::ERROR
 
-
-
 ! External namelist files:
 !---------------------------------------------------------------------//
       include 'run_control.inc'

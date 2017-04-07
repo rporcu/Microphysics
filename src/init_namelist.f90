@@ -795,41 +795,6 @@ MODULE INIT_NAMELIST_MODULE
          BC_Z_T(LC) = UNDEFINED
 !</keyword>
 
-!<keyword category="Boundary Condition" required="false">
-!  <description>I index of the west-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_I_W(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>I index of the east-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_I_E(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>J index of the south-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_J_S(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>J index of the north-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_J_N(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>K index of the bottom-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_K_B(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>K index of the top-most cell.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_K_T(LC) = UNDEFINED_I
-!</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Type of boundary.</description>
@@ -859,12 +824,6 @@ MODULE INIT_NAMELIST_MODULE
 !      all scalar quantities and velocity components. The specified
 !      values of fluid and solids velocities are only used initially
 !      as MFIX computes these values at this inlet boundary.' />
-!
-!  <valid value='P_OUTFLOW' alias='PO'
-!    note='Outflow to a boundary at a specified constant pressure.
-!      To specify as the west, south, or bottom end of the computational
-!      region, add a layer of wall cells to the west, south, or bottom of
-!      the PO cells.' />
 !
 !  <valid value='FREE_SLIP_WALL' alias='FSW'
 !    note='Velocity gradients at the wall vanish./>

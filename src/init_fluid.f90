@@ -335,7 +335,10 @@ module init_fluid_module
 ! Search for an outflow boundary condition where pressure is specified
       pj = undefined
       do l = 1, dimension_bc
-         if (bc_defined(l) .and. bc_type(l)=='P_OUTFLOW') pj = bc_p_g(l)
+         if (bc_defined(l)) then
+            if(bc_type(l)=='P_OUTFLOW' .or. bc_type(l)=='PO') &
+               pj = bc_p_g(l)
+         endif
       enddo
 
       if (is_undefined(pj)) then

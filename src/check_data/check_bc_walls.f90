@@ -54,9 +54,9 @@ contains
     integer, intent(in) :: bcv
     ! Initialize the error manger.
     call init_err_msg("CHECK_BC_WALLS_GAS")
-    
+
     ! The wall velocities are not needed for no-slip or free-slip
-    if(BC_TYPE(BCV) == 'PAR_SLIP_WALL') then
+    if(BC_TYPE(BCV) == 'PAR_SLIP_WALL' .or. BC_TYPE(BCV) == 'PSW') then
        if(is_undefined(bc_uw_g(bcv))) then
           write(err_msg,1000) trim(ivar('BC_Uw_g',bcv)), trim(IFILE_NAME)
           call flush_err_msg(abort=.true.)
@@ -67,14 +67,14 @@ contains
           write(err_msg,1000) trim(ivar('BC_Ww_g',bcv)), trim(IFILE_NAME)
           call flush_err_msg(abort=.true.)
        endif
-    endif    
-    
+    endif
+
     ! Clear the error manager.
     call finl_err_msg
-    
+
 1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
           'correct the ',A,' file.')
-    
+
   end subroutine check_bc_walls_gas
-  
+
 end module check_bc_walls_module

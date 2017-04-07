@@ -51,29 +51,6 @@
 !                      boundary conditions are specified
       real(c_real) BC_Z_t (DIMENSION_BC)
 !
-!                      i index of the west face of a region where
-!                      boundary conditions are specified
-      integer          BC_I_w (DIMENSION_BC)
-!
-!                      i index of the east face of a region where
-!                      boundary conditions are specified
-      integer          BC_I_e (DIMENSION_BC)
-!
-!                      j index of the south face of a region where
-!                      boundary conditions are specified
-      integer          BC_J_s (DIMENSION_BC)
-!
-!                      j index of the north face of a region where
-!                      boundary conditions are specified
-      integer          BC_J_n (DIMENSION_BC)
-!
-!                      k index of the bottom face of a region where
-!                      boundary conditions are specified
-      integer          BC_K_b (DIMENSION_BC)
-!
-!                      k index of the top face of a region where
-!                      boundary conditions are specified
-      integer          BC_K_t (DIMENSION_BC)
 !
 !                      Void fraction in a specified boundary region
       real(c_real) BC_EP_g (DIMENSION_BC)
@@ -142,17 +119,6 @@
 !                      Type of boundary: MASS_INFLOW, MASS_OUTFLOW,
 !                      P_INFLOW, P_OUTFLOW, FREE_SLIP_WALL, NO_SLIP_WALL
       CHARACTER(LEN=16)     BC_TYPE (DIMENSION_BC)
-      integer ::     BC_TYPE_ENUM (DIMENSION_BC)
-
-      ENUM, BIND(C)
-         ENUMERATOR :: CG_NSW, CG_FSW, CG_PSW, CG_MI, NONE
-         ENUMERATOR :: NO_SLIP_WALL, FREE_SLIP_WALL, PAR_SLIP_WALL, NSW, FSW, PSW
-         ENUMERATOR :: P_OUTFLOW, MASS_OUTFLOW, OUTFLOW
-         ENUMERATOR :: P_INFLOW, MASS_INFLOW
-         ENUMERATOR :: CG_PO, CG_MO
-         ENUMERATOR :: BLANK
-         ENUMERATOR :: DUMMY
-      END ENUM
 
 !                      FLAG to specify if this PO BC applies to solid phase
 !                      in discrete implementation or not. For example, setting
