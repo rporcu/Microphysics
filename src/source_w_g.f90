@@ -133,7 +133,7 @@ contains
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
-      use ic, only: MINF_, MOUT_
+      use ic, only: MINF_
       use ic, only: cycl_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
@@ -213,8 +213,7 @@ contains
 
                else if(bc_ilo_type(j,k,1) == PINF_ .or. &
                        bc_ilo_type(j,k,1) == POUT_ .or. &
-                       bc_ilo_type(j,k,1) == MINF_ .or. &
-                       bc_ilo_type(j,k,1) == MOUT_) then
+                       bc_ilo_type(j,k,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -254,8 +253,7 @@ contains
 
                else if(bc_ihi_type(j,k,1) == PINF_ .or. &
                        bc_ihi_type(j,k,1) == POUT_ .or. &
-                       bc_ihi_type(j,k,1) == MINF_ .or. &
-                       bc_ihi_type(j,k,1) == MOUT_) then
+                       bc_ihi_type(j,k,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -296,8 +294,7 @@ contains
 
                else if(bc_jlo_type(i,k,1) == PINF_ .or. &
                        bc_jlo_type(i,k,1) == POUT_ .or. &
-                       bc_jlo_type(i,k,1) == MINF_ .or. &
-                       bc_jlo_type(i,k,1) == MOUT_) then
+                       bc_jlo_type(i,k,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -339,8 +336,7 @@ contains
 
                else if(bc_jhi_type(i,k,1) == PINF_ .or. &
                        bc_jhi_type(i,k,1) == POUT_ .or. &
-                       bc_jhi_type(i,k,1) == MINF_ .or. &
-                       bc_jhi_type(i,k,1) == MOUT_) then
+                       bc_jhi_type(i,k,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -365,8 +361,7 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,b)
                   A_m(i,j,k,b) = zero
 
-               else if (bc_klo_type(i,j,1) == MINF_ .or. &
-                        bc_klo_type(i,j,1) == MOUT_) then
+               else if (bc_klo_type(i,j,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one
@@ -398,8 +393,7 @@ contains
                   A_m(i,j,k,0) = A_m(i,j,k,0)+A_m(i,j,k,t)
                   A_m(i,j,k,t) = zero
 
-               else if(bc_khi_type(i,j,1) == MINF_ .or. &
-                       bc_khi_type(i,j,1) == MOUT_) then
+               else if(bc_khi_type(i,j,1) == MINF_) then
 
                   A_m(i,j,k,:) =  zero
                   A_m(i,j,k,0) = -one

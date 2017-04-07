@@ -14,7 +14,7 @@
 
       use bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
       use bc, only: bc_t_g, bc_ep_g, bc_massflow_g, bc_volflow_g, bc_massflow_s, bc_volflow_s
-      use bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_rop_s
+      use bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_ep_s
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
       use bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
@@ -45,7 +45,7 @@
 
       use ic, only: nsw_, fsw_, psw_
       use ic, only: pinf_, pout_
-      use ic, only: minf_, mout_
+      use ic, only: minf_
 
       use calc_cell_module, only: calc_cell
       use calc_cell_module, only: calc_cell_bc_flow
@@ -383,9 +383,9 @@
             IF (IS_DEFINED(BC_V_G(L)))  WRITE (UNIT_OUT, 1651) BC_V_G(L)
             IF (IS_DEFINED(BC_W_G(L)))  WRITE (UNIT_OUT, 1652) BC_W_G(L)
             DO M = 1, MMAX_TOT
-               IF (IS_DEFINED(BC_ROP_S(L,M))) THEN
+               IF (IS_DEFINED(BC_EP_S(L,M))) THEN
                   WRITE (UNIT_OUT, "(' ')")
-                  WRITE (UNIT_OUT, 1660) M, BC_ROP_S(L,M)
+                  WRITE (UNIT_OUT, 1660) M, BC_EP_S(L,M)
                ENDIF
             END DO
             DO M = 1, MMAX_TOT
@@ -559,7 +559,7 @@
  1650 FORMAT(9X,'X-component of gas velocity (BC_U_g) = ',G12.5)
  1651 FORMAT(9X,'Y-component of gas velocity (BC_V_g) = ',G12.5)
  1652 FORMAT(9X,'Z-component of gas velocity (BC_W_g) = ',G12.5)
- 1660 FORMAT(9X,'Solids phase-',I2,' Density x Volume fr. (BC_ROP_s) = ',G12.5)
+ 1660 FORMAT(9X,'Solids phase-',I2,' Volume fr. (BC_EP_s) = ',G12.5)
 
  1668 FORMAT(9X,'Solids phase-',I2,' mass flow rate (BC_MASSFLOW_s) =',G12.5)
  1669 FORMAT(9X,'Solids phase-',I2,' volumetric flow rate (BC_VOLFLOW_s) =',&

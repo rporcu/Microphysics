@@ -19,7 +19,6 @@ set(F90_sources
   check_convergence.f90
   check_domain.f90
   check_data/check_axis.f90
-  check_data/check_bc_dem.f90
   check_data/check_bc_geometry.f90
   check_data/check_bc_inflow.f90
   check_data/check_bc_outflow.f90
@@ -27,7 +26,6 @@ set(F90_sources
   check_data/check_boundary_conditions.f90
   check_data/check_gas_phase.f90
   check_data/check_geometry_prereqs.f90
-  check_data/check_ic_common_discrete.f90
   check_data/check_initial_conditions.f90
   check_data/check_numerics.f90
   check_data/check_output_control.f90

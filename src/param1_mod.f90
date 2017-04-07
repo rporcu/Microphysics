@@ -33,27 +33,27 @@
          module procedure is_undefined_i
       end interface is_undefined
 
-   CONTAINS
+   contains
 
-      pure logical function IS_DEFINED_DB(x)
-         real(c_real), intent(IN) :: x
-         IS_DEFINED_DB = .NOT.EQUAL(x, UNDEFINED)
-      end function IS_DEFINED_DB
+      pure logical function is_defined_db(x)
+         real(c_real), intent(in) :: x
+         is_defined_db = .not.equal(x, undefined)
+      end function is_defined_db
 
-      pure logical function IS_DEFINED_I(x)
-         integer, intent(IN) :: x
-         IS_DEFINED_I = (x /= UNDEFINED_I)
-      end function IS_DEFINED_I
+      pure logical function is_defined_i(x)
+         integer, intent(in) :: x
+         is_defined_i = (x /= undefined_i)
+      end function is_defined_i
 
-      pure logical function IS_UNDEFINED_DB(x)
-         real(c_real), intent(IN) :: x
-         IS_UNDEFINED_DB = EQUAL(x, UNDEFINED)
-      end function IS_UNDEFINED_DB
+      pure logical function is_undefined_db(x)
+         real(c_real), intent(in) :: x
+         is_undefined_db = equal(x, undefined)
+      end function is_undefined_db
 
-      pure logical function IS_UNDEFINED_I(x)
-         integer, intent(IN) :: x
-         IS_UNDEFINED_I = (x == UNDEFINED_I)
-      end function IS_UNDEFINED_I
+      pure logical function is_undefined_i(x)
+         integer, intent(in) :: x
+         is_undefined_i = (x == undefined_i)
+      end function is_undefined_i
 
       pure logical function equal(x, y)
          real(c_real), intent(in) :: x, y

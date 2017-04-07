@@ -48,11 +48,10 @@ module check_bc_geometry_module
 ! Error flag
       logical :: RECOGNIZED_BC_TYPE
 ! Total number of valid BC types
-      integer, PARAMETER :: DIM_BCTYPE = 14
+      integer, PARAMETER :: DIM_BCTYPE = 12
 ! Valid boundary condition types
       CHARACTER(LEN=16), DIMENSION(1:DIM_BCTYPE) ::VALID_BC_TYPE = (/&
            'MASS_INFLOW     ', 'MI              ',&
-           'MASS_OUTFLOW    ', 'MO              ',&
            'P_INFLOW        ', 'PI              ',&
            'P_OUTFLOW       ', 'PO              ',&
            'FREE_SLIP_WALL  ', 'FSW             ',&
@@ -80,7 +79,6 @@ module check_bc_geometry_module
                call flush_err_msg(abort=.true.)
             endif
          endif
-
 
  1100 format('Error 1100: Illegal entry: ',A,' = ',A,/'Valid entries:',&
          ' ',7(/5X,A,2x,A),/5X,A)

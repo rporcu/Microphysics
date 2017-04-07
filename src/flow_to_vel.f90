@@ -162,17 +162,15 @@ contains
 
 
       if(skip_m) then
-         write(err_msg,1100) m, bcv, trim(ivar("BC_MASSFLOW_S",bcv,m)), &
-            trim(IFILE_NAME)
+         write(err_msg,1100) m, bcv, trim(ivar("BC_MASSFLOW_S",bcv,m))
          call flush_err_msg(abort=.true.)
       endif
 
 1100 FORMAT('Error 1100: Solids phase ',I2,' has a specified mass ',  &
-         'flow rate',/'at BC ',I3,', ',A,'. But, both BC_ROP_s and ',&
-         'BC_EP_s are zero or undefined.',/'Please correct the ',&
-         A,' file.')
+         'flow rate',/'at BC ',I3,', ',A,'. But, both BC_EP_s is ',&
+         'zero.',/'Please correct the input deck.')
 
-      VOLFLOW = BC_MASSFLOW_S(BCV,M)/RO_S0(M)
+      volflow = bc_massflow_s(bcv,m)/ro_s0(m)
 
     ! If volumetric flow is also specified compare both
       if(is_defined(bc_volflow_s(bcv,m))) then
@@ -328,15 +326,13 @@ contains
      call init_err_msg("SOLIDS_VOLFLOW_TO_VELOCITY")
 
      if(skip_m) then
-        write(err_msg,1100) m, bcv, trim(ivar("BC_VOLFLOW_S",bcv,m)), &
-           & trim(IFILE_NAME)
+        write(err_msg,1100) m, bcv, trim(ivar("BC_VOLFLOW_S",bcv,m))
         call flush_err_msg(abort=.true.)
      endif
 
 1100 format('Error 1100: Solids phase ',I2,' has a specified ',       &
-         'volumetric flow rate',/'at BC ',I3,', ',A,'. But, both ',&
-         'BC_ROP_s and BC_EP_s are zero or undefined.',/'Please ',&
-         'the ',A,' file.')
+         'volumetric flow rate',/'at BC ',I3,', ',A,'. But, BC_EP_s ',&
+         'is zero.',/'Please correct the input deck.')
 
      select case (trim(bc_type(bcv)))
      case ('MASS_INFLOW', 'MI'); sgn =  one; off = zero

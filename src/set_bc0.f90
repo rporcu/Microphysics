@@ -13,13 +13,13 @@
                          u_g, v_g, w_g, p_g, ep_g, &
                          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, domlo, domhi) &
-      bind(C, name="set_bc0")  
+      bind(C, name="set_bc0")
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use bc                , only: bc_u_g, bc_v_g, bc_w_g, bc_p_g, bc_ep_g
-      use ic                , only: PINF_, POUT_, MINF_, MOUT_
+      use ic                , only: PINF_, POUT_, MINF_
 
       use scales, only: scale_pressure
 
@@ -78,8 +78,7 @@
                do j=slo(2),shi(2)
                   bcv = bc_ilo_type(j,k,2)
                   if(bc_ilo_type(j,k,1) == PINF_ .or. &
-                     bc_ilo_type(j,k,1) == MINF_ .or. &
-                     bc_ilo_type(j,k,1) == MOUT_) then
+                     bc_ilo_type(j,k,1) == MINF_) then
 
                      p_g(ilo-i,j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(ilo-i,j,k) = bc_ep_g(bcv)
@@ -103,8 +102,7 @@
                do j=slo(2),shi(2)
                   bcv = bc_ihi_type(j,k,2)
                   if(bc_ihi_type(j,k,1) == PINF_ .or. &
-                     bc_ihi_type(j,k,1) == MINF_ .or. &
-                     bc_ihi_type(j,k,1) == MOUT_) then
+                     bc_ihi_type(j,k,1) == MINF_) then
 
                      p_g(ihi+i,j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(ihi+i,j,k) = bc_ep_g(bcv)
@@ -128,8 +126,7 @@
                do i=slo(1),shi(1)
                   bcv = bc_jlo_type(i,k,2)
                   if(bc_jlo_type(i,k,1) == PINF_ .or. &
-                     bc_jlo_type(i,k,1) == MINF_ .or. &
-                     bc_jlo_type(i,k,1) == MOUT_) then
+                     bc_jlo_type(i,k,1) == MINF_) then
 
                      p_g(i,jlo-j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,jlo-j,k) = bc_ep_g(bcv)
@@ -153,8 +150,7 @@
                do i=slo(1),shi(1)
                   bcv = bc_jhi_type(i,k,2)
                   if(bc_jhi_type(i,k,1) == PINF_ .or. &
-                     bc_jhi_type(i,k,1) == MINF_ .or. &
-                     bc_jhi_type(i,k,1) == MOUT_) then
+                     bc_jhi_type(i,k,1) == MINF_) then
 
                      p_g(i,jhi+j,k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,jhi+j,k) = bc_ep_g(bcv)
@@ -178,8 +174,7 @@
                do i=slo(1),shi(1)
                   bcv = bc_klo_type(i,j,2)
                   if(bc_klo_type(i,j,1) == PINF_ .or. &
-                     bc_klo_type(i,j,1) == MINF_ .or. &
-                     bc_klo_type(i,j,1) == MOUT_) then
+                     bc_klo_type(i,j,1) == MINF_) then
 
                      p_g(i,j,klo-k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,j,klo-k) = bc_ep_g(bcv)
@@ -203,8 +198,7 @@
                do i=slo(1),shi(1)
                   bcv = bc_khi_type(i,j,2)
                   if(bc_khi_type(i,j,1) == PINF_ .or. &
-                     bc_khi_type(i,j,1) == MINF_ .or. &
-                     bc_khi_type(i,j,1) == MOUT_) then
+                     bc_khi_type(i,j,1) == MINF_) then
 
                      p_g(i,j,khi+k) = scale_pressure(bc_p_g(bcv))
                      ep_g(i,j,khi+k) = bc_ep_g(bcv)

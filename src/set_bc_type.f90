@@ -22,20 +22,14 @@ module set_bc_type_module
 
       use bc, only: bc_defined, bc_type, bc_plane
 
-      use bc, only: BC_X_e, BC_X_w
-      use bc, only: BC_Y_n, BC_Y_s
-      use bc, only: BC_Z_t, BC_Z_b
-
-
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
-      use ic, only: MINF_, MOUT_
+      use ic, only: MINF_
       use ic, only: UNDEF_CELL, cycl_
 
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use param, only: dimension_bc
-      use toleranc, only: COMPARE
-      use param1, only: zero, equal
+      use param1, only: equal
       use calc_cell_module, only: calc_cell_bc_flow
       use calc_cell_module, only: calc_cell_bc_wall
 
@@ -110,7 +104,6 @@ module set_bc_type_module
                case('P_INFLOW'      ,'PI' ); type = pinf_
                case('P_OUTFLOW'     ,'PO' ); type = pout_
                case('MASS_INFLOW'   ,'MI' ); type = minf_
-               case('MASS_OUTFLOW'  ,'MO' ); type = mout_
                case default
                   write(6,*) 'unknown bc type'
                   stop 7655
@@ -120,7 +113,7 @@ module set_bc_type_module
             case(nsw_, fsw_, psw_)
                call calc_cell_bc_wall(bcv, domlo, domhi, xlength, ylength, &
                   zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case(pinf_, pout_, minf_, mout_)
+            case(pinf_, pout_, minf_)
                call calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
                   dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
             end select

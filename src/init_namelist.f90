@@ -945,7 +945,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Boundary Condition" required="false">
 !  <description>Void fraction at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_EP_G(LC) = UNDEFINED
+         BC_EP_G(LC) = ONE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -954,18 +954,12 @@ MODULE INIT_NAMELIST_MODULE
          BC_P_G(LC) = UNDEFINED
 !</keyword>
 
-!<keyword category="Boundary Condition" required="false">
-!  <description>Bulk density of solids phase at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_ROP_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids volume fraction at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_EP_S(LC,:DIM_M) = UNDEFINED
+         BC_EP_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
@@ -999,40 +993,40 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_U_G(LC) = UNDEFINED
+         BC_U_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_U_S(LC,:DIM_M) = UNDEFINED
+         BC_U_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_V_G(LC) = UNDEFINED
+         BC_V_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_V_S(LC,:DIM_M) = UNDEFINED
+         BC_V_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of gas velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_W_G(LC) = UNDEFINED
+         BC_W_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of solids-phase velocity at the BC plane.</description>
 !  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_W_S(LC,:DIM_M) = UNDEFINED
+         BC_W_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">

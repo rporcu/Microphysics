@@ -14,7 +14,7 @@
      use constant,      only: mmax
      use param1,        only: zero, one, undefined, equal
      use param,         only: dimension_bc, dim_m
-     use bc,            only: bc_defined, bc_type, bc_rop_s, bc_ep_s, bc_ep_g
+     use bc,            only: bc_defined, bc_type, bc_ep_s, bc_ep_g
 
     use flow_to_vel_new_module, only: flow_to_vel
     use amrex_fort_module, only : c_real => amrex_real
@@ -33,24 +33,19 @@
     ! Loop over each defined BC and check the user data.
     do bcv = 1, dimension_bc
 
-       if(.not.bc_defined(bcv)) cycle
+       if(bc_defined(bcv)) then
 
-       ! Determine which solids phases are present.
-       skip = .false.
-       do i = 1, dim_m
-          if ((equal(bc_rop_s(bcv,i), undefined).or.equal(bc_rop_s(bcv,i), zero)) &
-               .and.(equal(bc_ep_s(bcv,i), undefined).or.equal(bc_ep_s(bcv,i), zero))) then
-             skip = .true.
-          endif
-       end do
+          ! Determine which solids phases are present.
+          do i = 1, dim_m
+             skip(i) =(equal(bc_ep_s(bcv,i), zero))
+          end do
 
-       if(mmax_tot == 1 .and. .not.equal(bc_ep_g(bcv), one)) skip(1) = .false.
-
-       select case (trim(BC_TYPE(BCV)))
-
-       case ('MASS_INFLOW','MI','MASS_OUTFLOW','MO')
-          call flow_to_vel(mmax_tot, skip, bcv, xlength, ylength, zlength, dx, dy, dz)
-       end select
+          select case (trim(BC_TYPE(BCV)))
+          case ('MASS_INFLOW','MI','MASS_OUTFLOW','MO')
+             call flow_to_vel(mmax_tot, skip, bcv, &
+                xlength, ylength, zlength, dx, dy, dz)
+          end select
+       endif
     enddo
 
   end subroutine set_bc_flow

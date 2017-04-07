@@ -49,7 +49,7 @@ module get_data_module
 
       ! These checks verify that sufficient information was provided
       ! to setup the domain indices and DMP gridmap.
-      call CHECK_GEOMETRY_PREREQS
+      call check_geometry_prereqs
 
       ! Check the minimum solids phase requirements.
       call check_solids_model_prereqs

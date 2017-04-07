@@ -3,29 +3,27 @@ module check_boundary_conditions_module
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use check_bc_dem_module, only: check_bc_dem
-   use check_bc_inflow_module, only: check_bc_mass_inflow, check_bc_p_inflow
-   use check_bc_outflow_module, only: check_bc_outflow, check_bc_mass_outflow, check_bc_p_outflow
-   use check_bc_walls_module, only: check_bc_walls
-
 ! Parameter constants
-   use param1, only: ZERO, ONE, UNDEFINED, IS_DEFINED, IS_UNDEFINED, EQUAL
+   use param1, only: zero, one, undefined, is_defined, is_undefined, equal
+
+! Use the error manager for posting error messages.
+!---------------------------------------------------------------------//
+   use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
+   use error_manager, only: err_msg, ivar, ival
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_BOUNDARY_CONDITIONS                               !
-!  Author: P. Nicoletti                               Date: 10-DEC-91  !
 !                                                                      !
 !  Purpose: Check boundary condition specifications                    !
 !     - convert physical locations to i, j, k's                        !
 !     - convert mass and volumetric flows to velocities (FLOW_TO_VEL)  !
 !     - check specification of physical quantities                     !
 !                                                                      !
-!  Comments:                                                           !
-!                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine check_boundary_conditions(dx,dy,dz,xlength,ylength,zlength,domlo,domhi)
+      subroutine check_boundary_conditions(dx, dy, dz, &
+         xlength, ylength, zlength, domlo, domhi)
 
 ! Global Variables:
 !---------------------------------------------------------------------//
@@ -35,13 +33,8 @@ module check_boundary_conditions_module
       use bc, only: BC_DEFINED
 ! Use specified BC type
       use bc, only: BC_TYPE
-! User specified BC solids bulk density
-      use bc, only: BC_ROP_s
 ! Solids volume fraction at BC
       use bc, only: BC_EP_s
-      use bc, only: BC_EP_g
-! Run-time flag for DEM solids
-      use run, only: DEM_SOLIDS
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -50,11 +43,19 @@ module check_boundary_conditions_module
 ! Maximum number of disperse phases
       use param, only: DIM_M
 
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival
+      use check_bc_geometry_module, only: check_bc_geometry
+      use check_bc_geometry_module, only: check_bc_geometry_flow
+      use check_bc_geometry_module, only: check_bc_geometry_wall
 
-      use check_bc_geometry_module, only: check_bc_geometry, check_bc_geometry_flow, check_bc_geometry_wall
+      use check_bc_walls_module,    only: check_bc_walls
+
+      use check_bc_inflow_module,   only: check_bc_mass_inflow
+      use check_bc_inflow_module,   only: check_bc_p_inflow
+
+      use check_bc_outflow_module,  only: check_bc_outflow
+      use check_bc_outflow_module,  only: check_bc_p_outflow
+
+      use check_bc_dem_module, only: check_bc_dem
 
       implicit none
 
@@ -69,7 +70,6 @@ module check_boundary_conditions_module
 ! Flag to skip checks on indexed solid phase.
       logical :: SKIP(1:DIM_M)
 !......................................................................!
-
 
 ! Initialize the error manager.
       call init_err_msg("CHECK_BOUNDARY_CONDITIONS")
@@ -102,24 +102,15 @@ module check_boundary_conditions_module
                ! call check_bc_inflow(mmax, skip, bcv)
                call check_bc_outflow(mmax, bcv)
 
-            case ('OUTFLOW', 'OF')
-               call check_bc_geometry_flow(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
-               call check_bc_outflow(mmax, bcv)
-
-            case ('MASS_OUTFLOW', 'MO')
-               call check_bc_geometry_flow(bcv,dx,dy,dz,&
-                  xlength,ylength,zlength,domlo,domhi)
-               call check_bc_mass_outflow(mmax, bcv)
-               call check_bc_outflow(mmax, bcv)
-
             case ('P_OUTFLOW','PO')
                call check_bc_geometry_flow(bcv,dx,dy,dz,&
                   xlength,ylength,zlength,domlo,domhi)
                call check_bc_p_outflow(bcv)
                call check_bc_outflow(mmax, bcv)
 
-            case ('FREE_SLIP_WALL','FSW','PAR_SLIP_WALL','PSW','NO_SLIP_WALL','NSW')
+            case ('FREE_SLIP_WALL','FSW',&
+                  'PAR_SLIP_WALL', 'PSW',&
+                  'NO_SLIP_WALL',  'NSW')
                call check_bc_geometry_wall(bcv,dx,dy,dz,&
                   xlength,ylength,zlength,domlo,domhi)
                call check_bc_walls(bcv)
@@ -133,18 +124,15 @@ module check_boundary_conditions_module
 
          endif
       enddo
-! Additional checks needed for DEM boundaries
-      if(dem_solids) call check_bc_dem(mmax)
 
 ! Cleanup and exit.
       call finl_err_msg
 
-   CONTAINS
+   contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_BC_RANGE                                          !
-!  Author: P. Nicoletti                               Date: 10-DEC-91  !
 !                                                                      !
 !  Purpose: Verify that data was not given for undefined BC regions.   !
 !                                                                      !
@@ -156,9 +144,8 @@ module check_boundary_conditions_module
       use bc, only: BC_U_g, BC_V_g, BC_W_g
 
       ! Solids phase BC variables.
-      use bc, only: BC_EP_s, BC_ROP_s, BC_T_s, BC_X_s
+      use bc, only: BC_EP_s, BC_T_s, BC_X_s
       use bc, only: BC_U_s, BC_V_s, BC_W_s
-
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -167,14 +154,9 @@ module check_boundary_conditions_module
 ! Maximum number of species gas/solids
       use param, only: DIMENSION_N_G, DIMENSION_N_S
 
-
-! Use the error manager for posting error messages.
-!---------------------------------------------------------------------//
-      use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
-
+      use param1, only: zero, one, equal
 
       IMPLICIT NONE
-
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------/
@@ -193,29 +175,29 @@ module check_boundary_conditions_module
 
 
 ! Check gas phase variables.
-      IF(IS_DEFINED(BC_U_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_U_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-      IF(IS_DEFINED(BC_V_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_V_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-      IF (IS_DEFINED(BC_W_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_W_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-      IF (IS_DEFINED(BC_EP_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_EP_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-      IF (IS_DEFINED(BC_P_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_P_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
-      ENDIF
-      IF (IS_DEFINED(BC_T_G(BCV))) THEN
-         WRITE(ERR_MSG,1100) trim(iVar('BC_T_g',BCV))
-         call FLUSH_ERR_MSG(ABORT=.TRUE.)
+      if(.not.equal(bc_u_g(bcv),zero)) then
+         write(err_msg,1100) trim(ivar('BC_U_g',bcv))
+         call flush_err_msg(abort=.true.)
+      endif
+      if(.not.equal(bc_v_g(bcv),zero)) then
+         write(err_msg,1100) trim(ivar('BC_V_g',bcv))
+         call flush_err_msg(abort=.true.)
+      endif
+      if (.not.equal(bc_w_g(bcv),zero)) then
+         write(err_msg,1100) trim(ivar('BC_W_g',bcv))
+         call flush_err_msg(abort=.true.)
+      endif
+      if (.not.equal(bc_ep_g(bcv),one)) then
+         write(err_msg,1100) trim(ivar('BC_EP_g',bcv))
+         call flush_err_msg(abort=.true.)
+      endif
+      if (is_defined(bc_p_g(bcv))) then
+         write(err_msg,1100) trim(ivar('BC_P_g',bcv))
+         call flush_err_msg(abort=.true.)
+      endif
+      if (is_defined(bc_t_g(bcv))) then
+         write(err_msg,1100) trim(ivar('BC_T_g',bcv))
+         call flush_err_msg(abort=.true.)
       ENDIF
 
       DO N = 1, DIMENSION_N_G
@@ -226,39 +208,35 @@ module check_boundary_conditions_module
       ENDDO
 
 ! Check solids phase variables.
-      DO M = 1, DIM_M
-         IF(IS_DEFINED(BC_ROP_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_ROP_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-         IF(IS_DEFINED(BC_EP_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_EP_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-         IF(IS_DEFINED(BC_U_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_U_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-         IF(IS_DEFINED(BC_V_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_V_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+      do m = 1, dim_m
+         if(.not.equal(bc_ep_s(bcv,m),zero)) then
+            write(err_msg,1100) trim(ivar('BC_EP_s',BCV,M))
+            call flush_err_msg(abort=.true.)
+         endif
+         if(.not.equal(bc_u_s(bcv,m),zero)) then
+            write(err_msg,1100) trim(ivar('BC_U_s',BCV,M))
+            call flush_err_msg(abort=.true.)
+         endif
+         if(.not.equal(bc_v_s(bcv,m),zero)) then
+            write(err_msg,1100) trim(ivar('BC_V_s',BCV,M))
+            call flush_err_msg(abort=.true.)
+         endif
 
-         IF(IS_DEFINED(BC_W_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_W_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
-         IF(IS_DEFINED(BC_T_S(BCV,M))) THEN
-            WRITE(ERR_MSG,1100) trim(iVar('BC_T_s',BCV,M))
-            call FLUSH_ERR_MSG(ABORT=.TRUE.)
-         ENDIF
+         if(.not.equal(bc_w_s(bcv,m),zero)) then
+            write(err_msg,1100) trim(ivar('BC_W_s',BCV,M))
+            call flush_err_msg(abort=.true.)
+         endif
+         if(is_defined(bc_t_s(bcv,m))) then
+            write(err_msg,1100) trim(ivar('BC_T_s',BCV,M))
+            call flush_err_msg(abort=.true.)
+         endif
 
-         DO N = 1, DIMENSION_N_S
-            IF(IS_DEFINED(BC_X_S(BCV,M,N))) THEN
-               WRITE(ERR_MSG,1100) trim(iVar('BC_X_s',BCV,M,N))
-               call FLUSH_ERR_MSG(ABORT=.TRUE.)
-            ENDIF
-         ENDDO
+         do n = 1, dimension_n_s
+            if(is_defined(bc_x_s(bcv,m,n))) then
+               write(err_msg,1100) trim(ivar('BC_X_s',bcv,m,n))
+               call flush_err_msg(abort=.true.)
+            endif
+         enddo
 
       ENDDO
 

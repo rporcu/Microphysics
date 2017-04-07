@@ -92,24 +92,20 @@
 !   P_INFLOW          10    Specified pressure inflow cell
 !   P_OUTFLOW         11    Specified pressure outflow cell
 !   MASS_INFLOW       20    Specified mass flux inflow cell
-!   MASS_OUTFLOW      21    Specified mass flux outflow cell
-!   OUTFLOW           31    outflow cell
 !   NO_SLIP_WALL     100    Internal/external wall with no-slip b.c.
 !   FREE_SLIP_WALL   101    Internal/external wall with free-slip
 !   PAR_SLIP_WALL    102    Internal/external wall with partial-slip b.c.
 !   cyclic            50    Cyclic b.c.
 !   cyclic_pd         51    Cyclic b.c. with pressure drop
 
-   integer, parameter :: UNDEF_CELL =   0
-   integer, parameter :: FLUID_     =   1
-   integer, parameter :: PINF_      =  10
-   integer, parameter :: POUT_      =  11
-   integer, parameter :: MINF_      =  20
-   integer, parameter :: MOUT_      =  21
-   integer, parameter :: OUTF_      =  31
-   integer, parameter :: NSW_       = 100
-   integer, parameter :: FSW_       = 101
-   integer, parameter :: PSW_       = 102
+   integer, parameter :: undef_cell =   0
+   integer, parameter :: fluid_     =   1
+   integer, parameter :: pinf_      =  10
+   integer, parameter :: pout_      =  11
+   integer, parameter :: minf_      =  20
+   integer, parameter :: nsw_       = 100
+   integer, parameter :: fsw_       = 101
+   integer, parameter :: psw_       = 102
    integer, parameter :: cycl_      =  50
    integer, parameter :: cycp_      =  51
 
