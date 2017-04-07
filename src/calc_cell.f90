@@ -142,6 +142,40 @@ contains
 
    end subroutine calc_cell_bc_flow
 
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: calc_cell_ps                                            !
+!  Purpose: calculate the i, j or k cell index for point sources.      !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_cell_ps(psv, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+
+      use ps, only: ps_x_e, ps_x_w
+      use ps, only: ps_y_n, ps_y_s
+      use ps, only: ps_z_t, ps_z_b
+
+      use param1, only: equal
+
+      implicit none
+
+      integer,      intent(in   ) :: psv
+      real(c_real), intent(in   ) :: dx, dy, dz
+
+      integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
+
+      i_w = calc_cell(ps_x_w(psv), dx)
+      i_e = calc_cell(ps_x_e(psv), dx)
+      if(.not.equal(ps_x_w(psv), ps_x_e(psv))) i_w = i_w + 1
+
+      j_s = calc_cell(ps_y_s(psv), dy)
+      j_n = calc_cell(ps_y_n(psv), dy)
+      if(.not.equal(ps_y_s(psv), ps_y_n(psv))) j_s = j_s + 1
+
+      k_b = calc_cell(ps_z_b(psv), dz)
+      k_t = calc_cell(ps_z_t(psv), dz)
+      if(.not.equal(ps_z_b(psv), ps_z_t(psv))) k_b = k_b + 1
+
+   end subroutine calc_cell_ps
 
 
 END MODULE CALC_CELL_MODULE

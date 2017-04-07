@@ -34,7 +34,7 @@ set(F90_sources
   check_data/check_solids_common_all.f90
   check_data/check_solids_common_discrete.f90
   check_data/check_solids_dem.f90
-   check_data/check_solids_model_prereqs.f90
+  check_data/check_solids_model_prereqs.f90
   check_data/check_solids_phases.f90
   check_plane.f90
   constant_mod.f90
@@ -79,11 +79,9 @@ set(F90_sources
   exit.f90
   fill_bc0.f90
   fld_constants_mod.f90
-  flow_to_vel.f90
   functions_mod.f90
   geometry_mod.f90
   get_data.f90
-  get_ps.f90
   get_tunit.f90
   goal_seek_mflux.f90
   ic_mod.f90

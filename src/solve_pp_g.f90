@@ -117,9 +117,8 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_PP_G(alo, ahi, b_m, B_mmax, dx, dy, dz)
 
-      use param1  , only: small_number
-      use ps, only: dimension_ps, ps_defined, ps_massflow_g, ps_volume,&
-         ps_i_w, ps_j_s, ps_k_b, ps_i_e, ps_j_n, ps_k_t
+      ! use param1  , only: small_number
+      ! use ps, only: dimension_ps, ps_defined, ps_massflow_g
 
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(in   ) :: dx,dy,dz
@@ -137,35 +136,35 @@ module solve_pp_module
 !-----------------------------------------------
 
 ! Indices
-      integer :: I, J, K
-      integer :: PSV
+!       integer :: I, J, K
+!       integer :: PSV
 
-! terms of bm expression
-      real(c_real) pSource
-      real(c_real) vol
+! ! terms of bm expression
+!       real(c_real) pSource
+!       real(c_real) vol
 
-      vol = dx*dy*dz
+!       vol = dx*dy*dz
 
-!-----------------------------------------------
-      PS_LP: do PSV = 1, DIMENSION_PS
+! !-----------------------------------------------
+!       PS_LP: do PSV = 1, DIMENSION_PS
 
-         if(.not.ps_defined(psv)) cycle ps_lp
-         if(ps_massflow_g(psv) < small_number) cycle ps_lp
+!          if(.not.ps_defined(psv)) cycle ps_lp
+!          if(ps_massflow_g(psv) < small_number) cycle ps_lp
 
-         do k = PS_K_B(PSV), PS_K_T(PSV)
-            do j = PS_J_S(PSV), PS_J_N(PSV)
-               do i = PS_I_W(PSV), PS_I_E(PSV)
+!          do k = PS_K_B(PSV), PS_K_T(PSV)
+!             do j = PS_J_S(PSV), PS_J_N(PSV)
+!                do i = PS_I_W(PSV), PS_I_E(PSV)
 
-                  pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
+!                   pSource = PS_MASSFLOW_G(PSV) * (VOL/PS_VOLUME(PSV))
 
-                  b_m(I,J,K) = b_m(I,J,K) - pSource
-                  B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(b_m(I,J,K)))
+!                   b_m(I,J,K) = b_m(I,J,K) - pSource
+!                   B_MMAX(I,J,K) = max(abs(B_MMAX(I,J,K)), abs(b_m(I,J,K)))
 
-               enddo
-            enddo
-         enddo
+!                enddo
+!             enddo
+!          enddo
 
-      enddo PS_LP
+!       enddo PS_LP
 
       END SUBROUTINE POINT_SOURCE_PP_G
 end module solve_pp_module

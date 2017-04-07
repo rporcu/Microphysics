@@ -40,9 +40,9 @@ MODULE read_namelist_module
       use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
       use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
       use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
-      use ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
-      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
+      use ps, only: ps_massflow_g
+      use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
+      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use remove_comment_module, only: remove_comment
       use remove_comment_module, only: remove_par_blanks
       use residual, only: group_resid, resid_string

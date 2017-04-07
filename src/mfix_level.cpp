@@ -280,8 +280,8 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     Box domain(geom[0].Domain());
 
     // Only call this check on one processor since it has a bunch of print statements
-    // if ( ParallelDescriptor::IOProcessor() )
-    check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
+    if ( ParallelDescriptor::IOProcessor() )
+      check_domain(&dx,&dy,&dz,&xlen,&ylen,&zlen,domain.loVect(),domain.hiVect());
 
     // Convert (mass, volume) flows to velocities.
     set_bc_flow(&xlen, &ylen, &zlen, &dx,&dy,&dz);

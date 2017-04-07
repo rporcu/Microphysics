@@ -46,9 +46,9 @@ MODULE INIT_NAMELIST_MODULE
       use param, only: dimension_c
       use param1, only: undefined_c
       use ps, only: dimension_ps
-      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_b, ps_k_t, ps_massflow_g, ps_massflow_s
-      use ps, only: ps_t_g, ps_t_s, ps_u_g, ps_u_s, ps_v_g, ps_v_s, ps_w_g, ps_w_s
-      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_s, ps_x_w
+      use ps, only: ps_massflow_g
+      use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
+      use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use residual, only: group_resid, resid_string
       use run, only: automatic_restart, iter_restart, undefined_i, bdist_io
       use run, only: call_usr, description, detect_stall, discretize, tstop, units
@@ -1193,64 +1193,27 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Point Source" required="false">
-!  <description>I index of the west-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_I_W(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>I index of the east-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_I_E(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>J index of the south-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_J_S(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>J index of the north-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_J_N(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>K index of the bottom-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_K_B(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>K index of the top-most cell.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_K_T(LC) = UNDEFINED_I
-!</keyword>
-
-
-!<keyword category="Point Source" required="false">
 !  <description>X-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_U_G(LC) = UNDEFINED
+         PS_U_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_V_G(LC) = UNDEFINED
+         PS_V_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z-component of incoming gas velocity.</description>
 !  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_W_G(LC) = UNDEFINED
+         PS_W_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Gas mass flow rate through the point source.</description>
 !  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-         PS_MASSFLOW_G(LC) = UNDEFINED
+         PS_MASSFLOW_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
@@ -1264,49 +1227,6 @@ MODULE INIT_NAMELIST_MODULE
 !  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          PS_X_G(LC,:DIM_N_g) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>X-component of incoming solids velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         PS_U_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Y-component of incoming solids velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         PS_V_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Z-component of incoming solids velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         PS_W_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Solids mass flow rate through the point source.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         PS_MASSFLOW_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Temperature of incoming solids.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         PS_T_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Point Source" required="false">
-!  <description>Solids phase incoming species n mass fraction.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <arg index="3" id="Species" min="1" max="DIM_N_S"/>
-         PS_X_S(LC,:DIM_M,:DIM_N_S) = UNDEFINED
 !</keyword>
 
       ENDDO

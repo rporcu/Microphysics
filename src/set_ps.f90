@@ -12,12 +12,12 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
    subroutine set_ps(dx,dy,dz,err,is_ioproc) &
       bind(C, name="set_ps")
- 
+
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use ps, only: dimension_ps, point_source, ps_vel_mag_g, ps_massflow_g, ps_vel_mag_g, ps_volume, ps_defined
-      use ps, only: ps_i_e, ps_i_w, ps_j_n, ps_j_s, ps_k_t, ps_k_b
+      use ps, only: dimension_ps, point_source
+      use ps, only: ps_vel_mag_g, ps_massflow_g, ps_defined
       use ps, only: ps_x_w, ps_x_e, ps_y_s, ps_y_n, ps_z_b, ps_z_t
       use ps, only: ps_u_g, ps_v_g, ps_w_g
 
@@ -40,46 +40,54 @@
 
       logical, parameter :: dbg_ps = .FALSE.
 
+      integer :: i_w , i_e , j_s , j_n , k_b , k_t
+
       err = 0
 
       vol = dx*dy*dz
 
+      point_source = .false.
+      return
+
+       !              maxval(ps_massflow_g > zero) .or. &
+       !              maxval(ps_massflow_s > zero)
+
       if(.not.point_source) return
 
-      ! DETERMINE WHICH BOUNDARY CONDITION INDICES HAVE VALUES
-      L50: do PSV = 1, dimension_ps
+      ! ! DETERMINE WHICH BOUNDARY CONDITION INDICES HAVE VALUES
+      ! L50: do PSV = 1, dimension_ps
 
-         IF(.NOT.PS_DEFINED(PSV)) cycle L50
+      !    IF(.NOT.PS_DEFINED(PSV)) cycle L50
 
-         ! Calculate the velocity magnitude and normalize the axial components.
-         call calc_ps_vel_mag(PS_VEL_MAG_g(PSV), PS_U_g(PSV),          &
-            PS_V_g(PSV), PS_W_g(PSV))
+      !    ! Calculate the velocity magnitude and normalize the axial components.
+      !    call calc_ps_vel_mag(PS_VEL_MAG_g(PSV), PS_U_g(PSV),          &
+      !       PS_V_g(PSV), PS_W_g(PSV))
 
-         ! Calculate the number of cells comprising the point source. 
-         ps_size = (PS_I_E(PSV) - PS_I_W(PSV) + 1) * &
-                   (PS_J_N(PSV) - PS_J_S(PSV) + 1) * &
-                   (PS_K_T(PSV) - PS_K_B(PSV) + 1)
+      !    ! Calculate the number of cells comprising the point source.
+      !    ps_size = (I_E - I_W + 1) * &
+      !              (J_N - J_S + 1) * &
+      !              (K_T - K_B + 1)
 
-         if(ps_size < 1) then
-             eMsg = ''; 
-             if (is_ioproc .eq. 1) &
-                write(eMsg,"('Invalid PS size: ', I4)")ps_size
-             goto 500
-         endif
+      !    if(ps_size < 1) then
+      !        eMsg = '';
+      !        if (is_ioproc .eq. 1) &
+      !           write(eMsg,"('Invalid PS size: ', I4)")ps_size
+      !        goto 500
+      !    endif
 
-         ! Calculate the volume of the PointSource cells
-         ps_volume(PSV) = ps_size * vol
+      !    ! Calculate the volume of the PointSource cells
+      !    ps_volume(PSV) = ps_size * vol
 
-         if(abs(ps_volume(PSV)) < epsilon(ZERO)) then
-            eMsg = 'No ps_volume == ZERO'
-            if (is_ioproc .eq. 1) &
-               call debug_ps(PSV, ps_size)
-            goto 501
-         endif
+      !    if(abs(ps_volume(PSV)) < epsilon(ZERO)) then
+      !       eMsg = 'No ps_volume == ZERO'
+      !       if (is_ioproc .eq. 1) &
+      !          call debug_ps(PSV, ps_size)
+      !       goto 501
+      !    endif
 
-         if ( dbg_ps .and. (is_ioproc .eq. 1) ) call debug_ps(PSV, ps_size)
+      !    if ( dbg_ps .and. (is_ioproc .eq. 1) ) call debug_ps(PSV, ps_size)
 
-      enddo L50
+      ! enddo L50
 
       return
 
@@ -156,33 +164,33 @@
 
       integer :: lc1
 
-      write(*,"(3/,3x,'Debug Point Source Index: ',I3)") lPSV
-      write(*,"(/3x,'Size: ',I4)") lps_size
+      ! write(*,"(3/,3x,'Debug Point Source Index: ',I3)") lPSV
+      ! write(*,"(/3x,'Size: ',I4)") lps_size
 
-      lc1 = 0
+      ! lc1 = 0
 
-      ! Write some information to the screen.
-      write(*,"(/5x,'Location:')")
-      write(*,"( 5x,'X:',2(2x,g12.5),' :: ',2(2x,I4))")&
-         PS_X_w(lPSV), PS_X_e(lPSV), PS_I_w(lPSV), PS_I_e(lPSV)
-      write(*,"( 5x,'Y:',2(2x,g12.5),' :: ',2(2x,I4))")&
-         PS_Y_s(lPSV), PS_Y_n(lPSV), PS_J_s(lPSV), PS_J_n(lPSV)
-      write(*,"( 5x,'Z:',2(2x,g12.5),' :: ',2(2x,I4))")&
-         PS_Z_b(lPSV), PS_Z_t(lPSV), PS_K_b(lPSV), PS_K_t(lPSV)
+      ! ! Write some information to the screen.
+      ! write(*,"(/5x,'Location:')")
+      ! write(*,"( 5x,'X:',2(2x,g12.5),' :: ',2(2x,I4))")&
+      !    PS_X_w(lPSV), PS_X_e(lPSV), PS_I_w(lPSV), PS_I_e(lPSV)
+      ! write(*,"( 5x,'Y:',2(2x,g12.5),' :: ',2(2x,I4))")&
+      !    PS_Y_s(lPSV), PS_Y_n(lPSV), PS_J_s(lPSV), PS_J_n(lPSV)
+      ! write(*,"( 5x,'Z:',2(2x,g12.5),' :: ',2(2x,I4))")&
+      !    PS_Z_b(lPSV), PS_Z_t(lPSV), PS_K_b(lPSV), PS_K_t(lPSV)
 
-      write(*,"(/5x,'Volume: ',g12.5)") ps_volume(lPSV)
+      ! write(*,"(/5x,'Volume: ',g12.5)") ps_volume(lPSV)
 
-      if(PS_MASSFLOW_G(lPSV) > small_number) then
-         write(*,"(//5x,'Point Source Gas Phase:')")
-         write(*,"(7x,'Mass Flow Rate: ',g12.5)")PS_MASSFLOW_G(lPSV)
-         write(*,"(7x,'Velocity Magnitude: ',g12.5)") PS_VEL_MAG_g(lPSV)
-         write(*,"(7x,'Normal:')")
-         write(*,"(9x,'x-Axis: ',g12.5)")PS_U_g(lPSV)
-         write(*,"(9x,'y-Axis: ',g12.5)")PS_V_g(lPSV)
-         write(*,"(9x,'z-Axis: ',g12.5)")PS_W_g(lPSV)
-      else
-         write(*,"(//5x,'No gas phase point source.')")
-      endif
+      ! if(PS_MASSFLOW_G(lPSV) > small_number) then
+      !    write(*,"(//5x,'Point Source Gas Phase:')")
+      !    write(*,"(7x,'Mass Flow Rate: ',g12.5)")PS_MASSFLOW_G(lPSV)
+      !    write(*,"(7x,'Velocity Magnitude: ',g12.5)") PS_VEL_MAG_g(lPSV)
+      !    write(*,"(7x,'Normal:')")
+      !    write(*,"(9x,'x-Axis: ',g12.5)")PS_U_g(lPSV)
+      !    write(*,"(9x,'y-Axis: ',g12.5)")PS_V_g(lPSV)
+      !    write(*,"(9x,'z-Axis: ',g12.5)")PS_W_g(lPSV)
+      ! else
+      !    write(*,"(//5x,'No gas phase point source.')")
+      ! endif
 
       end subroutine debug_ps
 

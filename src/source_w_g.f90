@@ -429,47 +429,47 @@ contains
 !-----------------------------------------------
 ! Modules
 !-----------------------------------------------
-      use param1  , only: small_number, zero
-      use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
-      use ps, only: ps_w_g, ps_i_e, ps_i_w, ps_j_s, ps_j_n, ps_k_b, ps_k_t
+      ! use param1  , only: small_number, zero
+      ! use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      ! use ps, only: ps_w_g
 
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(inout) :: b_m(alo(1):ahi(1),alo(2):ahi(2),alo(3):ahi(3))
       real(c_real)  , intent(in   ) :: vol
 
-      integer(c_int) :: I, J, K
-      integer(c_int) :: psv
-      integer(c_int) :: lKT, lKB
-      real(c_real)  :: pSource
+      ! integer(c_int) :: I, J, K
+      ! integer(c_int) :: psv
+      ! integer(c_int) :: lKT, lKB
+      ! real(c_real)  :: pSource
 
-      ! Calculate the mass going into each (i,j,k) cell. This is done for each
-      ! call in case the point source is time dependent.
-      ps_lp: do psv = 1, dimension_ps
-         if (.not.ps_defined(psv)) cycle ps_lp
-         if (abs(PS_W_g(psv)) < small_number) cycle ps_lp
+      ! ! Calculate the mass going into each (i,j,k) cell. This is done for each
+      ! ! call in case the point source is time dependent.
+      ! ps_lp: do psv = 1, dimension_ps
+      !    if (.not.ps_defined(psv)) cycle ps_lp
+      !    if (abs(PS_W_g(psv)) < small_number) cycle ps_lp
 
-         if(PS_W_g(psv) < ZERO) then
-            lKB = PS_K_B(psv)-1
-            lKT = PS_K_T(psv)-1
-         else
-            lKB = PS_K_B(psv)
-            lKT = PS_K_T(psv)
-         endif
+      !    if(PS_W_g(psv) < ZERO) then
+      !       lKB = PS_K_B(psv)-1
+      !       lKT = PS_K_T(psv)-1
+      !    else
+      !       lKB = PS_K_B(psv)
+      !       lKT = PS_K_T(psv)
+      !    endif
 
-         do k = lKB, lKT
-         do j = PS_J_S(psv), PS_J_N(psv)
-         do i = PS_I_W(psv), PS_I_E(psv)
+      !    do k = lKB, lKT
+      !    do j = PS_J_S(psv), PS_J_N(psv)
+      !    do i = PS_I_W(psv), PS_I_E(psv)
 
-            pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
+      !       pSource =  PS_MASSFLOW_G(psv) * (VOL/PS_VOLUME(psv))
 
-            b_m(I,J,K) = b_m(I,J,K) - pSource * &
-               PS_W_g(psv) * PS_VEL_MAG_g(psv)
+      !       b_m(I,J,K) = b_m(I,J,K) - pSource * &
+      !          PS_W_g(psv) * PS_VEL_MAG_g(psv)
 
-         enddo
-         enddo
-         enddo
+      !    enddo
+      !    enddo
+      !    enddo
 
-      enddo ps_lp
+      ! enddo ps_lp
 
       end subroutine point_source_w_g
 end module source_w_g_module
