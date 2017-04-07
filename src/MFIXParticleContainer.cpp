@@ -17,6 +17,12 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     this->SetVerbose(0);
 }
 
+void 
+MFIXParticleContainer::AllocData () {
+    reserveData();
+    resizeData();
+}
+
 
 
 void 
@@ -51,10 +57,12 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     	    p.cpu() = ParallelDescriptor::MyProc();
                 
     	    // here were read the additional attributes to be stored in SoA style.
-    	    ifs >> attribs[0];
-    	    ifs >> attribs[1];
-    	    ifs >> attribs[2];
-                
+    	    ifs >> attribs[PIdx::radius];
+    	    ifs >> attribs[PIdx::density];
+    	    ifs >> attribs[PIdx::velx];
+    	    ifs >> attribs[PIdx::vely];
+    	    ifs >> attribs[PIdx::velz];
+	                    
     	    // add them to the data structure
     	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
     	    particle_tile.push_back(p);

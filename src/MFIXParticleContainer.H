@@ -76,6 +76,8 @@ public:
 
     void printParticles ();
 
+    void AllocData ();
+
 private:
 
     static void ReadStaticParameters ();
