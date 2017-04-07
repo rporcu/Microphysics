@@ -16,7 +16,7 @@ set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  
    des/calc_collision_wall_mod.f90  des/calc_drag_des.f90  des/calc_force_dem.f90  des/calc_grad_des.f90  des/calc_pg_grad.f90 
    des/cffctowall.f90  des/cfnewvalues.f90  des/cfrelvel.f90  des/cfslide.f90  des/comp_mean_fields.f90  des/des_bc_mod.f90
    des/des_init_namelist.f90  des/des_time_march.f90  des/desmpi_mod.f90  des/discretelement_mod.f90  des/drag_gp_des.f90
-   des/drag_gs_des.f90  des/gas_drag.f90  des/make_arrays_des.f90  des/randomno_mod.f90  des/read_particle_input.f90
+   des/drag_gs_des.f90  des/gas_drag.f90  des/make_arrays_des.f90  des/randomno_mod.f90  
    des/set_phase_index.f90  des/stl_functions_des_mod.f90  des/vtp_mod.f90  des/write_des_data.f90  discretization_mod.f90
    display_resid.f90  dmp_modules/compar_mod.f90  drag_mod.f90  eos_mod.f90  error_manager_mod.f90  exit.f90  fill_bc0.f90
    fld_constants_mod.f90  flow_to_vel.f90  functions_mod.f90  geometry_mod.f90  get_data.f90  get_ps.f90

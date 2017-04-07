@@ -22,6 +22,9 @@ extern "C"
 
   void mfix_set_ifile( char* fname, int len );
 
+    void mfix_set_phase_index( Real* phase, const Real* radius, const Real *density,
+			       const Real* state, const int*  pidx );
+
   void mfix_get_data( int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
                      Real* tstop, Real* time, int* max_nit,

@@ -11,7 +11,7 @@
    bind(C, name="mfix_make_arrays_des")
 
 ! Module procedures .................................................//
-      use read_par_input_module, only: read_par_input
+      ! use read_par_input_module, only: read_par_input
       use error_manager, only: init_err_msg, flush_err_msg
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -59,6 +59,8 @@
 
       CALL INIT_ERR_MSG("MAKE_ARRAYS_DES")
 
+      return
+
 ! Particle state flag
       particle_state(:) = nonexistent
       particle_phase(:) = nonexistent
@@ -84,8 +86,8 @@
 
 ! Set the initial particle data.
       IF(RUN_TYPE == 'NEW') THEN
-         IF(PARTICLES /= 0) CALL READ_PAR_INPUT(particle_state, &
-            des_radius, ro_sol, des_pos_new, des_vel_new)
+         ! IF(PARTICLES /= 0) CALL READ_PAR_INPUT(particle_state, &
+         !    des_radius, ro_sol, des_pos_new, des_vel_new)
 
 ! Initialize old values
          omega_new(:,:)   = zero
@@ -118,8 +120,8 @@
          omoi(l) = 2.5d0/(pmass(l)*des_radius(l)**2) !one over moi
       ENDDO
 
-      CALL SET_PHASE_INDEX(max_pip, particle_phase, des_radius,&
-         ro_sol, particle_state)
+      ! CALL SET_PHASE_INDEX(max_pip, particle_phase, des_radius,&
+      !    ro_sol, particle_state)
 
 ! do_nsearch should be set before calling particle in cell
       DO_NSEARCH =.TRUE.

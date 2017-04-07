@@ -17,6 +17,7 @@ struct PIdx
 	state,
         radius,
 	volume,
+	mass,
         density, 
         oneOverI,
 	velx,
