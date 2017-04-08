@@ -30,15 +30,16 @@ contains
     integer(c_int), intent(in)  :: pidx
     real(c_real),   intent(out) :: phase ! Got to set it to real because of Particle Container
     integer                     :: m     ! Phase index
+    integer                     :: istate! Integer phase
     real(c_real)                :: dDp   ! Diameter minus Diameter of the phase specified
     real(c_real)                :: dRho  ! Density  minus density of the phase specified
 
     phase = 0
 
     ! Proceed only for certain particle states ( do we really need this???)
-    if ( (state == NONEXISTENT) .or. (state == NORMAL_GHOST)  .or. (state == ENTERING_GHOST) &
-         & .or. (state == EXITING_GHOST) )  return
-
+    istate = int( state )
+    if ( (istate == NONEXISTENT) .or. (istate == NORMAL_GHOST)  .or. &
+         & (istate == ENTERING_GHOST) .or. (istate == EXITING_GHOST) )  return
 
     ! Determining the solids phase of each particle by matching the diameter
     ! and density to those specified in the data file.
