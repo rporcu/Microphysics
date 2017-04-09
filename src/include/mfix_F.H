@@ -12,7 +12,9 @@ extern "C"
 
   void parse_resid_string();
 
-  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz);
+  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz, 
+                  Real* xlength, Real* ylength, Real* zlength, 
+                  const int* domlo, const int* domhi);
 
   void write_usr0();
 
@@ -20,20 +22,31 @@ extern "C"
 
   void mfix_set_ifile( char* fname, int len );
 
-  void mfix_get_data(int* imax, int* jmax, int* kmax,
-                     int* fluid, int* dem,
+    void mfix_set_phase_index( Real* phase, const Real* radius, const Real *density,
+			       const Real* state, const int*  pidx );
+
+  void mfix_get_data( int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
                      Real* tstop, Real* time, int* max_nit,
                      Real* normg, int* set_normg, int* call_udf,
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void set_domain(Real* dx, Real* dy, Real* dz);
+  void   set_domain();
+  void check_domain(Real* dx, Real* dy, Real* dz, 
+                    Real* xlength, Real* ylength, Real* zlength,
+                    const int* domlo, const int* domhi);
+
+  void set_bc_area(Real* dx, Real* dy, Real* dz); 
+
+  void   set_bc_flow();
+  void check_bc_flow();
 
   void set_bc_type(const int* slo, const int* shi,
                    int* bc_ilo, int* bc_ihi,
                    int* bc_jlo, int* bc_jhi,
-                   int* bc_klo, int* bc_khi);
+                   int* bc_klo, int* bc_khi,
+                   const int* domlo , const int* domhi);
 
   void zero_norm_vel(const int* slo, const int* shi,
                      const int* ulo, const int* uhi,
@@ -42,7 +55,8 @@ extern "C"
                      Real* u_g,     Real* v_g,      Real* w_g,
                      int* bc_ilo, int* bc_ihi,
                      int* bc_jlo, int* bc_jhi,
-                     int* bc_klo, int* bc_khi);
+                     int* bc_klo, int* bc_khi,
+                     const int* domlo , const int* domhi);
 
   void set_bc0(const int* slo, const int* shi,
                const int* ulo, const int* uhi,
@@ -52,18 +66,21 @@ extern "C"
                Real* p_g,     Real* ep_g,
                int* bc_ilo, int* bc_ihi,
                int* bc_jlo, int* bc_jhi,
-               int* bc_klo, int* bc_khi);
+               int* bc_klo, int* bc_khi,
+               const int* domlo , const int* domhi);
 
   void init_fluid(const int* slo, const int* shi,
                   const int* ulo, const int* uhi,
                   const int* vlo, const int* vhi,
                   const int* wlo, const int* whi,
                   const int*  lo, const int*  hi,
+                  const int* domlo , const int* domhi,
                   Real* ep_g,    Real* ro_g,
                   Real* rop_g,   Real* p_g,
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* mu_g,    Real* lambda_g,
-                  Real* dx,       Real* dy,       Real* dz);
+                  Real* dx,       Real* dy,       Real* dz,
+                  Real* xlength, Real* ylength, Real* zlength); 
 
   void mfix_make_arrays_des(const int* max_pip,
                  int* particle_state,
@@ -96,7 +113,9 @@ extern "C"
 
   void mfix_output_manager(
          const int* max_pip,
-         Real* time, Real* dt, int* nstep,
+         Real* time, Real* dt, 
+         Real* xlength, Real* ylength, Real* zlength, 
+         int* nstep,
          int* particle_state,    Real* des_radius,
          Real* des_pos_new,
          Real* des_vel_new,      Real* des_usr_var,
@@ -155,9 +174,7 @@ extern "C"
          const int*  lo,       const int*  hi,
          Real* u_g,            Real* v_g,            Real* w_g,
          Real* rop_g,
-         Real* ropX,         Real* ropY,         Real* ropZ,
-         Real* dt,
-         Real* dx,             Real* dy,             Real* dz);
+         Real* ropX,         Real* ropY,         Real* ropZ);
 
   void calc_mflux(
          const int* ulo, const int* uhi,
@@ -176,7 +193,8 @@ extern "C"
   void fill_bc0(Real* s, const int* slo, const int* shi,
                 int* bc_ilo, int* bc_ihi,
                 int* bc_jlo, int* bc_jhi,
-                int* bc_klo, int* bc_khi);
+                int* bc_klo, int* bc_khi,
+                const int* domlo , const int* domhi);
 
   void solve_u_g_star(
           const int* slo, const int* shi,
@@ -194,7 +212,9 @@ extern "C"
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
-          int* bc_klo,    int* bc_khi,    Real* dt,
+          int* bc_klo,    int* bc_khi,
+          const int* domlo , const int* domhi,
+          Real* dt,
           Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_v_g_star(
@@ -213,7 +233,9 @@ extern "C"
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
-          int* bc_klo,    int* bc_khi,    Real* dt,
+          int* bc_klo,    int* bc_khi,
+          const int* domlo , const int* domhi,
+          Real* dt,
           Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_w_g_star(
@@ -232,7 +254,9 @@ extern "C"
           Real* A_m,      Real* b_m,      Real* drag_bm,
           int* bc_ilo,    int* bc_ihi,
           int* bc_jlo,    int* bc_jhi,
-          int* bc_klo,    int* bc_khi,    Real* dt,
+          int* bc_klo,    int* bc_khi,
+          const int* domlo , const int* domhi,
+          Real* dt,
           Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
   void solve_pp_g(
@@ -249,7 +273,9 @@ extern "C"
           Real* ropX,   Real* ropY,   Real* ropZ,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,      Real* b_mmax,
-          Real* dt,       Real* dx, Real* dy, Real* dz, Real (&residuals)[16]);
+          Real* dt,       Real* dx, Real* dy, Real* dz, 
+          const int* domlo , const int* domhi,
+          Real (&residuals)[16]);
 
   void correct_0(
           const int* slo, const int* shi,
@@ -257,6 +283,7 @@ extern "C"
           const int* vlo,  const int* vhi,
           const int* wlo,  const int* whi,
           const int* lo,  const int* hi,
+          const int* domlo,  const int* domhi,
           Real* p_g,      Real* pp_g,
           Real* u_g,      Real* v_g,      Real* w_g,
           Real* d_e,      Real* d_n,      Real* d_t);
@@ -279,6 +306,7 @@ extern "C"
           const int* vlo,  const int* vhi,
           const int* wlo,  const int* whi,
           const int* lo,   const int* hi,
+          const int* domlo , const int* domhi,
           Real* ep_g,           Real* p_g,
           Real* u_g,            Real* v_g,            Real* w_g,
           Real* ro_g,           Real* mu_g,
@@ -292,6 +320,7 @@ extern "C"
           int* pairs,           int* pair_count,
           Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
+          Real* xlength, Real* ylength, Real* zlength, 
           int * nstep);
 
   void mfix_usr0();

@@ -37,9 +37,6 @@
 ! The name of the calling routine. Set by calling: INIT_ERR_MSG
       CHARACTER(LEN=128), DIMENSION(MAX_CALL_DEPTH), PRIVATE :: CALLERS
 
-! Flag for writing messages to the screen.
-      logical, PRIVATE :: SCR_LOG
-
 ! Error Flag.
       integer :: IER_EM
 
@@ -59,8 +56,6 @@
       use run, only: RUN_NAME, IFILE_NAME
 ! Flag: All ranks report errors.
       use output, only: ENABLE_DMP_LOG
-! Flag: My rank reports errors.
-      use funits, only: DMP_LOG
 ! Flag: Provide the full log.
       use output, only: FULL_LOG
 ! Rank ID of process
@@ -69,8 +64,6 @@
       use compar, only: PE_IO
 ! Number of ranks in parallel run.
       use compar, only: numPEs
-! File unit for LOG messages.
-      use funits, only: UNIT_LOG
 ! Undefined character string.
       use param1, only: UNDEFINED_C
 
@@ -97,11 +90,6 @@
       ERR_MSG = ''
 ! Clear the caller routine information.
       CALLERS = ''
-
-! This turns on error messaging from all processes.
-      DMP_LOG = (myPE == PE_IO) .OR. ENABLE_DMP_LOG
-! Flag for printing screen messages.
-      SCR_LOG = (myPE == PE_IO) .AND. FULL_LOG
 
 ! Verify the length of user-provided name.
       LOGFILE = ''
@@ -130,14 +118,6 @@
          ELSE
             WRITE(LOGFILE,"(A,'_',I8.8)") RUN_NAME(1:(NB-1)), myPE
          ENDIF
-      ENDIF
-
-! Open the .LOG file. From here forward, all routines should store
-! error messages (at a minimum) in the .LOG file.
-      IF(DMP_LOG) THEN
-         NB = len_trim(LOGFILE)+1
-         CALL OPEN_FILE(LOGFILE, NB, UNIT_LOG, '.LOG', FILE_NAME,      &
-            'APPEND', 'SEQUENTIAL', 'FORMATTED', 132,  IER(myPE))
       ENDIF
 
 ! Verify that the .LOG file was successfully opened. Otherwise, flag the
@@ -171,10 +151,6 @@
 
 ! Rank ID of process
       use compar, only: myPE
-! Flag: My rank reports errors.
-      use funits, only: DMP_LOG
-! File unit for LOG messages.
-      use funits, only: UNIT_LOG
 
       implicit none
 
@@ -183,8 +159,7 @@
 ! Verify that the maximum call dept will not be exceeded.  If so, flag
 ! the error and exit.
       IF(CALL_DEPTH + 1 > MAX_CALL_DEPTH) THEN
-         IF(SCR_LOG) WRITE(*,1000) CALL_DEPTH
-         IF(DMP_LOG) WRITE(UNIT_LOG,1000) CALL_DEPTH
+         WRITE(*,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
          call mfix_exit(myPE)
       ELSE
@@ -217,10 +192,6 @@
 
 ! Rank ID of process
       use compar, only: myPE
-! Flag: My rank reports errors.
-      use funits, only: DMP_LOG
-! File unit for LOG messages.
-      use funits, only: UNIT_LOG
 
       implicit none
 
@@ -238,8 +209,7 @@
 
 ! Verify that at the INIT routine was called.
       IF(CALL_DEPTH < 1) THEN
-         IF(SCR_LOG) WRITE(*,1000)
-         IF(DMP_LOG) WRITE(UNIT_LOG,1000)
+         WRITE(*,1000)
          call mfix_exit(myPE)
       ELSE
 ! Store the current caller, clear the array position, and decrement
@@ -260,19 +230,16 @@
 ! If the error message container is not empty, report the error, dump
 ! the error message and abort MFIX.
       IF(COUNT /= 0) THEN
-         IF(SCR_LOG) WRITE(*,1001) trim(CALLER)
-         IF(DMP_LOG) WRITE(UNIT_LOG,1001) trim(CALLER)
+         WRITE(*,1001) trim(CALLER)
 ! Write out the error message container contents.
          DO LC = 1, LINE_COUNT
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(0 < LENGTH .AND. LENGTH < 256 ) THEN
-               IF(SCR_LOG) WRITE(*,1002)LC, LENGTH, trim(LINE)
-               IF(DMP_LOG) WRITE(UNIT_LOG,1002)LC, LENGTH, trim(LINE)
+               WRITE(*,1002)LC, LENGTH, trim(LINE)
             ENDIF
          ENDDO
-         IF(SCR_LOG) WRITE(*,1003)
-         IF(DMP_LOG) WRITE(UNIT_LOG, 1003)
+         WRITE(*,1003)
          call mfix_exit(myPE)
       ENDIF
 
@@ -308,10 +275,6 @@
 
 ! Rank ID of process
       use compar, only: myPE
-! Flag: My rank reports errors.
-      use funits, only: DMP_LOG
-! File unit for LOG messages.
-      use funits, only: UNIT_LOG
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -348,8 +311,6 @@
       logical :: A_FLAG
 ! Local call tree flag.
       logical :: CT_FLAG
-! Local flag to store output to UNIT_LOG
-      logical :: UNT_LOG
 
 ! The current calling routine.
       CHARACTER(LEN=128) :: CALLER
@@ -382,12 +343,6 @@
          F_FLAG = .TRUE.
       ENDIF
 
-! Set the call tree flag. Suppress the call tree by default.
-      IF(PRESENT(LOG)) THEN
-         UNT_LOG = DMP_LOG .AND. LOG
-      ELSE
-         UNT_LOG = DMP_LOG
-      ENDIF
 
 ! Set the call tree flag. Suppress the call tree by default.
       IF(PRESENT(CALL_TREE)) THEN
@@ -401,11 +356,9 @@
 ! Set the current caller.
          CALLER = CALLERS(CALL_DEPTH)
          IF(D_FLAG) THEN
-            IF(SCR_LOG) WRITE(*,2000) trim(CALLER)
-            IF(UNT_LOG) WRITE(UNIT_LOG,2000) trim(CALLER)
+            WRITE(*,2000) trim(CALLER)
          ELSE
-            IF(SCR_LOG) WRITE(*,1000) trim(CALLER)
-            IF(UNT_LOG) WRITE(UNIT_LOG,1000) trim(CALLER)
+            WRITE(*,1000) trim(CALLER)
          ENDIF
       ENDIF
 
@@ -423,14 +376,11 @@
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(LENGTH == 0) THEN
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, "EMPTY."
-               IF(UNT_LOG) WRITE(UNIT_LOG,2001) LC, LENGTH, "EMPTY."
+               WRITE(*,2001) LC, LENGTH, "EMPTY."
             ELSEIF(LENGTH >=  LINE_LENGTH)THEN
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, "OVERFLOW."
-               IF(UNT_LOG) WRITE(UNIT_LOG,2001) LC, LENGTH, "OVERFLOW."
+               WRITE(*,2001) LC, LENGTH, "OVERFLOW."
             ELSE
-               IF(SCR_LOG) WRITE(*,2001) LC, LENGTH, trim(LINE)
-               IF(UNT_LOG) WRITE(UNIT_LOG,2001) LC, LENGTH, trim(LINE)
+               WRITE(*,2001) LC, LENGTH, trim(LINE)
             ENDIF
          ENDDO
       ELSE
@@ -438,27 +388,22 @@
             LINE = ERR_MSG(LC)
             LENGTH = len_trim(LINE)
             IF(0 < LENGTH .AND. LENGTH < 256 ) THEN
-               IF(SCR_LOG) WRITE(*,1001) trim(LINE)
-               IF(UNT_LOG) WRITE(UNIT_LOG,1001) trim(LINE)
+               WRITE(*,1001) trim(LINE)
             ELSE
-               IF(SCR_LOG) WRITE(*,"('  ')")
-               IF(UNT_LOG) WRITE(UNIT_LOG,"('  ')")
+               WRITE(*,"('  ')")
             ENDIF
          ENDDO
          IF(LAST_LINE == 0) THEN
-            IF(SCR_LOG) WRITE(*,"('  ')")
-            IF(UNT_LOG) WRITE(UNIT_LOG,"('  ')")
+            WRITE(*,"('  ')")
          ENDIF
       ENDIF
 
 ! Print footer.
       IF(F_FLAG) THEN
          IF(D_FLAG) THEN
-            IF(SCR_LOG) WRITE(*, 2002)
-            IF(UNT_LOG) WRITE(UNIT_LOG, 2002)
+            WRITE(*, 2002)
          ELSE
-            IF(SCR_LOG) WRITE(*, 1002)
-            IF(UNT_LOG) WRITE(UNIT_LOG, 1002)
+            WRITE(*, 1002)
          ENDIF
       ENDIF
 
@@ -492,10 +437,6 @@
 !......................................................................!
       SUBROUTINE SHOW_CALL_TREE(HEADER, FOOTER)
 
-! Flag: My rank reports errors.
-      use funits, only: DMP_LOG
-! File unit for LOG messages.
-      use funits, only: UNIT_LOG
 
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
@@ -520,24 +461,20 @@
 
 ! Header
       IF(H_FLAG) THEN
-         IF(SCR_LOG) WRITE(*,1000)
-         IF(DMP_LOG) WRITE(UNIT_LOG,1000)
+         WRITE(*,1000)
       ENDIF
 
 ! Call Tree
       DO LC=1,MAX_CALL_DEPTH
          DO SL=1,LC
-            IF(SCR_LOG) WRITE(*,1001,ADVANCE='NO')
-            IF(DMP_LOG) WRITE(UNIT_LOG,1001,ADVANCE='NO')
+            WRITE(*,1001,ADVANCE='NO')
          ENDDO
-         IF(SCR_LOG) WRITE(*,1002,ADVANCE='YES') CALLERS(LC)
-         IF(DMP_LOG) WRITE(UNIT_LOG,1002,ADVANCE='YES') CALLERS(LC)
+         WRITE(*,1002,ADVANCE='YES') CALLERS(LC)
       ENDDO
 
 ! Footer.
       IF(F_FLAG) THEN
-         IF(SCR_LOG) WRITE(*,1003)
-         IF(DMP_LOG) WRITE(UNIT_LOG,1003)
+         WRITE(*,1003)
       ENDIF
 
       RETURN

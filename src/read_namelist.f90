@@ -32,12 +32,9 @@ MODULE read_namelist_module
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
-      use geometry, only: xlength, ylength, zlength
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
-      use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
-      use ic, only: ic_x_e, ic_x_g, ic_x_s, ic_y_n, ic_y_s, ic_z_b, ic_z_t
+      use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, leq_it, leq_method
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt

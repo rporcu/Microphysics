@@ -13,7 +13,7 @@ int main (int argc, char* argv[])
 {
   // Issue an error if AMR input file is not given
   if ( argc < 2 )
-    amrex::Abort("BOXLIB INPUT FILE MISSING");
+    amrex::Abort("AMReX input file missing");
 
   // BoxLib will now read the inputs file and the command line arguments, but the
   //        command line arguments are in mfix-format so it will just ignore them.
@@ -33,7 +33,6 @@ int main (int argc, char* argv[])
     delete[] mfix_ifile;
   }
 
-
   // Copy arguments into MFIX -- note that the first argument is now the name of the
   //      inputs file to be read by BoxLib, so we only pass the arguments after that
   for(int i=2; i < argc; i++) {
@@ -47,8 +46,6 @@ int main (int argc, char* argv[])
 
   Real strt_time = ParallelDescriptor::second();
 
-  // Size of the entire domain
-  int imax,jmax,kmax;
   int max_nit;
   int solve_fluid;
   int solve_dem;
@@ -62,8 +59,7 @@ int main (int argc, char* argv[])
   int coord;
   int cyclic_x, cyclic_y, cyclic_z, cyclic_mf;
 
-  mfix_get_data( &imax, &jmax, &kmax,
-                 &solve_fluid,
+  mfix_get_data( &solve_fluid,
                  &solve_dem,
                  &steady_state,
                  &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
@@ -71,15 +67,7 @@ int main (int argc, char* argv[])
                  &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
                  &xlength, &ylength, &zlength, &coord);
 
-  // This defines the physical size of the box using {xlength,ylength,zlength}
-  // from the mfix input file
-  RealBox real_box;
-  for (int n = 0; n < BL_SPACEDIM; n++)
-    real_box.setLo(n, 0.0);
-  real_box.setHi(0, xlength);
-  real_box.setHi(1, ylength);
-  real_box.setHi(2, zlength);
-
+#if 0
   // This sets the boundary conditions to be doubly or triply periodic
   Array<int> is_per(3);
   is_per[0] = cyclic_x;
@@ -91,18 +79,13 @@ int main (int argc, char* argv[])
   // table here so when we call Geometry::Setup from the AmrCore constructor it will see it.
   ParmParse pp("geometry");
   pp.addarr("is_periodic",is_per);
+#endif
 
-  int max_level = 0;
   int lev = 0;
-  Array<int> n_cell(3);
-  n_cell[0] = imax;
-  n_cell[1] = jmax;
-  n_cell[2] = kmax;
-
-  const RealBox* rb_ptr = &real_box;
 
   // Note that the constructor constructs the Geometry object now.
-  mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
+  mfix_level my_mfix;
+//mfix_level my_mfix(rb_ptr,max_level,n_cell,coord);
 
   my_mfix.InitParams(solve_fluid,solve_dem,cyclic_mf,max_nit,call_udf);
 

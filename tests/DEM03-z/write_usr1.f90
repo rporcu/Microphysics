@@ -1,31 +1,31 @@
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C
-!  Module name: WRITE_USR1 (L)                                         C
+!  Module name: write_usr1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new)
+      subroutine write_usr1(l, time, dt, max_pip, des_pos_new, des_vel_new, omega_new, &
+                            xlength, ylength, zlength )
 
       use amrex_fort_module, only : c_real => amrex_real
 
       IMPLICIT NONE
 
       integer,      intent(in   ) :: l, max_pip
-      real(c_real), intent(in   ) :: time, dt
+      real(c_real), intent(in   ) :: time, dt, xlength, ylength, zlength
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
       real(c_real), intent(in   ) :: omega_new(max_pip,3)
 
       SELECT CASE(L)
-      CASE(1); CALL WRITE_DES_OUT(TIME, max_pip, des_pos_new, des_vel_new)
-      END SELECT
+      CASE(1); call write_des_out(TIME, max_pip, des_pos_new, des_vel_new, &
+                                  zlength)
+      end SELECT
 
-      RETURN
-      END SUBROUTINE WRITE_USR1
-
+      end subroutine write_usr1
 
 !......................................................................!
-!  Subroutine: WRITE_DES_Out                                           !
+!  Subroutine: write_des_out                                           !
 !                                                                      !
 !  Purpose: Calculate the position and velocity (1D Y-axis) of a free  !
 !  falling particle. Compare the results to the MFIX-DEM solultion.    !
@@ -36,7 +36,7 @@
 !  open-source MFIX-DEM software for gas-solids flows," from URL:      !
 !  https://mfix.netl.doe.gov/documentation/dem_doc_2012-1.pdf,         !
 !......................................................................!
-      SUBROUTINE WRITE_DES_Out(lTime, max_pip, des_pos_new, des_vel_new)
+      subroutine write_des_out(lTime, max_pip, des_pos_new, des_vel_new, length)
 
       use amrex_fort_module, only : c_real => amrex_real
       Use usr, only: gy1, gy2, gz1, gz2, rk4_v4
@@ -47,7 +47,7 @@
 ! Passed variables
 !---------------------------------------------------------------------//
       integer,      intent(in   ) ::  max_pip
-      real(c_real), intent(in   ) :: ltime
+      real(c_real), intent(in   ) :: ltime, length
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
 
@@ -84,13 +84,13 @@
       ENDIF
 
       DO I=1, RK4_STEPS
-         CALL RK4_V4(RK4_DT, gz1, gy1, gz2, gy2)
+         CALL RK4_V4(RK4_DT, gz1, gy1, gz2, gy2, length)
          RK4_TIME = RK4_TIME + RK4_DT
       ENDDO
 
 
       IF(IS_DEFINED(RK4_DT_LAST)) THEN
-         CALL RK4_V4(RK4_DT_LAST, gz1, gy1, gz2, gy2)
+         CALL RK4_V4(RK4_DT_LAST, gz1, gy1, gz2, gy2, length)
          RK4_TIME = RK4_TIME + RK4_DT_LAST
       ENDIF
 
@@ -105,5 +105,4 @@
       CLOSE(uPos1)
       CLOSE(uPos2)
 
-
-      END SUBROUTINE WRITE_DES_Out
+      end subroutine write_des_out

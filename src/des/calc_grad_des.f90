@@ -5,12 +5,11 @@ module calc_grad_des_module
 
    contains
 
-      subroutine calc_grad_des(slo, shi, lo, hi, PHI, DEL_PHI, dx, dy, dz)
+      subroutine calc_grad_des(slo, shi, lo, hi, PHI, DEL_PHI, dx, dy, dz, domlo, domhi)
 
 ! Modules
 !-----------------------------------------------
 
-      use geometry, only: domlo,domhi
       use functions, only: avg
       use param1, only: zero
 
@@ -18,6 +17,7 @@ module calc_grad_des_module
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) ::  lo(3), hi(3)
+      integer, intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(in   ) :: PHI&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))

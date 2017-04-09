@@ -41,10 +41,6 @@
 
   COORDINATES = 'Cartesian'
 
-  XLENGTH  = 0.500   IMAX = 5
-  YLENGTH  = 0.500   JMAX = 5
-  ZLENGTH  = 0.100   KMAX = 1
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 

@@ -1,9 +1,5 @@
 module set_domain_module
 
-   use check_boundary_conditions_module, only: check_boundary_conditions
-   use check_initial_conditions_module, only: check_initial_conditions
-   use check_point_sources_module, only: check_point_sources
-
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
@@ -17,7 +13,7 @@ module set_domain_module
 !  Reviewer: M.SYAMLAL, W.ROGERS, P.NICOLETTI         Date: 24-JAN-92  !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine set_domain(dx,dy,dz) &
+      subroutine set_domain() &
           bind(C, name="set_domain")
 
       ! Cyclic domain flags.
@@ -29,14 +25,9 @@ module set_domain_module
       ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
 
-      use get_bc_area_module, only: get_bc_area
-      use set_bc_flow_module, only: set_bc_flow
-
       use param1, only: is_defined
 
       implicit none
-
-      real(c_real)  , intent(in   ) :: dx,dy,dz
 
       ! This used to be in set_geometry
 
@@ -50,18 +41,6 @@ module set_domain_module
       IF (cyclic_y_pd) cyclic_y = .TRUE.
       IF (cyclic_z_pd) cyclic_z = .TRUE.
       cyclic = cyclic_x .OR. cyclic_y .OR. cyclic_z
-
-      ! End of what used to be in set_geometry
-
-      call check_initial_conditions(dx,dy,dz)
-      call check_boundary_conditions(dx,dy,dz)
-      call check_point_sources(dx,dy,dz)
-
-      ! Compute area of boundary surfaces.
-      call get_bc_area(dx,dy,dz)
-
-      ! Convert (mass, volume) flows to velocities.
-      call set_bc_flow
 
       end subroutine set_domain
 end module set_domain_module

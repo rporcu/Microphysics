@@ -34,10 +34,7 @@ MODULE INIT_NAMELIST_MODULE
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
-      use geometry, only: xlength, ylength, zlength
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_rop_s, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
-      use ic, only: ic_i_e, ic_i_w, ic_j_n, ic_j_s, ic_k_b, ic_k_t
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
@@ -436,42 +433,6 @@ MODULE INIT_NAMELIST_MODULE
       COORDINATES = UNDEFINED_C
 !</keyword>
 
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the x (r) direction.</description>
-      IMAX = UNDEFINED_I
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the x (r) direction.</description>
-      XLENGTH = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the y-direction.</description>
-      JMAX = UNDEFINED_I
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the y-direction.</description>
-      YLENGTH = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Number of cells in the z-direction.</description>
-      KMAX = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Reactor length in the z (theta) direction.</description>
-      ZLENGTH = UNDEFINED
-!</keyword>
-
-
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
 !    Flag for making the x-direction cyclic without pressure drop. No other
@@ -496,7 +457,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across XLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across xlength when a cyclic boundary condition
 !    with pressure drop is imposed in the x-direction.
 !  </description>
       delp_x = UNDEFINED
@@ -526,7 +487,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across YLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across ylength when a cyclic boundary condition
 !    with pressure drop is imposed in the y-direction.
 !  </description>
       delp_y = UNDEFINED
@@ -557,7 +518,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    Fluid pressure drop across ZLENGTH when a cyclic boundary condition
+!    Fluid pressure drop across zlength when a cyclic boundary condition
 !    with pressure drop is imposed in the z-direction.
 !  </description>
       delp_z = UNDEFINED
@@ -690,42 +651,6 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
-!  <description>I index of the west-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_I_W(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>I index of the east-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_I_E(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>J index of the south-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_J_S(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>J index of the north-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_J_N(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>K index of the bottom-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_K_B(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>K index of the top-most wall.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_K_T(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
 !  <description>
 !    Type of initial condition. Mainly used in restart runs to overwrite
 !    values read from the .RES file by specifying it as _PATCH_. The
@@ -740,7 +665,7 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial void fraction in the IC region.</description>
 !  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-         IC_EP_G(LC) = UNDEFINED
+         IC_EP_G(LC) = ONE
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -755,24 +680,12 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Initial Condition" required="false">
 !  <description>
-!    Initial bulk density (rop_s = ro_s x ep_s) of solids phase-m in the
-!    IC region. Users need to specify this IC only for polydisperse flow
-!    (MMAX > 1). Users must make sure that summation of ( IC_ROP_s(ic,m)
-!    / RO_s(m) ) over all solids phases is equal to ( 1.0 - IC_EP_g(ic)).
-!  </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_ROP_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>
 !    Initial solids volume fraction of solids phase-m in the IC region.
 !    This may be specified in place of IC_ROP_s.
 !  </description>
 !  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         IC_EP_S(LC,:DIM_M) = UNDEFINED
+         IC_EP_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
@@ -1718,12 +1631,6 @@ MODULE INIT_NAMELIST_MODULE
 
 
 ! ---------------------------------- questionable namelist entries below
-
-
-
-
-
-
 
 
 !<keyword category="category name" required="false">

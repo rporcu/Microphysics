@@ -7,11 +7,9 @@
       NAMELIST / GEOMETRY_LOCKED /&
 
       COORDINATES, &
-      IMAX, XLENGTH, CYCLIC_X, CYCLIC_X_PD, &
-      JMAX, YLENGTH, CYCLIC_Y, CYCLIC_Y_PD, &
-      KMAX, ZLENGTH, CYCLIC_Z, CYCLIC_Z_PD
-
-
+      CYCLIC_X, CYCLIC_X_PD, &
+      CYCLIC_Y, CYCLIC_Y_PD, &
+      CYCLIC_Z, CYCLIC_Z_PD
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !  Namelist: GEOMETRY_UNLOCKED                                         !

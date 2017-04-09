@@ -53,10 +53,6 @@
 
   COORDINATES    = 'CARTESIAN'
 
-  XLENGTH = 0.10   IMAX  =  20
-  YLENGTH = 0.01   JMAX  =   5
-  ZLENGTH = 0.01   KMAX  =   5
-
   GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0
   GRAVITY(3) =  0.d0

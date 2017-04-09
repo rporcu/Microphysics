@@ -18,20 +18,21 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, &
-      A_m, b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-      v_go, tau_v_g, dx, dy, dz)
+      A_m, b_m, dt, p_g, ep_g, ro_g, rop_go, &
+      v_go, tau_v_g, dx, dy, dz, domlo, domhi)
 
       use constant, only: gravity
       use bc, only: delp_y
 
       use functions, only: avg
-      use geometry,  only: domlo, domhi, cyclic_y_pd
+      use geometry,  only: cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
 
       use scales, only: p_scale
 
       integer     , intent(in   ) :: slo(3),shi(3),vlo(3),vhi(3),alo(3),ahi(3),lo(3),hi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
 
       ! Septadiagonal matrix A_m
       real(c_real), intent(inout) :: A_m&
@@ -47,8 +48,6 @@ contains
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: ro_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-      real(c_real), intent(in   ) :: rop_g&
-         (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: rop_go&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
       real(c_real), intent(in   ) :: v_go&
@@ -63,11 +62,9 @@ contains
 ! Indices
       integer :: i,j,k
 ! Pressure at north cell
-      real(c_real) :: PgN
+      real(c_real) :: PgS
 ! Average volume fraction
       real(c_real) :: EPGA
-! Average density
-      real(c_real) :: ROPGA, ROGA
 ! Source terms (Surface)
       real(c_real) :: Sdp
 ! Source terms (Volumetric)
@@ -80,29 +77,25 @@ contains
       axz = dx*dz
       vol = dx*dy*dz
 
-      DO K = lo(3), hi(3)
-         DO J = lo(2)-1, hi(2)
-            DO I = lo(1), hi(1)
+      DO K = alo(3), ahi(3)
+         DO J = alo(2), ahi(2)
+            DO I = alo(1), ahi(1)
 
-               epga = avg(ep_g(i,j,k),ep_g(i,j+1,k))
+               epga = half*(ep_g(i,j-1,k) + ep_g(i,j,k))
 
                ! Pressure term
-               pgn = p_g(i,j+1,k)
-               if ( cyclic_y_pd) then
-                  if((j==domlo(2)-1) .or. (j==domhi(2)) ) &
-                     pgn = pgn - delp_y
+               pgs = p_g(i,j-1,k)
+               if (cyclic_y_pd) then
+                  if((j==domlo(2)) .or. (j==domhi(2)+1) ) &
+                     pgs = pgs + delp_y
                end if
-               sdp = -p_scale*epga*(pgn - p_g(i,j,k))*axz
-
-               ! Volumetric forces
-               roga = avg(ro_g(i,j,k),ro_g(i,j+1,k))
-               ropga = avg(rop_g(i,j,k),rop_g(i,j+1,k))
+               sdp = -p_scale*epga*(p_g(i,j,k) - pgs)*axz
 
                ! Previous time step
-               v0 = avg(rop_go(i,j,k),rop_go(i,j+1,k))*odt
+               v0 = half*(rop_go(i,j-1,k)+rop_go(i,j,k))*odt
 
                ! Body force
-               vbf = roga*gravity(2)
+               vbf = half*(ro_g(i,j-1,k)+ro_g(i,j,k))*gravity(2)
 
                ! Collect the terms
                A_m(i,j,k,0) = -(A_m(i,j,k,e) + A_m(i,j,k,w) + &
@@ -132,7 +125,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine source_v_g_bc(slo, shi, alo, ahi, A_m, b_m, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, dx, dz)
+         bc_klo_type, bc_khi_type, domlo, domhi, dx, dz)
 
       use ic, only: NSW_, FSW_, PSW_
       use ic, only: PINF_, POUT_
@@ -140,12 +133,12 @@ contains
       use ic, only: cycl_
 
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
-      use geometry, only: domlo, domhi
 
       use matrix, only: e, w, n, s, t, b
       use param1, only: is_defined
 
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
+      integer     , intent(in   ) :: domlo(3),domhi(3)
       real(c_real), intent(in   ) :: dx, dz
 
       real(c_real), intent(INOUT) :: A_m&

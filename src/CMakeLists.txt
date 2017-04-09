@@ -1,10 +1,11 @@
-set(CXX_sources main.cpp mfix_level.cpp solve_bicgstab.cpp ParticleContainer.cpp io/mfixIO.cpp )
+set(CXX_sources main.cpp mfix_level.cpp solve_bicgstab.cpp MFIXParticleContainer.cpp io/mfixIO.cpp )
 
-set(CXX_includes mfix_level.H  ParticleContainer.H include/mfix_F.H)
+set(CXX_includes mfix_level.H  MFIXParticleContainer.H include/mfix_F.H)
 
 set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  calc_cell.f90  calc_coeff.f90
    calc_d.f90  calc_mflux.f90  calc_mu_g.f90  calc_outflow.f90  calc_ro_g.f90  calc_trd_g.f90  check_bqend.f90
-   check_convergence.f90  check_data/check_axis.f90  check_data/check_bc_dem.f90  check_data/check_bc_geometry.f90
+   check_bc_flow.f90 check_convergence.f90  check_domain.f90 
+   check_data/check_axis.f90  check_data/check_bc_dem.f90  check_data/check_bc_geometry.f90
    check_data/check_bc_inflow.f90  check_data/check_bc_outflow.f90  check_data/check_bc_walls.f90 
    check_data/check_boundary_conditions.f90  check_data/check_gas_phase.f90  check_data/check_geometry_prereqs.f90 
    check_data/check_ic_common_discrete.f90  check_data/check_initial_conditions.f90  check_data/check_numerics.f90 
@@ -15,15 +16,15 @@ set(F90_sources  adjust_a_g.f90  adjust_dt_mod.f90  adjust_leq.f90  bc_mod.f90  
    des/calc_collision_wall_mod.f90  des/calc_drag_des.f90  des/calc_force_dem.f90  des/calc_grad_des.f90  des/calc_pg_grad.f90 
    des/cffctowall.f90  des/cfnewvalues.f90  des/cfrelvel.f90  des/cfslide.f90  des/comp_mean_fields.f90  des/des_bc_mod.f90
    des/des_init_namelist.f90  des/des_time_march.f90  des/desmpi_mod.f90  des/discretelement_mod.f90  des/drag_gp_des.f90
-   des/drag_gs_des.f90  des/gas_drag.f90  des/make_arrays_des.f90  des/randomno_mod.f90  des/read_particle_input.f90
+   des/drag_gs_des.f90  des/gas_drag.f90  des/make_arrays_des.f90  des/randomno_mod.f90  
    des/set_phase_index.f90  des/stl_functions_des_mod.f90  des/vtp_mod.f90  des/write_des_data.f90  discretization_mod.f90
    display_resid.f90  dmp_modules/compar_mod.f90  drag_mod.f90  eos_mod.f90  error_manager_mod.f90  exit.f90  fill_bc0.f90
-   fld_constants_mod.f90  flow_to_vel.f90  functions_mod.f90  geometry_mod.f90  get_bc_area.f90  get_data.f90  get_ps.f90
+   fld_constants_mod.f90  flow_to_vel.f90  functions_mod.f90  geometry_mod.f90  get_data.f90  get_ps.f90
    get_tunit.f90  goal_seek_mflux.f90  ic_mod.f90  init_fluid.f90  init_namelist.f90  io/funits_mod.f90  io/open_file.f90
    io/open_files.f90  io/out_bin_512.f90  io/out_bin_512i.f90  io/out_bin_512r.f90  io/output_manager.f90  io/init_output_vars.f90 io/write_error.f90
    io/write_header.f90  io/write_out0.f90  io/write_table.f90  location_check.f90  machine_mod.f90  matrix_mod.f90 
    output_mod.f90  param1_mod.f90  param_mod.f90  parse_line.f90  parse_resid_string.f90  physical_prop.f90  ps_mod.f90
-   read_namelist.f90  remove_comment.f90  residual_mod.f90  run_mod.f90  scales_mod.f90  set_bc0.f90  set_bc_flow.f90 
+   read_namelist.f90  remove_comment.f90  residual_mod.f90  run_mod.f90  scales_mod.f90 set_bc_area.f90 set_bc0.f90  set_bc_flow.f90 
    set_bc_type.f90  set_domain.f90  set_param.f90  set_ps.f90  solve_pp_g.f90  solve_vel_star.f90  solver_params.f90 
    solvers/leqsol_mod.f90  solvers/matvec.f90  source_pp_g.f90  source_u_g.f90  source_v_g.f90  source_w_g.f90  tau_u_g.f90
    tau_v_g.f90  tau_w_g.f90  time_cpu_mod.f90  toleranc_mod.f90  ur_facs_mod.f90  usr/usr0.f90  usr/usr0_des.f90  usr/usr1.f90

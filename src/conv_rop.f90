@@ -14,8 +14,7 @@ module conv_rop_module
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine conv_rop(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                          u_g, v_g, w_g, rop_g, ropX, ropY, ropZ, &
-                          dt, dx, dy, dz) &
+                          u_g, v_g, w_g, rop_g, ropX, ropY, ropZ) &
                           bind(C, name="conv_rop")
 
       use run, only: discretize
@@ -40,7 +39,6 @@ module conv_rop_module
       real(c_real), intent(  out) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in   ) :: dt, dx, dy, dz
 !---------------------------------------------------------------------//
 
 
@@ -48,10 +46,9 @@ module conv_rop_module
          call conv_rop0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          rop_g, U_g, V_g, W_g, ropX, ropY, ropZ)
       else
-         call conv_rop1 (discretize(1), &
-                         slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+         call conv_rop1 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
                          rop_g, u_g, v_g, w_g, &
-                         ropX, ropY, ropZ, dt, dx, dy, dz)
+                         ropX, ropY, ropZ)
       end if
 
 !  contains
@@ -100,12 +97,12 @@ module conv_rop_module
 
       do K = lo(3),hi(3)
         do J = lo(2),hi(2)
-          do I = slo(1),hi(1)
+          do I = lo(1),hi(1)+1
 
-            if (U(i,j,k) >= ZERO) THEN
-               ropX(i,j,k) = rop(i,j,k)
+            if (u(i,j,k) >= ZERO) THEN
+               ropX(i,j,k) = rop(i-1,j,k)
             else
-               ropX(i,j,k) = rop(i+1,j,k)
+               ropX(i,j,k) = rop(i  ,j,k)
             end if
 
           end do
@@ -113,27 +110,27 @@ module conv_rop_module
       end do
 
       do K = lo(3),hi(3)
-        do J = slo(2),hi(2)
+        do J = lo(2),hi(2)+1
           do I = lo(1),hi(1)
 
             if (V(i,j,k) >= ZERO) THEN
-               ropY(i,j,k) = rop(i,j,k)
+               ropY(i,j,k) = rop(i,j-1,k)
             else
-               ropY(i,j,k) = rop(i,j+1,k)
+               ropY(i,j,k) = rop(i,j  ,k)
             end if
 
           end do
         end do
       end do
 
-      do K = slo(3),hi(3)
+      do K = lo(3),hi(3)+1
         do J = lo(2),hi(2)
           do I = lo(1),hi(1)
 
             if (W(i,j,k) >= ZERO) THEN
-               ropZ(i,j,k) = rop(i,j,k)
+               ropZ(i,j,k) = rop(i,j,k-1)
             else
-               ropZ(i,j,k) = rop(i,j,k+1)
+               ropZ(i,j,k) = rop(i,j,k  )
             end if
 
           end do
@@ -151,29 +148,24 @@ module conv_rop_module
 !  density.                                                            !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine conv_rop1(DISC, &
-                           slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
-                           rop, u_g, v_g, w_g, &
-                           ropX, ropY, ropZ, &
-                           dt, dx, dy, dz)
+      subroutine conv_rop1(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, lo, hi, &
+                           rop, u_g, v_g, w_g, ropX, ropY, ropZ)
 
 ! Modules
 !---------------------------------------------------------------------//
-      use param1, only: one
-      use xsi   , only: calc_xsi_e, calc_xsi_n, calc_xsi_t
+      use param1        , only: one, zero
+      use discretization, only: phi_c_of, superbee
+
       implicit none
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
 
-! Discretization scheme
-      integer, INTENT(IN) :: DISC
-
-! macroscopic density (rho_prime)
-      real(c_real), INTENT(in) :: rop&
+      ! Macroscopic density (rho_prime)
+      real(c_real), intent(in) :: rop&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-! Velocity components
+      ! Velocity components
       real(c_real), intent(in   ) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(in   ) :: v_g&
@@ -181,7 +173,7 @@ module conv_rop_module
       real(c_real), intent(in   ) :: w_g&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-! Face value of density (for calculating convective fluxes)
+      ! Face value of density (for calculating convective fluxes)
       real(c_real), intent(  out) :: ropX&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))
       real(c_real), intent(  out) :: ropY&
@@ -189,72 +181,90 @@ module conv_rop_module
       real(c_real), intent(  out) :: ropZ&
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 
-      real(c_real), intent(in) :: dt, dx, dy, dz
+      real(c_real) :: phi_c, dwf, xsi
 
-      integer :: xlo(3)
       integer :: i,j,k
-
-      real(c_real), allocatable :: xsi_(:,:,:)
 
       ! Calculate factors
 
-      xlo(1) = lo(1)-1
-      xlo(2) = lo(2)
-      xlo(3) = lo(3)
+      ! NOTES:   rop  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !          u_g  lives on x-faces    :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
+      !          ropX lives on x-faces    :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_e (DISC, rop, slo, shi, u_g, ulo, uhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+      do k = lo(3), hi(3)
+        do j = lo(2), hi(2)
+          do i = lo(1), hi(1)+1
 
-      do k = lo(3),hi(3)
-        do j = lo(2),hi(2)
-          do i = lo(1)-1,hi(1)
-            ropX(i,j,k) = ((one - xsi_(i,j,k))*rop(i  ,j,k) + &
-                                  xsi_(i,j,k) *rop(i+1,j,k) )
+            if (u_g(i,j,k) >= zero) then
+               phi_c = phi_c_of(rop(i-2,j,k),rop(i-1,j,k),rop(i  ,j,k))
+               dwf = superbee(phi_c)
+               xsi = dwf
+            else
+               phi_c = phi_c_of(rop(i+1,j,k),rop(i  ,j,k),rop(i-1,j,k))
+               dwf = superbee(phi_c)
+               xsi = 1.d0 - dwf
+            end if
+
+            ropX(i,j,k) = ((one - xsi)*rop(i-1,j,k) + &
+                                  xsi *rop(i  ,j,k) )
+
           end do
         end do
-      end do
-      deallocate(xsi_)
+     end do
+
 
 !---------------------------------------------------------------------//
 
-      xlo(1) = lo(1)
-      xlo(2) = lo(2)-1
-      xlo(3) = lo(3)
+      ! NOTES:   rop  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !          v_g  lives on y-faces    :   (lo(1): hi(1)  , lo(2):hi(2)+1, lo(3):hi(3))
+      !          ropY lives on y-faces    :   (lo(1): hi(1)  , lo(2):hi(2)+1, lo(3):hi(3))
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_n (DISC, rop, slo, shi, v_g, vlo, vhi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+      do k =  lo(3), hi(3)
+        do j =  lo(2), hi(2)+1
+          do i =  lo(1), hi(1)
 
-      do k = lo(3),hi(3)
-        do j = lo(2)-1,hi(2)
-          do i = lo(1),hi(1)
-            ropY(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j  ,k)+&
-                                  xsi_(i,j,k) *rop(i,j+1,k))
+            if (v_g(i,j,k) >= zero) then
+               phi_c = phi_c_of(rop(i,j-2,k),rop(i,j-1,k),rop(i,j  ,k))
+               dwf = superbee(phi_c)
+               xsi = dwf
+            else
+               phi_c = phi_c_of(rop(i,j+1,k),rop(i,j  ,k),rop(i,j-1,k))
+               dwf = superbee(phi_c)
+               xsi = 1.d0 - dwf
+            end if
+
+            ropY(i,j,k) = ((one - xsi)*rop(i,j-1,k)+&
+                                  xsi *rop(i,j  ,k))
+
           end do
         end do
       end do
-      deallocate(xsi_)
 
 !---------------------------------------------------------------------//
 
-      xlo(1) = lo(1)
-      xlo(2) = lo(2)
-      xlo(3) = lo(3)-1
+      ! NOTES:   rop  lives on cell ctrs  :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3))
+      !          w_g  lives on z-faces    :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3)+1)
+      !          ropZ lives on z-faces    :   (lo(1): hi(1)  , lo(2):hi(2)  , lo(3):hi(3)+1)
 
-      allocate( xsi_(xlo(1): hi(1),xlo(2): hi(2),xlo(3): hi(3)) )
-      call calc_xsi_t (DISC, rop, slo, shi, w_g, wlo, whi, &
-         xsi_, xlo,  hi, dt, dx, dy, dz)
+      do k = lo(3), hi(3)+1
+        do j = lo(2), hi(2)
+          do i = lo(1), hi(1)
 
-      do k = lo(3)-1,hi(3)
-        do j = lo(2),hi(2)
-          do i = lo(1),hi(1)
-            ropZ(i,j,k) = ((one - xsi_(i,j,k))*rop(i,j,k  ) + &
-                                  xsi_(i,j,k) *rop(i,j,k+1) )
+            if (w_g(i,j,k) >= zero) then
+               phi_c = phi_c_of(rop(i,j,k-2),rop(i,j,k-1),rop(i,j,k  ))
+               dwf = superbee(phi_c)
+               xsi = dwf
+            else
+               phi_c = phi_c_of(rop(i,j,k+1),rop(i,j,k  ),rop(i,j,k-1))
+               dwf = superbee(phi_c)
+               xsi = 1.d0 - dwf
+            end if
+
+            ropZ(i,j,k) = ((one - xsi)*rop(i,j,k-1) + xsi *rop(i,j,k  ) )
+
           end do
         end do
       end do
-      deallocate(xsi_)
 
       end subroutine conv_rop1
 

@@ -6,18 +6,18 @@ module des_time_march_module
    contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!     Subroutine: DES_TIME_MARCH                                       !
+!     Subroutine: des_time_march                                       !
 !                                                                      !
 !     Purpose: Main DEM driver routine                                 !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE DES_TIME_MARCH(max_pip, slo, shi, ulo, uhi, vlo, vhi,&
-         wlo, whi, lo, hi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g, &
+      subroutine des_time_march(max_pip, slo, shi, ulo, uhi, vlo, vhi,&
+         wlo, whi, lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g, &
          particle_state, particle_phase, &
          des_radius,  pvol, pmass, omoi, des_usr_var, &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          drag_fc, fc, tow, pairs, pair_count, &
-         time, dt, dx, dy, dz, nstep) &
+         time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) &
          bind(C, name="mfix_des_time_march")
 
       use calc_collision_wall, only: calc_dem_force_with_wall_stl
@@ -34,7 +34,7 @@ module des_time_march_module
       use machine, only:  wall_time
       use output_manager_module, only: output_manager
       use param1, only: zero
-      use run, only: call_USR
+      use run, only: call_usr
       use run, only: TSTOP
 
       implicit none
@@ -45,6 +45,7 @@ module des_time_march_module
       integer(c_int), intent(in   ) :: vlo(3), vhi(3)
       integer(c_int), intent(in   ) :: wlo(3), whi(3)
       integer(c_int), intent(in   ) ::  lo(3),  hi(3)
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: ep_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -63,6 +64,7 @@ module des_time_march_module
 
       real(c_real)  , intent(inout) :: time, dt
       real(c_real)  , intent(in   ) :: dx, dy, dz
+      real(c_real)  , intent(in   ) :: xlength, ylength, zlength
       integer(c_int), intent(inout) :: nstep
 
       real(c_real), intent(inout) :: pvol(max_pip)
@@ -116,7 +118,7 @@ module des_time_march_module
       TMP_WALL = WALL_TIME()
 
 ! Initialize time stepping variables for coupled gas/solids simulations.
-      IF(DES_CONTINUUM_COUPLED) THEN
+      IF(des_continuum_coupled) THEN
          IF(DT.GE.DTSOLID) THEN
             FACTOR = CEILING(real(DT/DTSOLID))
          ELSE
@@ -129,13 +131,14 @@ module des_time_march_module
       ELSE
          FACTOR = CEILING(real((TSTOP-TIME)/DTSOLID))
          DT = DTSOLID
-         call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+         call output_manager(max_pip, time, dt, &
+            xlength, ylength, zlength, nstep, &
             particle_state, des_radius, &
             des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
 
-      IF(DES_CONTINUUM_COUPLED) THEN
+      IF(des_continuum_coupled) THEN
          WRITE(ERR_MSG, 1000) trim(iVal(factor))
          call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
       ELSE
@@ -146,9 +149,9 @@ module des_time_march_module
  1000 FORMAT(/'DEM NITs: ',A)
  1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
-      IF(call_USR) call USR0_DES
+      IF(call_usr) call USR0_DES
 
-      IF(DES_CONTINUUM_COUPLED) THEN
+      IF(des_continuum_coupled) THEN
          IF(DES_EXPLICITLY_COUPLED) THEN
             call drag_gs_des(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, max_pip, &
                ep_g, u_g, v_g, w_g, ro_g, mu_g, &
@@ -157,7 +160,8 @@ module des_time_march_module
          ENDIF
          call calc_pg_grad(slo, shi, lo, hi, max_pip, &
                            p_g, gradPg,  particle_state, des_pos_new, &
-                           pvol, drag_fc, dx, dy, dz)
+                           pvol, drag_fc, dx, dy, dz, &
+                           xlength, ylength, zlength, domlo, domhi)
       ENDIF
 
 
@@ -165,7 +169,7 @@ module des_time_march_module
 !----------------------------------------------------------------->>>
       DO NN = 1, FACTOR
 
-         IF(DES_CONTINUUM_COUPLED) THEN
+         IF(des_continuum_coupled) THEN
 ! If the current time in the discrete loop exceeds the current time in
 ! the continuum simulation, exit the discrete loop
             IF(S_TIME.GE.(TIME+DT)) EXIT
@@ -180,7 +184,8 @@ module des_time_march_module
 
 ! Calculate forces from particle-wall collisions
          call CALC_DEM_FORCE_WITH_WALL_STL(particle_phase, particle_state,  &
-            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow)
+            des_radius, des_pos_new, des_vel_new, omega_new, fc, tow,&
+            xlength, ylength, zlength)
 
 ! Calculate pairs of colliding particles
          call CALC_COLLISIONS(max_pip, pairs, pair_count, particle_state, &
@@ -197,7 +202,7 @@ module des_time_march_module
             des_radius,particle_phase,dx, dy, dz)
 
 ! Call user functions.
-         IF(call_USR) call USR1_DES
+         IF(call_usr) call USR1_DES
 ! Update position and velocities
          call CFNEWVALUES(max_pip, particle_state, pmass, omoi, &
             des_pos_new, des_vel_new, omega_new, fc, tow, &
@@ -223,24 +228,26 @@ module des_time_march_module
          S_TIME = S_TIME + DTSOLID
 
 ! The following section targets data writes for DEM only cases:
-         IF(.NOT.DES_CONTINUUM_COUPLED) THEN
+         IF(.NOT.des_continuum_coupled) THEN
 ! Keep track of TIME and number of steps for DEM simulations
             TIME = S_TIME
             NSTEP = NSTEP + 1
-! Call the output manager to write RES data.
-            call OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+
+            ! Call the output manager to write RES data.
+            call output_manager(max_pip, time, dt, &
+               xlength, ylength, zlength, nstep, &
                particle_state, des_radius, &
                des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
-         IF(call_USR) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+         IF(call_usr) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
       ENDDO ! end do NN = 1, FACTOR
 
 ! END DEM time loop
 !-----------------------------------------------------------------<<<
 
-      IF(call_USR) call USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
+      IF(call_usr) call USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
 ! When coupled, and if needed, reset the discrete time step accordingly
       IF(DT.LT.DTSOLID_TMP) THEN
@@ -254,7 +261,7 @@ module des_time_march_module
 
       deallocate(gradPg)
 
-      IF(.NOT.DES_CONTINUUM_COUPLED)THEN
+      IF(.NOT.des_continuum_coupled)THEN
          WRITE(ERR_MSG,"('<---------- END DES_TIME_MARCH ----------')")
          call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ELSE
@@ -326,8 +333,8 @@ module des_time_march_module
             ENDIF
          ENDDO
       ENDDO
-      END SUBROUTINE CALC_COLLISIONS
+      end subroutine calc_collisions
 
-      END SUBROUTINE DES_TIME_MARCH
+      end subroutine des_time_march
 
 end module des_time_march_module

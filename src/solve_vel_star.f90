@@ -2,7 +2,6 @@ module solve_vel_star_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use geometry      , only: domlo, domhi
 
    implicit none
 
@@ -27,7 +26,7 @@ module solve_vel_star_module
          rop_go, ep_g, tau_u_g, d_e, fluxX, fluxY, fluxZ ,mu_g,  &
          f_gds, A_m, b_m, drag_bm, &
          bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-         bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
+         bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
          bind(C, name="solve_u_g_star")
 
       use u_g_conv_dif, only: conv_dif_u_g
@@ -51,6 +50,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -123,25 +123,25 @@ module solve_vel_star_module
       ! calculate the convection-diffusion terms
       call conv_dif_u_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-                         dt, dx, dy, dz)
+                          dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_u_g(slo, shi, ulo, uhi, alo, ahi, lo, hi, A_m, b_m, dt, &
-         p_g, ep_g, ro_g, rop_g, rop_go, u_go, tau_u_g, dx, dy, dz)
+         p_g, ep_g, ro_g, rop_go, u_go, tau_u_g, dx, dy, dz, domlo, domhi)
 
       ! modifications for bc
       call source_u_g_bc (slo, shi, alo, ahi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
-                          dy, dz)
+                          domlo, domhi, dy, dz)
 
       ! Add in point sources
       if(point_source) call point_source_u_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
-                    ep_g, f_gds, dx, dy, dz)
+                    ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
 ! Handle special case where center coefficient is zero
       call adjust_a_g ('U', slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -153,7 +153,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          ulo, uhi, vlo, vhi, wlo, whi, &
          u_g, v_g, w_g, A_m, b_m, &
-         resid_u, resid(resid_u,1), resid(resid_u,2))
+         resid_u, resid(resid_u,1), resid(resid_u,2), domlo, domhi)
 
      call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, 3)
 
@@ -173,7 +173,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_v_g, d_n, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
+      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
       bind(C, name="solve_v_g_star")
 
 
@@ -202,6 +202,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -273,26 +274,26 @@ module solve_vel_star_module
 ! calculate the convection-diffusion terms
       call conv_dif_v_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-         dt, dx, dy, dz)
+          dx, dy, dz)
 
 ! calculate the source terms for the gas phase u-momentum eqs
       call source_v_g(slo, shi, vlo, vhi, alo, ahi, lo, hi, A_m,&
-         b_m, dt, p_g, ep_g, ro_g, rop_g, rop_go, &
-         v_go, tau_v_g, dx, dy, dz)
+         b_m, dt, p_g, ep_g, ro_g, rop_go, &
+         v_go, tau_v_g, dx, dy, dz, domlo, domhi)
 
 ! modifications for bc
       call source_v_g_bc(slo, shi, alo, ahi, A_m, b_m, &
                          bc_ilo_type, bc_ihi_type, &
                          bc_jlo_type, bc_jhi_type, &
                          bc_klo_type, bc_khi_type, &
-                         dx, dz)
+                         domlo, domhi, dx, dz)
 
       ! Add in point sources
       if(point_source) call point_source_v_g (alo, ahi, b_m, vol)
 
       ! Calculate coefficients for the pressure correction equation
       call calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m, &
-         ep_g, f_gds, dx, dy, dz)
+         ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
       ! Handle special case where center coefficient is zero
       call adjust_a_g('V',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -304,7 +305,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          vlo, vhi, wlo, whi, ulo, uhi, &
          v_g, w_g, u_g, A_m, b_m, &
-         resid_v, resid(resid_v,1), resid(resid_v,2))
+         resid_v, resid(resid_v,1), resid(resid_v,2), domlo, domhi)
 
       call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, 4)
 
@@ -325,7 +326,7 @@ module solve_vel_star_module
       rop_go, ep_g, tau_w_g, d_t, fluxX, fluxY, fluxZ, mu_g,  &
       f_gds, A_m, b_m, drag_bm, &
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
-      bc_klo_type, bc_khi_type, dt, dx, dy, dz, resid) &
+      bc_klo_type, bc_khi_type, domlo, domhi, dt, dx, dy, dz, resid) &
       bind(C, name="solve_w_g_star")
 
 ! Module procedures ..................................................//
@@ -352,6 +353,7 @@ module solve_vel_star_module
       integer(c_int)     , intent(in   ) :: vlo(3),vhi(3)
       integer(c_int)     , intent(in   ) :: wlo(3),whi(3)
       integer(c_int)     , intent(in   ) :: alo(3),ahi(3)
+      integer(c_int)     , intent(in   ) :: domlo(3),domhi(3)
       integer(c_int)     , intent(in   ) ::  lo(3), hi(3)
       real(c_real), intent(in   ) :: dt, dx, dy, dz
 
@@ -424,25 +426,25 @@ module solve_vel_star_module
       ! calculate the convection-diffusion terms
       call conv_dif_w_g (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                          A_m, mu_g, u_g, v_g, w_g, fluxX, fluxY, fluxZ, &
-                         dt, dx, dy, dz)
+                         dx, dy, dz)
 
       ! calculate the source terms for the gas phase u-momentum eqs
       call source_w_g(slo, shi, wlo, whi, alo, ahi, lo, hi, A_m, b_m, dt, &
-         p_g, ep_g, ro_g, rop_g, rop_go, w_go, tau_w_g, dx, dy, dz)
+         p_g, ep_g, ro_g, rop_go, w_go, tau_w_g, dx, dy, dz, domlo, domhi)
 
       ! modifications for bc
       call source_w_g_bc (slo, shi, alo, ahi, A_m, b_m, &
                           bc_ilo_type, bc_ihi_type, &
                           bc_jlo_type, bc_jhi_type, &
                           bc_klo_type, bc_khi_type, &
-                          dx, dy)
+                          domlo, domhi, dx, dy)
 
       ! Add in point sources
       if(point_source) call point_source_w_g (alo, ahi, b_m, vol)
 
       ! calculate coefficients for the pressure correction equation
       call calc_d_t(slo, shi, wlo, whi, alo, ahi, &
-         d_t, A_m, ep_g, f_gds, dx, dy, dz)
+         d_t, A_m, ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
       ! handle special case where center coefficient is zero
       call adjust_a_g('W',slo, shi, alo, ahi, lo, hi, A_m, b_m, rop_g, dx, dy, dz)
@@ -454,7 +456,7 @@ module solve_vel_star_module
       call calc_resid_vel (alo, ahi, &
          wlo, whi, ulo, uhi, vlo, vhi, &
          w_g, u_g, v_g, A_m, b_m, &
-         resid_w, resid(resid_w,1), resid(resid_w,2))
+         resid_w, resid(resid_w,1), resid(resid_w,2), domlo, domhi)
 
       call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, 5)
 

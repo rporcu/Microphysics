@@ -23,19 +23,12 @@ module get_data_module
       use check_solids_model_prereqs_module, only: check_solids_model_prereqs
       use check_solids_phases_module, only: check_solids_phases
       use error_manager  , only: init_error_manager
-      use get_bc_area_module, only: get_bc_area
       use init_namelist_module, only: init_namelist
-      use open_files_mod, only: open_files
       use read_namelist_module, only: read_namelist
-      use run            , only: run_type, run_name
-      use set_bc_flow_module, only: set_bc_flow
       use set_parameters_module, only: set_parameters
       use write_header_module, only: write_header
 
-      use geometry, only: domlo, domhi
-      use geometry, only: imax, jmax, kmax
-
-      IMPLICIT NONE
+      implicit none
 
       real(c_real), intent(  out) :: time, dt
 
@@ -54,19 +47,9 @@ module get_data_module
       ! Not sure if the values are correct or useful
       call write_header
 
-      ! Open files
-      call open_files(RUN_NAME, RUN_TYPE)
-
       ! These checks verify that sufficient information was provided
       ! to setup the domain indices and DMP gridmap.
       call CHECK_GEOMETRY_PREREQS
-
-      domlo(1) = 0
-      domlo(2) = 0
-      domlo(3) = 0
-      domhi(1) = imax-1
-      domhi(2) = jmax-1
-      domhi(3) = kmax-1
 
       ! Check the minimum solids phase requirements.
       call check_solids_model_prereqs

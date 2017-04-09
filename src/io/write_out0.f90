@@ -1,4 +1,3 @@
-
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: write_out0                                              !
@@ -7,7 +6,7 @@
 !  Purpose: Echo user input.                                           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      subroutine write_out0(time, dt, dx, dy, dz) &
+      subroutine write_out0(time, dt, dx, dy, dz, xlength, ylength, zlength, domlo, domhi) &
          bind(C, name="write_out0")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -20,19 +19,17 @@
       use bc, only: bc_u_g, bc_v_g, bc_w_g
       use bc, only: bc_u_s, bc_v_s, bc_w_s
       use bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
-      use compar, only: mype, pe_io
       use constant, only: gravity, c_name, c
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
-      use funits, only: unit_out
       use geometry, only: coordinates
       use geometry, only: cyclic_x, cyclic_y, cyclic_z
       use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use geometry, only: imax, jmax, kmax
-      use geometry, only: xlength, ylength, zlength
-      use ic, only: ic_ep_g, ic_p_g, ic_u_g, ic_v_g, ic_w_g, ic_rop_s, ic_u_s, ic_v_s, ic_w_s
-      use ic, only: ic_i_w, ic_defined, ic_i_e, ic_j_s, ic_j_n, ic_k_b, ic_k_t
+      use ic, only: ic_ep_g, ic_u_g, ic_v_g, ic_w_g, ic_p_g
+      use ic, only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
+
+      use ic, only: ic_defined
       use ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
@@ -45,12 +42,13 @@
       use scales, only: p_scale, p_ref
       use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
-      use write_table_mod, only: write_table
-      use geometry, only: domhi
 
+      use calc_cell_module, only: calc_cell
       implicit none
 
-      real(c_real), intent(in   ) :: time, dt, dx, dy, dz
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
+      real(c_real)  , intent(in   ) :: time, dt, dx, dy, dz
+      real(c_real)  , intent(in   ) :: xlength, ylength, zlength
 !-----------------------------------------------
 !   G l o b a l   P a r a m e t e r s
 !-----------------------------------------------
@@ -69,22 +67,26 @@
 
 ! Coefficient of restitution (old symbol)
       CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
-      CHARACTER(LEN=12), DIMENSION(0:9) :: DISCR_NAME
-      CHARACTER(LEN=12), DIMENSION(0:9) :: DISCR_NAME1
+      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME
+      CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME1
       CHARACTER(LEN=8), DIMENSION(1:4) :: LEQ_METHOD_NAME
+! RUN_NAME.OUT file unit number
+      integer, PARAMETER :: UNIT_OUT = 52
+      integer :: ier
+      integer :: i_w, j_s, k_b
+      integer :: i_e, j_n, k_t
 !-----------------------------------------------
 
 !
-      DATA DISCR_NAME/'FOUP', 'FOUP', 'Superbee', 'Smart', 'Ultra-Quick', &
-         'QUICKEST', 'Muscl', 'VanLeer', 'Minmod', 'Central'/
-      DATA DISCR_NAME1/'FOUP', 'FOUP', 'Fourth Order', 'Smart', 'Ultra-Quick', &
-         'QUICKEST', 'Muscl', 'VanLeer', 'Minmod', 'Central'/
+      DATA DISCR_NAME/'FOUP', '    ', 'Superbee'/
+      DATA DISCR_NAME1/'FOUP', '    ', 'Fourth Order'/
       DATA LEQ_METHOD_NAME/'   SOR  ', 'BiCGSTAB', '  GMRES ', '   CG   '/
 
-      if (myPE.ne.PE_IO) return
-
       MMAX_TOT = MMAX
-!
+
+      open(unit=unit_out, file=trim(run_name)//'.out', status='unknown', &
+         access='sequential', form='formatted', position='append', iostat=ier)
+
 !  Write Headers for .OUT file
 !
       WRITE(UNIT_OUT,1000)ID_VERSION,ID_HOUR,ID_MINUTE,ID_MONTH,ID_DAY,ID_YEAR
@@ -159,23 +161,23 @@
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
          LEGEND(3) = 'X_E'
-         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, DOMHI(1)+1)
-         WRITE (UNIT_OUT, 1212) IMAX
-         WRITE (UNIT_OUT, 1213) XLENGTH
+         CALL WRITE_TABLE (LEGEND, DX, 0.0d0, 1, domhi(1)+1)
+         WRITE (UNIT_OUT, 1212) (domhi(1)-domlo(1)+1)
+         WRITE (UNIT_OUT, 1213) xlength
          WRITE (UNIT_OUT, 1220)
          LEGEND(1) = '  J'
          LEGEND(2) = ' DY'
          LEGEND(3) = 'Y_N'
-         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, DOMHI(2)+1)
-         WRITE (UNIT_OUT, 1221) JMAX
-         WRITE (UNIT_OUT, 1222) YLENGTH
+         CALL WRITE_TABLE (LEGEND, DY, ZERO, 1, domhi(2)+1)
+         WRITE (UNIT_OUT, 1221) (domhi(2)-domlo(2)+1)
+         WRITE (UNIT_OUT, 1222) ylength
          WRITE (UNIT_OUT, 1230)
          LEGEND(1) = '  K'
          LEGEND(2) = ' DZ'
          LEGEND(3) = 'Z_T'
-         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, DOMHI(3)+1)
-         WRITE (UNIT_OUT, 1231) KMAX
-         WRITE (UNIT_OUT, 1232) ZLENGTH
+         CALL WRITE_TABLE (LEGEND, DZ, ZERO, 1, domhi(3)+1)
+         WRITE (UNIT_OUT, 1231) (domhi(3)-domlo(3)+1)
+         WRITE (UNIT_OUT, 1232) zlength
 
 !
 !  Gas Section
@@ -275,24 +277,32 @@
       WRITE (UNIT_OUT, 1500)
       DO L = 1, DIMENSION_IC
          IF (IC_DEFINED(L)) THEN
+
+            i_w = calc_cell (ic_x_w(l), dx) + 1
+            i_e = calc_cell (ic_x_e(l), dx)
+            j_s = calc_cell (ic_y_s(l), dy) + 1
+            j_n = calc_cell (ic_y_n(l), dy)
+            k_b = calc_cell (ic_z_b(l), dz) + 1
+            k_t = calc_cell (ic_z_t(l), dz)
+
             WRITE (UNIT_OUT, 1510) L
-            LOC(1) = LOCATION(IC_I_W(L),DX) - HALF*DX
-            LOC(2) = LOCATION(IC_I_E(L),DX) + HALF*DX
-            LOC(3) = LOCATION(IC_J_S(L),DY) - HALF*DY
-            LOC(4) = LOCATION(IC_J_N(L),DY) + HALF*DY
-            LOC(5) = LOCATION(IC_K_B(L),DZ) - HALF*DZ
-            LOC(6) = LOCATION(IC_K_T(L),DZ) + HALF*DZ
-            WRITE (UNIT_OUT, 1520) IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), IC_Y_S&
-               (L), LOC(3), IC_Y_N(L), LOC(4), IC_Z_B(L), LOC(5), IC_Z_T(L), &
-               LOC(6)
-            WRITE (UNIT_OUT, 1530) IC_I_W(L), IC_I_E(L), IC_J_S(L), IC_J_N(L), &
-               IC_K_B(L), IC_K_T(L)
+            LOC(1) = LOCATION(I_W,DX) - HALF*DX
+            LOC(2) = LOCATION(I_E,DX) + HALF*DX
+            LOC(3) = LOCATION(J_S,DY) - HALF*DY
+            LOC(4) = LOCATION(J_N,DY) + HALF*DY
+            LOC(5) = LOCATION(K_B,DZ) - HALF*DZ
+            LOC(6) = LOCATION(K_T,DZ) + HALF*DZ
+            WRITE (UNIT_OUT, 1520) &
+               IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), &
+               IC_Y_S(L), LOC(3), IC_Y_N(L), LOC(4), &
+               IC_Z_B(L), LOC(5), IC_Z_T(L), LOC(6)
+            WRITE (UNIT_OUT, 1530) I_W, I_E, J_S, J_N, K_B, K_T
             WRITE (UNIT_OUT, 1540) IC_EP_G(L)
             IF (IS_DEFINED(IC_P_G(L))) WRITE (UNIT_OUT, 1541) IC_P_G(L)
 !
             WRITE (UNIT_OUT, 1550) IC_U_G(L), IC_V_G(L), IC_W_G(L)
             DO M = 1, MMAX_TOT
-               WRITE (UNIT_OUT, 1560) M, IC_ROP_S(L,M)
+               WRITE (UNIT_OUT, 1560) M, IC_EP_S(L,M)
             END DO
 
             DO M = 1, MMAX_TOT
@@ -489,7 +499,7 @@
  1550 FORMAT(9X,'X-component of gas velocity (IC_U_g) = ',G12.5,/9X,&
          'Y-component of gas velocity (IC_V_g) = ',G12.5,/9X,&
          'Z-component of gas velocity (IC_W_g) = ',G12.5)
- 1560 FORMAT(9X,'Solids phase-',I2,' Density x Volume fr. (IC_ROP_s) = ',G12.5)
+ 1560 FORMAT(9X,'Solids phase-',I2,' Volume fr. (IC_EP_s) = ',G12.5)
  1570 FORMAT(9X,'X-component of solids phase-',I2,' velocity (IC_U_s) =',G12.5,&
          /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
          ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)
@@ -596,4 +606,116 @@
 
       end function LOCATION
 
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
+!                                                                      C
+!  Module name: WRITE_TABLE (LEGEND, ARRAY, DIST_MIN, LSTART, LEND)    C
+!  Purpose: To write a table of DX, DY, DZ, and cell wall locations    C
+!                                                                      C
+!  Author: M. Syamlal                                 Date: 09-JAN-92  C
+!  Reviewer: S. Venkatesan                            Date: 11-DEC-92  C
+!                                                                      C
+!  Revision Number:                                                    C
+!  Purpose:                                                            C
+!  Author:                                            Date: dd-mmm-yy  C
+!  Reviewer:                                          Date: dd-mmm-yy  C
+!                                                                      C
+!  Literature/Document References:                                     C
+!                                                                      C
+!  Variables referenced: None                                          C
+!  Variables modified: None                                            C
+!                                                                      C
+!  Local variables: NROW, L, L1, L2, L3, DIST, ARRAY1, ARRAY3          C
+!                                                                      C
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
+!
+      SUBROUTINE WRITE_TABLE(LEGEND, SCALAR, DIST_MIN, LSTART, LEND)
+
+!-----------------------------------------------
+!   M o d u l e s
+!-----------------------------------------------
+      IMPLICIT NONE
+!-----------------------------------------------
+!   D u m m y   A r g u m e n t s
+!-----------------------------------------------
+
+!                      Legend
+      CHARACTER(LEN=*)    LEGEND(3)
+
+!                      DX, DY, or DZ Array to be written
+
+
+!                      Starting array index
+      integer          LSTART
+
+!                      Ending array index
+      integer          LEND
+
+      real(c_real) SCALAR
+
+!                      Starting value of distance
+      real(c_real) DIST_MIN
+
+!-----------------------------------------------
+!   L o c a l   P a r a m e t e r s
+!-----------------------------------------------
+
+!                      Number of columns in the table.  When this is changed
+!                      remember to change the FORMAT statement also.
+      integer, PARAMETER :: NCOL = 5
+!
+!                      Some dimension large enough for I, J, and K.
+      integer, PARAMETER :: DIMENSION_1 = 5000
+
+!-----------------------------------------------
+!   L o c a l   V a r i a b l e s
+!-----------------------------------------------
+!
+!                      Indices
+      integer          ARRAY1(DIMENSION_1)
+!
+!                      Array3 to be written
+      real(c_real) ARRAY3(DIMENSION_1)
+!
+!                      Number of rows
+      integer          NROW
+!
+!                      Temporary storage for distance calculation
+      real(c_real) DIST
+!
+!                      Local array indices
+      integer          L, L1, L2, L3
+!-----------------------------------------------
+!
+!
+!  Fill arrays 1 and 3
+!
+      DIST = DIST_MIN
+      DO L = LSTART, LEND
+         ARRAY1(L) = L
+         ARRAY3(L) = DIST
+         IF (L < LEND) DIST = DIST + SCALAR
+      END DO
+      NROW = (LEND - LSTART + 1)/NCOL
+!
+      L2 = LSTART - 1
+      DO L = 1, NROW
+         L1 = L2 + 1
+         L2 = L1 + NCOL - 1
+         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
+         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
+      END DO
+      IF (NROW*NCOL < LEND - LSTART + 1) THEN
+         L1 = L2 + 1
+         L2 = LEND
+         WRITE (UNIT_OUT, 1010) LEGEND(1), (ARRAY1(L3),L3=L1,L2)
+         WRITE (UNIT_OUT, 1020) LEGEND(2), (SCALAR,L3=L1,L2)
+         WRITE (UNIT_OUT, 1030) LEGEND(3), (ARRAY3(L3),L3=L1,L2)
+      ENDIF
+      RETURN
+!
+ 1010 FORMAT(7X,A3,2X,5(4X,I3,5X,1X))
+ 1020 FORMAT(7X,A3,2X,5(G12.5,1X))
+ 1030 FORMAT(7X,A3,2X,5(G12.5,1X),/)
+      END SUBROUTINE WRITE_TABLE
       end subroutine write_out0

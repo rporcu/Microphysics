@@ -8,14 +8,15 @@ module output_manager_module
   contains
 !----------------------------------------------------------------------!
 !                                                                      !
-!  Subroutine: OUTPUT_MANAGER                                          !
+!  Subroutine: output_manager                                          !
 !  Author: J.Musser                                   Date:            !
 !                                                                      !
 !  Purpose: Relocate calls to write output files (RES,VTP). This was   !
 !  done to simplify the time_march code.                               !
 !                                                                      !
 !----------------------------------------------------------------------!
-     subroutine OUTPUT_MANAGER(max_pip, time, dt, nstep, &
+     subroutine output_manager(max_pip, time, dt, &
+        xlength, ylength, zlength, nstep, &
         particle_state, &
         des_radius, des_pos_new, des_vel_new, des_usr_var,&
         omega_new, finished) &
@@ -39,8 +40,7 @@ module output_manager_module
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: max_pip
-
-      real(c_real), INTENT(IN   ) :: time, dt
+      real(c_real)  , intent(in   ) :: time, dt, xlength, ylength, zlength
       integer(c_int), intent(in   ) :: nstep
 
       real(c_real), intent(in) :: des_radius(max_pip)
@@ -84,9 +84,9 @@ module output_manager_module
       DO LC = 1, DIMENSION_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
-            CALL WRITE_USR1 (LC, time, dt, max_pip, des_pos_new,&
-               des_vel_new, omega_new)
-            CALL NOTIFY_useR('.USR:',EXT_END(LC:LC))
+            call write_usr1 (LC, time, dt, max_pip, des_pos_new,&
+                             des_vel_new, omega_new, xlength, ylength, zlength)
+            call notify_user('.USR:',EXT_END(LC:LC))
             IDX = IDX + 1
          ENDIF
       ENDDO
@@ -148,8 +148,6 @@ module output_manager_module
       subroutine NOTIFY_useR(MSG, EXT)
 
       use output, only: FULL_LOG
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
 
       CHARACTER(len=*), INTENT(IN) :: MSG
       CHARACTER(len=*), INTENT(IN), OPTIONAL :: EXT
@@ -160,7 +158,6 @@ module output_manager_module
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
       IF(HDR_MSG) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG, 1000, ADVANCE='NO') TIME
          IF(SCR_LOG) WRITE(*, 1000, ADVANCE='NO') TIME
          HDR_MSG = .FALSE.
       ENDIF
@@ -168,14 +165,11 @@ module output_manager_module
  1000 FORMAT(' ',/' t=',F12.6,' Wrote')
 
       IF(.NOT.present(EXT)) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG, 1100, ADVANCE='NO') MSG
          IF(SCR_LOG) WRITE(*, 1100, ADVANCE='NO') MSG
       ELSE
          IF(IDX == 0) THEN
-            IF(DMP_LOG) WRITE(UNIT_LOG, 1110, ADVANCE='NO') MSG, EXT
             IF(SCR_LOG) WRITE(*, 1110, ADVANCE='NO') MSG, EXT
          ELSE
-            IF(DMP_LOG) WRITE(UNIT_LOG, 1120, ADVANCE='NO') EXT
             IF(SCR_LOG) WRITE(*, 1120, ADVANCE='NO') EXT
          ENDIF
       ENDIF
@@ -193,14 +187,11 @@ module output_manager_module
       subroutine FLUSH_LIST
 
       use output, only: FULL_LOG
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
 
       logical :: SCR_LOG
 
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
-      IF(DMP_LOG) WRITE(UNIT_LOG,1000, ADVANCE='NO')
       IF(SCR_LOG) WRITE(*,1000, ADVANCE='NO')
 
  1000 FORMAT(';')
@@ -212,13 +203,11 @@ module output_manager_module
 !----------------------------------------------------------------------!
 !                                                                      !
 !----------------------------------------------------------------------!
-      subroutine FLUSH_NOTIFY_useR
+      subroutine flush_notify_user
 
-      use discretelement, only: DES_CONTINUUM_COUPLED
+      use discretelement, only: des_continuum_coupled
       use discretelement, only: DTSOLID
       use error_manager, only: err_msg, flush_err_msg, ival
-      use funits, only: DMP_LOG
-      use funits, only: UNIT_LOG
       use tunit_module, only: get_tunit
       use machine, only: wall_time
       use output, only: FULL_LOG
@@ -236,7 +225,6 @@ module output_manager_module
       SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
 
       IF(.NOT.HDR_MSG) THEN
-         IF(DMP_LOG) WRITE(UNIT_LOG,1000)
          IF(SCR_LOG) WRITE(*,1000)
       ENDIF
 
@@ -245,7 +233,7 @@ module output_manager_module
 ! Write the elapsed time and estimated remaining time
       IF(MOD(NSTEP,NLOG) == 0) THEN
 
-         IF(DEM_SOLIDS .AND. .NOT.DES_CONTINUUM_COUPLED) THEN
+         IF(DEM_SOLIDS .AND. .NOT.des_continuum_coupled) THEN
             TNITs = CEILING(real((TSTOP-TIME)/DTSOLID))
             WRITE(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(TNITs))
             CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
@@ -407,4 +395,5 @@ module output_manager_module
       end subroutine SET_FNAME
 
       end subroutine BACKUP_RES
+
 end module output_manager_module

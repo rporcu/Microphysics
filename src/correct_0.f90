@@ -12,17 +12,17 @@ MODULE CORRECT_0_MODULE
 !  Purpose: Correct the fluid pressure and gas velocities              C
 !                                                                      C
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CORRECT_0(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,&
+      SUBROUTINE CORRECT_0(slo,shi,ulo,uhi,vlo,vhi,wlo,whi,lo,hi,domlo,domhi,&
            p_g,pp_g,u_g,v_g,w_g,d_e,d_n,d_t)&
            bind(C, name="correct_0")
 
       use ur_facs  , only: ur_fac
-      use geometry, only: domlo, domhi
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3),domhi(3)
 
       real(c_real), intent(inout   ) :: pp_g&
          (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -80,28 +80,28 @@ MODULE CORRECT_0_MODULE
 
       do k = llo(3), lhi(3)
         do j = llo(2), lhi(2)
-          do i = llo(1), lhi(1)-1
-            u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i+1,j,k)-pp_g(i,j,k))
+          do i = llo(1)+1, lhi(1)
+            u_g(i,j,k) = u_g(i,j,k) - d_e(i,j,k)*(pp_g(i,j,k)-pp_g(i-1,j,k))
           enddo
         enddo
      enddo
 
-      do k = llo(3), lhi(3)
-        do j = llo(2), lhi(2)-1
-          do i = llo(1), lhi(1)
-            v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j+1,k)-pp_g(i,j,k))
-          enddo
-        enddo
-      enddo
-
-     do k = llo(3), lhi(3)-1
-        do j = llo(2), lhi(2)
-           do i = llo(1), lhi(1)
-              w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k+1) - pp_g(i,j,k))
-           enddo
-        enddo
+     do k = llo(3), lhi(3)
+       do j = llo(2)+1, lhi(2)
+         do i = llo(1), lhi(1)
+           v_g(i,j,k) = v_g(i,j,k) - d_n(i,j,k)*(pp_g(i,j,k)-pp_g(i,j-1,k))
+         enddo
+       enddo
      enddo
 
-      end subroutine correct_0
+     do k = llo(3)+1, lhi(3)
+       do j = llo(2), lhi(2)
+         do i = llo(1), lhi(1)
+           w_g(i,j,k) = w_g(i,j,k) - d_t(i,j,k)*(pp_g(i,j,k)-pp_g(i,j,k-1))
+         enddo
+       enddo
+     enddo
+
+     end subroutine correct_0
 
 end module correct_0_module

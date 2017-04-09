@@ -19,20 +19,21 @@
                             u_g,v_g,w_g, &
                             bc_ilo_type, bc_ihi_type, &
                             bc_jlo_type, bc_jhi_type, &
-                            bc_klo_type, bc_khi_type) &
+                            bc_klo_type, bc_khi_type, &
+                            domlo, domhi) &
          bind(C, name="zero_norm_vel")
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
       use param1  , only: zero
-      use geometry, only: domlo,domhi
       use ic      , only: NSW_, FSW_, PSW_
 
       IMPLICIT NONE
 
       integer(c_int), intent(in   ) :: slo(3), shi(3)
       integer(c_int), intent(in   ) :: ulo(3),uhi(3),vlo(3),vhi(3),wlo(3),whi(3)
+      integer(c_int), intent(in   ) :: domlo(3), domhi(3)
 
       real(c_real), intent(inout) :: u_g&
          (ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3))

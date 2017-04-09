@@ -12,14 +12,14 @@
 #include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
 
-#include <ParticleContainer.H>
+#include <MFIXParticleContainer.H>
 
 class mfix_level
     : public AmrCore
 {
 public:
 
-    mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
+//  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
     ~mfix_level();
 

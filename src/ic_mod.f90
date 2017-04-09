@@ -38,24 +38,6 @@
 ! IC region Top face, Z-coordinate
       real(c_real) :: IC_Z_t (DIMENSION_IC)
 
-! IC region, West face, I Index
-      integer :: IC_I_w (DIMENSION_IC)
-
-! IC region, East face, I Index
-      integer :: IC_I_e (DIMENSION_IC)
-
-! IC region, South face, J Index
-      integer :: IC_J_s (DIMENSION_IC)
-
-! IC region, North face, J Index
-      integer :: IC_J_n (DIMENSION_IC)
-
-! IC region, Bottom face, K Index
-      integer :: IC_K_b (DIMENSION_IC)
-
-! IC region, Top face, K Index
-      integer :: IC_K_t (DIMENSION_IC)
-
 ! Type of initial condition: PATCH
       CHARACTER(LEN=16) :: IC_TYPE(DIMENSION_IC)
 
@@ -64,9 +46,6 @@
 
 ! Initial gas pressure
       real(c_real) :: IC_P_g (DIMENSION_IC)
-
-! Initial macroscopic density of solids phases
-      real(c_real) :: IC_ROP_s(DIMENSION_IC, DIM_M)
 
 ! Initial solids phase volume fraction
       real(c_real) :: IC_EP_s (DIMENSION_IC, DIM_M)
@@ -94,9 +73,6 @@
 
 ! Initial z-component of solids phase velocity
       real(c_real) :: IC_W_s(DIMENSION_IC, DIM_M)
-
-! Logical variable to determine whether an ic is defined
-      logical :: IC_DEFINED (DIMENSION_IC)
 
 ! Initial gas species mass fractions
       real(c_real) :: IC_X_g(DIMENSION_IC, DIM_N_g)
@@ -137,4 +113,35 @@
    integer, parameter :: cycl_      =  50
    integer, parameter :: cycp_      =  51
 
-      END MODULE ic
+contains
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+! Subroutine: ic_defined                                               !
+!                                                                      !
+! Purpose: Return if a IC region has been defined based on coordinates !
+! defined in the input deck.                                           !
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+   logical function ic_defined(icv)
+
+      use run,    only: run_type
+      use param1, only: is_defined
+
+      integer, intent(in) :: icv
+
+      ic_defined = is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
+                   is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
+                   is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
+
+! An IC is defined for restart runs only if it is a 'PATCH'.
+      if(run_type /= 'NEW' .and. ic_type(icv) /= 'PATCH') &
+         ic_defined = .false.
+
+! Ignore patched IC regions for new runs. It may be better to flag this as
+! and error to avoid user confusion.
+      if(run_type == 'NEW' .and. ic_type(icv) == 'PATCH') &
+         ic_defined = .false.
+
+   end function ic_defined
+
+end module ic

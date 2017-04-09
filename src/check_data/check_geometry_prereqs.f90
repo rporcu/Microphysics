@@ -23,20 +23,10 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_geometry_prereqs
 
-    use geometry, only: imax, jmax, kmax,  coordinates
-    use param1,   only: undefined_i
+    use geometry, only: coordinates
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_GEOMETRY_PREREQS")
-    
-    ! Verify that the domain decomposition was specified.
-    if(imax == undefined_i .or. jmax == undefined_i .or.             &
-         kmax == undefined_i ) then
-       write(err_msg,1000) trim(IFILE_NAME)
-       call flush_err_msg(abort=.true.)
-    endif
-    
-1000 format('Error 1000: IMAX or JMAX or KMAX not specified in ',A)
     
     select case(trim(coordinates))
        
