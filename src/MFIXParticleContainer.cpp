@@ -51,7 +51,7 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	// Issue an error if nparticles = 0 is specified
 	if ( num_particles == 0 ){
 	    Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
-\nPerhaps you forgot to specify the nnumber of particles one the first line??? ");
+\nPerhaps you forgot to specify the number of particles on the first line??? ");
 	}
 
     	// we add all the particles to grid 0 and tile 0 and let 
