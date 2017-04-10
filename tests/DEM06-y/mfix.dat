@@ -51,7 +51,7 @@
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-  COORDINATES    = 'CARTESIAN'
+
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) = -9.80665d0

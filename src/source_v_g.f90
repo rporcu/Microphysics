@@ -25,7 +25,7 @@ contains
       use bc, only: delp_y
 
       use functions, only: avg
-      use geometry,  only: cyclic_y_pd
+      use bc,  only: cyclic_y_pd
 
       use matrix, only: e, w, s, n, t, b
 

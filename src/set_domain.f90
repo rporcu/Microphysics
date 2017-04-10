@@ -17,10 +17,9 @@ module set_domain_module
           bind(C, name="set_domain")
 
       ! Cyclic domain flags.
-      use geometry, only: cyclic
-      use geometry, only: cyclic_x, cyclic_x_pd, cyclic_x_mf
-      use geometry, only: cyclic_y, cyclic_y_pd, cyclic_y_mf
-      use geometry, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
+      use bc, only: cyclic_x, cyclic_x_pd, cyclic_x_mf
+      use bc, only: cyclic_y, cyclic_y_pd, cyclic_y_mf
+      use bc, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
 
       ! Flag for specificed constant mass flux.
       use bc, only: Flux_g
@@ -40,7 +39,6 @@ module set_domain_module
       IF (cyclic_x_pd) cyclic_x = .TRUE.
       IF (cyclic_y_pd) cyclic_y = .TRUE.
       IF (cyclic_z_pd) cyclic_z = .TRUE.
-      cyclic = cyclic_x .OR. cyclic_y .OR. cyclic_z
 
       end subroutine set_domain
 end module set_domain_module

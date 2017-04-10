@@ -24,7 +24,7 @@ contains
       use param1, only: one
       use compar   ,only: myPE, PE_IO
       use exit_mod, only: mfix_exit
-      use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+      use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       use utilities, ONLY: mfix_isnan
       use vavg_mod, ONLY: vavg_flux_g
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg

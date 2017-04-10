@@ -29,9 +29,8 @@ MODULE read_namelist_module
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use funits, only: unit_dat
-      use geometry, only: coordinates
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -55,6 +54,7 @@ MODULE read_namelist_module
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
+      use param1, only: undefined
 
       IMPLICIT NONE
 

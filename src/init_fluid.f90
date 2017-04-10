@@ -227,8 +227,7 @@ module init_fluid_module
                          xlength, ylength, zlength, domlo, domhi)
 
       use bc, only: delp_x, delp_y, delp_z
-      use bc, only: dimension_ic
-      use bc, only: dimension_bc, bc_type, bc_p_g, bc_defined
+      use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
       use compar, only: myPE
       use constant , only: gravity
       use eos, ONLY: EOSG
@@ -241,6 +240,7 @@ module init_fluid_module
       use iso_c_binding , only: c_int
       use param1   , only: zero, undefined
       use param1   , only: is_defined, is_undefined
+      use param, only: dimension_ic
 
       implicit none
 
@@ -334,7 +334,7 @@ module init_fluid_module
 ! ---------------------------------------------------------------->>>
 ! Search for an outflow boundary condition where pressure is specified
       pj = undefined
-      do l = 1, dimension_bc
+      do l = 1, dim_bc
          if (bc_defined(l)) then
             if(bc_type(l)=='P_OUTFLOW' .or. bc_type(l)=='PO') &
                pj = bc_p_g(l)

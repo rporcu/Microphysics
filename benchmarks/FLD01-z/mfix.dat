@@ -47,7 +47,7 @@
 
   XLENGTH = 1.0   IMAX =  32
   ZLENGTH = 1.0   KMAX =  32
-  YLENGTH = 1.0   JMAX =   1   
+  YLENGTH = 1.0   JMAX =   1
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION

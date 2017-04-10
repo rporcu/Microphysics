@@ -29,7 +29,7 @@ module calc_pg_grad_module
       use discretelement, only: nonexistent
 
       ! Flags for cyclic BC with pressure drop
-      use geometry, only: CYCLIC_X_PD, CYCLIC_Y_PD, CYCLIC_Z_PD
+      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
 
       ! Specified pressure drop
       use bc, only: DELP_X, DELP_Y, DELP_Z

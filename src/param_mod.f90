@@ -17,7 +17,7 @@
 ! Maximum number of items for specifying initial conditions
       integer, PARAMETER :: DIMENSION_IC = 500
 ! Maximum number of items for specifying boundary conditions
-      integer, PARAMETER :: DIMENSION_BC = 500
+      integer, PARAMETER :: DIM_BC = 500
 ! Maximum number of items for specifying point sources
       integer, PARAMETER :: DIMENSION_PS = 5000
 ! Maximum number of solids phases

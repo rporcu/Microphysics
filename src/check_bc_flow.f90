@@ -1,7 +1,7 @@
 module check_bc_flow_module
 
    use param1, only: zero
-   use param,  only: dimension_bc, dim_m
+   use param,  only: dim_bc, dim_m
 
    use bc, only: bc_plane
    use bc, only: bc_u_g, bc_v_g, bc_w_g
@@ -42,7 +42,7 @@ contains
 
 
       ! Loop over each defined BC and check the user data.
-      do bcv = 1, dimension_bc
+      do bcv = 1, dim_bc
 
          if(bc_defined(bcv)) then
 

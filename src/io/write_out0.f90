@@ -12,19 +12,14 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use bc, only: bc_hw_g, bc_uw_g, bc_ww_g, bc_hw_g, bc_vw_s, bc_uw_s, bc_vw_g, bc_ww_s, bc_hw_s
-      use bc, only: bc_t_g, bc_ep_g, bc_massflow_g, bc_volflow_g, bc_massflow_s, bc_volflow_s
-      use bc, only: bc_type, delp_x, delp_y, delp_z, bc_defined, bc_p_g, bc_area, bc_ep_s
-      use bc, only: bc_u_g, bc_v_g, bc_w_g
-      use bc, only: bc_u_s, bc_v_s, bc_w_s
-      use bc, only: bc_x_w, bc_y_n, bc_z_b, bc_x_e, bc_y_s, bc_z_t
+      use bc, only: write_out_bc
       use constant, only: gravity, c_name, c
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
-      use geometry, only: coordinates
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_u_g, ic_v_g, ic_w_g, ic_p_g
       use ic, only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
 
@@ -33,7 +28,7 @@
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
       use output, only: out_dt, res_dt
-      use param, only: dimension_c, dimension_ic, dimension_bc
+      use param, only: dimension_c, dimension_ic, dim_bc
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
       use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
@@ -145,25 +140,7 @@
 
 ! Geometry and Discretization.
          WRITE (UNIT_OUT, 1200)
-         WRITE (UNIT_OUT, 1201) COORDINATES
-         IF (CYCLIC_X_PD) THEN
-            WRITE (UNIT_OUT, 1202) 'X', ' with pressure drop'
-            WRITE (UNIT_OUT, 1203) 'X', DELP_X
-         ELSE IF (CYCLIC_X) THEN
-            WRITE (UNIT_OUT, 1202) 'X'
-         ENDIF
-         IF (CYCLIC_Y_PD) THEN
-            WRITE (UNIT_OUT, 1202) 'Y', ' with pressure drop'
-            WRITE (UNIT_OUT, 1203) 'Y', DELP_Y
-         ELSE IF (CYCLIC_Y) THEN
-            WRITE (UNIT_OUT, 1202) 'Y'
-         ENDIF
-         IF (CYCLIC_Z_PD) THEN
-            WRITE (UNIT_OUT, 1202) 'Z', ' with pressure drop'
-            WRITE (UNIT_OUT, 1203) 'Z', DELP_Z
-         ELSE IF (CYCLIC_Z) THEN
-            WRITE (UNIT_OUT, 1202) 'Z'
-         ENDIF
+
          WRITE (UNIT_OUT, 1210)
          LEGEND(1) = '  I'
          LEGEND(2) = ' DX'
@@ -318,96 +295,9 @@
          ENDIF
       END DO
 
-! Boundary Condition Data
-      write (unit_out, 1600)
-      do l = 1, dimension_bc
-         if (bc_defined(l)) then
-            write (unit_out, 1610) l
-            write (unit_out, 1611) bc_type(l)
-            select case (trim(bc_type(l)))
-            case ('MASS_INFLOW','MI')
-               write (unit_out, 1612)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('MASS_OUTFLOW','MO')
-               write (unit_out, 1613)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('P_INFLOW','PI')
-               write (unit_out, 1614)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('P_OUTFLOW','PO')
-               write (unit_out, 1615)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('OUTFLOW','OF')
-               write (unit_out, 1619)
-               call calc_cell_bc_flow(l, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('FREE_SLIP_WALL','FSW')
-               write (unit_out, 1616)
-               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
-                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('NO_SLIP_WALL','NSW')
-               write (unit_out, 1617)
-               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
-                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            case ('PAR_SLIP_WALL','PSW')
-               write (unit_out, 1618)
-               call calc_cell_bc_wall(l, domlo, domhi, xlength, ylength, &
-                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
-            end select
 
-            write (unit_out, 1620) &
-               bc_x_w(l), location(i_w,dx) - half*dx, &
-               bc_x_e(l), location(i_e,dx) + half*dx, &
-               bc_y_s(l), location(j_s,dy) - half*dy, &
-               bc_y_n(l), location(j_n,dy) + half*dy, &
-               bc_z_b(l), location(k_b,dz) - half*dz, &
-               bc_z_t(l), location(k_t,dz) + half*dz
-
-            write (unit_out, 1630) i_w, i_e, j_s, j_n, k_b, k_t
-            write (unit_out,1635)  bc_area(l)
-
-            IF (IS_DEFINED(BC_EP_G(L))) WRITE (UNIT_OUT, 1640) BC_EP_G(L)
-            IF (IS_DEFINED(BC_P_G(L)))  WRITE (UNIT_OUT, 1641) BC_P_G(L)
-            IF (IS_DEFINED(BC_T_G(L)))  WRITE (UNIT_OUT, 1642) BC_T_G(L)
-            IF (IS_DEFINED(BC_MASSFLOW_G(L))) &
-               WRITE (UNIT_OUT, 1648) BC_MASSFLOW_G(L)
-            IF (IS_DEFINED(BC_VOLFLOW_G(L))) &
-               WRITE (UNIT_OUT, 1649) BC_VOLFLOW_G(L)
-            IF (IS_DEFINED(BC_U_G(L)))  WRITE (UNIT_OUT, 1650) BC_U_G(L)
-            IF (IS_DEFINED(BC_V_G(L)))  WRITE (UNIT_OUT, 1651) BC_V_G(L)
-            IF (IS_DEFINED(BC_W_G(L)))  WRITE (UNIT_OUT, 1652) BC_W_G(L)
-            DO M = 1, MMAX_TOT
-               IF (IS_DEFINED(BC_EP_S(L,M))) THEN
-                  WRITE (UNIT_OUT, "(' ')")
-                  WRITE (UNIT_OUT, 1660) M, BC_EP_S(L,M)
-               ENDIF
-            END DO
-            DO M = 1, MMAX_TOT
-               WRITE (UNIT_OUT, "(' ')")
-               IF (IS_DEFINED(BC_MASSFLOW_S(L,M))) WRITE (UNIT_OUT, 1668) M, &
-                  BC_MASSFLOW_S(L,M)
-               IF (IS_DEFINED(BC_VOLFLOW_S(L,M))) WRITE (UNIT_OUT, 1669) M, &
-                  BC_VOLFLOW_S(L,M)
-               IF(IS_DEFINED(BC_U_S(L,M))) WRITE(UNIT_OUT,1670)M,BC_U_S(L,M)
-               IF(IS_DEFINED(BC_V_S(L,M))) WRITE(UNIT_OUT,1671)M,BC_V_S(L,M)
-               IF(IS_DEFINED(BC_W_S(L,M))) WRITE(UNIT_OUT,1672)M,BC_W_S(L,M)
-            END DO
-            IF (BC_TYPE(L) == 'PAR_SLIP_WALL' .or. BC_TYPE(L) == 'PSW') THEN
-               WRITE (UNIT_OUT, 1675) BC_HW_G(L), BC_UW_G(L), BC_VW_G(L), &
-                  BC_WW_G(L)
-               DO M = 1, MMAX_TOT
-                  WRITE (UNIT_OUT, 1676) M, BC_HW_S(L,M), BC_UW_S(L,M), BC_VW_S&
-                     (L,M), BC_WW_S(L,M)
-               END DO
-            ENDIF
-         ENDIF
-      END DO
+      call write_out_bc(unit_out, dx, dy, dz, &
+         xlength, ylength, zlength, domlo, domhi)
 
 !
 !  Print out file descriptions and write intervals.
@@ -478,9 +368,7 @@
  1190 FORMAT(7X,1A20,'- C(',I2,') = ',G12.5)
 !
  1200 FORMAT(//,3X,'3. GEOMETRY AND DISCRETIZATION',/)
- 1201 FORMAT(7X,'Coordinates: ',1A16/)
- 1202 FORMAT(7X,'Cyclic boundary conditions in ',A,' direction',A)
- 1203 FORMAT(7X,'Pressure drop (DELP_',A,') = ',G12.5)
+
  1210 FORMAT(7X,'X-direction cell sizes (DX) and East face locations:')
  ! 1211 FORMAT(7X,'Minimum value of X, or R (XMIN) =',G12.5)
  1212 FORMAT(7X,'Number of cells in X, or R, direction (IMAX) = ',I4)
@@ -571,11 +459,6 @@
          'Slip velociity U at wall   (BC_Uw_g) = ',G12.5,/,9X,&
          'Slip velociity V at wall   (BC_Vw_g) = ',G12.5,/,9X,&
          'Slip velociity W at wall   (BC_Ww_g) = ',G12.5)
- 1676 FORMAT(9X,'Solids phase: ',I2,/,11X,&
-         'Partial slip coefficient   (BC_hw_s) = ',G12.5,/,11X,&
-         'Slip velociity U at wall   (BC_Uw_s) = ',G12.5,/,11X,&
-         'Slip velociity V at wall   (BC_Vw_s) = ',G12.5,/,11X,&
-         'Slip velociity W at wall   (BC_Ww_s) = ',G12.5)
 !
  1800 FORMAT(//,3X,'9. OUTPUT DATA FILES:',/7X,'Extension',T18,&
          'Description',T59,'Interval for writing')

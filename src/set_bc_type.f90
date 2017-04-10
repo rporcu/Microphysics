@@ -27,8 +27,11 @@ module set_bc_type_module
       use ic, only: MINF_
       use ic, only: UNDEF_CELL, cycl_
 
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use param, only: dimension_bc
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: bc_x_w, bc_y_s, bc_z_b
+      use bc, only: bc_x_e, bc_y_n, bc_z_t
+
+      use param, only: dim_bc
       use param1, only: equal
       use calc_cell_module, only: calc_cell_bc_flow
       use calc_cell_module, only: calc_cell_bc_wall
@@ -94,7 +97,7 @@ module set_bc_type_module
          bc_khi_type(:,:,1) = undef_cell
       endif
 
-      do bcv = 1, dimension_bc
+      do bcv = 1, dim_bc
          if (bc_defined(bcv)) then
 
             select case (trim(bc_type(bcv)))
@@ -111,11 +114,17 @@ module set_bc_type_module
 
             select case(type)
             case(nsw_, fsw_, psw_)
-               call calc_cell_bc_wall(bcv, domlo, domhi, xlength, ylength, &
-                  zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+               call calc_cell_bc_wall(bcv, domlo, domhi, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
             case(pinf_, pout_, minf_)
-               call calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
-                  dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+               call calc_cell_bc_flow(bcv, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
             end select
 
             if (i_w == i_e) then

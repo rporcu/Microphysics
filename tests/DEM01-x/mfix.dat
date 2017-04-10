@@ -5,7 +5,7 @@
 #                                                                      #
 #  Description:                                                        #
 #  Freely falling particles under gravity that collide with a wall.    #
-#  This is a variant of DEM01 but in this case the gravity is in the 
+#  This is a variant of DEM01 but in this case the gravity is in the
 #  x-direction rather than y-direction..
 #                                                                      #
 #  References:                                                         #
@@ -38,7 +38,7 @@
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-  COORDINATES = 'CARTESIAN'
+
 
   GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0

@@ -16,7 +16,6 @@ module get_data_module
       subroutine get_data(time, dt)
 
       use check_gas_phase_module, only: check_gas_phase
-      use check_geometry_prereqs_module, only: check_geometry_prereqs
       use check_numerics_module, only: check_numerics
       use check_output_control_module, only: check_output_control
       use check_run_control_module, only: check_run_control
@@ -46,10 +45,6 @@ module get_data_module
       ! Write header in the .LOG file and to screen.
       ! Not sure if the values are correct or useful
       call write_header
-
-      ! These checks verify that sufficient information was provided
-      ! to setup the domain indices and DMP gridmap.
-      call check_geometry_prereqs
 
       ! Check the minimum solids phase requirements.
       call check_solids_model_prereqs

@@ -24,6 +24,7 @@ MODULE INIT_NAMELIST_MODULE
       SUBROUTINE INIT_NAMELIST
 
       use bc
+      use ic
       use constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
@@ -31,9 +32,8 @@ MODULE INIT_NAMELIST_MODULE
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use fld_const, only: ro_g0, mu_g0, mw_avg
-      use geometry, only: coordinates
-      use geometry, only: cyclic_x, cyclic_y, cyclic_z
-      use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+      use bc, only: cyclic_x, cyclic_y, cyclic_z
+      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
@@ -43,8 +43,6 @@ MODULE INIT_NAMELIST_MODULE
       use output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
       use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
       use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
-      use param, only: dimension_c
-      use param1, only: undefined_c
       use ps, only: dimension_ps
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
@@ -59,6 +57,10 @@ MODULE INIT_NAMELIST_MODULE
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
+      use param, only: dimension_c
+
+      use param1, only: zero, one
+      use param1, only: undefined, undefined_i, undefined_c
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -426,13 +428,6 @@ MODULE INIT_NAMELIST_MODULE
 !                      Geometry and Discretization                    !
 !#####################################################################!
 
-
-!<keyword category="Geometry and Discretization" required="false">
-!  <description>Coordinates used in the simulation.</description>
-!  <valid value="cartesian" note="Cartesian coordinates."/>
-      COORDINATES = UNDEFINED_C
-!</keyword>
-
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
 !    Flag for making the x-direction cyclic without pressure drop. No other
@@ -756,49 +751,49 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 !                        Boundary Conditions                          !
 !#####################################################################!
-      DO LC = 1, DIMENSION_BC
+      DO LC = 1, DIM_BC
 
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_X_W(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_X_E(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_Y_S(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_Y_N(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_Z_B(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_Z_T(LC) = UNDEFINED
 !</keyword>
 
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Type of boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !
 !  <valid value='DUMMY'
 !    note='The specified boundary condition is ignored. This is
@@ -843,32 +838,25 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase hw for partial slip boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_HW_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>Solids phase hw for partial slip boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_HW_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Uw for partial slip boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_UW_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Vw for partial slip boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_VW_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase Ww for partial slip boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_WW_G(LC) = UNDEFINED
 !</keyword>
 
@@ -878,7 +866,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Gas phase heat transfer coefficient, Hw, in diffusion boundary condition:
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_HW_T_G(LC) = UNDEFINED
 !</keyword>
 
@@ -887,7 +875,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Specified gas phase wall temperature, Tw_g, in diffusion boundary condition:
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_TW_G(LC) = UNDEFINED
 !</keyword>
 
@@ -896,7 +884,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Specified constant gas phase heat flux, C, in diffusion boundary condition:
 !    d(T_g)/dn + Hw (T_g - Tw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_C_T_G(LC) = UNDEFINED
 !</keyword>
 
@@ -905,7 +893,7 @@ MODULE INIT_NAMELIST_MODULE
 !    Gas phase species mass transfer coefficient, Hw, in diffusion boundary condition:
 !    d(X_g)/dn + Hw (X_g - Xw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          BC_HW_X_G(LC,:DIM_N_G) = UNDEFINED
 !</keyword>
@@ -916,7 +904,7 @@ MODULE INIT_NAMELIST_MODULE
 !    d(X_g)/dn + Hw (X_g - Xw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
 !  <description>Gas phase Xw for mass transfer.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          BC_XW_G(LC,:DIM_N_G) = UNDEFINED
 !</keyword>
@@ -926,65 +914,54 @@ MODULE INIT_NAMELIST_MODULE
 !    Specified constant gas species mass flux, C, in diffusion boundary condition:
 !    d(X_g)/dn + Hw (X_g - Xw_g) = C, where n is the fluid-to-wall normal.
 !  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          BC_C_X_G(LC,:DIM_N_G) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
-!  <description>
-!    Solid phase species mass transfer coefficient, Hw, in diffusion boundary condition:
-!    d(X_s)/dn + Hw (X_s - Xw_s) = C, where n is the fluid-to-wall normal.
-!  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <arg index="3" id="Species" min="1" max="DIM_N_S"/>
-         BC_HW_X_S(LC,:DIM_M,:DIM_N_S) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
 !  <description>Void fraction at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_EP_G(LC) = ONE
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas pressure at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_P_G(LC) = UNDEFINED
 !</keyword>
 
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids volume fraction at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_EP_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas phase temperature at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_T_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids phase-m temperature at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_T_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Mass fraction of gas species at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          BC_X_G(LC,:DIM_N_G) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Mass fraction of solids species at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
 !  <arg index="3" id="Species" min="1" max="DIM_N_S"/>
          BC_X_S(LC,:DIM_M,:DIM_N_S) = UNDEFINED
@@ -992,160 +969,69 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_U_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>X-component of solids-phase velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_U_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_V_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Y-component of solids-phase velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_V_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of gas velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_W_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Z-component of solids-phase velocity at the BC plane.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_W_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas volumetric flow rate through the boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_VOLFLOW_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids volumetric flow rate through the boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_VOLFLOW_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Gas mass flow rate through the boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
          BC_MASSFLOW_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Boundary Condition" required="false">
 !  <description>Solids mass flow rate through the boundary.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
+!  <arg index="1" id="BC" min="1" max="DIM_BC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          BC_MASSFLOW_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
-!<keyword category="Boundary Condition" required="false">
-!  <description>The interval at the beginning when the normal
-!    velocity at the boundary is equal to BC_Jet_g0. When restarting,
-!    run this value and BC_Jet_g0 should be specified such that the
-!    transient jet continues correctly. MFIX does not store the jet
-!    conditions. For MASS_OUTFLOW boundary conditions, BC_DT_0 is
-!    the time period to average and print the outflow rates. The
-!    adjustment of velocities to get a specified mass or volumetric
-!    flow rate is based on the average outflow rate.
-!  </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_DT_0(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Value of normal velocity during the initial interval BC_DT_0.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_JET_G0(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>The interval when normal velocity is equal to BC_Jet_gh.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_DT_H(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Value of normal velocity during the interval BC_DT_h.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_JET_GH(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>The interval when normal velocity is equal to BC_JET_gL.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_DT_L(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Value of normal velocity during the interval BC_DT_L.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_JET_GL(LC) = UNDEFINED
-!</keyword>
-
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Magnitude of gas velocity in a specified boundary region.</description>
-!  <dependent keyword="CARTESIAN_GRID" value=".TRUE."/>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-         BC_VELMAG_G(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Magnitude of gas velocity in a specified boundary region.</description>
-!  <dependent keyword="CARTESIAN_GRID" value=".TRUE."/>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_BC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-         BC_VELMAG_S(LC,:DIM_M) = UNDEFINED
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Flag to specify the constant number
-! of computational particles per cell for the PIC solids inflow BC.
-!Statistical weight of parcels will be calculated by the code.</description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_IC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <conflict keyword="BC_PIC_CONST_STATWT" value="DEFINED"/>
-!  <dependent keyword="SOLIDS_MODEL" value="PIC"/>
-          BC_PIC_MI_CONST_NPC(LC, :DIM_M) = 0
-!</keyword>
-
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Flag to specify the constant statistical
-! weight for inflowing computational particles/parcels. Actual number of
-! parcels will be automatically computed. </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_IC"/>
-!  <arg index="2" id="Phase" min="1" max="DIM_M"/>
-!  <conflict keyword="IC_PIC_CONST_NPC" value="DEFINED"/>
-          BC_PIC_MI_CONST_STATWT(LC, :DIM_M) = ZERO
-!</keyword>
-
-!<keyword category="Boundary Condition" required="false">
-!  <description>Flag to make the PO BC invisible to discrete solids.
-! Set this flag to.FALSE.to remove this BC for discrete solids. </description>
-!  <arg index="1" id="BC" min="1" max="DIMENSION_IC"/>
-         BC_PO_APPLY_TO_DES(LC) = .TRUE.
-!</keyword>
-
-
-         BC_ROP_G(LC) = UNDEFINED
       ENDDO
 
 
@@ -1516,15 +1402,6 @@ MODULE INIT_NAMELIST_MODULE
       ITER_RESTART = 1
 !</keyword>
 
-
-
-
-      U_G0 = UNDEFINED
-      V_G0 = UNDEFINED
-      W_G0 = UNDEFINED
-      U_S0(:DIM_M) = UNDEFINED
-      V_S0(:DIM_M) = UNDEFINED
-      W_S0(:DIM_M) = UNDEFINED
 
       CALL DES_INIT_NAMELIST
 

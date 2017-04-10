@@ -25,7 +25,6 @@ set(F90_sources
   check_data/check_bc_walls.f90
   check_data/check_boundary_conditions.f90
   check_data/check_gas_phase.f90
-  check_data/check_geometry_prereqs.f90
   check_data/check_initial_conditions.f90
   check_data/check_numerics.f90
   check_data/check_output_control.f90
@@ -80,7 +79,6 @@ set(F90_sources
   fill_bc0.f90
   fld_constants_mod.f90
   functions_mod.f90
-  geometry_mod.f90
   get_data.f90
   get_tunit.f90
   goal_seek_mflux.f90

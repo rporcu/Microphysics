@@ -31,7 +31,7 @@
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-  COORDINATES = 'Cartesian'
+
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) =  0.d0

@@ -6,7 +6,6 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / GEOMETRY_LOCKED /&
 
-      COORDINATES, &
       CYCLIC_X, CYCLIC_X_PD, &
       CYCLIC_Y, CYCLIC_Y_PD, &
       CYCLIC_Z, CYCLIC_Z_PD

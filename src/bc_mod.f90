@@ -1,317 +1,77 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: bc.inc                                                 C
-!  Purpose: Common block containing boundary conditions data           C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Revision Number:                                                    C
-!  Purpose:                                                            C
-!  Author:                                            Date: dd-mmm-yy  C
-!  Reviewer:                                          Date: dd-mmm-yy  C
-!                                                                      C
-!  Literature/Document References: None                                C
-!                                                                      C
-!  Variables referenced: None                                          C
-!  Variables modified: None                                            C
-!                                                                      C
-!  Local variables: None                                               C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      MODULE bc
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: bc                                                     !
+!  Purpose: Global variables for specifying boundary conditions.       !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+module bc
 
-      use amrex_fort_module, only : c_real => amrex_real
-      use iso_c_binding , only: c_int
+   use amrex_fort_module, only : c_real => amrex_real
+   use iso_c_binding , only: c_int
 
-      use param, only: dimension_bc, dim_m, dim_n_g, dim_n_s, dimension_ic
-      use param1, only: zero, small_number, one, undefined, half
+   use param, only: dim_bc, dim_m, dim_n_g, dim_n_s
 
-!                      x coordinate of the west face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_X_w (DIMENSION_BC)
-!
-!                      x coordinate of the east face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_X_e (DIMENSION_BC)
-!
-!                      y coordinate of the south face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_Y_s (DIMENSION_BC)
-!
-!                      y coordinate of the north face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_Y_n (DIMENSION_BC)
-!
-!                      z coordinate of the bottom face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_Z_b (DIMENSION_BC)
-!
-!                      z coordinate of the top face of a region where
-!                      boundary conditions are specified
-      real(c_real) BC_Z_t (DIMENSION_BC)
-!
-!
-!                      Void fraction in a specified boundary region
-      real(c_real) BC_EP_g (DIMENSION_BC)
-!
-!                      Gas pressure in a specified boundary region
-      real(c_real) BC_P_g (DIMENSION_BC)
-!
-!                      Microscopic density of gas in a specified
-!                      boundary region
-      real(c_real) BC_RO_g (DIMENSION_BC)
-!
-!                      Macroscopic density of gas in a specified
-!                      boundary region
-      real(c_real) BC_ROP_g (DIMENSION_BC)
-!
-!                      Macroscopic density of solids phases in a
-!                      specified boundary region
-      real(c_real) BC_EP_s (DIMENSION_BC, DIM_M)
-!
-!                      Gas phase temperature in a specified boundary
-!                      region
-      real(c_real) BC_T_g (DIMENSION_BC)
-!
-!                      Solids phase temperature in a specified
-!                      boundary region
-      real(c_real) BC_T_s (DIMENSION_BC, DIM_M)
-!
-!
-!                      x-component of gas velocity in a specified
-!                      boundary region
-      real(c_real) BC_U_g (DIMENSION_BC)
-!
-!                      x-component of solids phase velocity in a
-!                      specified boundary region
-      real(c_real) BC_U_s (DIMENSION_BC, DIM_M)
-!
-!                      y-component of gas velocity in a specified
-!                      boundary region
-      real(c_real) BC_V_g (DIMENSION_BC)
-!
-!                      y-component of solids phase velocity in a
-!                      specified boundary region
-      real(c_real) BC_V_s (DIMENSION_BC, DIM_M)
-!
-!                      z-component of gas velocity in a specified
-!                      boundary region
-      real(c_real) BC_W_g (DIMENSION_BC)
-!
-!                      z-component of solids phase velocity in a
-!                      specified boundary region
-      real(c_real) BC_W_s (DIMENSION_BC, DIM_M)
-!
-! JFD: For cut cells, define the magnitude of velocity that will be enforced
-!      perpendicular to the cut face, for CG_MI boundary condition
-!
-!                      magnitude of gas velocity in a specified
-!                      boundary region
-      real(c_real) BC_VELMAG_g (DIMENSION_BC)
-!
-!                      magnitude of solids phase velocity in a
-!                      specified boundary region
-      real(c_real) BC_VELMAG_s (DIMENSION_BC, DIM_M)
+   ! Type of boundary:
+   character(len=16) :: BC_Type(dim_bc)
 
-!
-!                      Type of boundary: MASS_INFLOW, MASS_OUTFLOW,
-!                      P_INFLOW, P_OUTFLOW, FREE_SLIP_WALL, NO_SLIP_WALL
-      CHARACTER(LEN=16)     BC_TYPE (DIMENSION_BC)
+   ! Flags for periodic boundary conditions
+   logical :: cyclic_x, cyclic_x_pd, cyclic_x_mf
+   logical :: cyclic_y, cyclic_y_pd, cyclic_y_mf
+   logical :: cyclic_z, cyclic_z_pd, cyclic_z_mf
 
-!                      FLAG to specify if this PO BC applies to solid phase
-!                      in discrete implementation or not. For example, setting
-!                      Pressure outflow only for gas-phase.
+   ! Boundary condition coordinates
+   real(c_real) :: BC_X_w(dim_bc), BC_X_e(dim_bc)
+   real(c_real) :: BC_Y_s(dim_bc), BC_Y_n(dim_bc)
+   real(c_real) :: BC_Z_b(dim_bc), BC_Z_t(dim_bc)
 
-      logical          BC_PO_APPLY_TO_DES (DIMENSION_BC)
+   ! Void fraction in a specified boundary
+   real(c_real) :: BC_EP_g(dim_bc), BC_EP_s(dim_bc, dim_m)
 
-!                      Gas volumetric flow rate through the boundary
-      real(c_real) BC_VOLFLOW_g (DIMENSION_BC)
-!
-!                      Solids volumetric flow rate through the boundary
-      real(c_real) BC_VOLFLOW_s (DIMENSION_BC, DIM_M)
-!
-!                      Gas mass flow rate through the boundary
-      real(c_real) BC_MASSFLOW_g (DIMENSION_BC)
-!
-!                      Solids mass flow rate through the boundary
-      real(c_real) BC_MASSFLOW_s (DIMENSION_BC, DIM_M)
-!
-!                      Character variable with values W, E, S, N, B, and T
-!                      to determine the flow plane of a flow cell
-       CHARACTER       bc_plane (DIMENSION_BC)
-!
-!                      The interval at the beginning when normal vel. is equal to
-!                      BC_Jet_g0
-      real(c_real) BC_DT_0 (DIMENSION_BC)
-!
-!                      Stored value of normal velocity
-      real(c_real) BC_Jet_g (DIMENSION_BC)
-!
-!                      Value of normal vel. during the initial interval BC_DT_0
-      real(c_real) BC_Jet_g0 (DIMENSION_BC)
-!
-!                      The interval when normal vel. is equal to BC_Jet_gh
-      real(c_real) BC_DT_h (DIMENSION_BC)
-!
-!                      Value of normal vel. during the initial interval BC_DT_h
-      real(c_real) BC_Jet_gh (DIMENSION_BC)
-!
-!                      The interval when normal vel. is equal to BC_Jet_gl
-      real(c_real) BC_DT_l (DIMENSION_BC)
-!
-!                      Value of normal vel. during the initial interval BC_DT_l
-      real(c_real) BC_Jet_gl (DIMENSION_BC)
-!
-!                      Time to update a transient boundary condition
-      real(c_real) BC_TIME (DIMENSION_BC)
-!
-!                      Area of boundary surfaces
-      real(c_real) BC_AREA (DIMENSION_BC)
-!
-!                      Volume of boundary cells
-      real(c_real) BC_VOL (DIMENSION_BC)
-!
-!                      Gas species mass fractions in a boundary region
-      real(c_real) BC_X_g (DIMENSION_BC, DIM_N_g)
-!
-!                      Solids species mass fractions in a boundary region
-      real(c_real) BC_X_s (DIMENSION_BC, DIM_M, DIM_N_s)
-!
-!                      Accumulated or average mass outflow rate of gas
-      real(c_real) BC_MOUT_g(DIMENSION_BC)
-!
-!                      Accumulated or average mass outflow rate of solids
-      real(c_real) BC_MOUT_s(DIMENSION_BC, DIM_M)
-!
-!                      Accumulated or average volumetric outflow rate of gas
-      real(c_real) BC_VOUT_g(DIMENSION_BC)
-!
-!                      Accumulated or average volumetric outflow rate of solids
-      real(c_real) BC_VOUT_s(DIMENSION_BC, DIM_M)
-!
-!                      Number of outflow rate values accumulated
-      integer          BC_OUT_N (DIMENSION_BC)
-!
-!                      Pressure drop specified for cyclic b.c. in X
-      real(c_real) DELP_X
-!
-!                      Pressure drop specified for cyclic b.c. in Y
-      real(c_real) DELP_Y
-!
-!                      Pressure drop specified for cyclic b.c. in Z
-      real(c_real) DELP_Z
-!
-!                      Specified mass flux (e.g., g/cm^2.s) in the cyclic
-!                      direction with specified pressure drop (only one
-!                      direction is allowed).
-      real(c_real) Flux_g
-!
-!                      Average gas velocity in X direction (for cyclic bc)
-      real(c_real) U_g0
-!
-!                      Average gas velocity in Y direction (for cyclic bc)
-      real(c_real) V_g0
-!
-!                      Average gas velocity in Z direction (for cyclic bc)
-      real(c_real) W_g0
-!
-!                      Average solids velocity in X direction (for cyclic bc)
-      real(c_real) U_s0 (DIM_M)
-!
-!                      Average solids velocity in Y direction (for cyclic bc)
-      real(c_real) V_s0 (DIM_M)
-!
-!                      Average solids velocity in Z direction (for cyclic bc)
-      real(c_real) W_s0 (DIM_M)
-!
-!                      IJK location where P_g is fixed for cyclic b.c's
-      integer          IJK_P_g(3)
-!
-!                      Coefficient in partial slip condition -- gas
-      real(c_real) BC_hw_g (DIMENSION_BC)
-!
-!                      Coefficient in partial slip condition -- solids
-      real(c_real) BC_hw_s (DIMENSION_BC, DIM_M)
-!
-!                      Wall velocity for partial slip condition -- gas
-      real(c_real) BC_Uw_g (DIMENSION_BC)
-!
-!                      Wall velocity for partial slip condition -- gas
-      real(c_real) BC_Vw_g (DIMENSION_BC)
-!
-!                      Wall velocity for partial slip condition -- gas
-      real(c_real) BC_Ww_g (DIMENSION_BC)
-!
-!                      Wall velocity for partial slip condition -- solids
-      real(c_real) BC_Uw_s (DIMENSION_BC, DIM_M)
-!
-!                      Wall velocity for partial slip condition -- solids
-      real(c_real) BC_Vw_s (DIMENSION_BC, DIM_M)
-!
-!                      Wall velocity for partial slip condition -- solids
-      real(c_real) BC_Ww_s (DIMENSION_BC, DIM_M)
+   ! Gas phase BC pressure
+   real(c_real) :: BC_P_g(dim_bc)
 
-!
-!                      Coefficient in heat transfer boundary condition -- gas
-      real(c_real) BC_hw_T_g (DIMENSION_BC)
-!
-!                      Coefficient in heat transfer boundary condition -- solids
-      real(c_real) BC_hw_T_s (DIMENSION_BC, DIM_M)
-!
-!                      Wall temperature in heat transfer boundary  condition -- gas
-      real(c_real) BC_Tw_g (DIMENSION_BC)
-!
-!                      Wall temperature in heat transfer boundary condition -- solids
-      real(c_real) BC_Tw_s (DIMENSION_BC, DIM_M)
-!
-!                      Coefficient in heat transfer boundary condition -- gas
-      real(c_real) BC_C_T_g (DIMENSION_BC)
-!
-!                      Coefficient in heat transfer boundary condition -- solids
-      real(c_real) BC_C_T_s (DIMENSION_BC, DIM_M)
+   ! Velocities at a specified boundary
+   real(c_real) :: BC_U_g(DIM_BC), BC_U_s(dim_bc, dim_m)
+   real(c_real) :: BC_V_g(DIM_BC), BC_V_s(dim_bc, dim_m)
+   real(c_real) :: BC_W_g(DIM_BC), BC_W_s(dim_bc, dim_m)
 
-!
-!                      Coefficient in mass transfer boundary condition -- gas
-      real(c_real) BC_hw_X_g (DIMENSION_BC, DIM_N_g)
-!
-!                      Coefficient in mass transfer boundary condition -- solids
-      real(c_real) BC_hw_X_s (DIMENSION_BC, DIM_M, DIM_N_s)
-!
-!                      Wall value in mass  transfer boundary  condition -- gas
-      real(c_real) BC_Xw_g (DIMENSION_BC, DIM_N_g)
-!
-!                      Wall value in mass transfer boundary condition -- solids
-      real(c_real) BC_Xw_s (DIMENSION_BC, DIM_M, DIM_N_s)
-!
-!                      Coefficient in mass transfer boundary condition -- gas
-      real(c_real) BC_C_X_g (DIMENSION_BC, DIM_N_g)
-!
-!                      Coefficient in mass transfer boundary condition -- solids
-      real(c_real) BC_C_X_s (DIMENSION_BC, DIM_M, DIM_N_s)
-!
+   ! Volumetric flow rate through a mass inflow boundary
+   real(c_real) :: BC_VolFlow_g(dim_bc), BC_VolFlow_s(dim_bc, dim_m)
 
-      logical:: CG_MI_CONVERTED_TO_PS(DIMENSION_BC)
+   ! Mass flow rate through a mass inflow boundary
+   real(c_real) :: BC_MassFlow_g(dim_bc), BC_MassFlow_s(dim_bc, dim_m)
 
+   ! Specified pressure drop cyclic boundary
+   real(c_real) :: delp_x, delp_y, delp_z, flux_g
 
-! Flag to specify the constant number of particles per cell
-! for the PIC solids
-! Statistical weight of parcels will be calculated by the code
-      integer :: BC_PIC_MI_CONST_NPC(DIMENSION_BC, DIM_M)
+   ! Partial slip wall boundary condition (gas only)
+   real(c_real) :: BC_hw_g(dim_bc)
+   real(c_real) :: BC_Uw_g(dim_bc)
+   real(c_real) :: BC_Vw_g(dim_bc)
+   real(c_real) :: BC_Ww_g(dim_bc)
 
-! Flag to specify the constant statistical weight.
-! for the PIC solids
-! Number of computational particles/parcels will be calculated by the code
-      real(c_real) :: BC_PIC_MI_CONST_STATWT(DIMENSION_BC, DIM_M)
+   ! Heat transfer boundary condition
+   real(c_real) :: BC_T_g   (dim_bc), BC_T_s   (dim_bc, dim_m)
+   real(c_real) :: BC_hw_T_g(dim_bc), BC_hw_T_s(dim_bc, dim_m)
+   real(c_real) :: BC_Tw_g  (dim_bc), BC_Tw_s  (dim_bc, dim_m)
+   real(c_real) :: BC_C_T_g (dim_bc), BC_C_T_s (dim_bc, dim_m)
 
-      CONTAINS
+   ! Species transfer boundary condition
+   real(c_real) :: BC_X_g(dim_bc, dim_n_g), BC_X_s(dim_bc, dim_m, dim_n_s)
+   real(c_real) :: BC_hw_X_g(dim_bc, dim_n_g)
+   real(c_real) :: BC_Xw_g  (dim_bc, dim_n_g)
+   real(c_real) :: BC_C_X_g (dim_bc, dim_n_g)
 
+   ! Character variable to determine the flow plane of a flow cell
+   character :: BC_Plane(dim_bc)
+
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-! Subroutine: ic_defined                                               !
+! Subroutine: bc_defined                                               !
 !                                                                      !
-! Purpose: Return if a IC region has been defined based on coordinates !
+! Purpose: Return if a BC region has been defined based on coordinates !
 ! defined in the input deck.                                           !
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
    logical function bc_defined(icv)
@@ -328,4 +88,227 @@
       if(bc_type(icv) == 'DUMMY') bc_defined = .false.
 
    end function bc_defined
+
+
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: write_out_bc                                            !
+!                                                                      !
+!  Purpose: Echo user input for BC regions.                            !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine write_out_bc(unit_out, dx, dy, dz, &
+      xlength, ylength, zlength, domlo, domhi)
+
+      use ic, only: nsw_, fsw_, psw_
+      use ic, only: pinf_, pout_
+      use ic, only: minf_
+
+      use param1, only: zero, is_defined
+
+      use calc_cell_module, only: calc_cell_bc_flow
+      use calc_cell_module, only: calc_cell_bc_wall
+
+      implicit none
+
+      integer,        intent(in) :: unit_out
+      real(c_real)  , intent(in) :: dx, dy, dz
+      real(c_real)  , intent(in) :: xlength, ylength, zlength
+      integer(c_int), intent(in) :: domlo(3), domhi(3)
+
+      integer :: bcv, m
+      integer :: i_w, j_s, k_b
+      integer :: i_e, j_n, k_t
+
+      logical :: flow_bc
+
+!-----------------------------------------------
+
+
+! Boundary Condition Data
+      write (unit_out, 1600)
+1600  format(//,3x,'7. BOUNDARY CONDITIONS')
+
+      if (cyclic_x_pd) then
+         write (unit_out, 1602) 'X', ' with pressure drop'
+         write (unit_out, 1603) 'X', DELP_X
+      else if (cyclic_x) then
+         write (unit_out, 1602) 'X'
+      endif
+      if (cyclic_y_pd) then
+         write (unit_out, 1602) 'Y', ' with pressure drop'
+         write (unit_out, 1603) 'Y', DELP_Y
+      else if (cyclic_y) then
+         write (unit_out, 1602) 'Y'
+      endif
+      if (cyclic_z_pd) then
+         write (unit_out, 1602) 'Z', ' with pressure drop'
+         write (unit_out, 1603) 'Z', DELP_Z
+      else if (cyclic_z) then
+         write (unit_out, 1602) 'Z'
+      endif
+
+ 1602 format(7X,'Cyclic boundary conditions in ',A,' direction',A)
+ 1603 format(7X,'Pressure drop (DELP_',A,') = ',G12.5)
+
+      do bcv = 1, dim_bc
+         if (bc_defined(bcv)) then
+
+            write (unit_out, 1610) bcv, bc_type(bcv)
+
+1610  format(/7x,'Boundary condition no : ',I4,/&
+              9X,'Type of boundary condition : ',A16)
+
+            select case (trim(bc_type(bcv)))
+            case ('MASS_INFLOW','MI')
+               write (unit_out,"(9x,'Inlet with specified mass flux')")
+               call calc_cell_bc_flow(bcv, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .true.
+            case ('MASS_OUTFLOW','MO')
+               write (unit_out,"(9x,'Outlet with specified mass flux')")
+               call calc_cell_bc_flow(bcv, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+            case ('P_INFLOW','PI')
+               write (unit_out,"(9x,'Inlet with specified gas pressure')")
+               call calc_cell_bc_flow(bcv, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .true.
+            case ('P_OUTFLOW','PO')
+               write (unit_out,"(9x,'Outlet with specified gas pressure')")
+               call calc_cell_bc_flow(bcv, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .true.
+            case ('FREE_SLIP_WALL','FSW')
+               write (unit_out,"(9x,'Velocity gradients are zero')")
+               call calc_cell_bc_wall(bcv, domlo, domhi, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .false.
+            case ('NO_SLIP_WALL','NSW')
+               write (unit_out,"(9x,'Velocity is zero at wall')")
+               call calc_cell_bc_wall(bcv, domlo, domhi, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .false.
+            case ('PAR_SLIP_WALL','PSW')
+               write (unit_out,"(9x,'Partial slip condition at wall')")
+               call calc_cell_bc_wall(bcv, domlo, domhi, &
+                  xlength, ylength, zlength, dx, dy, dz, &
+                  bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+                  bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
+               flow_bc = .false.
+            end select
+
+            write (unit_out, 1620) &
+               bc_x_w(bcv), dx*dble(i_w-1), bc_x_e(bcv), dx*dble(i_e), &
+               bc_y_s(bcv), dy*dble(j_s-1), bc_y_n(bcv), dy*dble(j_n), &
+               bc_z_b(bcv), dz*dble(k_b-1), bc_z_t(bcv), dz*dble(k_t)
+
+1620  format(9x,45X,' Specified  ',5X,' Simulated  ',/&
+         9X,'X coordinate of west face   (BC_X_w) ...... ',g12.5, 5x, g12.5/,&
+         9x,'X coordinate of east face   (BC_X_e) ...... ',g12.5, 5x, g12.5/,&
+         9x,'Y coordinate of south face  (BC_Y_s) ...... ',g12.5, 5x, g12.5/,&
+         9x,'Y coordinate of north face  (BC_Y_n) ...... ',g12.5, 5x, g12.5/,&
+         9x,'Z coordinate of bottom face (BC_Z_b) ...... ',g12.5, 5x, g12.5/,&
+         9x,'Z coordinate of top face    (BC_Z_t) ...... ',g12.5, 5x, g12.5/)
+
+            write (unit_out, 1630) i_w, i_e, j_s, j_n, k_b, k_t
+
+1630  format(&
+         9X,'I index of cell at west   (BC_I_w) ',24('.'),1x,I4,/,&
+         9X,'I index of cell at east   (BC_I_e) ',24('.'),1x,I4,/,&
+         9X,'J index of cell at south  (BC_J_s) ',24('.'),1x,I4,/,&
+         9X,'J index of cell at north  (BC_J_n) ',24('.'),1x,I4,/,&
+         9X,'K index of cell at bottom (BC_K_b) ',24('.'),1x,I4,/,&
+         9X,'K index of cell at top    (BC_K_t) ',24('.'),1x,I4)
+
+
+            if(flow_bc) then
+               write (unit_out, "(' ')")
+               write (unit_out,1640) bc_ep_g(bcv)
+               if(is_defined(bc_p_g(bcv))) &
+                  write (unit_out,1641) bc_p_g(bcv)
+               if(is_defined(bc_t_g(bcv))) &
+                  write (unit_out,1642) bc_t_g(bcv)
+               if(is_defined(bc_massflow_g(bcv))) &
+                  write (unit_out,1648) bc_massflow_g(bcv)
+               if(is_defined(bc_volflow_g(bcv)))  &
+                  write (unit_out,1649) bc_volflow_g(bcv)
+               write (unit_out, 1650) bc_u_g(bcv)
+               write (unit_out, 1651) bc_v_g(bcv)
+               write (unit_out, 1652) bc_w_g(bcv)
+
+1640  format(9X,'Gas phase volume fraction (BC_EP_g) ....... ',g12.5)
+1641  format(9X,'Gas pressure (BC_P_g) ..................... ',g12.5)
+1642  format(9X,'Gas temperature (BC_T_g) .................. ',g12.5)
+1648  format(9X,'Gas mass flow rate (BC_MassFlow_g) ........ ',g12.5)
+1649  format(9X,'Gas volumetric flow rate (BC_VOLFLOW_g) ... ',g12.5)
+1650  format(9X,'X-component of gas velocity (BC_U_g) ...... ',g12.5)
+1651  format(9X,'Y-component of gas velocity (BC_V_g) ...... ',g12.5)
+1652  format(9X,'Z-component of gas velocity (BC_W_g) ...... ',g12.5)
+
+               do m = 1, dim_m
+                  if(bc_ep_s(bcv,m) > zero) then
+                     write (unit_out, "(' ')")
+                     write (unit_out, 1660) m, bc_ep_s(bcv,m)
+                     write (unit_out, "(' ')")
+                     if(is_defined(bc_massflow_s(bcv,m))) &
+                        write(unit_out, 1668) m, bc_massflow_s(bcv,m)
+                     if(is_defined(bc_volflow_s(bcv,m)))  &
+                        write(unit_out, 1669) m, bc_volflow_s(bcv,m)
+                     write(unit_out,1670)m,bc_u_s(bcv,m)
+                     write(unit_out,1671)m,bc_v_s(bcv,m)
+                     write(unit_out,1672)m,bc_w_s(bcv,m)
+                  endif
+               enddo
+
+1660  format(9X,'Solids phase-',I2,' Volume fraction (BC_EP_s) ............. ',g12.5)
+1668  format(9X,'Solids phase-',I2,' mass flow rate (BC_MASSFLOW_s) ........ ',g12.5)
+1669  format(9X,'Solids phase-',I2,' volumetric flow rate (BC_VOLFLOW_s) ... ',g12.5)
+1670  format(9X,'X-component of solids phase-',I2,' velocity (BC_U_s) ...... ',g12.5)
+1671  format(9X,'Y-component of solids phase-',I2,' velocity (BC_V_s) ...... ',g12.5)
+1672  format(9X,'Z-component of solids phase-',I2,' velocity (BC_W_s) ...... ',g12.5)
+
+            else
+               if (bc_type(bcv) == 'PAR_SLIP_WALL' .or. bc_type(bcv) == 'PSW') &
+                  write (unit_out, 1675) bc_hw_g(bcv), &
+                  bc_uw_g(bcv), bc_vw_g(bcv), bc_ww_g(bcv)
+
+1675  format(9X,'Partial slip coefficient (BC_hw_g) .... ',G12.5,/,&
+             9X,'Slip velocity U at wall (BC_Uw_g) ..... ',G12.5,/,&
+             9X,'Slip velocity V at wall (BC_Vw_g) ..... ',G12.5,/,&
+             9X,'Slip velocity W at wall (BC_Ww_g) ..... ',G12.5)
+
+            endif
+         endif
+      enddo
+
+      return
+
+
+
+
+
+   end subroutine write_out_bc
+
+
 end module bc

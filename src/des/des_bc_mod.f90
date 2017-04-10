@@ -16,7 +16,7 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use param, only: dimension_bc
+      use param, only: dim_bc
 
       integer :: DEM_BCMI
       integer :: DEM_BCMO
@@ -24,8 +24,8 @@
       logical DEM_MIO  ! either inlet or outlet exists
 
 ! Map between DEM MI/MO IDs and the user input BC index.
-      integer :: DEM_BCMI_MAP(DIMENSION_BC)
-      integer :: DEM_BCMO_MAP(DIMENSION_BC)
+      integer :: DEM_BCMI_MAP(DIM_BC)
+      integer :: DEM_BCMO_MAP(DIM_BC)
 
 ! This array contains integers representing the mass/solid phase indices
 ! present at a specific boundary condtion in proportion to their

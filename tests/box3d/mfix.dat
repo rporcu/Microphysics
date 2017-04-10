@@ -51,7 +51,7 @@
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-  COORDINATES = 'CARTESIAN'
+
 
   XLENGTH =   64   IMAX = 64
   ZLENGTH =   64   KMAX = 64

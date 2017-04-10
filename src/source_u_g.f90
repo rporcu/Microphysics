@@ -29,7 +29,7 @@ contains
 
       use functions, only: avg
 
-      use geometry, only: cyclic_x_pd
+      use bc, only: cyclic_x_pd
 
       use matrix, only: e, w, s, n, t, b
       use scales, only: p_scale

@@ -39,7 +39,7 @@ module check_boundary_conditions_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Maximum number of BCs
-      use param, only: DIMENSION_BC
+      use param, only: DIM_BC
 ! Maximum number of disperse phases
       use param, only: DIM_M
 
@@ -76,7 +76,7 @@ module check_boundary_conditions_module
       call check_bc_geometry
 
 ! Loop over each defined BC and check the user data.
-      do bcv = 1, dimension_bc
+      do bcv = 1, dim_bc
 
          if (bc_defined(bcv)) then
 

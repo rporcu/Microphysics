@@ -28,7 +28,7 @@ module calc_d_mod
    subroutine calc_d_e(slo, shi, ulo, uhi, alo, ahi, d_e, A_m, &
                        ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
-      use geometry, only: cyclic_x
+      use bc, only: cyclic_x
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: ulo(3),uhi(3)
@@ -86,7 +86,7 @@ module calc_d_mod
    subroutine calc_d_n(slo, shi, vlo, vhi, alo, ahi, d_n, A_m,&
                        ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
-      use geometry, only: cyclic_y
+      use bc, only: cyclic_y
 
       integer, intent(in   ) :: slo(3),shi(3)
       integer, intent(in   ) :: vlo(3),vhi(3)
@@ -145,7 +145,7 @@ module calc_d_mod
    subroutine calc_d_t(slo, shi, wlo, whi, alo, ahi, d_t, A_m,&
       ep_g, f_gds, dx, dy, dz, domlo, domhi)
 
-      use geometry, only: cyclic_z
+      use bc, only: cyclic_z
 
       integer     , intent(in   ) :: slo(3),shi(3)
       integer     , intent(in   ) :: wlo(3),whi(3)

@@ -33,7 +33,7 @@ contains
   subroutine set_bc_flow(xlength, ylength, zlength, dx, dy, dz) &
      bind(C,name ="set_bc_flow")
 
-     use param,    only: dimension_bc
+     use param,    only: dim_bc
      use bc,       only: bc_defined, bc_type
      use bc,       only: bc_ep_s
 
@@ -46,7 +46,7 @@ contains
     logical :: check(dim_m)  ! Flag to skip checks on indexed solid phase.
 
     ! Loop over each defined BC and check the user data.
-    do bcv = 1, dimension_bc
+    do bcv = 1, dim_bc
 
        if(bc_defined(bcv)) then
 
@@ -180,6 +180,8 @@ contains
      dx, dy, dz)
 
      use bc, only: bc_ep_g
+     use bc, only: bc_x_w, bc_y_s, bc_z_b
+     use bc, only: bc_x_e, bc_y_n, bc_z_t
      use calc_cell_module, only: calc_cell_bc_flow
 
      implicit none
@@ -202,8 +204,11 @@ contains
     case ('B'); sgn = -sgn
     end select
 
-    call calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
-       dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+    call calc_cell_bc_flow(bcv, &
+       xlength, ylength, zlength, dx, dy, dz, &
+       bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+       bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
 
     select case(bc_plane(bcv))
     case('W','E')
@@ -242,7 +247,10 @@ contains
   subroutine solids_volflow_to_velocity(bcv, m, &
      xlength, ylength, zlength, dx, dy, dz)
 
+
      use bc, only: bc_ep_s
+     use bc, only: bc_x_w, bc_y_s, bc_z_b
+     use bc, only: bc_x_e, bc_y_n, bc_z_t
      use calc_cell_module, only: calc_cell_bc_flow
 
      implicit none
@@ -265,8 +273,11 @@ contains
      case ('B'); sgn = -sgn
      end select
 
-     call calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
-        dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+    call calc_cell_bc_flow(bcv, &
+       xlength, ylength, zlength, dx, dy, dz, &
+       bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+       bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+       i_w, i_e, j_s, j_n, k_b, k_t)
 
      select case(bc_plane(bcv))
      case('W','E')

@@ -12,7 +12,7 @@ contains
 
     use run, only: IFILE_NAME, IFILE_NAME_DEFAULT
 
-    integer(c_int),         intent(in), value :: len        
+    integer(c_int),         intent(in), value :: len
     character(kind=c_char), intent(in)        :: fname(len)
     integer                                   :: nc
 
@@ -40,10 +40,9 @@ contains
      bind(C, name="mfix_get_data")
 
     use fld_const, only: ro_g0
-    use geometry, only: coordinates
-    use geometry, only: cyclic_x,    cyclic_y,    cyclic_z
-    use geometry, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
-    use geometry, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
+    use bc, only: cyclic_x,    cyclic_y,    cyclic_z
+    use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
+    use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
     use get_data_module, only: get_data
     use leqsol, only: max_nit
     use param1, only: is_undefined
@@ -86,13 +85,6 @@ contains
     cyclic_zC = merge(1,0,cyclic_z .or. cyclic_z_pd .or. cyclic_z_mf)
 
     cyclic_mf = merge(1,0,cyclic_x_mf .or. cyclic_y_mf .or. cyclic_z_mf)
-
-    if (coordinates .eq. 'CARTESIAN') then
-       coord_C = 0
-    else
-       print *,'UNKNOWN COORDINATES'
-       stop
-    end if
 
   end subroutine mfix_get_data
 

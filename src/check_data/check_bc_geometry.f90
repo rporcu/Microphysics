@@ -37,7 +37,7 @@ module check_bc_geometry_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! The max number of BCs.
-      use param, only: dimension_bc
+      use param, only: dim_bc
 
       implicit none
 
@@ -61,7 +61,7 @@ module check_bc_geometry_module
 
       call init_err_msg("CHECK_BC_GEOMETRY")
 
-      do bcv = 1, dimension_bc
+      do bcv = 1, dim_bc
 
          if(bc_type(bcv)/=undefined_c .and. bc_type(bcv)/='DUMMY')then
             recognized_bc_type = .false.
@@ -169,8 +169,11 @@ module check_bc_geometry_module
 
       call init_err_msg("check_bc_geometry_wall")
 
-      call calc_cell_bc_wall(bcv, domlo, domhi, xlength, ylength, &
-         zlength, dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+      call calc_cell_bc_wall(bcv, domlo, domhi, &
+         xlength, ylength, zlength, dx, dy, dz, &
+         bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+         bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+         i_w, i_e, j_s, j_n, k_b, k_t)
 
 ! check for valid values
       ier = 0
@@ -243,8 +246,11 @@ module check_bc_geometry_module
 
       call init_err_msg("CHECK_BC_GEOMETRY_FLOW")
 
-      call calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
-         dx, dy, dz, i_w, i_e, j_s, j_n, k_b, k_t)
+      call calc_cell_bc_flow(bcv, &
+         xlength, ylength, zlength, dx, dy, dz, &
+         bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
+         bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
+         i_w, i_e, j_s, j_n, k_b, k_t)
 
 ! check for valid values
       ier = 0
