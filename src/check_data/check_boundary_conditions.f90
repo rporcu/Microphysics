@@ -55,8 +55,6 @@ module check_boundary_conditions_module
       use check_bc_outflow_module,  only: check_bc_outflow
       use check_bc_outflow_module,  only: check_bc_p_outflow
 
-      use check_bc_dem_module, only: check_bc_dem
-
       implicit none
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)

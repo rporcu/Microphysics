@@ -2,7 +2,6 @@ module check_point_sources_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use get_ps_module,  only: get_ps
   use run,            only: IFILE_NAME
   use param1,         only: undefined, undefined_i, is_defined, is_undefined, zero
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
