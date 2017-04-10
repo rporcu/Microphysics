@@ -118,13 +118,7 @@ MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
 	pti.GetPosition(xp, yp, zp);
     }
 
-    // Fill des_pos_new
-    for ( int i = 0; i < numberOfParticles; ++i )
-    {
-	des_pos_new[3*i]   = xp[i];
-	des_pos_new[3*i+1] = yp[i];
-	des_pos_new[3*i+2] = zp[i];
-    }
+    Pack3DArrays(des_pos_new, xp, yp, zp);
     
 }
 
@@ -245,11 +239,14 @@ void
 MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
 				     Array<Real>& comp2, Array<Real>& comp3 )
 {
-    for ( int i = 0; i < comp1.size(); i++ )
+
+    const int  np = numberOfParticles; 
+
+    for ( int i = 0; i < np; i++ )
     {
-	vec[3*i]   = comp1[i];
-	vec[3*i+1] = comp2[i];
-	vec[3*i+2] = comp3[i];
+    	vec[i]      = comp1[i];
+    	vec[i+np]   = comp2[i];
+    	vec[i+2*np] = comp3[i];
     }
     
 }
