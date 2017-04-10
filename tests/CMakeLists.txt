@@ -17,12 +17,13 @@ foreach( THIS_TEST ${TESTS})
    STRING(REPLACE "/" "_" TEST_NAME ${THIS_TEST} )
 
    set(TEST_DIR ${CMAKE_BINARY_DIR}/tests/${THIS_TEST})
+   set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/tests/${THIS_TEST})
 
    # Copy file to binary dir
    FILE( COPY ${CMAKE_CURRENT_SOURCE_DIR}/${THIS_TEST} DESTINATION ${CMAKE_BINARY_DIR}/tests/ )
 
    # Setup for building a test
-   FILE(GLOB USR_OVERRIDES ${TEST_DIR}/*.f90)
+   FILE(GLOB USR_OVERRIDES ${SOURCE_DIR}/*.f90)
 
    set(TEST_EXE mfix_${TEST_NAME})
 
