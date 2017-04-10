@@ -45,11 +45,11 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     	if (!ifs.good())
     	    amrex::FileOpenFailed(file);
         
-    	int num_particles = 0;
-    	ifs >> num_particles >> std::ws;
+	// int numberOfParticles = 0;
+    	ifs >> numberOfParticles >> std::ws;
 
 	// Issue an error if nparticles = 0 is specified
-	if ( num_particles == 0 ){
+	if ( numberOfParticles == 0 ){
 	    Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
 \nPerhaps you forgot to specify the number of particles on the first line??? ");
 	}
@@ -63,7 +63,7 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     	ParticleType p;
     	std::array<Real, PIdx::nattribs> attribs;
 
-    	for (int i = 0; i < num_particles; i++) {
+    	for (int i = 0; i < numberOfParticles; i++) {
      
     	    // Here we read the struct data into the particle.
     	    ifs >> p.pos(0);
@@ -102,7 +102,6 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     }
     Redistribute();
 }
- 
 
 
 void
@@ -113,7 +112,6 @@ MFIXParticleContainer:: printParticles() {
     	const auto& particle_structs = kv.second.GetArrayOfStructs();
     	const auto& particle_attribs = kv.second.GetStructOfArrays();
     	for (unsigned i = 0; i < particle_structs.numParticles(); ++i) {
-    	    // std::cout << particle_structs[i] << " ";
     	    for (int j = 0; j < PIdx::nattribs; j++) {
     		std::cout << particle_attribs[j][i] << " " << std::endl;
     	    }

@@ -79,10 +79,15 @@ public:
 
     void AllocData ();
 
+    const int  GetNParticles () { return numberOfParticles; };
+    
+
 private:
 
     static void ReadStaticParameters ();
 
+    int  numberOfParticles = 0; 
+    
     // runtime parameters
     static int do_tiling;
     static IntVect tile_size;
