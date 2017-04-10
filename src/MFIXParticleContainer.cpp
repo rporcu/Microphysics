@@ -103,6 +103,34 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     Redistribute();
 }
 
+void
+MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
+
+
+    des_pos_new.resize(3*numberOfParticles);
+
+    Array<Real>  xp, yp, zp;
+
+    xp.resize(numberOfParticles);
+    yp.resize(numberOfParticles);
+    zp.resize(numberOfParticles);
+
+    int lev = 0;
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+	pti.GetPosition(xp, yp, zp);
+    }
+
+    // Fill des_pos_new
+    for ( int i = 0; i < numberOfParticles; ++i )
+    {
+	des_pos_new[3*i]   = xp[i];
+	des_pos_new[3*i+1] = yp[i];
+	des_pos_new[3*i+2] = zp[i];
+    }
+    
+}
+
 
 void
 MFIXParticleContainer:: printParticles() {

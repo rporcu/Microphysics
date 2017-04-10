@@ -80,6 +80,9 @@ public:
     void AllocData ();
 
     const int  GetNParticles () { return numberOfParticles; };
+
+    void GetParticlesPosition ( Array<Real>& des_pos_new );
+
     
 
 private:
