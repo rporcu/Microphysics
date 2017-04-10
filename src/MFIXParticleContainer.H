@@ -83,10 +83,23 @@ public:
 
     void GetParticlesPosition ( Array<Real>& des_pos_new );
 
+    void GetParticlesAttributes (
+	Array<int>& particle_state, Array<int>& particle_phase,
+	Array<Real>& des_radius,  Array<Real>& ro_sol,
+	Array<Real>& pvol,   Array<Real>& pmass,
+	Array<Real>& omoi,   Array<Real>& des_vel_new,
+	Array<Real>& omega_new,   Array<Real>& des_acc_old,
+	Array<Real>& rot_acc_old,   Array<Real>& drag_fc,
+	Array<Real>& fc,   Array<Real>& tow) ;
+    
+
     
 
 private:
 
+    void Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
+		       Array<Real>& comp2, Array<Real>& comp3 );
+    
     static void ReadStaticParameters ();
 
     int  numberOfParticles = 0; 

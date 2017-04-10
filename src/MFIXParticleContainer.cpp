@@ -106,9 +106,6 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 void
 MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
 
-
-    des_pos_new.resize(3*numberOfParticles);
-
     Array<Real>  xp, yp, zp;
 
     xp.resize(numberOfParticles);
@@ -130,6 +127,75 @@ MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
     }
     
 }
+
+void
+MFIXParticleContainer:: GetParticlesAttributes (
+    Array<int>& particle_state, Array<int>& particle_phase,
+    Array<Real>& des_radius,  Array<Real>& ro_sol,
+    Array<Real>& pvol,   Array<Real>& pmass,
+    Array<Real>& omoi,   Array<Real>& des_vel_new,
+    Array<Real>& omega_new,   Array<Real>& des_acc_old,
+    Array<Real>& rot_acc_old,   Array<Real>& drag_fc,
+    Array<Real>& fc,   Array<Real>& tow) {
+
+
+    int lev = 0;
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+	auto& attribs = pti.GetAttribs();
+
+	des_radius = attribs[PIdx::radius];
+	ro_sol     = attribs[PIdx::density];
+	pvol       = attribs[PIdx::volume];
+	pmass      = attribs[PIdx::mass];
+	omoi       = attribs[PIdx::oneOverI];	
+	
+	auto& state    = attribs[PIdx::state];
+	auto& phase    = attribs[PIdx::phase];
+	auto& velx     = attribs[PIdx::velx];
+	auto& vely     = attribs[PIdx::vely];
+	auto& velz     = attribs[PIdx::velz];	
+	auto& omegax   = attribs[PIdx::omegax];
+	auto& omegay   = attribs[PIdx::omegay];
+	auto& omegaz   = attribs[PIdx::omegaz];
+	auto& accx     = attribs[PIdx::accx];
+	auto& accy     = attribs[PIdx::accy];
+	auto& accz     = attribs[PIdx::accz];	
+	auto& alphax   = attribs[PIdx::alphax];
+	auto& alphay   = attribs[PIdx::alphay];
+	auto& alphaz   = attribs[PIdx::alphaz];	
+	auto& dragx    = attribs[PIdx::dragx];
+	auto& dragy    = attribs[PIdx::dragy];
+	auto& dragz    = attribs[PIdx::dragz];
+	auto& cforcex  = attribs[PIdx::cforcex];
+	auto& cforcey  = attribs[PIdx::cforcey];
+	auto& cforcez  = attribs[PIdx::cforcez];
+	auto& acforcex = attribs[PIdx::acforcex];
+	auto& acforcey = attribs[PIdx::acforcey];
+	auto& acforcez = attribs[PIdx::acforcez];
+	
+	Pack3DArrays(des_vel_new, velx, vely, velz);
+	Pack3DArrays(omega_new, omegax, omegay, omegaz);
+	Pack3DArrays(des_acc_old, accx, accy, accz);
+	Pack3DArrays(rot_acc_old, alphax, alphay, alphaz);
+	Pack3DArrays(drag_fc, dragx, dragy, dragz);
+	Pack3DArrays(fc, cforcex, cforcey, cforcez);
+	Pack3DArrays(tow, acforcex, acforcey, acforcez);
+	
+	// State and phase need type conversion
+	for ( int i = 0; i < numberOfParticles; i++ )
+	{
+	    particle_state[i]  = int(state[i]);
+	    particle_phase[i]  = int(phase[i]);
+
+	}
+
+    }
+}
+	
+
+
+
 
 
 void
@@ -174,6 +240,21 @@ MFIXParticleContainer::InitData()
 {
 }
 
+
+void
+MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
+				     Array<Real>& comp2, Array<Real>& comp3 )
+{
+    for ( int i = 0; i < comp1.size(); i++ )
+    {
+	vec[3*i]   = comp1[i];
+	vec[3*i+1] = comp2[i];
+	vec[3*i+2] = comp3[i];
+    }
+    
+}
+
+    
 void
 MFIXParticleContainer::Evolve (int lev, Real dt)
 {
