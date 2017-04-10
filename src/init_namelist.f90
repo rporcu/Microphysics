@@ -52,7 +52,7 @@ MODULE INIT_NAMELIST_MODULE
       use run, only: call_usr, description, detect_stall, discretize, tstop, units
       use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
       use scales, only: p_ref, p_scale
-      use toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
+      use residual, only: norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
@@ -383,16 +383,6 @@ MODULE INIT_NAMELIST_MODULE
       DISCRETIZE(:) = 0
 !</keyword>
 
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    The code declares divergence if the velocity anywhere in the domain
-!    exceeds a maximum value.  This maximum value is automatically
-!    determined from the boundary values. The user may scale the maximum
-!    value by adjusting this scale factor [1.0d0].
-!  </description>
-      MAX_INLET_VEL_FAC = ONE
-!</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
 !  <description>

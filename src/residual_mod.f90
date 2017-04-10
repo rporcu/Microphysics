@@ -5,8 +5,14 @@
 
       Use param, only: DIM_n
 
+      ! Tolerance in residuals allowed for convergence
+      real(c_real) :: tol_resid
+      ! Minimum residual for declaring divergence
+      real(c_real) :: tol_diverge
+      ! Factor for normalizing the residual of gas cont. eq.
+      real(c_real) :: norm_g
+
       integer, parameter :: MAX_resid_INDEX = 8
-!
       integer, parameter :: Nresid = 8
 
       integer, parameter :: resid_p  =  1 ! Pressure
@@ -175,8 +181,6 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine calc_resid_pp(alo, ahi, b_m, b_mmax, num, den)
-
-      use toleranc, only: norm_g
 
       implicit none
 

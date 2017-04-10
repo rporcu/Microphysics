@@ -34,7 +34,6 @@
       use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
       use run, only: units, discretize, solids_model
       use scales, only: p_scale, p_ref
-      use toleranc, only: tol_com, zero_ep_s
       use ur_facs, only: ur_fac
 
 
@@ -311,10 +310,6 @@
          '.RES','Restart file (Binary)', RES_DT
 !
 !  Print out tolerance values from TOLERANCE.INC
-!
-      WRITE (UNIT_OUT, 1900)
-      WRITE (UNIT_OUT, 1901) ZERO_EP_S
-      WRITE (UNIT_OUT, 1905) TOL_COM
 
 
       RETURN
@@ -414,60 +409,9 @@
          /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
          ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)
 !
- 1600 FORMAT(//,3X,'7. BOUNDARY CONDITIONS')
- 1610 FORMAT(/7X,'Boundary condition no : ',I4)
- 1611 FORMAT(9X,'Type of boundary condition : ',A16)
- 1612 FORMAT(11X,'(Inlet with specified gas and solids mass flux)')
- 1613 FORMAT(11X,'(Outlet with specified gas and solids mass flux)')
- 1614 FORMAT(11X,'(Inlet with specified gas pressure)')
- 1615 FORMAT(11X,'(Outlet with specified gas pressure)')
- 1616 FORMAT(11X,'(Gradients of parallel velocity components are zero)')
- 1617 FORMAT(11X,'(Velocity is zero at wall)')
- 1618 FORMAT(11X,'(Partial slip condition at wall)')
- 1619 FORMAT(11X,'(Outflow condition)')
- 1620 FORMAT(9X,39X,' Specified  ',5X,' Simulated  ',/9X,&
-         'X coordinate of west face   (BC_X_w) = ',G12.5,5X,G12.5/,9X,&
-         'X coordinate of east face   (BC_X_e) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of south face  (BC_Y_s) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of north face  (BC_Y_n) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of bottom face (BC_Z_b) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of top face    (BC_Z_t) = ',G12.5,5X,G12.5)
- 1630 FORMAT(9X,'I index of cell at west   (BC_I_w) = ',I4,/,9X,&
-         'I index of cell at east   (BC_I_e) = ',I4,/,9X,&
-         'J index of cell at south  (BC_J_s) = ',I4,/,9X,&
-         'J index of cell at north  (BC_J_n) = ',I4,/,9X,&
-         'K index of cell at bottom (BC_K_b) = ',I4,/,9X,&
-         'K index of cell at top    (BC_K_t) = ',I4)
- 1635 FORMAT(9X,'Boundary area = ',G12.5)
- 1640 FORMAT(9X,'Void fraction (BC_EP_g) = ',G12.5)
- 1641 FORMAT(9X,'Gas pressure (BC_P_g) = ',G12.5)
- 1642 FORMAT(9X,'Gas temperature (BC_T_g) = ',G12.5)
- 1648 FORMAT(9X,'Gas mass flow rate (BC_MASSFLOW_g) = ',G12.5)
- 1649 FORMAT(9X,'Gas volumetric flow rate (BC_VOLFLOW_g) = ',G12.5)
- 1650 FORMAT(9X,'X-component of gas velocity (BC_U_g) = ',G12.5)
- 1651 FORMAT(9X,'Y-component of gas velocity (BC_V_g) = ',G12.5)
- 1652 FORMAT(9X,'Z-component of gas velocity (BC_W_g) = ',G12.5)
- 1660 FORMAT(9X,'Solids phase-',I2,' Volume fr. (BC_EP_s) = ',G12.5)
-
- 1668 FORMAT(9X,'Solids phase-',I2,' mass flow rate (BC_MASSFLOW_s) =',G12.5)
- 1669 FORMAT(9X,'Solids phase-',I2,' volumetric flow rate (BC_VOLFLOW_s) =',&
-         G12.5)
- 1670 FORMAT(9X,'X-component of solids phase-',I2,' velocity (BC_U_s) =',G12.5)
- 1671 FORMAT(9X,'Y-component of solids phase-',I2,' velocity (BC_V_s) =',G12.5)
- 1672 FORMAT(9X,'Z-component of solids phase-',I2,' velocity (BC_W_s) =',G12.5)
- 1675 FORMAT(9X,'Partial slip coefficient   (BC_hw_g) = ',G12.5,/,9X,&
-         'Slip velociity U at wall   (BC_Uw_g) = ',G12.5,/,9X,&
-         'Slip velociity V at wall   (BC_Vw_g) = ',G12.5,/,9X,&
-         'Slip velociity W at wall   (BC_Ww_g) = ',G12.5)
-!
  1800 FORMAT(//,3X,'9. OUTPUT DATA FILES:',/7X,'Extension',T18,&
          'Description',T59,'Interval for writing')
  1801 FORMAT(7X,A4,T18,A,T61,G12.5)
-!
- 1900 FORMAT(//,3X,'10. TOLERANCES',/7X,&
-         'The following values are specified in the file TOLERANCE.INC.')
- 1901 FORMAT(/7X,'Minimum value of EP_s tracked (ZERO_EP_s) = ',G12.5)
- 1905 FORMAT(7X,'Tolerance for species and energy balances (TOL_COM) = ',G12.5)
 !
 
     CONTAINS

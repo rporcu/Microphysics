@@ -43,7 +43,7 @@
       Use discretelement, only: mew, mew_w
       use constant, only: gravity
       use param1, only: zero
-      use toleranc, only: COMPARE
+      use param1, only: equal
       use usr, only: u0
       use amrex_fort_module, only : c_real => amrex_real
 
@@ -75,7 +75,7 @@
       SLIP = DES_VEL_NEW(1,2) + OMEGA_NEW(1,1)*lRad
 
 ! Check for a sign flip or a small difference.
-      IF(COMPARE(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
+      IF(equal(abs(SLIP),1.0d-6) .OR. SLIP < ZERO) THEN
          ROLLFRIC_END = .TRUE.
 
 ! Open the files.

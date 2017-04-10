@@ -20,7 +20,7 @@ contains
       use residual, only: resid_index, resid_string, resid_x
       use residual, only: sum5_resid, group_resid, resid_prefix, resid_grp, hydro_grp
       use run, only: detect_stall
-      use toleranc, only: tol_resid, tol_diverge
+      use residual, only: tol_resid, tol_diverge
 
       use param1, only: zero, undefined_i, is_undefined, large_number
 

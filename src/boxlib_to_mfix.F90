@@ -48,7 +48,7 @@ contains
     use param1, only: is_undefined
     use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
-    use toleranc, only: norm_g
+    use residual, only: norm_g
 
     implicit none
 

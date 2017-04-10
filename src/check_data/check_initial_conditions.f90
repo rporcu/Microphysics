@@ -266,7 +266,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
     subroutine check_ic_solids_phases(ICV)
 
-      use toleranc, only: compare
+      use param1, only: equal
       use constant, only: mmax
       use ic,       only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
       use ic,       only: ic_ep_g, ic_type
@@ -317,7 +317,7 @@ contains
            'Please correct the input deck.')
 
       ! Verify that the volume fractions sum to one.
-      if(basic_ic .and. .not.compare(sum_ep,one)) then
+      if(basic_ic .and. .not.equal(sum_ep,one)) then
          write(err_msg,1410) icv
          call flush_err_msg(abort=.true.)
       endif

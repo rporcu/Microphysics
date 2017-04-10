@@ -49,7 +49,7 @@ MODULE read_namelist_module
       use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
       use run, only: IFILE_NAME
       use scales, only: p_ref, p_scale
-      use toleranc, only: max_inlet_vel_fac, norm_g, tol_diverge, tol_resid
+      use residual, only: norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment

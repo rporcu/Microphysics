@@ -26,6 +26,7 @@ build:
     - mkdir build
     - cd build
     - cmake ..
+    - make -j 4
     - make build_tests
 
 test:

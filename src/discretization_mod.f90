@@ -241,7 +241,7 @@ MODULE discretization
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       real(c_real) FUNCTION PHI_C_OF (PHI_U, PHI_C, PHI_D)
       use param1, only: zero
-      use toleranc, only: compare
+      use param1, only: equal
       IMPLICIT NONE
       real(c_real), INTENT(IN) :: PHI_U
       real(c_real), INTENT(IN) :: PHI_C
@@ -249,7 +249,7 @@ MODULE discretization
 
       real(c_real) :: DEN
 
-      IF (COMPARE(PHI_D,PHI_U)) THEN
+      IF (equal(PHI_D,PHI_U)) THEN
          PHI_C_OF = ZERO
       ELSE
          DEN = PHI_D - PHI_U
