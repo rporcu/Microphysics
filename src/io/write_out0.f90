@@ -27,7 +27,6 @@
       use ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
-      use output, only: out_dt, res_dt
       use param, only: dimension_c, dimension_ic, dim_bc
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
@@ -298,18 +297,6 @@
       call write_out_bc(unit_out, dx, dy, dz, &
          xlength, ylength, zlength, domlo, domhi)
 
-!
-!  Print out file descriptions and write intervals.
-!
-      WRITE (UNIT_OUT, 1800)
-      WRITE (UNIT_OUT, 1801) &
-         '.OUT','This file (ASCII)',OUT_DT
-      WRITE (UNIT_OUT, 1801) &
-         '.LOG','Log file containing messages (ASCII)',UNDEFINED
-      WRITE (UNIT_OUT, 1801) &
-         '.RES','Restart file (Binary)', RES_DT
-!
-!  Print out tolerance values from TOLERANCE.INC
 
 
       RETURN
@@ -408,11 +395,6 @@
  1570 FORMAT(9X,'X-component of solids phase-',I2,' velocity (IC_U_s) =',G12.5,&
          /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
          ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)
-!
- 1800 FORMAT(//,3X,'9. OUTPUT DATA FILES:',/7X,'Extension',T18,&
-         'Description',T59,'Interval for writing')
- 1801 FORMAT(7X,A4,T18,A,T61,G12.5)
-!
 
     CONTAINS
 

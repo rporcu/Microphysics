@@ -123,7 +123,7 @@
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-  RES_DT = 1.0d3  ! interval to update restart (.RES) file
+
 
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
@@ -134,5 +134,3 @@
 
 #_______________________________________________________________________
 # DMP SETUP
-
-  ENABLE_DMP_LOG = .F.

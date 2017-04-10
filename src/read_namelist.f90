@@ -36,8 +36,8 @@ MODULE read_namelist_module
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, leq_it, leq_method
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
-      use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
-      use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
+      use output, only: full_log, nlog
+      use output, only: usr_dt, usr_ext, usr_format, usr_type, usr_var
       use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
@@ -318,13 +318,6 @@ MODULE read_namelist_module
 
 
 ! Output control keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&OUTPUT_CONTROL_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=OUTPUT_CONTROL_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
       STRING=''; STRING = '&OUTPUT_CONTROL_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=OUTPUT_CONTROL_UNLOCKED, IOSTAT=IOS)

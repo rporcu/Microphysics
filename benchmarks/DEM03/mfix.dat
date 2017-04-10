@@ -161,8 +161,8 @@
 #_______________________________________________________________________
 # OUTPUT CONTROL SECTION
 
-  RES_DT = 0.10
-  VTP_DT = 0.01
+
+
 
   FULL_LOG = .T.
   GROUP_RESID = .T.

@@ -29,7 +29,6 @@ module output_manager_module
 
       use machine, only: wall_time
       use output, only: USR_TIME, USR_DT
-      use output, only: VTP_TIME, VTP_DT
       use param, only: DIMENSION_USR
       use run, only: tstop
       use run, only: dem_solids
@@ -92,14 +91,6 @@ module output_manager_module
       ENDDO
       IF(IDX /=0) CALL FLUSH_LIST
 
-      IF(DEM_SOLIDS) THEN
-         IF(CHECK_TIME(VTP_TIME)) THEN
-            VTP_TIME = NEXT_TIME(VTP_DT)
-            CALL WRITE_DES_DATA(max_pip, particle_state, des_radius, &
-               des_pos_new, des_vel_new, des_usr_var)
-            CALL NOTIFY_useR('DES.vtp;')
-         ENDIF
-      ENDIF
 
       CALL FLUSH_NOTIFY_useR
 
@@ -271,129 +262,5 @@ module output_manager_module
       end subroutine flush_notify_user
 
       end subroutine output_manager
-
-!----------------------------------------------------------------------!
-! Subroutine: BACKUP_RES                                               !
-! Purpose: Shift existing RES file backup files by one index, then     !
-! create a copy of the current RES file.                               !
-!----------------------------------------------------------------------!
-      subroutine BACKUP_RES
-
-      use compar, only: myPE, PE_IO
-      use output, only: RES_BACKUPS
-      use run, only: DEM_SOLIDS
-
-      IMPLICIT NONE
-
-      INTERFACE
-         FUNCTION rename(input,output) BIND(C,name="rename") RESULT(r)
-            use iso_c_binding, only: c_char, c_int
-            CHARACTER(kind=c_char),INTENT(in) :: input(*)
-            CHARACTER(kind=c_char),INTENT(in) :: output(*)
-            integer(c_int)        :: r
-         END FUNCTION rename
-      END INTERFACE
-
-      CHARACTER(len=256) :: FNAME0, FNAME1
-      CHARACTER :: CHAR
-
-      integer :: LC, I, IERR, IREC
-      integer, PARAMETER :: ISRC = 1234567
-      integer, PARAMETER :: IDST = 12345678
-
-      IF(myPE /= PE_IO) RETURN
-
-! Shift all the existing backups by one.
-      DO LC=RES_BACKUPS,2,-1
-         CALL SET_FNAME(FNAME0,'.RES', LC-1)
-         CALL SET_FNAME(FNAME1,'.RES', LC)
-            i = rename(FNAME0, FNAME1)
-
-         IF(DEM_SOLIDS) THEN
-            CALL SET_FNAME(FNAME0,'_DES.RES', LC-1)
-            CALL SET_FNAME(FNAME1,'_DES.RES', LC)
-            i = rename(FNAME0, FNAME1)
-         ENDIF
-      ENDDO
-
-! Copy RES to RES1
-      CALL SET_FNAME(FNAME0, '.RES')
-      CALL SET_FNAME(FNAME1, '.RES' ,1)
-
-      OPEN(UNIT=ISRC, FILE=FNAME0, ACCESS='DIRECT', STATUS='OLD', ACTION='READ', IOSTAT=IERR, RECL=1)
-      OPEN(UNIT=IDST, FILE=FNAME1, ACCESS='DIRECT', STATUS='REPLACE', ACTION='WRITE', IOSTAT=IERR, RECL=1)
-      IREC = 1
-      DO
-         READ(UNIT=ISRC, REC=IREC, IOSTAT=IERR) CHAR
-         IF (IERR.NE.0) EXIT
-         WRITE(UNIT=IDST, REC=I) CHAR
-         IREC = IREC + 1
-      END DO
-
-      IF(DEM_SOLIDS) THEN
-         CALL SET_FNAME(FNAME0, '_DES.RES')
-         CALL SET_FNAME(FNAME1, '_DES.RES' ,1)
-
-         OPEN(UNIT=ISRC, FILE=FNAME0, ACCESS='DIRECT', STATUS='OLD', ACTION='READ', IOSTAT=IERR, RECL=1)
-         OPEN(UNIT=IDST, FILE=FNAME1, ACCESS='DIRECT', STATUS='REPLACE', ACTION='WRITE', IOSTAT=IERR, RECL=1)
-         IREC = 1
-         DO
-            READ(UNIT=ISRC, REC=IREC, IOSTAT=IERR) CHAR
-            IF (IERR.NE.0) EXIT
-            WRITE(UNIT=IDST, REC=I) CHAR
-            IREC = IREC + 1
-         END DO
-
-      ENDIF
-
-      RETURN
-
-      contains
-
-!----------------------------------------------------------------------!
-! Subroutine: SET_FNAME                                                !
-! Purpose: Set the backup RES file name based on pINDX.                !
-!----------------------------------------------------------------------!
-      subroutine SET_FNAME(pFNAME, pEXT, pINDX)
-
-      use run, only: RUN_NAME
-
-      implicit none
-
-      CHARACTER(LEN=*), INTENT(OUT) :: pFNAME
-      CHARACTER(LEN=*), INTENT(IN) ::  pEXT
-      integer, INTENT(IN), OPTIONAL :: pINDX
-
-! Set the file format for backup copies
-      pFNAME=''
-      IF(.NOT.PRESENT(pINDX)) THEN
-         WRITE(pFNAME,1000) trim(RUN_NAME),pEXT
-      ELSE
-         IF(RES_BACKUPS < 10) THEN
-            WRITE(pFNAME,1001) trim(RUN_NAME), pEXT, pINDX
-         ELSEIF(RES_BACKUPS < 100) THEN
-            WRITE(pFNAME,1002) trim(RUN_NAME), pEXT, pINDX
-         ELSEIF(RES_BACKUPS < 1000) THEN
-            WRITE(pFNAME,1003) trim(RUN_NAME), pEXT, pINDX
-         ELSEIF(RES_BACKUPS < 10000) THEN
-            WRITE(pFNAME,1004) trim(RUN_NAME), pEXT, pINDX
-         ELSEIF(RES_BACKUPS < 10000) THEN
-            WRITE(pFNAME,1005) trim(RUN_NAME), pEXT, pINDX
-         ELSE
-            WRITE(pFNAME,1006) trim(RUN_NAME), pEXT, pINDX
-         ENDIF
-      ENDIF
-
- 1000 FORMAT(2A)
- 1001 FORMAT('BACKUP_RES/',2A,I1.1)
- 1002 FORMAT('BACKUP_RES/',2A,I2.2)
- 1003 FORMAT('BACKUP_RES/',2A,I3.3)
- 1004 FORMAT('BACKUP_RES/',2A,I4.4)
- 1005 FORMAT('BACKUP_RES/',2A,I5.5)
- 1006 FORMAT('BACKUP_RES/',2A,I6.6)
-
-      end subroutine SET_FNAME
-
-      end subroutine BACKUP_RES
 
 end module output_manager_module

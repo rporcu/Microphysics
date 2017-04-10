@@ -39,9 +39,9 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
-      use output, only: dbgprn_layout, enable_dmp_log, full_log, nlog, out_dt, report_mass_balance_dt, res_backup_dt, res_dt, vtp_dt
+      use output, only: full_log, nlog
       use output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
-      use output, only: usr_dt, usr_ext, usr_format, res_backups, usr_type, usr_var
+      use output, only: usr_dt, usr_ext, usr_format, usr_type, usr_var
       use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
       use ps, only: dimension_ps
       use ps, only: ps_massflow_g
@@ -1112,36 +1112,6 @@ MODULE INIT_NAMELIST_MODULE
 !                          Output Control                             !
 !#####################################################################!
 
-!<keyword category="Output Control" required="true">
-!  <description>
-!    Interval at which restart (.res) file is updated.
-!  </description>
-      RES_DT = UNDEFINED
-!</keyword>
-
-!<keyword category="Output Control" required="false">
-!  <description>
-!    Interval at which a backup copy of the restart file is created.
-!  </description>
-      RES_BACKUP_DT = UNDEFINED
-!</keyword>
-
-!<keyword category="Output Control" required="false">
-!  <description>
-!    The number of backup restart files to retain.
-!  </description>
-      RES_BACKUPS = UNDEFINED_I
-!</keyword>
-
-!<keyword category="Output Control" required="false">
-!  <description> Interval at which standard output (.OUT) file is updated.
-!    Only run configuration information is written if left undefined. Otherwise
-!    all field variables for the entire domain are written in ASCII
-!    format to the .OUT file at OUT_DT intervals.
-!  </description>
-      OUT_DT = UNDEFINED
-!</keyword>
-
 !<keyword category="Output Control" required="false">
 !  <description>Number of time steps between .LOG file updates.</description>
       NLOG = 25
@@ -1152,15 +1122,6 @@ MODULE INIT_NAMELIST_MODULE
 !    messages about convergence on the screen and in the .LOG file.
 !  </description>
       FULL_LOG = .FALSE.
-!</keyword>
-
-!<keyword category="Output Control" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Allows writing of discrete particle data to output files. Relevant
-!    to both granular and coupled simulations.
-!  </description>
-      VTP_DT = UNDEFINED
 !</keyword>
 
 !<keyword category="Output Control" required="false">
@@ -1189,14 +1150,6 @@ MODULE INIT_NAMELIST_MODULE
       REPORT_NEG_DENSITY = .FALSE.
 !</keyword>
 
-!<keyword category="Output Control" required="false">
-!  <description>
-!    Frequency to perform an overall species mass balance. Leaving
-!    undefined suppresses the mass balance calculations which can
-!    slightly extend run time.
-!  </description>
-      REPORT_MASS_BALANCE_DT = UNDEFINED
-!</keyword>
 
 !<keyword category="Output Control" required="false">
 !  <description>
@@ -1342,55 +1295,7 @@ MODULE INIT_NAMELIST_MODULE
       ENDDO
 
 
-!#####################################################################!
-!                        Chemical Reactions                           !
-!#####################################################################!
 
-
-
-!#####################################################################!
-!                    Parallelization Control                          !
-!#####################################################################!
-
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>Print out additional statistics for parallel runs</description>
-      solver_statistics = .FALSE.
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>All ranks write error messages.</description>
-      ENABLE_DMP_LOG = .FALSE.
-!</keyword>
-
-!<keyword category="Parallelization Control" required="false">
-!  <description>Print the index layout for debugging.</description>
-      DBGPRN_LAYOUT = .FALSE.
-!</keyword>
-
-
-!#####################################################################!
-!                       Batch Queue Environment                       !
-!#####################################################################!
-
-      TERM_BUFFER = 180.0         ! set to 3 minutes prior to end of job
-!</keyword>
-
-
-
-
-! ---------------------------------- questionable namelist entries below
-
-
-!<keyword category="category name" required="false">
-!  <description>Variable which triggers an automatic restart.</description>
-      AUTOMATIC_RESTART = .FALSE.
-!</keyword>
-
-!<keyword category="category name" required="false">
-!  <description>AUTO_RESTART counter.</description>
-      ITER_RESTART = 1
-!</keyword>
 
 
       CALL DES_INIT_NAMELIST

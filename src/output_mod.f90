@@ -13,28 +13,12 @@
 
       use param, only: DIMENSION_USR
 
-! Interval at which restart (.RES) file data is updated.
-      real(c_real) :: RES_DT, RES_TIME
-! Interval to create a backup copy of the RES file.
-      real(c_real) :: RES_BACKUP_DT, RES_BACKUP_TIME
-! Interval at which standard output (.OUT) file data is updated.
-      real(c_real) :: OUT_DT, OUT_TIME
 ! Interval at which user-defined output files are updated.
       real(c_real) :: USR_DT (DIMENSION_USR), USR_TIME(DIMENSION_USR)
-! Interval to write DES VTP files
-      real(c_real) :: VTP_DT, VTP_TIME
-! Interval to check and report the mass balance
-      real(c_real) :: REPORT_MASS_BALANCE_DT
-! Number of RES file copies to retain.
-      integer :: RES_BACKUPS
 ! Interval in number of time steps at which LOG file is written
       integer :: NLOG
 ! Flag to display messages and residuals on the screen
       logical :: FULL_LOG
-! Flag to enable all ranks to write private LOG files.
-      logical :: ENABLE_DMP_LOG
-! Flag to print the index layout for  ijk<=>i,j,k  debugging tasks
-      logical :: DBGPRN_LAYOUT
 ! The approximated total disk space (in MB)
       real(c_real) :: DISK_TOT = 0.0d0
 ! One megabite (MB)

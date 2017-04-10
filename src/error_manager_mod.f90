@@ -54,8 +54,6 @@
 !---------------------------------------------------------------------//
 ! Name given to current run.
       use run, only: RUN_NAME, IFILE_NAME
-! Flag: All ranks report errors.
-      use output, only: ENABLE_DMP_LOG
 ! Flag: Provide the full log.
       use output, only: FULL_LOG
 ! Rank ID of process
@@ -105,19 +103,7 @@
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
-         IF(numPEs == 1 .OR. .NOT.ENABLE_DMP_LOG) THEN
-            WRITE(LOGFILE,"(A)")RUN_NAME(1:(NB-1))
-         ELSEIF(numPEs <    10) THEN
-            WRITE(LOGFILE,"(A,'_',I1.1)") RUN_NAME(1:(NB-1)), myPE
-         ELSEIF(numPEs <   100) THEN
-            WRITE(LOGFILE,"(A,'_',I2.2)") RUN_NAME(1:(NB-1)), myPE
-         ELSEIF(numPEs <  1000) THEN
-            WRITE(LOGFILE,"(A,'_',I3.3)") RUN_NAME(1:(NB-1)), myPE
-         ELSEIF(numPEs < 10000) THEN
-            WRITE(LOGFILE,"(A,'_',I4.4)") RUN_NAME(1:(NB-1)), myPE
-         ELSE
-            WRITE(LOGFILE,"(A,'_',I8.8)") RUN_NAME(1:(NB-1)), myPE
-         ENDIF
+         WRITE(LOGFILE,"(A)")RUN_NAME(1:(NB-1))
       ENDIF
 
 ! Verify that the .LOG file was successfully opened. Otherwise, flag the
