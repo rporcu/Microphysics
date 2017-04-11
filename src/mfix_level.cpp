@@ -423,7 +423,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     fluxZ[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     fluxZ[lev]->setVal(0.);
 
-    ropZ[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    ropZ[lev].reset(new MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ropZ[lev]->setVal(0.);
 
     // ********************************************************************************
