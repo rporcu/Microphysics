@@ -92,17 +92,15 @@ extern "C"
                  Real* omoi,
                  Real* des_pos_new,
                  Real* des_vel_new,
-                 Real* des_usr_var,
                  Real* omega_new,
                  Real* fc,
                  Real* tow);
 
   void mfix_write_des_data(const int* max_pip,
-                 int* particle_state,
-                 Real* des_radius,
-                 Real* des_pos_new,
-                 Real* des_vel_new,
-                 Real* des_usr_var);
+			   int* particle_state,
+			   Real* des_radius,
+			   Real* des_pos_new,
+			   Real* des_vel_new);
 
   void comp_mean_fields(
          const int* slo, const int* shi,
@@ -111,16 +109,12 @@ extern "C"
          Real* pvol, Real* dx,       Real* dy,       Real* dz);
 
 
-  void mfix_output_manager(
-         const int* max_pip,
-         Real* time, Real* dt, 
-         Real* xlength, Real* ylength, Real* zlength, 
-         int* nstep,
-         int* particle_state,    Real* des_radius,
-         Real* des_pos_new,
-         Real* des_vel_new,      Real* des_usr_var,
-         Real* omega_new,
-         int* finsh);
+    void mfix_output_manager( const int* max_pip,
+			      Real* time, Real* dt,  
+			      Real* xlength, Real* ylength, Real* zlength, 
+			      int* nstep, int* particle_state,    Real* des_radius,
+			      Real* des_pos_new, Real* des_vel_new, Real* omega_new,
+			      int* finsh);
 
   void calc_coeff_all(
          const int* slo, const int* shi,
@@ -313,7 +307,7 @@ extern "C"
           int* particle_state,  int* particle_phase,
           Real* des_radius,
           Real* pvol,           Real* pmass,
-          Real* omoi,           Real* des_usr_var,
+          Real* omoi,           
           Real* des_pos_new,    Real* des_vel_new,    Real* omega_new,
           Real* des_acc_old,    Real* rot_acc_old,
           Real* drag_fc,        Real* fc,             Real* tow,

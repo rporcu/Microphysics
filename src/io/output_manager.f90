@@ -18,7 +18,7 @@ module output_manager_module
      subroutine output_manager(max_pip, time, dt, &
         xlength, ylength, zlength, nstep, &
         particle_state, &
-        des_radius, des_pos_new, des_vel_new, des_usr_var,&
+        des_radius, des_pos_new, des_vel_new, &
         omega_new, finished) &
         bind(C, name="mfix_output_manager")
 
@@ -47,7 +47,6 @@ module output_manager_module
 
       real(c_real), intent(in) :: des_pos_new(max_pip,3)
       real(c_real), intent(in) :: des_vel_new(max_pip,3)
-      real(c_real), intent(in) :: des_usr_var(max_pip,1)
       real(c_real), intent(in) :: omega_new(max_pip,3)
 
 
@@ -96,7 +95,7 @@ module output_manager_module
          IF(CHECK_TIME(VTP_TIME)) THEN
             VTP_TIME = NEXT_TIME(VTP_DT)
             CALL WRITE_DES_DATA(max_pip, particle_state, des_radius, &
-               des_pos_new, des_vel_new, des_usr_var)
+               des_pos_new, des_vel_new)
             CALL NOTIFY_useR('DES.vtp;')
          ENDIF
       ENDIF

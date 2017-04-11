@@ -14,7 +14,7 @@ module des_time_march_module
       subroutine des_time_march(max_pip, slo, shi, ulo, uhi, vlo, vhi,&
          wlo, whi, lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g, &
          particle_state, particle_phase, &
-         des_radius,  pvol, pmass, omoi, des_usr_var, &
+         des_radius,  pvol, pmass, omoi,  &
          des_pos_new, des_vel_new, omega_new, des_acc_old, rot_acc_old, &
          drag_fc, fc, tow, pairs, pair_count, &
          time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) &
@@ -82,7 +82,6 @@ module des_time_march_module
       real(c_real), intent(inout) :: tow(max_pip,3)
 
       real(c_real), intent(inout) :: omega_new(max_pip,3)
-      real(c_real), intent(inout) :: des_usr_var(max_pip,1)
 
       integer(c_int), intent(inout) :: particle_state(max_pip)
       integer(c_int), intent(inout) :: particle_phase(max_pip)
@@ -134,7 +133,7 @@ module des_time_march_module
          call output_manager(max_pip, time, dt, &
             xlength, ylength, zlength, nstep, &
             particle_state, des_radius, &
-            des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
+            des_pos_new, des_vel_new,  omega_new, 0)
       ENDIF   ! end if/else (des_continuum_coupled)
 
 
@@ -237,7 +236,7 @@ module des_time_march_module
             call output_manager(max_pip, time, dt, &
                xlength, ylength, zlength, nstep, &
                particle_state, des_radius, &
-               des_pos_new, des_vel_new, des_usr_var, omega_new, 0)
+               des_pos_new, des_vel_new, omega_new, 0)
          ENDIF  ! end if (.not.des_continuum_coupled)
 
          IF(call_usr) call USR2_DES(max_pip, des_pos_new, des_vel_new, omega_new)

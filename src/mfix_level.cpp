@@ -95,7 +95,6 @@ mfix_level::mfix_level ()
     omoi.resize          (  nparticles);
     des_pos_new.resize   (3*nparticles);
     des_vel_new.resize   (3*nparticles);
-    des_usr_var.resize   (  nparticles);
     omega_new.resize     (3*nparticles);
     des_acc_old.resize   (3*nparticles);
     rot_acc_old.resize   (3*nparticles);
@@ -597,7 +596,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         particle_state.dataPtr(), particle_phase.dataPtr(),
         des_radius.dataPtr(),
         pvol.dataPtr(),           pmass.dataPtr(),
-        omoi.dataPtr(),           des_usr_var.dataPtr(),
+        omoi.dataPtr(),           
         des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
         des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
         drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
@@ -624,7 +623,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       &time, &dt, &xlen, &ylen, &zlen, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
       des_pos_new.dataPtr(),
-      des_vel_new.dataPtr(), des_usr_var.dataPtr(),
+      des_vel_new.dataPtr(), 
       omega_new.dataPtr(), &finish);
   }
 }
@@ -685,7 +684,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       omoi.resize          (  max_pip);
       des_pos_new.resize   (3*max_pip);
       des_vel_new.resize   (3*max_pip);
-      des_usr_var.resize   (  max_pip);
       omega_new.resize     (3*max_pip);
       des_acc_old.resize   (3*max_pip);
       rot_acc_old.resize   (3*max_pip);
@@ -722,14 +720,14 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
     //     particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
     //     pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
     //     des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-    //     des_usr_var.dataPtr(), omega_new.dataPtr(),
+    // 			   omega_new.dataPtr(),
     //     fc.dataPtr(), tow.dataPtr());
     // }
 
     // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
     //   const int max_pip = particle_state.size();
     //   mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
-    //     des_pos_new.dataPtr(), des_vel_new.dataPtr(), des_usr_var.dataPtr());
+    //     des_pos_new.dataPtr(), des_vel_new.dataPtr());
     // }
   }
 

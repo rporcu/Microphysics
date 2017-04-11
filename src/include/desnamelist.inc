@@ -2,8 +2,6 @@
 
 ! USE discretelement
         DES_ONEWAY_COUPLED, DES_INTG_METHOD,  PARTICLES, &
-        DES_USR_VAR_SIZE,&
-
         DES_EXPLICITLY_COUPLED, &
 
 ! Particle properties

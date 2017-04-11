@@ -48,7 +48,6 @@ MODULE DES_INIT_NAMELIST_MODULE
       use discretelement, only: des_etat_fac, des_etat_w_fac
 
       use discretelement, only: particles
-      use discretelement, only: des_usr_var_size
 
       use discretelement, only: print_des_data
       use discretelement, only: vtp_findex
@@ -126,15 +125,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 !  <valid value="ADAMS BASHFORTH"
 !    note="Second order ADAMS BASHFORTH scheme (DEM only)"/>
       DES_INTG_METHOD = 'EULER'
-!</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    Defines the size of the particle-based user variable:
-!    DES_USR_VAR(SIZE, PARTICLES). Information in this array follows
-!    the particle throughout a simulation.
-!  </description>
-      DES_USR_VAR_SIZE = 0
 !</keyword>
 
 

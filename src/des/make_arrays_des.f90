@@ -7,7 +7,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine make_arrays_des(max_pip, particle_state, particle_phase, &
       des_radius,  ro_sol, pvol, pmass, omoi, des_pos_new, des_vel_new,&
-      des_usr_var, omega_new, fc, tow) &
+      omega_new, fc, tow) &
    bind(C, name="mfix_make_arrays_des")
 
 ! Module procedures .................................................//
@@ -44,7 +44,6 @@
       real(c_real)  , intent(  out) :: des_vel_new(max_pip,3)
       real(c_real)  , intent(  out) :: des_pos_new(max_pip,3)
       real(c_real)  , intent(  out) :: omega_new(max_pip,3)
-      real(c_real)  , intent(  out) :: des_usr_var(max_pip,1)
       integer(c_int), intent(  out) :: particle_state(max_pip)
       integer(c_int), intent(  out) :: particle_phase(max_pip)
 
@@ -80,9 +79,6 @@
 ! Translation and rotational forces
       fc(:,:) = zero
       tow(:,:) = zero
-
-! Initializing user defined array
-      des_usr_var(:,:) = zero
 
 ! Set the initial particle data.
       IF(RUN_TYPE == 'NEW') THEN
@@ -140,7 +136,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine mfix_write_des_data(max_pip, particle_state, des_radius, &
-      des_pos_new, des_vel_new, des_usr_var) &
+      des_pos_new, des_vel_new ) &
       bind(C, name="mfix_write_des_data")
 
       use amrex_fort_module, only : c_real => amrex_real
@@ -155,12 +151,11 @@
       real(c_real), intent(in   ) :: des_radius (max_pip)
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
-      real(c_real), intent(in   ) :: des_usr_var(max_pip,1)
 
       IF (RUN_TYPE /= 'RESTART_1' .AND. PRINT_DES_DATA) THEN
          S_TIME = 0.0d0 !TIME
          CALL WRITE_DES_DATA(max_pip, particle_state, des_radius,&
-            des_pos_new, des_vel_new, des_usr_var)
+            des_pos_new, des_vel_new )
       ENDIF
 
       CALL FINL_ERR_MSG

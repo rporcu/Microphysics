@@ -11,12 +11,11 @@ MODULE WRITE_DES_DATA_MODULE
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE WRITE_DES_DATA(max_pip, particle_state, des_radius, &
-         des_pos_new, des_vel_new, des_usr_var)
+         des_pos_new, des_vel_new )
 
       use vtp, only: vtp_open_file, vtp_close_file
       use vtp, only: add_vtp_to_pvd, vtp_write_element, vtp_write_data
       use discretelement, only: s_time
-      use discretelement, only: des_usr_var_size
 
       implicit none
 
@@ -26,7 +25,6 @@ MODULE WRITE_DES_DATA_MODULE
       real(c_real), intent(in   ) :: des_radius(max_pip)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
-      real(c_real), intent(in   ) :: des_usr_var(max_pip,1)
 
 ! Local variables ....................................................//
       real(c_real), allocatable :: des_diameter(:)
@@ -68,9 +66,6 @@ MODULE WRITE_DES_DATA_MODULE
       DEALLOCATE(DES_DIAMETER)
 
       CALL VTP_WRITE_DATA('Velocity', DES_VEL_NEW)
-
-      IF(DES_USR_VAR_SIZE > 0) &
-         CALL VTP_WRITE_DATA('User Defined Var', DES_USR_VAR)
 
       CALL VTP_WRITE_ELEMENT('</PointData>')
 

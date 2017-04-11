@@ -224,7 +224,6 @@ private:
     Array<Real> omoi;
     Array<Real> des_pos_new;
     Array<Real> des_vel_new;
-    Array<Real> des_usr_var;
     Array<Real> omega_new;
     Array<Real> des_acc_old;
     Array<Real> rot_acc_old;
