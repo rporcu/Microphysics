@@ -425,7 +425,7 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     fluxZ[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     fluxZ[lev]->setVal(0.);
 
-    ropZ[lev].reset(new MultiFab(grids[lev],dmap[lev],1,nghost));
+    ropZ[lev].reset(new  MultiFab(z_edge_ba,dmap[lev],1,nghost));
     ropZ[lev]->setVal(0.);
 
     // ********************************************************************************
@@ -467,6 +467,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 
         // Calculate face mass fluxes
         mfix_calc_mflux(lev);
+
 
         int converged=0;
         int nit=0;          // number of iterations
