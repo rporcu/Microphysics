@@ -22,10 +22,10 @@ module set_bc_type_module
 
       use bc, only: bc_defined, bc_type, bc_plane
 
-      use ic, only: NSW_, FSW_, PSW_
-      use ic, only: PINF_, POUT_
-      use ic, only: MINF_
-      use ic, only: UNDEF_CELL, cycl_
+      use bc, only: nsw_, fsw_, psw_
+      use bc, only: pinf_, pout_
+      use bc, only: minf_
+      use bc, only: undef_cell, cycl_
 
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: bc_x_w, bc_y_s, bc_z_b
@@ -114,13 +114,13 @@ module set_bc_type_module
 
             select case(type)
             case(nsw_, fsw_, psw_)
-               call calc_cell_bc_wall(bcv, domlo, domhi, &
+               call calc_cell_bc_wall(domlo, domhi, &
                   xlength, ylength, zlength, dx, dy, dz, &
                   bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
                   bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
                   i_w, i_e, j_s, j_n, k_b, k_t)
             case(pinf_, pout_, minf_)
-               call calc_cell_bc_flow(bcv, &
+               call calc_cell_bc_flow(&
                   xlength, ylength, zlength, dx, dy, dz, &
                   bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
                   bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &

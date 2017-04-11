@@ -3,8 +3,6 @@ module check_bc_geometry_module
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use calc_cell_module, only: calc_cell
-
    use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
    use error_manager, only: err_msg, ivar, ival
 
@@ -169,7 +167,7 @@ module check_bc_geometry_module
 
       call init_err_msg("check_bc_geometry_wall")
 
-      call calc_cell_bc_wall(bcv, domlo, domhi, &
+      call calc_cell_bc_wall(domlo, domhi, &
          xlength, ylength, zlength, dx, dy, dz, &
          bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
          bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
@@ -246,7 +244,7 @@ module check_bc_geometry_module
 
       call init_err_msg("CHECK_BC_GEOMETRY_FLOW")
 
-      call calc_cell_bc_flow(bcv, &
+      call calc_cell_bc_flow(&
          xlength, ylength, zlength, dx, dy, dz, &
          bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
          bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &

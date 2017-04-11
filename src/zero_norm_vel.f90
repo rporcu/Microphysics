@@ -27,7 +27,7 @@
       use iso_c_binding , only: c_int
 
       use param1  , only: zero
-      use ic      , only: NSW_, FSW_, PSW_
+      use bc      , only: nsw_, fsw_, psw_
 
       IMPLICIT NONE
 
@@ -134,5 +134,5 @@
         end do
         end do
       end if
- 
+
    end subroutine zero_norm_vel

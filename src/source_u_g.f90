@@ -132,10 +132,10 @@ contains
       bc_ilo_type, bc_ihi_type, bc_jlo_type, bc_jhi_type, &
       bc_klo_type, bc_khi_type, domlo, domhi, dy, dz)
 
-      use ic, only: NSW_, FSW_, PSW_
-      use ic, only: PINF_, POUT_
-      use ic, only: MINF_
-      use ic, only: cycl_
+      use bc, only: nsw_, fsw_, psw_
+      use bc, only: pinf_, pout_
+      use bc, only: minf_
+      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_uw_g, bc_u_g
 

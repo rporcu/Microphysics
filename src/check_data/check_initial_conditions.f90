@@ -28,7 +28,7 @@ contains
 
     use ic,                    only: ic_defined
     use run,                   only: dem_solids, run_type
-    use param,                 only: dimension_ic
+    use param,                 only: dim_ic
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
     real(c_real)  , intent(in) :: dx, dy, dz
@@ -38,7 +38,7 @@ contains
     call check_ic_geometry(dx,dy,dz,domlo,domhi)
 
     ! Loop over all IC arrays.
-    do icv=1, dimension_ic
+    do icv=1, dim_ic
 
        ! Verify user input for defined defined IC.
        if(ic_defined(icv)) then
@@ -68,12 +68,12 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
     subroutine check_ic_geometry(dx,dy,dz,domlo,domhi)
 
-      use param, only: dimension_ic
+      use param, only: dim_ic
       use ic,    only: ic_defined
       use ic,    only: IC_X_e, IC_Y_n, IC_Z_t
       use ic,    only: IC_X_w, IC_Y_s, IC_Z_b
 
-      use calc_cell_module, only: calc_cell
+      use calc_cell_module, only: calc_cell_ic
 
       integer(c_int), intent(in) :: domlo(3),domhi(3)
       real(c_real)  , intent(in) :: dx,dy,dz
@@ -84,7 +84,7 @@ contains
       call init_err_msg("CHECK_IC_GEOMETRY")
 
       ! Check geometry of any specified IC region
-      do icv = 1, dimension_ic
+      do icv = 1, dim_ic
 
          if(ic_defined(icv)) then
 
@@ -122,8 +122,10 @@ contains
         'defined.',/' > ',A,' is not specified.',/'Please correct ', &
         'the input deck.')
 
-           i_w = calc_cell (ic_x_w(icv), dx) + 1
-           i_e = calc_cell (ic_x_e(icv), dx)
+           call calc_cell_ic(dx, dy, dz, &
+                  ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+                  ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+                  i_w, i_e, j_s, j_n, k_b, k_t)
 
            ! Report problems with calculated bounds.
            if(i_w > i_e) then
@@ -143,9 +145,6 @@ contains
               call flush_err_msg(abort=.true.)
            endif
 
-           j_s = calc_cell (ic_y_s(icv), dy) + 1
-           j_n = calc_cell (ic_y_n(icv), dy)
-
            if(j_s > j_n) then
               write(err_msg, 1101) icv, 'IC_J_S > IC_J_N'
               call flush_err_msg(abort=.true.)
@@ -162,9 +161,6 @@ contains
               write(err_msg, 1101) icv, 'IC_J_N > domhi(2)'
               call flush_err_msg(abort=.true.)
            endif
-
-           k_b = calc_cell (ic_z_b(icv), dz) + 1
-           k_t = calc_cell (ic_z_t(icv), dz)
 
            if(k_b > k_t) then
               write(err_msg, 1101) icv, 'IC_K_B > IC_K_T'
@@ -184,7 +180,7 @@ contains
            endif
 
         endif
-     enddo   ! end loop over (icv=1,dimension_ic)
+     enddo   ! end loop over (icv=1,dim_ic)
 
 1101 format('Error 1101: Initial condition region ',I2,' is ill-',    &
         'defined.',/3x,A,/'Please correct the input deck.')
@@ -405,7 +401,7 @@ contains
    subroutine check_ic_common_discrete
 
       use param1,   only: zero
-      use param,    only: dimension_ic
+      use param,    only: dim_ic
       use ic,       only: ic_defined, ic_ep_s
       use ic,       only: ic_x_w, ic_x_e, ic_y_s, ic_y_n, ic_z_b, ic_z_t
 
@@ -418,9 +414,9 @@ contains
       call init_err_msg("CHECK_IC_COMMON_DISCRETE")
 
       ! Check if the ICs are non-overlapping.
-      do icv1 = 1, dimension_ic
+      do icv1 = 1, dim_ic
          if(ic_defined(icv1) .and. sum(ic_ep_s(icv1,:)) > zero) then
-            do icv2 = icv1+1, dimension_ic
+            do icv2 = icv1+1, dim_ic
                if(ic_defined(icv2) .and. sum(ic_ep_s(icv1,:)) > zero) then
                   if((ic_x_w(icv1) < ic_x_e(icv2) .and. ic_x_e(icv1) > ic_x_w(icv2)) .or. &
                      (ic_y_s(icv1) < ic_y_n(icv2) .and. ic_y_n(icv1) > ic_y_s(icv2)) .or. &

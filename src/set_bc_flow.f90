@@ -204,7 +204,7 @@ contains
     case ('B'); sgn = -sgn
     end select
 
-    call calc_cell_bc_flow(bcv, &
+    call calc_cell_bc_flow(&
        xlength, ylength, zlength, dx, dy, dz, &
        bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
        bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &
@@ -273,7 +273,7 @@ contains
      case ('B'); sgn = -sgn
      end select
 
-    call calc_cell_bc_flow(bcv, &
+    call calc_cell_bc_flow(&
        xlength, ylength, zlength, dx, dy, dz, &
        bc_x_w(bcv), bc_y_s(bcv), bc_z_b(bcv), &
        bc_x_e(bcv), bc_y_n(bcv), bc_z_t(bcv), &

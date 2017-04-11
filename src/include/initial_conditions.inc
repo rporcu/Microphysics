@@ -4,7 +4,7 @@
 !                                                                      !
 !  Purpose: List MFIX keywords that CANNOT be edited during a run.     !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      NAMELIST / INITIAL_CONDITIONS_LOCKED / IC_DES_FIT_TO_REGION
+!      NAMELIST / INITIAL_CONDITIONS_LOCKED /
 
 
 

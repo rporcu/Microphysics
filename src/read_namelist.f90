@@ -30,7 +30,7 @@ MODULE read_namelist_module
       use fld_const, only: ro_g0
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_des_fit_to_region, ic_x_w, ic_type
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, leq_it, leq_method
@@ -282,13 +282,6 @@ MODULE read_namelist_module
 
 
 ! Initial condtion keywords
-      IF(READ_LOCKED) THEN
-         STRING=''; STRING = '&INITIAL_CONDITIONS_LOCKED '//&
-            trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
-         READ(STRING, NML=INITIAL_CONDITIONS_LOCKED, IOSTAT=IOS)
-         IF(IOS == 0)  RETURN
-      ENDIF
-
       STRING=''; STRING = '&INITIAL_CONDITIONS_UNLOCKED '//&
          trim(adjustl(LINE_STRING(1:LINE_LEN)))//'/'
       READ(STRING, NML=INITIAL_CONDITIONS_UNLOCKED, IOSTAT=IOS)

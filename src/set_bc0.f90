@@ -19,7 +19,7 @@
       use iso_c_binding , only: c_int
 
       use bc                , only: bc_u_g, bc_v_g, bc_w_g, bc_p_g, bc_ep_g
-      use ic                , only: PINF_, POUT_, MINF_
+      use bc                , only: pinf_, pout_, minf_
 
       use scales, only: scale_pressure
 

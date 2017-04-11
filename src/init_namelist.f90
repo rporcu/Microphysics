@@ -34,7 +34,7 @@ MODULE INIT_NAMELIST_MODULE
       use fld_const, only: ro_g0, mu_g0, mw_avg
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_des_fit_to_region, ic_x_w, ic_type
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
@@ -589,41 +589,41 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 
 
-      DO LC = 1, DIMENSION_IC
+      DO LC = 1, DIM_IC
 
 !<keyword category="Initial Condition" required="false">
 !  <description>X coordinate of the west face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_X_W(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>X coordinate of the east face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_X_E(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Y coordinate of the south face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_Y_S(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Y coordinate of the north face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_Y_N(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Z coordinate of the bottom face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_Z_B(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Z coordinate of the top face.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_Z_T(LC) = UNDEFINED
 !</keyword>
 
@@ -635,13 +635,13 @@ MODULE INIT_NAMELIST_MODULE
 !    values from the .RES file are overwritten and no error checking is
 !    done for the patched values.
 !  </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_TYPE(LC) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial void fraction in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_EP_G(LC) = ONE
 !</keyword>
 
@@ -651,7 +651,7 @@ MODULE INIT_NAMELIST_MODULE
 !    specified, MFIX will set up a hydrostatic pressure profile,
 !    which varies only in the y-direction.
 !  </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_P_G(LC) = UNDEFINED
 !</keyword>
 
@@ -660,70 +660,63 @@ MODULE INIT_NAMELIST_MODULE
 !    Initial solids volume fraction of solids phase-m in the IC region.
 !    This may be specified in place of IC_ROP_s.
 !  </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          IC_EP_S(LC,:DIM_M) = ZERO
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial gas phase temperature in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_T_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial solids phase-m temperature in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          IC_T_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial x-component of gas velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_U_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial x-component of solids-phase velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          IC_U_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial y-component of gas velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_V_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial y-component of solids-phase velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          IC_V_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial z-component of gas velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_W_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">
 !  <description>Initial z-component of solids-phase velocity in the IC region.</description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
+!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
 !  <arg index="2" id="Phase" min="1" max="DIM_M"/>
          IC_W_S(LC,:DIM_M) = UNDEFINED
 !</keyword>
 
-
-!<keyword category="Initial Condition" required="false">
-!  <description>Flag for inflating initial lattice distribution
-! to the entire IC region. </description>
-!  <arg index="1" id="IC" min="1" max="DIMENSION_IC"/>
-          IC_DES_FIT_TO_REGION(LC) = .FALSE.
-!</keyword>
 
       ENDDO
 

@@ -90,7 +90,7 @@ module init_fluid_module
    subroutine set_ic(slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
       domlo, domhi, dx, dy, dz, p_g, u_g, v_g, w_g)
 
-      use ic, only: dimension_ic, ic_defined
+      use ic, only: dim_ic, ic_defined
       use ic, only: ic_p_g, ic_u_g, ic_v_g, ic_w_g
       use ic, only: ic_x_e, ic_y_n, ic_z_t
       use ic, only: ic_x_w, ic_y_s, ic_z_b
@@ -100,7 +100,7 @@ module init_fluid_module
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use calc_cell_module, only: calc_cell
+      use calc_cell_module, only: calc_cell_ic
 
       implicit none
 
@@ -136,15 +136,13 @@ module init_fluid_module
       integer :: i_e, j_n, k_t
 
 !  Set the initial conditions.
-      do icv = 1, dimension_ic
+      do icv = 1, dim_ic
          if (ic_defined(icv)) then
 
-            i_w = calc_cell (ic_x_w(icv), dx) + 1
-            i_e = calc_cell (ic_x_e(icv), dx)
-            j_s = calc_cell (ic_y_s(icv), dy) + 1
-            j_n = calc_cell (ic_y_n(icv), dy)
-            k_b = calc_cell (ic_z_b(icv), dz) + 1
-            k_t = calc_cell (ic_z_t(icv), dz)
+            call calc_cell_ic(dx, dy, dz, &
+              ic_x_w(icv), ic_y_s(icv), ic_z_b(icv), &
+              ic_x_e(icv), ic_y_n(icv), ic_z_t(icv), &
+              i_w, i_e, j_s, j_n, k_b, k_t)
 
             ! Use the volume fraction already calculated from particle data
             pgx = ic_p_g(icv)
@@ -240,7 +238,7 @@ module init_fluid_module
       use iso_c_binding , only: c_int
       use param1   , only: zero, undefined
       use param1   , only: is_defined, is_undefined
-      use param, only: dimension_ic
+      use param, only: dim_ic
 
       implicit none
 
@@ -275,7 +273,7 @@ module init_fluid_module
 
 ! If any initial pressures are unspecified skip next section
 ! calculations.
-      do l = 1, dimension_ic
+      do l = 1, dim_ic
          if (ic_defined(l)) then
             if (is_undefined(ic_p_g(l))) goto 60
             pj = ic_p_g(l)

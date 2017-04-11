@@ -131,10 +131,10 @@ contains
          bc_klo_type, bc_khi_type, domlo, domhi, dx, dy)
 
 
-      use ic, only: NSW_, FSW_, PSW_
-      use ic, only: PINF_, POUT_
-      use ic, only: MINF_
-      use ic, only: cycl_
+      use bc, only: nsw_, fsw_, psw_
+      use bc, only: pinf_, pout_
+      use bc, only: minf_
+      use bc, only: cycl_
 
       use bc, only: bc_hw_g, bc_ww_g, bc_w_g
 

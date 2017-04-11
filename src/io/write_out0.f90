@@ -12,22 +12,14 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use bc, only: write_out_bc
       use constant, only: gravity, c_name, c
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
-      use bc, only: cyclic_x, cyclic_y, cyclic_z
-      use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_u_g, ic_v_g, ic_w_g, ic_p_g
-      use ic, only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
-
-      use ic, only: ic_defined
-      use ic, only: ic_x_w, ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
-      use param, only: dimension_c, dimension_ic, dim_bc
+      use param, only: dimension_c, dim_ic, dim_bc
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
       use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
@@ -35,14 +27,8 @@
       use scales, only: p_scale, p_ref
       use ur_facs, only: ur_fac
 
-
-      use ic, only: nsw_, fsw_, psw_
-      use ic, only: pinf_, pout_
-      use ic, only: minf_
-
-      use calc_cell_module, only: calc_cell
-      use calc_cell_module, only: calc_cell_bc_flow
-      use calc_cell_module, only: calc_cell_bc_wall
+      use ic, only: write_out_ic
+      use bc, only: write_out_bc
 
       implicit none
 
@@ -89,8 +75,7 @@
 
 !  Write Headers for .OUT file
 !
-      WRITE(UNIT_OUT,1000)ID_VERSION,ID_HOUR,ID_MINUTE,ID_MONTH,ID_DAY,ID_YEAR
-      WRITE (UNIT_OUT, 1010) ID_NODE(1:50)
+      WRITE(UNIT_OUT,1000)
 !
 !  Echo input data
 !
@@ -252,46 +237,8 @@
 
       ENDIF
 
-!
-!  Initial Conditions Section
-!
-      WRITE (UNIT_OUT, 1500)
-      DO L = 1, DIMENSION_IC
-         IF (IC_DEFINED(L)) THEN
 
-            i_w = calc_cell (ic_x_w(l), dx) + 1
-            i_e = calc_cell (ic_x_e(l), dx)
-            j_s = calc_cell (ic_y_s(l), dy) + 1
-            j_n = calc_cell (ic_y_n(l), dy)
-            k_b = calc_cell (ic_z_b(l), dz) + 1
-            k_t = calc_cell (ic_z_t(l), dz)
-
-            WRITE (UNIT_OUT, 1510) L
-            LOC(1) = LOCATION(I_W,DX) - HALF*DX
-            LOC(2) = LOCATION(I_E,DX) + HALF*DX
-            LOC(3) = LOCATION(J_S,DY) - HALF*DY
-            LOC(4) = LOCATION(J_N,DY) + HALF*DY
-            LOC(5) = LOCATION(K_B,DZ) - HALF*DZ
-            LOC(6) = LOCATION(K_T,DZ) + HALF*DZ
-            WRITE (UNIT_OUT, 1520) &
-               IC_X_W(L), LOC(1), IC_X_E(L), LOC(2), &
-               IC_Y_S(L), LOC(3), IC_Y_N(L), LOC(4), &
-               IC_Z_B(L), LOC(5), IC_Z_T(L), LOC(6)
-            WRITE (UNIT_OUT, 1530) I_W, I_E, J_S, J_N, K_B, K_T
-            WRITE (UNIT_OUT, 1540) IC_EP_G(L)
-            IF (IS_DEFINED(IC_P_G(L))) WRITE (UNIT_OUT, 1541) IC_P_G(L)
-!
-            WRITE (UNIT_OUT, 1550) IC_U_G(L), IC_V_G(L), IC_W_G(L)
-            DO M = 1, MMAX_TOT
-               WRITE (UNIT_OUT, 1560) M, IC_EP_S(L,M)
-            END DO
-
-            DO M = 1, MMAX_TOT
-               WRITE(UNIT_OUT,1570)M,IC_U_S(L,M),M,IC_V_S(L,M),M,IC_W_S(L,M)
-            END DO
-         ENDIF
-      END DO
-
+      call write_out_ic(unit_out, dx, dy, dz)
 
       call write_out_bc(unit_out, dx, dy, dz, &
          xlength, ylength, zlength, domlo, domhi)
@@ -313,9 +260,8 @@
          'MM      MM  FF              II      XX      XX',/17X,&
          'MM      MM  FF            IIIIII    XX      XX',/17X,&
          'MM      MM  FF            IIIIII    XX      XX',2/20X,&
-         'Multiphase Flow with Interphase eXchanges'/34X,'Version: ',A,/20X,&
-         'Time: ',I2,':',I2,20X,'Date: ',I2,'-',I2,'-',I4)
- 1010 FORMAT(/7X,'Computer : ',A50,/,1X,79('_'))
+         'Multiphase Flow with Interphase eXchanges')
+
  1100 FORMAT(//,3X,'1. RUN CONTROL',/)
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
@@ -367,63 +313,9 @@
          '  (A constant value is used everywhere)')
  1320 FORMAT(7X,'Average molecular weight (MW_avg) = ',G12.5,&
          '  (A constant value is used everywhere)')
-!
-!
- 1500 FORMAT(//,3X,'6. INITIAL CONDITIONS')
- 1510 FORMAT(/7X,'Initial condition no : ',I4)
- 1520 FORMAT(9X,39X,' Specified  ',5X,' Simulated  ',/9X,&
-         'X coordinate of west face   (IC_X_w) = ',G12.5,5X,G12.5/,9X,&
-         'X coordinate of east face   (IC_X_e) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of south face  (IC_Y_s) = ',G12.5,5X,G12.5/,9X,&
-         'Y coordinate of north face  (IC_Y_n) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of bottom face (IC_Z_b) = ',G12.5,5X,G12.5/,9X,&
-         'Z coordinate of top face    (IC_Z_t) = ',G12.5,5X,G12.5)
- 1530 FORMAT(9X,'I index of cell at west   (IC_I_w) = ',I4,/,9X,&
-         'I index of cell at east   (IC_I_e) = ',I4,/,9X,&
-         'J index of cell at south  (IC_J_s) = ',I4,/,9X,&
-         'J index of cell at north  (IC_J_n) = ',I4,/,9X,&
-         'K index of cell at bottom (IC_K_b) = ',I4,/,9X,&
-         'K index of cell at top    (IC_K_t) = ',I4)
- 1540 FORMAT(9X,'Void fraction (IC_EP_g) = ',G12.5)
- 1541 FORMAT(9X,'Gas pressure (IC_P_g) = ',G12.5)
- 1550 FORMAT(9X,'X-component of gas velocity (IC_U_g) = ',G12.5,/9X,&
-         'Y-component of gas velocity (IC_V_g) = ',G12.5,/9X,&
-         'Z-component of gas velocity (IC_W_g) = ',G12.5)
- 1560 FORMAT(9X,'Solids phase-',I2,' Volume fr. (IC_EP_s) = ',G12.5)
- 1570 FORMAT(9X,'X-component of solids phase-',I2,' velocity (IC_U_s) =',G12.5,&
-         /9X,'Y-component of solids phase-',I2,' velocity (IC_V_s) =',G12.5,/9X&
-         ,'Z-component of solids phase-',I2,' velocity (IC_W_s) =',G12.5)
 
     CONTAINS
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: LOCATION(L2, DX)                                       C
-!  Purpose: Find the cell center location in X, Y, or Z direction for  C
-!           the given index L2.                                        C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      DOUBLE PRECISION function LOCATION (L2, DX)
-!
-!-----------------------------------------------
-!   M o d u l e s
-!-----------------------------------------------
-      use param1, only: half
-      IMPLICIT NONE
-!-----------------------------------------------
-!   D u m m y   A r g u m e n t s
-!-----------------------------------------------
-!
-! Index for which the location is required
-      integer :: L2
-! Cell sizes (DX, DY, or DZ)
-      real(c_real) :: DX
-!
-!-----------------------------------------------
-!
-      LOCATION = HALF*DX + DX*dble(L2-1)
-
-      end function LOCATION
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

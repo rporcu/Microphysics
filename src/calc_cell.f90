@@ -3,6 +3,12 @@ MODULE CALC_CELL_MODULE
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
+   private
+
+   public :: calc_cell_ic
+   public :: calc_cell_bc_wall, calc_cell_bc_flow
+   public :: calc_cell_ps
+
 contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -29,13 +35,43 @@ contains
 
    end function calc_cell
 
+
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Subroutine: calc_cell_ic                                            !
+!  Purpose: calculate the i, j or k cell index for IC regions.         !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+   subroutine calc_cell_ic(dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
+     i_w, i_e, j_s, j_n, k_b, k_t)
+
+     use param1, only: zero, equal
+
+     implicit none
+
+     real(c_real), intent(in   ) :: dx, dy, dz
+     real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
+
+     integer,      intent(  out) :: i_w, j_s, k_b, i_e, j_n, k_t
+
+     i_w = calc_cell(x_w, dx) + 1
+     i_e = calc_cell(x_e, dx)
+
+     j_s = calc_cell(y_s, dy) + 1
+     j_n = calc_cell(y_n, dy)
+
+     k_b = calc_cell(z_b, dz) + 1
+     k_t = calc_cell(z_t, dz)
+
+   end subroutine calc_cell_ic
+
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: calc_cell_bc_wall                                       !
 !  Purpose: calculate the i, j or k cell index for wall BCs.           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_bc_wall(bcv, domlo, domhi, xlength, ylength, &
+   subroutine calc_cell_bc_wall(domlo, domhi, xlength, ylength, &
       zlength, dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
       i_w, i_e, j_s, j_n, k_b, k_t)
 
@@ -43,7 +79,7 @@ contains
 
       implicit none
 
-      integer,      intent(in   ) :: bcv, domlo(3), domhi(3)
+      integer,      intent(in   ) :: domlo(3), domhi(3)
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
       real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
@@ -94,7 +130,7 @@ contains
 !  Purpose: calculate the i, j or k cell index for wall BCs.           !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-   subroutine calc_cell_bc_flow(bcv, xlength, ylength, zlength, &
+   subroutine calc_cell_bc_flow(xlength, ylength, zlength, &
       dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
       i_w, i_e, j_s, j_n, k_b, k_t)
 
@@ -102,7 +138,6 @@ contains
 
       implicit none
 
-      integer,      intent(in   ) :: bcv
       real(c_real), intent(in   ) :: dx, dy, dz
       real(c_real), intent(in   ) :: xlength, ylength, zlength
       real(c_real), intent(in   ) :: x_w, y_s, z_b, x_e, y_n, z_t
