@@ -21,7 +21,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_run_control(time, dt)
 
-    use run,    only: RUN_TYPE, DESCRIPTION, UNITS, TSTOP
+    use run,    only: RUN_TYPE, DESCRIPTION, TSTOP
     use param1, only: UNDEFINED_C, IS_UNDEFINED, ZERO
 ! Flag to adjust dt when residuals diverge
       use run, only: DETECT_STALL
@@ -32,18 +32,8 @@ contains
     ! Initialize the error manager.
     CALL init_err_msg("CHECK_RUN_CONTROL")
 
-
     ! Clear out the run description if not specified.
     if (DESCRIPTION == UNDEFINED_C) DESCRIPTION = ' '
-
-    ! Verify UNITS input.
-    if(UNITS == UNDEFINED_C) then
-       write(ERR_MSG,1000) 'UNITS', trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
-    elseif((UNITS /= 'CGS') .and. (UNITS /= 'SI')) then
-       write(ERR_MSG,1001) 'UNITS', UNITS, trim(IFILE_NAME)
-       call flush_err_msg(ABORT=.true.)
-    endif
 
     ! Verify that DT is valid.
     if (DT < ZERO) then

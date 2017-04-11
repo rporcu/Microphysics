@@ -16,7 +16,7 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  UNITS = 'SI'
+
   RUN_TYPE = 'NEW'
 
   TIME = 0.0 ! Steady state solution

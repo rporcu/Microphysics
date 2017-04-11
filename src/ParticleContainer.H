@@ -1,4 +1,3 @@
-
 #ifndef _ParticleContainer_H_
 #define _ParticleContainer_H_
 
@@ -15,8 +14,8 @@ using namespace amrex;
 struct PIdx
 {
     enum { // Particle data stored in p.m_data
-	particle_phase = 0, 
-	particle_state,
+  particle_phase = 0,
+  particle_state,
         des_radius,
         ro_sol,
         pvol, pmass, omoi,
@@ -30,7 +29,7 @@ struct PIdx
         fc,
         tow,
         pairs,
-	nattribs
+  nattribs
     };
 };
 

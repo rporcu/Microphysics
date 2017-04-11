@@ -30,9 +30,6 @@
 ! Brief description of the problem.
       CHARACTER(LEN=60) :: DESCRIPTION
 
-! Units for data input and output: SI.
-      CHARACTER(LEN=16) :: UNITS
-
 ! Type of run: NEW, RESTART
       CHARACTER(LEN=16) :: RUN_TYPE
 

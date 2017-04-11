@@ -14,7 +14,7 @@
 # RUN CONTROL SECTION
 
   RUN_TYPE = 'NEW'
-  UNITS = 'SI'
+
 
   TIME =  0.0000
   TSTOP = 0.0025
@@ -106,8 +106,8 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-4
-  USR_TYPE(1) = 'ASCII'
-  USR_VAR(1) =  'Granular temperature'
+
+
 
 #_______________________________________________________________________
 # OUTPUT CONTROL SECTION

@@ -25,7 +25,7 @@
 # RUN CONTROL SECTION
 
   RUN_TYPE = 'NEW'
-  UNITS = 'SI'
+
 
   TIME =   0.00
   TSTOP =  0.35
@@ -166,8 +166,8 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-2
-  USR_TYPE(1) = 'ASCII'
-  USR_VAR(1) =  'Particle position and velocity'
+
+
 
 
 #_______________________________________________________________________

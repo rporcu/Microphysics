@@ -28,7 +28,6 @@ MODULE read_namelist_module
       use exit_mod, only: mfix_exit
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
-      use funits, only: unit_dat
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_des_fit_to_region, ic_x_w, ic_type
@@ -37,15 +36,14 @@ MODULE read_namelist_module
       use leqsol, only: do_transpose, leq_it, leq_method
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, ival
       use output, only: full_log, nlog
-      use output, only: usr_dt, usr_ext, usr_format, usr_type, usr_var
-      use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
+      use output, only: usr_dt
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use remove_comment_module, only: remove_comment
       use remove_comment_module, only: remove_par_blanks
       use residual, only: group_resid, resid_string
-      use run, only: call_usr, description, detect_stall, discretize, tstop, units
+      use run, only: call_usr, description, detect_stall, discretize, tstop
       use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
       use run, only: IFILE_NAME
       use scales, only: p_ref, p_scale
@@ -64,6 +62,7 @@ MODULE read_namelist_module
 
 ! Local Variables:
 !------------------------------------------------------------------------//
+      integer, parameter :: unit_dat = 51
 ! LINE_STRING(1:MAXCOL) has valid input data
       integer, PARAMETER :: MAXCOL = 80
 ! Holds one line in the input file

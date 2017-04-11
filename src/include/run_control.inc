@@ -6,7 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / RUN_CONTROL_LOCKED /&
 
-      RUN_NAME, UNITS, RUN_TYPE, TIME
+      RUN_NAME, RUN_TYPE, TIME
 
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

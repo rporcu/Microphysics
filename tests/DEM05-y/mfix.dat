@@ -20,7 +20,7 @@
 # RUN CONTROL SECTION
 
   RUN_TYPE = 'NEW'
-  UNITS = 'SI'
+
 
   TIME =  0.0000
   TSTOP = 0.0025

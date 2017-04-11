@@ -40,16 +40,15 @@ MODULE INIT_NAMELIST_MODULE
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
       use output, only: full_log, nlog
-      use output, only: dimension_usr, usr_i_w, usr_i_e, usr_j_s, usr_j_n, usr_k_b, usr_k_t
-      use output, only: usr_dt, usr_ext, usr_format, usr_type, usr_var
-      use output, only: usr_x_e, usr_x_w, usr_y_n, usr_y_s, usr_z_b, usr_z_t
+      use output, only: dimension_usr
+      use output, only: usr_dt
       use ps, only: dimension_ps
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use residual, only: group_resid, resid_string
       use run, only: automatic_restart, iter_restart, undefined_i, bdist_io
-      use run, only: call_usr, description, detect_stall, discretize, tstop, units
+      use run, only: call_usr, description, detect_stall, discretize, tstop
       use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
@@ -85,13 +84,6 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Run Control" required="false">
 !  <description>Problem description. Limited to 60 characters.</description>
       DESCRIPTION = UNDEFINED_C
-!</keyword>
-
-!<keyword category="Run Control" required="true">
-!  <description> Simulation input/output units.</description>
-!  <valid value="cgs" note="All input and output in CGS units (g, cm, s, cal)."/>
-!  <valid value="si" note="All input and output in SI units (kg, m, s, J)."/>
-      UNITS = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Run Control" required="true">
@@ -512,7 +504,7 @@ MODULE INIT_NAMELIST_MODULE
 
 !<keyword category="Geometry and Discretization" required="false">
 !  <description>
-!    If a value is specified (in units of g/cm^2.s), the domain-averaged gas
+!    If a value is specified (in units of kg/m^2.s), the domain-averaged gas
 !    flux is held constant at that value in simulations over a periodic
 !    domain.  A pair of boundaries specified as periodic with fixed
 !    pressure drop is then treated as periodic with fixed mass flux.
@@ -1193,105 +1185,7 @@ MODULE INIT_NAMELIST_MODULE
          USR_DT(LC) = UNDEFINED
 !</keyword>
 
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: x coordinate of the west face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_X_W(LC) = UNDEFINED
-!</keyword>
 
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: x coordinate of the east face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_X_E(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: y coordinate of the south face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_Y_S(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: y coordinate of the north face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_Y_N(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_Z_B(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: z coordinate of the top face or edge.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_Z_T(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: i index of the west-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_I_W(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: i index of the east-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_I_E(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: j index of the south-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_J_S(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: j index of the north-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_J_N(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: k index of the bottom-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_K_B(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: k index of the top-most cell.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_K_T(LC) = UNDEFINED_I
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: Type of user-defined output: Binary of ASCII.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_TYPE(LC) = UNDEFINED_C
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook:
-!    Variables to be written in the user-defined output files.
-!  </description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_VAR(LC) = UNDEFINED_C
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook:
-!    Format for writing user-defined (ASCII) output file.
-!  </description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_FORMAT(LC) = UNDEFINED_C
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Udf Hook: File extension for the user-defined output.</description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
-         USR_EXT(LC) = UNDEFINED_C
-!</keyword>
       ENDDO
 
 

@@ -31,7 +31,7 @@
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
       use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
-      use run, only: units, discretize, solids_model
+      use run, only: discretize, solids_model
       use scales, only: p_scale, p_ref
       use ur_facs, only: ur_fac
 
@@ -99,7 +99,6 @@
       WRITE (UNIT_OUT, 1100)
       WRITE (UNIT_OUT, 1110) RUN_NAME
       WRITE (UNIT_OUT, 1120) DESCRIPTION
-      WRITE (UNIT_OUT, 1130) UNITS
       IF (IS_DEFINED(DT)) THEN
          WRITE (UNIT_OUT, 1135) TIME, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC
       ELSE
@@ -320,7 +319,6 @@
  1100 FORMAT(//,3X,'1. RUN CONTROL',/)
  1110 FORMAT(7X,'Run name(RUN_NAME): ',A60)
  1120 FORMAT(7X,'Brief description of the run (DESCRIPTION) :',/9X,A60)
- 1130 FORMAT(7X,'Units (UNITS) : ',A16)
  1135 FORMAT(7X,'Start-time (TIME) = ',G12.5,/7X,'Stop_time (TSTOP) = ',G12.5,/7X&
          ,'Time step (DT) = ',G12.5,/7X,'Max time step (DT_MAX) = ',G12.5,/7X&
          ,'Min time step (DT_MIN) = ',G12.5,/7X,&
