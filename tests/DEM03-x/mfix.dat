@@ -21,7 +21,6 @@
 
   RUN_TYPE = 'NEW'
 
-
   TIME =  0.0
   TSTOP = 1.0d-3
 
@@ -29,11 +28,6 @@
   DT_MAX = 2.0d-4
 
   CALL_USR = .T.
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-
 
   GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0
@@ -51,9 +45,6 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-
-
-  PARTICLES = 2                ! Number of partiles
 
 ! Friction coefficients. (1)
   MEW =   0.0                  ! particle-particle
@@ -133,20 +124,8 @@
 
   USR_DT(1) = 1.0d-5
 
-
-
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-
-#_______________________________________________________________________
-# DMP SETUP

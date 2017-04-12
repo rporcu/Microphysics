@@ -32,17 +32,15 @@
 
   CALL_USR = .T.
 
+  GRAVITY(1) =  0.d0
+  GRAVITY(2) =  0.d0
+  GRAVITY(3) = -9.80665d0
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
 #_______________________________________________________________________
 # GEOMETRY SECTION
 
-
-
-  GRAVITY(1) =  0.d0
-  GRAVITY(2) =  0.d0
-  GRAVITY(3) = -9.80665d0
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -55,8 +53,6 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-
-  PARTICLES = 1                ! Number of partiles
 
 ! Friction coefficients. (1)
   MEW =   0.0                  ! particle-particle
@@ -118,19 +114,8 @@
 
   USR_DT(1) = 5.0d-3
 
-
-
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-#_______________________________________________________________________
-# DMP SETUP

@@ -21,7 +21,6 @@
 
   RUN_TYPE = 'NEW'
 
-
   TIME =  0.0000
   TSTOP = 0.0025
 
@@ -36,11 +35,6 @@
   DES_INTG_METHOD='ADAMS_BASHFORTH'
 
 #_______________________________________________________________________
-# GEOMETRY SECTION
-
-
-
-#_______________________________________________________________________
 # MATERIAL SECTION
 
 ! GAS SECTION
@@ -51,9 +45,6 @@
 
 ! SOLIDS SECTION
 !---------------------------------------------------------------------//
-
-
-  PARTICLES = 93      ! Number of particles
 
 ! Friction coefficients (1)
   MEW      = 0.092           ! particle-particle
@@ -151,14 +142,5 @@
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   NLOG = 5000     ! time steps between updates to (.LOG) file
   FULL_LOG = .T.  ! display residuals on screen
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .T.
-
-#_______________________________________________________________________
-# DMP SETUP

@@ -23,11 +23,6 @@
       INTEGER :: NP
       double precision :: lTMP(62,3)
 
-      IF(PARTICLES /= 93) THEN
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      ENDIF
-
       INIT_VEL_T = 0.0d0
       INIT_ANGLE = 0.0d0
 

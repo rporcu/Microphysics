@@ -20,18 +20,12 @@
 
   RUN_TYPE = 'NEW'
 
-
   TIME  = 0.00
   TSTOP = 0.02
 
   DT = 1.0d-4
 
   CALL_USR = .T.
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-
 
   GRAVITY(1) =  0.d0
   GRAVITY(2) =  0.d0
@@ -49,9 +43,6 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
-
-  PARTICLES = 1                ! Number of partiles
-
 ! Normal collision spring constant (N/m)
   KN =    1.0d4                ! inter-particle
   KN_W =  1.0d4                ! particle-wall
@@ -60,20 +51,13 @@
   KT_FAC   = 1.0d0             ! inter-particle
   KT_W_FAC = 1.0d0             ! particle-wall
 
-
-! Restitution coefficient. (1)                                         !
-  DES_EN_INPUT =      1.0      ! particle-particle                     !
-  DES_EN_WALL_INPUT = 1.0      ! particle-wall                         !
+! Restitution coefficient. (1)
+  DES_EN_INPUT =      1.0      ! particle-particle
+  DES_EN_WALL_INPUT = 1.0      ! particle-wall
 
 ! Tangential damping coefficient factor: ETAT/ETAN (1)
   DES_ETAT_FAC =   1.0         ! inter-particle
   DES_ETAT_W_FAC = 1.0         ! particle-wall
-
-
-
-
-
-
 
 !......................................................................!
 ! The following keywords are required inputs for the simulation. They  !
@@ -91,7 +75,6 @@
 
   D_p0(1) =   1.0d-3   ! (m)
   RO_s0(1) =  1.0d+4   ! (kg/m)
-
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION
@@ -130,20 +113,8 @@
 
   USR_DT(1) = 1.0d-8
 
-
-
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-
-#_______________________________________________________________________
-# DMP SETUP

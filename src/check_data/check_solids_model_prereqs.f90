@@ -28,8 +28,7 @@ CONTAINS
     use run,            only: tfm_solids, tfm_count, dem_solids, &
                             & dem_count, pic_solids, pic_count,  &
                             & solids_model
-    use discretelement, only: des_continuum_coupled, des_oneway_coupled, &
-                            & print_des_data
+    use discretelement, only: des_continuum_coupled, des_oneway_coupled
 
     integer      :: M ! Phase index
 
@@ -81,7 +80,6 @@ CONTAINS
     ! Overwrite user settings if no Lagrangian solids
     if(.not.dem_solids) then
        des_continuum_coupled = .false.
-       print_des_data = .false.
        des_oneway_coupled = .false.
     endif
 

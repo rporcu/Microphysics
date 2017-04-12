@@ -26,7 +26,6 @@
 
   RUN_TYPE = 'NEW'
 
-
   TIME =   0.00
   TSTOP =  0.35
 
@@ -36,6 +35,10 @@
   CALL_USR = .TRUE.
 
   DRAG_TYPE = 'USER_DRAG'
+
+  GRAVITY(1) = -9.80665d0
+  GRAVITY(2) =  0.d0
+  GRAVITY(3) =  0.d0
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
@@ -49,15 +52,6 @@
   LEQ_SWEEP(1:3)= 3*'ISIS'
 
 #_______________________________________________________________________
-# GEOMETRY SECTION
-
-
-
-  GRAVITY(1) = -9.80665d0
-  GRAVITY(2) =  0.d0
-  GRAVITY(3) =  0.d0
-
-#_______________________________________________________________________
 # MATERIAL SECTION
 
 ! Gas Section
@@ -68,9 +62,6 @@
 
 ! Particle Section
 !---------------------------------------------------------------------//
-
-
-  PARTICLES = 1
 
 ! Normal collision spring constant. (N/m)
   KN =   0.1                   ! particle-particle
@@ -167,21 +158,8 @@
 
   USR_DT(1) = 1.0d-2
 
-
-
-
 #_______________________________________________________________________
 # OUTPUT CONTROL SECTION
 
   FULL_LOG = .T.    ! display residuals on screen
   NLOG = 25         ! frequency to updated log file (.LOG)
-
-! Output Control
-
-
-  PRINT_DES_DATA = .F.
-
-  GROUP_RESID = .T.
-
-#_______________________________________________________________________
-# DMP SETUP

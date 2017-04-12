@@ -56,16 +56,9 @@
 !---------------------------------------------------------------------//
 
 
-  PARTICLES = 1                ! Number of partiles
-
 ! Friction coefficients. (1)
   MEW =   0.0                  ! particle-particle
   MEW_W = 0.0                  ! particle-wall
-
-
-
-
-
 
 
 !......................................................................!
@@ -128,20 +121,8 @@
   USR_DT(1) = 5.0d-3
 
 
-
-
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-
-#_______________________________________________________________________
-# DMP SETUP

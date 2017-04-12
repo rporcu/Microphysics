@@ -717,12 +717,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
         pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
     }
-
-    // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
-    //   const int max_pip = particle_state.size();
-    //   mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
-    //     des_pos_new.dataPtr(), des_vel_new.dataPtr());
-    // }
   }
 
   // Calculate volume fraction, ep_g.

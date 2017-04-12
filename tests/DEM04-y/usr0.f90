@@ -20,11 +20,6 @@
 
       IMPLICIT NONE
 
-      if(particles /= 1) then
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      endif
-
 ! Store the initial particle velocity.
       u0 = 0.10d0
 

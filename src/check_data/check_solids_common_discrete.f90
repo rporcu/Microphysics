@@ -25,23 +25,12 @@ contains
     use constant,       only: mmax,  d_p0
     use param1,         only: undefined
     use discretelement, only: des_intg_method, intg_adams_bashforth, &
-                            & intg_euler, max_radius, min_radius,    &
-                            & do_old
+                            & intg_euler
 
     integer :: lM  ! Solids phase Index
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_SOLIDS_COMMON_DISCRETE")
-
-    max_radius = -undefined
-    min_radius =  undefined
-
-    ! determine the maximum particle size in the system (max_radius), which
-    ! in turn is used for various tasks
-    do lm=1, mmax
-       max_radius = max(max_radius, 0.5d0*d_p0(lm))
-       min_radius = min(min_radius, 0.5d0*d_p0(lm))
-    enddo
 
     ! Check for valid integration method
     select case(trim(DES_INTG_METHOD))
@@ -59,8 +48,6 @@ contains
             'correct the input deck.')
 
     end select
-
-    do_old = intg_adams_bashforth
 
     call finl_err_msg
 

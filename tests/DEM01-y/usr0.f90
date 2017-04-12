@@ -23,11 +23,6 @@
       double precision :: lMass
       double precision :: lGrav
 
-      if(particles /= 1) then
-         write(*,"(3x, 'invalid setup for test case')")
-         call mfix_exit(0)
-      endif
-
       lRad   = 0.1d0
       h0     = 0.5d0
       lGrav  = -gravity(2)

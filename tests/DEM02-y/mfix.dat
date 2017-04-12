@@ -23,7 +23,6 @@
 
   RUN_TYPE = 'NEW'
 
-
   TIME =   0.0
   TSTOP = 10.0
 
@@ -31,12 +30,6 @@
   DT_MAX = 2.0d-4
 
   CALL_USR = .T.
-
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -51,18 +44,9 @@
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
 
-
-  PARTICLES = 1                ! Number of partiles
-
 ! Friction coefficients. (1)
   MEW =   0.0                  ! particle-particle
   MEW_W = 0.0                  ! particle-wall
-
-
-
-
-
-
 
 !......................................................................!
 ! The following keywords are required inputs for the simulation. They  !
@@ -123,21 +107,8 @@
 
   USR_DT(1) = 1.0
 
-
-
-
 #_______________________________________________________________________
 # OUTPUT CONROL SECTION
 
-
-
   FULL_LOG = .F.  ! display residuals on screen
   NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-  PRINT_DES_DATA = .F.
-
-
-#_______________________________________________________________________
-# DMP SETUP

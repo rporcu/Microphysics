@@ -69,8 +69,6 @@ set(F90_sources
   des/make_arrays_des.f90
   des/randomno_mod.f90
   des/stl_functions_des_mod.f90
-  des/vtp_mod.f90
-  des/write_des_data.f90
   discretization_mod.f90
   display_resid.f90
   dmp_modules/compar_mod.f90

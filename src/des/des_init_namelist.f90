@@ -49,9 +49,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       use discretelement, only: particles
 
-      use discretelement, only: print_des_data
-      use discretelement, only: vtp_findex
-
       use discretelement, only: dim_m
       use param1, only: undefined_i, undefined
 
@@ -66,36 +63,8 @@ MODULE DES_INIT_NAMELIST_MODULE
       include 'desnamelist.inc'
 
 !#####################################################################!
-!                          Output Control                             !
-!#####################################################################!
-
-
-!<keyword category="Output Control" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Allows writing of discrete particle data to output files. Relevant
-!    to both granular and coupled simulations.
-!  </description>
-      PRINT_DES_DATA = .FALSE.
-!</keyword>
-
-
-!#####################################################################!
 ! DEM/PIC COMMON:      Discrete Element Simulation                    !
 !#####################################################################!
-
-!<keyword category="Discrete Element Simulation" required="false"
-!  dem="true" pic="true">
-!  <description>
-!    Number of particles to be read in from the particle_input.dat file.
-!    This value is overwritten when using automatic particle generation.
-!    A simulation with a mass inflow BC can start without solids by
-!    setting PARTICLES = 0.
-!  </description>
-!  <range min="0" max="+Inf" />
-      PARTICLES = UNDEFINED_I
-!</keyword>
-
 
 !<keyword category="Discrete Element Simulation" required="false"
 !  dem="true" pic="true">
@@ -352,13 +321,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 
 
 
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
-!                            UNSUPPORTED KEYWORDS                      !
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~!
-
-
-! These need to be inialized to 0, but they are not part of the namelist
-      VTP_FINDEX = 0
 
       RETURN
       END SUBROUTINE DES_INIT_NAMELIST

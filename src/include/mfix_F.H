@@ -82,12 +82,6 @@ extern "C"
                  int* particle_state, Real* des_radius, Real* ro_sol,
                  Real* pvol, Real* pmass, Real* omoi);
 
-  void mfix_write_des_data(const int* max_pip,
-         int* particle_state,
-         Real* des_radius,
-         Real* des_pos_new,
-         Real* des_vel_new);
-
   void comp_mean_fields(
          const int* slo, const int* shi,
          const int* max_pip,

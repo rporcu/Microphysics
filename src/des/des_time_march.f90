@@ -28,7 +28,7 @@ module des_time_march_module
       use cfnewvalues_module, only: cfnewvalues
       use discretelement, only: des_continuum_coupled, des_explicitly_coupled
       use discretelement, only: dtsolid
-      use discretelement, only: s_time, do_nsearch
+      use discretelement, only: s_time
       use drag_gs_des1_module, only: drag_gs_des
       use error_manager, only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
       use machine, only:  wall_time
@@ -207,9 +207,6 @@ module des_time_march_module
             des_pos_new, des_vel_new, omega_new, fc, tow, &
             des_acc_old, rot_acc_old)
 
-! Set DO_NSEARCH before calling DES_PAR_EXCHANGE.
-         DO_NSEARCH = .TRUE.
-
 ! Add/Remove particles to the system via flow BCs.
 !         IF(DEM_BCMI > 0) call MASS_INFLOW_DEM
 !         IF(DEM_BCMO > 0) call MASS_OUTFLOW_DEM
@@ -219,18 +216,14 @@ module des_time_march_module
             ep_g, particle_state, des_pos_new, pvol, &
             dx, dy, dz)
 
-         ! IF(DO_NSEARCH) call NEIGHBOUR(  particle_state, des_radius,&
-         !    des_pos_new, neighbor_index, neighbor_index_old)
-
-
 ! Update time to reflect changes
-         S_TIME = S_TIME + DTSOLID
+         s_time = s_time + dtsolid
 
 ! The following section targets data writes for DEM only cases:
-         IF(.NOT.des_continuum_coupled) THEN
+         if(.not.des_continuum_coupled) then
 ! Keep track of TIME and number of steps for DEM simulations
-            TIME = S_TIME
-            NSTEP = NSTEP + 1
+            time = s_time
+            nstep = nstep + 1
 
             ! Call the output manager to write RES data.
             call output_manager(max_pip, time, dt, &

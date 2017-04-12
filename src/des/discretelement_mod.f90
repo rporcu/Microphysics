@@ -60,18 +60,6 @@
       integer, parameter :: entering_ghost=5
       integer, parameter :: exiting_ghost=6
 
-
-! Output/debug controls
-!----------------------------------------------------------------->>>
-! Logic that controls whether to print data dem simulations (granular or
-! coupled)
-      logical :: PRINT_DES_DATA
-      CHARACTER(LEN=255) :: VTP_DIR
-
-! Output file count for .vtp type files and for tecplot files;
-! for vtp output used to label .vtp file names in sequential order
-! and is saved so restarts begin at the correct count
-      integer :: VTP_FINDEX
 ! End Output/debug controls
 !-----------------------------------------------------------------<<<
 
@@ -102,20 +90,6 @@
       real(c_real) :: DTSOLID
 ! Run time value of simulation time used in dem simulation
       real(c_real) :: S_TIME
-
-
-! Neighbor search related quantities
-!----------------------------------------------------------------->>>
-! Quantities used to determine whether neighbor search should be called
-
-      logical :: DO_NSEARCH
-
-! Flag on whether to have DES_*_OLD arrays, if either Adams Bashforth or PIC is used
-      logical :: DO_OLD
-
-! Quantities used for reporting: max no. neighbors and max overlap
-! that exists during last solid time step of dem simulation
-      real(c_real) :: OVERLAP_MAX
 
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<
@@ -158,15 +132,6 @@
 
 ! End particle-particle and particle-wall collision model parameters
 !-----------------------------------------------------------------<<<
-
-! Additional quantities
-      real(c_real) :: MIN_RADIUS, MAX_RADIUS
-
-!-----------------------------------------------------------------<<<
-
-
-
-
 
       CONTAINS
 

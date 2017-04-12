@@ -24,7 +24,7 @@ MODULE read_namelist_module
       use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
       use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
       use discretelement, only: des_explicitly_coupled, des_intg_method, des_oneway_coupled, e_young, ew_young
-      use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, particles, des_etat_w_fac, print_des_data
+      use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, particles, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
       use exit_mod, only: mfix_exit
       use fld_const, only: mu_g0, mw_avg
