@@ -35,13 +35,6 @@ struct PIdx
         dragx,
 	dragy,
 	dragz,
-        cforcex,  //Collision force for linear momenta
-	cforcey,
-	cforcez,
-        acforcex,  //Collision force for angular momenta
-	acforcey,
-	acforcez,
-        pairs,
 	nattribs
     };
 };
@@ -89,11 +82,7 @@ public:
 	Array<Real>& pvol,   Array<Real>& pmass,
 	Array<Real>& omoi,   Array<Real>& des_vel_new,
 	Array<Real>& omega_new,   Array<Real>& des_acc_old,
-	Array<Real>& rot_acc_old,   Array<Real>& drag_fc,
-	Array<Real>& fc,   Array<Real>& tow) ;
-    
-
-    
+	Array<Real>& rot_acc_old,   Array<Real>& drag_fc);    
 
 private:
 

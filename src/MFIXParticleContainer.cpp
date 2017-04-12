@@ -39,64 +39,64 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
     // only read the file on the IO proc
     if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
-      std::ifstream ifs;
-      ifs.open(file.c_str(), std::ios::in);
+	std::ifstream ifs;
+	ifs.open(file.c_str(), std::ios::in);
 
-      if (!ifs.good())
-          amrex::FileOpenFailed(file);
+	if (!ifs.good())
+	    amrex::FileOpenFailed(file);
 
-  // int numberOfParticles = 0;
-      ifs >> numberOfParticles >> std::ws;
+	// int numberOfParticles = 0;
+	ifs >> numberOfParticles >> std::ws;
 
-  // Issue an error if nparticles = 0 is specified
-  if ( numberOfParticles == 0 ){
-      Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
+	// Issue an error if nparticles = 0 is specified
+	if ( numberOfParticles == 0 ){
+	    Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
 \nPerhaps you forgot to specify the number of particles on the first line??? ");
-  }
+	}
 
-      // we add all the particles to grid 0 and tile 0 and let
-      // Redistribute() put them in the right places.
-      const int lev  = 0;
-      const int grid = 0;
-      const int tile = 0;
+	// we add all the particles to grid 0 and tile 0 and let
+	// Redistribute() put them in the right places.
+	const int lev  = 0;
+	const int grid = 0;
+	const int tile = 0;
 
-      ParticleType p;
-      int phase;
-      std::array<Real, PIdx::nattribs> attribs;
+	ParticleType p;
+	int phase;
+	std::array<Real, PIdx::nattribs> attribs;
 
-      for (int i = 0; i < numberOfParticles; i++) {
+	for (int i = 0; i < numberOfParticles; i++) {
 
-          // Here we read the struct data into the particle.
-          ifs >> phase;
-          ifs >> p.pos(0);
-          ifs >> p.pos(1);
-          ifs >> p.pos(2);
-          p.id() = ParticleType::NextID();
-          p.cpu() = ParallelDescriptor::MyProc();
+	    // Here we read the struct data into the particle.
+	    ifs >> phase;
+	    ifs >> p.pos(0);
+	    ifs >> p.pos(1);
+	    ifs >> p.pos(2);
+	    p.id() = ParticleType::NextID();
+	    p.cpu() = ParallelDescriptor::MyProc();
 
-      // Init to 0 every attributes
-      attribs.fill(0.0);
+	    // Init to 0 every attributes
+	    attribs.fill(0.0);
 
-          // Initialize attributes given in input file
-          ifs >> attribs[PIdx::radius];
-          ifs >> attribs[PIdx::density];
-          ifs >> attribs[PIdx::velx];
-          ifs >> attribs[PIdx::vely];
-          ifs >> attribs[PIdx::velz];
+	    // Initialize attributes given in input file
+	    ifs >> attribs[PIdx::radius];
+	    ifs >> attribs[PIdx::density];
+	    ifs >> attribs[PIdx::velx];
+	    ifs >> attribs[PIdx::vely];
+	    ifs >> attribs[PIdx::velz];
 
-      // Initialize remaning attributes
-      // State = 1 corresponds to parameter "normal_particle" defined in module discretelement
-      attribs[PIdx::phase]    = phase;
-      attribs[PIdx::state]    = 1;
-      attribs[PIdx::volume]   = (four/three)*M_PI*pow(attribs[PIdx::radius],3);
-      attribs[PIdx::mass]     = attribs[PIdx::volume] * attribs[PIdx::density];
-      attribs[PIdx::oneOverI] = half5/(attribs[PIdx::mass]*pow(attribs[PIdx::radius],2));
+	    // Initialize remaning attributes
+	    // State = 1 corresponds to parameter "normal_particle" defined in module discretelement
+	    attribs[PIdx::phase]    = phase;
+	    attribs[PIdx::state]    = 1;
+	    attribs[PIdx::volume]   = (four/three)*M_PI*pow(attribs[PIdx::radius],3);
+	    attribs[PIdx::mass]     = attribs[PIdx::volume] * attribs[PIdx::density];
+	    attribs[PIdx::oneOverI] = half5/(attribs[PIdx::mass]*pow(attribs[PIdx::radius],2));
 
-          // add them to the data structure
-          auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
-          particle_tile.push_back(p);
-          particle_tile.push_back(attribs);
-      }
+	    // add them to the data structure
+	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
+	    particle_tile.push_back(p);
+	    particle_tile.push_back(attribs);
+	}
     }
     Redistribute();
 }
@@ -127,67 +127,55 @@ MFIXParticleContainer:: GetParticlesAttributes (
     Array<Real>& pvol,   Array<Real>& pmass,
     Array<Real>& omoi,   Array<Real>& des_vel_new,
     Array<Real>& omega_new,   Array<Real>& des_acc_old,
-    Array<Real>& rot_acc_old,   Array<Real>& drag_fc,
-    Array<Real>& fc,   Array<Real>& tow) {
+    Array<Real>& rot_acc_old,   Array<Real>& drag_fc) {
 
 
     int lev = 0;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-  auto& attribs = pti.GetAttribs();
 
-  des_radius = attribs[PIdx::radius];
-  ro_sol     = attribs[PIdx::density];
-  pvol       = attribs[PIdx::volume];
-  pmass      = attribs[PIdx::mass];
-  omoi       = attribs[PIdx::oneOverI];
+	auto& attribs = pti.GetAttribs();
 
-  auto& state    = attribs[PIdx::state];
-  auto& phase    = attribs[PIdx::phase];
-  auto& velx     = attribs[PIdx::velx];
-  auto& vely     = attribs[PIdx::vely];
-  auto& velz     = attribs[PIdx::velz];
-  auto& omegax   = attribs[PIdx::omegax];
-  auto& omegay   = attribs[PIdx::omegay];
-  auto& omegaz   = attribs[PIdx::omegaz];
-  auto& accx     = attribs[PIdx::accx];
-  auto& accy     = attribs[PIdx::accy];
-  auto& accz     = attribs[PIdx::accz];
-  auto& alphax   = attribs[PIdx::alphax];
-  auto& alphay   = attribs[PIdx::alphay];
-  auto& alphaz   = attribs[PIdx::alphaz];
-  auto& dragx    = attribs[PIdx::dragx];
-  auto& dragy    = attribs[PIdx::dragy];
-  auto& dragz    = attribs[PIdx::dragz];
-  auto& cforcex  = attribs[PIdx::cforcex];
-  auto& cforcey  = attribs[PIdx::cforcey];
-  auto& cforcez  = attribs[PIdx::cforcez];
-  auto& acforcex = attribs[PIdx::acforcex];
-  auto& acforcey = attribs[PIdx::acforcey];
-  auto& acforcez = attribs[PIdx::acforcez];
+	des_radius = attribs[PIdx::radius];
+	ro_sol     = attribs[PIdx::density];
+	pvol       = attribs[PIdx::volume];
+	pmass      = attribs[PIdx::mass];
+	omoi       = attribs[PIdx::oneOverI];	
+	
+	auto& state    = attribs[PIdx::state];
+	auto& phase    = attribs[PIdx::phase];
+	auto& velx     = attribs[PIdx::velx];
+	auto& vely     = attribs[PIdx::vely];
+	auto& velz     = attribs[PIdx::velz];	
+	auto& omegax   = attribs[PIdx::omegax];
+	auto& omegay   = attribs[PIdx::omegay];
+	auto& omegaz   = attribs[PIdx::omegaz];
+	auto& accx     = attribs[PIdx::accx];
+	auto& accy     = attribs[PIdx::accy];
+	auto& accz     = attribs[PIdx::accz];	
+	auto& alphax   = attribs[PIdx::alphax];
+	auto& alphay   = attribs[PIdx::alphay];
+	auto& alphaz   = attribs[PIdx::alphaz];	
+	auto& dragx    = attribs[PIdx::dragx];
+	auto& dragy    = attribs[PIdx::dragy];
+	auto& dragz    = attribs[PIdx::dragz];
+	
+	Pack3DArrays(des_vel_new, velx, vely, velz);
+	Pack3DArrays(omega_new, omegax, omegay, omegaz);
+	Pack3DArrays(des_acc_old, accx, accy, accz);
+	Pack3DArrays(rot_acc_old, alphax, alphay, alphaz);
+	Pack3DArrays(drag_fc, dragx, dragy, dragz);
+	
+	// State and phase need type conversion
+	for ( int i = 0; i < numberOfParticles; i++ )
+	{
+	    particle_state[i]  = int(state[i]);
+	    particle_phase[i]  = int(phase[i]);
 
-  Pack3DArrays(des_vel_new, velx, vely, velz);
-  Pack3DArrays(omega_new, omegax, omegay, omegaz);
-  Pack3DArrays(des_acc_old, accx, accy, accz);
-  Pack3DArrays(rot_acc_old, alphax, alphay, alphaz);
-  Pack3DArrays(drag_fc, dragx, dragy, dragz);
-  Pack3DArrays(fc, cforcex, cforcey, cforcez);
-  Pack3DArrays(tow, acforcex, acforcey, acforcez);
-
-  // State and phase need type conversion
-  for ( int i = 0; i < numberOfParticles; i++ )
-  {
-      particle_state[i]  = int(state[i]);
-      particle_phase[i]  = int(phase[i]);
-
-  }
+	}
 
     }
 }
-
-
-
-
 
 
 void
@@ -205,7 +193,6 @@ MFIXParticleContainer:: printParticles() {
       }
     }
 }
-
 
 
 void

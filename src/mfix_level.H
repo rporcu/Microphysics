@@ -228,9 +228,7 @@ private:
     Array<Real> des_acc_old;
     Array<Real> rot_acc_old;
     Array<Real> drag_fc;
-    Array<Real> fc;
-    Array<Real> tow;
-    Array<int> pairs;
+
 
     // runtime parameters
 
