@@ -12,8 +12,8 @@ extern "C"
 
   void parse_resid_string();
 
-  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz, 
-                  Real* xlength, Real* ylength, Real* zlength, 
+  void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz,
+                  Real* xlength, Real* ylength, Real* zlength,
                   const int* domlo, const int* domhi);
 
   void write_usr0();
@@ -23,7 +23,7 @@ extern "C"
   void mfix_set_ifile( char* fname, int len );
 
     void mfix_set_phase_index( Real* phase, const Real* radius, const Real *density,
-			       const Real* state, const int*  pidx );
+             const Real* state, const int*  pidx );
 
   void mfix_get_data( int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
@@ -33,11 +33,11 @@ extern "C"
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
   void   set_domain();
-  void check_domain(Real* dx, Real* dy, Real* dz, 
+  void check_domain(Real* dx, Real* dy, Real* dz,
                     Real* xlength, Real* ylength, Real* zlength,
                     const int* domlo, const int* domhi);
 
-  void set_bc_area(Real* dx, Real* dy, Real* dz); 
+  void set_bc_area(Real* dx, Real* dy, Real* dz);
 
   void   set_bc_flow();
   void check_bc_flow();
@@ -80,27 +80,17 @@ extern "C"
                   Real* u_g,     Real* v_g,      Real* w_g,
                   Real* mu_g,    Real* lambda_g,
                   Real* dx,       Real* dy,       Real* dz,
-                  Real* xlength, Real* ylength, Real* zlength); 
+                  Real* xlength, Real* ylength, Real* zlength);
 
   void mfix_make_arrays_des(const int* max_pip,
-                 int* particle_state,
-                 int* particle_phase,
-                 Real* des_radius,
-                 Real* ro_sol,
-                 Real* pvol,
-                 Real* pmass,
-                 Real* omoi,
-                 Real* des_pos_new,
-                 Real* des_vel_new,
-                 Real* omega_new,
-                 Real* fc,
-                 Real* tow);
+                 int* particle_state, Real* des_radius, Real* ro_sol,
+                 Real* pvol, Real* pmass, Real* omoi);
 
   void mfix_write_des_data(const int* max_pip,
-			   int* particle_state,
-			   Real* des_radius,
-			   Real* des_pos_new,
-			   Real* des_vel_new);
+         int* particle_state,
+         Real* des_radius,
+         Real* des_pos_new,
+         Real* des_vel_new);
 
   void comp_mean_fields(
          const int* slo, const int* shi,
@@ -110,11 +100,11 @@ extern "C"
 
 
     void mfix_output_manager( const int* max_pip,
-			      Real* time, Real* dt,  
-			      Real* xlength, Real* ylength, Real* zlength, 
-			      int* nstep, int* particle_state,    Real* des_radius,
-			      Real* des_pos_new, Real* des_vel_new, Real* omega_new,
-			      int* finsh);
+            Real* time, Real* dt,
+            Real* xlength, Real* ylength, Real* zlength,
+            int* nstep, int* particle_state,    Real* des_radius,
+            Real* des_pos_new, Real* des_vel_new, Real* omega_new,
+            int* finsh);
 
   void calc_coeff_all(
          const int* slo, const int* shi,
@@ -267,7 +257,7 @@ extern "C"
           Real* ropX,   Real* ropY,   Real* ropZ,
           Real* d_e,      Real* d_n,      Real* d_t,
           Real* A_m,      Real* b_m,      Real* b_mmax,
-          Real* dt,       Real* dx, Real* dy, Real* dz, 
+          Real* dt,       Real* dx, Real* dy, Real* dz,
           const int* domlo , const int* domhi,
           Real (&residuals)[16]);
 
@@ -307,14 +297,14 @@ extern "C"
           int* particle_state,  int* particle_phase,
           Real* des_radius,
           Real* pvol,           Real* pmass,
-          Real* omoi,           
+          Real* omoi,
           Real* des_pos_new,    Real* des_vel_new,    Real* omega_new,
           Real* des_acc_old,    Real* rot_acc_old,
           Real* drag_fc,        Real* fc,             Real* tow,
           int* pairs,           int* pair_count,
           Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
-          Real* xlength, Real* ylength, Real* zlength, 
+          Real* xlength, Real* ylength, Real* zlength,
           int * nstep);
 
   void mfix_usr0();

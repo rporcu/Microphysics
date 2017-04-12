@@ -596,7 +596,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         particle_state.dataPtr(), particle_phase.dataPtr(),
         des_radius.dataPtr(),
         pvol.dataPtr(),           pmass.dataPtr(),
-        omoi.dataPtr(),           
+        omoi.dataPtr(),
         des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
         des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
         drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
@@ -623,7 +623,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       &time, &dt, &xlen, &ylen, &zlen, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
       des_pos_new.dataPtr(),
-      des_vel_new.dataPtr(), 
+      des_vel_new.dataPtr(),
       omega_new.dataPtr(), &finish);
   }
 }
@@ -669,11 +669,11 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   {
       pc -> AllocData();
       pc -> InitParticlesAscii("particle_input.dat");
-      pc -> printParticles();      
+      pc -> printParticles();
 
       // Resize arrays
       const int max_pip = pc -> GetNParticles();
-      
+
       particle_state.resize(  max_pip);
       particle_phase.resize(  max_pip);
 
@@ -690,39 +690,35 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       drag_fc.resize       (3*max_pip);
       fc.resize            (3*max_pip);
       tow.resize           (3*max_pip);
-      pairs.resize         (12*max_pip);    
+      pairs.resize         (12*max_pip);
 
-      
+
 
       pc -> GetParticlesPosition(des_pos_new);
 
       pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
-				   pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-				   rot_acc_old, drag_fc, fc, tow);
+           pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
+           rot_acc_old, drag_fc, fc, tow);
 
       // for( int i = 0; i <max_pip; i++ )
       // {
-      // 	  std::cout << "id, x, y, z ="
-      // 	  	    << des_pos_new[i*3]   << " "
-      // 	  	    << des_pos_new[i*3+1] << " "
-      // 	  	    << des_pos_new[i*3+2] << std::endl;
+      //    std::cout << "id, x, y, z ="
+      //          << des_pos_new[i*3]   << " "
+      //          << des_pos_new[i*3+1] << " "
+      //          << des_pos_new[i*3+2] << std::endl;
       // }
 
-      
-      // return;
-	  
-      
-    // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
-    //   const int max_pip = particle_state.size();
 
-    //   mfix_make_arrays_des(&max_pip,
-    //     particle_state.dataPtr(),
-    //     particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
-    //     pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
-    //     des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-    // 			   omega_new.dataPtr(),
-    //     fc.dataPtr(), tow.dataPtr());
-    // }
+      // return;
+
+
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
+      const int max_pip = particle_state.size();
+
+      mfix_make_arrays_des(&max_pip,
+        particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
+        pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
+    }
 
     // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
     //   const int max_pip = particle_state.size();
@@ -733,7 +729,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   // Calculate volume fraction, ep_g.
   if (solve_dem)
-    mfix_comp_mean_fields(lev);	// 
+    mfix_comp_mean_fields(lev);	//
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   mfix_init_fluid(lev);
