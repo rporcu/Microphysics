@@ -2,7 +2,6 @@ module check_solids_common_discrete_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use run,            only: IFILE_NAME
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,    &
        &  ivar,  ival, err_msg
 
@@ -53,11 +52,11 @@ contains
        intg_euler = .false.
        intg_adams_bashforth = .true.
     case DEFAULT
-       write(err_msg,2020) trim(des_intg_method), trim(IFILE_NAME)
+       write(err_msg,2020) trim(des_intg_method)
        call flush_err_msg(abort=.true.)
 
 2020   format('Error 2020:Invalid DES_INGT_METHOD: ',A,/'Please ',      &
-            'correct the ',A,' file.')
+            'correct the input deck.')
 
     end select
 

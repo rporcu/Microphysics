@@ -2,7 +2,6 @@ module check_solids_model_prereqs_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use run,            only: IFILE_NAME
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
                           & ivar, ival, err_msg
 
@@ -46,46 +45,46 @@ CONTAINS
        case ('PIC'); pic_count = pic_count + 1
        case ('---')
        case default
-          write(err_msg,1001) ivar('SOLIDS_MODEL',m), solids_model(m), trim(IFILE_NAME)
+          write(err_msg,1001) ivar('SOLIDS_MODEL',m), solids_model(m)
           call flush_err_msg(ABORT=.true.)
-          
+
 1001      format('Error 1001: Unknown solids model: ',A,' = ',A)
-          
+
        end select
     enddo
-    
+
     ! Clear out the unused phases.
     mmax =  tfm_count + dem_count + pic_count
-    
+
     ! Set the runtime flags:
     tfm_solids = (tfm_count > 0)
     dem_solids = (dem_count > 0)
     pic_solids = (pic_count > 0)
-    
+
     if(tfm_solids)then
-       write(err_msg, 1002) trim(IFILE_NAME)
+       write(err_msg, 1002)
        call flush_err_msg(abort=.true.)
     elseif(pic_solids)then
-       write(err_msg, 1003) trim(IFILE_NAME)
+       write(err_msg, 1003)
        call flush_err_msg(abort=.true.)
     endif
-    
+
 1002 format('Error 1002: TFM solids are not supported in this&
-          & version of MFIX.',/'Please correct the ',A,'t file.')
-    
+          & version of MFIX.',/'Please correct the input deck.')
+
 1003 format('Error 1003: PIC solids are not supported in this&
-          & version of MFIX.',/'Please correct the ',A,' file.')
-    
+          & version of MFIX.',/'Please correct the input deck.')
+
     ! Set flag for coupled simulations
     des_continuum_coupled = dem_solids .and. (abs(ro_g0) > 0.0d0)
-    
+
     ! Overwrite user settings if no Lagrangian solids
     if(.not.dem_solids) then
        des_continuum_coupled = .false.
        print_des_data = .false.
        des_oneway_coupled = .false.
     endif
-    
+
     call finl_err_msg
 
   end subroutine check_solids_model_prereqs

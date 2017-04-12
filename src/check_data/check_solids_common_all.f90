@@ -3,12 +3,11 @@ module check_solids_common_all_module
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
   use param1,         only: is_undefined, is_defined
-  use run,            only: IFILE_NAME
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
                           & ivar, ival, err_msg
 
   implicit none
-  private 
+  private
 
   public check_solids_common_all
 
@@ -51,18 +50,17 @@ contains
     ! Check D_p0
     do M = 1, MMAX_L
        if(IS_UNDEFINED(D_P0(M))) then
-          write(ERR_MSG, 1000) trim(iVar('D_p0',M)), trim(IFILE_NAME)
+          write(ERR_MSG, 1000) trim(iVar('D_p0',M))
           call flush_err_msg(ABORT=.true.)
        elseif(D_P0(M) <= ZERO)then
-          write(ERR_MSG, 1001) trim(iVar('D_p0',M)), iVal(D_P0(M)), &
-               trim(IFILE_NAME)
+          write(ERR_MSG, 1001) trim(iVar('D_p0',M)), iVal(D_P0(M))
           call flush_err_msg(ABORT=.true.)
        endif
     enddo
 
     do M = MMAX_L+1, DIM_M
        if(IS_DEFINED(D_P0(M)))then
-          write(ERR_MSG,1002) trim(iVar('D_p0',M)), trim(IFILE_NAME)
+          write(ERR_MSG,1002) trim(iVar('D_p0',M))
           call flush_err_msg(ABORT=.true.)
        endif
     enddo
@@ -78,13 +76,13 @@ contains
 
 
 1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
-         'correct the ',A,' file.')
+         'correct the input deck.')
 
 1001 format('Error 1001: Illegal or unphysical input: ',A,' = ',A,/   &
-         'Please correct the ',A,' file.')
+         'Please correct the input deck.')
 
 1002 format('Error 1002: Illegal input: ',A,' specified out of range.', &
-         'Please correct the ',A,' file.')
+         'Please correct the input deck.')
 
   end subroutine check_solids_common_all
 
@@ -97,9 +95,9 @@ contains
   !----------------------------------------------------------------------!
   subroutine check_solids_drag
 
-    use run, only: DRAG_TYPE, DRAG_TYPE_ENUM, SYAM_OBRIEN, GIDASPOW, &
+    use drag, only: DRAG_TYPE, DRAG_TYPE_ENUM, SYAM_OBRIEN, GIDASPOW, &
          & GIDASPOW_PCF, GIDASPOW_BLEND, GIDASPOW_BLEND_PCF, WEN_YU, &
-         & WEN_YU_PCF, KOCH_HILL, KOCH_HILL_PCF, BVK, HYS, USER_DRAG
+         & WEN_YU_PCF, KOCH_HILL, KOCH_HILL_PCF, BVK, USER_DRAG
 
     ! Initialize the error manager.
     call init_err_msg("CHECK_SOLIDS_DRAG")
@@ -113,22 +111,20 @@ contains
     case ('GIDASPOW_BLEND_PCF'); DRAG_TYPE_ENUM = GIDASPOW_BLEND_PCF
     case ('WEN_YU'); DRAG_TYPE_ENUM = WEN_YU
     case ('WEN_YU_PCF'); DRAG_TYPE_ENUM = WEN_YU_PCF
-    CASE ('KOCH_HILL'); DRAG_TYPE_ENUM = KOCH_HILL
+    case ('KOCH_HILL'); DRAG_TYPE_ENUM = KOCH_HILL
     case ('KOCH_HILL_PCF'); DRAG_TYPE_ENUM = KOCH_HILL_PCF
     case ('BVK'); DRAG_TYPE_ENUM = BVK
-    case ('HYS'); DRAG_TYPE_ENUM = HYS
     case ('USER_DRAG','USR_DRAG'); DRAG_TYPE_ENUM = USER_DRAG
 
     case DEFAULT
-       write(ERR_MSG,1001)'DRAG_TYPE', trim(adjustl(DRAG_TYPE)), &
-            trim(IFILE_NAME)
+       write(ERR_MSG,1001)'DRAG_TYPE', trim(adjustl(DRAG_TYPE))
        call flush_err_msg(ABORT=.true.)
     end select
-    
+
     call finl_err_msg
 
 1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/   &
-         'Please correct the ',A,' file.')
+         'Please correct the input deck.')
 
   end subroutine check_solids_drag
 
@@ -156,11 +152,11 @@ contains
 
        ! Verify that one -and only one- solids density model is in use.
        if(IS_UNDEFINED(RO_S0(M))) then
-          write(ERR_MSG, 1100) M, trim(IFILE_NAME)
+          write(ERR_MSG, 1100) M
           call flush_err_msg(ABORT=.true.)
 
 1100      format('Error 1101: No solids density information for phase ',  &
-               I2,'.',/'Please correct the ',A,' file.')
+               I2,'.',/'Please correct the input deck.')
 
        endif
 
@@ -169,7 +165,7 @@ contains
     ! Check for input overflow.
     do M = MMAX_LL+1, DIM_M
        if(IS_DEFINED(RO_S0(M))) then
-          write(ERR_MSG,1002) trim(iVar('RO_s0',M)), trim(IFILE_NAME)
+          write(ERR_MSG,1002) trim(iVar('RO_s0',M))
           call flush_err_msg(ABORT=.TRUE.)
        endif
     enddo
@@ -179,8 +175,8 @@ contains
 
 
 1002 format('Error 1002: Illegal input: ',A,' specified out of range.',&
-         'Please correct the ',A,' file.')
-    
+         'Please correct the input deck.')
+
   end subroutine check_solids_density
 
-end module 
+end module

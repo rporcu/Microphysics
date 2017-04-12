@@ -49,7 +49,8 @@ MODULE INIT_NAMELIST_MODULE
       use residual, only: group_resid, resid_string
       use run, only: undefined_i
       use run, only: call_usr, description, detect_stall, discretize, tstop
-      use run, only: drag_type, dt_fac, dt_max, dt_min, run_name, run_type, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name, run_type, solids_model
+      use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac

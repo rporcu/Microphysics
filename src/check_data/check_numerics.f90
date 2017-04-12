@@ -18,23 +18,27 @@ contains
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_numerics
 
-    use run,           only: discretize, IFILE_NAME
+    use run,           only: discretize
     use param,         only: dim_eqs
     use error_manager, only: finl_err_msg, err_msg, flush_err_msg, &
                            & init_err_msg, ivar, ival
 
     integer  :: l
 
+    call init_err_msg("CHECK_NUMERICS")
+
     do l = 1,dim_eqs
-       if(discretize(l) > 9 .or. discretize(l) < 0) then
+       if(discretize(l) /= 0 .and. discretize(l) /= 2) then
           write(err_msg,2002) trim(ivar('DISCRETIZE',l)),&
-               trim(ival(discretize(l))), trim(IFILE_NAME)
+               trim(ival(discretize(l)))
           call flush_err_msg(abort=.true.)
        endif
     enddo
 
 2002 format('Error 2002: Invalid option ', A,' = ', A, '.',/  &
-         'Please correct the ',A,' file.')
+       'Please correct the input deck.')
+
+    call finl_err_msg
 
   end subroutine check_numerics
 

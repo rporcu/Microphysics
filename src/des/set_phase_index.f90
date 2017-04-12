@@ -20,7 +20,6 @@ CONTAINS
     use discretelement, only: nonexistent, normal_ghost, entering_ghost, exiting_ghost
     use param1, only: small_number
     use constant, only: MMAX, D_P0, RO_s0
-    use run,      only: IFILE_NAME
 
     IMPLICIT NONE
 
@@ -97,7 +96,7 @@ CONTAINS
        ENDIF
     ENDDO
 
-    WRITE(ERR_MSG, 1101) trim(IFILE_NAME)
+    WRITE(ERR_MSG, 1101)
     CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
 
 1101 format(' ',/'Defined phase parameters from ',A,'t:',/3x,'ID',&
@@ -108,10 +107,10 @@ CONTAINS
        CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
     ENDDO
 
-    WRITE(ERR_MSG, 1102) trim(IFILE_NAME)
+    WRITE(ERR_MSG, 1102)
     CALL FLUSH_ERR_MSG(HEADER=.FALSE., ABORT=.TRUE.)
 
-1102 format('Please correct the ',A,' or particle_input.dat files.')
+1102 format('Please correct the input deck or particle_input.dat files.')
 
 9000 FORMAT(I10,2(2x,g12.5))
 

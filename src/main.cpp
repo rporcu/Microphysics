@@ -19,20 +19,6 @@ int main (int argc, char* argv[])
   //        command line arguments are in mfix-format so it will just ignore them.
   amrex::Initialize(argc,argv);
 
-  // Get the mfix input file name if provided via command line
-  {
-    std::string ifile {""};
-    ParmParse pp("mfix");
-    pp.query("input_file", ifile);
-
-    char *mfix_ifile = new char[ ifile.length()+1];
-
-    std::strcpy(mfix_ifile,ifile.c_str());
-
-    mfix_set_ifile( mfix_ifile, std::strlen(mfix_ifile) );
-    delete[] mfix_ifile;
-  }
-
   // Copy arguments into MFIX -- note that the first argument is now the name of the
   //      inputs file to be read by BoxLib, so we only pass the arguments after that
   for(int i=2; i < argc; i++) {

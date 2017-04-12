@@ -20,8 +20,6 @@ extern "C"
 
   void set_ps(Real* dx, Real* dy, Real* dz, int* err, int* is_ioproc);
 
-  void mfix_set_ifile( char* fname, int len );
-
   void mfix_get_data( int* fluid, int* dem,
                      int* steady_state, Real* dt, Real* dt_min, Real* dt_max,
                      Real* tstop, Real* time, int* max_nit,

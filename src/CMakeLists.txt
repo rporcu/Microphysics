@@ -18,7 +18,6 @@ set(F90_sources
   check_bc_flow.f90
   check_convergence.f90
   check_domain.f90
-  check_data/check_axis.f90
   check_data/check_bc_geometry.f90
   check_data/check_bc_inflow.f90
   check_data/check_bc_outflow.f90

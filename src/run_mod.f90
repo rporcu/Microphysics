@@ -42,24 +42,6 @@
 ! If .TRUE. call user-defined subroutines
       logical :: CALL_USR
 
-! Drag model options (see drag_gs for full details)
-! default is syam_obrien (may enforce a corrected Umf by defining
-! drag_c1 and drag_d1 accordingly)
-      CHARACTER(64) :: DRAG_TYPE
-      integer :: DRAG_TYPE_ENUM
-      integer,PARAMETER :: SYAM_OBRIEN=0
-      integer,PARAMETER :: GIDASPOW=1
-      integer,PARAMETER :: GIDASPOW_PCF=2
-      integer,PARAMETER :: GIDASPOW_BLEND=3
-      integer,PARAMETER :: GIDASPOW_BLEND_PCF=4
-      integer,PARAMETER :: WEN_YU=5
-      integer,PARAMETER :: WEN_YU_PCF=6
-      integer,PARAMETER :: KOCH_HILL=7
-      integer,PARAMETER :: KOCH_HILL_PCF=8
-      integer,PARAMETER :: BVK=9
-      integer,PARAMETER :: HYS=10
-      integer,PARAMETER :: useR_DRAG=11
-
 ! Maximum Time step.
       real(c_real) :: DT_MAX
 
@@ -71,10 +53,6 @@
 
 ! If .TRUE. reduce time step when residuals do not decrease
       logical :: DETECT_STALL
-
-! Input file parameters
-      character(len=*), parameter :: IFILE_NAME_DEFAULT = 'mfix.dat'
-      character(100)              :: IFILE_NAME
 
 ! Specifies the type of solids: TFM, DEM, MPPIC
       CHARACTER(len=3), DIMENSION(DIM_M) :: SOLIDS_MODEL

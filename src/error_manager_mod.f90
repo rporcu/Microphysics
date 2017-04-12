@@ -40,7 +40,7 @@
 ! Error Flag.
       integer :: IER_EM
 
-      contains
+    contains
 
 !``````````````````````````````````````````````````````````````````````!
 ! Subroutine: INIT_ERROR_MANAGER                                       !
@@ -52,8 +52,7 @@
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-! Name given to current run.
-      use run, only: RUN_NAME, IFILE_NAME
+      use run, only: RUN_NAME
 ! Flag: Provide the full log.
       use output, only: FULL_LOG
 ! Rank ID of process
@@ -92,16 +91,16 @@
       NB = INDEX(RUN_NAME,' ')
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
-         IF(myPE  == PE_IO) WRITE (*, 1000) 'short', trim(IFILE_NAME)
+         WRITE (*, 1000) 'short'
          call mfix_exit(myPE)
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
-         if(myPE == PE_IO) write (*, 1000) 'long', trim(IFILE_NAME)
+         write (*, 1000) 'long'
          call mfix_exit(myPE)
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
-         WRITE(LOGFILE,"(A)")RUN_NAME(1:(NB-1))
+         WRITE(LOGFILE,"(A)") RUN_NAME(1:(NB-1))
       ENDIF
 
 ! Verify that the .LOG file was successfully opened. Otherwise, flag the
@@ -115,8 +114,8 @@
       RETURN
 
  1000 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
-         ' Error 1000: RUN_NAME too ',A,'. Please correct the ',       &
-         A,' file.',/1x,70('*'),2/)
+        ' Error 1000: RUN_NAME too ',A,'.',/&
+        'Please correct the input deck.',/1x,70('*'),2/)
 
  1001 FORMAT(2/,1X,70('*')/' From: INIT_ERROR_MANAGER',/               &
          ' Error 1001: Failed to open log file: ',A,/' Aborting run.'/,&

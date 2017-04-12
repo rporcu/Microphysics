@@ -1,23 +1,28 @@
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: drag                                                   C
-!  Purpose: Common block containing drag arrays                        C
-!                                                                      C
-!  Author: M. Syamlal                                 Date: 20-MAY-92  C
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-
-MODULE drag
+module drag
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
    use param1, only: one, half, zero, small_number, large_number
 
-! Off diagonal friction coefficient in HYS drag relation
-  real(c_real), DIMENSION(:, :, :), ALLOCATABLE ::  beta_ij
+! Drag model options (see drag_gs for full details)
+! default is syam_obrien (may enforce a corrected Umf by defining
+! drag_c1 and drag_d1 accordingly)
+      character(64) :: drag_type
+      integer :: drag_type_enum
+      integer,parameter :: syam_obrien=0
+      integer,parameter :: gidaspow=1
+      integer,parameter :: gidaspow_pcf=2
+      integer,parameter :: gidaspow_blend=3
+      integer,parameter :: gidaspow_blend_pcf=4
+      integer,parameter :: wen_yu=5
+      integer,parameter :: wen_yu_pcf=6
+      integer,parameter :: koch_hill=7
+      integer,parameter :: koch_hill_pcf=8
+      integer,parameter :: bvk=9
+      integer,parameter :: user_drag=11
 
-CONTAINS
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
 !                                                                      C

@@ -3,7 +3,6 @@ module check_bc_inflow_module
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
   use param1,         only: undefined, one, zero, is_undefined, is_defined
-  use run,            only: IFILE_NAME
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,    &
                          &  ivar,  ival, err_msg
 
