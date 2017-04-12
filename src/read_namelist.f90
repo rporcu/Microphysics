@@ -18,7 +18,8 @@ MODULE read_namelist_module
 
       use bc
       use compar, only: mype, pe_io
-      use constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
+      use drag, only: drag_c1, drag_d1
+      use constant, only: d_p0, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
       use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson

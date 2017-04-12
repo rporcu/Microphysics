@@ -12,8 +12,6 @@
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ! Maximum number of reactions defined in data file
       integer, PARAMETER :: DIMENSION_RXN = 100
-! Number of user defined constants
-      integer, PARAMETER :: DIMENSION_C = 500
 ! Maximum number of items for specifying initial conditions
       integer, PARAMETER :: DIM_IC = 500
 ! Maximum number of items for specifying boundary conditions

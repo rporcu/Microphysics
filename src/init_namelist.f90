@@ -25,7 +25,8 @@ MODULE INIT_NAMELIST_MODULE
 
       use bc
       use ic
-      use constant, only: c, c_name, d_p0, drag_c1, drag_d1, gravity, ro_s0
+      use drag, only: drag_c1, drag_d1
+      use constant, only: d_p0, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
       use des_init_namelist_module, only: des_init_namelist
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
@@ -57,7 +58,7 @@ MODULE INIT_NAMELIST_MODULE
       use usr
       use utilities, only: blank_line, line_too_big, seek_comment
       use utilities, only: make_upper_case, replace_tab
-      use param, only: dimension_c
+
 
       use param1, only: zero, one
       use param1, only: undefined, undefined_i, undefined_c
@@ -1142,15 +1143,6 @@ MODULE INIT_NAMELIST_MODULE
       CALL_USR = .FALSE.
 !</keyword>
 
-!<keyword category="UDF Control" required="false">
-!  <description>User defined constants.</description>
-      C(:DIMENSION_C) = UNDEFINED
-!</keyword>
-
-!<keyword category="UDF Control" required="false">
-!  <description>Name of user-defined constant. (20 character max)</description>
-      C_NAME(:DIMENSION_C) = '....................'
-!</keyword>
 
       DO LC=1, DIMENSION_USR
 !<keyword category="UDF Control" required="false">

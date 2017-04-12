@@ -13,7 +13,6 @@ set(CXX_includes
 set(F90_sources
   adjust_a_g.f90
   adjust_dt_mod.f90
-  adjust_leq.f90
   bc_mod.f90
   calc_cell.f90
   calc_coeff.f90
@@ -22,7 +21,6 @@ set(F90_sources
   calc_mu_g.f90
   calc_ro_g.f90
   calc_trd_g.f90
-  check_bqend.f90
   check_bc_flow.f90
   check_convergence.f90
   check_domain.f90
@@ -42,7 +40,6 @@ set(F90_sources
   check_data/check_solids_dem.f90
   check_data/check_solids_model_prereqs.f90
   check_data/check_solids_phases.f90
-  check_plane.f90
   constant_mod.f90
   conv_dif_u_g.f90
   conv_dif_v_g.f90

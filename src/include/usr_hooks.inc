@@ -16,4 +16,4 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / USER_HOOKS_UNLOCKED /&
 
-      CALL_USR, C, C_NAME, USR_DT
+      CALL_USR, USR_DT

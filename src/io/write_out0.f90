@@ -12,14 +12,14 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use constant, only: gravity, c_name, c
+      use constant, only: gravity
       use discretelement, only: des_continuum_coupled, des_coll_model_enum, hertzian, kn, kt, kn_w, kt_w, lsd
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
       use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
-      use param, only: dimension_c, dim_ic, dim_bc
+      use param, only: dim_ic, dim_bc
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
       use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
@@ -115,10 +115,6 @@
                           LEQ_METHOD_NAME(LEQ_METHOD(L)),&
                           LEQ_SWEEP(L), LEQ_TOL(L), LEQ_PC(L),&
                           DISCR_NAME(DISCRETIZE(L)),L=1,9)
-
-      DO L = 1, DIMENSION_C
-         IF (IS_DEFINED(C(L))) WRITE (UNIT_OUT, 1190) C_NAME(L), L, C(L)
-      END DO
 
 ! Geometry and Discretization.
          WRITE (UNIT_OUT, 1200)
@@ -291,7 +287,6 @@
          'V velocity            = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
          'W velocity            = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/9X,&
          'User scalar           = ',F6.3,2X,I4,6X,A8,5x,A4,4X,G11.4,3X,A4,3X,A12/)
- 1190 FORMAT(7X,1A20,'- C(',I2,') = ',G12.5)
 !
  1200 FORMAT(//,3X,'3. GEOMETRY AND DISCRETIZATION',/)
 
