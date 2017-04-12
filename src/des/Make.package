@@ -20,7 +20,6 @@ f90EXE_sources += make_arrays_des.f90
 f90EXE_sources += randomno_mod.f90
 f90EXE_sources += read_particle_input.f90
 f90EXE_sources += set_geometry_des.f90
-f90EXE_sources += set_phase_index.f90
 f90EXE_sources += stl_functions_des_mod.f90
 f90EXE_sources += vtp_mod.f90
 f90EXE_sources += write_des_data.f90
