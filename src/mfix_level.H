@@ -12,7 +12,7 @@
 #include <AMReX_iMultiFab.H>
 #include <AMReX_BLProfiler.H>
 
-#include <ParticleContainer.H>
+#include <MFIXParticleContainer.H>
 
 class mfix_level
     : public AmrCore
@@ -134,7 +134,7 @@ private:
     Array<int> istep = {1} ;
 
     // Particle container
-    std::unique_ptr<MyParticleContainer> mypc;
+    std::unique_ptr<MFIXParticleContainer> pc;
 
 //  Array< std::unique_ptr<iMultiFab> > bc_type;
 //  Array< std::unique_ptr<iMultiFab> > bc_ptr;
@@ -224,7 +224,6 @@ private:
     Array<Real> omoi;
     Array<Real> des_pos_new;
     Array<Real> des_vel_new;
-    Array<Real> des_usr_var;
     Array<Real> omega_new;
     Array<Real> des_acc_old;
     Array<Real> rot_acc_old;

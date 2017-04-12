@@ -1,6 +1,14 @@
-set(CXX_sources main.cpp mfix_level.cpp solve_bicgstab.cpp ParticleContainer.cpp io/mfixIO.cpp )
+set(CXX_sources
+  main.cpp
+  mfix_level.cpp
+  solve_bicgstab.cpp
+  MFIXParticleContainer.cpp
+  io/mfixIO.cpp)
 
-set(CXX_includes mfix_level.H  ParticleContainer.H include/mfix_F.H)
+set(CXX_includes
+  mfix_level.H
+  MFIXParticleContainer.H
+  include/mfix_F.H)
 
 set(F90_sources
   adjust_a_g.f90
@@ -63,7 +71,6 @@ set(F90_sources
   des/gas_drag.f90
   des/make_arrays_des.f90
   des/randomno_mod.f90
-  des/read_particle_input.f90
   des/set_phase_index.f90
   des/stl_functions_des_mod.f90
   des/vtp_mod.f90

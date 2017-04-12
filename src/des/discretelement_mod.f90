@@ -162,9 +162,6 @@
 ! Additional quantities
       real(c_real) :: MIN_RADIUS, MAX_RADIUS
 
-! Defining user defined allocatable array
-      integer :: DES_USR_VAR_SIZE = 0
-
 !-----------------------------------------------------------------<<<
 
 

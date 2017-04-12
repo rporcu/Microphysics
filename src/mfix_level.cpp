@@ -29,7 +29,7 @@ mfix_level::mfix_level ()
 #endif
 
     // Particle Container
-    mypc = std::unique_ptr<MyParticleContainer> (new MyParticleContainer(this));
+    pc = std::unique_ptr<MFIXParticleContainer> (new MFIXParticleContainer(this));
 
     A_m.resize(nlevs_max);
     b_m.resize(nlevs_max);
@@ -95,7 +95,6 @@ mfix_level::mfix_level ()
     omoi.resize          (  nparticles);
     des_pos_new.resize   (3*nparticles);
     des_vel_new.resize   (3*nparticles);
-    des_usr_var.resize   (  nparticles);
     omega_new.resize     (3*nparticles);
     des_acc_old.resize   (3*nparticles);
     rot_acc_old.resize   (3*nparticles);
@@ -202,7 +201,7 @@ mfix_level::Init(int lev, Real dt, Real time)
 
     // if max_level > 0, define fine levels
 
-    mypc->InitData();
+    pc->InitData();
 }
 
 void
@@ -466,6 +465,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
         // Calculate face mass fluxes
         mfix_calc_mflux(lev);
 
+
         int converged=0;
         int nit=0;          // number of iterations
         int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
@@ -594,7 +594,7 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
         particle_state.dataPtr(), particle_phase.dataPtr(),
         des_radius.dataPtr(),
         pvol.dataPtr(),           pmass.dataPtr(),
-        omoi.dataPtr(),           des_usr_var.dataPtr(),
+        omoi.dataPtr(),
         des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
         des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
         drag_fc.dataPtr(),        fc.dataPtr(),            tow.dataPtr(),
@@ -621,7 +621,7 @@ mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real ti
       &time, &dt, &xlen, &ylen, &zlen, &nstep,
       particle_state.dataPtr(), des_radius.dataPtr(),
       des_pos_new.dataPtr(),
-      des_vel_new.dataPtr(), des_usr_var.dataPtr(),
+      des_vel_new.dataPtr(),
       omega_new.dataPtr(), &finish);
   }
 }
@@ -665,28 +665,69 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   // Allocate the particle arrays
   if (solve_dem)
   {
+      pc -> AllocData();
+      pc -> InitParticlesAscii("particle_input.dat");
+      pc -> printParticles();
+
+      // Resize arrays
+      const int max_pip = pc -> GetNParticles();
+
+      particle_state.resize(  max_pip);
+      particle_phase.resize(  max_pip);
+
+      des_radius.resize    (  max_pip);
+      ro_sol.resize        (  max_pip);
+      pvol.resize          (  max_pip);
+      pmass.resize         (  max_pip);
+      omoi.resize          (  max_pip);
+      des_pos_new.resize   (3*max_pip);
+      des_vel_new.resize   (3*max_pip);
+      omega_new.resize     (3*max_pip);
+      des_acc_old.resize   (3*max_pip);
+      rot_acc_old.resize   (3*max_pip);
+      drag_fc.resize       (3*max_pip);
+      fc.resize            (3*max_pip);
+      tow.resize           (3*max_pip);
+      pairs.resize         (12*max_pip);
+
+
+
+      pc -> GetParticlesPosition(des_pos_new);
+
+      pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
+           pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
+           rot_acc_old, drag_fc, fc, tow);
+
+      // for( int i = 0; i <max_pip; i++ )
+      // {
+      //    std::cout << "id, x, y, z ="
+      //          << des_pos_new[i*3]   << " "
+      //          << des_pos_new[i*3+1] << " "
+      //          << des_pos_new[i*3+2] << std::endl;
+      // }
+
+
+      // return;
+
+
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
       const int max_pip = particle_state.size();
 
       mfix_make_arrays_des(&max_pip,
-        particle_state.dataPtr(),
-        particle_phase.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
-        pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr(),
-        des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-        des_usr_var.dataPtr(), omega_new.dataPtr(),
-        fc.dataPtr(), tow.dataPtr());
+        particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
+        pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
     }
 
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
-      const int max_pip = particle_state.size();
-      mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
-        des_pos_new.dataPtr(), des_vel_new.dataPtr(), des_usr_var.dataPtr());
-    }
+    // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi){
+    //   const int max_pip = particle_state.size();
+    //   mfix_write_des_data(&max_pip, particle_state.dataPtr(), des_radius.dataPtr(),
+    //     des_pos_new.dataPtr(), des_vel_new.dataPtr());
+    // }
   }
 
   // Calculate volume fraction, ep_g.
   if (solve_dem)
-    mfix_comp_mean_fields(lev);
+    mfix_comp_mean_fields(lev);	//
 
   // Initial fluid arrays: pressure, velocity, density, viscosity
   mfix_init_fluid(lev);
@@ -868,6 +909,8 @@ mfix_level::mfix_comp_mean_fields(int lev)
     Real dz = geom[lev].CellSize(2);
 
     const int max_pip = particle_state.size();
+
+    std::cout << "From comp fields: size is " << max_pip << std::endl;
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
