@@ -18,7 +18,7 @@ MODULE READ_PAR_INPUT_MODULE
       use discretelement, only: normal_particle, particles
       use error_manager, only: err_msg, ival, init_err_msg, flush_err_msg, finl_err_msg
       use exit_mod, only: mfix_exit
-      use run, only: bdist_io
+
 
       implicit none
 
@@ -82,7 +82,7 @@ MODULE READ_PAR_INPUT_MODULE
             (des_vel_new(lcurpar,k),k=1,RDMN)
       ENDDO
 
-      IF(bDIST_IO .OR. myPE == PE_IO) CLOSE(lUNIT)
+      CLOSE(lUNIT)
 
       CALL FINL_ERR_MSG()
 

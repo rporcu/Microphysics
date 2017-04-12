@@ -1,17 +1,8 @@
-f90EXE_sources += funits_mod.f90
-f90EXE_sources += in_binary_512_mod.f90
-f90EXE_sources += in_binary_512i_mod.f90
-f90EXE_sources += open_file.f90
-f90EXE_sources += open_files.f90
 f90EXE_sources += out_array.f90
 f90EXE_sources += out_array_k.f90
 f90EXE_sources += out_array_kc.f90
-f90EXE_sources += out_bin_512.f90
-f90EXE_sources += out_bin_512i.f90
-f90EXE_sources += out_bin_512r.f90
 f90EXE_sources += output_manager.f90
 f90EXE_sources += write_error.f90
-f90EXE_sources += write_header.f90
 f90EXE_sources += write_out0.f90
 f90EXE_sources += write_table.f90
 

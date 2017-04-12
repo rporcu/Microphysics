@@ -17,4 +17,4 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       NAMELIST / OUTPUT_CONTROL_UNLOCKED /&
 
-      NLOG, FULL_LOG, RESID_STRING, GROUP_RESID, REPORT_NEG_DENSITY
+      NLOG, FULL_LOG, RESID_STRING, GROUP_RESID

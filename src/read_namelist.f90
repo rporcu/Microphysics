@@ -44,7 +44,7 @@ MODULE read_namelist_module
       use remove_comment_module, only: remove_par_blanks
       use residual, only: group_resid, resid_string
       use run, only: call_usr, description, detect_stall, discretize, tstop
-      use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model
+      use run, only: drag_type, dt_fac, dt_max, dt_min, run_name, run_type, solids_model
       use run, only: IFILE_NAME
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid

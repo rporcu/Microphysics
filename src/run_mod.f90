@@ -33,15 +33,6 @@
 ! Type of run: NEW, RESTART
       CHARACTER(LEN=16) :: RUN_TYPE
 
-! Variable which triggers automatic restart
-      logical :: AUTOMATIC_RESTART
-
-! counter to keep track of how many auto_retart were performed
-      integer :: ITER_RESTART
-
-! version.release of software
-      CHARACTER(LEN=10) :: ID_VERSION
-
 ! Stop-time of the run.
       real(c_real) :: TSTOP
 
@@ -69,21 +60,6 @@
       integer,PARAMETER :: HYS=10
       integer,PARAMETER :: useR_DRAG=11
 
-! Single particle drag correlation
-      CHARACTER(64) :: CD_FUNCTION
-
-
-! STOP Trigger mechanism to terminate MFIX normally before batch
-! queue terminates flag variable to check for end of batch queue when
-! set to TRUE check performed at the beginning of each time step and
-! termination of mfix triggered after saving all files if condition
-! is met
-      real(c_real) :: TERM_BUFFER
-
-! parameters for dynamically adjusting time step
-! +1 -> increase dt; -1 decrease dt
-      integer :: DT_dir = -1
-
 ! Maximum Time step.
       real(c_real) :: DT_MAX
 
@@ -96,16 +72,9 @@
 ! If .TRUE. reduce time step when residuals do not decrease
       logical :: DETECT_STALL
 
-! Generate log files when negative gas density is detected.
-      logical :: REPORT_NEG_DENSITY
-
 ! Input file parameters
       character(len=*), parameter :: IFILE_NAME_DEFAULT = 'mfix.dat'
       character(100)              :: IFILE_NAME
-
-
-! Flags indicating variable solids density.
-      logical :: SOLVE_ROs(DIM_M), ANY_SOLVE_ROs
 
 ! Specifies the type of solids: TFM, DEM, MPPIC
       CHARACTER(len=3), DIMENSION(DIM_M) :: SOLIDS_MODEL
@@ -118,6 +87,5 @@
       integer :: TFM_COUNT = 0
       integer :: DEM_COUNT = 0
       integer :: PIC_COUNT = 0
-      logical :: bDist_IO
 
       END MODULE RUN

@@ -22,7 +22,7 @@
       use param, only: dimension_c, dim_ic, dim_bc
       use param1, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
-      use run, only: description, id_version, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
+      use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
       use run, only: discretize, solids_model
       use scales, only: p_scale, p_ref
       use ur_facs, only: ur_fac

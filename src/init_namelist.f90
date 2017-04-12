@@ -47,9 +47,9 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use residual, only: group_resid, resid_string
-      use run, only: automatic_restart, iter_restart, undefined_i, bdist_io
+      use run, only: undefined_i
       use run, only: call_usr, description, detect_stall, discretize, tstop
-      use run, only: drag_type, dt_fac, dt_max, dt_min, report_neg_density, run_name, run_type, solids_model, term_buffer
+      use run, only: drag_type, dt_fac, dt_max, dt_min, run_name, run_type, solids_model
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
       use ur_facs, only: ur_fac
@@ -1123,24 +1123,6 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Output Control" required="false">
 !  <description>Display residuals by equation.  </description>
       GROUP_RESID = .FALSE.
-!</keyword>
-
-
-!<keyword category="Output Control" required="false">
-!  <description>
-!    Provide detailed logging of negative density errors.
-!  </description>
-!  <valid value=".FALSE." note="Do not log negative density errors."/>
-!  <valid value=".TRUE." note="Log negative density errors."/>
-      REPORT_NEG_DENSITY = .FALSE.
-!</keyword>
-
-
-!<keyword category="Output Control" required="false">
-!  <description>
-!    Use distributed IO :: Each MPI process generates RES files.
-!  </description>
-      bDist_IO = .FALSE.
 !</keyword>
 
 

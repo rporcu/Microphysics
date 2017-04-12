@@ -85,16 +85,9 @@ set(F90_sources
   ic_mod.f90
   init_fluid.f90
   init_namelist.f90
-  io/funits_mod.f90
-  io/open_file.f90
-  io/open_files.f90
-  io/out_bin_512.f90
-  io/out_bin_512i.f90
-  io/out_bin_512r.f90
   io/output_manager.f90
   io/init_output_vars.f90
   io/write_error.f90
-  io/write_header.f90
   io/write_out0.f90
   io/write_table.f90
   location_check.f90

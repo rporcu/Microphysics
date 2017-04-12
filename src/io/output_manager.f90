@@ -33,8 +33,6 @@ module output_manager_module
       use run, only: tstop
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
-      use write_des_data_module, only: write_des_data
-
 
       IMPLICIT NONE
 

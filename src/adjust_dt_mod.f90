@@ -1,9 +1,17 @@
 module adjust_dt
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   contains
+! Current DT (1/DT) and direction of last change (+/-)
+! +1 -> increase dt; -1 decrease dt
+  integer, save :: DT_dir = -1
+
+  private
+
+  public adjust
+
+contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
@@ -22,8 +30,6 @@ module adjust_dt
       use leqsol, only: MAX_NIT
 ! User defined: min, max DT and adjustment factor
       use run, only: DT_MIN, DT_MAX, DT_FAC
-! Current DT (1/DT) and direction of last change (+/-)
-      use run, only: DT_DIR
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
@@ -61,6 +67,7 @@ module adjust_dt
 ! Current number of iterations per second
       real(c_real) :: NITOS_NEW
 !......................................................................!
+
 
 ! Initialize the function result.
       adjustdt = 0

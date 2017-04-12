@@ -65,8 +65,6 @@
 ! Undefined character string.
       use param1, only: UNDEFINED_C
 
-      use open_file_mod, only: open_file
-
       implicit none
 
 ! Local Variables:

@@ -25,7 +25,6 @@ module get_data_module
       use init_namelist_module, only: init_namelist
       use read_namelist_module, only: read_namelist
       use set_parameters_module, only: set_parameters
-      use write_header_module, only: write_header
 
       implicit none
 
@@ -41,10 +40,6 @@ module get_data_module
       ! is read so that message verbosity can be set and the .LOG file
       ! can be opened.
       call init_error_manager
-
-      ! Write header in the .LOG file and to screen.
-      ! Not sure if the values are correct or useful
-      call write_header
 
       ! Check the minimum solids phase requirements.
       call check_solids_model_prereqs
