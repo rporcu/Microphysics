@@ -36,7 +36,6 @@ set(F90_sources
   check_data/check_point_sources.f90
   check_data/check_run_control.f90
   check_data/check_solids_common_all.f90
-  check_data/check_solids_common_discrete.f90
   check_data/check_solids_dem.f90
   check_data/check_solids_model_prereqs.f90
   check_data/check_solids_phases.f90

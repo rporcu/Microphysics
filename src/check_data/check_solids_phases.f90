@@ -1,7 +1,6 @@
 MODULE CHECK_SOLIDS_PHASES_MODULE
 
    use check_solids_common_all_module, only: check_solids_common_all
-   use check_solids_common_discrete_module, only: check_solids_common_discrete
    use check_des_solids_module, only: check_solids_dem
 
    CONTAINS
@@ -37,9 +36,6 @@ MODULE CHECK_SOLIDS_PHASES_MODULE
 
 ! Checks common to all solids models.
       CALL CHECK_SOLIDS_COMMON_ALL
-
-! Checks common to discrete solids phases (DEM).
-      IF(DEM_SOLIDS) CALL CHECK_SOLIDS_COMMON_DISCRETE
 
 ! Checks specific to the particular solids phase.
       IF(DEM_SOLIDS) CALL CHECK_SOLIDS_DEM

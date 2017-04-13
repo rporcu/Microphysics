@@ -26,7 +26,7 @@
       SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: DES_INTG_METHOD
+
 
       IMPLICIT NONE
 
@@ -42,7 +42,7 @@
       IF (.NOT.EXISTS) THEN
          OPEN(UNIT=fUNIT,FILE=FNAME,STATUS='NEW')
          WRITE(fUNIT, 1000) trim(DESCRIPTION)
-         WRITE(fUNIT, 1100) trim(adjustl(DES_INTG_METHOD))
+
          WRITE(fUNIT, 1300) 'MEW', VAR, VAR
       ENDIF
 

@@ -14,7 +14,6 @@ f90EXE_sources +=   check_output_control.f90
 f90EXE_sources +=   check_point_sources.f90
 f90EXE_sources +=   check_run_control.f90
 f90EXE_sources +=   check_solids_common_all.f90
-f90EXE_sources +=   check_solids_common_discrete.f90
 f90EXE_sources +=   check_solids_dem.f90
 f90EXE_sources +=   check_solids_model_prereqs.f90
 f90EXE_sources +=   check_solids_phases.f90

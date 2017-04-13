@@ -3,9 +3,6 @@
                          DEM03: BALL SLIPPING ON A ROUGH SURFACE
 
 
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
-
            MEW                 TVEL            TVEL_MFIX         %REL ERR
         0.20000000          0.71428571        0.71427206        0.00191103
         0.30000000          0.71428571        0.71428186        0.00053914

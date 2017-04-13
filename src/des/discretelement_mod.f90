@@ -79,13 +79,6 @@
       integer,PARAMETER :: HERTZIAN=0
       integer,PARAMETER :: LSD=1
 
-! Integration method, options are as follows
-!   'euler' first-order scheme (default)
-!   'adams_bashforth' second-order scheme (by T.Li)
-      CHARACTER(LEN=64) :: DES_INTG_METHOD
-      logical :: INTG_ADAMS_BASHFORTH
-      logical :: INTG_EULER
-
 ! Value of solids time step based on particle properties
       real(c_real) :: DTSOLID
 ! Run time value of simulation time used in dem simulation

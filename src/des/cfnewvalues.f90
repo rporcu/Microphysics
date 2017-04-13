@@ -1,124 +1,92 @@
 MODULE CFNEWVALUES_MODULE
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC
-!                                                                      C
-!  Module name: CFNEWVALUES                                            C
-!
-!  Purpose: DES - Calculate the new values of particle velocity,
-!           position, angular velocity etc
-!                                                                      C
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
-      SUBROUTINE CFNEWVALUES(max_pip, particle_state, pmass,&
-         omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
-         des_acc_old, rot_acc_old)
+contains
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+!                                                                      !
+!  Module name: CFNEWVALUES                                            !
+!                                                                      !
+!  Purpose: DES - Calculate the new values of particle velocity,       !
+!           position, angular velocity etc                             !
+!                                                                      !
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  SUBROUTINE CFNEWVALUES(max_pip, particle_state, pmass,&
+    omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
+    des_acc_old, rot_acc_old)
 
-      use discretelement, only: dtsolid
-      use discretelement, only: intg_euler, intg_adams_bashforth
-      use discretelement, only: entering_particle, entering_ghost
-      use discretelement, only: nonexistent, exiting_ghost
-      use discretelement, only: normal_ghost
-      use param1, only: zero
-      use constant, only: gravity
+    use discretelement, only: dtsolid
+    use discretelement, only: normal_particle, exiting_particle
+    use param1, only: zero
+    use constant, only: gravity
 
-      IMPLICIT NONE
+    implicit none
 
-      integer     , intent(in   ) :: max_pip
-      integer     , intent(in   ) :: particle_state(max_pip)
-      real(c_real), intent(in   ) :: omoi(max_pip)
-      real(c_real), intent(in   ) :: pmass(max_pip)
-      real(c_real), intent(inout) :: des_pos_new(max_pip,3)
-      real(c_real), intent(inout) :: des_vel_new(max_pip,3)
-      real(c_real), intent(inout) :: omega_new(max_pip,3)
-      real(c_real), intent(inout) :: fc(max_pip,3)
-      real(c_real), intent(inout) :: tow(max_pip,3)
-      real(c_real), intent(inout) :: des_acc_old(max_pip,3)
-      real(c_real), intent(inout) :: rot_acc_old(max_pip,3)
+    integer     , intent(in   ) :: max_pip
+    integer     , intent(in   ) :: particle_state(max_pip)
+    real(c_real), intent(in   ) :: omoi(max_pip)
+    real(c_real), intent(in   ) :: pmass(max_pip)
+    real(c_real), intent(inout) :: des_pos_new(max_pip,3)
+    real(c_real), intent(inout) :: des_vel_new(max_pip,3)
+    real(c_real), intent(inout) :: omega_new(max_pip,3)
+    real(c_real), intent(inout) :: fc(max_pip,3)
+    real(c_real), intent(inout) :: tow(max_pip,3)
+    real(c_real), intent(inout) :: des_acc_old(max_pip,3)
+    real(c_real), intent(inout) :: rot_acc_old(max_pip,3)
 
 !-----------------------------------------------
 ! Local Variables
 !-----------------------------------------------
-      integer :: L
-      real(c_real) :: DD(3)
-      logical, SAVE :: FIRST_PASS = .TRUE.
+    integer :: L
+    real(c_real) :: DD(3)
+    logical, save :: first_pass = .true.
 
-      real(c_real) :: lVELo(3), lPOSo(3)
+    real(c_real) :: lVELo(3), lPOSo(3)
 
 !-----------------------------------------------
 
 ! Adams-Bashforth defaults to Euler for the first time step.
-      IF(FIRST_PASS .AND. INTG_ADAMS_BASHFORTH) THEN
-         DO L =1, MAX_PIP
-            IF(NONEXISTENT==PARTICLE_STATE(L)) CYCLE
-            IF(ENTERING_PARTICLE==PARTICLE_STATE(L).or.&
-               ENTERING_GHOST==PARTICLE_STATE(L)) CYCLE  ! Only non-entering
-            IF(NORMAL_GHOST==PARTICLE_STATE(L)) CYCLE
-            DES_ACC_OLD(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
-            ROT_ACC_OLD(L,:) = TOW(L,:)
-         ENDDO
-      ENDIF
-      DO L = 1, MAX_PIP
-! only process particles that exist
-         IF(NONEXISTENT==PARTICLE_STATE(L) .or.      &
-            NORMAL_GHOST==PARTICLE_STATE(L).or.      &
-            ENTERING_GHOST==PARTICLE_STATE(L).or.    &
-            EXITING_GHOST==PARTICLE_STATE(L)) CYCLE
+    if(first_pass) then
+       first_pass = .false.
+       do l =1, max_pip
+          if(particle_state(l) == normal_particle .or.      &
+             particle_state(l) == exiting_particle) then
+             des_acc_old(l,:) = fc(l,:)/pmass(l) + gravity(:)
+             rot_acc_old(l,:) = tow(l,:)
+          endif
+       enddo
+    endif
 
-! If a particle is classified as new, then forces are ignored.
-! Classification from new to existing is performed in routine
-! des_check_new_particle.f
-         IF(.NOT.ENTERING_PARTICLE==PARTICLE_STATE(L) .AND. &
-            .NOT.ENTERING_GHOST==PARTICLE_STATE(L))THEN
-            FC(L,:) = FC(L,:)/PMASS(L) + GRAVITY(:)
-         ELSE
-            FC(L,:) = ZERO
-            TOW(L,:) = ZERO
-         ENDIF
+    do l = 1, max_pip
+       if(particle_state(l) == normal_particle .or.      &
+          particle_state(l) == exiting_particle) then
+
+          fc(l,:) = fc(l,:)/pmass(l) + gravity(:)
 
 ! Advance particle position, velocity
-         IF (INTG_EULER) THEN
-! first-order method
-            DES_VEL_NEW(L,:) = DES_VEL_NEW(L,:) + FC(L,:)*DTSOLID
-            DD(:) = DES_VEL_NEW(L,:)*DTSOLID
-            DES_POS_NEW(L,:) = DES_POS_NEW(L,:) + DD(:)
-            OMEGA_NEW(L,:)   = OMEGA_NEW(L,:) + TOW(L,:)*OMOI(L)*DTSOLID
-
-         ELSEIF (INTG_ADAMS_BASHFORTH) THEN
-
-            lVELo = DES_VEL_NEW(L,:)
-            lPOSo = DES_POS_NEW(L,:)
+          lvelo = des_vel_new(l,:)
+          lposo = des_pos_new(l,:)
 
 ! Second-order Adams-Bashforth/Trapezoidal scheme
-            DES_VEL_NEW(L,:) = lVELo(:) + 0.5d0*&
-               ( 3.d0*FC(L,:)-DES_ACC_OLD(L,:) )*DTSOLID
+          des_vel_new(l,:) = lvelo(:) + 0.5d0*&
+            ( 3.d0*fc(l,:)-des_acc_old(l,:) )*dtsolid
 
-            OMEGA_NEW(L,:)   =  OMEGA_NEW(L,:) + 0.5d0*&
-               ( 3.d0*TOW(L,:)*OMOI(L)-ROT_ACC_OLD(L,:) )*DTSOLID
+          omega_new(l,:)   =  omega_new(l,:) + 0.5d0*&
+            ( 3.d0*tow(l,:)*omoi(l)-rot_acc_old(l,:) )*dtsolid
 
-            DD(:) = 0.5d0*( lVELo(:)+DES_VEL_NEW(L,:) )*DTSOLID
+          dd(:) = 0.5d0*( lvelo(:)+des_vel_new(l,:) )*dtsolid
 
-            DES_POS_NEW(L,:) = lPOSo(:) + DD(:)
-            DES_ACC_OLD(L,:) = FC(L,:)
-            ROT_ACC_OLD(L,:) = TOW(L,:)*OMOI(L)
-         ENDIF
+          des_pos_new(l,:) = lposo(:) + dd(:)
+          des_acc_old(l,:) = fc(l,:)
+          rot_acc_old(l,:) = tow(l,:)*omoi(l)
 
 ! Reset total contact force and torque
-         FC(L,:) = ZERO
-         TOW(L,:) = ZERO
+          fc(l,:) = zero
+          tow(l,:) = zero
+       endif
+    enddo
 
-      ENDDO
-
-      FIRST_PASS = .FALSE.
-
-      RETURN
-
-      contains
-
-        include 'functions.inc'
-
-      END SUBROUTINE CFNEWVALUES
-
-END MODULE CFNEWVALUES_MODULE
+    return
+  end subroutine cfnewvalues
+end module cfnewvalues_module

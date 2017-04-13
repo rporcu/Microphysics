@@ -25,7 +25,7 @@
       subroutine write_dat_header(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: DES_INTG_METHOD
+
       use discretelement, only: KN, KN_W
       use discretelement, only: DES_EN_WALL_INPUT
 
@@ -47,7 +47,7 @@
          OPEN(UNIT=fUNIT,FILE=FNAME,POSITION="APPEND",STATUS='OLD')
       ENDIF
 
-      WRITE(fUNIT, 1100) trim(adjustl(DES_INTG_METHOD))
+
 
       WRITE(fUNIT, 1110) KN, KN_W
       WRITE(fUNIT, 1120) DES_EN_WALL_INPUT(1), DES_EN_WALL_INPUT(1)
@@ -70,7 +70,7 @@
          9X,'%REL DIFF',9x,'ABS DIFF')
 
       CLOSE(fUNIT)
-      
+
       end subroutine write_dat_header
 
       end subroutine write_usr0

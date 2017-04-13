@@ -1,7 +1,7 @@
        NAMELIST / DES_INPUT_DATA /&
 
 ! USE discretelement
-        DES_ONEWAY_COUPLED, DES_INTG_METHOD, DES_EXPLICITLY_COUPLED, &
+        DES_ONEWAY_COUPLED, DES_EXPLICITLY_COUPLED, &
 
 ! Particle properties
         KN, KN_W, KT_FAC, KT_W_FAC, MEW, MEW_W, &

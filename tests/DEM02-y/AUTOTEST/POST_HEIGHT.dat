@@ -2,9 +2,6 @@
 
                          DEM02: BOUNCING PARTICLE HEIGHT
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
           KN_W =               0.5000E+05
@@ -31,9 +28,6 @@
    14          0.50000000        0.50040642        0.08128478
    15          0.50000000        0.50043660        0.08732029
    16          0.50000000        0.50047150        0.09429962
-
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
 
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
@@ -96,9 +90,6 @@
    49          0.10001312        0.09786991        2.14292377
    50          0.10001062        0.09786878        2.14162088
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
           KN_W =               0.5000E+05
@@ -160,9 +151,6 @@
    49          0.10000000        0.09786394        2.13605604
    50          0.10000000        0.09786394        2.13605601
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
           KN_W =               0.5000E+05
@@ -223,9 +211,6 @@
    48          0.10000000        0.09786394        2.13605597
    49          0.10000000        0.09786394        2.13605597
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
           KN_W =               0.5000E+05
@@ -271,9 +256,6 @@
    33          0.10000000        0.09786394        2.13605597
    34          0.10000000        0.09786394        2.13605597
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+05
           KN_W =               0.5000E+05
@@ -310,9 +292,6 @@
    24          0.10000000        0.09786394        2.13605597
    25          0.10000000        0.09786394        2.13605597
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
           KN_W =               0.5000E+06
@@ -340,9 +319,6 @@
    15          0.50000000        0.49999696        0.00060745
    16          0.50000000        0.49986102        0.02779511
    17          0.50000000        0.49983802        0.03239643
-
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
 
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
@@ -405,9 +381,6 @@
    49          0.10001312        0.09979189        0.22120001
    50          0.10001062        0.09979084        0.21975856
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
           KN_W =               0.5000E+06
@@ -469,9 +442,6 @@
    49          0.10000000        0.09978639        0.21360567
    50          0.10000000        0.09978639        0.21360564
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
           KN_W =               0.5000E+06
@@ -532,9 +502,6 @@
    48          0.10000000        0.09978639        0.21360560
    49          0.10000000        0.09978639        0.21360560
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
           KN_W =               0.5000E+06
@@ -580,9 +547,6 @@
    33          0.10000000        0.09978639        0.21360560
    34          0.10000000        0.09978639        0.21360560
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+06
           KN_W =               0.5000E+06
@@ -619,9 +583,6 @@
    24          0.10000000        0.09978639        0.21360560
    25          0.10000000        0.09978639        0.21360560
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07
           KN_W =               0.5000E+07
@@ -649,9 +610,6 @@
    15          0.50000000        0.50026746        0.05349286
    16          0.50000000        0.50033359        0.06671890
    17          0.50000000        0.50030760        0.06152080
-
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
 
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07
@@ -714,9 +672,6 @@
    49          0.10001312        0.09998389        0.02921865
    50          0.10001062        0.09998290        0.02772579
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07
           KN_W =               0.5000E+07
@@ -778,9 +733,6 @@
    49          0.10000000        0.09997864        0.02136064
    50          0.10000000        0.09997864        0.02136061
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07
           KN_W =               0.5000E+07
@@ -841,9 +793,6 @@
    48          0.10000000        0.09997864        0.02136056
    49          0.10000000        0.09997864        0.02136056
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07
           KN_W =               0.5000E+07
@@ -888,9 +837,6 @@
    32          0.10000000        0.09997864        0.02136056
    33          0.10000000        0.09997864        0.02136056
    34          0.10000000        0.09997864        0.02136056
-
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
 
        Normal collision spring constant. (N/m)
           KN =                 0.5000E+07

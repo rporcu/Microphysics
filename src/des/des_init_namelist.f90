@@ -27,7 +27,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       SUBROUTINE DES_INIT_NAMELIST
 
-      use discretelement, only: des_intg_method
+
       use discretelement, only: des_coll_model
 
       use discretelement, only: des_continuum_coupled
@@ -84,18 +84,6 @@ MODULE DES_INIT_NAMELIST_MODULE
 ! </description>
       DES_ONEWAY_COUPLED = .FALSE.
 !</keyword>
-
-!<keyword category="Discrete Element Simulation" required="false" dem="true">
-!  <description>
-!    Time stepping scheme.
-!  </description>
-!  <valid value="EULER"
-!    note="First-Order Euler Scheme."/>
-!  <valid value="ADAMS BASHFORTH"
-!    note="Second order ADAMS BASHFORTH scheme (DEM only)"/>
-      DES_INTG_METHOD = 'EULER'
-!</keyword>
-
 
 !<keyword category="Discrete Element Simulation" required="false" dem="true">
 !  <description>

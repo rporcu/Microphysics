@@ -62,14 +62,10 @@
   DES_ETAT_FAC = 1.0           ! inter-particle
   DES_ETAT_W_FAC = 1.0         ! particle-wall
 
-!......................................................................!
-! The following keywords are required inputs for the simulation. They  !
-! are not specified here because they are passed as run time arguments.!
-!                                                                      !
-! Restitution coefficient. (1)                                         !
-! DES_EN_INPUT =      xxxxx    ! particle-particle                     !
-! DES_EN_WALL_INPUT = xxxxx    ! particle-wall                         !
-!......................................................................!
+! Restitution coefficient. (1)
+  DES_EN_INPUT(1:2) = 1.0   1.0    ! particle-particle
+  DES_EN_INPUT(3)   =       1.0
+  DES_EN_WALL_INPUT = 1.0   1.0    ! particle-wall
 
 ! Solids phase 1
 !---------------------------------------------------------------------//

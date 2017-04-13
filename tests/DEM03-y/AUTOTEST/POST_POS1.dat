@@ -2,9 +2,6 @@
 
                          DEM03: TWO STACKED, COMPRESSED PARTICLES
 
-
-       Time Stepping Scheme: ADAMS_BASHFORTH
-
        Normal collision spring constant. (N/m)
           KN =                  1000.    
           KN_W =                1000.    

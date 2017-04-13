@@ -33,7 +33,7 @@
 ! Invoke UDFs
   CALL_USR = .TRUE.
 
-  DES_INTG_METHOD='ADAMS_BASHFORTH'
+
 
 #_______________________________________________________________________
 # MATERIAL SECTION
