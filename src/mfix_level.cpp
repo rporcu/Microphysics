@@ -428,8 +428,23 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     mfix_set_bc_type(lev);
 }
 
+
+// This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
+mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt, 
+		   Real time, Real normg) {
+
+    if (solve_fluid)
+      EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
+
+    if (solve_dem)
+      EvolveParticles(lev,nstep,dt,time);
+
+}
+
+
+void
+mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
                          Real dt, Real& prev_dt, Real time, Real normg)
 {
       Real dx = geom[lev].CellSize(0);
@@ -552,7 +567,7 @@ mfix_level::evolve_fluid(int lev, int nstep, int set_normg,
 }
 
 void
-mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
+mfix_level::EvolveParticles(int lev, int nstep, Real dt, Real time)
 {
     int pair_count = 0;
 
@@ -565,6 +580,8 @@ mfix_level::evolve_dem(int lev, int nstep, Real dt, Real time)
     Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
     Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
     Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+    const auto& plevel = pc -> GetParticles(lev);
 
     const int max_pip = particle_state.size();
 

@@ -39,10 +39,13 @@ public:
 
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
-    void evolve_fluid (int lev, int nstep, int set_normg,
+    void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
 
-    void evolve_dem (int lev, int nstep, Real dt, Real time);
+    // void evolve_fluid (int lev, int nstep, int set_normg,
+    //                    Real dt, Real& prev_dt, Real time, Real normg);
+
+    // void evolve_dem (int lev, int nstep, Real dt, Real time);
 
     void usr3 (int lev);
 
@@ -117,6 +120,11 @@ private:
     void WriteJobInfo(const std::string& dir ) const;
 
     static void GotoNextLine (std::istream& is);
+
+    void EvolveFluid (int lev, int nstep, int set_normg,
+                       Real dt, Real& prev_dt, Real time, Real normg);
+
+    void EvolveParticles (int lev, int nstep, Real dt, Real time);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;

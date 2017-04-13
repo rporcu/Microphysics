@@ -52,6 +52,8 @@ public:
     amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
 
 
+    // const int& GetNumberOfParticles ()  const {return GetStructOfArrays().size();};
+
     ///
     /// Define some convenient wrappers for accessing particle data
     ///
