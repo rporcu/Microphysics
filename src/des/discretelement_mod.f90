@@ -21,7 +21,7 @@
 !-----------------------------------------------
 
 ! Total number of particles in simulation: read from input or generated
-      integer :: PARTICLES
+!      integer :: PARTICLES
 
 ! Start particle tracking quantities
 !----------------------------------------------------------------->>>

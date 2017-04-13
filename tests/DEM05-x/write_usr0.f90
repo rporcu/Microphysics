@@ -26,8 +26,7 @@
       SUBROUTINE WRITE_DAT_HEADER(FNAME, VAR)
 
       use run, only: DESCRIPTION
-      use discretelement, only: des_coll_model_enum, hertzian, kn, kn_w, kt, kt_w, lsd
-      use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etan_wall, des_etat_wall
+      use discretelement, only: des_coll_model
       use constant, only: MMAX
 
       IMPLICIT NONE
@@ -60,53 +59,17 @@
       ENDIF
 
 
- 1450 FORMAT(3/4X,'Collision model: ',A,2/4X,&
-         'Spring Coefficients:',T29,'Normal',7x,'Tangential')
-
-      IF(DES_COLL_MODEL_ENUM .EQ. LSD) THEN
-         WRITE(fUNIT,1450) 'LINEAR SPRING-DASHPOT'
-         WRITE(fUNIT,1455) 'Particle-particle', KN, KT
-         WRITE(fUNIT,1455) 'Particle-wall', KN_W, KT_W
-
-      ELSEIF(DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
-         WRITE(fUNIT,1450) 'HERTZIAN SPRING-DASHPOT'
-
-         DO M = 1, MMAX
-            DO N = M, MMAX
-               IF(M==N) THEN
-                 WRITE(fUNIT,1456)M,N,HERT_KN(M,N),HERT_KT(M,N)
-               ELSE
-                 WRITE(fUNIT,1457)N,HERT_KN(M,N),HERT_KT(M,N)
-               ENDIF
-            ENDDO
-            WRITE(fUNIT,1458) HERT_KWN(M),HERT_KWT(M)
-         ENDDO
-      ENDIF
-
-      WRITE(fUNIT,1451)
- 1451 FORMAT(/4X,'Damping Coefficients:',T29,'Normal',7x,'Tangential')
-
-      DO M = 1, MMAX
-         DO N = M, MMAX
-            IF(M==N) THEN
-               WRITE(fUNIT,1456)M,N,DES_ETAN(M,N),DES_ETAT(M,N)
-            ELSE
-               WRITE(fUNIT,1457)N,DES_ETAN(M,N),DES_ETAT(M,N)
-            ENDIF
-         ENDDO
-         WRITE(fUNIT,1458) DES_ETAN_WALL(M),DES_ETAT_WALL(M)
-      ENDDO
-
- 1455 FORMAT(6X,A,T27,g12.5,3x,g12.5)
- 1456 FORMAT(6X,'Phase',I2,'-Phase',I2,' = ',T27,g12.5,3x,g12.5)
- 1457 FORMAT(13X,'-Phase',I2,' = ',T27,g12.5,3x,g12.5)
- 1458 FORMAT(13X,'-Wall',3x,' = ',T27,g12.5,3x,g12.5)
+      select case (trim(des_coll_model))
+      case('LSD');      write(funit,1450) 'LINEAR SPRING-DASHPOT'
+      case('HERTZIAN'); write(funit,1450) 'HERTZIAN SPRING-DASHPOT'
+      end select
+1450  FORMAT(3/4X,'Collision model: ',A)
 
 
       WRITE(fUNIT, 1200)
 
 
- 1000 FORMAT(2/,25x,A)
+ 1000 FORMAT(25x,A)
 
 
  1200 FORMAT(/6X,'Impact Angle',2X,'Part-Part',5x,'Part-Wall')
@@ -238,8 +201,8 @@
       WRITE(lUNIT,1000)
  1000 FORMAT(/4x,'Impact Angle',4x,'Experiment')
 
-      DO LC=1, COEFFS
 ! Write the results to a file.
+      DO LC=1, COEFFS
          WRITE(lUNIT,1100) IMPT_ANGLE(LC), EXP_COEFF(LC)
       ENDDO
 

@@ -82,6 +82,8 @@ extern "C"
                  int* particle_state, Real* des_radius, Real* ro_sol,
                  Real* pvol, Real* pmass, Real* omoi);
 
+  void mfix_init_collision();
+
   void comp_mean_fields(
          const int* slo, const int* shi,
          const int* max_pip,

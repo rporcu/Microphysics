@@ -47,10 +47,8 @@ MODULE DES_INIT_NAMELIST_MODULE
 
       use discretelement, only: des_etat_fac, des_etat_w_fac
 
-      use discretelement, only: particles
-
       use discretelement, only: dim_m
-      use param1, only: undefined_i, undefined
+      use param1, only: undefined_i, undefined, half
 
 
       IMPLICIT NONE
@@ -244,9 +242,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 !  </description>
 !  <dependent keyword="DES_COLL_MODEL" value="LSD"/>
 !  <range min="0.0" max="1.0" />
-!  <valid value="UNDEFINED" note="For LSD model, if left undefined, MFIX
-!   reverts to default value of 0.5" />
-      DES_ETAT_FAC = UNDEFINED
+      DES_ETAT_FAC = HALF
 !</keyword>
 
 
@@ -263,7 +259,7 @@ MODULE DES_INIT_NAMELIST_MODULE
 ! <range min="0.0" max="1.0" />
 ! <valid value="UNDEFINED" note="For LSD model, if left undefined, MFIX
 ! will revert to default value of 0.5" />
-      DES_ETAT_W_FAC = UNDEFINED
+      DES_ETAT_W_FAC = HALF
 !</keyword>
 
 

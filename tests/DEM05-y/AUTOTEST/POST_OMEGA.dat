@@ -1,5 +1,3 @@
-
-
                          DEM05: OBLIQUE PARTICLE COLLISION
 
     Impact Angle    Experiment
@@ -14,17 +12,6 @@
 
 
     Collision model: LINEAR SPRING-DASHPOT
-
-    Spring Coefficients:    Normal       Tangential
-      Particle-particle    0.17200E+08    0.14800E+08
-      Particle-wall        0.17200E+08    0.14800E+08
-
-    Damping Coefficients:   Normal       Tangential
-      Phase 1-Phase 1 =     0.0000         0.0000    
-             -Phase 2 =     0.0000         0.0000    
-             -Wall    =     0.0000         0.0000    
-      Phase 2-Phase 2 =     0.0000         0.0000    
-             -Wall    =     0.0000         0.0000    
 
       Impact Angle  Part-Part     Part-Wall
         0.0000        0.0000        0.0000
@@ -62,20 +49,6 @@
 
 
     Collision model: HERTZIAN SPRING-DASHPOT
-
-    Spring Coefficients:    Normal       Tangential
-      Phase 1-Phase 1 =    0.94570E+10    0.12342E+11
-             -Phase 2 =    0.29676E+10    0.38243E+10
-             -Wall    =    0.41968E+10    0.54084E+10
-      Phase 2-Phase 2 =    0.17599E+10    0.22627E+10
-             -Wall    =    0.24889E+10    0.32000E+10
-
-    Damping Coefficients:   Normal       Tangential
-      Phase 1-Phase 1 =     0.0000         0.0000    
-             -Phase 2 =     0.0000         0.0000    
-             -Wall    =     0.0000         0.0000    
-      Phase 2-Phase 2 =     0.0000         0.0000    
-             -Wall    =     0.0000         0.0000    
 
       Impact Angle  Part-Part     Part-Wall
         0.0000        0.0000        0.0000

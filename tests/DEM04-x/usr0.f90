@@ -13,7 +13,7 @@
       SUBROUTINE USR0
 
       use run, only: TSTOP
-      use discretelement, only: mew_w, particles
+      use discretelement, only: mew_w
       use constant, only: gravity
       use exit_mod, only: mfix_exit
       use usr, only: tsa, u0

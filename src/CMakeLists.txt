@@ -65,6 +65,7 @@ set(F90_sources
   des/drag_gp_des.f90
   des/drag_gs_des.f90
   des/gas_drag.f90
+  des/init_collision.f90
   des/make_arrays_des.f90
   des/randomno_mod.f90
   des/stl_functions_des_mod.f90

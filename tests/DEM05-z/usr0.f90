@@ -14,7 +14,7 @@
 
       use compar, only: myPE, PE_IO
       use constant, only: PI
-      use discretelement, only: PARTICLES
+
       use exit_mod, only: mfix_exit
       use usr, only: init_vel_t, init_angle
 

@@ -717,6 +717,10 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
         particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
         pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
     }
+
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+      mfix_init_collision();
+
   }
 
   // Calculate volume fraction, ep_g.
