@@ -683,9 +683,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       des_acc_old.resize   (3*max_pip);
       rot_acc_old.resize   (3*max_pip);
       drag_fc.resize       (3*max_pip);
-      // fc.resize            (3*max_pip);
-      // tow.resize           (3*max_pip);
-      // pairs.resize         (12*max_pip);
 
 
 
@@ -693,16 +690,16 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
       pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
            pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-				   rot_acc_old, drag_fc);//, fc, tow);
+				   rot_acc_old, drag_fc);
 
 
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
       const int max_pip = particle_state.size();
 
-      mfix_make_arrays_des(&max_pip,
-        particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
-        pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
+      // mfix_make_arrays_des(&max_pip,
+      //   particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
+      //   pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
     }
   }
 

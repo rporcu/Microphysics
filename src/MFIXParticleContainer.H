@@ -50,7 +50,36 @@ public:
     SoA&       GetAttribs ()       { return GetStructOfArrays(); }
     const amrex::Array<amrex::Real>& GetAttribs (int comp) const { return GetStructOfArrays()[comp]; }
     amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
+
+
+    ///
+    /// Define some convenient wrappers for accessing particle data
+    ///
+    ParticleType::RealType& x(int i) { return GetArrayOfStructs()[i].pos(0); }
+    ParticleType::RealType& y(int i) { return GetArrayOfStructs()[i].pos(1); }
+    ParticleType::RealType& z(int i) { return GetArrayOfStructs()[i].pos(2); }
+
+    ParticleType::RealType& velx(int i) { return GetStructOfArrays()[PIdx::velx][i]; }
+    ParticleType::RealType& vely(int i) { return GetStructOfArrays()[PIdx::vely][i]; }
+    ParticleType::RealType& velz(int i) { return GetStructOfArrays()[PIdx::velz][i]; }
+
+    int phase(int i) { return int(GetStructOfArrays()[PIdx::phase][i]); }
+    int state(int i) { return int(GetStructOfArrays()[PIdx::state][i]); }
+
+    // ParticleType::RealType& ax(int i) { return GetStructOfArrays()[PIdx::ax][i]; }
+    // ParticleType::RealType& ay(int i) { return GetStructOfArrays()[PIdx::ay][i]; }
+
+
+
+
 };
+
+
+
+
+
+
+
 
 class MFIXParticleContainer
     : public amrex::ParticleContainer<0,0,PIdx::nattribs> 

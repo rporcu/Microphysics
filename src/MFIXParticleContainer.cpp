@@ -18,7 +18,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
       (amr_core->GetParGDB())
 {
     ReadStaticParameters();
-
+    
     this->SetVerbose(0);
 }
 
@@ -32,10 +32,6 @@ MFIXParticleContainer::AllocData () {
 
 void
 MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
-
-    const Real four  = 4.0;
-    const Real three = 3.0;
-    const Real half5 = 2.5;
 
     // only read the file on the IO proc
     if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
@@ -61,44 +57,54 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	const int tile = 0;
 
 	ParticleType p;
-	int phase;
+	int        pstate, pphase;
+	Real       pradius, pdensity, pvolume, pomoi, pmass;
+
 	std::array<Real, PIdx::nattribs> attribs;
 
+	pstate = 1;
+
+	
 	for (int i = 0; i < numberOfParticles; i++) {
 
-	    // Here we read the struct data into the particle.
-	    ifs >> phase;
+	    // Init to 0 all attributes
+	    attribs.fill(0.0);
+
+	    // Read from input file
+	    ifs >> pphase;
 	    ifs >> p.pos(0);
 	    ifs >> p.pos(1);
 	    ifs >> p.pos(2);
-	    p.id() = ParticleType::NextID();
-	    p.cpu() = ParallelDescriptor::MyProc();
-
-	    // Init to 0 every attributes
-	    attribs.fill(0.0);
-
-	    // Initialize attributes given in input file
-	    ifs >> attribs[PIdx::radius];
-	    ifs >> attribs[PIdx::density];
+	    ifs >> pradius;
+	    ifs >> pdensity; 
 	    ifs >> attribs[PIdx::velx];
 	    ifs >> attribs[PIdx::vely];
 	    ifs >> attribs[PIdx::velz];
 
-	    // Initialize remaning attributes
-	    // State = 1 corresponds to parameter "normal_particle" defined in module discretelement
-	    attribs[PIdx::phase]    = phase;
-	    attribs[PIdx::state]    = 1;
-	    attribs[PIdx::volume]   = (four/three)*M_PI*pow(attribs[PIdx::radius],3);
-	    attribs[PIdx::mass]     = attribs[PIdx::volume] * attribs[PIdx::density];
-	    attribs[PIdx::oneOverI] = half5/(attribs[PIdx::mass]*pow(attribs[PIdx::radius],2));
+	    // Set id and cpu for this particle
+	    p.id()  = ParticleType::NextID();
+	    p.cpu() = ParallelDescriptor::MyProc();
 
-	    // add them to the data structure
+	    // Compute other particle properties
+	    mfix_set_particle_properties( &pstate, &pradius, &pdensity, &pvolume, &pmass, &pomoi);
+
+	    // Set other particle properties
+	    attribs[PIdx::phase]    = pphase;
+	    attribs[PIdx::state]    = pstate;
+	    attribs[PIdx::volume]   = pvolume;
+	    attribs[PIdx::density]  = pdensity;
+	    attribs[PIdx::mass]     = pmass;
+	    attribs[PIdx::oneOverI] = pomoi;
+	    attribs[PIdx::radius]   = pradius;
+
+	    // Add everything to the data structure
 	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 	    particle_tile.push_back(p);
 	    particle_tile.push_back(attribs);
 	}
     }
     Redistribute();
+
 }
 
 void
@@ -113,7 +119,7 @@ MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
     int lev = 0;
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-  pti.GetPosition(xp, yp, zp);
+	pti.GetPosition(xp, yp, zp);
     }
 
     Pack3DArrays(des_pos_new, xp, yp, zp);
@@ -169,8 +175,8 @@ MFIXParticleContainer:: GetParticlesAttributes (
 	// State and phase need type conversion
 	for ( int i = 0; i < numberOfParticles; i++ )
 	{
-	    particle_state[i]  = int(state[i]);
-	    particle_phase[i]  = int(phase[i]);
+	    particle_state[i]  = state[i];
+	    particle_phase[i]  = phase[i];
 
 	}
 
@@ -186,8 +192,9 @@ MFIXParticleContainer:: printParticles() {
       const auto& particle_structs = kv.second.GetArrayOfStructs();
       const auto& particle_attribs = kv.second.GetStructOfArrays();
       for (unsigned i = 0; i < particle_structs.numParticles(); ++i) {
+	  std::cout << "Particle ID  = " << i << " " << std::endl;
           for (int j = 0; j < PIdx::nattribs; j++) {
-        std::cout << particle_attribs[j][i] << " " << std::endl;
+	      std::cout << particle_attribs[j][i] << " " << std::endl;
           }
           std::cout << std::endl;
       }

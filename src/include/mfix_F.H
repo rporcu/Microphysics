@@ -78,9 +78,9 @@ extern "C"
                   Real* dx,       Real* dy,       Real* dz,
                   Real* xlength, Real* ylength, Real* zlength);
 
-  void mfix_make_arrays_des(const int* max_pip,
-                 int* particle_state, Real* des_radius, Real* ro_sol,
+    void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
                  Real* pvol, Real* pmass, Real* omoi);
+
 
   void comp_mean_fields(
          const int* slo, const int* shi,
