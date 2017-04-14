@@ -125,6 +125,8 @@ public:
 			 const Array< unique_ptr<MultiFab> >& mu_g,
 			 int lev, int nstep, Real dt, Real time);
 
+    void output(int lev, int estatus, int finish, int nstep, Real dt, Real time);
+
 private:
 
     void Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,

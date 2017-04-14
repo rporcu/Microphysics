@@ -375,6 +375,56 @@ MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 
 }
 
+
+void
+MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
+{
+
+    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
+    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
+    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
+
+
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+
+	// particle struct data
+	auto& structs = pti.GetArrayOfStructs();
+	
+	// particle array data
+	auto& attribs = pti.GetStructOfArrays();
+	
+	//number of particles
+	const int np = structs.size();
+
+	// Temporary arrays
+	Array<int>   state;
+	Array<Real>   vel, pos, omega;
+
+	state.resize(np);
+	vel.resize(3*np);
+	pos.resize(3*np);
+	omega.resize(3*np);
+
+	for( unsigned i=0; i < np ; ++i )
+	{
+	    pos[i]      = structs[i].pos(0);
+	    pos[i+np]   = structs[i].pos(1);
+	    pos[i+2*np] = structs[i].pos(2);
+	    state[i]    = int(attribs[PIdx::state][i]);
+	}
+
+	Pack3DArrays(vel,   attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz] );
+	Pack3DArrays(omega, attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz] );
+
+
+	mfix_output_manager(&np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+			    state.dataPtr(), attribs[PIdx::radius].dataPtr(), pos.dataPtr(),
+			    vel.dataPtr(),  omega.dataPtr(), &finish);
+    }
+
+}
+
 // void
 // MFIXParticleContainer::Evolve (int lev, Real dt)
 // {

@@ -577,21 +577,23 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
-  const int max_pip = particle_state.size();
 
-  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+  pc -> output( lev, estatus, finish, nstep, dt, time);
+  // const int max_pip = particle_state.size();
 
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-  {
-     mfix_output_manager(&max_pip,
-      &time, &dt, &xlen, &ylen, &zlen, &nstep,
-      particle_state.dataPtr(), des_radius.dataPtr(),
-      des_pos_new.dataPtr(),
-      des_vel_new.dataPtr(),
-      omega_new.dataPtr(), &finish);
-  }
+  // Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  // Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  // Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+  // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  // {
+  //    mfix_output_manager(&max_pip,
+  //     &time, &dt, &xlen, &ylen, &zlen, &nstep,
+  //     particle_state.dataPtr(), des_radius.dataPtr(),
+  //     des_pos_new.dataPtr(),
+  //     des_vel_new.dataPtr(),
+  //     omega_new.dataPtr(), &finish);
+  // }
 }
 
 void
