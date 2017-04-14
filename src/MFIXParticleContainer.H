@@ -8,6 +8,7 @@
 
 
 using namespace amrex;
+using namespace std;
 
 
 struct PIdx
@@ -115,10 +116,22 @@ public:
 	Array<Real>& omega_new,   Array<Real>& des_acc_old,
 	Array<Real>& rot_acc_old,   Array<Real>& drag_fc);    
 
+    void EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
+			 const Array< unique_ptr<MultiFab> >& u_g,
+			 const Array< unique_ptr<MultiFab> >& v_g,
+			 const Array< unique_ptr<MultiFab> >& w_g,
+			 const Array< unique_ptr<MultiFab> >& p_g,
+			 const Array< unique_ptr<MultiFab> >& ro_g,
+			 const Array< unique_ptr<MultiFab> >& mu_g,
+			 int lev, int nstep, Real dt, Real time);
+
 private:
 
-    void Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
-		       Array<Real>& comp2, Array<Real>& comp3 );
+    void Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
+		       const Array<Real>& comp2, const Array<Real>& comp3 );
+
+    void Unpack3DArrays( Array<Real>& comp1,  Array<Real>& comp2, Array<Real>& comp3,
+			 const Array<Real>& vec );
     
     static void ReadStaticParameters ();
 

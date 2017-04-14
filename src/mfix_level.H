@@ -21,7 +21,7 @@ public:
 
 //  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
-    ~mfix_level();
+    ~mfix_level ();
 
     int Verbose () const { return verbose; }
 
@@ -41,11 +41,6 @@ public:
 
     void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
-
-    // void evolve_fluid (int lev, int nstep, int set_normg,
-    //                    Real dt, Real& prev_dt, Real time, Real normg);
-
-    // void evolve_dem (int lev, int nstep, Real dt, Real time);
 
     void usr3 (int lev);
 
@@ -122,9 +117,7 @@ private:
     static void GotoNextLine (std::istream& is);
 
     void EvolveFluid (int lev, int nstep, int set_normg,
-                       Real dt, Real& prev_dt, Real time, Real normg);
-
-    void EvolveParticles (int lev, int nstep, Real dt, Real time);
+		      Real dt, Real& prev_dt, Real time, Real normg);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;

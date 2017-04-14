@@ -9,6 +9,8 @@
 
 
 using namespace amrex;
+using namespace std;
+
 
 int     MFIXParticleContainer::do_tiling = 0;
 IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
@@ -228,11 +230,11 @@ MFIXParticleContainer::InitData()
 
 
 void
-MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
-             Array<Real>& comp2, Array<Real>& comp3 )
+MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
+             const Array<Real>& comp2, const Array<Real>& comp3 )
 {
 
-    const int  np = numberOfParticles;
+    const int  np = comp1.size();
 
     for ( int i = 0; i < np; i++ )
     {
@@ -245,15 +247,144 @@ MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, Array<Real>& comp1,
 
 
 void
-MFIXParticleContainer::Evolve (int lev, Real dt)
+MFIXParticleContainer::Unpack3DArrays( Array<Real>& comp1,  Array<Real>& comp2, Array<Real>& comp3,
+				       const Array<Real>& vec )
 {
-    BL_PROFILE("MyPC::Evolve()");
 
-    const Geometry& gm  = m_gdb->Geom(lev);
+    const int  np = comp1.size();
 
-#if (BL_SPACEDIM == 3)
-    const Real* dx = gm.CellSize();
-#elif (BL_SPACEDIM == 2)
-    Real dx[3] = { gm.CellSize(0), std::numeric_limits<Real>::quiet_NaN(), gm.CellSize(1) };
-#endif
+    for ( int i = 0; i < np; i++ )
+    {
+	comp1[i] = vec[i];
+	comp2[i] = vec[i+np];
+	comp3[i] = vec[i+2*np];
+    }
+
 }
+
+
+void
+MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g, 
+				       const Array< unique_ptr<MultiFab> >& u_g,
+				       const Array< unique_ptr<MultiFab> >& v_g,
+				       const Array< unique_ptr<MultiFab> >& w_g,
+				       const Array< unique_ptr<MultiFab> >& p_g,
+				       const Array< unique_ptr<MultiFab> >& ro_g,
+				       const Array< unique_ptr<MultiFab> >& mu_g,
+				       int lev, int nstep, Real dt, Real time )
+{
+    
+    int pair_count = 0;
+
+    Box domain(Geom(lev).Domain());
+
+    Real dx = Geom(lev).CellSize(0);
+    Real dy = Geom(lev).CellSize(1);
+    Real dz = Geom(lev).CellSize(2);
+
+    Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
+    Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
+    Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
+
+    const int np = NumberOfParticlesAtLevel( lev, 1, 1 );
+
+
+    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
+    {
+
+	const Box& sbx = (*ep_g[lev])[pti].box();
+	const Box& bx  = pti.validbox();
+	
+	Box ubx((*u_g[lev])[pti].box());
+	Box vbx((*v_g[lev])[pti].box());
+	Box wbx((*w_g[lev])[pti].box());
+
+	
+	// particle struct data
+	auto& structs = pti.GetArrayOfStructs();
+	
+	// particle array data
+	auto& attribs = pti.GetStructOfArrays();
+	
+	//number of particles
+	const int np = structs.size();
+
+	// Temporary arrays
+	Array<int>   state, phase;
+	Array<Real>   vel, pos, omega, acc, alpha, drag;
+
+	state.resize(np);
+	phase.resize(np);
+	vel.resize(3*np);
+	pos.resize(3*np);
+	omega.resize(3*np);
+	acc.resize(3*np);
+	alpha.resize(3*np);
+	drag.resize(3*np);
+
+
+	for( unsigned i=0; i < np ; ++i )
+	{
+	    pos[i]      = structs[i].pos(0);
+	    pos[i+np]   = structs[i].pos(1);
+	    pos[i+2*np] = structs[i].pos(2);
+	    state[i]    = int(attribs[PIdx::state][i]);
+	    phase[i]    = int(attribs[PIdx::phase][i]);
+	}
+
+
+	Pack3DArrays(vel,   attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz] );
+	Pack3DArrays(acc,   attribs[PIdx::accx], attribs[PIdx::accy], attribs[PIdx::accz] );
+	Pack3DArrays(omega, attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz] );
+	Pack3DArrays(alpha, attribs[PIdx::alphax], attribs[PIdx::alphay], attribs[PIdx::alphaz] );
+	Pack3DArrays(drag,  attribs[PIdx::dragx], attribs[PIdx::dragy], attribs[PIdx::dragz] );
+
+
+	mfix_des_time_march( &np, 
+			     sbx.loVect(), sbx.hiVect(),
+			     ubx.loVect(), ubx.hiVect(),
+			     vbx.loVect(), vbx.hiVect(),
+			     wbx.loVect(), wbx.hiVect(),
+			     bx.loVect(),  bx.hiVect(),
+			     domain.loVect(), domain.hiVect(),
+			     (*ep_g[lev])[pti].dataPtr(), (*p_g[lev])[pti].dataPtr(),
+			     (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+			     (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+			     state.dataPtr(),    phase.dataPtr(),
+			     attribs[PIdx::radius].dataPtr(), attribs[PIdx::volume].dataPtr(), attribs[PIdx::mass].dataPtr(),
+			     attribs[PIdx::oneOverI].dataPtr(), pos.dataPtr(),    vel.dataPtr(),   omega.dataPtr(),
+			     acc.dataPtr(),    alpha.dataPtr(), drag.dataPtr(), &time, &dt, &dx, &dy, &dz, 
+			     &xlen, &ylen, &zlen, &nstep);
+
+	for( unsigned i=0; i < np ; ++i )
+	{
+	    structs[i].pos(0) = pos[i];
+	    structs[i].pos(1) = pos[i+np] ;
+	    structs[i].pos(2) = pos[i+2*np];
+	    attribs[PIdx::state][i] = state[i];
+	    attribs[PIdx::phase][i] = phase[i];
+	}
+
+	Unpack3DArrays(attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz], vel );
+	Unpack3DArrays(attribs[PIdx::accx], attribs[PIdx::accy], attribs[PIdx::accz], acc );
+	Unpack3DArrays(attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz], omega );
+	Unpack3DArrays(attribs[PIdx::alphax], attribs[PIdx::alphay], attribs[PIdx::alphaz], alpha );
+	Unpack3DArrays(attribs[PIdx::dragx], attribs[PIdx::dragy], attribs[PIdx::dragz], drag );
+
+    }
+
+}
+
+// void
+// MFIXParticleContainer::Evolve (int lev, Real dt)
+// {
+//     BL_PROFILE("MyPC::Evolve()");
+
+//     const Geometry& gm  = m_gdb->Geom(lev);
+
+// #if (BL_SPACEDIM == 3)
+//     const Real* dx = gm.CellSize();
+// #elif (BL_SPACEDIM == 2)
+//     Real dx[3] = { gm.CellSize(0), std::numeric_limits<Real>::quiet_NaN(), gm.CellSize(1) };
+// #endif
+// }

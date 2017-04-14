@@ -438,8 +438,18 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
       EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
     if (solve_dem)
-      EvolveParticles(lev,nstep,dt,time);
+    {
+	pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
+			       lev, nstep, dt,time );
+	fill_mf_bc(lev,*ep_g[lev]);
+	fill_mf_bc(lev,*rop_g[lev]);
 
+      pc -> GetParticlesPosition(des_pos_new);
+
+      pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
+           pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
+				   rot_acc_old, drag_fc);
+    }
 }
 
 
@@ -566,59 +576,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       } while (reiterate==1);
 }
 
-void
-mfix_level::EvolveParticles(int lev, int nstep, Real dt, Real time)
-{
-    int pair_count = 0;
-
-    Box domain(geom[lev].Domain());
-
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-    Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-    Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
-
-    const auto& plevel = pc -> GetParticles(lev);
-
-    const int max_pip = particle_state.size();
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-       // const Box& bx = mfi.validbox();
-       const Box& sbx = (*ep_g[lev])[mfi].box();
-       const Box& bx = mfi.validbox();
-
-       Box ubx((*u_g[lev])[mfi].box());
-       Box vbx((*v_g[lev])[mfi].box());
-       Box wbx((*w_g[lev])[mfi].box());
-
-       mfix_des_time_march(&max_pip,
-        sbx.loVect(), sbx.hiVect(),
-        ubx.loVect(), ubx.hiVect(),
-        vbx.loVect(), vbx.hiVect(),
-        wbx.loVect(), wbx.hiVect(),
-        bx.loVect(), bx.hiVect(),
-        domain.loVect(), domain.hiVect(),
-        (*ep_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-        (*ro_g[lev])[mfi].dataPtr(),
-        (*mu_g[lev])[mfi].dataPtr(),
-        particle_state.dataPtr(), particle_phase.dataPtr(),
-        des_radius.dataPtr(),
-        pvol.dataPtr(),           pmass.dataPtr(),
-        omoi.dataPtr(),
-        des_pos_new.dataPtr(),    des_vel_new.dataPtr(),   omega_new.dataPtr(),
-        des_acc_old.dataPtr(),    rot_acc_old.dataPtr(),
-        drag_fc.dataPtr(), &time, &dt, &dx, &dy, &dz, 
-			   &xlen, &ylen, &zlen, &nstep);
-    }
-
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-}
 
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
