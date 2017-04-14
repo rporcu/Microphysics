@@ -78,8 +78,7 @@ extern "C"
                   Real* dx,       Real* dy,       Real* dz,
                   Real* xlength, Real* ylength, Real* zlength);
 
-  void mfix_make_arrays_des(const int* max_pip,
-                 int* particle_state, Real* des_radius, Real* ro_sol,
+    void mfix_set_particle_properties(const int* pstate, Real* pradius, Real* pdensity,
                  Real* pvol, Real* pmass, Real* omoi);
 
   void mfix_init_collision();
@@ -291,9 +290,7 @@ extern "C"
           Real* pvol,           Real* pmass,
           Real* omoi,
           Real* des_pos_new,    Real* des_vel_new,    Real* omega_new,
-          Real* des_acc_old,    Real* rot_acc_old,
-          Real* drag_fc,        Real* fc,             Real* tow,
-          int* pairs,           int* pair_count,
+          Real* des_acc_old,    Real* rot_acc_old,  Real* drag_fc,
           Real* time,           Real* dt,
           Real* dx  ,           Real* dy,             Real* dz,
           Real* xlength, Real* ylength, Real* zlength,

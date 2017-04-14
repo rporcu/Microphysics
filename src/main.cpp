@@ -104,11 +104,7 @@ int main (int argc, char* argv[])
   {
     mfix_usr1();
 
-    if (solve_fluid)
-      my_mfix.evolve_fluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
-
-    if (solve_dem)
-      my_mfix.evolve_dem(lev,nstep,dt,time);
+    my_mfix.Evolve(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
     if (!steady_state)  {
       time += prev_dt;

@@ -21,7 +21,7 @@ public:
 
 //  mfix_level (const RealBox* rb, int max_level_in, const Array<int>& n_cell_in, int coord);
     mfix_level ();
-    ~mfix_level();
+    ~mfix_level ();
 
     int Verbose () const { return verbose; }
 
@@ -39,10 +39,8 @@ public:
 
     void InitFromCheckpoint (int *nstep, Real *dt, Real *time) const;
 
-    void evolve_fluid (int lev, int nstep, int set_normg,
+    void Evolve(int lev, int nstep, int set_normg,
                        Real dt, Real& prev_dt, Real time, Real normg);
-
-    void evolve_dem (int lev, int nstep, Real dt, Real time);
 
     void usr3 (int lev);
 
@@ -117,6 +115,9 @@ private:
     void WriteJobInfo(const std::string& dir ) const;
 
     static void GotoNextLine (std::istream& is);
+
+    void EvolveFluid (int lev, int nstep, int set_normg,
+		      Real dt, Real& prev_dt, Real time, Real normg);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;
@@ -228,9 +229,7 @@ private:
     Array<Real> des_acc_old;
     Array<Real> rot_acc_old;
     Array<Real> drag_fc;
-    Array<Real> fc;
-    Array<Real> tow;
-    Array<int> pairs;
+
 
     // runtime parameters
 
