@@ -17,9 +17,6 @@ module ic
   real(c_real) :: IC_Y_s(dim_ic), IC_Y_n(dim_ic)
   real(c_real) :: IC_Z_b(dim_ic), IC_Z_t(dim_ic)
 
-  ! Type of initial condition: PATCH
-  character(len=16) :: IC_Type(dim_ic)
-
   ! Void fraction in a specified boundary
   real(c_real) :: IC_EP_g(dim_ic), IC_EP_s(dim_ic, dim_m)
 
@@ -48,7 +45,6 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   logical function ic_defined(icv)
 
-    use run,    only: run_type
     use param, only: is_defined
 
     integer, intent(in) :: icv
@@ -56,15 +52,6 @@ contains
     ic_defined = is_defined(ic_x_w(icv)) .or. is_defined(ic_x_e(icv)) .or. &
       is_defined(ic_y_s(icv)) .or. is_defined(ic_y_n(icv)) .or. &
       is_defined(ic_z_b(icv)) .or. is_defined(ic_z_t(icv))
-
-    ! An IC is defined for restart runs only if it is a 'PATCH'.
-    if(run_type /= 'NEW' .and. ic_type(icv) /= 'PATCH') &
-      ic_defined = .false.
-
-    ! Ignore patched IC regions for new runs. It may be better to flag this as
-    ! and error to avoid user confusion.
-    if(run_type == 'NEW' .and. ic_type(icv) == 'PATCH') &
-      ic_defined = .false.
 
    end function ic_defined
 

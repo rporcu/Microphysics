@@ -27,7 +27,7 @@ contains
   subroutine check_initial_conditions(dx,dy,dz,domlo,domhi)
 
     use ic,                    only: ic_defined
-    use run,                   only: dem_solids, run_type
+    use run,                   only: dem_solids
     use param,                 only: dim_ic
 
     integer(c_int), intent(in) :: domlo(3),domhi(3)
@@ -47,9 +47,8 @@ contains
           ! Generic solids phase checks.
           call check_ic_solids_phases(ICV)
 
-       ! Verify that no data was defined for unspecified IC. ICs are only
-       ! defined for new runs, so these checks are restricted to new runs.
-       elseif(run_type == 'NEW') then
+       ! Verify that no data was defined for unspecified IC.
+       else
           call check_ic_overflow(ICV)
        endif
     enddo
@@ -201,32 +200,26 @@ contains
    subroutine check_ic_gas_phase(ICV)
 
       use fld_const, only: ro_g0
-      use ic,        only: IC_P_g, IC_U_g, IC_V_g, IC_W_g,  IC_TYPE
+      use ic,        only: IC_P_g, IC_U_g, IC_V_g, IC_W_g
 
       integer, intent(in) :: ICV
-      logical             :: BASIC_IC
 
       call init_err_msg("CHECK_IC_GAS_PHASE")
 
-      ! Patch ICs skip various checks.
-      basic_ic = (ic_type(icv) /= 'PATCH')
-
       ! Check that gas phase velocity components are initialized.
-      if(basic_ic) then
-         if(is_undefined(ic_u_g(icv))) then
-            write(err_msg, 1000) trim(ivar('IC_U_g',icv))
-            call flush_err_msg(abort=.true.)
-         endif
+      if(is_undefined(ic_u_g(icv))) then
+         write(err_msg, 1000) trim(ivar('IC_U_g',icv))
+         call flush_err_msg(abort=.true.)
+      endif
 
-         if(is_undefined(ic_v_g(icv))) then
-            write(err_msg, 1000) trim(ivar('IC_V_g',icv))
-            call flush_err_msg(abort=.true.)
-         endif
+      if(is_undefined(ic_v_g(icv))) then
+         write(err_msg, 1000) trim(ivar('IC_V_g',icv))
+         call flush_err_msg(abort=.true.)
+      endif
 
-         if(is_undefined(ic_w_g(icv))) then
-            write(err_msg, 1000) trim(ivar('IC_W_g',icv))
-            call flush_err_msg(abort=.true.)
-         endif
+      if(is_undefined(ic_w_g(icv))) then
+         write(err_msg, 1000) trim(ivar('IC_W_g',icv))
+         call flush_err_msg(abort=.true.)
       endif
 
 1000  format('Error 1000: Required input not specified: ',A,/&
@@ -265,55 +258,49 @@ contains
       use param, only: equal
       use constant, only: mmax
       use ic,       only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
-      use ic,       only: ic_ep_g, ic_type
+      use ic,       only: ic_ep_g
 
       integer, intent(in) :: icv
       integer             :: m
       real(c_real)        :: sum_ep
-      logical             :: basic_ic
 
       ! Initialize the error manager.
       CALL init_err_msg("CHECK_IC_SOLIDS_PHASES")
-
-      ! Patch ICs skip various checks.
-      basic_ic = (ic_type(icv) /= 'PATCH')
 
       ! Initialize the sum of the total volume fraction.
       sum_ep = ic_ep_g(icv)
 
       ! check that solids phase-m components are initialized
-      if(basic_ic) then
-         do m=1, mmax
+      do m=1, mmax
 
-            if(ic_ep_s(icv,m) > epsilon(0.d0)) then
+         if(ic_ep_s(icv,m) > epsilon(0.d0)) then
 
-               if(is_undefined(ic_u_s(icv,m))) then
-                  write(err_msg, 1000)trim(ivar('IC_U_s',icv,m))
-                  call flush_err_msg(abort=.true.)
-               endif
-
-               if(is_undefined(ic_v_s(icv,m))) then
-                  write(err_msg, 1000)trim(ivar('IC_V_s',icv,m))
-                  call flush_err_msg(abort=.true.)
-               endif
-
-               if(is_undefined(ic_w_s(icv,m))) then
-                  write(err_msg, 1000)trim(ivar('IC_W_s',icv,m))
-                  call flush_err_msg(abort=.true.)
-               endif
-
-               sum_ep = sum_ep + ic_ep_s(icv,m)
-
+            if(is_undefined(ic_u_s(icv,m))) then
+               write(err_msg, 1000)trim(ivar('IC_U_s',icv,m))
+               call flush_err_msg(abort=.true.)
             endif
-         enddo
-      endif
+
+            if(is_undefined(ic_v_s(icv,m))) then
+               write(err_msg, 1000)trim(ivar('IC_V_s',icv,m))
+               call flush_err_msg(abort=.true.)
+            endif
+
+            if(is_undefined(ic_w_s(icv,m))) then
+               write(err_msg, 1000)trim(ivar('IC_W_s',icv,m))
+               call flush_err_msg(abort=.true.)
+            endif
+
+            sum_ep = sum_ep + ic_ep_s(icv,m)
+
+         endif
+      enddo
 
 1000  format('Error 1000: Insufficient solids phase ',I2,' ',          &
            'information for IC',/'region ',I3,'. ',A,' not specified.',/ &
            'Please correct the input deck.')
 
       ! Verify that the volume fractions sum to one.
-      if(basic_ic .and. .not.equal(sum_ep,one)) then
+      if(.not.equal(sum_ep,one)) then
          write(err_msg,1410) icv
          call flush_err_msg(abort=.true.)
       endif
@@ -339,14 +326,11 @@ contains
     subroutine check_ic_overflow(ICV)
 
       use param, only: dim_m
-      use ic,    only: ic_type
       use ic,    only: ic_ep_g, ic_u_g, ic_v_g, ic_w_g
       use ic,    only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
 
       integer, intent(in) :: icv
       integer :: m
-
-      if (ic_type(icv) == 'PATCH') return
 
       ! Initialize the error manager.
       call init_err_msg("CHECK_IC_OVERFLOW")

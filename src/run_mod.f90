@@ -30,9 +30,6 @@
 ! Brief description of the problem.
       CHARACTER(LEN=60) :: DESCRIPTION
 
-! Type of run: NEW, RESTART
-      CHARACTER(LEN=16) :: RUN_TYPE
-
 ! Stop-time of the run.
       real(c_real) :: TSTOP
 

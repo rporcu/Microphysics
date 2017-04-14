@@ -15,7 +15,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
   UNITS = 'CGS'
 
   Tstop  =   0.1
@@ -81,8 +80,6 @@
 
 ! Solids phase 1:
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   RO_s0(1) =   2.7   ! solids density
   D_p0(1) =    0.4   ! particle diameter
 

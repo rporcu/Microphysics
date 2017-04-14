@@ -20,6 +20,8 @@
       implicit none
 !-----------------------------------------------
 
+      integer :: particle_types = 0
+
 ! Total number of particles in simulation: read from input or generated
 !      integer :: PARTICLES
 
