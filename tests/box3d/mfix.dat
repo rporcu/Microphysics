@@ -18,9 +18,7 @@
   RUN_TYPE = 'NEW'
   UNITS = 'CGS'
 
-  Time   =   0.0
   Tstop  =   0.1
-
   DT =     1.0d-4
   DT_MAX = 5.0d-4
 
@@ -30,11 +28,6 @@
   CALL_USR = .T.
 
   GENER_PART_CONFIG = .T.
-
-
-
-
-
 
   DES_EXPLICITLY_COUPLED = .T.
 

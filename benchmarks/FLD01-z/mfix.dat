@@ -21,8 +21,6 @@
   UNITS = 'SI'
   RUN_TYPE = 'NEW'
 
-  TIME = 0.0 ! STEADY STATE SOLUTION
-
   GRAVITY(1:3) = 3*0.0
 
   CALL_USR = .T.

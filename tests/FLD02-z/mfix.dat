@@ -16,10 +16,7 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-
   RUN_TYPE = 'NEW'
-
-  TIME = 0.0 ! Steady state solution
 
   GRAVITY(1:3) = 3*0.0
 

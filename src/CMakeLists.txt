@@ -31,8 +31,6 @@ set(F90_sources
   check_data/check_boundary_conditions.f90
   check_data/check_gas_phase.f90
   check_data/check_initial_conditions.f90
-  check_data/check_numerics.f90
-  check_data/check_output_control.f90
   check_data/check_point_sources.f90
   check_data/check_run_control.f90
   check_data/check_solids_common_all.f90

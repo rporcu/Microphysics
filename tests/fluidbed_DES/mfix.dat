@@ -17,7 +17,6 @@
   RUN_TYPE = 'NEW'
   UNITS = 'CGS'
 
-  TIME =   0.0
   TSTOP =  1.0
 
   DT =     5.0d-4

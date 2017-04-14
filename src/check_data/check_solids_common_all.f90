@@ -20,15 +20,6 @@ contains
   !  Purpose: Check the solid phase input that is common to all solids   !
   !  phase models.                                                       !
   !                                                                      !
-  !    ****** DO NOT PUT MODEL SPECIFIC CHECKS IN THIS ROUTINE ******    !
-  !                                                                      !
-  !  Use the companion routines for checks specific to a particular      !
-  !  solids phase model:                                                 !
-  !                                                                      !
-  !    > CHECK_SOLIDS_DEM       :: DEM solids phase model                !
-  !                                                                      !
-  !  Author: J.Musser                                  Date: 03-FEB-14   !
-  !                                                                      !
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine check_solids_common_all
 
@@ -106,14 +97,14 @@ contains
 
     case ('SYAM_OBRIEN'); DRAG_TYPE_ENUM = SYAM_OBRIEN
     case ('GIDASPOW'); DRAG_TYPE_ENUM = GIDASPOW
-    case ('GIDASPOW_PCF'); DRAG_TYPE_ENUM = GIDASPOW_PCF
     case ('GIDASPOW_BLEND'); DRAG_TYPE_ENUM = GIDASPOW_BLEND
-    case ('GIDASPOW_BLEND_PCF'); DRAG_TYPE_ENUM = GIDASPOW_BLEND_PCF
     case ('WEN_YU'); DRAG_TYPE_ENUM = WEN_YU
-    case ('WEN_YU_PCF'); DRAG_TYPE_ENUM = WEN_YU_PCF
     case ('KOCH_HILL'); DRAG_TYPE_ENUM = KOCH_HILL
-    case ('KOCH_HILL_PCF'); DRAG_TYPE_ENUM = KOCH_HILL_PCF
     case ('BVK'); DRAG_TYPE_ENUM = BVK
+    case ('GIDASPOW_PCF'); DRAG_TYPE_ENUM = GIDASPOW_PCF
+    case ('GIDASPOW_BLEND_PCF'); DRAG_TYPE_ENUM = GIDASPOW_BLEND_PCF
+    case ('WEN_YU_PCF'); DRAG_TYPE_ENUM = WEN_YU_PCF
+    case ('KOCH_HILL_PCF'); DRAG_TYPE_ENUM = KOCH_HILL_PCF
     case ('USER_DRAG','USR_DRAG'); DRAG_TYPE_ENUM = USER_DRAG
 
     case DEFAULT

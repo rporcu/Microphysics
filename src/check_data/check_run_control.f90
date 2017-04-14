@@ -2,8 +2,12 @@ module check_run_control_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
-                          & ivar, ival, err_msg
+
+  use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg, &
+                            err_msg, ivar, ival
+
+    use param1, only: undefined_c, zero
+    use param1, only: is_defined, is_undefined
 
   implicit none
   private
@@ -18,58 +22,51 @@ contains
 !  Purpose: Check the run control namelist section                     !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_run_control(time, dt)
+  subroutine check_run_control(dt)
 
-    use run,    only: RUN_TYPE, DESCRIPTION, TSTOP
-    use param1, only: UNDEFINED_C, IS_UNDEFINED, ZERO
-! Flag to adjust dt when residuals diverge
-      use run, only: DETECT_STALL
-
-    real(c_real), intent(inout) :: time, dt
+    use run,    only: tstop, nlog, discretize
+    use param, only: dim_eqs
 
 
-    ! Initialize the error manager.
+    real(c_real), intent(inout) :: dt
+
+    integer  :: lc
+
     CALL init_err_msg("CHECK_RUN_CONTROL")
 
-    ! Clear out the run description if not specified.
-    if (DESCRIPTION == UNDEFINED_C) DESCRIPTION = ' '
+    if(is_defined(dt)) then
 
-    ! Verify that DT is valid.
-    if (DT < ZERO) then
-       write(ERR_MSG,1002) 'DT', DT
-       call flush_err_msg(ABORT=.true.)
+       if (dt < zero) then
+          write(err_msg,1002) 'DT', dt
+          call flush_err_msg(abort=.true.)
+       endif
 
-       ! Steady-state simulation.
-    elseif(IS_UNDEFINED(DT) .or. IS_UNDEFINED(DT)) then
-       DETECT_STALL = .FALSE.
-       TIME = ZERO
+       if (is_undefined(tstop)) then
+          write(err_msg,1000) 'TSTOP'
+          call flush_err_msg(abort=.true.)
 
-       ! Transient simulation.
-    else
-       ! Verify the remaining time settings.
-       if (IS_UNDEFINED(TIME)) then
-          write(ERR_MSG,1000) 'TIME'
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (IS_UNDEFINED(TSTOP)) then
-          write(ERR_MSG,1000) 'TSTOP'
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (TIME < ZERO) then
-          write(ERR_MSG,1002)'TIME', TIME
-          call flush_err_msg(ABORT=.true.)
-
-       elseif (TSTOP < ZERO) then
-          write(ERR_MSG,1002) 'TSTOP', TSTOP
-          call flush_err_msg(ABORT=.true.)
+       elseif (tstop < zero) then
+          write(err_msg,1002) 'tstop', tstop
+          call flush_err_msg(abort=.true.)
        endif
     endif
 
-    ! Verify the run type.
-    if(.not.(RUN_TYPE=='NEW')) then
-       write(ERR_MSG,1001) 'RUN_TYPE', RUN_TYPE
-       call flush_err_msg(ABORT=.true.)
+    do lc = 1,dim_eqs
+       if(discretize(lc) /= 0 .and. discretize(lc) /= 2) then
+          write(err_msg,2002) trim(ivar('DISCRETIZE',lc)),&
+            trim(ival(discretize(lc)))
+          call flush_err_msg(abort=.true.)
+       endif
+    enddo
+
+    if(nlog <= 0) then
+       write(err_msg,1001) 'NLOG', ival(nlog)
+       call flush_err_msg(abort=.true.)
     endif
+
+
+2002 format('Error 2002: Invalid option ', A,' = ', A, '.',/  &
+       'Please correct the input deck.')
 
 
     ! Clear the error manager

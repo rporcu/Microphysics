@@ -21,7 +21,6 @@
 
   RUN_TYPE = 'NEW'
 
-  TIME =  0.0
   TSTOP = 1.0d-3
 
   DT =     1.0d-4

@@ -54,7 +54,7 @@
 !---------------------------------------------------------------------//
       use run, only: RUN_NAME
 ! Flag: Provide the full log.
-      use output, only: FULL_LOG
+      use run, only: FULL_LOG
 ! Rank ID of process
       use compar, only: myPE
 ! Rank ID for IO handeling

@@ -14,7 +14,7 @@ contains
 !**************************************************************************!
   subroutine mfix_get_data(fluid, &
      dem, steady_state, dt, dt_minC, dt_maxC, tstopC, &
-     time, max_nitC, normg, set_normg, call_udf, &
+     max_nitC, normg, set_normg, call_udf, &
      cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf, &
      coord_C) &
      bind(C, name="mfix_get_data")
@@ -36,13 +36,13 @@ contains
     integer(c_int), intent(out) :: dem, call_udf
     integer(c_int), intent(out) :: steady_state
     real(c_real), intent(out) :: dt_minC, dt_maxC, tstopC
-    real(c_real), intent(out) :: dt, time
+    real(c_real), intent(out) :: dt
     integer(c_int)         , intent(out) :: max_nitC, coord_C
     real(c_real), intent(out) :: normg
     integer(c_int), intent(out) :: set_normg
     integer(c_int), intent(out) :: cyclic_xC, cyclic_yC, cyclic_zC, cyclic_mf
 
-    call get_data(time, dt)
+    call get_data(dt)
 
 ! Flags for fluid setup
     fluid =  merge(1,0,ro_g0 /= 0.0d0)

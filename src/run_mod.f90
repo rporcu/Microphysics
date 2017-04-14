@@ -54,6 +54,12 @@
 ! If .TRUE. reduce time step when residuals do not decrease
       logical :: DETECT_STALL
 
+
+  integer :: nlog
+  ! Flag to display messages and residuals on the screen
+  logical :: full_log
+
+
 ! Specifies the type of solids: TFM, DEM, MPPIC
       CHARACTER(len=3), DIMENSION(DIM_M) :: SOLIDS_MODEL
 

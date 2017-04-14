@@ -134,7 +134,7 @@ module output_manager_module
 !----------------------------------------------------------------------!
       subroutine NOTIFY_useR(MSG, EXT)
 
-      use output, only: FULL_LOG
+      use run, only: FULL_LOG
 
       CHARACTER(len=*), INTENT(IN) :: MSG
       CHARACTER(len=*), INTENT(IN), OPTIONAL :: EXT
@@ -142,7 +142,7 @@ module output_manager_module
 
       logical :: SCR_LOG
 
-      SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
+      SCR_LOG = (FULL_LOG)
 
       IF(HDR_MSG) THEN
          IF(SCR_LOG) WRITE(*, 1000, ADVANCE='NO') TIME
@@ -173,11 +173,11 @@ module output_manager_module
 !----------------------------------------------------------------------!
       subroutine FLUSH_LIST
 
-      use output, only: FULL_LOG
+      use run, only: FULL_LOG
 
       logical :: SCR_LOG
 
-      SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
+      SCR_LOG = (FULL_LOG)
 
       IF(SCR_LOG) WRITE(*,1000, ADVANCE='NO')
 
@@ -197,8 +197,7 @@ module output_manager_module
       use error_manager, only: err_msg, flush_err_msg, ival
       use tunit_module, only: get_tunit
       use machine, only: wall_time
-      use output, only: FULL_LOG
-      use output, only: NLOG
+      use run, only: FULL_LOG, nlog
       use time_cpu, only: TIME_START
       use time_cpu, only: WALL_START
 
@@ -209,7 +208,7 @@ module output_manager_module
       integer :: TNITS
       logical :: SCR_LOG
 
-      SCR_LOG = (FULL_LOG .and. myPE.eq.PE_IO)
+      SCR_LOG = (FULL_LOG)
 
       IF(.NOT.HDR_MSG) THEN
          IF(SCR_LOG) WRITE(*,1000)

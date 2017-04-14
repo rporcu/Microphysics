@@ -37,7 +37,8 @@ int main (int argc, char* argv[])
   int solve_dem;
   int steady_state;
   int call_udf;
-  Real dt, dt_min, dt_max, tstop, time;
+  Real dt, dt_min, dt_max, tstop;
+  Real time=0.0L;
   Real xlength, ylength, zlength;
   int nstep=0;  // Number of time steps
   Real normg;
@@ -48,7 +49,7 @@ int main (int argc, char* argv[])
   mfix_get_data( &solve_fluid,
                  &solve_dem,
                  &steady_state,
-                 &dt, &dt_min, &dt_max, &tstop, &time, &max_nit,
+                 &dt, &dt_min, &dt_max, &tstop, &max_nit,
                  &normg, &set_normg, &call_udf,
                  &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
                  &xlength, &ylength, &zlength, &coord);

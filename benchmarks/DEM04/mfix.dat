@@ -16,7 +16,6 @@
   RUN_TYPE = 'NEW'
   UNITS = 'SI'
 
-  TIME =  0.00
   TSTOP = 0.01
 
   DT =     1.0d-04
@@ -28,10 +27,6 @@
   MOMENTUM_Z_EQ(0:1) = .T.  .F.
 
   DRAG_TYPE = 'KOCH_HILL'
-
-
-
-
 
   GENER_PART_CONFIG = .F.
   CALL_USR = .T.

@@ -16,7 +16,6 @@
   RUN_TYPE = 'NEW'
   UNITS = 'SI'
 
-  TIME =  0.0000
   TSTOP = 0.0025
 
   DT =     1.0d-04
@@ -30,10 +29,6 @@
   DRAG_TYPE = 'BVK'
 
   GRAVITY(1:3) = 3*0.0
-
-
-
-
 
   GENER_PART_CONFIG = .T.
   CALL_USR = .T.

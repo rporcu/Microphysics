@@ -40,7 +40,7 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
-      use output, only: full_log, nlog
+      use run, only: full_log, nlog
       use output, only: dimension_usr
       use output, only: usr_dt
       use ps, only: dimension_ps
