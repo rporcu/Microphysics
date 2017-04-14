@@ -154,9 +154,6 @@ mfix_level::Init(int lev, Real dt, Real time)
 
       init_output_vars(&time, &dt);
 
-      // Parse residual strings
-      parse_resid_string();
-
       Real dx = geom[lev].CellSize(0);
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
@@ -431,24 +428,24 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt, 
-		   Real time, Real normg) {
+mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
+       Real time, Real normg) {
 
     if (solve_fluid)
       EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
     if (solve_dem)
     {
-	pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
-			       lev, nstep, dt,time );
-	fill_mf_bc(lev,*ep_g[lev]);
-	fill_mf_bc(lev,*rop_g[lev]);
+  pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
+             lev, nstep, dt,time );
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
 
       pc -> GetParticlesPosition(des_pos_new);
 
       pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
            pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-				   rot_acc_old, drag_fc);
+           rot_acc_old, drag_fc);
     }
 }
 
@@ -664,7 +661,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
       pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
            pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-				   rot_acc_old, drag_fc);
+           rot_acc_old, drag_fc);
 
 
 
@@ -978,7 +975,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
     }
 
 
-    int eq_id=3;
+    int eq_id=2;
     mfix_solve_linear_equation(eq_id,lev,(*u_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve V-Momentum equation
@@ -1016,7 +1013,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           &dt, &dx, &dy, &dz, residuals);
     }
 
-    eq_id=4;
+    eq_id=3;
     mfix_solve_linear_equation(eq_id,lev,(*v_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     // Solve W-Momentum equation
@@ -1054,7 +1051,7 @@ mfix_level::mfix_solve_for_vels(int lev, Real dt, Real (&residuals)[16])
           &dt, &dx, &dy, &dz, residuals);
     }
 
-    eq_id=5;
+    eq_id=4;
     mfix_solve_linear_equation(eq_id,lev,(*w_gt[lev]),(*A_m[lev]),(*b_m[lev]));
 
     MultiFab::Copy(*u_g[lev], *u_gt[lev], 0, 0, 1, u_g[lev]->nGrow());

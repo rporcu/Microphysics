@@ -3,9 +3,9 @@ module des_time_march_module
   use amrex_fort_module, only: c_real => amrex_real
   use iso_c_binding ,    only: c_int
 
-  implicit none 
+  implicit none
 
-  private 
+  private
   public des_time_march
 
 
@@ -37,7 +37,7 @@ contains
     use error_manager,           only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
     use machine,                 only:  wall_time
     use output_manager_module,   only: output_manager
-    use param1,                  only: zero
+    use param,                  only: zero
 
 
 
@@ -219,7 +219,7 @@ contains
        ! Add/Remove particles to the system via flow BCs.
        !         IF(DEM_BCMI > 0) call MASS_INFLOW_DEM
        !         IF(DEM_BCMO > 0) call MASS_OUTFLOW_DEM
-       
+
 
        ! Calculate mean fields (EPg).
        call comp_mean_fields(slo, shi, np, &
@@ -296,7 +296,7 @@ contains
          pstate, des_radius, des_pos_new)
 
       use discretelement, only: nonexistent
-      use param1, only: small_number
+      use param, only: small_number
 
       implicit none
 

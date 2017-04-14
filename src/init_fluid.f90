@@ -16,7 +16,7 @@ module init_fluid_module
       use calc_ro_g_module, only: calc_ro_g
       use calc_mu_g_module, only: calc_mu_g
 
-      use param1, only: is_undefined, undefined
+      use param, only: is_undefined, undefined
       use fld_const, only: ro_g0, mu_g0
 
       implicit none
@@ -95,7 +95,7 @@ module init_fluid_module
       use ic, only: ic_x_e, ic_y_n, ic_z_t
       use ic, only: ic_x_w, ic_y_s, ic_z_b
       use scales, only: scale_pressure
-      use param1, only: undefined, is_defined
+      use param, only: undefined, is_defined
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -236,8 +236,8 @@ module init_fluid_module
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
-      use param1   , only: zero, undefined
-      use param1   , only: is_defined, is_undefined
+      use param   , only: zero, undefined
+      use param   , only: is_defined, is_undefined
       use param, only: dim_ic
 
       implicit none

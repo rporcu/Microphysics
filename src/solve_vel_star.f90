@@ -155,7 +155,7 @@ module solve_vel_star_module
          u_g, v_g, w_g, A_m, b_m, &
          resid_u, resid(resid_u,1), resid(resid_u,2), domlo, domhi)
 
-     call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, 3)
+     call under_relax (u_g, ulo, uhi, A_m, b_m, alo, ahi, resid_u)
 
    end subroutine solve_u_g_star
 
@@ -307,7 +307,7 @@ module solve_vel_star_module
          v_g, w_g, u_g, A_m, b_m, &
          resid_v, resid(resid_v,1), resid(resid_v,2), domlo, domhi)
 
-      call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, 4)
+      call under_relax (v_g, vlo, vhi, A_m, b_m, alo, ahi, resid_v)
 
    end subroutine solve_v_g_star
 
@@ -458,7 +458,7 @@ module solve_vel_star_module
          w_g, u_g, v_g, A_m, b_m, &
          resid_w, resid(resid_w,1), resid(resid_w,2), domlo, domhi)
 
-      call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, 5)
+      call under_relax (w_g, wlo, whi, A_m, b_m, alo, ahi, resid_w)
 
    end subroutine solve_w_g_star
 

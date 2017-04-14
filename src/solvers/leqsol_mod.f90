@@ -4,7 +4,7 @@ module leqsol
    use error_manager, only: ival, flush_err_msg, err_msg
    use exit_mod, only: mfix_exit
    use param, only: DIM_EQS
-   use param1, only: zero
+   use param, only: zero
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
@@ -18,9 +18,6 @@ module leqsol
 
 ! Maximum number of linear equation solver iterations
   integer :: LEQ_IT(DIM_EQS)
-
-! Linear equation solver method
-  integer :: LEQ_METHOD(DIM_EQS)
 
 ! Total Iterations
   integer :: ITER_TOT(DIM_EQS) = 0
@@ -101,7 +98,7 @@ CONTAINS
 
   subroutine leq_msolve1(b_m, blo, bhi, A_m, alo, ahi, var, vlo, vhi) &
      bind(C, name = "leq_msolve1")
-   use param1, only: small_number
+   use param, only: small_number
 
     IMPLICIT NONE
 

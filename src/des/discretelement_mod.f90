@@ -16,7 +16,7 @@
       use iso_c_binding , only: c_int
 
       use param, only: dim_m
-      use param1, only: undefined, one, zero, half
+      use param, only: undefined, one, zero, half
       implicit none
 !-----------------------------------------------
 

@@ -4,7 +4,7 @@ module check_boundary_conditions_module
    use iso_c_binding , only: c_int
 
 ! Parameter constants
-   use param1, only: zero, one, undefined, is_defined, is_undefined, equal
+   use param, only: zero, one, undefined, is_defined, is_undefined, equal
 
 ! Use the error manager for posting error messages.
 !---------------------------------------------------------------------//
@@ -150,9 +150,9 @@ module check_boundary_conditions_module
 ! Maximum number of disperse phases.
       use param, only: DIM_M
 ! Maximum number of species gas/solids
-      use param, only: DIMENSION_N_G, DIMENSION_N_S
+      use param, only: DIM_N_G, DIM_N_S
 
-      use param1, only: zero, one, equal
+      use param, only: zero, one, equal
 
       IMPLICIT NONE
 
@@ -198,7 +198,7 @@ module check_boundary_conditions_module
          call flush_err_msg(abort=.true.)
       ENDIF
 
-      DO N = 1, DIMENSION_N_G
+      DO N = 1, DIM_N_G
          IF(IS_DEFINED(BC_X_G(BCV,N))) THEN
             WRITE(ERR_MSG,1100) trim(iVar('BC_X_g',BCV,N))
             call FLUSH_ERR_MSG(ABORT=.TRUE.)
@@ -229,7 +229,7 @@ module check_boundary_conditions_module
             call flush_err_msg(abort=.true.)
          endif
 
-         do n = 1, dimension_n_s
+         do n = 1, dim_n_s
             if(is_defined(bc_x_s(bcv,m,n))) then
                write(err_msg,1100) trim(ivar('BC_X_s',bcv,m,n))
                call flush_err_msg(abort=.true.)

@@ -2,7 +2,7 @@ module check_solids_common_all_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param1,         only: is_undefined, is_defined
+  use param,         only: is_undefined, is_defined
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, &
                           & ivar, ival, err_msg
 
@@ -26,7 +26,7 @@ contains
     use constant, only: MMAX     ! Number of continuum solids phases.
     use constant, only: D_P0     ! User specified: Initial solids diameter.
     use param,    only: DIM_M    ! Maximum number of solids phases.
-    use param1,   only: ZERO     ! Parameter constants
+    use param,   only: ZERO     ! Parameter constants
 
     integer :: M          ! Loop counters.
     integer :: MMAX_L     ! Total number of all solids

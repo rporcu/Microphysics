@@ -12,7 +12,7 @@ module drag_gs_des1_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Double precision values.
-      use param1, only: ZERO, ONE
+      use param, only: ZERO, ONE
 
       use discretelement, only: entering_particle, entering_ghost, exiting_particle
       use discretelement, only: nonexistent, exiting_ghost, normal_particle

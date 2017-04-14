@@ -88,7 +88,7 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   logical function bc_defined(icv)
 
-    use param1, only: is_defined
+    use param, only: is_defined
 
     integer, intent(in) :: icv
 
@@ -113,7 +113,7 @@ contains
   subroutine write_out_bc(unit_out, dx, dy, dz, &
     xlength, ylength, zlength, domlo, domhi)
 
-    use param1, only: zero, is_defined
+    use param, only: zero, is_defined
 
     use calc_cell_module, only: calc_cell_bc_flow
     use calc_cell_module, only: calc_cell_bc_wall

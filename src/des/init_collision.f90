@@ -11,7 +11,7 @@ subroutine init_collision() bind(C, name="mfix_init_collision")
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param1,         only: zero
+  use param,         only: zero
 
   implicit none
 

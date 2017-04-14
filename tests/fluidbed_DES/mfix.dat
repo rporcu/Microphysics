@@ -24,17 +24,14 @@
 
   DRAG_TYPE = 'GIDASPOW'
 
+  NLOG = 25       ! time steps between updates to (.LOG) file
+  FULL_LOG = .T.  ! display residuals on screen
+
 #_______________________________________________________________________
 # NUMERICAL SECTION
 
   MAX_NIT = 50
   TOL_RESID = 1.0d-3
-
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -48,7 +45,6 @@
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
-
 
   PARTICLES = 2400             ! Number of partiles.
 
@@ -120,23 +116,3 @@
   BC_TYPE(2) =   'PO'
 
   BC_P_g(2) =    0.0
-
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-
-
-  NLOG = 25       ! time steps between updates to (.LOG) file
-  FULL_LOG = .T.  ! display residuals on screen
-
-  GROUP_RESID = .F.  ! Group residuals by equation
-
-  RESID_STRING  = 'P0' 'U0', 'V0'
-
-
-
-
-
-#_______________________________________________________________________
-# DMP SETUP

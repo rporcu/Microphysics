@@ -117,8 +117,8 @@ module solve_pp_module
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE POINT_SOURCE_PP_G(alo, ahi, b_m, B_mmax, dx, dy, dz)
 
-      ! use param1  , only: small_number
-      ! use ps, only: dimension_ps, ps_defined, ps_massflow_g
+      ! use param  , only: small_number
+      ! use ps, only: dim_ps, ps_defined, ps_massflow_g
 
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
       real(c_real)  , intent(in   ) :: dx,dy,dz
@@ -146,7 +146,7 @@ module solve_pp_module
 !       vol = dx*dy*dz
 
 ! !-----------------------------------------------
-!       PS_LP: do PSV = 1, DIMENSION_PS
+!       PS_LP: do PSV = 1, DIM_PS
 
 !          if(.not.ps_defined(psv)) cycle ps_lp
 !          if(ps_massflow_g(psv) < small_number) cycle ps_lp

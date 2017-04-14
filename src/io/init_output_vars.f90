@@ -10,8 +10,8 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use param , only: dimension_usr
-      use param1, only: undefined, undefined_i, is_defined
+      use param , only: dim_usr
+      use param, only: undefined, undefined_i, is_defined
 
       use machine, only: wall_time
       use output, only: USR_TIME, USR_DT
@@ -31,7 +31,7 @@
       CPU_IO = 0.0d0
 
 ! Initialize USR_TIME
-      DO LC = 1, dimension_usr
+      DO LC = 1, dim_usr
          USR_TIME(LC) = undefined
          IF (is_defined(USR_DT(LC))) THEN
             IF (RUN_TYPE == 'NEW') THEN

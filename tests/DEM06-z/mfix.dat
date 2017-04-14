@@ -31,7 +31,10 @@
   DT =     1.00d-3
   DT_MAX = 1.00d-3
 
-  CALL_USR = .TRUE.
+  CALL_USR = .T.
+
+  FULL_LOG = .T.    ! display residuals on screen
+  NLOG = 25         ! frequency to updated log file (.LOG)
 
   DRAG_TYPE = 'USER_DRAG'
 
@@ -55,9 +58,9 @@
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 1.2      ! (kg/m^3)
   MU_g0 = 1.8d-5   ! (Pa.s)
+
 
 ! Particle Section
 !---------------------------------------------------------------------//
@@ -156,9 +159,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-2
-
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-  FULL_LOG = .T.    ! display residuals on screen
-  NLOG = 25         ! frequency to updated log file (.LOG)

@@ -3,7 +3,7 @@ module check_gas_phase_module
   use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg, &
                            err_msg, ivar, ival
 
-  use param1, only: is_undefined, is_defined, zero
+  use param, only: is_undefined, is_defined, zero
 
   implicit none
   private

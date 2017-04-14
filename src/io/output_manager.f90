@@ -3,7 +3,7 @@ module output_manager_module
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param1, only: IS_DEFINED, IS_UNDEFINED
+   use param, only: IS_DEFINED, IS_UNDEFINED
 
   contains
 !----------------------------------------------------------------------!
@@ -29,7 +29,7 @@ module output_manager_module
 
       use machine, only: wall_time
       use output, only: USR_TIME, USR_DT
-      use param, only: DIMENSION_USR
+      use param, only: DIM_USR
       use run, only: tstop
       use run, only: dem_solids
       use time_cpu, only: CPU_IO
@@ -77,7 +77,7 @@ module output_manager_module
 
 ! Write special output, if needed
       IDX = 0
-      DO LC = 1, DIMENSION_USR
+      DO LC = 1, DIM_USR
          IF(CHECK_TIME(USR_TIME(LC))) THEN
             USR_TIME(LC) = NEXT_TIME(USR_DT(LC))
             call write_usr1 (LC, time, dt, max_pip, des_pos_new,&

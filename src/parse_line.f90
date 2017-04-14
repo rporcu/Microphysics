@@ -1,7 +1,7 @@
 module parse_line_module
 
       use compar, only: mype
-      use param1, only: one
+      use param, only: one
       use exit_mod, only: mfix_exit
 
    contains

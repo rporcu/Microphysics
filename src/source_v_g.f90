@@ -2,7 +2,7 @@ module source_v_g_module
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use param1        , only: zero, half, one, undefined, is_undefined, small_number
+   use param        , only: zero, half, one, undefined, is_undefined, small_number
 
    implicit none
 
@@ -135,7 +135,7 @@ contains
       use bc, only: bc_hw_g, bc_vw_g, bc_v_g
 
       use matrix, only: e, w, n, s, t, b
-      use param1, only: is_defined
+      use param, only: is_defined
 
       integer     , intent(in   ) :: slo(3),shi(3),alo(3),ahi(3)
       integer     , intent(in   ) :: domlo(3),domhi(3)
@@ -423,7 +423,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       subroutine point_source_v_g(alo,ahi,b_m,vol)
 
-      ! use ps, only: dimension_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
+      ! use ps, only: dim_ps, ps_defined, ps_volume, ps_vel_mag_g, ps_massflow_g
       ! use ps, only: ps_v_g
 
       integer(c_int), intent(in   ) :: alo(3),ahi(3)
@@ -439,7 +439,7 @@ contains
 
       ! ! Calculate the mass going into each (i,j,k) cell. This is done for each
       ! ! call in case the point source is time dependent.
-      ! ps_lp: do psv = 1, dimension_ps
+      ! ps_lp: do psv = 1, dim_ps
 
       !    if (.not.ps_defined(psv)) cycle ps_lp
       !    if (abs(PS_V_g(psv)) < small_number) cycle ps_lp

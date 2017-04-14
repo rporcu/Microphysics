@@ -17,7 +17,7 @@ module comp_mean_fields_module
          particle_state, des_pos_new, pvol, dx, dy, dz) &
          bind(C, name="comp_mean_fields")
 
-      use param1, only: zero
+      use param, only: zero
 
       use discretelement, only: nonexistent, normal_ghost
       use discretelement, only: entering_ghost, exiting_ghost

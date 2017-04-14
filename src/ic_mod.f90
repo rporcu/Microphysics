@@ -49,7 +49,7 @@ contains
   logical function ic_defined(icv)
 
     use run,    only: run_type
-    use param1, only: is_defined
+    use param, only: is_defined
 
     integer, intent(in) :: icv
 
@@ -78,7 +78,7 @@ contains
    subroutine write_out_ic(unit_out, dx, dy, dz)
 
      use calc_cell_module, only: calc_cell_ic
-     use param1, only: zero, is_defined
+     use param, only: zero, is_defined
      use fld_const, only: ro_g0
 
      integer,        intent(in) :: unit_out

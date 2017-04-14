@@ -11,7 +11,7 @@ module calc_grad_des_module
 !-----------------------------------------------
 
       use functions, only: avg
-      use param1, only: zero
+      use param, only: zero
 
       IMPLICIT NONE
 

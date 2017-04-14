@@ -2,7 +2,7 @@ module check_point_sources_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param1,         only: undefined, undefined_i, is_defined, is_undefined, zero
+  use param,         only: undefined, undefined_i, is_defined, is_undefined, zero
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg, ivar, ival, err_msg
 
   implicit none
@@ -24,7 +24,7 @@ contains
   subroutine check_point_sources(dx,dy,dz)
 
     use ps,    only: ps_defined
-    use param, only: dimension_ps
+    use param, only: dim_ps
 
     integer                  :: PSV
     real(c_real), intent(in) :: dx,dy,dz
@@ -36,7 +36,7 @@ contains
     call check_ps_geometry(dx,dy,dz)
 
     ! Loop over all PS arrays.
-    do psv = 1, dimension_ps
+    do psv = 1, dim_ps
 
        ! Verify user input for defined defined PS.
        if(ps_defined(psv)) then
@@ -65,7 +65,7 @@ contains
   subroutine check_ps_geometry(dx, dy, dz)
 
 
-    use param, only: dimension_ps
+    use param, only: dim_ps
     use ps, only: ps_defined
     use ps, only: ps_x_e, ps_y_n, ps_z_t
     use ps, only: ps_x_w, ps_y_s, ps_z_b
@@ -81,7 +81,7 @@ contains
     call init_err_msg("CHECK_PS_GEOMETRY")
 
     ! Determine which point source indices have values.
-    psv_lp: do psv = 1, dimension_ps
+    psv_lp: do psv = 1, dim_ps
 
        if(ps_defined(psv)) then
           if(is_undefined(ps_x_w(psv))) then
@@ -150,7 +150,7 @@ contains
    subroutine check_ps_gas_phase(PSV)
 
       use ps, only: ps_massflow_g, ps_u_g, ps_v_g, ps_w_g
-      use param1, only: zero, equal
+      use param, only: zero, equal
 
       integer, intent(in) :: PSV
 

@@ -16,7 +16,7 @@ contains
               bind(c, name="physical_prop")
 
       use calc_ro_g_module, only: calc_ro_g
-      use param1, only: is_undefined
+      use param, only: is_undefined
 
       use fld_const, only: ro_g0
 

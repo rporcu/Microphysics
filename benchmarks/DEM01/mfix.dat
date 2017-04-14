@@ -32,6 +32,7 @@
 
   GENER_PART_CONFIG = .T.
   CALL_USR = .T.
+  FULL_LOG = .T.
 
 #_______________________________________________________________________
 # NUMERICAL SECTION
@@ -114,18 +115,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-4
-
-
-
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-
-
-  FULL_LOG = .T.
-  GROUP_RESID = .T.
-
-#_______________________________________________________________________
-# DMP SETUP
-
- NODESI = 1  NODESJ = 1  NODESK = 1

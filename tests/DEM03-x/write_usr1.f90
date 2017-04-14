@@ -1,4 +1,3 @@
-
 !                                                                      C
 !  Module name: write_usr1 (L)                                         C
 !  Purpose: Write user-defined output                                  C
@@ -12,7 +11,7 @@
       IMPLICIT NONE
 
       integer,      intent(in   ) :: l, max_pip
-      real(c_real), intent(in   ) :: time, dt, xlength, ylength, zlength 
+      real(c_real), intent(in   ) :: time, dt, xlength, ylength, zlength
       real(c_real), intent(in   ) :: des_pos_new(max_pip,3)
       real(c_real), intent(in   ) :: des_vel_new(max_pip,3)
       real(c_real), intent(in   ) :: omega_new(max_pip,3)
@@ -40,7 +39,7 @@
 
       use amrex_fort_module, only : c_real => amrex_real
       Use usr, only: gz1, gz2, gx1, gx2, rk4_v4
-      Use param1, only: undefined, is_defined
+      Use param, only: undefined, is_defined
 
       IMPLICIT NONE
 

@@ -23,7 +23,7 @@ contains
       use eos, only: droodp_g
       use fld_const, only: ro_g0
       use matrix, only: e, w, n, s, t, b
-      use param1, only: is_defined, is_undefined
+      use param, only: is_defined, is_undefined
       use ur_facs, only: ur_fac
 
       implicit none
@@ -143,7 +143,7 @@ contains
    subroutine source_pp_g_bc(slo, shi, alo, ahi, domlo, domhi, A_m)
 
       use matrix, only: e, n, t, w, s, b
-      use param1, only: zero
+      use param, only: zero
 
       implicit none
 

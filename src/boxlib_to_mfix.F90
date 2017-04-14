@@ -25,7 +25,7 @@ contains
     use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
     use get_data_module, only: get_data
     use leqsol, only: max_nit
-    use param1, only: is_undefined
+    use param, only: is_undefined
     use run, only: dem_solids, call_usr
     use run, only: dt_min, dt_max, tstop
     use residual, only: norm_g

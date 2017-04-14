@@ -23,7 +23,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine under_relax(var, varlo, varhi, A_m, b_m, alo, ahi, eq)
 
-   use param1, only: one, equal
+   use param, only: one, equal
 
    implicit none
 

@@ -6,8 +6,8 @@ module check_run_control_module
   use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg, &
                             err_msg, ivar, ival
 
-    use param1, only: undefined_c, zero
-    use param1, only: is_defined, is_undefined
+    use param, only: undefined_c, zero
+    use param, only: is_defined, is_undefined
 
   implicit none
   private

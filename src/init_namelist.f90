@@ -38,16 +38,15 @@ MODULE INIT_NAMELIST_MODULE
       use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w, ic_type
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
-      use leqsol, only: do_transpose, icheck_bicgs, leq_it, leq_method, opt_parallel, use_doloop
+      use leqsol, only: do_transpose, icheck_bicgs, leq_it, opt_parallel, use_doloop
       use leqsol, only: leq_pc, leq_sweep, leq_tol, max_nit, solver_statistics, ival
       use run, only: full_log, nlog
-      use output, only: dimension_usr
+      use output, only: dim_usr
       use output, only: usr_dt
-      use ps, only: dimension_ps
+      use ps, only: dim_ps
       use ps, only: ps_massflow_g
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
-      use residual, only: group_resid, resid_string
       use run, only: undefined_i
       use run, only: call_usr, description, detect_stall, discretize, tstop
       use run, only: dt_fac, dt_max, dt_min, run_name, run_type, solids_model
@@ -60,8 +59,8 @@ MODULE INIT_NAMELIST_MODULE
       use utilities, only: make_upper_case, replace_tab
 
 
-      use param1, only: zero, one
-      use param1, only: undefined, undefined_i, undefined_c
+      use param, only: zero, one
+      use param, only: undefined, undefined_i, undefined_c
 
       IMPLICIT NONE
 !-----------------------------------------------
@@ -270,20 +269,6 @@ MODULE INIT_NAMELIST_MODULE
       DETECT_STALL = .TRUE.
 !</keyword>
 
-
-!<keyword category="Numerical Parameters" required="false">
-!  <description>
-!    LEQ Solver selection. BiCGSTAB is the default method for all
-!    equation types.
-!  </description>
-!  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
-!  <valid value="1" note="SOR - Successive over-relaxation"/>
-!  <valid value="2" note="BiCGSTAB - Biconjugate gradient stabilized."/>
-!  <valid value="3" note="GMRES - Generalized minimal residual method"/>
-!  <valid value="5" note="CG - Conjugate gradient"/>
-      LEQ_METHOD(:) = 2
-!</keyword>
-
 !<keyword category="Numerical Parameters" required="false">
 !  <description>
 !    Linear Equation tolerance [1.0d-4].
@@ -297,21 +282,14 @@ MODULE INIT_NAMELIST_MODULE
 !<keyword category="Numerical Parameters" required="false">
 !  <description>
 !    Number of iterations in the linear equation solver.
-!    o 20 iterations for equation types 1-2
-!    o  5 iterations for equation types 3-5,10
-!    o 15 iterations for equation types 6-9
+!    o 20 iterations for pressure equation
+!    o  5 iterations for momentum equations
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
-      LEQ_IT(1) =  20
-      LEQ_IT(2) =  20
-      LEQ_IT(3) =   5
-      LEQ_IT(4) =   5
-      LEQ_IT(5) =   5
-      LEQ_IT(6) =  15
-      LEQ_IT(7) =  15
-      LEQ_IT(8) =  15
-      LEQ_IT(9) =  15
-      LEQ_IT(10) =  5
+      leq_it(1) =  20
+      leq_it(2) =   5
+      leq_it(3) =   5
+      leq_it(4) =   5
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
@@ -351,29 +329,16 @@ MODULE INIT_NAMELIST_MODULE
 !  </description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
       UR_FAC(1)  = 0.8D0     ! pressure
-      UR_FAC(2)  = 0.5D0     ! rho, ep
-      UR_FAC(3)  = 0.5D0     ! U
-      UR_FAC(4)  = 0.5D0     ! V
-      UR_FAC(5)  = 0.5D0     ! W
-      UR_FAC(6)  = 1.0D0     ! T
-      UR_FAC(7)  = 1.0D0     ! X
-      UR_FAC(8)  = 0.5D0     ! Th
-      UR_FAC(10) = 1.0D0     ! DES Diffusion
+      UR_FAC(2)  = 0.5D0     ! U
+      UR_FAC(3)  = 0.5D0     ! V
+      UR_FAC(4)  = 0.5D0     ! W
 !</keyword>
 
 !<keyword category="Numerical Parameters" required="false">
 !  <description>Discretization scheme of equations.</description>
 !  <arg index="1" id="Equation ID Number" min="1" max="DIM_EQS"/>
 !  <valid value="0" note="First-order upwinding."/>
-!  <valid value="1" note="First-order upwinding (using down-wind factors)."/>
-!  <valid value="3" note="Smart."/>
 !  <valid value="2" note="Superbee (recommended method)."/>
-!  <valid value="5" note="QUICKEST (does not work)."/>
-!  <valid value="4" note="ULTRA-QUICK."/>
-!  <valid value="7" note="van Leer."/>
-!  <valid value="6" note="MUSCL."/>
-!  <valid value="8" note="minmod."/>
-!  <valid value="9" note="Central (often unstable; useful for testing)."/>
       DISCRETIZE(:) = 0
 !</keyword>
 
@@ -1017,77 +982,77 @@ MODULE INIT_NAMELIST_MODULE
 !#####################################################################!
 !                     Point Source Mass Inlets                        !
 !#####################################################################!
-      DO LC = 1, DIMENSION_PS
+      DO LC = 1, DIM_PS
 
 !<keyword category="Point Source" required="false">
 !  <description>X coordinate of the west face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_X_W(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>X coordinate of the east face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_X_E(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y coordinate of the south face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_Y_S(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y coordinate of the north face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_Y_N(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z coordinate of the bottom face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_Z_B(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z coordinate of the top face or edge.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_Z_T(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>X-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_U_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Y-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_V_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Z-component of incoming gas velocity.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_W_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Gas mass flow rate through the point source.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_MASSFLOW_G(LC) = ZERO
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Temperature of incoming gas.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
          PS_T_G(LC) = UNDEFINED
 !</keyword>
 
 !<keyword category="Point Source" required="false">
 !  <description>Gas phase incoming species n mass fraction.</description>
-!  <arg index="1" id="PS" min="1" max="DIMENSION_PS"/>
+!  <arg index="1" id="PS" min="1" max="DIM_PS"/>
 !  <arg index="2" id="Species" min="1" max="DIM_N_G"/>
          PS_X_G(LC,:DIM_N_g) = UNDEFINED
 !</keyword>
@@ -1111,23 +1076,6 @@ MODULE INIT_NAMELIST_MODULE
       FULL_LOG = .FALSE.
 !</keyword>
 
-!<keyword category="Output Control" required="false">
-!  <description>Specifies the residuals to display. </description>
-!  <arg index="1" id="Residual Index" max="8" min="1"/>
-!  <valid value="P0" note="Gas pressure"/>
-!  <valid value="R0" note="Gas density"/>
-!  <valid value="U0" note="Gas phase U-velocity"/>
-!  <valid value="V0" note="Gas phase V-velocity"/>
-!  <valid value="W0" note="Gas phase W-velocity"/>
-      RESID_STRING(:8) = UNDEFINED_C
-!</keyword>
-
-!<keyword category="Output Control" required="false">
-!  <description>Display residuals by equation.  </description>
-      GROUP_RESID = .FALSE.
-!</keyword>
-
-
 
 !#####################################################################!
 !                           UDF  Control                              !
@@ -1144,12 +1092,12 @@ MODULE INIT_NAMELIST_MODULE
 !</keyword>
 
 
-      DO LC=1, DIMENSION_USR
+      DO LC=1, DIM_USR
 !<keyword category="UDF Control" required="false">
 !  <description>
 !    Intervals at which subroutine write_usr1 is called.
 !  </description>
-!  <arg index="1" id="USR" max="DIMENSION_USR" min="1"/>
+!  <arg index="1" id="USR" max="DIM_USR" min="1"/>
          USR_DT(LC) = UNDEFINED
 !</keyword>
 

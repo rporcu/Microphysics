@@ -21,7 +21,7 @@ contains
 ! Modules
 !-----------------------------------------------
       use bc, only: delp_x, delp_y, delp_z, flux_g
-      use param1, only: one
+      use param, only: one
       use compar   ,only: myPE, PE_IO
       use exit_mod, only: mfix_exit
       use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf

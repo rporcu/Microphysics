@@ -111,7 +111,7 @@
 !......................................................................!
       REAL(C_REAL) FUNCTION ABS_ERR(EXT, NUM)
 
-      use param1, only: SMALL_NUMBER
+      use param, only: SMALL_NUMBER
 
       IMPLICIT NONE
 

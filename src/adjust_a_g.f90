@@ -19,7 +19,7 @@
 
          use functions, only: avg
          use matrix, only: e, w, s, n, t, b
-         use param1, only: ONE, ZERO, small_number
+         use param, only: ONE, ZERO, small_number
 
          implicit none
 

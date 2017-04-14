@@ -25,12 +25,12 @@
 
   DT = 1.0d-4
 
-! No gravity
+  CALL_USR = .T.
+
+  FULL_LOG = .T.  ! display residuals on screen
+  NLOG = 5000     ! time steps between updates to (.LOG) file
+
   GRAVITY(1:3) = 3*0.0
-
-! Invoke UDFs
-  CALL_USR = .TRUE.
-
 
 #_______________________________________________________________________
 # MATERIAL SECTION
@@ -38,7 +38,6 @@
 ! GAS SECTION
 !---------------------------------------------------------------------//
   RO_g0 = 0.0
-  MU_g0 = 0.2
 
 
 ! SOLIDS SECTION
@@ -137,9 +136,3 @@
   BC_Z_t(1:6) =  0.10  0.10  0.10  0.10  0.00  0.10  ! (m)
 
   BC_TYPE(1:6) = 6*'NSW'
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-  NLOG = 5000     ! time steps between updates to (.LOG) file
-  FULL_LOG = .T.  ! display residuals on screen

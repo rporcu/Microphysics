@@ -34,7 +34,7 @@ module des_drag_gp_module
          drag_type_enum, drag_type
       use drag, only: wen_yu, koch_hill, user_drag
       use drag, only: wen_yu_pcf, gidaspow_pcf, gidaspow_blend_pcf, koch_hill_pcf
-      use param1, only: one
+      use param, only: one
       use constant, only: ro_s0
       use constant, only: D_p0
 

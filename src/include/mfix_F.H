@@ -10,8 +10,6 @@ extern "C"
 
   void init_output_vars(Real* time, Real* dt);
 
-  void parse_resid_string();
-
   void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz,
                   Real* xlength, Real* ylength, Real* zlength,
                   const int* domlo, const int* domhi);

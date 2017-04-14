@@ -30,14 +30,15 @@
 
   CALL_USR = .T.
 
+  FULL_LOG = .F.  ! display residuals on screen
+  NLOG = 250      ! time steps between updates to (.LOG) file
+
 #_______________________________________________________________________
 # MATERIAL SECTION
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 0.0
-  MU_g0 = 0.2
 
 
 ! PARTICLE SECTION
@@ -105,9 +106,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-  FULL_LOG = .F.  ! display residuals on screen
-  NLOG = 250      ! time steps between updates to (.LOG) file

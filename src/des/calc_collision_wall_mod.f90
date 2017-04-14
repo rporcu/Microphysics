@@ -20,7 +20,7 @@
       use discretelement, only: des_crossprdct
       use discretelement, only: kn_w, kt_w, mew_w, dtsolid
       use error_manager, only: err_msg, flush_err_msg, init_err_msg
-      use param1, only: small_number, zero
+      use param, only: small_number, zero
 
       use stl_functions_des, only: closestptpointtriangle
       use discretelement, only: normal_particle
@@ -43,7 +43,7 @@
             des_vel_new, omega_new, fc, tow, xlength, ylength, zlength)
 
       use bc, only: cyclic_x, cyclic_y, cyclic_z
-      use param1, only: zero, one
+      use param, only: zero, one
 
       IMPLICIT NONE
 

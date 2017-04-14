@@ -26,7 +26,7 @@
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       Subroutine ClosestPtPointTriangle(pointp, points, closest_point)
-      use param1, only: zero, one
+      use param, only: zero, one
 
       implicit none
 
@@ -120,7 +120,7 @@
       Subroutine intersectLnPlane(ref_line, dir_line, ref_plane,       &
          norm_plane, line_param)
 
-      use param1, only: zero
+      use param, only: zero
 
       implicit none
 

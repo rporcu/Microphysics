@@ -6,7 +6,7 @@ module set_bc_flow_module
   use bc, only: bc_type, bc_plane
 
   use param,  only: dim_m
-  use param1, only: zero, one, equal, is_defined
+  use param, only: zero, one, equal, is_defined
 
   use bc, only: bc_u_g, bc_v_g, bc_w_g
   use bc, only: bc_massflow_g, bc_volflow_g

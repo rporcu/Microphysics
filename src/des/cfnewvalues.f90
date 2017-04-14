@@ -18,7 +18,7 @@ contains
 
     use discretelement, only: dtsolid
     use discretelement, only: normal_particle, exiting_particle
-    use param1, only: zero
+    use param, only: zero
     use constant, only: gravity
 
     implicit none

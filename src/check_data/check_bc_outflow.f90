@@ -2,7 +2,7 @@ module check_bc_outflow_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param1,         only: one, undefined, zero, is_undefined, is_defined, equal
+  use param,         only: one, undefined, zero, is_undefined, is_defined, equal
   use error_manager,  only: finl_err_msg, err_msg, flush_err_msg, init_err_msg, ivar, ival
 
 
@@ -25,7 +25,7 @@ contains
   subroutine check_bc_outflow(M_TOT, BCV)
 
      use bc,     only: bc_ep_g, bc_ep_s
-     use param1, only: one, equal
+     use param, only: one, equal
 
     integer, intent(in) :: BCV, M_TOT
     integer             :: M

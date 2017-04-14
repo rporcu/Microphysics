@@ -47,7 +47,7 @@ contains
   subroutine check_bc_walls_gas(bcv)
 
     use bc,     only: bc_type, bc_uw_g, bc_vw_g, bc_ww_g
-    use param1, only: is_undefined
+    use param, only: is_undefined
 
 
     integer, intent(in) :: bcv

@@ -33,7 +33,7 @@ contains
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: ZERO, ONE, IS_UNDEFINED
+      use param, only: ZERO, ONE, IS_UNDEFINED
 
 ! Module proceedures:
 !---------------------------------------------------------------------//

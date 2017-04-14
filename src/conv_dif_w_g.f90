@@ -2,7 +2,7 @@ module w_g_conv_dif
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use param1        , only: half, one, zero
+   use param        , only: half, one, zero
 
    implicit none
 
@@ -61,7 +61,7 @@ module w_g_conv_dif
          (wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3))
 !---------------------------------------------------------------------//
 
-      if (discretize(5) == 0) then               ! 0 & 1 => FOUR
+      if (discretize(4) == 0) then               ! 0 & 1 => FOUR
          call store_a_w_g0 (slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
                             A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
       else

@@ -1,7 +1,7 @@
 module u_g_conv_dif
 
    use amrex_fort_module, only : c_real => amrex_real
-   use param1        , only: half, one, zero
+   use param        , only: half, one, zero
 
    implicit none
 
@@ -59,7 +59,7 @@ contains
       real(c_real), intent(in   ) :: dx, dy, dz
 !---------------------------------------------------------------------//
 
-      if (discretize(3) == 0) then
+      if (discretize(2) == 0) then
 
          call store_a_u_g0(&
             slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
@@ -336,7 +336,7 @@ contains
 
       allocate(xsi_(alo(1):xhi(1),alo(2):xhi(2),alo(3):xhi(3)) )
       call calc_xsi_y (u_g, ulo, uhi, vel, vello, velhi, xsi_, alo, xhi, .true.)
-  
+
       ! NOTES:   u_g  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
       !          A_m  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2)  , lo(3):hi(3))
       !          vel  lives on x-y edges :   (lo(1): hi(1)+1, lo(2):hi(2)+1, lo(3):hi(3))
@@ -377,7 +377,7 @@ contains
           end do
         end do
       end do
-  
+
       ! NOTES:   u_g  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)  )
       !          A_m  lives on x-faces   :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)  )
       !          vel  lives on x-z edges :   (lo(1): hi(1)+1, lo(2):hi(2), lo(3):hi(3)+1)

@@ -42,8 +42,8 @@
 
       Use discretelement, only: mew, mew_w
       use constant, only: gravity
-      use param1, only: zero
-      use param1, only: equal
+      use param, only: zero
+      use param, only: equal
       use usr, only: u0
       use amrex_fort_module, only : c_real => amrex_real
 

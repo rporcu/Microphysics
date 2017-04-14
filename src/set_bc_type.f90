@@ -32,7 +32,7 @@ module set_bc_type_module
       use bc, only: bc_x_e, bc_y_n, bc_z_t
 
       use param, only: dim_bc
-      use param1, only: equal
+      use param, only: equal
       use calc_cell_module, only: calc_cell_bc_flow
       use calc_cell_module, only: calc_cell_bc_wall
 

@@ -9,7 +9,7 @@
       subroutine parse_resid_string() &
          bind(C, name="parse_resid_string")
 
-      use param1, only: undefined_c, undefined_i
+      use param, only: undefined_c, undefined_i
       use residual, only: resid_grp_string, resid_index, max_resid_index, resid_x, resid_prefix
       use residual, only: resid_string, energy_grp, group_resid, ke_grp, nprefix, scalar_grp, hydro_grp, theta_grp
       use write_error_module, only: write_error
@@ -95,5 +95,5 @@
               + ICHAR(RESID_STRING(L)(4:4)) - 48 - 1
          ENDIF
       END DO
-      
+
       end subroutine parse_resid_string

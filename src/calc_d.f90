@@ -3,7 +3,7 @@ module calc_d_mod
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param1, only: ZERO, SMALL_NUMBER
+   use param, only: ZERO, SMALL_NUMBER
 
    ! Flag: Coupled DEM simulation
    use discretelement, only: DES_CONTINUUM_COUPLED

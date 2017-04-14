@@ -62,7 +62,7 @@
 ! Number of ranks in parallel run.
       use compar, only: numPEs
 ! Undefined character string.
-      use param1, only: UNDEFINED_C
+      use param, only: UNDEFINED_C
 
       implicit none
 

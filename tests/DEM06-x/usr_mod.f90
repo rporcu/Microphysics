@@ -1,7 +1,7 @@
       MODULE usr
 
       ! use param
-      ! use param1
+      ! use param
 
       implicit none
 

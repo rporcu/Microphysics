@@ -9,7 +9,7 @@ contains
 
    subroutine leq_scale(rhs, rlo, rhi, A_m, alo, ahi) &
       bind(C, name = "leq_scale")
-   use param1, only: small_number, one
+   use param, only: small_number, one
 
    integer(c_int), intent(in   ) :: rlo(3),rhi(3),alo(3),ahi(3)
 

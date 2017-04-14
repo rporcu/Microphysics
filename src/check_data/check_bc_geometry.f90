@@ -8,8 +8,8 @@ module check_bc_geometry_module
 
 ! Global Parameters:
 !---------------------------------------------------------------------//
-      use param1, only: zero, undefined, undefined_i, undefined_c
-      use param1, only: is_undefined, is_defined
+      use param, only: zero, undefined, undefined_i, undefined_c
+      use param, only: is_undefined, is_defined
 
    CONTAINS
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

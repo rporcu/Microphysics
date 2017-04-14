@@ -21,7 +21,7 @@ MODULE XSI
    use discretization, only: minmod
    use discretization, only: central_scheme
 
-   use param1, only: zero
+   use param, only: zero
 
    implicit none
 
@@ -74,7 +74,7 @@ contains
                else
                   phi_c = phi_c_of(phi(i+1,j,k),phi(i,j,k),phi(i-1,j,k))
                endif
-            endif 
+            endif
 
             dwf = superbee(phi_c)
             xsi_e(i,j,k) = xsi_func(vel(i,j,k),dwf)
@@ -131,7 +131,7 @@ contains
                else
                   phi_c = phi_c_of(phi(i,j+1,k),phi(i,j,k),phi(i,j-1,k))
                endif
-            endif 
+            endif
 
             dwf = superbee(phi_c)
             xsi_n(i,j,k) = xsi_func(vel(i,j,k),dwf)
@@ -189,7 +189,7 @@ contains
                else
                   phi_c = phi_c_of(phi(i,j,k+1),phi(i,j,k),phi(i,j,k-1))
                endif
-            endif 
+            endif
 
             dwf = superbee(phi_C)
             XSI_T(i,j,k) = XSI_func(vel(i,j,k),DWF)

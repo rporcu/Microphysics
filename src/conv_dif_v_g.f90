@@ -2,7 +2,7 @@ module v_g_conv_dif
 
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
-   use param1        , only: half, one, zero
+   use param        , only: half, one, zero
 
    implicit none
 
@@ -61,7 +61,7 @@ module v_g_conv_dif
 !---------------------------------------------------------------------//
 
       ! DO NOT use DEFERRED CORRECTION TO SOLVE V_G
-      IF (discretize(4) == 0) THEN               ! 0 & 1 => FOUR
+      IF (discretize(3) == 0) THEN               ! 0 & 1 => FOUR
          call store_a_v_g0(&
               slo, shi, ulo, uhi, vlo, vhi, wlo, whi, alo, ahi, &
               A_m, mu_g, fluxX, fluxY, fluxZ, dx, dy, dz)
@@ -257,10 +257,10 @@ module v_g_conv_dif
       integer :: xlo(3), xhi(3)
       integer :: vello(3),velhi(3)
       integer :: i, j, k
- 
+
       ! Diffusion parameter
       real(c_real) :: d_f,d_f_e,d_f_w,d_f_b,d_f_t
- 
+
       ! Face mass flux
       real(c_real) :: lflux,lflux_e,lflux_w,lflux_b,lflux_t
 

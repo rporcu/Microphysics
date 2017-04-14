@@ -21,9 +21,9 @@ set(F90_sources
   calc_mu_g.f90
   calc_ro_g.f90
   calc_trd_g.f90
-  check_bc_flow.f90
   check_convergence.f90
-  check_domain.f90
+  check_data/check_domain.f90
+  check_data/check_bc_flow.f90
   check_data/check_bc_geometry.f90
   check_data/check_bc_inflow.f90
   check_data/check_bc_outflow.f90
@@ -87,15 +87,12 @@ set(F90_sources
   io/init_output_vars.f90
   io/write_error.f90
   io/write_out0.f90
-  io/write_table.f90
   location_check.f90
   machine_mod.f90
   matrix_mod.f90
   output_mod.f90
-  param1_mod.f90
   param_mod.f90
   parse_line.f90
-  parse_resid_string.f90
   physical_prop.f90
   ps_mod.f90
   read_namelist.f90
@@ -107,7 +104,6 @@ set(F90_sources
   set_bc_flow.f90
   set_bc_type.f90
   set_domain.f90
-  set_param.f90
   set_ps.f90
   solve_pp_g.f90
   solve_vel_star.f90

@@ -21,7 +21,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    pure integer function calc_cell(location, dx)
 
-      use param1, only : half
+      use param, only : half
 
       implicit none
 
@@ -45,7 +45,7 @@ contains
    subroutine calc_cell_ic(dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
      i_w, i_e, j_s, j_n, k_b, k_t)
 
-     use param1, only: zero, equal
+     use param, only: zero, equal
 
      implicit none
 
@@ -75,7 +75,7 @@ contains
       zlength, dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
       i_w, i_e, j_s, j_n, k_b, k_t)
 
-      use param1, only: zero, equal
+      use param, only: zero, equal
 
       implicit none
 
@@ -134,7 +134,7 @@ contains
       dx, dy, dz, x_w, y_s, z_b, x_e, y_n, z_t, &
       i_w, i_e, j_s, j_n, k_b, k_t)
 
-      use param1, only: equal
+      use param, only: equal
 
       implicit none
 
@@ -185,7 +185,7 @@ contains
       use ps, only: ps_y_n, ps_y_s
       use ps, only: ps_z_t, ps_z_b
 
-      use param1, only: equal
+      use param, only: equal
 
       implicit none
 

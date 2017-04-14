@@ -40,7 +40,7 @@
 
       use amrex_fort_module, only : c_real => amrex_real
       Use usr, only: gy1, gy2, gz1, gz2, rk4_v4
-      Use param1, only: undefined, is_defined
+      Use param, only: undefined, is_defined
 
       IMPLICIT NONE
 

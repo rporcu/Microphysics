@@ -16,12 +16,12 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use ps, only: dimension_ps, point_source
+      use ps, only: dim_ps, point_source
       use ps, only: ps_vel_mag_g, ps_massflow_g, ps_defined
       use ps, only: ps_x_w, ps_x_e, ps_y_s, ps_y_n, ps_z_b, ps_z_t
       use ps, only: ps_u_g, ps_v_g, ps_w_g
 
-      use param1  , only: zero, small_number
+      use param  , only: zero, small_number
 
       implicit none
 
@@ -55,7 +55,7 @@
       if(.not.point_source) return
 
       ! ! DETERMINE WHICH BOUNDARY CONDITION INDICES HAVE VALUES
-      ! L50: do PSV = 1, dimension_ps
+      ! L50: do PSV = 1, dim_ps
 
       !    IF(.NOT.PS_DEFINED(PSV)) cycle L50
 
@@ -152,7 +152,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       subroutine debug_ps(lPSV, lps_size)
 
-      use param1  , only: small_number
+      use param  , only: small_number
 
       implicit none
 

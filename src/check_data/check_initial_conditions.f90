@@ -3,8 +3,8 @@ module check_initial_conditions_module
   use amrex_fort_module, only: c_real => amrex_real
   use iso_c_binding ,    only: c_int
 
-  use param1,  only: zero, one, undefined, undefined_i
-  use param1,  only: is_defined, is_undefined
+  use param,  only: zero, one, undefined, undefined_i
+  use param,  only: is_defined, is_undefined
 
   use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg
   use error_manager, only: err_msg, ivar, ival
@@ -262,7 +262,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
     subroutine check_ic_solids_phases(ICV)
 
-      use param1, only: equal
+      use param, only: equal
       use constant, only: mmax
       use ic,       only: ic_ep_s, ic_u_s, ic_v_s, ic_w_s
       use ic,       only: ic_ep_g, ic_type
@@ -400,7 +400,7 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
    subroutine check_ic_common_discrete
 
-      use param1,   only: zero
+      use param,   only: zero
       use param,    only: dim_ic
       use ic,       only: ic_defined, ic_ep_s
       use ic,       only: ic_x_w, ic_x_e, ic_y_s, ic_y_n, ic_z_b, ic_z_t

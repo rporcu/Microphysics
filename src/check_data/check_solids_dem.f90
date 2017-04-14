@@ -3,7 +3,7 @@ module check_des_solids_module
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
-  use param1,         only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
+  use param,         only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
   use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,  &
        & ival, ivar, err_msg
 

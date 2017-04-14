@@ -30,6 +30,9 @@
 
   CALL_USR = .T.
 
+  FULL_LOG = .F.  ! display residuals on screen
+  NLOG = 250
+
   GRAVITY(1) = -9.80665d0
   GRAVITY(2) =  0.d0
   GRAVITY(3) =  0.d0
@@ -39,9 +42,8 @@
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 0.0
-  MU_g0 = 0.2
+
 
 ! PARTICLE SECTION
 !---------------------------------------------------------------------//
@@ -105,17 +107,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 5.0d-3
-
-
-#_______________________________________________________________________
-# OUTPUT CONROL SECTION
-
-  FULL_LOG = .F.  ! display residuals on screen
-  NLOG = 250      ! time steps between updates to (.LOG) file
-
-  GROUP_RESID = .T.
-
-
-
-#_______________________________________________________________________
-# DMP SETUP

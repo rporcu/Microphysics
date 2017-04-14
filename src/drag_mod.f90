@@ -3,7 +3,7 @@ module drag
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param1, only: one, half, zero, small_number, large_number
+   use param, only: one, half, zero, small_number, large_number
 
 ! Drag model options (see drag_gs for full details)
       character(64) :: drag_type

@@ -1,6 +1,6 @@
 module check_bc_flow_module
 
-   use param1, only: zero
+   use param, only: zero
    use param,  only: dim_bc, dim_m
 
    use bc, only: bc_plane

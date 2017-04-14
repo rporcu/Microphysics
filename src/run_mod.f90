@@ -18,7 +18,7 @@
       use iso_c_binding , only: c_int
 
       use param, only: dim_M, dim_eqs
-      use param1, only: UNDEFINED_I
+      use param, only: UNDEFINED_I
 
 !---------------------------------------------------------------------//
 

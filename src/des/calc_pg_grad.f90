@@ -41,7 +41,7 @@ module calc_pg_grad_module
 ! Global Parameters:
 !---------------------------------------------------------------------//
 ! Double precision values.
-      use param1, only: ZERO
+      use param, only: ZERO
 
       implicit none
 

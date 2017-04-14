@@ -33,6 +33,9 @@
 
   CALL_USR = .TRUE.
 
+  FULL_LOG = .T.    ! display residuals on screen
+  NLOG = 25         ! frequency to updated log file (.LOG)
+
   DRAG_TYPE = 'USER_DRAG'
 
   GRAVITY(1) =  0.d0
@@ -55,13 +58,12 @@
 
 ! Gas Section
 !---------------------------------------------------------------------//
-
   RO_g0 = 1.2      ! (kg/m^3)
   MU_g0 = 1.8d-5   ! (Pa.s)
 
+
 ! Particle Section
 !---------------------------------------------------------------------//
-
 
 ! Normal collision spring constant. (N/m)
   KN =   0.1                   ! particle-particle
@@ -157,9 +159,3 @@
 # USER OUTPUT CONTROL
 
   USR_DT(1) = 1.0d-2
-
-#_______________________________________________________________________
-# OUTPUT CONTROL SECTION
-
-  FULL_LOG = .T.    ! display residuals on screen
-  NLOG = 25         ! frequency to updated log file (.LOG)

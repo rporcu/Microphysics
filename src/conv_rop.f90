@@ -67,7 +67,7 @@ module conv_rop_module
 
 ! Modules
 !---------------------------------------------------------------------//
-      use param1, only: zero
+      use param, only: zero
 
 
       integer(c_int), intent(in   ) :: slo(3),shi(3),lo(3),hi(3)
@@ -153,7 +153,7 @@ module conv_rop_module
 
 ! Modules
 !---------------------------------------------------------------------//
-      use param1        , only: one, zero
+      use param        , only: one, zero
       use discretization, only: phi_c_of, superbee
 
       implicit none

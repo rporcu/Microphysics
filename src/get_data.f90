@@ -19,8 +19,7 @@ module get_data_module
       use error_manager  , only: init_error_manager
       use init_namelist_module, only: init_namelist
       use read_namelist_module, only: read_namelist
-      use set_parameters_module, only: set_parameters
-      use param1, only: is_undefined
+      use param, only: is_undefined
 
       use run, only: detect_stall
 
@@ -46,7 +45,6 @@ module get_data_module
 
       call check_gas_phase
       call check_solids_phases
-      call set_parameters
 
 
       if(is_undefined(dt)) detect_stall = .false.

@@ -1,51 +1,83 @@
-      MODULE param
+module param
+
+  use amrex_fort_module, only : c_real => amrex_real
+
+! Parameters limiting user-specifed input.
+!'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  ! Maximum number of items for specifying initial conditions
+  integer, parameter :: dim_ic = 500
+  ! Maximum number of items for specifying boundary conditions
+  integer, parameter :: dim_bc = 500
+  ! Maximum number of items for specifying point sources
+  integer, parameter :: dim_ps = 5000
+  ! Maximum number of solids phases
+  integer, parameter :: dim_m = 10
+  ! Maximum number of gas species
+  integer, parameter :: dim_n_g = 100
+  ! Maximum number of solids species per phase.
+  integer, parameter :: dim_n_s = 100
+  ! Maximum number of user-defined output files
+  integer, parameter :: dim_usr = 5
+
+  ! Number of Equation types:
+  !  1) Gas pressure
+  !  2) Gas and solids U-Momentum equation
+  !  3) Gas and solids V-Momentum equation
+  !  4) Gas and solids W-Momentum equation
+  integer, parameter :: dim_eqs = 4
 
 ! Parameters describing problem size: (set from user input)
 !'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-! Maximum number of species.
-      integer :: DIMENSION_N_g ! Gas
-      integer :: DIMENSION_N_s ! Solids
+! Parameters for testing if user input was specifed.
+      real(c_real), parameter :: undefined = 9.87654321d31
+      integer,      parameter :: undefined_i = 987654321
+      character,    parameter :: undefined_c = ' '
 
+! Cutoffs for large and small numbers
+      real(c_real), parameter :: large_number = 1.0d32
+      real(c_real), parameter :: small_number = 1.0d-15
 
-! Parameters limiting user-specifed input.
-!'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-! Maximum number of reactions defined in data file
-      integer, PARAMETER :: DIMENSION_RXN = 100
-! Maximum number of items for specifying initial conditions
-      integer, PARAMETER :: DIM_IC = 500
-! Maximum number of items for specifying boundary conditions
-      integer, PARAMETER :: DIM_BC = 500
-! Maximum number of items for specifying point sources
-      integer, PARAMETER :: DIMENSION_PS = 5000
-! Maximum number of solids phases
-      integer, PARAMETER :: DIM_M = 10
-! Maximum number of gas species
-      integer, PARAMETER :: DIM_N_g = 100
-! Maximum number of solids species per phase.
-      integer, PARAMETER :: DIM_N_s = 100
-! Maximum of DIM_N_g and DIM_N_s
-      integer, PARAMETER :: DIM_N = max(DIM_N_g, DIM_N_s)
-! Maximum number of species.
-      integer, PARAMETER :: DIM_N_ALL = 2*DIM_N
-! Maximum of the number of cells in the x direction.
-      integer, PARAMETER :: DIM_I = 5000
-! Maximum of the number of cells in the y direction.
-      integer, PARAMETER :: DIM_J = 5000
-! Maximum of the number of cells in the z direction.
-      integer, PARAMETER :: DIM_K = 5000
-! Maximum number of user-defined output files
-      integer, PARAMETER :: DIMENSION_USR = 5
-! Number of Equation types:
-!  1) Gas pressure
-!  2) Solids volume fraction
-!  3) Gas and solids U-Momentum equation
-!  4) Gas and solids V-Momentum equation
-!  5) Gas and solids W-Momentum equation
-!  6) Temperature
-!  7) Species Mass Fractions
-!  8) Granular Temperature
-! 10) DES Diffusion
-      integer, PARAMETER :: DIM_EQS = 10
+! Common parameter constants
+      real(c_real), parameter :: zero = 0.0d0
+      real(c_real), parameter :: half = 0.5d0
+      real(c_real), parameter :: one  = 1.0d0
+
+      interface is_defined
+         module procedure is_defined_db
+         module procedure is_defined_i
+      end interface is_defined
+
+      interface is_undefined
+         module procedure is_undefined_db
+         module procedure is_undefined_i
+      end interface is_undefined
+
+   contains
+
+      pure logical function is_defined_db(x)
+         real(c_real), intent(in) :: x
+         is_defined_db = .not.equal(x, undefined)
+      end function is_defined_db
+
+      pure logical function is_defined_i(x)
+         integer, intent(in) :: x
+         is_defined_i = (x /= undefined_i)
+      end function is_defined_i
+
+      pure logical function is_undefined_db(x)
+         real(c_real), intent(in) :: x
+         is_undefined_db = equal(x, undefined)
+      end function is_undefined_db
+
+      pure logical function is_undefined_i(x)
+         integer, intent(in) :: x
+         is_undefined_i = (x == undefined_i)
+      end function is_undefined_i
+
+      pure logical function equal(x, y)
+         real(c_real), intent(in) :: x, y
+         equal = (abs(x-y) < epsilon(x))
+      end function equal
 
       END MODULE param

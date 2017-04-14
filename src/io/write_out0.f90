@@ -17,10 +17,10 @@
       use discretelement, only: hert_kn, hert_kt, hert_kwn, hert_kwt, des_etan, des_etat, des_etat_wall, des_etan_wall
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
-      use leqsol, only: leq_it, leq_method, leq_sweep, leq_tol, leq_pc
+      use leqsol, only: leq_it, leq_sweep, leq_tol, leq_pc
       use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
       use param, only: dim_ic, dim_bc
-      use param1, only: half, undefined, zero, is_defined
+      use param, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
       use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
       use run, only: discretize, solids_model
@@ -55,7 +55,6 @@
       CHARACTER(LEN=3), DIMENSION(3) :: LEGEND
       CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME
       CHARACTER(LEN=12), DIMENSION(0:2) :: DISCR_NAME1
-      CHARACTER(LEN=8), DIMENSION(1:4) :: LEQ_METHOD_NAME
 ! RUN_NAME.OUT file unit number
       integer, PARAMETER :: UNIT_OUT = 52
       integer :: ier
@@ -66,7 +65,6 @@
 !
       DATA DISCR_NAME/'FOUP', '    ', 'Superbee'/
       DATA DISCR_NAME1/'FOUP', '    ', 'Fourth Order'/
-      DATA LEQ_METHOD_NAME/'   SOR  ', 'BiCGSTAB', '  GMRES ', '   CG   '/
 
       MMAX_TOT = MMAX
 
@@ -111,10 +109,9 @@
       WRITE (UNIT_OUT, 1150)
       WRITE (UNIT_OUT, 1157) P_REF, P_SCALE, GRAVITY(2)
       WRITE (UNIT_OUT, 1158)
-      WRITE (UNIT_OUT, 1159) (UR_FAC(L),LEQ_IT(L),&
-                          LEQ_METHOD_NAME(LEQ_METHOD(L)),&
+      WRITE (UNIT_OUT, 1159) (UR_FAC(L),LEQ_IT(L),'BiCGSTAB',&
                           LEQ_SWEEP(L), LEQ_TOL(L), LEQ_PC(L),&
-                          DISCR_NAME(DISCRETIZE(L)),L=1,9)
+                          DISCR_NAME(DISCRETIZE(L)),L=1,4)
 
 ! Geometry and Discretization.
          WRITE (UNIT_OUT, 1200)
