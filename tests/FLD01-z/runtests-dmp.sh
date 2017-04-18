@@ -21,11 +21,11 @@ if ! [ -z "${MFIX_BENCHMARKS_HOME}" ] && ! [ -z "${FCOMPARE}" ]; then
 fi
 
 if ! [ -z "${FEXTRACT}" ]; then
-  ${FEXTRACT} -p FLD0100000/ -d 1 -v w_g && mv FLD0100000.slice POST_WG.dat
-  ${FEXTRACT} -p FLD0100000/ -d 3 -v p_g && mv FLD0100000.slice POST_PG.dat
+  ${FEXTRACT} -p FLD0100000/ -d 1 -v w_g && mv FLD0100000.slice POST_WG_MPI.dat
+  ${FEXTRACT} -p FLD0100000/ -d 3 -v p_g && mv FLD0100000.slice POST_PG_MPI.dat
 
   post_dats=POST*.dat
   for result in ${post_dats}; do
-    numdiff -a 1.0e-9 -r 1.0e-8 AUTOTEST/${result} ${result}
+    numdiff -a 0.0 -r 0.0 AUTOTEST/${result} ${result}
   done
 fi
