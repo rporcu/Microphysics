@@ -138,8 +138,7 @@ mfix_level::InitParams(int solve_fluid_in, int solve_dem_in, int cyclic_mf_in,
    call_udf     = call_udf_in;
 }
 
-void
-mfix_level::Init(int lev, Real dt, Real time)
+void mfix_level::Init(int lev, Real dt, Real time)
 {
     BL_ASSERT(max_level == 0);
 
@@ -189,14 +188,15 @@ mfix_level::Init(int lev, Real dt, Real time)
          amrex::Abort("Bad data in set_ps");
       }
 
+      // Always allocate data for pc
+      pc -> AllocData();
+
       InitLevelData(lev,dt,time);
 
       InitIOData ();
     }
 
-    // if max_level > 0, define fine levels
-
-    pc->InitData();
+    // pc->InitData();
 }
 
 void
@@ -569,11 +569,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 }
 
 
-void
-mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
-{
-    pc -> output( lev, estatus, finish, nstep, dt, time);
-}
 
 void
 mfix_level::InitLevelData(int lev, Real dt, Real time)
@@ -612,7 +607,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
 
-  pc -> AllocData();
 
   // Allocate the particle arrays
   if (solve_dem)
@@ -704,8 +698,6 @@ mfix_level::mfix_calc_all_coeffs(int lev)
   Real dx = geom[lev].CellSize(0);
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
-
-  // const int max_pip = particle_state.size();
 
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
