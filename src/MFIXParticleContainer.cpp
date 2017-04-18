@@ -109,24 +109,8 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
 }
 
-void
-MFIXParticleContainer:: GetParticlesPosition( Array<Real>& des_pos_new ) {
 
-    Array<Real>  xp, yp, zp;
 
-    xp.resize(numberOfParticles);
-    yp.resize(numberOfParticles);
-    zp.resize(numberOfParticles);
-
-    int lev = 0;
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-	pti.GetPosition(xp, yp, zp);
-    }
-
-    Pack3DArrays(des_pos_new, xp, yp, zp);
-
-}
 
 void
 MFIXParticleContainer:: GetParticlesAttributes (
@@ -229,52 +213,16 @@ MFIXParticleContainer::InitData()
 }
 
 
-void
-MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
-             const Array<Real>& comp2, const Array<Real>& comp3 )
+
+void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g, 
+					    const Array< unique_ptr<MultiFab> >& u_g,
+					    const Array< unique_ptr<MultiFab> >& v_g,
+					    const Array< unique_ptr<MultiFab> >& w_g,
+					    const Array< unique_ptr<MultiFab> >& p_g,
+					    const Array< unique_ptr<MultiFab> >& ro_g,
+					    const Array< unique_ptr<MultiFab> >& mu_g,
+					    int lev, int nstep, Real dt, Real time )
 {
-
-    const int  np = comp1.size();
-
-    for ( int i = 0; i < np; i++ )
-    {
-      vec[i]      = comp1[i];
-      vec[i+np]   = comp2[i];
-      vec[i+2*np] = comp3[i];
-    }
-
-}
-
-
-void
-MFIXParticleContainer::Unpack3DArrays( Array<Real>& comp1,  Array<Real>& comp2, Array<Real>& comp3,
-				       const Array<Real>& vec )
-{
-
-    const int  np = comp1.size();
-
-    for ( int i = 0; i < np; i++ )
-    {
-	comp1[i] = vec[i];
-	comp2[i] = vec[i+np];
-	comp3[i] = vec[i+2*np];
-    }
-
-}
-
-
-void
-MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g, 
-				       const Array< unique_ptr<MultiFab> >& u_g,
-				       const Array< unique_ptr<MultiFab> >& v_g,
-				       const Array< unique_ptr<MultiFab> >& w_g,
-				       const Array< unique_ptr<MultiFab> >& p_g,
-				       const Array< unique_ptr<MultiFab> >& ro_g,
-				       const Array< unique_ptr<MultiFab> >& mu_g,
-				       int lev, int nstep, Real dt, Real time )
-{
-    
-    int pair_count = 0;
 
     Box domain(Geom(lev).Domain());
 
@@ -286,8 +234,6 @@ MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-    const int np = NumberOfParticlesAtLevel( lev, 1, 1 );
-
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) 
     {
@@ -298,46 +244,18 @@ MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 	Box ubx((*u_g[lev])[pti].box());
 	Box vbx((*v_g[lev])[pti].box());
 	Box wbx((*w_g[lev])[pti].box());
-
-	
-	// particle struct data
-	auto& structs = pti.GetArrayOfStructs();
-	
-	// particle array data
-	auto& attribs = pti.GetStructOfArrays();
 	
 	//number of particles
-	const int np = structs.size();
+	const int np =  NumberOfParticles(pti);
 
 	// Temporary arrays
-	Array<int>   state, phase;
-	Array<Real>   vel, pos, omega, acc, alpha, drag;
-
-	state.resize(np);
-	phase.resize(np);
-	vel.resize(3*np);
-	pos.resize(3*np);
-	omega.resize(3*np);
-	acc.resize(3*np);
-	alpha.resize(3*np);
-	drag.resize(3*np);
+	Real         *pradius, *pdensity, *pvol, *pmass, *pomoi;
+	Real         *ppos, *pvel, *pomega, *pacc, *palpha, *pdrag; 
+    	int          *pstate, *pphase;
 
 
-	for( unsigned i=0; i < np ; ++i )
-	{
-	    pos[i]      = structs[i].pos(0);
-	    pos[i+np]   = structs[i].pos(1);
-	    pos[i+2*np] = structs[i].pos(2);
-	    state[i]    = int(attribs[PIdx::state][i]);
-	    phase[i]    = int(attribs[PIdx::phase][i]);
-	}
-
-
-	Pack3DArrays(vel,   attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz] );
-	Pack3DArrays(acc,   attribs[PIdx::accx], attribs[PIdx::accy], attribs[PIdx::accz] );
-	Pack3DArrays(omega, attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz] );
-	Pack3DArrays(alpha, attribs[PIdx::alphax], attribs[PIdx::alphay], attribs[PIdx::alphaz] );
-	Pack3DArrays(drag,  attribs[PIdx::dragx], attribs[PIdx::dragy], attribs[PIdx::dragz] );
+	GetParticlesAttributes ( &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
+				 &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag, pti ); 
 
 
 	mfix_des_time_march( &np, 
@@ -350,34 +268,21 @@ MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 			     (*ep_g[lev])[pti].dataPtr(), (*p_g[lev])[pti].dataPtr(),
 			     (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
 			     (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-			     state.dataPtr(),    phase.dataPtr(),
-			     attribs[PIdx::radius].dataPtr(), attribs[PIdx::volume].dataPtr(), attribs[PIdx::mass].dataPtr(),
-			     attribs[PIdx::oneOverI].dataPtr(), pos.dataPtr(),    vel.dataPtr(),   omega.dataPtr(),
-			     acc.dataPtr(),    alpha.dataPtr(), drag.dataPtr(), &time, &dt, &dx, &dy, &dz, 
+			     pstate, pphase, pradius, pvol, pmass, pomoi, ppos,  pvel, pomega,
+			     pacc,  palpha, pdrag, &time, &dt, &dx, &dy, &dz, 
 			     &xlen, &ylen, &zlen, &nstep);
 
-	for( unsigned i=0; i < np ; ++i )
-	{
-	    structs[i].pos(0) = pos[i];
-	    structs[i].pos(1) = pos[i+np] ;
-	    structs[i].pos(2) = pos[i+2*np];
-	    attribs[PIdx::state][i] = state[i];
-	    attribs[PIdx::phase][i] = phase[i];
-	}
 
-	Unpack3DArrays(attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz], vel );
-	Unpack3DArrays(attribs[PIdx::accx], attribs[PIdx::accy], attribs[PIdx::accz], acc );
-	Unpack3DArrays(attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz], omega );
-	Unpack3DArrays(attribs[PIdx::alphax], attribs[PIdx::alphay], attribs[PIdx::alphaz], alpha );
-	Unpack3DArrays(attribs[PIdx::dragx], attribs[PIdx::dragy], attribs[PIdx::dragz], drag );
+	RestoreParticlesAttributes  ( &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
+				      &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag, pti ); 
+
 
     }
 
 }
 
 
-void
-MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
+void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
 
     Real xlen = Geom(lev).ProbHi(0) - Geom(lev).ProbLo(0);
@@ -387,54 +292,27 @@ MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, Real 
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-
-	// particle struct data
-	auto& structs = pti.GetArrayOfStructs();
-	
-	// particle array data
-	auto& attribs = pti.GetStructOfArrays();
 	
 	//number of particles
-	const int np = structs.size();
+	const int np = NumberOfParticles(pti);
 
 	// Temporary arrays
-	Array<int>   state;
-	Array<Real>   vel, pos, omega;
+	Real         *ppos, *pvel, *pomega, *pradius; 
+    	int          *pstate, *pphase;
 
-	state.resize(np);
-	vel.resize(3*np);
-	pos.resize(3*np);
-	omega.resize(3*np);
 
-	for( unsigned i=0; i < np ; ++i )
-	{
-	    pos[i]      = structs[i].pos(0);
-	    pos[i+np]   = structs[i].pos(1);
-	    pos[i+2*np] = structs[i].pos(2);
-	    state[i]    = int(attribs[PIdx::state][i]);
-	}
-
-	Pack3DArrays(vel,   attribs[PIdx::velx], attribs[PIdx::vely], attribs[PIdx::velz] );
-	Pack3DArrays(omega, attribs[PIdx::omegax], attribs[PIdx::omegay], attribs[PIdx::omegaz] );
-
+	GetParticlesAttributes ( &pstate, NULL, &pradius,  NULL, NULL, NULL,
+				 NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL, pti ); 
 
 	mfix_output_manager(&np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-			    state.dataPtr(), attribs[PIdx::radius].dataPtr(), pos.dataPtr(),
-			    vel.dataPtr(),  omega.dataPtr(), &finish);
+			    pstate, pradius, ppos, pvel,  pomega, &finish);
+
+
+	RestoreParticlesAttributes ( &pstate, NULL, &pradius,  NULL, NULL, NULL,
+				     NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL, pti ); 
+
     }
 
 }
 
-// void
-// MFIXParticleContainer::Evolve (int lev, Real dt)
-// {
-//     BL_PROFILE("MyPC::Evolve()");
 
-//     const Geometry& gm  = m_gdb->Geom(lev);
-
-// #if (BL_SPACEDIM == 3)
-//     const Real* dx = gm.CellSize();
-// #elif (BL_SPACEDIM == 2)
-//     Real dx[3] = { gm.CellSize(0), std::numeric_limits<Real>::quiet_NaN(), gm.CellSize(1) };
-// #endif
-// }
