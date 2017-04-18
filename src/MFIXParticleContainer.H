@@ -89,8 +89,19 @@ class MFIXParticleContainer
 public:
 
     // Get number of particles
-
     const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); } 
+
+    const int NumberOfParticles(int& lev, MFIter& mfi)
+	{
+	    const int gridIndex = mfi.index();
+	    const int tileIndex = mfi.LocalTileIndex();
+	    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
+	    auto&     structs   = particles.GetArrayOfStructs();
+	    auto&     attribs   = particles.GetStructOfArrays();
+	    const int np        = structs.size();
+
+	    return structs.size();
+	} 
 
     MFIXParticleContainer (AmrCore* amr_core);
 
@@ -103,38 +114,41 @@ public:
     void printParticles ();
 
     void AllocData ();
+   
 
-    const int  GetNParticles () { return numberOfParticles; };
-
-    void GetParticlesPosition ( Array<Real>& des_pos_new );
-    void GetPositionsArray( Real** posPtr, MFIXParIter& pti );
-    void RestorePositionsArray( Real** posPtr, MFIXParIter& pti );
-    void GetVelocitiesArray( Real** velPtr, MFIXParIter& pti );
-    void RestoreVelocitiesArray( Real** velPtr, MFIXParIter& pti );
-
-    void GetParticlesAttributes (
-	Array<int>& particle_state, Array<int>& particle_phase,
-	Array<Real>& des_radius,  Array<Real>& ro_sol,
-	Array<Real>& pvol,   Array<Real>& pmass,
-	Array<Real>& omoi,   Array<Real>& des_vel_new,
-	Array<Real>& omega_new,   Array<Real>& des_acc_old,
-	Array<Real>& rot_acc_old,   Array<Real>& drag_fc);    
-
-    void GetParticlesAttributes ( int** pstate, int** pphase,
+    void GetParticlesAttributes ( MFIXParIter& pti,
+				  int** pstate, int** pphase,
 				  Real** pradius,  Real** pdensity,
 				  Real** pvol, Real** pmass,
 				  Real** pomoi, Real** ppos,  Real** pvel,
 				  Real** pomega, Real** pacc,
-				  Real** palpha, Real** pdrag,
-				  MFIXParIter& pti); 
+				  Real** palpha, Real** pdrag ); 
 
-    void RestoreParticlesAttributes ( int** pstate, int** pphase,
+    void GetParticlesAttributes ( const int& lev, const MFIter& mfi,
+				  int** pstate, int** pphase,
 				  Real** pradius,  Real** pdensity,
 				  Real** pvol, Real** pmass,
 				  Real** pomoi, Real** ppos,  Real** pvel,
 				  Real** pomega, Real** pacc,
-				  Real** palpha, Real** pdrag,
-				  MFIXParIter& pti); 
+				  Real** palpha, Real** pdrag );
+
+
+    void RestoreParticlesAttributes ( MFIXParIter& pti,
+				      int** pstate, int** pphase,
+				      Real** pradius,  Real** pdensity,
+				      Real** pvol, Real** pmass,
+				      Real** pomoi, Real** ppos,  Real** pvel,
+				      Real** pomega, Real** pacc,
+				      Real** palpha, Real** pdrag ); 
+    
+    void RestoreParticlesAttributes ( const int& lev, const MFIter& mfi,
+				      int** pstate, int** pphase,
+				      Real** pradius,  Real** pdensity,
+				      Real** pvol, Real** pmass,
+				      Real** pomoi, Real** ppos,  Real** pvel,
+				      Real** pomega, Real** pacc,
+				      Real** palpha, Real** pdrag );
+
 
     void EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 			 const Array< unique_ptr<MultiFab> >& u_g,
@@ -157,7 +171,7 @@ private:
     
     static void ReadStaticParameters ();
 
-    int  numberOfParticles = 0; 
+
     
     // runtime parameters
     static int do_tiling;

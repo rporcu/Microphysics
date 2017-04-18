@@ -215,24 +215,7 @@ private:
     Array< std::unique_ptr<MultiFab> > drag_bm;
 
 
-    Array<int> particle_state;
-    Array<int> particle_phase;
-
-    Array<Real> des_radius;
-    Array<Real> ro_sol;
-    Array<Real> pvol;
-    Array<Real> pmass;
-    Array<Real> omoi;
-    Array<Real> des_pos_new;
-    Array<Real> des_vel_new;
-    Array<Real> omega_new;
-    Array<Real> des_acc_old;
-    Array<Real> rot_acc_old;
-    Array<Real> drag_fc;
-
-
     // runtime parameters
-
     int verbose = 0;
 
     int solve_fluid;

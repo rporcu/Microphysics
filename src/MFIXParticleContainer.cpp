@@ -43,11 +43,11 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	if (!ifs.good())
 	    amrex::FileOpenFailed(file);
 
-	// int numberOfParticles = 0;
-	ifs >> numberOfParticles >> std::ws;
+	int np = -1;
+	ifs >> np >> std::ws;
 
 	// Issue an error if nparticles = 0 is specified
-	if ( numberOfParticles == 0 ){
+	if ( np == -1 ){
 	    Abort("\nCannot read number of particles from particle_input.dat: file is corrupt.\
 \nPerhaps you forgot to specify the number of particles on the first line??? ");
 	}
@@ -67,7 +67,7 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	pstate = 1;
 
 	
-	for (int i = 0; i < numberOfParticles; i++) {
+	for (int i = 0; i < np; i++) {
 
 	    // Init to 0 all attributes
 	    attribs.fill(0.0);
@@ -107,66 +107,6 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
     }
     Redistribute();
 
-}
-
-
-
-
-void
-MFIXParticleContainer:: GetParticlesAttributes (
-    Array<int>& particle_state, Array<int>& particle_phase,
-    Array<Real>& des_radius,  Array<Real>& ro_sol,
-    Array<Real>& pvol,   Array<Real>& pmass,
-    Array<Real>& omoi,   Array<Real>& des_vel_new,
-    Array<Real>& omega_new,   Array<Real>& des_acc_old,
-    Array<Real>& rot_acc_old,   Array<Real>& drag_fc) {
-
-
-    int lev = 0;
-    for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
-    {
-
-	auto& attribs = pti.GetAttribs();
-
-	des_radius = attribs[PIdx::radius];
-	ro_sol     = attribs[PIdx::density];
-	pvol       = attribs[PIdx::volume];
-	pmass      = attribs[PIdx::mass];
-	omoi       = attribs[PIdx::oneOverI];	
-	
-	auto& state    = attribs[PIdx::state];
-	auto& phase    = attribs[PIdx::phase];
-	auto& velx     = attribs[PIdx::velx];
-	auto& vely     = attribs[PIdx::vely];
-	auto& velz     = attribs[PIdx::velz];	
-	auto& omegax   = attribs[PIdx::omegax];
-	auto& omegay   = attribs[PIdx::omegay];
-	auto& omegaz   = attribs[PIdx::omegaz];
-	auto& accx     = attribs[PIdx::accx];
-	auto& accy     = attribs[PIdx::accy];
-	auto& accz     = attribs[PIdx::accz];	
-	auto& alphax   = attribs[PIdx::alphax];
-	auto& alphay   = attribs[PIdx::alphay];
-	auto& alphaz   = attribs[PIdx::alphaz];	
-	auto& dragx    = attribs[PIdx::dragx];
-	auto& dragy    = attribs[PIdx::dragy];
-	auto& dragz    = attribs[PIdx::dragz];
-	
-	Pack3DArrays(des_vel_new, velx, vely, velz);
-	Pack3DArrays(omega_new, omegax, omegay, omegaz);
-	Pack3DArrays(des_acc_old, accx, accy, accz);
-	Pack3DArrays(rot_acc_old, alphax, alphay, alphaz);
-	Pack3DArrays(drag_fc, dragx, dragy, dragz);
-	
-	// State and phase need type conversion
-	for ( int i = 0; i < numberOfParticles; i++ )
-	{
-	    particle_state[i]  = state[i];
-	    particle_phase[i]  = phase[i];
-
-	}
-
-    }
 }
 
 
@@ -254,8 +194,8 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
     	int          *pstate, *pphase;
 
 
-	GetParticlesAttributes ( &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
-				 &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag, pti ); 
+	GetParticlesAttributes ( pti, &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
+				 &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag ); 
 
 
 	mfix_des_time_march( &np, 
@@ -273,8 +213,8 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 			     &xlen, &ylen, &zlen, &nstep);
 
 
-	RestoreParticlesAttributes  ( &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
-				      &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag, pti ); 
+	RestoreParticlesAttributes  ( pti, &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
+				      &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag ); 
 
 
     }
@@ -301,15 +241,15 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     	int          *pstate, *pphase;
 
 
-	GetParticlesAttributes ( &pstate, NULL, &pradius,  NULL, NULL, NULL,
-				 NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL, pti ); 
+	GetParticlesAttributes ( pti, &pstate, NULL, &pradius,  NULL, NULL, NULL,
+				 NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL ); 
 
 	mfix_output_manager(&np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
 			    pstate, pradius, ppos, pvel,  pomega, &finish);
 
 
-	RestoreParticlesAttributes ( &pstate, NULL, &pradius,  NULL, NULL, NULL,
-				     NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL, pti ); 
+	RestoreParticlesAttributes ( pti, &pstate, NULL, &pradius,  NULL, NULL, NULL,
+				     NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL);  
 
     }
 

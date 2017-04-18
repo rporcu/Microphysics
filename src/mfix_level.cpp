@@ -83,22 +83,22 @@ mfix_level::mfix_level ()
     f_gds.resize(nlevs_max);
     drag_bm.resize(nlevs_max);
 
-    int nparticles = 100;
+    // int nparticles = 100;
 
-    particle_state.resize(  nparticles);
-    particle_phase.resize(  nparticles);
+    // particle_state.resize(  nparticles);
+    // particle_phase.resize(  nparticles);
 
-    des_radius.resize    (  nparticles);
-    ro_sol.resize        (  nparticles);
-    pvol.resize          (  nparticles);
-    pmass.resize         (  nparticles);
-    omoi.resize          (  nparticles);
-    des_pos_new.resize   (3*nparticles);
-    des_vel_new.resize   (3*nparticles);
-    omega_new.resize     (3*nparticles);
-    des_acc_old.resize   (3*nparticles);
-    rot_acc_old.resize   (3*nparticles);
-    drag_fc.resize       (3*nparticles);
+    // des_radius.resize    (  nparticles);
+    // ro_sol.resize        (  nparticles);
+    // pvol.resize          (  nparticles);
+    // pmass.resize         (  nparticles);
+    // omoi.resize          (  nparticles);
+    // des_pos_new.resize   (3*nparticles);
+    // des_vel_new.resize   (3*nparticles);
+    // omega_new.resize     (3*nparticles);
+    // des_acc_old.resize   (3*nparticles);
+    // rot_acc_old.resize   (3*nparticles);
+    // drag_fc.resize       (3*nparticles);
 
 }
 
@@ -436,16 +436,11 @@ mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
 
     if (solve_dem)
     {
-  pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
-             lev, nstep, dt,time );
-  fill_mf_bc(lev,*ep_g[lev]);
-  fill_mf_bc(lev,*rop_g[lev]);
+	pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
+			       lev, nstep, dt,time );
+	fill_mf_bc(lev,*ep_g[lev]);
+	fill_mf_bc(lev,*rop_g[lev]);
 
-      pc -> GetParticlesPosition(des_pos_new);
-
-      pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
-           pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-           rot_acc_old, drag_fc);
     }
 }
 
@@ -577,23 +572,7 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
 void
 mfix_level::output(int lev, int estatus, int finish, int nstep, Real dt, Real time)
 {
-
-  pc -> output( lev, estatus, finish, nstep, dt, time);
-  // const int max_pip = particle_state.size();
-
-  // Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
-  // Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
-  // Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
-
-  // for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-  // {
-  //    mfix_output_manager(&max_pip,
-  //     &time, &dt, &xlen, &ylen, &zlen, &nstep,
-  //     particle_state.dataPtr(), des_radius.dataPtr(),
-  //     des_pos_new.dataPtr(),
-  //     des_vel_new.dataPtr(),
-  //     omega_new.dataPtr(), &finish);
-  // }
+    pc -> output( lev, estatus, finish, nstep, dt, time);
 }
 
 void
@@ -632,51 +611,18 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   v_g[lev]->FillBoundary(geom[lev].periodicity());
   w_g[lev]->FillBoundary(geom[lev].periodicity());
 
+
+  pc -> AllocData();
+
   // Allocate the particle arrays
   if (solve_dem)
   {
-      pc -> AllocData();
+
       pc -> InitParticlesAscii("particle_input.dat");
       pc -> printParticles();
 
-      // Resize arrays
-      const int max_pip = pc -> GetNParticles();
-
-      particle_state.resize(  max_pip);
-      particle_phase.resize(  max_pip);
-
-      des_radius.resize    (  max_pip);
-      ro_sol.resize        (  max_pip);
-      pvol.resize          (  max_pip);
-      pmass.resize         (  max_pip);
-      omoi.resize          (  max_pip);
-      des_pos_new.resize   (3*max_pip);
-      des_vel_new.resize   (3*max_pip);
-      omega_new.resize     (3*max_pip);
-      des_acc_old.resize   (3*max_pip);
-      rot_acc_old.resize   (3*max_pip);
-      drag_fc.resize       (3*max_pip);
-
-
-
-      pc -> GetParticlesPosition(des_pos_new);
-
-      pc -> GetParticlesAttributes(particle_state, particle_phase, des_radius,  ro_sol,
-           pvol, pmass, omoi, des_vel_new, omega_new, des_acc_old,
-           rot_acc_old, drag_fc);
-
-
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi) {
-      const int max_pip = particle_state.size();
-
-      // mfix_make_arrays_des(&max_pip,
-      //   particle_state.dataPtr(), des_radius.dataPtr(), ro_sol.dataPtr(),
-      //   pvol.dataPtr(), pmass.dataPtr(), omoi.dataPtr());
-    }
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-      mfix_init_collision();
+      for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+	  mfix_init_collision();
 
   }
 
@@ -695,48 +641,62 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   int calc_flag = 2;
   mfix_calc_coeffs(lev,calc_flag);
 
-  // mfix_finl_err_msg();
+
 }
 
-void
-mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
+void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 {
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
+    Real dx = geom[lev].CellSize(0);
+    Real dy = geom[lev].CellSize(1);
+    Real dz = geom[lev].CellSize(2);
 
-  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-  {
-     const Box& sbx = (*ep_g[lev])[mfi].box();
-     const Box& bx = mfi.validbox();
+    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+	const Box& sbx = (*ep_g[lev])[mfi].box();
+	const Box& bx = mfi.validbox();
 
-     Box ubx((*u_g[lev])[mfi].box());
-     Box vbx((*v_g[lev])[mfi].box());
-     Box wbx((*w_g[lev])[mfi].box());
+	Box ubx((*u_g[lev])[mfi].box());
+	Box vbx((*v_g[lev])[mfi].box());
+	Box wbx((*w_g[lev])[mfi].box());
 
-     const int max_pip = particle_state.size();
+	const int np = pc -> NumberOfParticles(lev, mfi);
 
-     calc_coeff(sbx.loVect(), sbx.hiVect(),
-      ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-      bx.loVect(), bx.hiVect(), &max_pip,   &calc_flag,
-      (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
-      (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-      (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
-      (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
-      (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
-      particle_phase.dataPtr(), particle_state.dataPtr(),
-      pvol.dataPtr(), des_pos_new.dataPtr(), des_vel_new.dataPtr(),
-      des_radius.dataPtr(), &dx, &dy, &dz );
-  }
-  fill_mf_bc(lev,*ro_g[lev]);
-  fill_mf_bc(lev,*rop_g[lev]);
+	int   *pstate, *pphase;
+	Real  *pvol, *pradius, *ppos, *pvel;
 
-  if (solve_dem)
-  {
-    fill_mf_bc(lev,*f_gds[lev]);
-    fill_mf_bc(lev,*drag_bm[lev]);
-  }
+	pc -> GetParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
+				       &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
+				       NULL, NULL, NULL ); 
+
+	calc_coeff(sbx.loVect(), sbx.hiVect(),
+		   ubx.loVect(), ubx.hiVect(), 
+		   vbx.loVect(), vbx.hiVect(), 
+		   wbx.loVect(), wbx.hiVect(),
+		   bx.loVect(),  bx.hiVect(), 
+		   &np,   &calc_flag,
+		   (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
+		   (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
+		   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
+		   (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
+		   (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
+		   pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
+
+	pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
+					   &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
+					   NULL, NULL, NULL ); 
+
+    }
+    fill_mf_bc(lev,*ro_g[lev]);
+    fill_mf_bc(lev,*rop_g[lev]);
+
+    if (solve_dem)
+    {
+	fill_mf_bc(lev,*f_gds[lev]);
+	fill_mf_bc(lev,*drag_bm[lev]);
+    }
 }
+
+
 
 void
 mfix_level::mfix_calc_all_coeffs(int lev)
@@ -745,7 +705,7 @@ mfix_level::mfix_calc_all_coeffs(int lev)
   Real dy = geom[lev].CellSize(1);
   Real dz = geom[lev].CellSize(2);
 
-  const int max_pip = particle_state.size();
+  // const int max_pip = particle_state.size();
 
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
   {
@@ -756,16 +716,31 @@ mfix_level::mfix_calc_all_coeffs(int lev)
      Box vbx((*v_g[lev])[mfi].box());
      Box wbx((*w_g[lev])[mfi].box());
 
+     const int np = pc -> NumberOfParticles(lev, mfi);
+
+     int   *pstate, *pphase;
+     Real  *pvol, *pradius, *ppos, *pvel;
+     
+     pc -> GetParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
+				    &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
+				    NULL, NULL, NULL ); 
+
      calc_coeff_all(sbx.loVect(), sbx.hiVect(),
-       ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-       bx.loVect(), bx.hiVect(), &max_pip,
-       (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-       (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-       (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
-       (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
-       particle_phase.dataPtr(),  particle_state.dataPtr(),
-       pvol.dataPtr(), des_pos_new.dataPtr(),
-       des_vel_new.dataPtr(), des_radius.dataPtr(), &dx, &dy, &dz);
+		    ubx.loVect(), ubx.hiVect(),
+		    vbx.loVect(), vbx.hiVect(), 
+		    wbx.loVect(), wbx.hiVect(),
+		    bx.loVect(),  bx.hiVect(), &np,
+		    (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+		    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+		    (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
+		    (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
+		    pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
+
+     pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
+					&pvol, NULL, NULL,  &ppos, &pvel, NULL, 
+					NULL, NULL, NULL ); 
+
+
   }
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
@@ -856,25 +831,34 @@ mfix_level::mfix_init_fluid(int lev)
   fill_mf_bc(lev,*lambda_g[lev]);
 }
 
-void
-mfix_level::mfix_comp_mean_fields(int lev)
+
+
+void mfix_level::mfix_comp_mean_fields(int lev)
 {
     Real dx = geom[lev].CellSize(0);
     Real dy = geom[lev].CellSize(1);
     Real dz = geom[lev].CellSize(2);
 
-    const int max_pip = particle_state.size();
-
-    std::cout << "From comp fields: size is " << max_pip << std::endl;
-
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-       const Box& sbx = (*ep_g[lev])[mfi].box();
+	const Box& sbx = (*ep_g[lev])[mfi].box();
+	const int np   = pc -> NumberOfParticles(lev, mfi);
 
-       comp_mean_fields(sbx.loVect(), sbx.hiVect(),
-            &max_pip, (*ep_g[lev])[mfi].dataPtr(),
-            particle_state.dataPtr(), des_pos_new.dataPtr(), pvol.dataPtr(),
-            &dx, &dy, &dz );
+	Real *pvol, *ppos;
+	int  *pstate; 
+
+	pc -> GetParticlesAttributes ( lev, mfi, &pstate, NULL, NULL, NULL,
+				       &pvol, NULL, NULL,  &ppos, NULL, NULL, 
+				       NULL, NULL, NULL ); 
+ 
+	comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
+			 pstate, ppos, pvol, &dx, &dy, &dz );
+
+	pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, NULL, NULL, NULL,
+					   &pvol, NULL, NULL,  &ppos, NULL, NULL, 
+					   NULL, NULL, NULL ); 
+
+
     }
     fill_mf_bc(lev,*ep_g[lev]);
 }
