@@ -1,4 +1,4 @@
-module check_gas_phase_module
+module check_gas_prop_module
 
   use error_manager, only: init_err_msg, finl_err_msg, flush_err_msg, &
                            err_msg, ivar, ival
@@ -8,7 +8,7 @@ module check_gas_phase_module
   implicit none
   private
 
-  public check_gas_phase
+  public check_gas_properties
 
 contains
 
@@ -18,7 +18,7 @@ contains
 !  Purpose: Check the gas phase input section                          !
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_gas_phase
+  subroutine check_gas_properties
 
     use fld_const, only: mu_g0, ro_g0, mw_avg
 
@@ -56,5 +56,5 @@ contains
 1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
          'Please correct the input deck.')
 
-  end subroutine check_gas_phase
-end module check_gas_phase_module
+  end subroutine check_gas_properties
+end module check_gas_prop_module

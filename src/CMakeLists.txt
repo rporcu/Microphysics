@@ -22,20 +22,20 @@ set(F90_sources
   calc_ro_g.f90
   calc_trd_g.f90
   check_convergence.f90
-  check_data/check_domain.f90
   check_data/check_bc_flow.f90
   check_data/check_bc_geometry.f90
   check_data/check_bc_inflow.f90
   check_data/check_bc_outflow.f90
   check_data/check_bc_walls.f90
   check_data/check_boundary_conditions.f90
-  check_data/check_gas_phase.f90
+  check_data/check_collision_model.f90
+  check_data/check_domain.f90
+  check_data/check_gas_properties.f90
   check_data/check_initial_conditions.f90
+  check_data/check_inputs.f90
+  check_data/check_particle_properties.f90
   check_data/check_point_sources.f90
   check_data/check_run_control.f90
-  check_data/check_solids_common_all.f90
-  check_data/check_solids_dem.f90
-  check_data/check_solids_phases.f90
   constant_mod.f90
   conv_dif_u_g.f90
   conv_dif_v_g.f90

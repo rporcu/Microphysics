@@ -192,7 +192,6 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_IC_GAS_PHASE                                       !
-! Author: J.Musser                                    Date: 01-Mar-14  !
 !                                                                      !
 ! Purpose: Verify gas phase input variables in IC region.              !
 !                                                                      !
@@ -247,8 +246,6 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 !  Subroutine: CHECK_IC_SOLIDS_PHASES                                  !
-!  Author: P. Nicoletti                               Date: 02-DEC-91  !
-!  Author: J.Musser                                   Date: 01-MAR-14  !
 !                                                                      !
 !  Purpose: Verify solids phase(s) input variables in IC region.       !
 !                                                                      !
@@ -317,7 +314,6 @@ contains
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
 ! Subroutine: CHECK_IC_OVERFLOW                                        !
-! Author: J.Musser                                    Date: 01-Mar-14  !
 !                                                                      !
 ! Purpose: Verify that no data was defined for unspecified IC.         !
 !                                                                      !

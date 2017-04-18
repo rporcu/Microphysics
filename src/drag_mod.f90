@@ -5,23 +5,24 @@ module drag
 
    use param, only: one, half, zero, small_number, large_number
 
-! Drag model options (see drag_gs for full details)
-      character(64) :: drag_type
-      integer :: drag_type_enum
-      integer,parameter :: syam_obrien=0
-      integer,parameter :: gidaspow=1
-      integer,parameter :: gidaspow_pcf=2
-      integer,parameter :: gidaspow_blend=3
-      integer,parameter :: gidaspow_blend_pcf=4
-      integer,parameter :: wen_yu=5
-      integer,parameter :: wen_yu_pcf=6
-      integer,parameter :: koch_hill=7
-      integer,parameter :: koch_hill_pcf=8
-      integer,parameter :: bvk=9
-      integer,parameter :: user_drag=11
+   integer,parameter :: invalid_drag=-1
+   integer,parameter :: syam_obrien=0
+   integer,parameter :: gidaspow=1
+   integer,parameter :: gidaspow_pcf=2
+   integer,parameter :: gidaspow_blend=3
+   integer,parameter :: gidaspow_blend_pcf=4
+   integer,parameter :: wen_yu=5
+   integer,parameter :: wen_yu_pcf=6
+   integer,parameter :: koch_hill=7
+   integer,parameter :: koch_hill_pcf=8
+   integer,parameter :: bvk=9
+   integer,parameter :: user_drag=11
+
+   character(64) :: drag_type
+   integer :: drag_type_enum = invalid_drag
 
 ! Coefficients for calibrating Syamlal-O'Brien drag correlation
-      real(c_real) :: drag_c1, drag_d1
+   real(c_real) :: drag_c1, drag_d1
 
 contains
 

@@ -23,6 +23,8 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
+  void check_inputs(Real* dt);
+
   void check_domain(Real* dx, Real* dy, Real* dz,
                     Real* xlength, Real* ylength, Real* zlength,
                     const int* domlo, const int* domhi);

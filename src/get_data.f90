@@ -12,29 +12,32 @@ contains
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   subroutine get_data(dt)
 
-    use check_gas_phase_module, only: check_gas_phase
-    use check_run_control_module, only: check_run_control
-    use check_solids_phases_module, only: check_solids_phases
-    use error_manager  , only: init_error_manager
     use init_namelist_module, only: init_namelist
     use read_namelist_module, only: read_namelist
-    use param, only: is_undefined
 
     ! Cyclic domain flags.
     use bc, only: cyclic_x, cyclic_x_pd, cyclic_x_mf
     use bc, only: cyclic_y, cyclic_y_pd, cyclic_y_mf
     use bc, only: cyclic_z, cyclic_z_pd, cyclic_z_mf
-
-    ! Flag for specificed constant mass flux.
     use bc, only: flux_g
 
     use run, only: detect_stall, dem_solids
+
+    use constant, only: mmax
     use discretelement, only: particle_types
+
     use discretelement, only: des_continuum_coupled, des_oneway_coupled
     use fld_const, only: ro_g0
 
-    use param, only: is_defined
-    use constant, only: mmax
+    use discretelement, only: des_coll_model, des_coll_model_enum, &
+                              lsd, hertzian
+
+    use drag, only: drag_type, drag_type_enum, syam_obrien, gidaspow, &
+                    gidaspow_pcf, gidaspow_blend, gidaspow_blend_pcf, &
+                    wen_yu, wen_yu_pcf, koch_hill, koch_hill_pcf, bvk,&
+                    user_drag
+
+    use param, only: is_undefined, is_defined
 
     implicit none
 
@@ -64,22 +67,31 @@ contains
     dem_solids = (particle_types > 0)
 
     mmax = particle_types
-    write(*,*) 'particle types',particle_types
     ! Overwrite user settings if no Lagrangian solids
     if(particle_types==0) then
        des_continuum_coupled = .false.
        des_oneway_coupled = .false.
     endif
 
-    ! Initialize the error manager. This call occurs after the mfix.dat
-    ! is read so that message verbosity can be set and the .LOG file
-    ! can be opened.
-    call init_error_manager
+    select case(trim(adjustl(drag_type)))
+    case ('SYAM_OBRIEN'); drag_type_enum = syam_obrien
+    case ('GIDASPOW'); drag_type_enum = gidaspow
+    case ('GIDASPOW_BLEND'); drag_type_enum = gidaspow_blend
+    case ('WEN_YU'); drag_type_enum = wen_yu
+    case ('KOCH_HILL'); drag_type_enum = koch_hill
+    case ('BVK'); drag_type_enum = bvk
+    case ('GIDASPOW_PCF'); drag_type_enum = gidaspow_pcf
+    case ('GIDASPOW_BLEND_PCF'); drag_type_enum = gidaspow_blend_pcf
+    case ('WEN_YU_PCF'); drag_type_enum = wen_yu_pcf
+    case ('KOCH_HILL_PCF'); drag_type_enum = koch_hill_pcf
+    case ('USER_DRAG','USR_DRAG'); drag_type_enum = user_drag
+    end select
 
-    call check_run_control(dt)
-
-    call check_gas_phase
-    call check_solids_phases
+    ! Check collision model specific parameters.
+    select case (trim(adjustl(des_coll_model)))
+    case('LSD'); des_coll_model_enum = lsd
+    case('HERTZIAN'); des_coll_model_enum = hertzian
+    end select
 
   end subroutine get_data
 

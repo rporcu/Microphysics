@@ -28,7 +28,7 @@ contains
     use param, only: dim_eqs
 
 
-    real(c_real), intent(inout) :: dt
+    real(c_real), intent(in) :: dt
 
     integer  :: lc
 
@@ -64,14 +64,11 @@ contains
        call flush_err_msg(abort=.true.)
     endif
 
-
 2002 format('Error 2002: Invalid option ', A,' = ', A, '.',/  &
        'Please correct the input deck.')
 
-
     ! Clear the error manager
     call finl_err_msg
-
 
 1000 format('Error 1000: Required input not specified: ',A,/'Please ',&
           'correct the input deck.')
