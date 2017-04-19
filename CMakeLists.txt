@@ -47,4 +47,5 @@ target_link_libraries( mfix mfixcore ${MFIX_EXT_LINK_STRING} )
 # Tests
 enable_testing()
 add_subdirectory( tests )
+add_subdirectory( benchmarks )
 

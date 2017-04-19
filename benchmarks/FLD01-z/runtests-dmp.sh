@@ -14,12 +14,12 @@ if [ -n "$2" ]; then
 fi
 
 rm -rf ${RUN_NAME}* POST_* &> /dev/null
-time -p ${MFIX} inputs
+time -p mpirun -np 4 ${MFIX} inputs
 
 
 if ! [ -z "${FEXTRACT}" ]; then
-  ${FEXTRACT} -p FLD0100000/ -d 1 -v w_g && mv FLD0100000.slice POST_UG.dat
-  ${FEXTRACT} -p FLD0100000/ -d 3 -v u_g && mv FLD0100000.slice POST_VG.dat
+  ${FEXTRACT} -p FLD0100000/ -d 1 -v w_g && mv FLD0100000.slice POST_UG_MPI.dat
+  ${FEXTRACT} -p FLD0100000/ -d 3 -v u_g && mv FLD0100000.slice POST_VG_MPI.dat
 
   post_dats=POST*.dat
   for result in ${post_dats}; do
