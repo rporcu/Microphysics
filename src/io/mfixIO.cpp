@@ -128,7 +128,8 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
 
     }
 
-    pc->Checkpoint(checkpointname, "particle", true);
+    if ( solve_dem )
+	pc -> Checkpoint(plotfilename, "particles", false);
 }
 
 
@@ -258,8 +259,7 @@ mfix_level::GotoNextLine (std::istream& is)
     is.ignore(bl_ignore_max, '\n');
 }
 
-void
-mfix_level::WriteJobInfo (const std::string& dir) const
+void mfix_level::WriteJobInfo (const std::string& dir) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -362,10 +362,9 @@ mfix_level::WriteJobInfo (const std::string& dir) const
 }
 
 
-void
-mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
+void mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 {
-    BL_PROFILE("mfix_vele::WritePlotFile()");
+    BL_PROFILE("mfix_level::WritePlotFile()");
 
     // Return if it's not time to dump plotfile yet or 
     // plotfile have not been enabled ( check_int < 1 )
@@ -416,14 +415,15 @@ mfix_level::WritePlotFile ( int nstep, Real dt, Real time ) const
 
 	// Concatenate scalar and vector var names
 	Array<std::string>  names;
-	names.insert( names.end(),vecVarsName.begin(), vecVarsName.end());
-	names.insert( names.end(),scaVarsName.begin(), scaVarsName.end());
+	names.insert( names.end(), vecVarsName.begin(), vecVarsName.end());
+	names.insert( names.end(), scaVarsName.begin(), scaVarsName.end());
 
 	amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf2, names,
-					Geom(), time, istep, refRatio());
+				       Geom(), time, istep, refRatio());
     }
 
-    //pc->Checkpoint(plotfilename, "particle", false);
+    if ( solve_dem )
+	pc -> Checkpoint(plotfilename, "particles", false);
 
     WriteJobInfo(plotfilename);
 
