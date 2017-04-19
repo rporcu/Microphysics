@@ -129,7 +129,7 @@ mfix_level::WriteCheckPointFile( int nstep, Real dt, Real time )  const
     }
 
     if ( solve_dem )
-	pc -> Checkpoint(plotfilename, "particles", false);
+	pc -> Checkpoint(checkpointname, "particles", false);
 }
 
 
