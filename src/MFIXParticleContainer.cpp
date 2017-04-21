@@ -16,7 +16,7 @@ int     MFIXParticleContainer::do_tiling = 0;
 IntVect MFIXParticleContainer::tile_size   { D_DECL(1024000,8,8) };
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
-    : ParticleContainer<0,0,PIdx::nattribs>
+    : ParticleContainer<0,0,realData::count,intData::count>
       (amr_core->GetParGDB())
 {
     ReadStaticParameters();
@@ -24,16 +24,15 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core)
     this->SetVerbose(0);
 }
 
-void
-MFIXParticleContainer::AllocData () {
+void MFIXParticleContainer::AllocData ()
+{
     reserveData();
     resizeData();
 }
 
 
 
-void
-MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
+void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 
     // only read the file on the IO proc
     if (ParallelDescriptor::MyProc() ==  ParallelDescriptor::IOProcessorNumber()) {
@@ -62,7 +61,8 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	int        pstate, pphase;
 	Real       pradius, pdensity, pvolume, pomoi, pmass;
 
-	std::array<Real, PIdx::nattribs> attribs;
+	std::array<Real, realData::count> realAttribs;
+	std::array<int,   intData::count>  intAttribs;
 
 	pstate = 1;
 
@@ -70,7 +70,8 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	for (int i = 0; i < np; i++) {
 
 	    // Init to 0 all attributes
-	    attribs.fill(0.0);
+	    realAttribs.fill(0.0);
+	    intAttribs.fill(0);
 
 	    // Read from input file
 	    ifs >> pphase;
@@ -79,9 +80,9 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	    ifs >> p.pos(2);
 	    ifs >> pradius;
 	    ifs >> pdensity; 
-	    ifs >> attribs[PIdx::velx];
-	    ifs >> attribs[PIdx::vely];
-	    ifs >> attribs[PIdx::velz];
+	    ifs >> realAttribs[realData::velx];
+	    ifs >> realAttribs[realData::vely];
+	    ifs >> realAttribs[realData::velz];
 
 	    // Set id and cpu for this particle
 	    p.id()  = ParticleType::NextID();
@@ -91,18 +92,19 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	    mfix_set_particle_properties( &pstate, &pradius, &pdensity, &pvolume, &pmass, &pomoi);
 
 	    // Set other particle properties
-	    attribs[PIdx::phase]    = pphase;
-	    attribs[PIdx::state]    = pstate;
-	    attribs[PIdx::volume]   = pvolume;
-	    attribs[PIdx::density]  = pdensity;
-	    attribs[PIdx::mass]     = pmass;
-	    attribs[PIdx::oneOverI] = pomoi;
-	    attribs[PIdx::radius]   = pradius;
+	    intAttribs[intData::phase]      = pphase;
+	    intAttribs[intData::state]      = pstate;
+	    realAttribs[realData::volume]   = pvolume;
+	    realAttribs[realData::density]  = pdensity;
+	    realAttribs[realData::mass]     = pmass;
+	    realAttribs[realData::oneOverI] = pomoi;
+	    realAttribs[realData::radius]   = pradius;
 
 	    // Add everything to the data structure
 	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 	    particle_tile.push_back(p);
-	    particle_tile.push_back(attribs);
+	    particle_tile.push_back_real(realAttribs);
+	    particle_tile.push_back_int(intAttribs);
 	}
     }
     Redistribute();
@@ -110,17 +112,17 @@ MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 }
 
 
-void
-MFIXParticleContainer:: printParticles() {
+void MFIXParticleContainer:: printParticles() {
     const int lev = 0;
     const auto& plevel = GetParticles(lev);
     for (const auto& kv : plevel) {
       const auto& particle_structs = kv.second.GetArrayOfStructs();
-      const auto& particle_attribs = kv.second.GetStructOfArrays();
+      const auto& attribs = kv.second.GetStructOfArrays();
+      
       for (unsigned i = 0; i < particle_structs.numParticles(); ++i) {
-	  std::cout << "Particle ID  = " << i << " " << std::endl;
-          for (int j = 0; j < PIdx::nattribs; j++) {
-	      std::cout << particle_attribs[j][i] << " " << std::endl;
+    	  std::cout << "Particle ID  = " << i << " " << std::endl;
+          for (int j = 0; j < realData::count; j++) {
+    	      std::cout << attribs.GetRealData(j)[i] << " " << std::endl;
           }
           std::cout << std::endl;
       }
@@ -128,22 +130,23 @@ MFIXParticleContainer:: printParticles() {
 }
 
 
-void
-MFIXParticleContainer::ReadStaticParameters ()
+void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
+
     if (!initialized)
     {
-  ParmParse pp("particles");
+	ParmParse pp("particles");
 
-  pp.query("do_tiling",  do_tiling);
+	pp.query("do_tiling",  do_tiling);
 
-  Array<int> ts(BL_SPACEDIM);
-  if (pp.queryarr("tile_size", ts)) {
-      tile_size = IntVect(ts);
-  }
+	Array<int> ts(BL_SPACEDIM);
 
-  initialized = true;
+	if (pp.queryarr("tile_size", ts)) {
+	    tile_size = IntVect(ts);
+	}
+
+	initialized = true;
     }
 }
 

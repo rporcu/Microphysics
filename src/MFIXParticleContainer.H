@@ -10,13 +10,10 @@
 using namespace amrex;
 using namespace std;
 
-
-struct PIdx
+struct realData
 {
     enum { // Particle data stored in p.m_data
-	phase = 0, 
-	state,
-        radius,
+        radius = 0,
 	volume,
 	mass,
         density, 
@@ -36,41 +33,81 @@ struct PIdx
         dragx,
 	dragy,
 	dragz,
-	nattribs
+	count
+	
+    };
+};
+
+struct intData
+{
+    enum { // Particle data stored in p.m_data
+	phase = 0, 
+	state,
+	count
     };
 };
 
 
+// struct PIdx
+// {
+//     enum { // Particle data stored in p.m_data
+// 	phase = 0, 
+// 	state,
+//         radius,
+// 	volume,
+// 	mass,
+//         density, 
+//         oneOverI,
+// 	velx,
+// 	vely,
+// 	velz,
+//         omegax,
+// 	omegay,
+// 	omegaz,
+// 	accx,
+// 	accy,
+// 	accz,
+//         alphax,  //angular acceleration
+// 	alphay, 
+// 	alphaz,
+//         dragx,
+// 	dragy,
+// 	dragz,
+// 	nattribs
+//     };
+// };
+
+
 class MFIXParIter
-    : public amrex::ParIter<0,0,PIdx::nattribs>
+    : public amrex::ParIter<0,0,realData::count,intData::count>
 {
 public:
-    using amrex::ParIter<0,0,PIdx::nattribs>::ParIter;
+    using amrex::ParIter<0,0,realData::count,intData::count>::ParIter;
 
-    const SoA& GetAttribs () const { return GetStructOfArrays(); }
-    SoA&       GetAttribs ()       { return GetStructOfArrays(); }
-    const amrex::Array<amrex::Real>& GetAttribs (int comp) const { return GetStructOfArrays()[comp]; }
-    amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
+    // const SoA& GetAttribs () const { return GetStructOfArrays(); }
+    // SoA&       GetAttribs ()       { return GetStructOfArrays(); }
+    // const amrex::Array<amrex::Real>& GetAttribs (int comp) const { return GetStructOfArrays()[comp]; }
+    // amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
 
 
     ///
     /// Define some convenient wrappers for accessing particle data
     ///
-    ParticleType::RealType& x(int i) { return GetArrayOfStructs()[i].pos(0); }
-    ParticleType::RealType& y(int i) { return GetArrayOfStructs()[i].pos(1); }
-    ParticleType::RealType& z(int i) { return GetArrayOfStructs()[i].pos(2); }
+    // ParticleType::RealType& x(int i) { return GetArrayOfStructs()[i].pos(0); }
+    // ParticleType::RealType& y(int i) { return GetArrayOfStructs()[i].pos(1); }
+    // ParticleType::RealType& z(int i) { return GetArrayOfStructs()[i].pos(2); }
 
-    ParticleType::RealType& velx(int i) { return GetStructOfArrays()[PIdx::velx][i]; }
-    ParticleType::RealType& vely(int i) { return GetStructOfArrays()[PIdx::vely][i]; }
-    ParticleType::RealType& velz(int i) { return GetStructOfArrays()[PIdx::velz][i]; }
+    // ParticleType::RealType& velx(int i) { return GetStructOfArrays()[PIdx::velx][i]; }
+    // ParticleType::RealType& vely(int i) { return GetStructOfArrays()[PIdx::vely][i]; }
+    // ParticleType::RealType& velz(int i) { return GetStructOfArrays()[PIdx::velz][i]; }
 
-    int phase(int i) { return int(GetStructOfArrays()[PIdx::phase][i]); }
-    int state(int i) { return int(GetStructOfArrays()[PIdx::state][i]); }
+    // int phase(int i) { return int(GetStructOfArrays()[PIdx::phase][i]); }
+    // int state(int i) { return int(GetStructOfArrays()[PIdx::state][i]); }
 
 
-    // Getter and Setter for attributes
-    const ParticleType::RealType& vel();
-    const ParticleType::RealType& vel(int grid, int tile);
+    // // Getter and Setter for attributes
+    // const ParticleType::RealType& vel();
+    // const ParticleType::RealType& vel(int grid, int tile);
 
 
 };
@@ -78,17 +115,14 @@ public:
 
 
 
-
-
-
-
 class MFIXParticleContainer
-    : public amrex::ParticleContainer<0,0,PIdx::nattribs> 
+    : public amrex::ParticleContainer<0,0,realData::count,intData::count>
 {
 
 public:
 
     // Get number of particles
+
     const int NumberOfParticles(MFIXParIter& pti) { return pti.GetArrayOfStructs().size(); } 
 
     const int NumberOfParticles(int& lev, MFIter& mfi)
@@ -97,7 +131,6 @@ public:
 	    const int tileIndex = mfi.LocalTileIndex();
 	    auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
 	    auto&     structs   = particles.GetArrayOfStructs();
-	    auto&     attribs   = particles.GetStructOfArrays();
 	    const int np        = structs.size();
 
 	    return structs.size();

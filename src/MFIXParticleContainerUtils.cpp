@@ -21,6 +21,8 @@ MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
 
     const int  np = comp1.size();
 
+    vec.resize(3*np);
+
     for ( int i = 0; i < np; i++ )
     {
       vec[i]      = comp1[i];
@@ -61,75 +63,68 @@ void MFIXParticleContainer:: GetParticlesAttributes ( MFIXParIter& pti,
 
     auto& structs = pti.GetArrayOfStructs();
     auto& attribs = pti.GetStructOfArrays();
-    const int np  = structs.size();
-
-    state.resize(np);
-    phase.resize(np);
-    pos.resize(3*np);
-    vel.resize(3*np);
-    omega.resize(3*np);
-    acc.resize(3*np);
-    alpha.resize(3*np);
-    drag.resize(3*np);
-
-    for (int i = 0; i < np; ++i )
-    {
-
-	state[i] = int( attribs[PIdx::state][i] );
-	phase[i] = int( attribs[PIdx::phase][i] );
-
-	pos[i]      = structs[i].pos(0);
-	pos[i+np]   = structs[i].pos(1);
-	pos[i+2*np] = structs[i].pos(2);	
-
-	vel[i]      = attribs[PIdx::velx][i];
-	vel[i+np]   = attribs[PIdx::vely][i];
-	vel[i+2*np] = attribs[PIdx::velz][i];
-
-	omega[i]      = attribs[PIdx::omegax][i];
-	omega[i+np]   = attribs[PIdx::omegay][i];
-	omega[i+2*np] = attribs[PIdx::omegaz][i];
-
-	acc[i]      = attribs[PIdx::accx][i];
-	acc[i+np]   = attribs[PIdx::accy][i];
-	acc[i+2*np] = attribs[PIdx::accz][i];
-
-	alpha[i]      = attribs[PIdx::alphax][i];
-	alpha[i+np]   = attribs[PIdx::alphay][i];
-	alpha[i+2*np] = attribs[PIdx::alphaz][i];
-
-	drag[i]      = attribs[PIdx::dragx][i];
-	drag[i+np]   = attribs[PIdx::dragy][i];
-	drag[i+2*np] = attribs[PIdx::dragz][i];
-	
-    }
 
     if (pstate)
-	*pstate = state.dataPtr();
+	*pstate = attribs.GetIntData(intData::state).dataPtr();
     if (pphase)
-	*pphase = phase.dataPtr();
+	*pphase = attribs.GetIntData(intData::phase).dataPtr();
     if (pradius)
-	*pradius = attribs[PIdx::radius].dataPtr();
+	*pradius = attribs.GetRealData(realData::radius).dataPtr();
     if (pdensity)
-	*pdensity = attribs[PIdx::density].dataPtr();
+	*pdensity = attribs.GetRealData(realData::density).dataPtr();
     if (pvol)
-	*pvol = attribs[PIdx::volume].dataPtr();
+	*pvol = attribs.GetRealData(realData::volume).dataPtr();
     if (pmass)
-	*pmass = attribs[PIdx::mass].dataPtr();
+	*pmass = attribs.GetRealData(realData::mass).dataPtr();
     if (pomoi)
-	*pomoi = attribs[PIdx::oneOverI].dataPtr();
-    if (ppos)
-	*ppos = pos.dataPtr();
-    if (pvel)
-	*pvel = vel.dataPtr();
-    if (pomega)
-	*pomega = omega.dataPtr();
-    if (pacc)
-	*pacc = acc.dataPtr();
-    if (palpha)
-	*palpha = alpha.dataPtr();
-    if (pdrag)
-	*pdrag = drag.dataPtr();
+	*pomoi = attribs.GetRealData(realData::oneOverI).dataPtr();
+
+    if (ppos) {
+	const int np  = structs.size();
+	pos.resize(3*np);
+	for (int i = 0; i < np; ++i ) {
+	    pos[i]      = structs[i].pos(0);
+	    pos[i+np]   = structs[i].pos(1);
+	    pos[i+2*np] = structs[i].pos(2);
+	}
+	*ppos = pos.dataPtr();	
+    }
+
+    if (pvel) {
+	Pack3DArrays( vel, attribs.GetRealData(realData::velx), 
+		      attribs.GetRealData(realData::vely),
+		      attribs.GetRealData(realData::velz) );
+	*pvel = vel.dataPtr();	
+    }
+
+    if (pomega) {
+	Pack3DArrays( omega, attribs.GetRealData(realData::omegax), 
+		      attribs.GetRealData(realData::omegay),
+		      attribs.GetRealData(realData::omegaz) );
+	*pomega = omega.dataPtr();	
+    }
+
+    if (pacc) {
+	Pack3DArrays( acc, attribs.GetRealData(realData::accx), 
+		      attribs.GetRealData(realData::accy),
+		      attribs.GetRealData(realData::accz) );
+	*pacc = acc.dataPtr();	
+    }
+
+    if (palpha) {
+	Pack3DArrays( alpha, attribs.GetRealData(realData::alphax), 
+		      attribs.GetRealData(realData::alphay),
+		      attribs.GetRealData(realData::alphaz) );
+	*palpha= alpha.dataPtr();	
+    }
+
+    if (pdrag) {
+	Pack3DArrays( drag, attribs.GetRealData(realData::dragx), 
+		      attribs.GetRealData(realData::dragy),
+		      attribs.GetRealData(realData::dragz) );
+	*pdrag= drag.dataPtr();	
+    }
+
 }
 
 
@@ -147,75 +142,67 @@ void MFIXParticleContainer::GetParticlesAttributes ( const int& lev, const MFIte
     auto&     particles = GetParticles(lev)[std::make_pair(gridIndex,tileIndex)];
     auto&     structs   = particles.GetArrayOfStructs();
     auto&     attribs   = particles.GetStructOfArrays();
-    const int np        = structs.size();
-
-    state.resize(np);
-    phase.resize(np);
-    pos.resize(3*np);
-    vel.resize(3*np);
-    omega.resize(3*np);
-    acc.resize(3*np);
-    alpha.resize(3*np);
-    drag.resize(3*np);
-
-    for (int i = 0; i < np; ++i )
-    {
-
-    	state[i] = int( attribs[PIdx::state][i] );
-    	phase[i] = int( attribs[PIdx::phase][i] );
-
-    	pos[i]      = structs[i].pos(0);
-    	pos[i+np]   = structs[i].pos(1);
-    	pos[i+2*np] = structs[i].pos(2);	
-
-    	vel[i]      = attribs[PIdx::velx][i];
-    	vel[i+np]   = attribs[PIdx::vely][i];
-    	vel[i+2*np] = attribs[PIdx::velz][i];
-
-    	omega[i]      = attribs[PIdx::omegax][i];
-    	omega[i+np]   = attribs[PIdx::omegay][i];
-    	omega[i+2*np] = attribs[PIdx::omegaz][i];
-
-    	acc[i]      = attribs[PIdx::accx][i];
-    	acc[i+np]   = attribs[PIdx::accy][i];
-    	acc[i+2*np] = attribs[PIdx::accz][i];
-
-    	alpha[i]      = attribs[PIdx::alphax][i];
-    	alpha[i+np]   = attribs[PIdx::alphay][i];
-    	alpha[i+2*np] = attribs[PIdx::alphaz][i];
-
-    	drag[i]      = attribs[PIdx::dragx][i];
-    	drag[i+np]   = attribs[PIdx::dragy][i];
-    	drag[i+2*np] = attribs[PIdx::dragz][i];
-	
-    }
 
     if (pstate)
-    	*pstate = state.dataPtr();
+	*pstate = attribs.GetIntData(intData::state).dataPtr();
     if (pphase)
-    	*pphase = phase.dataPtr();
+	*pphase = attribs.GetIntData(intData::phase).dataPtr();
     if (pradius)
-    	*pradius = attribs[PIdx::radius].dataPtr();
+	*pradius = attribs.GetRealData(realData::radius).dataPtr();
     if (pdensity)
-    	*pdensity = attribs[PIdx::density].dataPtr();
+	*pdensity = attribs.GetRealData(realData::density).dataPtr();
     if (pvol)
-    	*pvol = attribs[PIdx::volume].dataPtr();
+	*pvol = attribs.GetRealData(realData::volume).dataPtr();
     if (pmass)
-    	*pmass = attribs[PIdx::mass].dataPtr();
+	*pmass = attribs.GetRealData(realData::mass).dataPtr();
     if (pomoi)
-    	*pomoi = attribs[PIdx::oneOverI].dataPtr();
-    if (ppos)
-    	*ppos = pos.dataPtr();
-    if (pvel)
-    	*pvel = vel.dataPtr();
-    if (pomega)
-    	*pomega = omega.dataPtr();
-    if (pacc)
-    	*pacc = acc.dataPtr();
-    if (palpha)
-    	*palpha = alpha.dataPtr();
-    if (pdrag)
-    	*pdrag = drag.dataPtr();
+	*pomoi = attribs.GetRealData(realData::oneOverI).dataPtr();
+
+    if (ppos) {
+	const int np  = structs.size();
+	pos.resize(3*np);
+	for (int i = 0; i < np; ++i ) {
+	    pos[i]      = structs[i].pos(0);
+	    pos[i+np]   = structs[i].pos(1);
+	    pos[i+2*np] = structs[i].pos(2);
+	}
+	*ppos = pos.dataPtr();	
+    }
+
+    if (pvel) {
+	Pack3DArrays( vel, attribs.GetRealData(realData::velx), 
+		      attribs.GetRealData(realData::vely),
+		      attribs.GetRealData(realData::velz) );
+	*pvel = vel.dataPtr();	
+    }
+
+    if (pomega) {
+	Pack3DArrays( omega, attribs.GetRealData(realData::omegax), 
+		      attribs.GetRealData(realData::omegay),
+		      attribs.GetRealData(realData::omegaz) );
+	*pomega = omega.dataPtr();	
+    }
+
+    if (pacc) {
+	Pack3DArrays( acc, attribs.GetRealData(realData::accx), 
+		      attribs.GetRealData(realData::accy),
+		      attribs.GetRealData(realData::accz) );
+	*pacc = acc.dataPtr();	
+    }
+
+    if (palpha) {
+	Pack3DArrays( alpha, attribs.GetRealData(realData::alphax), 
+		      attribs.GetRealData(realData::alphay),
+		      attribs.GetRealData(realData::alphaz) );
+	*palpha= alpha.dataPtr();	
+    }
+
+    if (pdrag) {
+	Pack3DArrays( drag, attribs.GetRealData(realData::dragx), 
+		      attribs.GetRealData(realData::dragy),
+		      attribs.GetRealData(realData::dragz) );
+	*pdrag= drag.dataPtr();	
+    }
 }
 
 
@@ -230,47 +217,9 @@ void MFIXParticleContainer:: RestoreParticlesAttributes ( MFIXParIter& pti,
 							  Real** palpha, Real** pdrag  ) 
 { 
 
-
-
-
     auto& structs = pti.GetArrayOfStructs();
     auto& attribs = pti.GetStructOfArrays();
     const int np  = structs.size();
-
-
-
-    for (int i = 0; i < np; ++i )
-    {
-
-	attribs[PIdx::state][i] = state[i];
-	attribs[PIdx::phase][i] = phase[i];
-
-	structs[i].pos(0) = pos[i];
-	structs[i].pos(1) = pos[i+np];
-	structs[i].pos(2) = pos[i+2*np];
-
-	attribs[PIdx::velx][i] = vel[i];
-	attribs[PIdx::vely][i] = vel[i+np];
-	attribs[PIdx::velz][i] = vel[i+2*np];
-
-	attribs[PIdx::omegax][i] = omega[i];
-	attribs[PIdx::omegay][i] = omega[i+np];
-	attribs[PIdx::omegaz][i] = omega[i+2*np];
-
-	attribs[PIdx::accx][i] = acc[i];
-	attribs[PIdx::accy][i] = acc[i+np];
-	attribs[PIdx::accz][i] = acc[i+2*np];
-
-	attribs[PIdx::alphax][i] = alpha[i];
-	attribs[PIdx::alphay][i] = alpha[i+np];
-	attribs[PIdx::alphaz][i] = alpha[i+2*np];
-
-	attribs[PIdx::dragx][i] = drag[i];
-	attribs[PIdx::dragx][i] = drag[i+np];
-	attribs[PIdx::dragz][i] = drag[i+2*np];
-	
-    }
-
 
     if (pstate)
 	*pstate = NULL;
@@ -286,18 +235,51 @@ void MFIXParticleContainer:: RestoreParticlesAttributes ( MFIXParIter& pti,
 	*pmass = NULL;
     if (pomoi)
 	*pomoi = NULL;
-    if (ppos)
+
+    if (ppos) {
+	const int np  = structs.size();
+	for (int i = 0; i < np; ++i ) {
+	    structs[i].pos(0) = pos[i];
+	    structs[i].pos(1) = pos[i+np];
+	    structs[i].pos(2) = pos[i+2*np];
+	}
 	*ppos = NULL;
-    if (pvel)
-	*pvel = NULL;
-    if (pomega)
-	*pomega = NULL;
-    if (pacc)
-	*pacc = NULL;
-    if (palpha)
-	*palpha = NULL;
-    if (pdrag)
-	*pdrag = NULL;
+    }
+
+    if (pvel) {
+	Unpack3DArrays( attribs.GetRealData(realData::velx), 
+		      attribs.GetRealData(realData::vely),
+			attribs.GetRealData(realData::velz), vel );
+	*pvel = NULL;	
+    }
+
+    if (pomega) {
+	Unpack3DArrays( attribs.GetRealData(realData::omegax), 
+		      attribs.GetRealData(realData::omegay),
+			attribs.GetRealData(realData::omegaz), omega );
+	*pomega = NULL;	
+    }
+
+    if (pacc) {
+	Unpack3DArrays( attribs.GetRealData(realData::accx), 
+		      attribs.GetRealData(realData::accy),
+			attribs.GetRealData(realData::accz), acc );
+	*pacc = NULL;	
+    }
+
+    if (palpha) {
+	Unpack3DArrays( attribs.GetRealData(realData::alphax), 
+		      attribs.GetRealData(realData::alphay),
+			attribs.GetRealData(realData::alphaz), alpha );
+	*palpha= NULL;	
+    }
+
+    if (pdrag) {
+	Unpack3DArrays( attribs.GetRealData(realData::dragx), 
+		      attribs.GetRealData(realData::dragy),
+			attribs.GetRealData(realData::dragz), drag );
+	*pdrag= NULL;	
+    }
 
 }
 
@@ -319,40 +301,6 @@ void MFIXParticleContainer:: RestoreParticlesAttributes ( const int& lev, const 
     auto&     attribs   = particles.GetStructOfArrays();
     const int np        = structs.size();
 
-
-    for (int i = 0; i < np; ++i )
-    {
-
-	attribs[PIdx::state][i] = state[i];
-	attribs[PIdx::phase][i] = phase[i];
-
-	structs[i].pos(0) = pos[i];
-	structs[i].pos(1) = pos[i+np];
-	structs[i].pos(2) = pos[i+2*np];
-
-	attribs[PIdx::velx][i] = vel[i];
-	attribs[PIdx::vely][i] = vel[i+np];
-	attribs[PIdx::velz][i] = vel[i+2*np];
-
-	attribs[PIdx::omegax][i] = omega[i];
-	attribs[PIdx::omegay][i] = omega[i+np];
-	attribs[PIdx::omegaz][i] = omega[i+2*np];
-
-	attribs[PIdx::accx][i] = acc[i];
-	attribs[PIdx::accy][i] = acc[i+np];
-	attribs[PIdx::accz][i] = acc[i+2*np];
-
-	attribs[PIdx::alphax][i] = alpha[i];
-	attribs[PIdx::alphay][i] = alpha[i+np];
-	attribs[PIdx::alphaz][i] = alpha[i+2*np];
-
-	attribs[PIdx::dragx][i] = drag[i];
-	attribs[PIdx::dragx][i] = drag[i+np];
-	attribs[PIdx::dragz][i] = drag[i+2*np];
-	
-    }
-
-
     if (pstate)
 	*pstate = NULL;
     if (pphase)
@@ -367,18 +315,52 @@ void MFIXParticleContainer:: RestoreParticlesAttributes ( const int& lev, const 
 	*pmass = NULL;
     if (pomoi)
 	*pomoi = NULL;
-    if (ppos)
-	*ppos = NULL;
-    if (pvel)
-	*pvel = NULL;
-    if (pomega)
-	*pomega = NULL;
-    if (pacc)
-	*pacc = NULL;
-    if (palpha)
-	*palpha = NULL;
-    if (pdrag)
-	*pdrag = NULL;
+
+    if (ppos) {
+	const int np  = structs.size();
+	for (int i = 0; i < np; ++i ) {
+	    structs[i].pos(0) = pos[i];
+	    structs[i].pos(1) = pos[i+np];
+	    structs[i].pos(2) = pos[i+2*np];
+	}
+	*ppos = NULL; 
+    }
+
+    if (pvel) {
+	Unpack3DArrays( attribs.GetRealData(realData::velx), 
+		      attribs.GetRealData(realData::vely),
+			attribs.GetRealData(realData::velz), vel );
+	*pvel = NULL;	
+    }
+
+    if (pomega) {
+	Unpack3DArrays( attribs.GetRealData(realData::omegax), 
+		      attribs.GetRealData(realData::omegay),
+			attribs.GetRealData(realData::omegaz), omega );
+	*pomega = NULL;	
+    }
+
+    if (pacc) {
+	Unpack3DArrays( attribs.GetRealData(realData::accx), 
+		      attribs.GetRealData(realData::accy),
+			attribs.GetRealData(realData::accz), acc );
+	*pacc = NULL;	
+    }
+
+    if (palpha) {
+	Unpack3DArrays( attribs.GetRealData(realData::alphax), 
+		      attribs.GetRealData(realData::alphay),
+			attribs.GetRealData(realData::alphaz), alpha );
+	*palpha= NULL;	
+    }
+
+    if (pdrag) {
+	Unpack3DArrays( attribs.GetRealData(realData::dragx), 
+		      attribs.GetRealData(realData::dragy),
+			attribs.GetRealData(realData::dragz), drag );
+	*pdrag= NULL;	
+    }
+
 
 }
 

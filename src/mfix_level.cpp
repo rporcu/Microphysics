@@ -83,23 +83,6 @@ mfix_level::mfix_level ()
     f_gds.resize(nlevs_max);
     drag_bm.resize(nlevs_max);
 
-    // int nparticles = 100;
-
-    // particle_state.resize(  nparticles);
-    // particle_phase.resize(  nparticles);
-
-    // des_radius.resize    (  nparticles);
-    // ro_sol.resize        (  nparticles);
-    // pvol.resize          (  nparticles);
-    // pmass.resize         (  nparticles);
-    // omoi.resize          (  nparticles);
-    // des_pos_new.resize   (3*nparticles);
-    // des_vel_new.resize   (3*nparticles);
-    // omega_new.resize     (3*nparticles);
-    // des_acc_old.resize   (3*nparticles);
-    // rot_acc_old.resize   (3*nparticles);
-    // drag_fc.resize       (3*nparticles);
-
 }
 
 void
@@ -187,6 +170,7 @@ void mfix_level::Init(int lev, Real dt, Real time)
       if (err_ps == 1)
          amrex::Abort("Bad data in set_ps");
       }
+
 
       // Always allocate data for pc
       pc -> AllocData();
