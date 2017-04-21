@@ -3,13 +3,13 @@ module ur_facs
    use amrex_fort_module, only : c_real => amrex_real
    use iso_c_binding , only: c_int
 
-   use param, only: DIM_eqS
+   use param, only: dim_eqs
 
 ! Under relaxation factors for coefficient update:
 !  [0]  every time step (explicit)
 !  [1]  every iteration (implicit)
 ! (0,1) under-relaxed
-   real(c_real) :: UR_FAC(DIM_eqS)
+   real(c_real) :: ur_fac(dim_eqs)
 
 contains
 

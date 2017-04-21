@@ -20,6 +20,8 @@
       implicit none
 !-----------------------------------------------
 
+      integer :: particle_types = 0
+
 ! Total number of particles in simulation: read from input or generated
 !      integer :: PARTICLES
 
@@ -64,25 +66,27 @@
 !-----------------------------------------------------------------<<<
 
 ! DES - Continuum
-      logical :: DES_CONTINUUM_COUPLED
-      logical :: DES_EXPLICITLY_COUPLED
+      logical :: des_continuum_coupled
+      logical :: des_explicitly_coupled
 
 ! With this logic the particles see the fluid but the fluid does
 ! not see the particles.
-      logical :: DES_ONEWAY_COUPLED
+      logical :: des_oneway_coupled
 
 ! Collision model, options are as follows
 !   linear spring dashpot model (default/undefined)
 !   'hertzian' model
-      CHARACTER(LEN=64) :: DES_COLL_MODEL
-      integer :: DES_COLL_MODEL_ENUM
-      integer,PARAMETER :: HERTZIAN=0
-      integer,PARAMETER :: LSD=1
+      character(len=64) :: des_coll_model
+      integer,parameter :: invalid_coll=-1
+      integer,parameter :: hertzian=0
+      integer,parameter :: lsd=1
+
+      integer :: des_coll_model_enum = invalid_coll
 
 ! Value of solids time step based on particle properties
-      real(c_real) :: DTSOLID
+      real(c_real) :: dtsolid
 ! Run time value of simulation time used in dem simulation
-      real(c_real) :: S_TIME
+      real(c_real) :: s_time
 
 ! End neighbor search related quantities
 !-----------------------------------------------------------------<<<

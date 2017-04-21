@@ -24,8 +24,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  RUN_TYPE = 'NEW'
-
   TSTOP =  0.35
 
   DT =     1.00d-3
@@ -65,6 +63,8 @@
 ! Particle Section
 !---------------------------------------------------------------------//
 
+  PARTICLE_TYPES = 1
+
 ! Normal collision spring constant. (N/m)
   KN =   0.1                   ! particle-particle
   KN_W = 0.1                   ! particle-wall
@@ -80,8 +80,6 @@
 
 ! Solids phase 1:
 !---------------------------------------------------------------------//
-  SOLIDS_MODEL(1) = 'DEM'
-
   D_p0(1) =  1.0d-4  ! (m)
   RO_s0(1) = 2.0d3   ! (kg/m^3)
 

@@ -1,75 +1,24 @@
-module check_des_solids_module
+module check_collision_model
 
+  use amrex_fort_module, only: c_real => amrex_real
+  use iso_c_binding ,    only: c_int
 
-  use amrex_fort_module, only : c_real => amrex_real
-  use iso_c_binding , only: c_int
-  use param,         only: ZERO, HALF, ONE, UNDEFINED, IS_UNDEFINED, IS_DEFINED
-  use error_manager,  only: finl_err_msg, flush_err_msg, init_err_msg,  &
-       & ival, ivar, err_msg
+  use error_manager,  only: init_err_msg, flush_err_msg, finl_err_msg,  &
+                            err_msg, ival, ivar
+
+  use param, only: zero, half, one, undefined
+  use param, only: is_undefined, is_defined
 
   implicit none
-  private
 
-  public check_solids_dem
+  private
+  public :: check_collision_model_lsd, check_collision_model_hertz
 
 contains
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  SUBROUTINE: CHECK_DES_SOLIDS                                        !
-!                                                                      !
-!  Purpose: Check user input data for DES collision calculations.      !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_solids_dem
-
-    use discretelement, only: DES_COLL_MODEL, MEW, MEW_W
-
-    ! Initialize the error manager.
-    call init_err_msg("CHECK_SOLIDS_DEM_COLLISION")
-
-    ! Check coefficient friction
-    if(is_undefined(mew)) then
-       write(err_msg,1000) 'MEW'
-       call flush_err_msg(abort=.true.)
-    elseif (mew < zero .or. mew_w > one) then
-       write(err_msg,1001) 'MEW', trim(ival(mew))
-       call flush_err_msg(abort=.true.)
-    endif
-
-    if(is_undefined(mew_w)) then
-       write(err_msg,1000) 'MEW_W'
-       call flush_err_msg(abort=.true.)
-    elseif(mew_w < zero .or. mew_w > one) then
-       write(err_msg,1001) 'MEW_W', trim(ival(mew_w))
-       call flush_err_msg(abort=.true.)
-    endif
-
-1000 format('Error 1000: Required input not specified: ',A,/&
-       'Please correct the input deck.')
-
-1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
-         'Please correct the input deck.')
-
-    ! Check collision model specific parameters.
-    select case (trim(DES_COLL_MODEL))
-    case('LSD');      call check_solids_dem_coll_lsd
-    case('HERTZIAN'); call check_solids_dem_coll_hertz
-    case DEFAULT
-       write(ERR_MSG,2000) trim(DES_COLL_MODEL)
-       call flush_err_msg(ABORT=.true.)
-    end select
-
-2000 format('Error 2000: Invalid particle-particle collision model:',&
-         A,/'Please correct the input deck.')
-
-    call finl_err_msg
-
-  end subroutine check_solids_dem
-
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CHECK_SOLIDS_DEM_COLL_LSD                               !
+!  Subroutine: CHECK_COLLISION_MODEL_LSD                               !
 !                                                                      !
 !  Purpose: Check user input data for DES collision calculations.      !
 !                                                                      !
@@ -79,7 +28,7 @@ contains
 !      65-149 (pages 94-95)                                            !
 !   - Silbert et al., Physical Review E, 2001, 64, 051302 1-14 (page 5)!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine check_solids_dem_coll_lsd
+  subroutine check_collision_model_lsd
 
     use constant,       only: MMAX
     use discretelement, only: kn, kn_w, kt, kt_w, kt_fac, kt_w_fac, &
@@ -163,11 +112,11 @@ contains
 1001 format('Error 1001: Illegal or unknown input: ',A,' = ',A,/      &
        'Please correct the input deck.')
 
-  end subroutine check_solids_dem_coll_lsd
+  end subroutine check_collision_model_lsd
 
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 !                                                                      !
-!  Subroutine: CHECK_SOLIDS_DEM_COLL_HERTZ                             !
+!  Subroutine: CHECK_COLLISION_MODEL_HERTZ                             !
 !                                                                      !
 !  Purpose: Check user input data for Hertzian collisions.             !
 !                                                                      !
@@ -177,7 +126,7 @@ contains
 !      65-149 (pages 94-95)                                            !
 !   - Silbert et al., Physical Review E, 2001, 64, 051302 1-14 (page 5)!
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-subroutine check_solids_dem_coll_hertz
+subroutine check_collision_model_hertz
 
   use constant,       only: mmax
   use param,          only: dim_m
@@ -287,6 +236,6 @@ subroutine check_solids_dem_coll_hertz
 1002 format('Error 1002: Required input not specified: ',A,/          &
          'Description:',A,/'Please correct the input deck.')
 
-  end subroutine check_solids_dem_coll_hertz
+  end subroutine check_collision_model_hertz
 
-end module check_des_solids_module
+end module check_collision_model

@@ -364,107 +364,62 @@ module init_fluid_module
 ! specified
 
       if(abs(gravity(1)) > epsilon(0.0d0)) then
-         do i = hi(1), lo(1), -1
 
 ! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dy*dz
+         if (is_undefined(ro_g0)) then
+            dpodx = -gravity(1)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpodx = -gravity(1)*ro_g0
+         endif
+
+         pj = pj - dpodx*dx*(hi(1)-domhi(1)+1)
+         do i = shi(1), slo(1), -1
+            pj = pj + dpodx*dx
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dx*gravity(1)*&
-                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dx*gravity(1)*&
-                        ep_g(i,j,k)*ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-! Global Sum
-            if (0.0 < abs(area)) bed_weight = bed_weight/area
-
-            pj = pj + bed_weight
-            do k = lo(3),hi(3)
-               do j = lo(2),hi(2)
-                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
 
       else if(abs(gravity(3)) > epsilon(0.0d0)) then
-         do k = hi(3), lo(3), -1
+         if (is_undefined(ro_g0)) then
+            dpody = -gravity(2)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpody = -gravity(2)*ro_g0
+         endif
 
-! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dx*dy
-            do j = lo(2), hi(2)
+         pj = pj - dpody*dy*(hi(2)-domhi(2)+1)
+         do j = hi(2), lo(2), -1
+            pj = pj + dpody*dy
+            do k = lo(3), hi(3)
                do i = lo(1), hi(1)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dz*gravity(3)*&
-                        ep_g(i,j,k)*eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dz*gravity(3)*&
-                        ep_g(i,j,k)*ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-            ! Global Sum
-            if (0.0 < abs(area)) bed_weight = bed_weight/area
-
-            pj = pj + bed_weight
-            do j = lo(2),hi(2)
-               do i = lo(1),hi(1)
-                  if(is_undefined(p_g(i,j,k))) p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
 
       else
-         do j = hi(2), lo(2), -1
+         if (is_undefined(ro_g0)) then
+            dpodz = -gravity(3)*eosg(mw_avg,pj,295.15d0)
+         else
+            dpodz = -gravity(3)*ro_g0
+         endif
 
-            ! Find the average weight per unit area over an x-z slice
-            bed_weight = 0.0
-            area = 0.0
-            darea = dx*dz
-            do k = lo(3), hi(3)
+         pj = pj - dpodz*dz*(hi(3)-domhi(3)+1)
+         do k = hi(3), lo(3), -1
+            pj = pj + dpodz*dz
+            do j = lo(2), hi(2)
                do i = lo(1), hi(1)
-                  area = area + darea
-                  if (is_undefined(ro_g0)) then
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
-                        eosg(mw_avg,pj,295.15d0)*darea
-                  else
-                     bed_weight = bed_weight - dy*gravity(2)*ep_g(i,j,k)*&
-                        ro_g0*darea
-                  endif
-               enddo
-            enddo
-
-         ! Global Sum
-         ! call global_all_sum(bed_weight)
-         ! call global_all_sum(area)
-            IF (0.0 < ABS(AREA)) BED_WEIGHT = BED_WEIGHT/AREA
-
-            pj = pj + bed_weight
-            do k = lo(3),hi(3)
-               do i = lo(1),hi(1)
-                  if (is_undefined(p_g(i,j,k)))&
-                     p_g(i,j,k)=scale_pressure(pj)
+                  p_g(i,j,k) = scale_pressure(pj)
                enddo
             enddo
          enddo
       endif
-! end setting an undefined pressure in an initial condition region
-! ----------------------------------------------------------------<<<
 
-  100 CONTINUE
+  100 continue
 
-      RETURN
+      return
 
  1000 FORMAT(/1X,70('*')//' From: SET_FLUIDBED_P'/' Message: Outflow ',&
          'pressure boundary condition (P_OUTFLOW) not found.',/&

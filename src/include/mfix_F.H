@@ -8,8 +8,6 @@ extern "C"
 
   void set_resid_p(Real& val);
 
-  void init_output_vars(Real* time, Real* dt);
-
   void write_out0(Real* time, Real* dt, Real* dx, Real* dy, Real* dz,
                   Real* xlength, Real* ylength, Real* zlength,
                   const int* domlo, const int* domhi);
@@ -25,7 +23,8 @@ extern "C"
                      int* cyclic_x, int* cyclic_y, int* cyclic_z, int* cyclic_mf,
                      Real* xlength, Real* ylength, Real* zlength, int* coord);
 
-  void   set_domain();
+  void check_inputs(Real* dt);
+
   void check_domain(Real* dx, Real* dy, Real* dz,
                     Real* xlength, Real* ylength, Real* zlength,
                     const int* domlo, const int* domhi);
@@ -41,16 +40,6 @@ extern "C"
                    const int* domlo , const int* domhi,
                    Real* dx, Real* dy, Real* dz,
                    Real* xlen, Real* ylen, Real* zlen);
-
-  void zero_norm_vel(const int* slo, const int* shi,
-                     const int* ulo, const int* uhi,
-                     const int* vlo, const int* vhi,
-                     const int* wlo, const int* whi,
-                     Real* u_g,     Real* v_g,      Real* w_g,
-                     int* bc_ilo, int* bc_ihi,
-                     int* bc_jlo, int* bc_jhi,
-                     int* bc_klo, int* bc_khi,
-                     const int* domlo , const int* domhi);
 
   void set_bc0(const int* slo, const int* shi,
                const int* ulo, const int* uhi,

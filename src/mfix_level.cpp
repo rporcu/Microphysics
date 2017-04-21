@@ -151,8 +151,6 @@ void mfix_level::Init(int lev, Real dt, Real time)
 
       MakeNewLevelFromScratch(0, time, ba, dm);
 
-      init_output_vars(&time, &dt);
-
       Real dx = geom[lev].CellSize(0);
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
@@ -268,8 +266,6 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
     Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
     Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
     Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
-
-    set_domain();
 
     Box domain(geom[0].Domain());
 
@@ -582,12 +578,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
      Box ubx((*u_g[lev])[mfi].box());
      Box vbx((*v_g[lev])[mfi].box());
      Box wbx((*w_g[lev])[mfi].box());
-
-     zero_norm_vel(sbx.loVect(), sbx.hiVect(),
-                   ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),
-                   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),      (*w_g[lev])[mfi].dataPtr(),
-                   bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
-                   bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
 
      set_bc0(sbx.loVect(), sbx.hiVect(),
              ubx.loVect(), ubx.hiVect(), vbx.loVect(), vbx.hiVect(), wbx.loVect(), wbx.hiVect(),

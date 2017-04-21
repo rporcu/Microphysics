@@ -18,9 +18,6 @@
 #_______________________________________________________________________
 # RUN CONTROL SECTION
 
-  UNITS = 'SI'
-  RUN_TYPE = 'NEW'
-
   GRAVITY(1:3) = 3*0.0
 
   CALL_USR = .T.
@@ -30,34 +27,20 @@
 # NUMERICAL SECTION
 
   MAX_NIT = 200000
-  TOL_RESID = 1.0E-3
+  TOL_RESID = 1.0E-4
 
-  LEQ_PC = 9*'NONE'
+  LEQ_PC = 4*'NONE'
 
-  DISCRETIZE = 9*2
+  DISCRETIZE = 4*2
 
   UR_FAC(1) =     0.85
-  UR_FAC(3:5) = 3*0.70
-
-#_______________________________________________________________________
-# GEOMETRY SECTION
-
-  COORDINATES   = 'CARTESIAN'
-
-  XLENGTH = 1.0   IMAX =  32
-  ZLENGTH = 1.0   KMAX =   1
-  YLENGTH = 1.0   JMAX =  32
+  UR_FAC(2:4) = 3*0.70
 
 #_______________________________________________________________________
 # GAS-PHASE SECTION
 
   RO_G0 = 1.0     ! (kg/m3)
   MU_G0 = 1.0d-2  ! (Pa.sec)
-
-#_______________________________________________________________________
-# SOLIDS-PHASE SECTION
-
-
 
 #_______________________________________________________________________
 # INITIAL CONDITIONS SECTION

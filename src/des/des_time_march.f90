@@ -35,7 +35,6 @@ contains
     use discretelement,          only: dtsolid, s_time
     use drag_gs_des1_module,     only: drag_gs_des
     use error_manager,           only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
-    use machine,                 only:  wall_time
     use output_manager_module,   only: output_manager
     use param,                  only: zero
 
@@ -104,8 +103,6 @@ contains
     ! changes in solid time step
     real(c_real) :: TMP_DTS, DTSOLID_TMP
 
-    ! Numbers to calculate wall time spent in DEM calculations.
-    real(c_real) :: TMP_WALL
     ! Pressure gradient
     real(c_real), allocatable :: gradPg(:,:,:,:)
     !.......................................................................!
@@ -122,7 +119,6 @@ contains
     S_TIME = TIME
     TMP_DTS = ZERO
     DTSOLID_TMP = ZERO
-    TMP_WALL = WALL_TIME()
 
     ! Initialize time stepping variables for coupled gas/solids simulations.
     IF(des_continuum_coupled) THEN
@@ -263,25 +259,6 @@ contains
     ENDIF
 
     deallocate(gradPg)
-
-    IF(.NOT.des_continuum_coupled)THEN
-       WRITE(ERR_MSG,"('<---------- END DES_TIME_MARCH ----------')")
-       call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-    ELSE
-       ! call send_recv(ep_g,2)
-       ! call send_recv(rop_g,2)
-
-       TMP_WALL = WALL_TIME() - TMP_WALL
-       IF(TMP_WALL > 1.0d-10) THEN
-          WRITE(ERR_MSG, 9000) trim(iVal(dble(FACTOR)/TMP_WALL))
-       ELSE
-          WRITE(ERR_MSG, 9000) '+Inf'
-       ENDIF
-       call FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE., LOG=.FALSE.)
-
-9000   FORMAT('    NITs/SEC = ',A)
-
-    ENDIF
 
 
   CONTAINS

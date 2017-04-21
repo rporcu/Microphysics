@@ -6,8 +6,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
 subroutine init_collision() bind(C, name="mfix_init_collision")
 
-  use discretelement, only: des_coll_model, des_coll_model_enum
-  use discretelement, only: lsd, hertzian
+  use discretelement, only: des_coll_model_enum, lsd, hertzian
 
   use amrex_fort_module, only : c_real => amrex_real
   use iso_c_binding , only: c_int
@@ -15,13 +14,9 @@ subroutine init_collision() bind(C, name="mfix_init_collision")
 
   implicit none
 
-  select case (trim(des_coll_model))
-  case('LSD')
-     des_coll_model_enum = lsd
-     call init_collision_lsd
-  case('HERTZIAN')
-     des_coll_model_enum = hertzian
-     call init_collision_hertz
+  select case (des_coll_model_enum)
+  case(lsd); call init_collision_lsd
+  case(hertzian); call init_collision_hertz
   end select
 
 contains

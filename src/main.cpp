@@ -54,6 +54,10 @@ int main (int argc, char* argv[])
                  &cyclic_x, &cyclic_y, &cyclic_z, &cyclic_mf,
                  &xlength, &ylength, &zlength, &coord);
 
+
+    if ( ParallelDescriptor::IOProcessor() )
+      check_inputs(&dt);
+
 #if 0
   // This sets the boundary conditions to be doubly or triply periodic
   Array<int> is_per(3);
