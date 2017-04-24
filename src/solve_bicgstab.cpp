@@ -21,6 +21,7 @@ dotxy (const MultiFab& r,
     if (r.boxArray().ixType().cellCentered())
     {
       val = MultiFab::Dot(r,0,z,0,ncomp,nghost,local);
+      ParallelDescriptor::ReduceRealSum(val);
     }
 
     // If the MultiFab is not cell-centered we have to create a special mask to make sure we
@@ -281,7 +282,7 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
       // This is a little funky.  I want to elide one of the reductions
       // in the following two dotxy()s.  We do that by calculating the "local"
       // values and then reducing the two local values at the same time.
-      Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true), 
+      Real vals[2] = { dotxy(t,t,geom[lev].periodicity(),true),
                        dotxy(t,s,geom[lev].periodicity(),true) };
 
 

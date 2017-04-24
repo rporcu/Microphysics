@@ -18,11 +18,10 @@
       use fld_const, only: mw_avg, mu_g0, ro_g0
 
       use leqsol, only: leq_it, leq_sweep, leq_tol, leq_pc
-      use machine, only: id_node, id_month, id_year, id_minute, id_hour, id_day
       use param, only: dim_ic, dim_bc
       use param, only: half, undefined, zero, is_defined
       use constant, only: mmax, ro_s0, d_p0
-      use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, run_type, tstop
+      use run, only: description, call_usr, dem_solids, dt_fac,  dt_min, dt_max, run_name, tstop
       use run, only: discretize, solids_model
       use scales, only: p_scale, p_ref
       use ur_facs, only: ur_fac
@@ -86,12 +85,6 @@
          WRITE (UNIT_OUT, 1135) TIME, TSTOP, DT, DT_MAX, DT_MIN, DT_FAC
       ELSE
          WRITE (UNIT_OUT, 1136)
-      ENDIF
-      WRITE (UNIT_OUT, 1137) RUN_TYPE
-      IF (RUN_TYPE == 'NEW') THEN
-         WRITE (UNIT_OUT, 1138)
-      ELSE IF (RUN_TYPE == 'RESTART_1') THEN
-         WRITE (UNIT_OUT, 1139)
       ENDIF
 
       WRITE (UNIT_OUT, 1140) 'X', ' '
@@ -263,9 +256,6 @@
          ,'Min time step (DT_MIN) = ',G12.5,/7X,&
          'Time step adjustment factor (DT_FAC) = ',G12.5)
  1136 FORMAT(7X,'* Steady state simulation.')
- 1137 FORMAT(7X,'Type of run (RUN_TYPE) : ',A16)
- 1138 FORMAT(30X,'(Initial conditions from the input (.DAT) file)')
- 1139 FORMAT(30X,'(Initial conditions from the restart (.RES) file)')
  1140 FORMAT(/7X,'* Gas momentum equation-',A,' is',A,'solved.')
  1149 FORMAT(/7X,'* User-defined subroutines are',A,'called.')
 !

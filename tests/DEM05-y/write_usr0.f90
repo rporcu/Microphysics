@@ -27,7 +27,7 @@
 
       use run, only: DESCRIPTION
       use discretelement, only: des_coll_model
-      use constant, only: MMAX
+      use discretelement, only: particle_types
 
       IMPLICIT NONE
 

@@ -23,21 +23,20 @@ set(F90_sources
   calc_ro_g.f90
   calc_trd_g.f90
   check_convergence.f90
-  check_data/check_domain.f90
   check_data/check_bc_flow.f90
   check_data/check_bc_geometry.f90
   check_data/check_bc_inflow.f90
   check_data/check_bc_outflow.f90
   check_data/check_bc_walls.f90
   check_data/check_boundary_conditions.f90
-  check_data/check_gas_phase.f90
+  check_data/check_collision_model.f90
+  check_data/check_domain.f90
+  check_data/check_gas_properties.f90
   check_data/check_initial_conditions.f90
+  check_data/check_inputs.f90
+  check_data/check_particle_properties.f90
   check_data/check_point_sources.f90
   check_data/check_run_control.f90
-  check_data/check_solids_common_all.f90
-  check_data/check_solids_dem.f90
-  check_data/check_solids_model_prereqs.f90
-  check_data/check_solids_phases.f90
   constant_mod.f90
   conv_dif_u_g.f90
   conv_dif_v_g.f90
@@ -85,11 +84,9 @@ set(F90_sources
   init_fluid.f90
   init_namelist.f90
   io/output_manager.f90
-  io/init_output_vars.f90
   io/write_error.f90
   io/write_out0.f90
   location_check.f90
-  machine_mod.f90
   matrix_mod.f90
   output_mod.f90
   param_mod.f90
@@ -104,7 +101,6 @@ set(F90_sources
   set_bc0.f90
   set_bc_flow.f90
   set_bc_type.f90
-  set_domain.f90
   set_ps.f90
   solve_pp_g.f90
   solve_vel_star.f90
@@ -118,7 +114,6 @@ set(F90_sources
   tau_u_g.f90
   tau_v_g.f90
   tau_w_g.f90
-  time_cpu_mod.f90
   ur_facs_mod.f90
   usr/usr0.f90
   usr/usr0_des.f90
@@ -136,7 +131,6 @@ set(F90_sources
   utilities_mod.f90
   vavg_g.f90
   xsi_mod.f90
-  zero_norm_vel.f90
   boxlib_to_mfix.F90)
 
 # Generate AMReX_buildInfo.cpp

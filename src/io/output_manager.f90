@@ -27,12 +27,10 @@ module output_manager_module
 
       use compar, only: myPE, PE_IO
 
-      use machine, only: wall_time
       use output, only: USR_TIME, USR_DT
       use param, only: DIM_USR
       use run, only: tstop
       use run, only: dem_solids
-      use time_cpu, only: CPU_IO
 
       IMPLICIT NONE
 
@@ -60,8 +58,6 @@ module output_manager_module
       integer :: LC, IDX
 ! Flag that the header (time) has not be written.
       logical :: HDR_MSG
-! Wall time at the start of IO operations.
-      real(c_real) :: WALL_START
 ! SPX file extensions.
       CHARACTER(LEN=35) ::  EXT_END
 !......................................................................!
@@ -71,9 +67,6 @@ module output_manager_module
 
 ! Initial the header flag.
       HDR_MSG = .TRUE.
-
-! Get the current time before any IO operations begin
-      WALL_START = WALL_TIME()
 
 ! Write special output, if needed
       IDX = 0
@@ -89,9 +82,6 @@ module output_manager_module
       IF(IDX /=0) CALL FLUSH_LIST
 
       CALL FLUSH_NOTIFY_useR
-
-      ! Add the amount of time needed for all IO operations to total.
-      CPU_IO = CPU_IO + (WALL_TIME() - WALL_START)
 
       contains
 
@@ -196,10 +186,7 @@ module output_manager_module
       use discretelement, only: DTSOLID
       use error_manager, only: err_msg, flush_err_msg, ival
       use tunit_module, only: get_tunit
-      use machine, only: wall_time
       use run, only: FULL_LOG, nlog
-      use time_cpu, only: TIME_START
-      use time_cpu, only: WALL_START
 
       real(c_real) :: WALL_ELAP, WALL_LEFT, WALL_NOW
       CHARACTER(LEN=9) :: CHAR_ELAP, CHAR_LEFT
@@ -226,30 +213,6 @@ module output_manager_module
          ENDIF
  1100 FORMAT(/'Time: ',g12.5,3x,'DT: ',g12.5,3x,'DEM NITs: ',A)
 
-         WALL_NOW = WALL_TIME()
-! Calculate the elapsed wall time.
-         WALL_ELAP = WALL_NOW - WALL_START
-         CALL GET_TUNIT(WALL_ELAP, UNIT_ELAP)
-         CHAR_ELAP=''; WRITE(CHAR_ELAP,"(F9.2)") WALL_ELAP
-         CHAR_ELAP = trim(adjustl(CHAR_ELAP))
-! Estimate the remaining wall time.
-         WALL_LEFT = (WALL_NOW-WALL_START)*(TSTOP-TIME)/               &
-            max(TIME-TIME_START,1.0d-6)
-         CALL GET_TUNIT(WALL_LEFT, UNIT_LEFT)
-
-         IF (IS_DEFINED(DT)) THEN
-            CHAR_LEFT=''; WRITE(CHAR_LEFT,"(F9.2)") WALL_LEFT
-            CHAR_LEFT = trim(adjustl(CHAR_LEFT))
-         ELSE
-            CHAR_LEFT = '0.0'
-            UNIT_LEFT = 's'
-         ENDIF
-
-! Notify the user of usage/remaining wall times.
-         WRITE(ERR_MSG,2000)                                           &
-            'Elapsed:', trim(CHAR_ELAP), trim(UNIT_ELAP),              &
-            'Est. Remaining:',trim(CHAR_LEFT), trim(UNIT_LEFT)
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
       ENDIF
 
  2000 FORMAT('Wall Time - ',2(A,1X,A,A,4X))

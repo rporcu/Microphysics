@@ -35,7 +35,7 @@ MODULE INIT_NAMELIST_MODULE
       use fld_const, only: ro_g0, mu_g0, mw_avg
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w, ic_type
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_t_g, ic_t_s, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, icheck_bicgs, leq_it, opt_parallel, use_doloop
@@ -49,7 +49,7 @@ MODULE INIT_NAMELIST_MODULE
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t,  ps_x_w
       use run, only: undefined_i
       use run, only: call_usr, description, detect_stall, discretize, tstop
-      use run, only: dt_fac, dt_max, dt_min, run_name, run_type, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
@@ -87,12 +87,6 @@ MODULE INIT_NAMELIST_MODULE
       DESCRIPTION = UNDEFINED_C
 !</keyword>
 
-!<keyword category="Run Control" required="true">
-!  <description>Type of run.</description>
-!  <valid value="new" note="A new run. There should be no .RES,
-!    .OUT, or .LOG files in the run directory."/>
-      RUN_TYPE = UNDEFINED_C
-!</keyword>
 
 !<keyword category="Run Control" required="false">
 !  <description>
@@ -592,18 +586,6 @@ MODULE INIT_NAMELIST_MODULE
 !  <description>Z coordinate of the top face.</description>
 !  <arg index="1" id="IC" min="1" max="DIM_IC"/>
          IC_Z_T(LC) = UNDEFINED
-!</keyword>
-
-!<keyword category="Initial Condition" required="false">
-!  <description>
-!    Type of initial condition. Mainly used in restart runs to overwrite
-!    values read from the .RES file by specifying it as _PATCH_. The
-!    user needs to be careful when using the _PATCH_ option, since the
-!    values from the .RES file are overwritten and no error checking is
-!    done for the patched values.
-!  </description>
-!  <arg index="1" id="IC" min="1" max="DIM_IC"/>
-         IC_TYPE(LC) = UNDEFINED_C
 !</keyword>
 
 !<keyword category="Initial Condition" required="false">

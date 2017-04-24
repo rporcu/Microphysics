@@ -21,7 +21,7 @@ MODULE read_namelist_module
       use drag, only: drag_c1, drag_d1
       use constant, only: d_p0, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
-      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input
+      use discretelement, only: des_coll_model, des_en_input, des_en_wall_input, des_et_input, des_et_wall_input, particle_types
       use discretelement, only: des_etat_fac, des_etat_w_fac, v_poisson, vw_poisson
       use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
@@ -31,7 +31,7 @@ MODULE read_namelist_module
       use fld_const, only: ro_g0
       use bc, only: cyclic_x, cyclic_y, cyclic_z
       use bc, only: cyclic_x_pd, cyclic_y_pd, cyclic_z_pd
-      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w, ic_type
+      use ic, only: ic_ep_g, ic_ep_s, ic_p_g, ic_x_w
       use ic, only: ic_u_g, ic_u_s, ic_v_g, ic_v_s, ic_w_g, ic_w_s
       use ic, only: ic_x_e, ic_y_n, ic_y_s, ic_z_b, ic_z_t
       use leqsol, only: do_transpose, leq_it
@@ -42,7 +42,7 @@ MODULE read_namelist_module
       use ps, only: ps_t_g, ps_u_g, ps_v_g, ps_w_g
       use ps, only: ps_x_e, ps_x_g, ps_y_n, ps_y_s, ps_z_b, ps_z_t, ps_x_w
       use run, only: call_usr, description, detect_stall, discretize, tstop
-      use run, only: dt_fac, dt_max, dt_min, run_name, run_type, solids_model
+      use run, only: dt_fac, dt_max, dt_min, run_name, solids_model
       use drag, only: drag_type
       use scales, only: p_ref, p_scale
       use residual, only: norm_g, tol_diverge, tol_resid
