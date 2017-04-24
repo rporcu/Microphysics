@@ -48,68 +48,12 @@ struct intData
 };
 
 
-// struct PIdx
-// {
-//     enum { // Particle data stored in p.m_data
-// 	phase = 0, 
-// 	state,
-//         radius,
-// 	volume,
-// 	mass,
-//         density, 
-//         oneOverI,
-// 	velx,
-// 	vely,
-// 	velz,
-//         omegax,
-// 	omegay,
-// 	omegaz,
-// 	accx,
-// 	accy,
-// 	accz,
-//         alphax,  //angular acceleration
-// 	alphay, 
-// 	alphaz,
-//         dragx,
-// 	dragy,
-// 	dragz,
-// 	nattribs
-//     };
-// };
-
 
 class MFIXParIter
     : public amrex::ParIter<0,0,realData::count,intData::count>
 {
 public:
     using amrex::ParIter<0,0,realData::count,intData::count>::ParIter;
-
-    // const SoA& GetAttribs () const { return GetStructOfArrays(); }
-    // SoA&       GetAttribs ()       { return GetStructOfArrays(); }
-    // const amrex::Array<amrex::Real>& GetAttribs (int comp) const { return GetStructOfArrays()[comp]; }
-    // amrex::Array      <amrex::Real>& GetAttribs (int comp)       { return GetStructOfArrays()[comp]; }
-
-
-    ///
-    /// Define some convenient wrappers for accessing particle data
-    ///
-    // ParticleType::RealType& x(int i) { return GetArrayOfStructs()[i].pos(0); }
-    // ParticleType::RealType& y(int i) { return GetArrayOfStructs()[i].pos(1); }
-    // ParticleType::RealType& z(int i) { return GetArrayOfStructs()[i].pos(2); }
-
-    // ParticleType::RealType& velx(int i) { return GetStructOfArrays()[PIdx::velx][i]; }
-    // ParticleType::RealType& vely(int i) { return GetStructOfArrays()[PIdx::vely][i]; }
-    // ParticleType::RealType& velz(int i) { return GetStructOfArrays()[PIdx::velz][i]; }
-
-    // int phase(int i) { return int(GetStructOfArrays()[PIdx::phase][i]); }
-    // int state(int i) { return int(GetStructOfArrays()[PIdx::state][i]); }
-
-
-    // // Getter and Setter for attributes
-    // const ParticleType::RealType& vel();
-    // const ParticleType::RealType& vel(int grid, int tile);
-
-
 };
 
 
@@ -147,41 +91,34 @@ public:
     void printParticles ();
 
     void AllocData ();
-   
 
-    void GetParticlesAttributes ( MFIXParIter& pti,
-				  int** pstate, int** pphase,
-				  Real** pradius,  Real** pdensity,
-				  Real** pvol, Real** pmass,
-				  Real** pomoi, Real** ppos,  Real** pvel,
-				  Real** pomega, Real** pacc,
-				  Real** palpha, Real** pdrag ); 
+    void GetIntData ( MFIXParIter& pti, int dataIdx, int** dataPtr );
 
-    void GetParticlesAttributes ( const int& lev, const MFIter& mfi,
-				  int** pstate, int** pphase,
-				  Real** pradius,  Real** pdensity,
-				  Real** pvol, Real** pmass,
-				  Real** pomoi, Real** ppos,  Real** pvel,
-				  Real** pomega, Real** pacc,
-				  Real** palpha, Real** pdrag );
+    void GetIntData ( const int& lev, const MFIter& mfi, int dataIdx, int** dataPtr );  
 
+    void RestoreIntData ( int** dataPtr ) { *dataPtr = NULL;};
 
-    void RestoreParticlesAttributes ( MFIXParIter& pti,
-				      int** pstate, int** pphase,
-				      Real** pradius,  Real** pdensity,
-				      Real** pvol, Real** pmass,
-				      Real** pomoi, Real** ppos,  Real** pvel,
-				      Real** pomega, Real** pacc,
-				      Real** palpha, Real** pdrag ); 
-    
-    void RestoreParticlesAttributes ( const int& lev, const MFIter& mfi,
-				      int** pstate, int** pphase,
-				      Real** pradius,  Real** pdensity,
-				      Real** pvol, Real** pmass,
-				      Real** pomoi, Real** ppos,  Real** pvel,
-				      Real** pomega, Real** pacc,
-				      Real** palpha, Real** pdrag );
+    void GetRealData ( MFIXParIter& pti, int dataIdx, Real** dataPtr );
 
+    void GetRealData ( const int& lev, const MFIter& mfi, int dataIdx, Real** dataPtr );  
+
+    void RestoreRealData ( Real** dataPtr ) { *dataPtr = NULL;};
+
+    void GetPosition ( MFIXParIter& pti, Real** dataPtr );
+
+    void GetPosition ( const int& lev, const MFIter& mfi, Real** dataPtr );
+
+    void RestorePosition ( MFIXParIter& pti, Real** dataPtr );
+
+    void RestorePosition ( const int& lev, const MFIter& mfi, Real** dataPtr );
+
+    void GetVectorData ( MFIXParIter& pti, int firstCompIdx, Real** dataPtr );
+
+    void GetVectorData ( const int& lev, const MFIter& mfi, int firstCompIdx, Real** dataPtr );
+
+    void RestoreVectorData ( MFIXParIter& pti, int firstCompIdx, Real** dataPtr);
+
+    void RestoreVectorData ( const int& lev, const MFIter& mfi, int firstCompIdx, Real** dataPtr );
 
     void EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 			 const Array< unique_ptr<MultiFab> >& u_g,
@@ -209,11 +146,6 @@ private:
     // runtime parameters
     static int do_tiling;
     static IntVect tile_size;
-
-    // These are working arrays used to convert from Real to int to conform to AMReX 
-    // way of doing things
-    Array<int>     phase;
-    Array<int>     state;
 
     // These are working arrays used to pack 3D components into a 3D vector
     Array<Real>      pos;

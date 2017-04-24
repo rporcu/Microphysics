@@ -197,17 +197,27 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
     	int          *pstate, *pphase;
 
 
-	GetParticlesAttributes ( pti, &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
-				 &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag ); 
+	GetIntData( pti, intData::state, &pstate );
+	GetIntData( pti, intData::phase, &pphase );
+
+	GetRealData( pti, realData::radius, &pradius );
+	GetRealData( pti, realData::volume, &pvol );
+	GetRealData( pti, realData::mass, &pmass );
+	GetRealData( pti, realData::oneOverI, &pomoi );
+
+	GetPosition( pti, &ppos );
+
+	GetVectorData( pti, realData::velx, &pvel );
+	GetVectorData( pti, realData::omegax, &pomega );
+	GetVectorData( pti, realData::accx, &pacc );
+	GetVectorData( pti, realData::alphax, &palpha );
+	GetVectorData( pti, realData::dragx, &pdrag );
 
 
-	mfix_des_time_march( &np, 
-			     sbx.loVect(), sbx.hiVect(),
-			     ubx.loVect(), ubx.hiVect(),
-			     vbx.loVect(), vbx.hiVect(),
-			     wbx.loVect(), wbx.hiVect(),
-			     bx.loVect(),  bx.hiVect(),
-			     domain.loVect(), domain.hiVect(),
+
+	mfix_des_time_march( &np, sbx.loVect(), sbx.hiVect(), ubx.loVect(), ubx.hiVect(),
+			     vbx.loVect(), vbx.hiVect(),  wbx.loVect(), wbx.hiVect(),
+			     bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
 			     (*ep_g[lev])[pti].dataPtr(), (*p_g[lev])[pti].dataPtr(),
 			     (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
 			     (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
@@ -216,10 +226,21 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 			     &xlen, &ylen, &zlen, &nstep);
 
 
-	RestoreParticlesAttributes  ( pti, &pstate, &pphase, &pradius,  NULL, &pvol, &pmass,
-				      &pomoi, &ppos, &pvel, &pomega, &pacc, &palpha, &pdrag ); 
+	RestoreIntData( &pstate );
+	RestoreIntData( &pphase );
 
+	RestoreRealData( &pradius );
+	RestoreRealData( &pvol );
+	RestoreRealData( &pmass );
+	RestoreRealData( &pomoi );
 
+	RestorePosition( pti, &ppos );
+
+	RestoreVectorData( pti, realData::velx, &pvel );
+	RestoreVectorData( pti, realData::omegax, &pomega );
+	RestoreVectorData( pti, realData::accx, &pacc );
+	RestoreVectorData( pti, realData::alphax, &palpha );
+	RestoreVectorData( pti, realData::dragx, &pdrag );
     }
 
 }
@@ -244,15 +265,27 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     	int          *pstate, *pphase;
 
 
-	GetParticlesAttributes ( pti, &pstate, NULL, &pradius,  NULL, NULL, NULL,
-				 NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL ); 
+	GetIntData( pti, intData::state, &pstate );
+
+	GetRealData( pti, realData::radius, &pradius );
+
+	GetPosition( pti, &ppos );
+
+	GetVectorData( pti, realData::velx, &pvel );
+	GetVectorData( pti, realData::omegax, &pomega );
 
 	mfix_output_manager(&np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
 			    pstate, pradius, ppos, pvel,  pomega, &finish);
 
 
-	RestoreParticlesAttributes ( pti, &pstate, NULL, &pradius,  NULL, NULL, NULL,
-				     NULL, &ppos, &pvel, &pomega, NULL, NULL, NULL);  
+	RestoreIntData( &pstate );
+
+	RestoreRealData( &pradius );
+
+	RestorePosition( pti, &ppos );
+
+	RestoreVectorData( pti, realData::velx, &pvel );
+	RestoreVectorData( pti, realData::omegax, &pomega );
 
     }
 

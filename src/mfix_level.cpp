@@ -642,9 +642,15 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 	int   *pstate, *pphase;
 	Real  *pvol, *pradius, *ppos, *pvel;
 
-	pc -> GetParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
-				       &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
-				       NULL, NULL, NULL ); 
+	pc -> GetIntData( lev, mfi, intData::state, &pstate );
+	pc -> GetIntData( lev, mfi, intData::phase, &pphase );
+
+	pc -> GetRealData( lev, mfi, realData::radius, &pradius );
+	pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+
+	pc -> GetPosition( lev, mfi, &ppos );
+
+	pc -> GetVectorData( lev, mfi, realData::velx, &pvel );
 
 	calc_coeff(sbx.loVect(), sbx.hiVect(),
 		   ubx.loVect(), ubx.hiVect(), 
@@ -659,9 +665,16 @@ void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 		   (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
 		   pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
 
-	pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
-					   &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
-					   NULL, NULL, NULL ); 
+	pc -> RestoreIntData( &pstate );
+	pc -> RestoreIntData( &pphase );
+
+	pc -> RestoreRealData( &pradius );
+	pc -> RestoreRealData( &pvol );
+
+	pc -> RestorePosition( lev, mfi, &ppos );
+
+	pc -> RestoreVectorData( lev, mfi, realData::velx, &pvel );
+
 
     }
     fill_mf_bc(lev,*ro_g[lev]);
@@ -696,10 +709,16 @@ mfix_level::mfix_calc_all_coeffs(int lev)
 
      int   *pstate, *pphase;
      Real  *pvol, *pradius, *ppos, *pvel;
-     
-     pc -> GetParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
-				    &pvol, NULL, NULL,  &ppos, &pvel, NULL, 
-				    NULL, NULL, NULL ); 
+
+     pc -> GetIntData( lev, mfi, intData::state, &pstate );
+     pc -> GetIntData( lev, mfi, intData::phase, &pphase );
+
+     pc -> GetRealData( lev, mfi, realData::radius, &pradius );
+     pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+
+     pc -> GetPosition( lev, mfi, &ppos );
+
+     pc -> GetVectorData( lev, mfi, realData::velx, &pvel );
 
      calc_coeff_all(sbx.loVect(), sbx.hiVect(),
 		    ubx.loVect(), ubx.hiVect(),
@@ -708,14 +727,20 @@ mfix_level::mfix_calc_all_coeffs(int lev)
 		    bx.loVect(),  bx.hiVect(), &np,
 		    (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
 		    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-		    (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),   (*w_g[lev])[mfi].dataPtr(),
-		    (*mu_g[lev])[mfi].dataPtr(), (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
+		    (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), 
+		    (*w_g[lev])[mfi].dataPtr(),  (*mu_g[lev])[mfi].dataPtr(), 
+		    (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
 		    pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
 
-     pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, &pphase, &pradius, NULL,
-					&pvol, NULL, NULL,  &ppos, &pvel, NULL, 
-					NULL, NULL, NULL ); 
+     pc -> RestoreIntData( &pstate );
+     pc -> RestoreIntData( &pphase );
 
+     pc -> RestoreRealData( &pradius );
+     pc -> RestoreRealData( &pvol );
+
+     pc -> RestorePosition( lev, mfi, &ppos );
+
+     pc -> RestoreVectorData( lev, mfi, realData::velx, &pvel );
 
   }
   fill_mf_bc(lev,*ro_g[lev]);
@@ -823,17 +848,21 @@ void mfix_level::mfix_comp_mean_fields(int lev)
 	Real *pvol, *ppos;
 	int  *pstate; 
 
-	pc -> GetParticlesAttributes ( lev, mfi, &pstate, NULL, NULL, NULL,
-				       &pvol, NULL, NULL,  &ppos, NULL, NULL, 
-				       NULL, NULL, NULL ); 
+
+	pc -> GetIntData( lev, mfi, intData::state, &pstate );
+
+	pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+
+	pc -> GetPosition( lev, mfi, &ppos );
  
 	comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
 			 pstate, ppos, pvol, &dx, &dy, &dz );
 
-	pc -> RestoreParticlesAttributes ( lev, mfi, &pstate, NULL, NULL, NULL,
-					   &pvol, NULL, NULL,  &ppos, NULL, NULL, 
-					   NULL, NULL, NULL ); 
+	pc -> RestoreIntData ( &pstate );
 
+	pc -> RestoreRealData( &pvol );
+
+	pc -> RestorePosition( lev, mfi, &ppos );
 
     }
     fill_mf_bc(lev,*ep_g[lev]);
