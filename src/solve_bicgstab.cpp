@@ -261,6 +261,8 @@ mfix_level::solve_bicgstab (MultiFab&       sol,
                         A_m[mfi].dataPtr(), abx.loVect(), abx.hiVect(),
                         sh[mfi].dataPtr(), hbx.loVect(), hbx.hiVect());
 
+          // HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK HACK
+          sh.FillBoundary(geom[lev].periodicity());
         }
       }
       else // pc_type ==None
