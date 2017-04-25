@@ -243,6 +243,8 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 	RestoreVectorData( pti, realData::dragx, &pdrag );
     }
 
+    Redistribute();
+
 }
 
 
