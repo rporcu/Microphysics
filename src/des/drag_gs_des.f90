@@ -102,9 +102,9 @@ module drag_gs_des1_module
 
          IF(.NOT.NORMAL_PARTICLE==PARTICLE_STATE(np)) CYCLE
 
-         i = floor(des_pos_new(np,1)*odx) - 1
-         j = floor(des_pos_new(np,2)*ody) - 1
-         k = floor(des_pos_new(np,3)*odz) - 1
+         i = floor(des_pos_new(np,1)*odx)
+         j = floor(des_pos_new(np,2)*ody)
+         k = floor(des_pos_new(np,3)*odz)
 
          ! Calculate the gas volume fraction, velocity, and pressure force at
          ! the particle's position.
@@ -232,9 +232,9 @@ module drag_gs_des1_module
             exiting_ghost==particle_state(np)) cycle
 
          ! This avoids FP exceptions for some ghost particles.
-         i = floor(des_pos_new(np,1)*odx) - 1
-         j = floor(des_pos_new(np,2)*ody) - 1
-         k = floor(des_pos_new(np,3)*odz) - 1
+         i = floor(des_pos_new(np,1)*odx)
+         j = floor(des_pos_new(np,2)*ody)
+         k = floor(des_pos_new(np,3)*odz)
 
          ! Calculate the gas volume fraction, velocity, and at the
          ! particle's position.
