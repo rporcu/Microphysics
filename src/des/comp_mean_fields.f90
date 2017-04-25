@@ -59,16 +59,16 @@ module comp_mean_fields_module
       vol = dx*dy*dz
 
 ! Calculate the gas phae forces acting on each particle.
-      DO NP=1,MAX_PIP
+      do np=1,max_pip
          IF(NONEXISTENT==PARTICLE_STATE(NP)) CYCLE
          IF(NORMAL_GHOST==PARTICLE_STATE(NP) .or. &
             ENTERING_GHOST==PARTICLE_STATE(NP) .or. &
             EXITING_GHOST==PARTICLE_STATE(NP)) CYCLE
 
 ! Fluid cell containing the particle
-         i = floor(des_pos_new(np,1)*odx) - 1
-         j = floor(des_pos_new(np,2)*ody) - 1
-         k = floor(des_pos_new(np,3)*odz) - 1
+         i = floor(des_pos_new(np,1)*odx)
+         j = floor(des_pos_new(np,2)*ody)
+         k = floor(des_pos_new(np,3)*odz)
 
 ! Particle phase for data binning.
 ! Accumulate total solids volume (by phase)

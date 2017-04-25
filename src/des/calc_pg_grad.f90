@@ -104,9 +104,9 @@ module calc_pg_grad_module
                exiting_ghost==particle_state(np)) cycle
 
             ! Fluid cell containing the particle
-            i = floor(des_pos_new(np,1)*odx) - 1
-            j = floor(des_pos_new(np,2)*ody) - 1
-            k = floor(des_pos_new(np,3)*odz) - 1
+            i = floor(des_pos_new(np,1)*odx)
+            j = floor(des_pos_new(np,2)*ody)
+            k = floor(des_pos_new(np,3)*odz)
 
             ! Include gas pressure and gas-solids drag
             drag_fc(NP,:) = drag_fc(NP,:) + gradPg(i,j,k,:)*PVOL(NP)
