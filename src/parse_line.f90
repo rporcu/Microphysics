@@ -1,8 +1,8 @@
 module parse_line_module
 
-      use compar, only: mype
+
       use param, only: one
-      use exit_mod, only: mfix_exit
+
 
    contains
 
@@ -54,8 +54,8 @@ module parse_line_module
 ! exit MFiX.
          LEND = LSTART - 1 + INDEX(LINE(LSTART:LMAX),')')
          IF (LEND <= LSTART) THEN
-            WRITE (*, 1000) myPE,LINE(LSTART:LMAX)
-            CALL mfix_exit(myPE)
+            WRITE (*, 1000) 0,LINE(LSTART:LMAX)
+            stop 20015
          ENDIF
       ENDIF ! IF (LSTART /= 0) THEN
 !
@@ -146,8 +146,8 @@ module parse_line_module
 !
       LEND = LSTART - 1 + INDEX(LINE(LSTART:LMAX),')')
       IF (LEND <= LSTART) THEN
-         WRITE (*, 1000) myPE,LINE(LSTART:LMAX)
-         CALL mfix_exit(myPE)
+         WRITE (*, 1000) 0,LINE(LSTART:LMAX)
+         stop 20016
       ENDIF
 !
 !    Do the arithmetic
@@ -158,8 +158,8 @@ module parse_line_module
       DO L = LSTART + 2, LEND
          IF (LINE(L:L)=='*' .OR. LINE(L:L)=='/' .OR. LINE(L:L)==')') THEN
             IF (LSUB == 1) THEN
-               WRITE (*, 1015) myPE,LINE(LSTART:LEND)
-               CALL mfix_exit(myPE)
+               WRITE (*, 1015) 0,LINE(LSTART:LEND)
+               stop 20017
             ENDIF
             IF (SUB_STR(1:LSUB-1) == 'PI') THEN
                SUB_VALUE = PI
@@ -188,8 +188,8 @@ module parse_line_module
          LMAX = SEEK_END(LINE,LEN(LINE))
          LDIF = 22 - LENGTH
          IF (LMAX + LDIF > LEN(LINE)) THEN
-            WRITE (*, 1020) myPE,LINE(1:80)
-            CALL mfix_exit(myPE)
+            WRITE (*, 1020) 0,LINE(1:80)
+            stop 20018
          ENDIF
          DO L = LMAX, LEND + 1, -1
             LINE(L+LDIF:L+LDIF) = LINE(L:L)
@@ -207,8 +207,8 @@ module parse_line_module
       GO TO 10
 !
   900 CONTINUE
-      WRITE (*, 1010) myPE, SUB_STR(1:LSUB-1)
-      CALL mfix_exit(myPE)
+      WRITE (*, 1010) 0, SUB_STR(1:LSUB-1)
+      stop 20019
  1000 FORMAT(/1X,70('*')//'(PE ',I6,'): From: PARSE_ARITH',/&
          ' Message: No ending ) found in the input line: ',/9X,A,/1X,70('*')/)
  1010 FORMAT(/1X,70('*')//'(PE ',I6,'): From: PARSE_ARITH',/&

@@ -69,11 +69,9 @@ set(F90_sources
   des/stl_functions_des_mod.f90
   discretization_mod.f90
   display_resid.f90
-  dmp_modules/compar_mod.f90
   drag_mod.f90
   eos_mod.f90
   error_manager_mod.f90
-  exit.f90
   fill_bc0.f90
   fld_constants_mod.f90
   functions_mod.f90

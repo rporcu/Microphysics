@@ -34,7 +34,6 @@
       SUBROUTINE WRITE_TEST_DATA(max_pip, des_vel_new)
 
       use amrex_fort_module, only: c_real => amrex_real
-      use compar, only: myPE, PE_IO
       use run, only: time
 
       implicit none
@@ -61,16 +60,14 @@
       gTemp0 = gTemp
       ! call global_sum(gTemp, gTemp0)
 
-      if(myPE == PE_IO) then
-         gTemp = gTemp0/(3.0d0*DBLE(particles))
-         ltime = time*sqrt(0.1d0)/100.0e-6
+      gTemp = gTemp0/(3.0d0*DBLE(particles))
+      ltime = time*sqrt(0.1d0)/100.0e-6
 
-         OPEN(UNIT=fUnit,FILE='POST_GRAN_TEMP.dat',&
-            POSITION="APPEND",STATUS='OLD')
-         write(fUnit,"(3(2x,es13.6))") ltime, ToT0(time), gTemp/0.1d0
+      OPEN(UNIT=fUnit,FILE='POST_GRAN_TEMP.dat',&
+        POSITION="APPEND",STATUS='OLD')
+      write(fUnit,"(3(2x,es13.6))") ltime, ToT0(time), gTemp/0.1d0
 
-         close(fUnit)
-      endif
+      close(fUnit)
 
       contains
 

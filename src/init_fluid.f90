@@ -226,13 +226,12 @@ module init_fluid_module
 
       use bc, only: delp_x, delp_y, delp_z
       use bc, only: dim_bc, bc_type, bc_p_g, bc_defined
-      use compar, only: myPE
       use constant , only: gravity
       use eos, ONLY: EOSG
       use fld_const, only: mw_avg, ro_g0
       use ic       , only: ic_p_g, ic_defined
       use scales   , only: scale_pressure
-      use exit_mod, only: mfix_exit
+
 
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
@@ -355,7 +354,7 @@ module init_fluid_module
 ! conditions regions is unspecified, then a PO is effectively required
 ! (i.e., is specifies a bc_p_g).
             write (*, 1000)
-            call mfix_exit(mype)
+            stop 20014
          endif
       endif
 

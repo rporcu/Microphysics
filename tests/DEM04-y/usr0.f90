@@ -15,7 +15,7 @@
       use run, only: TSTOP
       use discretelement, only: mew_w
       use constant, only: gravity
-      use exit_mod, only: mfix_exit
+
       use usr, only: tsa, u0
 
       IMPLICIT NONE
@@ -28,7 +28,7 @@
 
       if(TSTOP < tsA) then
          write(*,"(3x,'simulation not long enough.')")
-         call mfix_exit(0)
+         stop 1000
       endif
 
       return

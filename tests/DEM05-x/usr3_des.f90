@@ -14,7 +14,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
       SUBROUTINE USR3_DES(max_pip, des_pos_new, des_vel_new, omega_new)
 
-      use compar, only: myPE, PE_IO
+
       use constant, only: PI
 
       use usr, only: init_angle, init_vel_t
@@ -48,7 +48,6 @@
       FNAME = 'POST_ALPHA.dat'
       OPEN(UNIT=UDF_UNIT,FILE=FNAME, POSITION="APPEND",STATUS='OLD')
 
-      IF(myPE == PE_IO) THEN
          DO LC=1,31
 ! Calculate the particle-wall rebound angle.
             NP = LC+31
@@ -84,12 +83,10 @@
             WRITE(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(NP), RST_COEFF(1:2)
          ENDDO
          CLOSE(UDF_UNIT)
-      ENDIF
 
 ! Particle-wall Angular velocity (rad/sec)
 !---------------------------------------------------------------------//
 ! Open the files.
-      IF(myPE == PE_IO) THEN
          FNAME = 'POST_OMEGA.dat'
          OPEN(UNIT=UDF_UNIT,FILE=FNAME, POSITION="APPEND",STATUS='OLD')
 
@@ -107,7 +104,6 @@
             WRITE(UDF_UNIT,"(3(3x,F11.4))") INIT_ANGLE(NP), ROT_YZ(1:2)
          ENDDO
          CLOSE(UDF_UNIT)
-      ENDIF
 
       RETURN
       END SUBROUTINE USR3_DES

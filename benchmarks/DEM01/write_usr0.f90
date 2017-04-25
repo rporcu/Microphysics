@@ -23,7 +23,6 @@
 !----------------------------------------------------------------------!
       SUBROUTINE WRITE_DAT_HEADER(FNAME)
 
-      use compar, only: myPE, PE_IO
       use run, only: DESCRIPTION
 
       IMPLICIT NONE
@@ -34,8 +33,6 @@
       LOGICAL :: EXISTS
 ! file unit for heat transfer data
       INTEGER, PARAMETER :: fUNIT = 2030
-
-      if(myPE /= PE_IO) RETURN
 
       INQUIRE(FILE=FNAME,EXIST=EXISTS)
       IF (.NOT.EXISTS) THEN

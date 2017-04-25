@@ -9,7 +9,7 @@
       use amrex_fort_module, only : c_real => amrex_real
       use iso_c_binding , only: c_int
 
-      use exit_mod, only: mfix_exit
+
 
       implicit none
 
@@ -55,12 +55,6 @@
       use run, only: RUN_NAME
 ! Flag: Provide the full log.
       use run, only: FULL_LOG
-! Rank ID of process
-      use compar, only: myPE
-! Rank ID for IO handeling
-      use compar, only: PE_IO
-! Number of ranks in parallel run.
-      use compar, only: numPEs
 ! Undefined character string.
       use param, only: UNDEFINED_C
 
@@ -74,7 +68,7 @@
 ! First non-blank character in run_name.
       integer :: NB
 ! Integer error flag
-      integer :: IER(0:numPEs-1)
+      integer :: IER(0:0)
 
 ! Initizilae the error flags.
       IER = 0
@@ -92,11 +86,11 @@
 ! RUN_NAME length too short.
       IF(RUN_NAME == UNDEFINED_C .OR. NB <= 1) THEN
          WRITE (*, 1000) 'short'
-         call mfix_exit(myPE)
+         stop 20001
 ! RUN_NAME length too long.
       ELSEIF(NB + 10 > LEN(LOGFILE)) THEN
          write (*, 1000) 'long'
-         call mfix_exit(myPE)
+         stop 20002
 ! RUN_NAME legnth just right.
       ELSE
 ! Specify the .LOG file name based on MPI Rank extenion.
@@ -107,8 +101,8 @@
 ! error and abort.
       ! CALL GLOBAL_ALL_SUM(IER)
       IF(sum(IER) /= 0) THEN
-         IF(myPE == PE_IO) WRITE(*,1001) trim(FILE_NAME)
-         call mfix_exit(myPE)
+         WRITE(*,1001) trim(FILE_NAME)
+        stop 20003
       ENDIF
 
       RETURN
@@ -133,7 +127,6 @@
       SUBROUTINE INIT_ERR_MSG(CALLER)
 
 ! Rank ID of process
-      use compar, only: myPE
 
       implicit none
 
@@ -144,7 +137,7 @@
       IF(CALL_DEPTH + 1 > MAX_CALL_DEPTH) THEN
          WRITE(*,1000) CALL_DEPTH
          CALL SHOW_CALL_TREE
-         call mfix_exit(myPE)
+         stop 20004
       ELSE
 ! Store the caller routines name.
          CALL_DEPTH = CALL_DEPTH + 1
@@ -174,7 +167,6 @@
       SUBROUTINE FINL_ERR_MSG
 
 ! Rank ID of process
-      use compar, only: myPE
 
       implicit none
 
@@ -193,7 +185,7 @@
 ! Verify that at the INIT routine was called.
       IF(CALL_DEPTH < 1) THEN
          WRITE(*,1000)
-         call mfix_exit(myPE)
+         stop 20005
       ELSE
 ! Store the current caller, clear the array position, and decrement
 ! the counter.
@@ -223,7 +215,7 @@
             ENDIF
          ENDDO
          WRITE(*,1003)
-         call mfix_exit(myPE)
+         stop 20006
       ENDIF
 
 ! This shouldn't be needed, but it doesn't hurt.
@@ -256,9 +248,6 @@
       SUBROUTINE FLUSH_ERR_MSG(DEBUG, HEADER, FOOTER, ABORT, LOG, &
          CALL_TREE)
 
-! Rank ID of process
-      use compar, only: myPE
-
 ! Dummy Arguments:
 !---------------------------------------------------------------------//
 ! Debug flag.
@@ -267,7 +256,7 @@
       logical, INTENT(IN), OPTIONAL :: HEADER
 ! Flag to suppress the message footer.
       logical, INTENT(IN), OPTIONAL :: FOOTER
-! Flag to abort execution by invoking MFIX_EXIT.
+! Flag to abort execution
       logical, INTENT(IN), OPTIONAL :: ABORT
 ! Flag to force (or override) writing data to the log file.
       logical, INTENT(IN), OPTIONAL :: LOG
@@ -395,10 +384,7 @@
 
 
 ! Abort the run if specified.
-      IF(A_FLAG) THEN
-         IF(D_FLAG) WRITE(*,3000) myPE
-         call mfix_exit(myPE)
-      ENDIF
+      IF(A_FLAG) stop 20007
 
       RETURN
 
@@ -409,8 +395,6 @@
  2000 FORMAT(2/,'--- HEADER ---> ',70('*'),/'--- HEADER ---> From: ',A)
  2001 FORMAT('LC ',I2.2,': LEN: ',I3.3,1x,A)
  2002 FORMAT('--- FOOTER --->',1x,70('*'))
-
- 3000 FORMAT(2x,'Rank ',I5,' calling MFIX_EXIT from FLUSH_ERR_MSG.')
 
       END SUBROUTINE FLUSH_ERR_MSG
 

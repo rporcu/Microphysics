@@ -12,7 +12,7 @@
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^C
       SUBROUTINE USR0
 
-      use exit_mod, only: mfix_exit
+
       use usr, only: rk4_pos, rk4_vel
 
       IMPLICIT NONE

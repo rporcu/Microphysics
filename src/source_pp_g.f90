@@ -154,32 +154,32 @@ contains
 
 ! --- EAST FLUID ---------------------------------------------------------->
 
-      if (slo(1).lt.domlo(1)) &
+      if (alo(1) == domlo(1)) &
          A_m(domlo(1),alo(2):ahi(2),alo(3):ahi(3),w) =  zero
 
 ! --- WEST FLUID ---------------------------------------------------------->
 
-      if (shi(1).gt.domhi(1)) &
+      if (ahi(1) == domhi(1)) &
          A_m(domhi(1),alo(2):ahi(2),alo(3):ahi(3),e) =  zero
 
 ! --- NORTH FLUID --------------------------------------------------------->
 
-      if (slo(2).lt.domlo(2)) &
+      if (alo(2) == domlo(2)) &
          A_m(alo(1):ahi(1),domlo(2),alo(3):ahi(3),s) =  zero
 
 ! --- SOUTH FLUID --------------------------------------------------------->
 
-      if (shi(2).gt.domhi(2)) &
+      if (ahi(2) == domhi(2)) &
          A_m(alo(1):ahi(1),domhi(2),alo(3):ahi(3),n) =  zero
 
 ! --- TOP FLUID ----------------------------------------------------------->
 
-      if (slo(3).lt.domlo(3)) &
+      if (alo(3) == domlo(3)) &
          A_m(alo(1):ahi(1),alo(2):ahi(2),domlo(3),b) =  zero
 
 ! --- BOTTOM FLUID -------------------------------------------------------->
 
-      if (shi(3).gt.domhi(3)) &
+      if (ahi(3) == domhi(3)) &
          A_m(alo(1):ahi(1),alo(2):ahi(2),domhi(3),t) =  zero
 
    end subroutine source_pp_g_bc

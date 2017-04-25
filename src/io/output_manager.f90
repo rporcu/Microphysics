@@ -24,9 +24,6 @@ module output_manager_module
 
 ! Global Variables:
 !---------------------------------------------------------------------//
-
-      use compar, only: myPE, PE_IO
-
       use output, only: USR_TIME, USR_DT
       use param, only: DIM_USR
       use run, only: tstop

@@ -40,7 +40,7 @@
 
       Use usr, only: b_r, h0, time_c, time_r, w0_r, y_s1, dydt_s1, &
          y_s3, dydt_s3, y_s2, dydt_s2
-      use compar, only: mype, pe_io
+
       use constant, only: gravity
       use amrex_fort_module, only : c_real => amrex_real
 
@@ -69,7 +69,7 @@
       real(c_real) :: lRad
       integer :: lStage
 
-      IF(myPE /= PE_IO) RETURN
+
 
 ! Open the files.
       OPEN(UNIT=uPOS,FILE='POST_POS.dat',POSITION="APPEND",STATUS='OLD')

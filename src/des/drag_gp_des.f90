@@ -26,8 +26,8 @@ module des_drag_gp_module
       subroutine des_drag_gp(slo, shi, NP, particle_vel, fluid_vel, EPg,&
                              ro_g, mu_g, f_gp, i,j,k, des_radius,  pvol, particle_phase)
 
-      use compar  , only: myPE
-      use exit_mod, only: mfix_exit
+
+
       use drag  , only: drag_syam_obrien, drag_gidaspow, drag_gidaspow_blend,&
          drag_wen_yu, drag_koch_hill, drag_bvk
       use drag, only: syam_obrien, gidaspow, gidaspow_blend, bvk,&
@@ -205,7 +205,7 @@ module des_drag_gp_module
 
          CASE DEFAULT
             WRITE (*, '(A,A)') 'Unknown DRAG_TYPE: ', DRAG_TYPE
-            CALL mfix_exit(myPE)
+            stop 20013
          end SELECT   ! end selection of drag_type
 
 

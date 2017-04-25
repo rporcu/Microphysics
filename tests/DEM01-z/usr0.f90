@@ -14,7 +14,7 @@
 
       use usr, only: b_r, h0, time_c, time_r, vel_c, vel_r, w0_r, y_s2, dydt_s2
       use discretelement, only: dtsolid, kn_w, des_etan_wall, des_en_wall_input
-      use exit_mod, only: mfix_exit
+
       use constant, only: gravity, pi
 
       IMPLICIT NONE
@@ -112,7 +112,7 @@
          write(*,"(3x,'Fatal Error: fa*fb >= 0')")
          write(*,"(3x,'fa: ',g12.4,3x,'a: ',g12.4)") fa, ak
          write(*,"(3x,'fb: ',g12.4,3x,'b: ',g12.4)") fb, bk
-         call mfix_exit(0)
+         stop 1000
       endif
 
       ck = ak

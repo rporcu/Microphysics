@@ -17,7 +17,6 @@ MODULE read_namelist_module
       SUBROUTINE READ_NAMELIST(dt)
 
       use bc
-      use compar, only: mype, pe_io
       use drag, only: drag_c1, drag_d1
       use constant, only: d_p0, gravity, ro_s0
       use deprecated_or_unknown_module, only: deprecated_or_unknown
@@ -26,7 +25,7 @@ MODULE read_namelist_module
       use discretelement, only: des_explicitly_coupled, des_oneway_coupled, e_young, ew_young
       use discretelement, only: kn, kn_w, kt_fac, kt_w_fac, mew, mew_w, des_etat_w_fac
       use error_manager, only: finl_err_msg, flush_err_msg, init_err_msg, ivar
-      use exit_mod, only: mfix_exit
+
       use fld_const, only: mu_g0, mw_avg
       use fld_const, only: ro_g0
       use bc, only: cyclic_x, cyclic_y, cyclic_z
@@ -101,8 +100,8 @@ MODULE read_namelist_module
       ! there is difficulties opening it.
       inquire(file='mfix.dat',exist=lEXISTS)
       IF(.NOT.lEXISTS) THEN
-         IF(myPE == PE_IO) WRITE(*,1000)
-         call mfix_exit(myPE)
+         WRITE(*,1000)
+         stop 20010
 
  1000 FORMAT(2/,1X,70('*')/' From: READ_NAMELIST',/' Error 1000: ',    &
          'The input data file, mfix.dat, is missing. Aborting.',/1x,   &
@@ -111,8 +110,8 @@ MODULE read_namelist_module
       ELSE
          OPEN(UNIT=UNIT_DAT, FILE='mfix.dat', STATUS='OLD', IOSTAT=IOS)
          IF(IOS /= 0) THEN
-            IF(myPE == PE_IO) WRITE (*,1100)
-            call mfix_exit(myPE)
+            WRITE (*,1100)
+            stop 20011
          ENDIF
 
       ENDIF
@@ -132,7 +131,7 @@ MODULE read_namelist_module
          IF(LINE_TOO_BIG(LINE_STRING,LINE_LEN,MAXCOL) > 0) THEN
             write (*, 1100)  trim(iVAL(LINE_NO)), &
                  &  trim(trim(ival(MAXCOL))), LINE_STRING(1:MAXCOL)
-            call mfix_exit(myPE)
+            stop 20012
          ENDIF
 
  1100 FORMAT(//1X,70('*')/1x,'From: READ_NAMELIST',/1x,'Error 1100: ', &

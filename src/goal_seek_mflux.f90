@@ -22,8 +22,7 @@ contains
 !-----------------------------------------------
       use bc, only: delp_x, delp_y, delp_z, flux_g
       use param, only: one
-      use compar   ,only: myPE, PE_IO
-      use exit_mod, only: mfix_exit
+
       use bc, only: cyclic_x_mf, cyclic_y_mf, cyclic_z_mf
       use utilities, ONLY: mfix_isnan
       use vavg_mod, ONLY: vavg_flux_g
@@ -81,12 +80,12 @@ contains
       GSMF = gsmf + 1
 
       IF(GSMF > MAXGSMF) THEN
-         IF (myPE.EQ.PE_IO) write(*,5400) MAXGSMF
-         CALL mfix_exit(0)
+         write(*,5400) MAXGSMF
+         stop 20008
       ENDIF
 
       IF (mfix_isnan(mdot_n) .OR. mfix_isnan(delp_n)) THEN
-         IF (myPE.eq.PE_IO) write(*,*) mdot_n, delp_n, &
+         write(*,*) mdot_n, delp_n, &
             ' NaN being caught in GoalSeekMassFlux '
          stop  32232
          RETURN
