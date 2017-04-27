@@ -273,7 +273,7 @@ extern "C"
 				  Real* radius,      Real* vol,    Real* pos,     Real* vel,
 				  Real* omega,       Real* drag,   Real* time,    Real* dt,
 				  Real* dx,          Real* dy,     Real* dz,      Real* xlength,
-				  Real* ylength, Real* zlength, int * nstep);
+				  Real* ylength, Real* zlength, int * nstep, int* nsubsteps );
 
     void mfix_des_finalize_time_loop( const int* np, const Real* dt, Real* pos, Real* vel, Real* omega );
 
@@ -285,28 +285,7 @@ extern "C"
 				 Real* vol, Real* mass, Real* omoi, Real* pos, Real* vel, Real* omega,
 				 Real* acc, Real* alpha,  Real* drag, Real* time, Real* dt, Real* dx,
 				 Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
-				 int * nstep );
-
-    void  mfix_des_time_march( const int* max_pip,
-			       const int* slo,  const int* shi,
-			       const int* ulo,  const int* uhi,
-			       const int* vlo,  const int* vhi,
-			       const int* wlo,  const int* whi,
-			       const int* lo,   const int* hi,
-			       const int* domlo , const int* domhi,
-			       Real* ep_g,           Real* p_g,
-			       Real* u_g,            Real* v_g,            Real* w_g,
-			       Real* ro_g,           Real* mu_g,
-			       int* particle_state,  int* particle_phase,
-			       Real* des_radius,
-			       Real* pvol,           Real* pmass,
-			       Real* omoi,
-			       Real* des_pos_new,    Real* des_vel_new,    Real* omega_new,
-			       Real* des_acc_old,    Real* rot_acc_old,  Real* drag_fc,
-			       Real* time,           Real* dt,
-			       Real* dx  ,           Real* dy,             Real* dz,
-			       Real* xlength, Real* ylength, Real* zlength,
-			       int * nstep);
+				 int * nstep, int* quit );
 
     void mfix_usr0();
 

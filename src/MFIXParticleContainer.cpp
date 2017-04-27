@@ -195,6 +195,7 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 	Real         *pradius, *pdensity, *pvol, *pmass, *pomoi;
 	Real         *ppos, *pvel, *pomega, *pacc, *palpha, *pdrag; 
     	int          *pstate, *pphase;
+	int          nsubsteps;
 
 
 	GetIntData( pti, intData::state, &pstate );
@@ -213,17 +214,34 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
 	GetVectorData( pti, realData::alphax, &palpha );
 	GetVectorData( pti, realData::dragx, &pdrag );
 
+	
+	mfix_des_init_time_loop( &np, sbx.loVect(), sbx.hiVect(), ubx.loVect(), ubx.hiVect(),
+				 vbx.loVect(), vbx.hiVect(),  wbx.loVect(), wbx.hiVect(),
+				 bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
+				 (*ep_g[lev])[pti].dataPtr(), (*p_g[lev])[pti].dataPtr(),
+				 (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+				 (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+				 pstate, pphase, pradius, pvol, ppos,  pvel, pomega,
+				 pdrag, &time, &dt, &dx, &dy, &dz, 
+				 &xlen, &ylen, &zlen, &nstep, &nsubsteps);
+
+	int quit;
+
+	for ( int n = 0; n < nsubsteps; ++n ) {
+	    mfix_des_time_loop_ops( &np, sbx.loVect(), sbx.hiVect(), ubx.loVect(), ubx.hiVect(),
+				    vbx.loVect(), vbx.hiVect(),  wbx.loVect(), wbx.hiVect(),
+				    (*ep_g[lev])[pti].dataPtr(), 
+				    (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
+				    (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
+				    pstate, pphase, pradius, pvol, pmass, pomoi, ppos,  pvel, pomega,
+				    pacc,  palpha, pdrag, &time, &dt, &dx, &dy, &dz, 
+				    &xlen, &ylen, &zlen, &nstep, &quit);
+
+	    if ( quit ) break;
+	} 
 
 
-	mfix_des_time_march( &np, sbx.loVect(), sbx.hiVect(), ubx.loVect(), ubx.hiVect(),
-			     vbx.loVect(), vbx.hiVect(),  wbx.loVect(), wbx.hiVect(),
-			     bx.loVect(),  bx.hiVect(), domain.loVect(), domain.hiVect(),
-			     (*ep_g[lev])[pti].dataPtr(), (*p_g[lev])[pti].dataPtr(),
-			     (*u_g[lev])[pti].dataPtr(),  (*v_g[lev])[pti].dataPtr(), (*w_g[lev])[pti].dataPtr(),
-			     (*ro_g[lev])[pti].dataPtr(), (*mu_g[lev])[pti].dataPtr(),
-			     pstate, pphase, pradius, pvol, pmass, pomoi, ppos,  pvel, pomega,
-			     pacc,  palpha, pdrag, &time, &dt, &dx, &dy, &dz, 
-			     &xlen, &ylen, &zlen, &nstep);
+	mfix_des_finalize_time_loop( &np, &dt, ppos, pvel, pomega );
 
 
 	RestoreIntData( &pstate );

@@ -6,11 +6,10 @@ module des_time_march_module
   implicit none
 
   private
-  public des_time_march
+  ! public des_time_march
 
   ! Let's make some variables module variables to make the transition
   ! to C++ easier ( even though it is really a nasty thing to do ).
-  integer(c_int), save  :: factor      
   real(c_real),   save  :: dtsolid_tmp 
 
   ! Temporary variables when des_continuum_coupled is T to track
@@ -49,11 +48,10 @@ module des_time_march_module
 contains
 
 
-
   subroutine des_init_time_loop( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
        & state, phase, radius, vol, pos, vel, omega, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) &
+       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep, nsubsteps) &
        bind(C, name="mfix_des_init_time_loop")
 
     use discretelement,          only: dtsolid, s_time
@@ -87,14 +85,13 @@ contains
          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     integer(c_int), intent(inout) :: nstep, state(np), phase(np)
-
+    integer(c_int), intent(out)   :: nsubsteps
 
     allocate (gradPg (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3) )
     allocate ( tow(np,3), fc(np,3) )
 
     tow        = zero
-    fc         = zero
-    
+    fc         = zero    
     
     ! In case of restarts assign S_TIME from MFIX TIME
     S_TIME = TIME
@@ -104,9 +101,9 @@ contains
     if ( des_continuum_coupled ) then
 
        if ( DT >= DTSOLID ) then
-          FACTOR = ceiling(real(DT/DTSOLID))
+          nsubsteps = ceiling(real(DT/DTSOLID))
        else
-          FACTOR = 1
+          nsubsteps = 1
           DTSOLID_TMP = DTSOLID
           DT = DTSOLID
        end if
@@ -114,7 +111,7 @@ contains
        ! Initialize time stepping variable for pure granular simulations.
     else
 
-       FACTOR = ceiling(real((TSTOP-TIME)/DTSOLID))
+       nsubsteps = ceiling(real((TSTOP-TIME)/DTSOLID))
        DT = DTSOLID
        call output_manager(np, time, dt, xlength, ylength, zlength, nstep, &
             state, radius, pos, vel, omega, 0)
@@ -122,10 +119,10 @@ contains
     end if   
 
     if (des_continuum_coupled) then
-       write(ERR_MSG, 1000) trim(iVal(factor))
+       write(ERR_MSG, 1000) trim(iVal(nsubsteps))
        call FLUSH_ERR_MSG(HEADER=.false., FOOTER=.false., LOG=.false.)
     else
-       write(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(factor))
+       write(ERR_MSG, 1100) TIME, DTSOLID, trim(iVal(nsubsteps))
        call FLUSH_ERR_MSG(HEADER=.false., FOOTER=.false., LOG=.false.)
     endif
 
@@ -146,9 +143,8 @@ contains
             xlength, ylength, zlength, domlo, domhi)
     ENDIF
 
-    
-
   end subroutine des_init_time_loop
+
 
 
   subroutine des_finalize_time_loop( np, dt, pos, vel, omega ) &
@@ -177,98 +173,12 @@ contains
 
   end subroutine des_finalize_time_loop
 
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  !     Subroutine: des_time_march                                       !
-  !                                                                      !
-  !     Purpose: Main DEM driver routine                                 !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  subroutine des_time_march( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-       & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
-       & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) &
-       bind(C, name="mfix_des_time_march")
 
-    use calc_collision_wall,     only: calc_dem_force_with_wall_stl
-    use calc_drag_des_module,    only: calc_drag_des
-    use calc_force_dem_module,   only: calc_force_dem
-    use calc_pg_grad_module,     only: calc_pg_grad
-    use comp_mean_fields_module, only: comp_mean_fields
-    use cfnewvalues_module,      only: cfnewvalues
-    use discretelement,          only: dtsolid, s_time, des_continuum_coupled
-    use drag_gs_des1_module,     only: drag_gs_des
-    use error_manager,           only: init_err_msg, finl_err_msg, ival, flush_err_msg
-    use output_manager_module,   only: output_manager
 
-    integer(c_int), intent(in)    :: np, slo(3), shi(3), ulo(3), uhi(3)
-    integer(c_int), intent(in)    :: vlo(3), vhi(3), wlo(3), whi(3)
-    integer(c_int), intent(in)    :: lo(3), hi(3), domlo(3), domhi(3)
-    real(c_real),   intent(in)    :: xlength, ylength, zlength, dx, dy, dz
-    real(c_real),   intent(inout) :: time, dt
-    real(c_real),   intent(in)    :: &
-         p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-         u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
-         v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
-         w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
-         ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
-         mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-    real(c_real), intent(inout) :: vol(np), mass(np), radius(np), omoi(np)
-    real(c_real), intent(inout) :: alpha(np,3), drag(np,3), omega(np,3)
-    real(c_real), intent(inout) :: pos(np,3), vel(np,3), acc(np,3)
-
-    real(c_real), intent(inout) :: &
-         ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
-
-    integer(c_int), intent(inout) :: nstep, state(np), phase(np)
-
-    !------------------------------------------------
-    ! Local variables
-    !------------------------------------------------
-    ! time step loop counter index
-    integer :: NN
-
-    call des_init_time_loop( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-       & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
-       & state, phase, radius, vol, pos, vel, omega, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
-
-    ! Main DEM time loop
-    !----------------------------------------------------------------->>>
-    do NN = 1, FACTOR
-
-       if ( des_continuum_coupled ) then
-          ! If the current time in the discrete loop exceeds the current time in
-          ! the continuum simulation, exit the discrete loop
-          if ( S_TIME > (TIME+DT) ) exit
-          ! If next time step in the discrete loop will exceed the current time
-          ! in the continuum simulation, modify the discrete time step so final
-          ! time will match
-          if ( (S_TIME+DTSOLID) > (TIME+DT) ) then
-             TMP_DTS = DTSOLID
-             DTSOLID = TIME + DT - S_TIME
-          end if
-       end if
-
-       call des_time_loop_ops( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-            & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
-            & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
-            & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
-
-    ENDDO 
-
-    call des_finalize_time_loop( np, dt, pos, vel, omega )
-
-  end subroutine des_time_march
-
-  !
-  ! This subroutine performs a single time step
-  ! 
   subroutine des_time_loop_ops( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
        & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep)  &
+       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep, quit )  &
        bind(C, name="mfix_des_time_loop_ops")
 
     use calc_collision_wall,     only: calc_dem_force_with_wall_stl
@@ -302,7 +212,25 @@ contains
          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     integer(c_int), intent(inout) :: nstep, state(np), phase(np)
+    integer(c_int), intent(out)   :: quit 
 
+    quit = 0
+
+    if ( des_continuum_coupled ) then
+       ! If the current time in the discrete loop exceeds the current time in
+       ! the continuum simulation, exit the discrete loop
+       if ( S_TIME > (TIME+DT) ) then
+          quit = 1
+          return
+       end if
+       ! If next time step in the discrete loop will exceed the current time
+       ! in the continuum simulation, modify the discrete time step so final
+       ! time will match
+       if ( (S_TIME+DTSOLID) > (TIME+DT) ) then
+          TMP_DTS = DTSOLID
+          DTSOLID = TIME + DT - S_TIME
+       end if
+    end if
 
     ! calculate forces from particle-wall collisions
     call calc_dem_force_with_wall_stl( phase, state, radius, &
