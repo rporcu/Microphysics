@@ -25,6 +25,31 @@ module des_time_march_module
   real(c_real),   allocatable, save :: gradPg(:,:,:,:), fc(:,:), tow(:,:)
   integer(c_int), allocatable, save :: pairs(:,:)  
 
+  ! Define interface for external functions so there will be no 
+  ! warning at compile time
+  interface
+
+     subroutine usr0_des()
+     end subroutine usr0_des
+
+     subroutine usr1_des()
+     end subroutine usr1_des
+
+     subroutine usr2_des(np, pos, vel, omega)
+       import  c_real
+       integer     , intent(in)    :: np
+       real(c_real), intent(in)    :: pos(np,3), vel(np,3)
+       real(c_real), intent(inout) :: omega(np,3)
+     end subroutine usr2_des
+
+     subroutine usr3_des(np, pos, vel, omega)
+       import  c_real
+       integer     , intent(in)    :: np
+       real(c_real), intent(in)    :: pos(np,3), vel(np,3), omega(np,3)
+     end subroutine usr3_des
+
+  end interface
+
 
 contains
 
