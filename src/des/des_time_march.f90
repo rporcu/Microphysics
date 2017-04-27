@@ -151,7 +151,8 @@ contains
   end subroutine des_init_time_loop
 
 
-  subroutine des_finalize_time_step( np, dt, pos, vel, omega )
+  subroutine des_finalize_time_loop( np, dt, pos, vel, omega ) &
+       bind(C, name="mfix_des_finalize_time_loop")
 
     use discretelement, only: dtsolid
     use param,          only: zero
@@ -174,7 +175,7 @@ contains
 
     deallocate( gradPg, tow, fc )
 
-  end subroutine des_finalize_time_step
+  end subroutine des_finalize_time_loop
 
   !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
   !                                                                      !
@@ -250,24 +251,25 @@ contains
           end if
        end if
 
-       call des_time_step( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+       call des_time_loop_ops( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
             & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
             & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
             & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
 
     ENDDO 
 
-    call des_finalize_time_step( np, dt, pos, vel, omega )
+    call des_finalize_time_loop( np, dt, pos, vel, omega )
 
   end subroutine des_time_march
 
   !
   ! This subroutine performs a single time step
   ! 
-  subroutine des_time_step( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
+  subroutine des_time_loop_ops( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
        & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
-       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
+       & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep)  &
+       bind(C, name="mfix_des_time_loop_ops")
 
     use calc_collision_wall,     only: calc_dem_force_with_wall_stl
     use calc_drag_des_module,    only: calc_drag_des
@@ -349,7 +351,7 @@ contains
 
     if(call_usr) call usr2_des(np, pos, vel, omega)
 
-  end subroutine des_time_step
+  end subroutine des_time_loop_ops
 
 
 
