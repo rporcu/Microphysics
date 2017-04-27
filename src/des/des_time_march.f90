@@ -2,9 +2,6 @@ module des_time_march_module
 
   use amrex_fort_module, only: c_real => amrex_real
   use iso_c_binding ,    only: c_int
-  use run,               only: call_usr, tstop
-  use discretelement,    only: des_continuum_coupled, des_explicitly_coupled
-  use param,             only: zero
 
   implicit none
 
@@ -57,7 +54,7 @@ contains
 
   subroutine des_init_time_loop( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
-       & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
+       & state, phase, radius, vol, pos, vel, omega, drag,&
        & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) &
        bind(C, name="mfix_des_init_time_loop")
 
@@ -67,6 +64,9 @@ contains
     use drag_gs_des1_module,     only: drag_gs_des
     use error_manager,           only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
     use output_manager_module,   only: output_manager
+    use discretelement,          only: des_continuum_coupled, des_explicitly_coupled
+    use run,                     only: call_usr, tstop
+    use param,                   only: zero
 
     integer(c_int), intent(in)    :: np, slo(3), shi(3), ulo(3), uhi(3)
     integer(c_int), intent(in)    :: vlo(3), vhi(3), wlo(3), whi(3)
@@ -81,9 +81,9 @@ contains
          ro_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
          mu_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
-    real(c_real), intent(inout) :: vol(np), mass(np), radius(np), omoi(np)
-    real(c_real), intent(inout) :: alpha(np,3), drag(np,3), omega(np,3)
-    real(c_real), intent(inout) :: pos(np,3), vel(np,3), acc(np,3)
+    real(c_real), intent(inout) :: vol(np), radius(np)
+    real(c_real), intent(inout) :: drag(np,3), omega(np,3)
+    real(c_real), intent(inout) :: pos(np,3), vel(np,3)
 
     real(c_real), intent(inout) :: &
          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
@@ -159,6 +159,7 @@ contains
 
     use discretelement, only: dtsolid
     use param,          only: zero
+    use run,            only: call_usr
 
     integer(c_int), intent(in)    :: np
     real(c_real),   intent(inout) :: dt, pos(np,3), vel(np,3), omega(np,3)    
@@ -198,11 +199,10 @@ contains
     use calc_pg_grad_module,     only: calc_pg_grad
     use comp_mean_fields_module, only: comp_mean_fields
     use cfnewvalues_module,      only: cfnewvalues
-    use discretelement,          only: dtsolid, s_time
+    use discretelement,          only: dtsolid, s_time, des_continuum_coupled
     use drag_gs_des1_module,     only: drag_gs_des
-    use error_manager,           only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
+    use error_manager,           only: init_err_msg, finl_err_msg, ival, flush_err_msg
     use output_manager_module,   only: output_manager
-
 
     integer(c_int), intent(in)    :: np, slo(3), shi(3), ulo(3), uhi(3)
     integer(c_int), intent(in)    :: vlo(3), vhi(3), wlo(3), whi(3)
@@ -234,7 +234,7 @@ contains
 
     call des_init_time_loop( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
        & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
-       & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
+       & state, phase, radius, vol, pos, vel, omega, drag,&
        & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
 
     ! Main DEM time loop
@@ -255,7 +255,7 @@ contains
        end if
 
        call des_time_step( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-            & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
+            & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
             & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
             & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
 
@@ -269,7 +269,7 @@ contains
   ! This subroutine performs a single time step
   ! 
   subroutine des_time_step( np, slo, shi, ulo, uhi, vlo, vhi, wlo, whi, &
-       & lo, hi, domlo, domhi, ep_g, p_g, u_g, v_g, w_g, ro_g, mu_g,     &
+       & ep_g, u_g, v_g, w_g, ro_g, mu_g,     &
        & state, phase, radius, vol, mass, omoi, pos, vel, omega, acc, alpha, drag,&
        & time, dt, dx, dy, dz, xlength, ylength, zlength, nstep) 
 
@@ -279,18 +279,17 @@ contains
     use calc_pg_grad_module,     only: calc_pg_grad
     use comp_mean_fields_module, only: comp_mean_fields
     use cfnewvalues_module,      only: cfnewvalues
-    use discretelement,          only: dtsolid, s_time
+    use discretelement,          only: dtsolid, s_time, des_continuum_coupled
     use drag_gs_des1_module,     only: drag_gs_des
-    use error_manager,           only: err_msg, init_err_msg, finl_err_msg, ival, flush_err_msg
+    use error_manager,           only: init_err_msg, finl_err_msg, ival, flush_err_msg
     use output_manager_module,   only: output_manager
+    use run,                     only: call_usr
 
     integer(c_int), intent(in)    :: np, slo(3), shi(3), ulo(3), uhi(3)
     integer(c_int), intent(in)    :: vlo(3), vhi(3), wlo(3), whi(3)
-    integer(c_int), intent(in)    :: lo(3), hi(3), domlo(3), domhi(3)
     real(c_real),   intent(in)    :: xlength, ylength, zlength, dx, dy, dz
     real(c_real),   intent(inout) :: time, dt
     real(c_real),   intent(in)    :: &
-         p_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3)), &
          u_g(ulo(1):uhi(1),ulo(2):uhi(2),ulo(3):uhi(3)), &
          v_g(vlo(1):vhi(1),vlo(2):vhi(2),vlo(3):vhi(3)), &
          w_g(wlo(1):whi(1),wlo(2):whi(2),wlo(3):whi(3)), &
