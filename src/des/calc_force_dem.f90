@@ -1,221 +1,288 @@
-MODULE CALC_FORCE_DEM_MODULE
+module calc_force_dem_module
 
-   use amrex_fort_module, only : c_real => amrex_real
-   use iso_c_binding , only: c_int
+  use amrex_fort_module, only : c_real => amrex_real
+  use iso_c_binding , only: c_int
 
-   CONTAINS
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: CALC_FORCE_DEM                                          !
-!  Author: Jay Boyalakuntla                           Date: 12-Jun-04  !
-!                                                                      !
-!  Purpose: Calculate contact force and torque on particle from        !
-!           particle-particle and particle-wall collisions. Treats     !
-!           wall interaction also as a two-particle interaction but    !
-!           accounting for the wall properties                         !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE CALC_FORCE_DEM(particle_phase, des_radius, des_pos_new, des_vel_new, omega_new, pairs, pair_count, fc, tow)
+  implicit none
+  private
 
-         use cfrelvel_module, only: cfrelvel
-         use discretelement, only: des_coll_model_enum, dtsolid
-         use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
-         use discretelement, only: s_time, des_crossprdct
-         use discretelement, only: kn, kt, mew, hertzian
+  public calc_force_dem
 
-         use drag_gs_des1_module, only: drag_gs_des
-         use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
+contains
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  !  subroutine: calc_force_dem                                          !
+  !  author: jay boyalakuntla                           date: 12-jun-04  !
+  !                                                                      !
+  !  purpose: calculate contact force and torque on particle from        !
+  !           particle-particle and particle-wall collisions. treats     !
+  !           wall interaction also as a two-particle interaction but    !
+  !           accounting for the wall properties                         !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  subroutine calc_force_dem(phase, radius, pos, vel, omega, state, fc, tow)
 
-         IMPLICIT NONE
+    use cfrelvel_module, only: cfrelvel
+    use discretelement, only: des_coll_model_enum, dtsolid
+    use discretelement, only: des_etan, des_etat, hert_kt, hert_kn
+    use discretelement, only: s_time, des_crossprdct
+    use discretelement, only: kn, kt, mew, hertzian
 
-      integer, intent(in) :: particle_phase(:)
+    use drag_gs_des1_module, only: drag_gs_des
+    use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
-      real(c_real), intent(in) :: des_radius(:)
-      real(c_real), intent(in) :: des_pos_new(:,:)
-      real(c_real), intent(in) :: des_vel_new(:,:)
-      real(c_real), intent(in) :: omega_new(:,:)
-      integer, intent(in) :: pairs(:,:)
-      integer, intent(in) :: pair_count
-      real(c_real), intent(inout) :: fc(:,:), tow(:,:)
 
-! Local variables
-!---------------------------------------------------------------------//
-! percent of particle radius when excess overlap will be flagged
-      real(c_real), PARAMETER :: flag_overlap = 0.20d0
-! particle no. indices
-      integer :: I, LL, cc
-! the overlap occuring between particle-particle or particle-wall
-! collision in the normal direction
-      real(c_real) :: OVERLAP_N, OVERLAP_T(3)
-! square root of the overlap
-      real(c_real) :: SQRT_OVERLAP
-! distance vector between two particle centers or between a particle
-! center and wall when the two surfaces are just at contact (i.e. no
-! overlap)
-      real(c_real) :: R_LM,DIST_CI,DIST_CL
-! the normal and tangential components of the translational relative
-! velocity
-      real(c_real) :: V_REL_TRANS_NORM, rad
-! distance vector between two particle centers or between a particle
-! center and wall at current and previous time steps
-      real(c_real) :: DIST(3), NORMAL(3), DIST_MAG, POS(3)
-! tangent to the plane of contact at current time step
-      real(c_real) :: VREL_T(3)
-! normal and tangential forces
-      real(c_real) :: FN(3), FT(3)
-! temporary storage of force
-      real(c_real) :: FC_TMP(3)
-! temporary storage of force for torque
-      real(c_real) :: TOW_FORCE(3)
-! temporary storage of torque
-      real(c_real) :: TOW_TMP(3,2)
+    integer, intent(in) :: phase(:)
 
-! store solids phase index of particle (i.e. particle_phase(np))
-      integer :: PHASEI, PHASELL
-! local values used spring constants and damping coefficients
-      real(c_real) :: ETAN_DES, ETAT_DES
-      real(c_real) :: KN_DES, KT_DES
+    real(c_real), intent(in) :: radius(:)
+    real(c_real), intent(in) :: pos(:,:)
+    real(c_real), intent(in) :: vel(:,:)
+    real(c_real), intent(in) :: omega(:,:)
+    integer, intent(in)      :: state(:)
+    ! integer, intent(inout)   :: pairs(:,:)
+    ! integer, intent(inout)   :: pair_count
+    real(c_real), intent(inout) :: fc(:,:), tow(:,:)
 
-      logical, PARAMETER :: report_excess_overlap = .FALSE.
+    ! local variables
+    !---------------------------------------------------------------------//
+    ! percent of particle radius when excess overlap will be flagged
+    real(c_real), parameter :: flag_overlap = 0.20d0
+    ! particle no. indices
+    integer :: i, ll, cc
+    ! the overlap occuring between particle-particle or particle-wall
+    ! collision in the normal direction
+    real(c_real) :: overlap_n, overlap_t(3)
+    ! square root of the overlap
+    real(c_real) :: sqrt_overlap
+    ! distance vector between two particle centers or between a particle
+    ! center and wall when the two surfaces are just at contact (i.e. no
+    ! overlap)
+    real(c_real) :: r_lm,dist_ci,dist_cl
+    ! the normal and tangential components of the translational relative
+    ! velocity
+    real(c_real) :: v_rel_trans_norm, rad
+    ! distance vector between two particle centers or between a particle
+    ! center and wall at current and previous time steps
+    real(c_real) :: dist(3), normal(3), dist_mag, pos_tmp(3)
+    ! tangent to the plane of contact at current time step
+    real(c_real) :: vrel_t(3)
+    ! normal and tangential forces
+    real(c_real) :: fn(3), ft(3)
+    ! temporary storage of force
+    real(c_real) :: fc_tmp(3)
+    ! temporary storage of force for torque
+    real(c_real) :: tow_force(3)
+    ! temporary storage of torque
+    real(c_real) :: tow_tmp(3,2)
 
-      real(c_real) :: FNMD, MAG_OVERLAP_T, TANGENT(3)
+    ! store solids phase index of particle (i.e. phase(np))
+    integer :: phasei, phasell
+    ! local values used spring constants and damping coefficients
+    real(c_real) :: etan_des, etat_des
+    real(c_real) :: kn_des, kt_des
 
-!-----------------------------------------------
+    logical, parameter :: report_excess_overlap = .false.
 
-! Check particle LL neighbor contacts
-!---------------------------------------------------------------------//
+    real(c_real) :: fnmd, mag_overlap_t, tangent(3)
 
-      DO cc = 1, pair_count
+    integer      :: pairs(6*size(state),3), pair_count
+    !-----------------------------------------------
 
-         ll = pairs(cc, 1)
-         i = pairs(cc, 2)
+    ! check particle ll neighbor contacts
+    !---------------------------------------------------------------------//
 
-         pos = DES_POS_NEW(LL,:)
-         rad = DES_RADIUS(LL)
+    ! calculate pairs of colliding particles
+    pairs      = 0
+    pair_count = 0
+    call calc_collisions( size(state), pairs, pair_count, state, radius, pos)
 
-            R_LM = rad + DES_RADIUS(I)
-            DIST(:) = DES_POS_NEW(I,:) - POS(:)
-            DIST_MAG = dot_product(DIST,DIST)
 
-            IF(abs(DIST_MAG) < epsilon(dist_mag)) THEN
-               WRITE(*,8550) LL, I
-               STOP "division by zero"
- 8550 FORMAT('distance between particles is zero:',2(2x,I10))
-            ENDIF
+    do cc = 1, pair_count
 
-            DIST_MAG = SQRT(DIST_MAG)
-            NORMAL(:)= DIST(:)/DIST_MAG
+       ll = pairs(cc, 1)
+       i = pairs(cc, 2)
 
-! Calcuate the normal overlap
-            OVERLAP_N = R_LM-DIST_MAG
-            IF(REPORT_EXCESS_OVERLAP) CALL PRINT_EXCESS_OVERLAP
+       pos_tmp = pos(ll,:)
+       rad     = radius(ll)
 
-! Calculate the components of translational relative velocity for a
-! contacting particle pair and the tangent to the plane of contact
-            CALL CFRELVEL(LL, I, V_REL_TRANS_NORM, VREL_T,            &
-               NORMAL(:), DIST_MAG, DES_VEL_NEW, DES_RADIUS, OMEGA_NEW)
+       r_lm = rad + radius(i)
+       dist(:) = pos(i,:) - pos_tmp(:)
+       dist_mag = dot_product(dist,dist)
 
-            phaseLL = particle_phase(LL)
-            phaseI = particle_phase(I)
+       if(abs(dist_mag) < epsilon(dist_mag)) then
+          write(*,8550) ll, i
+          stop "division by zero"
+8550      format('distance between particles is zero:',2(2x,i10))
+       endif
 
-! Hertz spring-dashpot contact model
-            IF (DES_COLL_MODEL_ENUM .EQ. HERTZIAN) THEN
-               sqrt_overlap = SQRT(OVERLAP_N)
-               KN_DES = hert_kn(phaseLL,phaseI)*sqrt_overlap
-               KT_DES = hert_kt(phaseLL,phaseI)*sqrt_overlap
-               sqrt_overlap = SQRT(sqrt_overlap)
-               ETAN_DES = DES_ETAN(phaseLL,phaseI)*sqrt_overlap
-               ETAT_DES = DES_ETAT(phaseLL,phaseI)*sqrt_overlap
+       dist_mag = sqrt(dist_mag)
+       normal(:)= dist(:)/dist_mag
 
-! Linear spring-dashpot contact model
-            ELSE
-               KN_DES = KN
-               KT_DES = KT
-               ETAN_DES = DES_ETAN(phaseLL,phaseI)
-               ETAT_DES = DES_ETAT(phaseLL,phaseI)
-            ENDIF
+       ! calcuate the normal overlap
+       overlap_n = r_lm-dist_mag
+       if(report_excess_overlap) call print_excess_overlap
 
-! Calculate the normal contact force
-            FN(:) =  -(KN_DES * OVERLAP_N * NORMAL(:) + &
-               ETAN_DES * V_REL_TRANS_NORM * NORMAL(:))
+       ! calculate the components of translational relative velocity for a
+       ! contacting particle pair and the tangent to the plane of contact
+       call cfrelvel(ll, i, v_rel_trans_norm, vrel_t,            &
+            normal(:), dist_mag, vel, radius, omega)
 
-! Calcuate the tangential overlap
-            OVERLAP_T(:) = DTSOLID*VREL_T(:)
-            MAG_OVERLAP_T = sqrt(dot_product(OVERLAP_T,OVERLAP_T))
+       phasell = phase(ll)
+       phasei = phase(i)
 
-! Calculate the tangential contact force.
-            IF(MAG_OVERLAP_T > 0.0) THEN
-! Max force before the on set of frictional slip.
-               FNMD = MEW*sqrt(dot_product(FN,FN))
-! Direction of tangential force.
-               TANGENT = OVERLAP_T/MAG_OVERLAP_T
-! Frictional slip
-               FT = -FNMD * TANGENT
-            ELSE
-               FT = 0.0
-            ENDIF
+       ! hertz spring-dashpot contact model
+       if (des_coll_model_enum .eq. hertzian) then
+          sqrt_overlap = sqrt(overlap_n)
+          kn_des = hert_kn(phasell,phasei)*sqrt_overlap
+          kt_des = hert_kt(phasell,phasei)*sqrt_overlap
+          sqrt_overlap = sqrt(sqrt_overlap)
+          etan_des = des_etan(phasell,phasei)*sqrt_overlap
+          etat_des = des_etat(phasell,phasei)*sqrt_overlap
 
-! calculate the distance from the particles' centers to the contact point,
-! which is taken as the radical line
-! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
-            DIST_CL = DIST_MAG/2.d0 + (DES_RADIUS(LL)**2 - &
-               DES_RADIUS(I)**2)/(2.d0*DIST_MAG)
+          ! linear spring-dashpot contact model
+       else
+          kn_des = kn
+          kt_des = kt
+          etan_des = des_etan(phasell,phasei)
+          etat_des = des_etat(phasell,phasei)
+       endif
 
-            DIST_CI = DIST_MAG - DIST_CL
+       ! calculate the normal contact force
+       fn(:) =  -(kn_des * overlap_n * normal(:) + &
+            etan_des * v_rel_trans_norm * normal(:))
 
-            TOW_force(:) = DES_CROSSPRDCT(NORMAL(:), FT(:))
-            TOW_TMP(:,1) = DIST_CL*TOW_force(:)
-            TOW_TMP(:,2) = DIST_CI*TOW_force(:)
+       ! calcuate the tangential overlap
+       overlap_t(:) = dtsolid*vrel_t(:)
+       mag_overlap_t = sqrt(dot_product(overlap_t,overlap_t))
 
-! Calculate the total force FC of a collision pair
-! total contact force
-            FC_TMP(:) = FN(:) + FT(:)
+       ! calculate the tangential contact force.
+       if(mag_overlap_t > 0.0) then
+          ! max force before the on set of frictional slip.
+          fnmd = mew*sqrt(dot_product(fn,fn))
+          ! direction of tangential force.
+          tangent = overlap_t/mag_overlap_t
+          ! frictional slip
+          ft = -fnmd * tangent
+       else
+          ft = 0.0
+       endif
 
-            FC(LL,:) = FC(LL,:) + FC_TMP(:)
+       ! calculate the distance from the particles' centers to the contact point,
+       ! which is taken as the radical line
+       ! dist_ci+dist_cl=dist_li; dist_ci^2+a^2=ri^2;  dist_cl^2+a^2=rl^2
+       dist_cl = dist_mag/2.d0 + (radius(ll)**2 - &
+            radius(i)**2)/(2.d0*dist_mag)
 
-            FC(I,1) = FC(I,1) - FC_TMP(1)
-            FC(I,2) = FC(I,2) - FC_TMP(2)
-            FC(I,3) = FC(I,3) - FC_TMP(3)
+       dist_ci = dist_mag - dist_cl
 
-! for each particle the signs of norm and ft both flip, so add the same torque
-            TOW(LL,:) = TOW(LL,:) + TOW_TMP(:,1)
+       tow_force(:) = des_crossprdct(normal(:), ft(:))
+       tow_tmp(:,1) = dist_cl*tow_force(:)
+       tow_tmp(:,2) = dist_ci*tow_force(:)
 
-            TOW(I,1)  = TOW(I,1)  + TOW_TMP(1,2)
-            TOW(I,2)  = TOW(I,2)  + TOW_TMP(2,2)
-            TOW(I,3)  = TOW(I,3)  + TOW_TMP(3,2)
+       ! calculate the total force fc of a collision pair
+       ! total contact force
+       fc_tmp(:) = fn(:) + ft(:)
 
-      ENDDO
+       fc(ll,:) = fc(ll,:) + fc_tmp(:)
 
-      RETURN
+       fc(i,1) = fc(i,1) - fc_tmp(1)
+       fc(i,2) = fc(i,2) - fc_tmp(2)
+       fc(i,3) = fc(i,3) - fc_tmp(3)
 
-      contains
+       ! for each particle the signs of norm and ft both flip, so add the same torque
+       tow(ll,:) = tow(ll,:) + tow_tmp(:,1)
 
-        include 'functions.inc'
+       tow(i,1)  = tow(i,1)  + tow_tmp(1,2)
+       tow(i,2)  = tow(i,2)  + tow_tmp(2,2)
+       tow(i,3)  = tow(i,3)  + tow_tmp(3,2)
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-!                                                                      !
-!  Subroutine: print_excess_overlap                                    !
-!                                                                      !
-!  Purpose: Print overlap warning messages.                            !
-!                                                                      !
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-      SUBROUTINE PRINT_EXCESS_OVERLAP
+    enddo
 
-      IF(OVERLAP_N > flag_overlap*DES_RADIUS(LL) .OR.                  &
-         OVERLAP_N > flag_overlap*DES_RADIUS(I)) THEN
+    return
 
-         WRITE(ERR_MSG,1000) trim(iVAL(LL)), trim(iVAL(I)), S_TIME,    &
-            DES_RADIUS(LL), DES_RADIUS(I), OVERLAP_N
+  contains
 
-         CALL FLUSH_ERR_MSG(HEADER=.FALSE., FOOTER=.FALSE.)
-      ENDIF
+    include 'functions.inc'
 
- 1000 FORMAT('WARNING: Excessive overplay detected between ',          &
-         'particles ',A,' and ',/A,' at time ',g11.4,'.',/             &
-         'RADII:  ',g11.4,' and ',g11.4,4x,'OVERLAP: ',g11.4)
+    !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+    !                                                                      !
+    !  subroutine: print_excess_overlap                                    !
+    !                                                                      !
+    !  purpose: print overlap warning messages.                            !
+    !                                                                      !
+    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+    subroutine print_excess_overlap
 
-      END SUBROUTINE PRINT_EXCESS_OVERLAP
+      if(overlap_n > flag_overlap*radius(ll) .or.                  &
+           overlap_n > flag_overlap*radius(i)) then
 
-    END SUBROUTINE CALC_FORCE_DEM
+         write(err_msg,1000) trim(ival(ll)), trim(ival(i)), s_time,    &
+              radius(ll), radius(i), overlap_n
 
-END MODULE CALC_FORCE_DEM_MODULE
+         call flush_err_msg(header=.false., footer=.false.)
+      endif
+
+1000  format('warning: excessive overplay detected between ',          &
+           'particles ',a,' and ',/a,' at time ',g11.4,'.',/             &
+           'radii:  ',g11.4,' and ',g11.4,4x,'overlap: ',g11.4)
+
+    end subroutine print_excess_overlap
+
+  end subroutine calc_force_dem
+
+
+
+  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
+  !                                                                      !
+  ! Subroutine: calc_collisions                                          !
+  ! Purpose: Build a list of collision pairs.                            !
+  !                                                                      !
+  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
+  SUBROUTINE CALC_COLLISIONS(np, pairs, pair_count, &
+       state, radius, pos)
+
+    use discretelement, only: nonexistent
+    use param, only: small_number
+
+    implicit none
+
+    ! Dummy arguments ......................................................
+    integer, intent(in) :: np
+
+    integer     , intent(  out) :: pair_count
+    integer     , intent(  out) :: pairs(6*np,2)
+
+    real(c_real), intent(in   ) :: pos(np,3)
+    real(c_real), intent(in   ) :: radius(np)
+    integer     , intent(in   ) :: state(np)
+
+    ! Local variables ......................................................
+    integer :: i, ll
+    real(c_real) :: rad
+    real(c_real) :: DIST(3), DIST_MAG, pos_tmp(3)
+
+    pair_count = 0
+
+    DO LL = 1, np-1
+
+       IF(NONEXISTENT==STATE(LL)) CYCLE
+       pos_tmp = POS(LL,:)
+       rad = RADIUS(LL)
+
+       DO I = LL+1, np
+          IF(NONEXISTENT==STATE(I)) CYCLE
+
+          DIST(:) = POS(I,:) - POS_tmp(:)
+          DIST_MAG = dot_product(DIST,DIST)
+
+          IF(DIST_MAG < (rad + RADIUS(I) - SMALL_NUMBER)**2) THEN
+             pair_count = pair_count + 1
+             pairs(pair_count, 1) = ll
+             pairs(pair_count, 2) = i
+          ENDIF
+       ENDDO
+    ENDDO
+  end subroutine calc_collisions
+
+
+end module calc_force_dem_module

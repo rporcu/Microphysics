@@ -12,7 +12,6 @@ module des_time_march_module
   ! to C++ easier ( even though it is really a nasty thing to do ).
   integer(c_int), save  :: factor      
   real(c_real),   save  :: dtsolid_tmp 
-  integer(c_int), save  :: pair_count
 
   ! Temporary variables when des_continuum_coupled is T to track
   ! changes in solid time step
@@ -20,7 +19,6 @@ module des_time_march_module
 
   ! Pressure gradient
   real(c_real),   allocatable, save :: gradPg(:,:,:,:), fc(:,:), tow(:,:)
-  integer(c_int), allocatable, save :: pairs(:,:)  
 
   ! Define interface for external functions so there will be no 
   ! warning at compile time
@@ -92,12 +90,10 @@ contains
 
 
     allocate (gradPg (slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),3) )
-    allocate ( tow(np,3), pairs(6*np,3), fc(np,3) )
-    
-    pairs      = 0
+    allocate ( tow(np,3), fc(np,3) )
+
     tow        = zero
     fc         = zero
-    pair_count = 0
     
     
     ! In case of restarts assign S_TIME from MFIX TIME
@@ -176,7 +172,7 @@ contains
        TMP_DTS = ZERO
     endif
 
-    deallocate( gradPg, tow, fc, pairs )
+    deallocate( gradPg, tow, fc )
 
   end subroutine des_finalize_time_step
 
@@ -310,12 +306,9 @@ contains
     call calc_dem_force_with_wall_stl( phase, state, radius, &
          pos, vel, omega, fc, tow, xlength, ylength, zlength )
 
-    ! calculate pairs of colliding particles
-    call calc_collisions( np, pairs, pair_count, state, radius, pos)
-
     ! calculate forces from particle-particle collisions
-    call calc_force_dem(phase, radius, pos, vel, omega, pairs, & 
-         pair_count, fc, tow)
+    call calc_force_dem(phase, radius, pos, vel, omega, state, & 
+         fc, tow)
 
     ! calculate or distribute fluid-particle drag force.
     call calc_drag_des(slo,shi, ulo, uhi, vlo, vhi, wlo, whi,np,&
@@ -358,60 +351,6 @@ contains
 
   end subroutine des_time_step
 
-
-
-
-  !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-  !                                                                      !
-  ! Subroutine: calc_collisions                                          !
-  ! Purpose: Build a list of collision pairs.                            !
-  !                                                                      !
-  !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-  SUBROUTINE CALC_COLLISIONS(np, pairs, pair_count, &
-       state, radius, pos)
-
-    use discretelement, only: nonexistent
-    use param, only: small_number
-
-    implicit none
-
-    ! Dummy arguments ......................................................
-    integer, intent(in) :: np
-
-    integer     , intent(  out) :: pair_count
-    integer     , intent(  out) :: pairs(6*np,2)
-
-    real(c_real), intent(in   ) :: pos(np,3)
-    real(c_real), intent(in   ) :: radius(np)
-    integer     , intent(in   ) :: state(np)
-
-    ! Local variables ......................................................
-    integer :: i, ll
-    real(c_real) :: rad
-    real(c_real) :: DIST(3), DIST_MAG, pos_tmp(3)
-
-    pair_count = 0
-
-    DO LL = 1, np-1
-
-       IF(NONEXISTENT==STATE(LL)) CYCLE
-       pos_tmp = POS(LL,:)
-       rad = RADIUS(LL)
-
-       DO I = LL+1, np
-          IF(NONEXISTENT==STATE(I)) CYCLE
-
-          DIST(:) = POS(I,:) - POS_tmp(:)
-          DIST_MAG = dot_product(DIST,DIST)
-
-          IF(DIST_MAG < (rad + RADIUS(I) - SMALL_NUMBER)**2) THEN
-             pair_count = pair_count + 1
-             pairs(pair_count, 1) = ll
-             pairs(pair_count, 2) = i
-          ENDIF
-       ENDDO
-    ENDDO
-  end subroutine calc_collisions
 
 
 end module des_time_march_module
