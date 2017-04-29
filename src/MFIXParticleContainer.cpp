@@ -228,9 +228,15 @@ MFIXParticleContainer::InitData()
 {
 }
 
-
-void
-MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
+/**
+  @brief pack hree 1D arrays into a single 3D array.
+  @param[out] vec    the 3D array
+  @param[in] comp1  the first component 
+  @param[in] comp2  the second component
+  @param[in] comp3  the third component
+  
+*/
+void MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,
              const Array<Real>& comp2, const Array<Real>& comp3 )
 {
 
