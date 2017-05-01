@@ -1,3 +1,3 @@
 [submodule "ThirdParty/amrex"]
 	path = ThirdParty/amrex
-	url = https://bitbucket.org/berkeleylab/amrex.git
+	url = https://github.com/AMReX-Codes/amrex.git
