@@ -13,7 +13,7 @@ contains
 !                                                                      !
 !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
   SUBROUTINE CFNEWVALUES(max_pip, particle_state, pmass,&
-    omoi, des_pos_new, des_vel_new, omega_new, fc, tow, &
+    omoi, drag, des_pos_new, des_vel_new, omega_new, fc, tow, &
     des_acc_old, rot_acc_old)
 
     use discretelement, only: dtsolid
@@ -27,6 +27,7 @@ contains
     integer     , intent(in   ) :: particle_state(max_pip)
     real(c_real), intent(in   ) :: omoi(max_pip)
     real(c_real), intent(in   ) :: pmass(max_pip)
+    real(c_real), intent(in   ) :: drag(max_pip,3)
     real(c_real), intent(inout) :: des_pos_new(max_pip,3)
     real(c_real), intent(inout) :: des_vel_new(max_pip,3)
     real(c_real), intent(inout) :: omega_new(max_pip,3)
@@ -52,7 +53,7 @@ contains
        do l =1, max_pip
           if(particle_state(l) == normal_particle .or.      &
              particle_state(l) == exiting_particle) then
-             des_acc_old(l,:) = fc(l,:)/pmass(l) + gravity(:)
+             des_acc_old(l,:) = (fc(l,:) + drag(l,:))/pmass(l) + gravity(:)
              rot_acc_old(l,:) = tow(l,:)
           endif
        enddo
@@ -62,7 +63,7 @@ contains
        if(particle_state(l) == normal_particle .or.      &
           particle_state(l) == exiting_particle) then
 
-          fc(l,:) = fc(l,:)/pmass(l) + gravity(:)
+          fc(l,:) = (fc(l,:) + drag(l,:))/pmass(l) + gravity(:)
 
 ! Advance particle position, velocity
           lvelo = des_vel_new(l,:)

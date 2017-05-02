@@ -409,18 +409,17 @@ mfix_level::MakeNewLevelFromScratch (int lev, Real time,
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
 mfix_level::Evolve(int lev, int nstep, int set_normg, Real dt, Real& prev_dt,
-       Real time, Real normg) {
+                   Real time, Real normg) {
 
-    if (solve_fluid)
-      EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
+  if (solve_fluid)
+    EvolveFluid(lev,nstep,set_normg,dt,prev_dt,time,normg);
 
-    if (solve_dem)
+  if (solve_dem)
     {
-	pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g,  mu_g,
-			       lev, nstep, dt,time );
-	fill_mf_bc(lev,*ep_g[lev]);
-	fill_mf_bc(lev,*rop_g[lev]);
+      if (solve_fluid)
+        mfix_calc_drag_particle(lev);
 
+      pc -> EvolveParticles( ep_g, u_g, v_g, w_g, p_g, ro_g, mu_g, lev, nstep, dt, time);
     }
 }
 
@@ -433,8 +432,12 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
       Real dy = geom[lev].CellSize(1);
       Real dz = geom[lev].CellSize(2);
 
+      if (solve_dem)
+        mfix_calc_volume_fraction(lev);
+
       // Calculate transport coefficients
-      mfix_calc_all_coeffs(lev);
+      int calc_flag = 2;
+      mfix_calc_coeffs(lev,calc_flag);
 
       // Calculate the stress tensor trace and cross terms for all phases.
       mfix_calc_trd_and_tau(lev);
@@ -460,7 +463,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
         // Calculate face mass fluxes
         mfix_calc_mflux(lev);
 
-
         int converged=0;
         int nit=0;          // number of iterations
         int gsmf=0;         // number of outer iterations for goal seek mass flux (GSMF)
@@ -484,8 +486,12 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
             mfix_usr2();
 
           // Calculate transport coefficients
-          int calc_flag = 1;
+          calc_flag = 1;
           mfix_calc_coeffs(lev,calc_flag);
+
+          // Calculate drag coefficient
+          if (solve_dem)
+            mfix_calc_drag_fluid(lev);
 
           // Solve momentum equations
           mfix_solve_for_vels(lev, dt, residuals);
@@ -542,8 +548,6 @@ mfix_level::EvolveFluid(int lev, int nstep, int set_normg,
           MultiFab::Copy(*v_g[lev],   *v_go[lev],   0, 0, 1, nghost);
           MultiFab::Copy(*w_g[lev],   *w_go[lev],   0, 0, 1, nghost);
 
-          // Recalculate all coefficients (JM: not sure why)
-          mfix_calc_all_coeffs(lev);
         }
       } while (reiterate==1);
 }
@@ -590,7 +594,7 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
       pc -> printParticles();
 
       for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-	  mfix_init_collision();
+    mfix_init_collision();
 
   }
 
@@ -609,140 +613,24 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
   int calc_flag = 2;
   mfix_calc_coeffs(lev,calc_flag);
 
-
 }
 
 void mfix_level::mfix_calc_coeffs(int lev, int calc_flag)
 {
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	const Box& bx = mfi.validbox();
-
-	Box ubx((*u_g[lev])[mfi].box());
-	Box vbx((*v_g[lev])[mfi].box());
-	Box wbx((*w_g[lev])[mfi].box());
-
-	const int np = pc -> NumberOfParticles(lev, mfi);
-
-	int   *pstate, *pphase;
-	Real  *pvol, *pradius, *ppos, *pvel;
-
-	pc -> GetIntData( lev, mfi, intData::state, &pstate );
-	pc -> GetIntData( lev, mfi, intData::phase, &pphase );
-
-	pc -> GetRealData( lev, mfi, realData::radius, &pradius );
-	pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-	pc -> GetPosition( lev, mfi, &ppos );
-
-	pc -> GetVectorData( lev, mfi, realData::velx, &pvel );
-
-	calc_coeff(sbx.loVect(), sbx.hiVect(),
-		   ubx.loVect(), ubx.hiVect(), 
-		   vbx.loVect(), vbx.hiVect(), 
-		   wbx.loVect(), wbx.hiVect(),
-		   bx.loVect(),  bx.hiVect(), 
-		   &np,   &calc_flag,
-		   (*ro_g[lev])[mfi].dataPtr(),    (*p_g[lev])[mfi].dataPtr(),
-		   (*ep_g[lev])[mfi].dataPtr(),    (*rop_g[lev])[mfi].dataPtr(),
-		   (*u_g[lev])[mfi].dataPtr(),     (*v_g[lev])[mfi].dataPtr(),
-		   (*w_g[lev])[mfi].dataPtr(),     (*mu_g[lev])[mfi].dataPtr(),
-		   (*f_gds[lev])[mfi].dataPtr(),   (*drag_bm[lev])[mfi].dataPtr(),
-		   pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
-
-	pc -> RestoreIntData( &pstate );
-	pc -> RestoreIntData( &pphase );
-
-	pc -> RestoreRealData( &pradius );
-	pc -> RestoreRealData( &pvol );
-
-	pc -> RestorePosition( lev, mfi, &ppos );
-
-	pc -> RestoreVectorData( lev, mfi, realData::velx, &pvel );
-
-
-    }
-    fill_mf_bc(lev,*ro_g[lev]);
-    fill_mf_bc(lev,*rop_g[lev]);
-
-    if (solve_dem)
-    {
-	fill_mf_bc(lev,*f_gds[lev]);
-	fill_mf_bc(lev,*drag_bm[lev]);
-    }
-}
-
-
-
-void
-mfix_level::mfix_calc_all_coeffs(int lev)
-{
-  Real dx = geom[lev].CellSize(0);
-  Real dy = geom[lev].CellSize(1);
-  Real dz = geom[lev].CellSize(2);
-
   for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-  {
-     const Box& bx = mfi.validbox();
-     const Box& sbx = (*ep_g[lev])[mfi].box();
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      const Box& bx = mfi.validbox();
 
-     Box ubx((*u_g[lev])[mfi].box());
-     Box vbx((*v_g[lev])[mfi].box());
-     Box wbx((*w_g[lev])[mfi].box());
+      calc_coeff(sbx.loVect(), sbx.hiVect(), bx.loVect(),  bx.hiVect(), &calc_flag,
+       (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
+       (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr());
+    }
 
-     const int np = pc -> NumberOfParticles(lev, mfi);
-
-     int   *pstate, *pphase;
-     Real  *pvol, *pradius, *ppos, *pvel;
-
-     pc -> GetIntData( lev, mfi, intData::state, &pstate );
-     pc -> GetIntData( lev, mfi, intData::phase, &pphase );
-
-     pc -> GetRealData( lev, mfi, realData::radius, &pradius );
-     pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-     pc -> GetPosition( lev, mfi, &ppos );
-
-     pc -> GetVectorData( lev, mfi, realData::velx, &pvel );
-
-     calc_coeff_all(sbx.loVect(), sbx.hiVect(),
-		    ubx.loVect(), ubx.hiVect(),
-		    vbx.loVect(), vbx.hiVect(), 
-		    wbx.loVect(), wbx.hiVect(),
-		    bx.loVect(),  bx.hiVect(), &np,
-		    (*ro_g[lev])[mfi].dataPtr(), (*p_g[lev])[mfi].dataPtr(),
-		    (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
-		    (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(), 
-		    (*w_g[lev])[mfi].dataPtr(),  (*mu_g[lev])[mfi].dataPtr(), 
-		    (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
-		    pphase, pstate, pvol, ppos, pvel, pradius, &dx, &dy, &dz );
-
-     pc -> RestoreIntData( &pstate );
-     pc -> RestoreIntData( &pphase );
-
-     pc -> RestoreRealData( &pradius );
-     pc -> RestoreRealData( &pvol );
-
-     pc -> RestorePosition( lev, mfi, &ppos );
-
-     pc -> RestoreVectorData( lev, mfi, realData::velx, &pvel );
-
-  }
   fill_mf_bc(lev,*ro_g[lev]);
   fill_mf_bc(lev,*rop_g[lev]);
-
-  if (solve_dem)
-  {
-    fill_mf_bc(lev,*ep_g[lev]);
-    fill_mf_bc(lev,*f_gds[lev]);
-    fill_mf_bc(lev,*drag_bm[lev]);
-  }
 }
+
 
 void
 mfix_level::mfix_calc_trd_and_tau(int lev)
@@ -832,27 +720,27 @@ void mfix_level::mfix_comp_mean_fields(int lev)
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
-	const Box& sbx = (*ep_g[lev])[mfi].box();
-	const int np   = pc -> NumberOfParticles(lev, mfi);
+  const Box& sbx = (*ep_g[lev])[mfi].box();
+  const int np   = pc -> NumberOfParticles(lev, mfi);
 
-	Real *pvol, *ppos;
-	int  *pstate; 
+  Real *pvol, *ppos;
+  int  *pstate;
 
 
-	pc -> GetIntData( lev, mfi, intData::state, &pstate );
+  pc -> GetIntData( lev, mfi, intData::state, &pstate );
 
-	pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+  pc -> GetRealData( lev, mfi, realData::volume, &pvol );
 
-	pc -> GetPosition( lev, mfi, &ppos );
- 
-	comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
-			 pstate, ppos, pvol, &dx, &dy, &dz );
+  pc -> GetPosition( lev, mfi, &ppos );
 
-	pc -> RestoreIntData ( &pstate );
+  comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
+       pstate, ppos, pvol, &dx, &dy, &dz );
 
-	pc -> RestoreRealData( &pvol );
+  pc -> RestoreIntData ( &pstate );
 
-	pc -> RestorePosition( lev, mfi, &ppos );
+  pc -> RestoreRealData( &pvol );
+
+  pc -> RestorePosition( lev, mfi, &ppos );
 
     }
     fill_mf_bc(lev,*ep_g[lev]);
@@ -1202,5 +1090,159 @@ mfix_level::fill_mf_bc(int lev, MultiFab& mf)
       fill_bc0(mf[mfi].dataPtr(),sbx.loVect(),sbx.hiVect(),
                bc_ilo.dataPtr(), bc_ihi.dataPtr(), bc_jlo.dataPtr(), bc_jhi.dataPtr(),
                bc_klo.dataPtr(), bc_khi.dataPtr(), domain.loVect(), domain.hiVect());
+  }
+}
+
+
+void mfix_level::mfix_calc_volume_fraction(int lev)
+{
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+  ep_g[lev]->setVal(0.0L);
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      const int np = pc -> NumberOfParticles(lev, mfi);
+
+      int   *pstate;
+      Real  *pvol, *ppos;
+
+      pc -> GetIntData(  lev, mfi, intData::state,   &pstate );
+      pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+      pc -> GetPosition( lev, mfi, &ppos );
+
+      calc_solids_volume(sbx.loVect(), sbx.hiVect(), &np,
+           (*ep_g[lev])[mfi].dataPtr(),
+           pstate, pvol, ppos, &dx, &dy, &dz );
+
+      pc -> RestoreIntData( &pstate );
+      pc -> RestoreRealData( &pvol );
+      pc -> RestorePosition( lev, mfi, &ppos );
+    }
+  // fill_mf_bc(lev,*ep_g[lev]);
+
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+    {
+      const Box& sbx = (*ep_g[lev])[mfi].box();
+      const Box& bx = mfi.validbox();
+
+      calc_volume_fraction(sbx.loVect(), sbx.hiVect(), bx.loVect(), bx.hiVect(),
+           (*ep_g[lev])[mfi].dataPtr(), (*rop_g[lev])[mfi].dataPtr(),
+           (*ro_g[lev])[mfi].dataPtr(), &dx, &dy, &dz );
+    }
+  fill_mf_bc(lev,*ep_g[lev]);
+  fill_mf_bc(lev,*rop_g[lev]);
+}
+
+
+
+void mfix_level::mfix_calc_drag_fluid(int lev)
+{
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+  f_gds[lev]->setVal(0.0L);
+  drag_bm[lev]->setVal(0.0L);
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  {
+     const Box& bx = mfi.validbox();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
+
+     Box ubx((*u_g[lev])[mfi].box());
+     Box vbx((*v_g[lev])[mfi].box());
+     Box wbx((*w_g[lev])[mfi].box());
+
+     const int np = pc -> NumberOfParticles(lev, mfi);
+
+     int   *pstate, *pphase;
+     Real  *pvol, *pradius, *ppos, *pvel, *drag;
+
+     pc -> GetIntData( lev, mfi, intData::state, &pstate );
+     pc -> GetIntData( lev, mfi, intData::phase, &pphase );
+
+     pc -> GetRealData( lev, mfi, realData::radius, &pradius );
+     pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+
+     pc -> GetPosition( lev, mfi, &ppos );
+
+     pc -> GetVectorData( lev, mfi, realData::velx,  &pvel );
+     pc -> GetVectorData( lev, mfi, realData::dragx, &drag );
+
+     calc_drag_fluid(
+        sbx.loVect(), sbx.hiVect(),
+        ubx.loVect(), ubx.hiVect(),
+        vbx.loVect(), vbx.hiVect(),
+        wbx.loVect(), wbx.hiVect(), &np,
+        (*ep_g[lev])[mfi].dataPtr(), (*ro_g[lev])[mfi].dataPtr(),
+        (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
+        (*w_g[lev])[mfi].dataPtr(),  (*mu_g[lev])[mfi].dataPtr(),
+        (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
+        pphase, pstate, pvol, ppos, pvel, pradius, drag, &dx, &dy, &dz );
+
+     pc -> RestoreIntData( &pstate );
+     pc -> RestoreIntData( &pphase );
+
+     pc -> RestoreRealData( &pradius );
+     pc -> RestoreRealData( &pvol );
+
+     pc -> RestorePosition( lev, mfi, &ppos );
+
+     pc -> RestoreVectorData( lev, mfi, realData::velx,  &pvel );
+     pc -> RestoreVectorData( lev, mfi, realData::dragx, &drag );
+
+  }
+  fill_mf_bc(lev,*f_gds[lev]);
+  fill_mf_bc(lev,*drag_bm[lev]);
+}
+
+void mfix_level::mfix_calc_drag_particle(int lev)
+{
+  Real dx = geom[lev].CellSize(0);
+  Real dy = geom[lev].CellSize(1);
+  Real dz = geom[lev].CellSize(2);
+
+  Real xlen = geom[lev].ProbHi(0) - geom[lev].ProbLo(0);
+  Real ylen = geom[lev].ProbHi(1) - geom[lev].ProbLo(1);
+  Real zlen = geom[lev].ProbHi(2) - geom[lev].ProbLo(2);
+
+  for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
+  {
+     const Box& bx = mfi.validbox();
+     const Box& sbx = (*ep_g[lev])[mfi].box();
+
+     Box ubx((*u_g[lev])[mfi].box());
+     Box vbx((*v_g[lev])[mfi].box());
+     Box wbx((*w_g[lev])[mfi].box());
+
+     const int np = pc -> NumberOfParticles(lev, mfi);
+
+     Real  *pvol, *ppos, *pvel, *drag;
+
+     pc -> GetRealData( lev, mfi, realData::volume, &pvol );
+
+     pc -> GetPosition( lev, mfi, &ppos );
+
+     pc -> GetVectorData( lev, mfi, realData::velx,  &pvel );
+     pc -> GetVectorData( lev, mfi, realData::dragx, &drag );
+
+     calc_drag_particle(
+        sbx.loVect(), sbx.hiVect(),
+        ubx.loVect(), ubx.hiVect(),
+        vbx.loVect(), vbx.hiVect(),
+        wbx.loVect(), wbx.hiVect(), &np,
+        (*p_g[lev])[mfi].dataPtr(), (*u_g[lev])[mfi].dataPtr(),
+        (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
+        pvol, ppos, pvel, drag,
+        &dx, &dy, &dz, &xlen, &ylen, &zlen);
+
+     pc -> RestoreRealData( &pvol );
+
+     pc -> RestorePosition( lev, mfi, &ppos );
+
+     pc -> RestoreVectorData( lev, mfi, realData::velx,  &pvel );
+     pc -> RestoreVectorData( lev, mfi, realData::dragx, &drag );
   }
 }

@@ -46,11 +46,6 @@
   MAX_NIT = 250
   TOL_RESID = 1.E-4
 
-  NORM_G = 0
-
-! Sweep Direction
-  LEQ_SWEEP(1:3)= 3*'ISIS'
-
 #_______________________________________________________________________
 # MATERIAL SECTION
 
