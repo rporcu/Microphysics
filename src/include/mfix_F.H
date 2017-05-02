@@ -229,66 +229,59 @@ extern "C"
   Real* dx,       Real* dy,       Real* dz, Real (&residuals)[16]);
 
     void solve_pp_g(
-  const int* slo, const int* shi,
-  const int* ulo,  const int* uhi,
-  const int* vlo,  const int* vhi,
-  const int* wlo,  const int* whi,
-  const int* alo,  const int* ahi,
-  const int* lo,  const int* hi,
-  Real* u_g,      Real* v_g,      Real* w_g,
-  Real* p_g,      Real* ep_g,
-  Real* rop_g,    Real* rop_go,
-  Real* ro_g,
-  Real* ropX,   Real* ropY,   Real* ropZ,
-  Real* d_e,      Real* d_n,      Real* d_t,
-  Real* A_m,      Real* b_m,      Real* b_mmax,
-  Real* dt,       Real* dx, Real* dy, Real* dz,
-  const int* domlo , const int* domhi,
-  Real (&residuals)[16]);
+       const int* slo, const int* shi,
+       const int* ulo,  const int* uhi,
+       const int* vlo,  const int* vhi,
+       const int* wlo,  const int* whi,
+       const int* alo,  const int* ahi,
+       const int* lo,  const int* hi,
+       Real* u_g,      Real* v_g,      Real* w_g,
+       Real* p_g,      Real* ep_g,
+       Real* rop_g,    Real* rop_go,
+       Real* ro_g,
+       Real* ropX,   Real* ropY,   Real* ropZ,
+       Real* d_e,      Real* d_n,      Real* d_t,
+       Real* A_m,      Real* b_m,      Real* b_mmax,
+       Real* dt,       Real* dx, Real* dy, Real* dz,
+       const int* domlo , const int* domhi,
+       Real (&residuals)[16]);
 
     void correct_0(
-  const int* slo, const int* shi,
-  const int* ulo,  const int* uhi,
-  const int* vlo,  const int* vhi,
-  const int* wlo,  const int* whi,
-  const int* lo,  const int* hi,
-  const int* domlo,  const int* domhi,
-  Real* p_g,      Real* pp_g,
-  Real* u_g,      Real* v_g,      Real* w_g,
-  Real* d_e,      Real* d_n,      Real* d_t);
+       const int* slo, const int* shi,
+       const int* ulo,  const int* uhi,
+       const int* vlo,  const int* vhi,
+       const int* wlo,  const int* whi,
+       const int* lo,  const int* hi,
+       const int* domlo,  const int* domhi,
+       Real* p_g,      Real* pp_g,
+       Real* u_g,      Real* v_g,      Real* w_g,
+       Real* d_e,      Real* d_n,      Real* d_t);
 
     void display_resid(int* nit, Real (&residuals)[16]);
 
     int check_convergence(int* nit, Real (&residuals)[16]);
 
     int goal_seek_mflux(
-  const int* slo, const int* shi,
-  int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
-  Real* fluxX,  Real* fluxY,  Real* fluxZ,
-  Real* dx     ,  Real* dy,       Real* dz);
+          const int* slo, const int* shi,
+          int *nit,       int* gsmf,      Real* delP_MF,  Real* lMFlux,
+          Real* fluxX,  Real* fluxY,  Real* fluxZ,
+          Real* dx     ,  Real* dy,       Real* dz);
 
     int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
 
-    void mfix_des_init_time_loop( const int* np,   const int* slo,  const int* shi,
-          const int* ulo,  const int* uhi,  const int* vlo,
-          const int* vhi,  const int* wlo,  const int* whi,
-          const int* lo,   const int* hi,   const int* domlo,
-          const int* domhi,  Real* ep_g,   Real* p_g,
-          Real* u_g,         Real* v_g,    Real* w_g,
-          Real* ro_g,        Real* mu_g,   int*  state,   int*  phase,
+    void mfix_des_init_time_loop( const int* np,
+          int*  state,   int*  phase,
           Real* radius,      Real* vol,    Real* pos,     Real* vel,
           Real* omega,       Real* drag,   Real* time,    Real* dt,
           Real* dx,          Real* dy,     Real* dz,      Real* xlength,
           Real* ylength, Real* zlength, int * nstep, int* nsubsteps );
 
-    void mfix_des_finalize_time_loop( const int* np, const Real* dt, Real* pos, Real* vel, Real* omega );
+    void mfix_des_finalize_time_loop( const int* np, const Real* dt,
+                                      Real* pos, Real* vel, Real* omega );
 
-
-    void mfix_des_time_loop_ops( const int* np,  const int* slo,  const int* shi, const int* ulo,
-         const int* uhi, const int* vlo,  const int* vhi, const int* wlo,
-         const int* whi, Real* ep_g, Real* u_g, Real* v_g, Real* w_g,
-         Real* ro_g, Real* mu_g, int* state,  int* phase,  Real* radius,
+    void mfix_des_time_loop_ops( const int* np,
+         int* state,  int* phase,  Real* radius,
          Real* vol, Real* mass, Real* omoi, Real* pos, Real* vel, Real* omega,
          Real* acc, Real* alpha,  Real* drag, Real* time, Real* dt, Real* dx,
          Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
