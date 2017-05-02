@@ -1,5 +1,6 @@
 #include <AMReX.H>
 #include "AMReX_Particles.H"
+#include "AMReX_RealVect.H"
 #include <iostream>
 #include <MFIXParticleContainer.H>
 
@@ -177,7 +178,6 @@ void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
 
@@ -293,4 +293,26 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 
     }
 
+}
+
+void MFIXParticleContainer::writeAllAtLevel(int lev)
+{
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
+    {
+      auto& particles = pti.GetArrayOfStructs();
+      size_t Np = pti.numParticles();
+      cout << "Particles: " << Np << " << at level " << lev << endl;
+      for (unsigned i = 0; i < Np; ++i)
+        {
+          const ParticleType& p = particles[i];
+          const IntVect& iv = Index(p, lev);
+
+          RealVect xyz(p.pos(0), p.pos(1), p.pos(2));
+
+          cout << "[" << i << "]: id " << p.id()
+               << " mass " << p.rdata(0)
+               << " index " << iv
+               << " position " << xyz << endl;
+        }
+    }
 }
