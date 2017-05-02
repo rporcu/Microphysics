@@ -45,7 +45,7 @@ public:
     void usr3 (int lev);
 
     void output (int lev, int estatus, int finish, int nstep, Real dt, Real time)
-	{ pc -> output( lev, estatus, finish, nstep, dt, time);};
+  { pc -> output( lev, estatus, finish, nstep, dt, time);};
 
     void make_mg_bc (int mg_bc[]);
 
@@ -75,8 +75,6 @@ protected:
 
     void mfix_calc_coeffs (int lev, int calc_flag);
 
-    void mfix_calc_all_coeffs (int lev);
-
     void mfix_calc_trd_and_tau (int lev);
 
     void mfix_init_fluid (int lev);
@@ -100,6 +98,10 @@ protected:
     int solve_bicgstab (MultiFab& sol, const MultiFab& rhs, const MultiFab& matrix,
            int sweep_type, int precond_type, int maxiter, Real eps_rel, int lev);
 
+    void mfix_calc_volume_fraction(int lev);
+    void mfix_calc_drag_fluid(int lev);
+    void mfix_calc_drag_particle(int lev);
+
 private:
 
     void ReadParameters ();
@@ -118,7 +120,7 @@ private:
     static void GotoNextLine (std::istream& is);
 
     void EvolveFluid (int lev, int nstep, int set_normg,
-		      Real dt, Real& prev_dt, Real time, Real normg);
+          Real dt, Real& prev_dt, Real time, Real normg);
 
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
     BoxArray MakeBaseGrids () const;

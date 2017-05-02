@@ -10,7 +10,7 @@ module des_time_march_module
 
   ! Let's make some variables module variables to make the transition
   ! to C++ easier ( even though it is really a nasty thing to do ).
-  real(c_real),   save  :: dtsolid_tmp 
+  real(c_real),   save  :: dtsolid_tmp
 
   ! Temporary variables when des_continuum_coupled is T to track
   ! changes in solid time step
@@ -19,7 +19,7 @@ module des_time_march_module
   ! Pressure gradient
   real(c_real),   allocatable, save :: gradPg(:,:,:,:), fc(:,:), tow(:,:)
 
-  ! Define interface for external functions so there will be no 
+  ! Define interface for external functions so there will be no
   ! warning at compile time
   interface
 
@@ -91,11 +91,11 @@ contains
     allocate ( tow(np,3), fc(np,3) )
 
     tow        = zero
-    fc         = zero    
-    
+    fc         = zero
+
     ! In case of restarts assign S_TIME from MFIX TIME
     S_TIME = TIME
-    TMP_DTS = ZERO    
+    TMP_DTS = ZERO
 
     ! Initialize time stepping variables for coupled gas/solids simulations.
     if ( des_continuum_coupled ) then
@@ -107,7 +107,7 @@ contains
           DTSOLID_TMP = DTSOLID
           DT = DTSOLID
        end if
-       
+
        ! Initialize time stepping variable for pure granular simulations.
     else
 
@@ -116,7 +116,7 @@ contains
        call output_manager(np, time, dt, xlength, ylength, zlength, nstep, &
             state, radius, pos, vel, omega, 0)
 
-    end if   
+    end if
 
     if (des_continuum_coupled) then
        write(ERR_MSG, 1000) trim(iVal(nsubsteps))
@@ -155,7 +155,7 @@ contains
     use run,            only: call_usr
 
     integer(c_int), intent(in)    :: np
-    real(c_real),   intent(inout) :: dt, pos(np,3), vel(np,3), omega(np,3)    
+    real(c_real),   intent(inout) :: dt, pos(np,3), vel(np,3), omega(np,3)
 
     if ( call_usr ) call usr3_des(np, pos, vel, omega)
 
@@ -182,14 +182,9 @@ contains
        bind(C, name="mfix_des_time_loop_ops")
 
     use calc_collision_wall,     only: calc_dem_force_with_wall_stl
-    use calc_drag_des_module,    only: calc_drag_des
     use calc_force_dem_module,   only: calc_force_dem
-    use calc_pg_grad_module,     only: calc_pg_grad
-    use comp_mean_fields_module, only: comp_mean_fields
     use cfnewvalues_module,      only: cfnewvalues
     use discretelement,          only: dtsolid, s_time, des_continuum_coupled
-    use drag_gs_des1_module,     only: drag_gs_des
-    use error_manager,           only: init_err_msg, finl_err_msg, ival, flush_err_msg
     use output_manager_module,   only: output_manager
     use run,                     only: call_usr
 
@@ -212,7 +207,7 @@ contains
          ep_g(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3))
 
     integer(c_int), intent(inout) :: nstep, state(np), phase(np)
-    integer(c_int), intent(out)   :: quit 
+    integer(c_int), intent(out)   :: quit
 
     quit = 0
 
@@ -237,29 +232,16 @@ contains
          pos, vel, omega, fc, tow, xlength, ylength, zlength )
 
     ! calculate forces from particle-particle collisions
-    call calc_force_dem(phase, radius, pos, vel, omega, state, & 
+    call calc_force_dem(phase, radius, pos, vel, omega, state, &
          fc, tow)
-
-    ! calculate or distribute fluid-particle drag force.
-    call calc_drag_des(slo,shi, ulo, uhi, vlo, vhi, wlo, whi,np,&
-         ep_g,u_g,v_g,w_g,ro_g,mu_g, gradpg, state, fc,&
-         drag, vol, pos, vel,&
-         radius, phase,dx, dy, dz)
 
     ! call user functions.
     if ( call_usr ) call usr1_des
 
     ! update position and velocities
-    call cfnewvalues(np, state, mass, omoi, &
+    call cfnewvalues(np, state, mass, omoi, drag, &
          pos, vel, omega, fc, tow, &
          acc, alpha)
-
-
-    ! calculate mean fields (epg).
-    call comp_mean_fields(slo, shi, np, &
-         ep_g, state, pos, vol, &
-         dx, dy, dz)
-
 
     ! update time to reflect changes
     s_time = s_time + dtsolid

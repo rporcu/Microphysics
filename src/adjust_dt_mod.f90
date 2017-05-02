@@ -41,8 +41,6 @@ contains
       use error_manager, only: finl_err_msg, err_msg, flush_err_msg
       use error_manager, only: init_err_msg, ival
 
-      use calc_coeff_module, only: calc_coeff_all
-
       IMPLICIT NONE
 
 ! Dummy Arguments:
