@@ -28,6 +28,8 @@ build:
     - cmake ..
     - make -j 4
     - make build_tests
+  tags:
+    - joule
 
 test:
   stage: test
@@ -37,3 +39,5 @@ test:
     - cmake ..
     - make -j 4
     - make test
+  tags:
+    - joule
