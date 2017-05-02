@@ -6,6 +6,7 @@ module particle_mod
   implicit none
   private
 
+  public  particle_t
   
   type, bind(C)  :: particle_t
      real(c_real)    :: radius
