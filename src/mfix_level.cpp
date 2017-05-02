@@ -598,10 +598,6 @@ mfix_level::InitLevelData(int lev, Real dt, Real time)
 
   }
 
-  // Calculate volume fraction, ep_g.
-  if (solve_dem)
-    mfix_comp_mean_fields(lev);	//
-
   // Initial fluid arrays: pressure, velocity, density, viscosity
   mfix_init_fluid(lev);
 
@@ -708,42 +704,6 @@ mfix_level::mfix_init_fluid(int lev)
 
   fill_mf_bc(lev,*mu_g[lev]);
   fill_mf_bc(lev,*lambda_g[lev]);
-}
-
-
-
-void mfix_level::mfix_comp_mean_fields(int lev)
-{
-    Real dx = geom[lev].CellSize(0);
-    Real dy = geom[lev].CellSize(1);
-    Real dz = geom[lev].CellSize(2);
-
-    for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
-    {
-  const Box& sbx = (*ep_g[lev])[mfi].box();
-  const int np   = pc -> NumberOfParticles(lev, mfi);
-
-  Real *pvol, *ppos;
-  int  *pstate;
-
-
-  pc -> GetIntData( lev, mfi, intData::state, &pstate );
-
-  pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-  pc -> GetPosition( lev, mfi, &ppos );
-
-  comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
-       pstate, ppos, pvol, &dx, &dy, &dz );
-
-  pc -> RestoreIntData ( &pstate );
-
-  pc -> RestoreRealData( &pvol );
-
-  pc -> RestorePosition( lev, mfi, &ppos );
-
-    }
-    fill_mf_bc(lev,*ep_g[lev]);
 }
 
 void

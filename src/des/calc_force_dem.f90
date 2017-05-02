@@ -31,7 +31,6 @@ contains
     use discretelement, only: s_time, des_crossprdct
     use discretelement, only: kn, kt, mew, hertzian
     use param,          only: SMALL_NUMBER
-    use drag_gs_des1_module, only: drag_gs_des
     use error_manager, only: init_err_msg, flush_err_msg, err_msg, ival
 
     integer,      intent(in)    :: state(:), phase(:)
@@ -91,7 +90,7 @@ contains
           if ( state(ii) == NONEXISTENT ) cycle
 
           dist     = pos(ii,:) - pos_tmp(:)
-          dist_mag = dot_product( dist, dist ) 
+          dist_mag = dot_product( dist, dist )
           r_lm     = rad + radius(ii)
 
           if ( dist_mag > ( r_lm - SMALL_NUMBER )**2 ) cycle
@@ -104,7 +103,7 @@ contains
 
           dist_mag  = sqrt( dist_mag )
           normal(:) = dist(:) / dist_mag
-          
+
           ! calcuate the normal overlap
           overlap_n = r_lm-dist_mag
           if(report_excess_overlap) call print_excess_overlap

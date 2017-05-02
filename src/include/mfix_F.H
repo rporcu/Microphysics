@@ -70,12 +70,6 @@ extern "C"
 
     void mfix_init_collision();
 
-    void comp_mean_fields(
-  const int* slo, const int* shi,
-  const int* max_pip,
-  Real* ep_g, int* particle_state, Real* des_pos_new,
-  Real* pvol, Real* dx,       Real* dy,       Real* dz);
-
     void mfix_output_manager( const int* max_pip,
             Real* time, Real* dt,
             Real* xlength, Real* ylength, Real* zlength,

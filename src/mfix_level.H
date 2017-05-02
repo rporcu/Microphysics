@@ -79,8 +79,6 @@ protected:
 
     void mfix_init_fluid (int lev);
 
-    void mfix_comp_mean_fields (int lev);
-
     void mfix_conv_rop (int lev, Real dt);
 
     void mfix_calc_mflux (int lev);
