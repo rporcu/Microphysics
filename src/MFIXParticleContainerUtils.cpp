@@ -24,8 +24,6 @@ void* MFIXParticleContainer::GetParticlesData( const int& lev, const MFIter& mfi
     return  particles.GetArrayOfStructs().data(); 
 }
 
-// 
-
 
 // void
 // MFIXParticleContainer::Pack3DArrays( Array<Real>& vec, const Array<Real>& comp1,

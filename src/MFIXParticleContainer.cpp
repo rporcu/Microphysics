@@ -62,11 +62,7 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	int        pstate, pphase;
 	Real       pradius, pdensity, pvolume, pomoi, pmass;
 
-	//std::array<Real, realData::count> realAttribs;
-	//std::array<int,   intData::count>  intAttribs;
-
 	pstate = 1;
-
 
 	for (int i = 0; i < np; i++) {
 
@@ -100,8 +96,6 @@ void MFIXParticleContainer::InitParticlesAscii(const std::string& file) {
 	    // Add everything to the data structure
 	    auto& particle_tile = GetParticles(lev)[std::make_pair(grid,tile)];
 	    particle_tile.push_back(p);
-	    //	    particle_tile.push_back_real(realAttribs);
-	    //	    particle_tile.push_back_int(intAttribs);
 	}
     }
     Redistribute();
@@ -161,14 +155,6 @@ MFIXParticleContainer::InitData()
 }
 
 
-// void MFIXParticleContainer::EvolveParticles(Array< unique_ptr<MultiFab> >& ep_g,
-// 					    const Array< unique_ptr<MultiFab> >& u_g,
-// 					    const Array< unique_ptr<MultiFab> >& v_g,
-// 					    const Array< unique_ptr<MultiFab> >& w_g,
-// 					    const Array< unique_ptr<MultiFab> >& p_g,
-// 					    const Array< unique_ptr<MultiFab> >& ro_g,
-// 					    const Array< unique_ptr<MultiFab> >& mu_g,
-// 					    int lev, int nstep, Real dt, Real time )
 
 void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real time )
 {
@@ -183,102 +169,30 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
     Real ylen = Geom(lev).ProbHi(1) - Geom(lev).ProbLo(1);
     Real zlen = Geom(lev).ProbHi(2) - Geom(lev).ProbLo(2);
 
-
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
     {
-
-	//number of particles
-	const int np  =  NumberOfParticles(pti);
-	// auto& structs = pti.GetArrayOfStructs();
-	auto& attribs = pti.GetStructOfArrays();
-
-	AoS&  particles=pti.GetArrayOfStructs();
-	// // Temporary arrays
-	// Real         *pradius, *pdensity, *pvol, *pmass, *pomoi;
-	// Real         *ppos, *pvel, *pomega, *pacc, *palpha, *pdrag;
-	// int          *pstate, *pphase;
-	int          nsubsteps;
-
+	const int np     = NumberOfParticles(pti);
+	void* particles  = GetParticlesData(pti);
+	int   nsubsteps;
 	
-
-	// Array< Particle<realData::count, intData::count> > particles;
-	
-	// particles.resize(np);
-	
-	
-	// Fill in particle data
-	// for ( int i = 0; i < np; ++i ) {
-
-	//     particles[i].pos(0)   = structs[i].pos(0);  
-	//     particles[i].pos(1)   = structs[i].pos(1);
-	//     particles[i].pos(2)   = structs[i].pos(2);
-	//     particles[i].id()     = structs[i].id();
-	//     particles[i].cpu()    = structs[i].cpu();
-	//     particles[i].idata(0) = attribs.GetIntData(intData::phase)[i];
-	//     particles[i].idata(1) = attribs.GetIntData(intData::state)[i];
-
-	//     for ( int j = 0; j < realData::count; ++j )  {
-	// 	particles[i].rdata(j) = attribs.GetRealData(j)[i];
-	//     }
-	//     //  particles[i].rdata(0) = attribs.GetRealData(realData::radius)[i];
-	//     // particles[i].rdata(1) = attribs.GetRealData(realData::volume)[i];
-	//     // particles[i].rdata(2) = attribs.GetRealData(realData::mass)[i];
-	//     // particles[i].rdata(3) = attribs.GetRealData(realData::density)[i];
-	//     // particles[i].rdata(4) = attribs.GetRealData(realData::oneOverI)[i];
-	//     // particles[i].rdata(5) = attribs.GetRealData(realData::velx)[i];
-	//     // particles[i].rdata(6) = attribs.GetRealData(realData::vely)[i];
-	//     // particles[i].rdata(7) = attribs.GetRealData(realData::velz)[i];
-	//     // particles[i].rdata(8)  = attribs.GetRealData(realData::omegax)[i];
-	//     // particles[i].rdata(9)  = attribs.GetRealData(realData::omegay)[i];
-	//     // particles[i].rdata(10) = attribs.GetRealData(realData::omegaz)[i];
-	//     // particles[i].rdata(11)  = attribs.GetRealData(realData::accx)[i];
-	//     // particles[i].rdata(12)  = attribs.GetRealData(realData::accy)[i];
-	//     // particles[i].rdata(13) = attribs.GetRealData(realData::accz)[i];
-	//     // particles[i].rdata(14)  = attribs.GetRealData(realData::alphax)[i];
-	//     // particles[i].rdata(15)  = attribs.GetRealData(realData::alphay)[i];
-	//     // particles[i].rdata(16) = attribs.GetRealData(realData::alphaz)[i];
-	//     // particles[i].rdata(17)  = attribs.GetRealData(realData::dragx)[i];
-	//     // particles[i].rdata(18)  = attribs.GetRealData(realData::dragy)[i];
-	//     // particles[i].rdata(19) = attribs.GetRealData(realData::dragz)[i];
-		
-	// }
-
-	mfix_des_init_time_loop_aos( &np, &particles, &time, &dt, &dx, &dy, &dz,
+	mfix_des_init_time_loop_aos( &np, particles, &time, &dt, &dx, &dy, &dz,
 				     &xlen, &ylen, &zlen, &nstep, &nsubsteps);
 
 	int quit;
 
 	for ( int n = 0; n < nsubsteps; ++n ) {
-	    mfix_des_time_loop_ops_aos( &np, &particles, &time, &dt, &dx, &dy, &dz,
+	    mfix_des_time_loop_ops_aos( &np, particles, &time, &dt, &dx, &dy, &dz,
 					&xlen, &ylen, &zlen, &nstep, &quit);
 		
 	    if ( quit ) break;
 	}
 
 
-	mfix_des_finalize_time_loop_aos( &np, &dt, &particles );
-
-
-	// // Copy back particle data
-	// for ( int i = 0; i < np; ++i ) {
-
-	//     structs[i].pos(0) = particles[i].pos(0);  
-	//     structs[i].pos(1) = particles[i].pos(1);
-	//     structs[i].pos(2) = particles[i].pos(2);
-	//     structs[i].id()   = particles[i].id();
-	//     structs[i].cpu()  = particles[i].cpu();
-	//     attribs.GetIntData(intData::phase)[i] = particles[i].idata(0);
-	//     attribs.GetIntData(intData::state)[i] = particles[i].idata(1);
-
-	//     for ( int j = 0; j < realData::count; ++j )  {
-	// 	attribs.GetRealData(j)[i] = particles[i].rdata(j);
-	//     }
-	// }
+	mfix_des_finalize_time_loop_aos( &np, &dt, particles );
 	
     }
 
     Redistribute();
-
 }
 
 
@@ -299,38 +213,11 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
     {
 
 	//number of particles
-	const int np = NumberOfParticles(pti);
-	AoS&  particles = pti.GetArrayOfStructs();
-	// // Temporary arrays
-	// Real         *ppos, *pvel, *pomega, *pradius;
-	// int          *pstate, *pphase;
-
-
-	// GetIntData( pti, intData::state, &pstate );
-
-	// GetRealData( pti, realData::radius, &pradius );
-
-	// GetPosition( pti, &ppos );
-
-	// GetVectorData( pti, realData::velx, &pvel );
-	// GetVectorData( pti, realData::omegax, &pomega );
-
+	const int     np = NumberOfParticles(pti);
+	void*  particles = GetParticlesData(pti);
+	
 	mfix_output_manager_aos( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-				 &particles, &finish);
-
-	// mfix_output_manager(&np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-	// 		    pstate, pradius, ppos, pvel,  pomega, &finish);
-
-
-	// RestoreIntData( &pstate );
-
-	// RestoreRealData( &pradius );
-
-	// RestorePosition( pti, &ppos );
-
-	// RestoreVectorData( pti, realData::velx, &pvel );
-	// RestoreVectorData( pti, realData::omegax, &pomega );
-
+				 particles, &finish);
     }
 
 }

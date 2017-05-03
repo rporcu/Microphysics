@@ -89,7 +89,10 @@ public:
     void AllocData ();
 
     void* GetParticlesData( const int& lev, const MFIter& mfi );
-    // void GetIntData ( MFIXParIter& pti, int dataIdx, int** dataPtr );
+
+    void* GetParticlesData( MFIXParIter& pti) {return pti.GetArrayOfStructs().data();};    
+
+//    void GetIntData ( MFIXParIter& pti, int dataIdx, int** dataPtr );
 
     // void GetIntData ( const int& lev, const MFIter& mfi, int dataIdx, int** dataPtr );
 

@@ -728,25 +728,6 @@ void mfix_level::mfix_comp_mean_fields(int lev)
 	comp_mean_fields_aos(sbx.loVect(), sbx.hiVect(), &np,  particles,
 			     &dx, &dy, &dz, (*ep_g[lev])[mfi].dataPtr() );
 
-// Real *pvol, *ppos;
-	// int  *pstate;
-
-
-	// pc -> GetIntData( lev, mfi, intData::state, &pstate );
-
-	// pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-	// pc -> GetPosition( lev, mfi, &ppos );
-
-	// comp_mean_fields(sbx.loVect(), sbx.hiVect(), &np, (*ep_g[lev])[mfi].dataPtr(),
-	// 		 pstate, ppos, pvol, &dx, &dy, &dz );
-
-	// pc -> RestoreIntData ( &pstate );
-
-	// pc -> RestoreRealData( &pvol );
-
-	// pc -> RestorePosition( lev, mfi, &ppos );
-
     }
     fill_mf_bc(lev,*ep_g[lev]);
 }
@@ -1116,23 +1097,7 @@ void mfix_level::mfix_calc_volume_fraction(int lev)
 	calc_solids_volume_aos(sbx.loVect(), sbx.hiVect(), &np,
 			       particles, &dx, &dy, &dz,
 			       (*ep_g[lev])[mfi].dataPtr() );
-
-// int   *pstate;
-	// Real  *pvol, *ppos;
-
-	// pc -> GetIntData(  lev, mfi, intData::state,   &pstate );
-	// pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-	// pc -> GetPosition( lev, mfi, &ppos );
-
-	// calc_solids_volume(sbx.loVect(), sbx.hiVect(), &np,
-	// 		   (*ep_g[lev])[mfi].dataPtr(),
-	// 		   pstate, pvol, ppos, &dx, &dy, &dz );
-
-	// pc -> RestoreIntData( &pstate );
-	// pc -> RestoreRealData( &pvol );
-	// pc -> RestorePosition( lev, mfi, &ppos );
     }
-    // fill_mf_bc(lev,*ep_g[lev]);
 
     for (MFIter mfi(*ep_g[lev]); mfi.isValid(); ++mfi)
     {
@@ -1181,43 +1146,6 @@ void mfix_level::mfix_calc_drag_fluid(int lev)
 	    (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
 	    particles, &dx, &dy, &dz );
 
-	
-	// int   *pstate, *pphase;
-	// Real  *pvol, *pradius, *ppos, *pvel, *drag;
-
-	// pc -> GetIntData( lev, mfi, intData::state, &pstate );
-	// pc -> GetIntData( lev, mfi, intData::phase, &pphase );
-
-	// pc -> GetRealData( lev, mfi, realData::radius, &pradius );
-	// pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-	// pc -> GetPosition( lev, mfi, &ppos );
-
-	// pc -> GetVectorData( lev, mfi, realData::velx,  &pvel );
-	// pc -> GetVectorData( lev, mfi, realData::dragx, &drag );
-
-	// calc_drag_fluid(
-	//     sbx.loVect(), sbx.hiVect(),
-	//     ubx.loVect(), ubx.hiVect(),
-	//     vbx.loVect(), vbx.hiVect(),
-	//     wbx.loVect(), wbx.hiVect(), &np,
-	//     (*ep_g[lev])[mfi].dataPtr(), (*ro_g[lev])[mfi].dataPtr(),
-	//     (*u_g[lev])[mfi].dataPtr(),  (*v_g[lev])[mfi].dataPtr(),
-	//     (*w_g[lev])[mfi].dataPtr(),  (*mu_g[lev])[mfi].dataPtr(),
-	//     (*f_gds[lev])[mfi].dataPtr(), (*drag_bm[lev])[mfi].dataPtr(),
-	//     pphase, pstate, pvol, ppos, pvel, pradius, drag, &dx, &dy, &dz );
-
-	// pc -> RestoreIntData( &pstate );
-	// pc -> RestoreIntData( &pphase );
-
-	// pc -> RestoreRealData( &pradius );
-	// pc -> RestoreRealData( &pvol );
-
-	// pc -> RestorePosition( lev, mfi, &ppos );
-
-	// pc -> RestoreVectorData( lev, mfi, realData::velx,  &pvel );
-	// pc -> RestoreVectorData( lev, mfi, realData::dragx, &drag );
-
     }
     fill_mf_bc(lev,*f_gds[lev]);
     fill_mf_bc(lev,*drag_bm[lev]);
@@ -1244,14 +1172,6 @@ void mfix_level::mfix_calc_drag_particle(int lev)
 
 	const int np = pc -> NumberOfParticles(lev, mfi);
 	void* particles = pc -> GetParticlesData( lev, mfi );
-	// Real  *pvol, *ppos, *pvel, *drag;
-
-	// pc -> GetRealData( lev, mfi, realData::volume, &pvol );
-
-	// pc -> GetPosition( lev, mfi, &ppos );
-
-	// pc -> GetVectorData( lev, mfi, realData::velx,  &pvel );
-	// pc -> GetVectorData( lev, mfi, realData::dragx, &drag );
 
 	calc_drag_particle_aos(
 	    sbx.loVect(), sbx.hiVect(),
@@ -1262,23 +1182,5 @@ void mfix_level::mfix_calc_drag_particle(int lev)
 	    (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
 	    particles, &dx, &dy, &dz, &xlen, &ylen, &zlen);
 
-
-	
-	// calc_drag_particle(
-	//     sbx.loVect(), sbx.hiVect(),
-	//     ubx.loVect(), ubx.hiVect(),
-	//     vbx.loVect(), vbx.hiVect(),
-	//     wbx.loVect(), wbx.hiVect(), &np,
-	//     (*p_g[lev])[mfi].dataPtr(), (*u_g[lev])[mfi].dataPtr(),
-	//     (*v_g[lev])[mfi].dataPtr(), (*w_g[lev])[mfi].dataPtr(),
-	//     pvol, ppos, pvel, drag,
-	//     &dx, &dy, &dz, &xlen, &ylen, &zlen);
-
-	// pc -> RestoreRealData( &pvol );
-
-	// pc -> RestorePosition( lev, mfi, &ppos );
-
-	// pc -> RestoreVectorData( lev, mfi, realData::velx,  &pvel );
-	// pc -> RestoreVectorData( lev, mfi, realData::dragx, &drag );
     }
 }

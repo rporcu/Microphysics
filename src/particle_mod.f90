@@ -7,6 +7,7 @@ module particle_mod
   private
 
   public  particle_t
+  public  print_particles
   
   type, bind(C)  :: particle_t
      real(c_real)    :: pos(3)     !< Position
@@ -26,6 +27,25 @@ module particle_mod
      integer(c_int)  :: state
   end type particle_t
   
+contains
 
+   subroutine print_particles( particles )
+      type(particle_t), intent(in) :: particles(:)
+      integer                      :: p
+
+
+      do p = 1, size(particles)
+
+         write(*,'(2/,A,I0)')        "Particle ID = ", particles(p) % id
+         write(*,'(A,3(es15.6,1X))')  "Position    = ", particles(p) % pos
+         write(*,'(A,3(es15.6,1X))')  "Velocity    = ", particles(p) % vel
+         write(*,'(A,es15.6)')         "Radius      = ", particles(p) % radius
+         write(*,'(A,es15.6)')         "Mass        = ", particles(p) % mass
+         write(*,'(A,es15.6)')         "Volume      = ", particles(p) % volume
+         
+      end do     
+
+
+   end subroutine print_particles
 
 end module
