@@ -175,20 +175,20 @@ void MFIXParticleContainer::EvolveParticles( int lev, int nstep, Real dt, Real t
 	void* particles  = GetParticlesData(pti);
 	int   nsubsteps;
 	
-	mfix_des_init_time_loop_aos( &np, particles, &time, &dt, &dx, &dy, &dz,
-				     &xlen, &ylen, &zlen, &nstep, &nsubsteps);
+	mfix_des_init_time_loop( &np, particles, &time, &dt, &dx, &dy, &dz,
+				 &xlen, &ylen, &zlen, &nstep, &nsubsteps);
 
 	int quit;
 
 	for ( int n = 0; n < nsubsteps; ++n ) {
-	    mfix_des_time_loop_ops_aos( &np, particles, &time, &dt, &dx, &dy, &dz,
-					&xlen, &ylen, &zlen, &nstep, &quit);
+	    mfix_des_time_loop_ops( &np, particles, &time, &dt, &dx, &dy, &dz,
+				    &xlen, &ylen, &zlen, &nstep, &quit);
 		
 	    if ( quit ) break;
 	}
 
 
-	mfix_des_finalize_time_loop_aos( &np, &dt, particles );
+	mfix_des_finalize_time_loop( &np, &dt, particles );
 	
     }
 
@@ -216,8 +216,8 @@ void MFIXParticleContainer::output(int lev, int estatus, int finish, int nstep, 
 	const int     np = NumberOfParticles(pti);
 	void*  particles = GetParticlesData(pti);
 	
-	mfix_output_manager_aos( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
-				 particles, &finish);
+	mfix_output_manager( &np, &time, &dt, &xlen, &ylen, &zlen, &nstep,
+			     particles, &finish);
     }
 
 }

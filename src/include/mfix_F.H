@@ -70,44 +70,27 @@ extern "C"
 
     void mfix_init_collision();
 
-    void mfix_output_manager( const int* max_pip,
-            Real* time, Real* dt,
-            Real* xlength, Real* ylength, Real* zlength,
-            int* nstep, int* particle_state,    Real* des_radius,
-            Real* des_pos_new, Real* des_vel_new, Real* omega_new,
-            int* finsh);
-
-    
-    void mfix_output_manager( const int* max_pip,
-			      Real* time, Real* dt,
-			      Real* xlength, Real* ylength, Real* zlength,
-			      int* nstep, int* particle_state,    Real* des_radius,
-			      Real* des_pos_new, Real* des_vel_new, Real* omega_new,
-			      int* finsh);
-    
-    void mfix_output_manager_aos ( const int* np,  Real* time, Real* dt,
-				   Real* xlength, Real* ylength, Real* zlength,
-				   int* nstep, void* particles, int* finsh);
+   
+   
+    void mfix_output_manager ( const int* np,  Real* time, Real* dt,
+			       Real* xlength, Real* ylength, Real* zlength,
+			       int* nstep, void* particles, int* finsh);
 
 
-    void calc_solids_volume_aos ( const int* slo, const int* shi, const int* np,
-				  void* particles, Real* dx, Real* dy, Real* dz,
-				  Real* ep_g );
-
-    
-    void calc_solids_volume(
-	const int* slo, const int* shi, const int* max_pip,
-	Real* ep_g,
-	int* pstate, Real* pvol, Real* ppos,
-	Real* dx, Real* dy, Real* dz);
+    void calc_solids_volume ( const int* slo, const int* shi, const int* np,
+			      void* particles, Real* dx, Real* dy, Real* dz,
+			      Real* ep_g );
 
     void calc_volume_fraction(
 	const int* slo, const int* shi,
 	const int*  lo, const int*  hi,
 	Real* rop_g, Real* ep_g, Real* ro_g,
 	Real* dx,    Real* dy,   Real* dz);
+    
 
-    void calc_drag_fluid_aos(
+
+
+    void calc_drag_fluid(
 	const int* slo, const int* shi,
 	const int* ulo, const int* uhi,
 	const int* vlo, const int* vhi,
@@ -120,21 +103,7 @@ extern "C"
 	Real* dx,       Real* dy,       Real* dz);
 
     
-    void calc_drag_fluid(
-	const int* slo, const int* shi,
-	const int* ulo, const int* uhi,
-	const int* vlo, const int* vhi,
-	const int* wlo, const int* whi,
-	const int* max_pip,
-	Real* ep_g, Real* ro_g,
-	Real* u_g,  Real* v_g,   Real* w_g,
-	Real* mu_g, Real* f_gds, Real* drag_bm,
-	int* pphase,  int* pstate,
-	Real* pvol, Real* ppos,  Real* pvel,
-	Real* pradius, Real* drag,
-	Real* dx,       Real* dy,       Real* dz);
-
-    void calc_drag_particle_aos(
+    void calc_drag_particle(
 	const int* slo, const int* shi,
 	const int* ulo, const int* uhi,
 	const int* vlo, const int* vhi,
@@ -144,17 +113,6 @@ extern "C"
 	void* particles, 
 	Real* dx, Real* dy, Real* dz, Real* xlen, Real* ylen, Real* zlen);
 
-
-    
-    void calc_drag_particle(
-	const int* slo, const int* shi,
-	const int* ulo, const int* uhi,
-	const int* vlo, const int* vhi,
-	const int* wlo, const int* whi,
-	const int* max_pip,
-	Real* p_g, Real* u_g,  Real* v_g,   Real* w_g,
-	Real* pvol, Real* ppos,  Real* pvel,Real* drag,
-	Real* dx, Real* dy, Real* dz, Real* xlen, Real* ylen, Real* zlen);
 
     void calc_coeff(
 	const int* slo, const int* shi, const int* lo,  const int* hi, int* level,
@@ -307,34 +265,15 @@ extern "C"
     int mfix_adjustdt(int* ier, int* nit, Real* dt);
 
 
-    void mfix_des_init_time_loop( const int* np,
-				  int*  state,   int*  phase,
-				  Real* radius,      Real* vol,    Real* pos,     Real* vel,
-				  Real* omega,       Real* drag,   Real* time,    Real* dt,
-				  Real* dx,          Real* dy,     Real* dz,      Real* xlength,
+    void mfix_des_init_time_loop( const int* np, void* particles, Real* time, Real* dt,
+				  Real* dx, Real* dy, Real* dz, Real* xlength,
 				  Real* ylength, Real* zlength, int * nstep, int* nsubsteps );
-
-    void mfix_des_init_time_loop_aos( const int* np, void* particles,   Real* time,    Real* dt,
-				      Real* dx,          Real* dy,     Real* dz,      Real* xlength,
-				      Real* ylength, Real* zlength, int * nstep, int* nsubsteps );
-
     
-    void mfix_des_finalize_time_loop( const int* np, const Real* dt,
-				      Real* pos, Real* vel, Real* omega );
-    void mfix_des_finalize_time_loop_aos( const int* np, const Real* dt, void* particles);
+    void mfix_des_finalize_time_loop( const int* np, const Real* dt, void* particles);
 
-
-    
-    void mfix_des_time_loop_ops( const int* np,
-				 int* state,  int* phase,  Real* radius,
-				 Real* vol, Real* mass, Real* omoi, Real* pos, Real* vel, Real* omega,
-				 Real* acc, Real* alpha,  Real* drag, Real* time, Real* dt, Real* dx,
+    void mfix_des_time_loop_ops( const int* np,  void* particles, Real* time, Real* dt, Real* dx,
 				 Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
 				 int * nstep, int* quit );
-    void mfix_des_time_loop_ops_aos( const int* np,  void* particles, Real* time, Real* dt, Real* dx,
-				     Real* dy, Real* dz, Real* xlength, Real* ylength, Real* zlength,
-				     int * nstep, int* quit );
-
 
   
     void mfix_usr0();
