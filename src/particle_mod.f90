@@ -9,12 +9,12 @@ module particle_mod
   public  particle_t
   
   type, bind(C)  :: particle_t
+     real(c_real)    :: pos(3)     !< Position
      real(c_real)    :: radius
      real(c_real)    :: volume
      real(c_real)    :: mass
      real(c_real)    :: density
      real(c_real)    :: omoi       !< One over momentum of inertia
-     real(c_real)    :: pos(3)     !< Position
      real(c_real)    :: vel(3)     !< Linear velocity
      real(c_real)    :: acc(3)     !< Linear acceleration
      real(c_real)    :: omega(3)   !< Angular velocity
@@ -26,7 +26,6 @@ module particle_mod
      integer(c_int)  :: state
   end type particle_t
   
-
 
 
 end module

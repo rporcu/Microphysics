@@ -350,7 +350,7 @@ contains
       use particle_mod,  only: particle_t
       
 
-      type(particle_t), intent(inout) :: particles(:)
+      type(particle_t), intent(in)    :: particles(:)
       real(c_real)  ,   intent(inout) :: fc(:,:), tow(:,:)
       real(c_real)  ,   intent(in   ) :: xlength, ylength, zlength
      
